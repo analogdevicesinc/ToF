@@ -36,6 +36,8 @@
 #include "camera_chicony_006.h"
 #elif defined(FXTOF1)
 #include "camera_fxtof1.h"
+#elif defined(CMOS)
+#include "camera_cmos.h"
 #else
 #include "camera_96tof1.h"
 #endif
@@ -64,6 +66,9 @@ buildCameras(std::unique_ptr<SensorEnumeratorInterface> enumerator) {
             dSensor, storages, temperatureSensors);
 #elif defined(FXTOF1)
         std::shared_ptr<Camera> camera = std::make_shared<CameraFxTof1>(
+            dSensor, storages, temperatureSensors);
+#elif defined(CMOS)
+std::shared_ptr<Camera> camera = std::make_shared<CameraCmos>(
             dSensor, storages, temperatureSensors);
 #else
         std::shared_ptr<Camera> camera = std::make_shared<Camera96Tof1>(

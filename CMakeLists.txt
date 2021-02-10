@@ -26,6 +26,7 @@ option(WITH_OPEN3D "Build open3d bindings?" OFF)
 option(WITH_ROS "Build ros bindings?" OFF)
 option(WITH_NETWORK "Build network interface?" ON)
 option(USE_CHICONY "Use Chicony 006 camera?" OFF)
+option(USE_CMOS "Use CMOS camera?" OFF)
 option(USE_FXTOF1 "Use FXTOF1 camera?" OFF)
 option(WITH_TOOLS "Build tools?" OFF)
 
@@ -39,6 +40,10 @@ endif()
 
 if (USE_FXTOF1)
         add_definitions(-DFXTOF1)
+endif()
+
+if (USE_CMOS)
+        add_definitions(-DCMOS)
 endif()
 
 add_subdirectory(sdk)
