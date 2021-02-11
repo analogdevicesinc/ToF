@@ -31,6 +31,7 @@
  */
 #include "camera_cmos.h"
 
+#include <algorithm>
 #include <array>
 #include <glog/logging.h>
 
@@ -147,4 +148,61 @@ aditof::Status CameraCmos::getControl(const std::string &control,
     }
 
     return status;
+}
+
+aditof::Status CameraCmos::initComputeLibrary(void) {
+    // TO DO
+
+    return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status CameraCmos::freeComputeLibrary(void) {
+    // TO DO
+
+    return aditof::Status::UNAVAILABLE;
+}
+
+std::tuple<aditof::Status, int, int, int> CameraCmos::loadConfigData(void) {
+    // TO DO
+
+    return std::make_tuple<aditof::Status, int, int>(
+        aditof::Status::UNAVAILABLE, 0, 0, 0);
+}
+
+void CameraCmos::freeConfigData(void) {
+    // TO DO
+}
+
+aditof::Status CameraCmos::isValidFrame(const int /*numTotalFrames*/) {
+    // TO DO
+
+    return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status CameraCmos::isValidMode(const uint8_t /*hdr_mode*/) {
+    // TO DO
+
+    return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status
+CameraCmos::processFrame(uint8_t * /*rawFrame*/, uint16_t * /*captureData*/,
+                         uint8_t * /*head*/, const uint16_t /*embed_height*/,
+                         const uint16_t /*embed_width*/,
+                         aditof::FrameDetails & /*frameDetails*/) {
+    // TO DO
+
+    return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status CameraCmos::getCurrentModeInfo(ModeInfo::modeInfo & /*info*/) {
+    // TO DO
+
+    return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status CameraCmos::cleanupTempFiles() {
+    // TO DO
+
+    return aditof::Status::UNAVAILABLE;
 }
