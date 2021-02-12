@@ -52,6 +52,14 @@
  *                    before calling initialize().
  *   Accepted values: A file name, including extension.
  *
+ * powerUp
+ *   Description:     PowerUp the camera, it performs power monitoring on different power registers.
+ *                    This is required before performing any operation on the camera.
+ *   Accepted values: A string with this exact value: 'call'
+ *
+ * powerDown
+ *   Description:     PowerDown the camera, this is required for shutting down the camera module.
+ *   Accepted values: A string with this exact value: 'call'.
  */
 
 class CameraCmos : public aditof::Camera {
@@ -94,21 +102,6 @@ class CameraCmos : public aditof::Camera {
     // in order to not go beyond Camera API
 
     //aditof::Status setCameraSyncMode(uint8_t mode, uint8_t level);
-
-    /**
-     * @brief PowerUp the camera, it performs power monitoring on different power registers.
-     * This is required before performing any operation on the camera.
-     * @return aditof::Status
-     * @see aditof::Status
-     */
-    //aditof::Status powerUp();
-
-    /**
-     * @brief PowerDown the camera, this is required for shutting down the camera module
-     * @return aditof::Status
-     * @see aditof::Status
-     */
-    //aditof::Status powerDown();
 
     /**
      * @brief Read camera module memory and initialize camera with loaded data.
@@ -223,6 +216,21 @@ class CameraCmos : public aditof::Camera {
      * @see m_tempFiles
      */
     aditof::Status cleanupTempFiles();
+
+    /**
+     * @brief PowerUp the camera, it performs power monitoring on different power registers.
+     * This is required before performing any operation on the camera.
+     * @return aditof::Status
+     * @see aditof::Status
+     */
+    aditof::Status powerUp();
+
+    /**
+     * @brief PowerDown the camera, this is required for shutting down the camera module
+     * @return aditof::Status
+     * @see aditof::Status
+     */
+    aditof::Status powerDown();
 
   private:
     aditof::CameraDetails m_details;

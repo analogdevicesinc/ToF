@@ -46,6 +46,8 @@ CameraCmos::CameraCmos(
 
     // Define some of the controls of this camera
     m_controls.emplace("initialization_config", "");
+    m_controls.emplace("powerUp", "call");
+    m_controls.emplace("powerDown", "call");
 
     // Check Depth Sensor
     if (!depthSensor) {
@@ -140,7 +142,15 @@ aditof::Status CameraCmos::setControl(const std::string &control,
     Status status = Status::OK;
 
     if (m_controls.count(control) > 0) {
-        m_controls[control] = value;
+        if (value == "call") {
+            if (control == "powerUp")
+                return powerUp();
+            else if (control == "powerDown") {
+                return powerDown();
+            }
+        } else {
+            m_controls[control] = value;
+        }
     } else {
         LOG(WARNING) << "Unsupported control";
         return Status::INVALID_ARGUMENT;
@@ -216,6 +226,18 @@ aditof::Status CameraCmos::getCurrentModeInfo(ModeInfo::modeInfo & /*info*/) {
 }
 
 aditof::Status CameraCmos::cleanupTempFiles() {
+    // TO DO
+
+    return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status CameraCmos::powerUp() {
+    // TO DO
+
+    return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status CameraCmos::powerDown() {
     // TO DO
 
     return aditof::Status::UNAVAILABLE;
