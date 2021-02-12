@@ -39,7 +39,13 @@ CameraCmos::CameraCmos(
     std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
     std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms,
     std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &tSensors)
-    : m_depthSensor(depthSensor) {
+    : m_depthSensor(depthSensor), m_devStarted(false),
+      m_modechange_framedrop_count(0) {
+    m_details.mode = "";
+    m_details.cameraId = "";
+
+    // Define some of the controls of this camera
+    m_controls.emplace("initialization_config", "");
 
     // Check Depth Sensor
     if (!depthSensor) {
@@ -51,7 +57,11 @@ CameraCmos::CameraCmos(
     m_details.connection = sDetails.connectionType;
 }
 
-CameraCmos::~CameraCmos() {}
+CameraCmos::~CameraCmos() {
+    cleanupTempFiles();
+    freeConfigData();
+    // m_device->toggleFsync();
+}
 
 aditof::Status CameraCmos::initialize() { return aditof::Status::OK; }
 
@@ -115,7 +125,11 @@ CameraCmos::getAvailableControls(std::vector<std::string> &controls) const {
     using namespace aditof;
     Status status = Status::OK;
 
-    controls = m_availableControls;
+    controls.empty();
+    controls.reserve(m_controls.size());
+    for (const auto &item : m_controls) {
+        controls.emplace_back(item.first);
+    }
 
     return status;
 }
@@ -125,9 +139,9 @@ aditof::Status CameraCmos::setControl(const std::string &control,
     using namespace aditof;
     Status status = Status::OK;
 
-    auto it = std::find(m_availableControls.begin(), m_availableControls.end(),
-                        control);
-    if (it == m_availableControls.end()) {
+    if (m_controls.count(control) > 0) {
+        m_controls[control] = value;
+    } else {
         LOG(WARNING) << "Unsupported control";
         return Status::INVALID_ARGUMENT;
     }
@@ -140,9 +154,9 @@ aditof::Status CameraCmos::getControl(const std::string &control,
     using namespace aditof;
     Status status = Status::OK;
 
-    auto it = std::find(m_availableControls.begin(), m_availableControls.end(),
-                        control);
-    if (it == m_availableControls.end()) {
+    if (m_controls.count(control) > 0) {
+        value = m_controls.at(control);
+    } else {
         LOG(WARNING) << "Unsupported control";
         return Status::INVALID_ARGUMENT;
     }

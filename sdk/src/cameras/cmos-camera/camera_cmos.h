@@ -36,13 +36,23 @@
 #include <aditof/depth_sensor_interface.h>
 #include <aditof/storage_interface.h>
 #include <aditof/temperature_sensor_interface.h>
-
+#include <unordered_map>
 // #include "calibration.h"
 // #include <aditof/tofi_compute.h>
 // #include <aditof/tofi_config.h>
 // #include "aditof_internal.h"
 // #include "tofi_utils.h"
 #include "mode_info.h"
+
+/* Camera controls
+ *
+ * initialization_config
+ *   Description:     The JSON configuration files which should be specific to the given module.
+ *                    Can be omitted if 'loadModuleData' control is executed. This needs to be set
+ *                    before calling initialize().
+ *   Accepted values: A file name, including extension.
+ *
+ */
 
 class CameraCmos : public aditof::Camera {
   public:
@@ -82,19 +92,6 @@ class CameraCmos : public aditof::Camera {
 
     // TO DO - The methods bellow need to be converted somehow to be covered by setControl()
     // in order to not go beyond Camera API
-
-    /**
-         * @brief Initialize the camera. This is required before performing any
-         * operation on the camera.
-         *
-         * This API initializes the OS specific UVC driver.
-         * @param[in] config - The json configuration file which should be specific to
-         * the given module. Can be ommitted if loadModuleData() is called.
-         * @return aditof::Status
-         * @see aditof::Status
-         */
-    // The initialize() already exists but takes no argumets. The configs could be set by SetControls()
-    //aditof::Status initialize(const std::string &config);
 
     //aditof::Status setCameraSyncMode(uint8_t mode, uint8_t level);
 
@@ -231,7 +228,7 @@ class CameraCmos : public aditof::Camera {
     aditof::CameraDetails m_details;
     std::shared_ptr<aditof::DepthSensorInterface> m_depthSensor;
     std::shared_ptr<aditof::StorageInterface> m_eeprom;
-    std::vector<std::string> m_availableControls;
+    std::unordered_map<std::string, std::string> m_controls;
 
     bool m_devStarted;
     // Calibration m_calibration;
