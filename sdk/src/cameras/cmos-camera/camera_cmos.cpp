@@ -48,6 +48,7 @@ CameraCmos::CameraCmos(
     m_controls.emplace("initialization_config", "");
     m_controls.emplace("powerUp", "call");
     m_controls.emplace("powerDown", "call");
+    m_controls.emplace("syncMode", "0, 0");
 
     // Check Depth Sensor
     if (!depthSensor) {
@@ -148,6 +149,11 @@ aditof::Status CameraCmos::setControl(const std::string &control,
             else if (control == "powerDown") {
                 return powerDown();
             }
+        } else if (control == "syncMode") {
+            // TO DO: parse value and get the two parameters (mode, level)
+            uint8_t mode = 0;
+            uint8_t level = 0;
+            return setCameraSyncMode(mode, level);
         } else {
             m_controls[control] = value;
         }
@@ -238,6 +244,12 @@ aditof::Status CameraCmos::powerUp() {
 }
 
 aditof::Status CameraCmos::powerDown() {
+    // TO DO
+
+    return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status CameraCmos::setCameraSyncMode(uint8_t mode, uint8_t level) {
     // TO DO
 
     return aditof::Status::UNAVAILABLE;
