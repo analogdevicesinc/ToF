@@ -66,6 +66,11 @@
  *   Accepted values: A string containing two integer values. E.g. '1, 2'
  *                    First integer corresponds to mode. Set to 0 for internal and 2 for
  *                    external. Second integer is level. Set to TDB!!!
+ * loadModuleData
+ *   Description:     Read camera module memory and initialize camera with loaded data.
+ *                    Must be called after initialize() and powerUp(). Calibration or Firmware
+ *                    data are NOT loaded if already defined by initialize() config file.
+ *   Accepted values: A string with this exact value: 'call'
  */
 
 class CameraCmos : public aditof::Camera {
@@ -106,17 +111,6 @@ class CameraCmos : public aditof::Camera {
 
     // TO DO - The methods bellow need to be converted somehow to be covered by setControl()
     // in order to not go beyond Camera API
-
-    /**
-     * @brief Read camera module memory and initialize camera with loaded data.
-     *
-     * Must be called after initialize() and powerUp(). Calibration or Firmware
-     * data are NOT loaded if already defined by initialize() config file.
-     *
-     * @return Status
-     * @see Status
-     */
-    //aditof::Status loadModuleData();
 
     /**
      * @brief Write data to  camera module memory
@@ -242,6 +236,17 @@ class CameraCmos : public aditof::Camera {
      * @return Status
      */
     aditof::Status setCameraSyncMode(uint8_t mode, uint8_t level);
+
+    /**
+     * @brief Read camera module memory and initialize camera with loaded data.
+     *
+     * Must be called after initialize() and powerUp(). Calibration or Firmware
+     * data are NOT loaded if already defined by initialize() config file.
+     *
+     * @return Status
+     * @see Status
+     */
+    aditof::Status loadModuleData();
 
   private:
     aditof::CameraDetails m_details;
