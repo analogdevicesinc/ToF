@@ -36,6 +36,7 @@
 #include <aditof/depth_sensor_interface.h>
 #include <aditof/storage_interface.h>
 #include <aditof/temperature_sensor_interface.h>
+#include <map>
 #include <unordered_map>
 // #include "calibration.h"
 // #include <aditof/tofi_compute.h>
@@ -249,10 +250,13 @@ class CameraCmos : public aditof::Camera {
     aditof::Status loadModuleData();
 
   private:
+    using noArgCallable = std::function<aditof::Status()>;
+
     aditof::CameraDetails m_details;
     std::shared_ptr<aditof::DepthSensorInterface> m_depthSensor;
     std::shared_ptr<aditof::StorageInterface> m_eeprom;
     std::unordered_map<std::string, std::string> m_controls;
+    std::map<std::string, noArgCallable> m_noArgCallables;
 
     bool m_devStarted;
     // Calibration m_calibration;

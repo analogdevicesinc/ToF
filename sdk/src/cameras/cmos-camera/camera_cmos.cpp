@@ -51,6 +51,12 @@ CameraCmos::CameraCmos(
     m_controls.emplace("syncMode", "0, 0");
     m_controls.emplace("loadModuleData", "call");
 
+    m_noArgCallables.emplace("powerUp", std::bind(&CameraCmos::powerUp, *this));
+    m_noArgCallables.emplace("powerDown",
+                             std::bind(&CameraCmos::powerUp, *this));
+    m_noArgCallables.emplace("loadModuleData",
+                             std::bind(&CameraCmos::loadModuleData, *this));
+
     // Check Depth Sensor
     if (!depthSensor) {
         LOG(WARNING) << "Invalid instance of a depth sensor";
@@ -145,13 +151,7 @@ aditof::Status CameraCmos::setControl(const std::string &control,
 
     if (m_controls.count(control) > 0) {
         if (value == "call") {
-            if (control == "powerUp")
-                return powerUp();
-            else if (control == "powerDown") {
-                return powerDown();
-            } else if (control == "loadModuleData") {
-                return loadModuleData();
-            }
+            return m_noArgCallables.at(control)();
         } else if (control == "syncMode") {
             // TO DO: parse value and get the two parameters (mode, level)
             uint8_t mode = 0;
