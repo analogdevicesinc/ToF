@@ -39,3 +39,4 @@ unsigned int ModeInfo::getNumModes() {
     return sizeof(ModeInfo::g_modeInfoData) /
            sizeof(ModeInfo::g_modeInfoData[0]);
 }
+

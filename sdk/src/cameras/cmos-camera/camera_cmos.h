@@ -39,8 +39,8 @@
 #include <map>
 #include <unordered_map>
 // #include "calibration.h"
-// #include <aditof/tofi_compute.h>
-// #include <aditof/tofi_config.h>
+ #include "tofi/tofi_compute.h"
+ #include "tofi/tofi_config.h"
 // #include "aditof_internal.h"
 // #include "tofi_utils.h"
 #include "mode_info.h"
@@ -127,6 +127,9 @@ class CameraCmos : public aditof::Camera {
     //aditof::Status writeModuleEeprom(const std::string &ccbFileName, const std::string &cfgFileName);
 
   private:
+
+    aditof::Status convertCameraMode(const std::string &modes, uint8_t *convertedMode);
+
     /**
      * @brief Default ADI module flash memory is Macronix MX25U6435F.
      * Override by defining a MODULE_EEPROM_TYPE name in configuration JSON file.
@@ -264,8 +267,8 @@ class CameraCmos : public aditof::Camera {
     uint8_t *m_calData = NULL;
     uint8_t *m_depthINIData = NULL;
     uint8_t *m_jconfigData = NULL;
-    // TofiConfig *m_tofi_config = NULL;
-    // TofiComputeContext *m_tofi_compute_context = NULL;
+    TofiConfig *m_tofi_config = NULL;
+    TofiComputeContext *m_tofi_compute_context = NULL;
 
     bool m_CameraProgrammed = false;
     std::string m_sensorFirmwareFile;

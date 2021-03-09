@@ -34,6 +34,10 @@
 #include <algorithm>
 #include <array>
 #include <glog/logging.h>
+#include "cJSON/cJSON.h"
+#include "cJSON/cJSON.c"
+#include "tofi/floatTolin.h"
+#include "tofi/tofi_utils.h"
 
 CameraCmos::CameraCmos(
     std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
@@ -41,7 +45,7 @@ CameraCmos::CameraCmos(
     std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &tSensors)
     : m_depthSensor(depthSensor), m_devStarted(false),
       m_modechange_framedrop_count(0) {
-    m_details.mode = "";
+    m_details.mode = "short_throw";
     m_details.cameraId = "";
 
     // Define some of the controls of this camera
@@ -65,6 +69,7 @@ CameraCmos::CameraCmos(
     aditof::SensorDetails sDetails;
     m_depthSensor->getDetails(sDetails);
     m_details.connection = sDetails.connectionType;
+
 }
 
 CameraCmos::~CameraCmos() {
@@ -74,7 +79,7 @@ CameraCmos::~CameraCmos() {
 }
 
 aditof::Status CameraCmos::initialize() { return aditof::Status::OK; }
-
+//For now we keep the device open all the time
 aditof::Status CameraCmos::start() { return aditof::Status::OK; }
 
 aditof::Status CameraCmos::stop() { return aditof::Status::OK; }
@@ -86,7 +91,23 @@ aditof::Status CameraCmos::setMode(const std::string &mode,
 
 aditof::Status
 CameraCmos::getAvailableModes(std::vector<std::string> &availableModes) const {
-    return aditof::Status::OK;
+    using namespace aditof;
+    Status status = Status::OK;
+
+    // Dummy data. To remove when implementig this method
+    availableModes.emplace_back("short_throw");
+    availableModes.emplace_back("long_throw");
+    availableModes.emplace_back("aHat1"); 
+    availableModes.emplace_back("pcm");
+    availableModes.emplace_back("long_throw_native");
+    availableModes.emplace_back("mp_pcm");
+    availableModes.emplace_back("chip_char");
+    availableModes.emplace_back("qmp");
+    availableModes.emplace_back("pcm8");
+    availableModes.emplace_back("ahat2");
+    availableModes.emplace_back("mp");
+
+    return status;
 }
 
 aditof::Status CameraCmos::setFrameType(const std::string &frameType) {
@@ -183,38 +204,182 @@ aditof::Status CameraCmos::getControl(const std::string &control,
     return status;
 }
 
-aditof::Status CameraCmos::initComputeLibrary(void) {
-    // TO DO
+aditof::Status CameraCmos::convertCameraMode(const std::string &modes, uint8_t *convertedMode) {
+    std::vector<std::string> availableModes;
+    aditof::Status status = aditof::Status::OK;
+    if (status != getAvailableModes(availableModes)){
+        return aditof::Status::GENERIC_ERROR;
+    };
 
-    return aditof::Status::UNAVAILABLE;
+    auto it = std::find (availableModes.begin(), availableModes.end(), modes);
+    if (it == availableModes.end()){
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    *convertedMode = (it - availableModes.begin());
+    return status;
+}
+
+aditof::Status CameraCmos::initComputeLibrary(void) {
+   aditof::Status status = aditof::Status::OK;
+
+    LOG(INFO) << "initComputeLibrary";
+    freeComputeLibrary();
+    uint8_t convertedMode;
+
+    aditof::Status configStatus;
+    size_t calFileSize = 0, jsonFileSize = 0, iniFileSize = 0;
+    std::tie(configStatus, calFileSize, jsonFileSize, iniFileSize) = loadConfigData();
+
+    status = convertCameraMode(m_details.mode, &convertedMode);
+
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Invalid mode!";
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    if (configStatus == aditof::Status::OK) {
+        ConfigFileData calData = {m_calData, calFileSize};
+        uint32_t status = ADI_TOFI_SUCCESS;
+
+        if (!m_ini_depth.empty()) {
+
+            ConfigFileData depth_ini = {m_depthINIData, iniFileSize};
+            
+            m_tofi_config = InitTofiConfig(&calData, NULL, &depth_ini, convertedMode, &status);
+        } else {
+            m_tofi_config = InitTofiConfig(&calData, NULL, NULL, convertedMode, &status);
+        }
+
+        if ((m_tofi_config == NULL) || (m_tofi_config->p_tofi_cal_config == NULL) || (status != ADI_TOFI_SUCCESS)) {
+            LOG(INFO) << "InitTofiConfig failed";
+            return aditof::Status::GENERIC_ERROR;
+
+        } else {
+            m_tofi_compute_context = InitTofiCompute(m_tofi_config->p_tofi_cal_config, &status);
+            if (m_tofi_compute_context == NULL || status != ADI_TOFI_SUCCESS) {
+                LOG(INFO) << "InitTofiCompute failed";
+                return aditof::Status::GENERIC_ERROR;
+            }
+        }
+    } else {
+        LOG(INFO) << "loadConfigData failed";
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    if (status != aditof::Status::OK) {
+        freeComputeLibrary();
+    }
+    return status;
 }
 
 aditof::Status CameraCmos::freeComputeLibrary(void) {
-    // TO DO
+       LOG(INFO) << "freeComputeLibrary";
 
-    return aditof::Status::UNAVAILABLE;
+    freeConfigData();
+
+    if (NULL != m_tofi_compute_context) {
+        FreeTofiCompute(m_tofi_compute_context);
+        m_tofi_compute_context = NULL;
+    }
+
+    if (m_tofi_config != NULL) {
+        FreeTofiConfig(m_tofi_config);
+        m_tofi_config = NULL;
+    }
+    return aditof::Status::OK;
 }
 
 std::tuple<aditof::Status, int, int, int> CameraCmos::loadConfigData(void) {
-    // TO DO
+       uint32_t calFileSize = 0, jsonFileSize = 0, iniFileSize = 0, status = 0;
+    freeConfigData();
 
-    return std::make_tuple<aditof::Status, int, int>(
-        aditof::Status::UNAVAILABLE, 0, 0, 0);
+    std::tuple<aditof::Status, int, int, int> retErr = std::make_tuple(aditof::Status::GENERIC_ERROR, 0, 0, 0);
+
+#if 0 // Jason file are hardcoded un-comment for next release
+      // 
+    jsonFileSize = GetDataFileSize(JASON_CONFIG_FILE);
+    m_jconfigData = new uint8_t[jsonFileSize];
+
+    if (m_jconfigData == NULL) {
+        return retErr;
+    }
+    status &= LoadFileContents(JASON_CONFIG_FILE, m_jconfigData,
+        &jsonFileSize);
+    if (status == 0) {
+        LOG(WARNING) << "Unable to load jfile contents\n";
+    }
+
+#endif
+
+    if (!m_ini_depth.empty()) {
+
+        iniFileSize = GetDataFileSize(m_ini_depth.c_str());
+        m_depthINIData = new uint8_t[iniFileSize];
+        if (m_depthINIData == NULL) {
+            return retErr;
+        }
+
+        status = LoadFileContents(m_ini_depth.c_str(), m_depthINIData, &iniFileSize);
+        if (status == 0) {
+            LOG(WARNING) << "Unable to load depth ini contents\n";
+            return retErr;
+        }
+    }
+
+    calFileSize = GetDataFileSize(m_ccb_calibrationFile.c_str());
+    m_calData = new uint8_t[calFileSize];
+    if (m_calData == NULL) {
+        return retErr;
+    }
+    status = LoadFileContents(m_ccb_calibrationFile.c_str(), m_calData, &calFileSize);
+    if (status == 0) {
+        LOG(INFO) << "Unable to load cfile contents\n";
+        return retErr;
+    }
+
+    return std::make_tuple(aditof::Status::OK, calFileSize, jsonFileSize, iniFileSize);
+//    return std::make_tuple(aditof::Status::UNAVAILABLE, 0, 0, 0);
 }
 
 void CameraCmos::freeConfigData(void) {
-    // TO DO
+    
+    delete (m_jconfigData);
+    m_jconfigData = NULL;
+
+    delete (m_depthINIData);
+    m_depthINIData = NULL;
+
+    delete (m_calData);
+    m_calData = NULL;
+    
 }
 
-aditof::Status CameraCmos::isValidFrame(const int /*numTotalFrames*/) {
-    // TO DO
+aditof::Status CameraCmos::isValidFrame(const int numTotalFrames) {
+    using namespace aditof;
 
-    return aditof::Status::UNAVAILABLE;
+    ModeInfo::modeInfo aModeInfo;
+    if (Status::OK != getCurrentModeInfo(aModeInfo)) {
+        return Status::GENERIC_ERROR;
+    }
+
+    if (aModeInfo.subframes == numTotalFrames) {
+        return (aditof::Status::OK);
+    }
+
+    return (aditof::Status::GENERIC_ERROR);
 }
 
 aditof::Status CameraCmos::isValidMode(const uint8_t /*hdr_mode*/) {
-    // TO DO
+  /*  using namespace aditof;
+    unsigned int mode = 0;
+    m_depthSensor->getMode(mode);
 
+    if ((static_cast<uint8_t>(mode)) == (hdr_mode)) {
+        return (aditof::Status::OK);
+    }
+
+    return (aditof::Status::GENERIC_ERROR);*/
     return aditof::Status::UNAVAILABLE;
 }
 
@@ -228,38 +393,80 @@ CameraCmos::processFrame(uint8_t * /*rawFrame*/, uint16_t * /*captureData*/,
     return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status CameraCmos::getCurrentModeInfo(ModeInfo::modeInfo & /*info*/) {
-    // TO DO
+aditof::Status CameraCmos::getCurrentModeInfo(ModeInfo::modeInfo &info) {
+    using namespace aditof;
+    Status status = Status::OK;
+    uint8_t convertedMode;
 
-    return aditof::Status::UNAVAILABLE;
+    status = convertCameraMode(m_details.mode, &convertedMode);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Invalid mode!";
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    ModeInfo *pModeInfo = ModeInfo::getInstance();
+    if (pModeInfo && 0 <= convertedMode && convertedMode < pModeInfo->getNumModes()) {
+        info = pModeInfo->getModeInfo(convertedMode);
+        return Status::OK;
+    } 
+    return Status::GENERIC_ERROR;
 }
 
 aditof::Status CameraCmos::cleanupTempFiles() {
-    // TO DO
+     using namespace aditof;
+    Status status = Status::OK;
+    for (const std::string& filename : m_tempFiles) {
+        if( std::remove( filename.c_str() ) != 0 ) {
+            LOG(WARNING) << "Failed temp file delete: " << filename;
+            status = Status::GENERIC_ERROR;
+        }
+    }
 
-    return aditof::Status::UNAVAILABLE;
+    m_tempFiles.clear();
+    return status;
 }
 
 aditof::Status CameraCmos::powerUp() {
     // TO DO
-
+//defined in device_interface.h -> depth_sensor_interface.h
     return aditof::Status::UNAVAILABLE;
 }
 
 aditof::Status CameraCmos::powerDown() {
     // TO DO
-
+//defined in device_interface.h -> depth_sensor_interface.h
     return aditof::Status::UNAVAILABLE;
 }
 
 aditof::Status CameraCmos::setCameraSyncMode(uint8_t mode, uint8_t level) {
-    // TO DO
-
-    return aditof::Status::UNAVAILABLE;
+//defined in device_interface.h -> depth_sensor_interface.h
+    //return m_depthSensor->setCameraSyncMode(mode, level);
+        return aditof::Status::UNAVAILABLE;
 }
 
 aditof::Status CameraCmos::loadModuleData() {
-    // TO DO
+  /*  using namespace aditof;
+    Status status = Status::OK;
 
-    return aditof::Status::UNAVAILABLE;
+    cleanupTempFiles();
+//EepromInterface -> StorageInterface
+    std::shared_ptr<EepromInterface> eeprom = aditof::EepromFactory::getInstance().getDevice(m_eepromDeviceName);
+    if (eeprom == nullptr) {
+        LOG(ERROR) << "Undefined module memory device";
+        return Status::GENERIC_ERROR;
+    }
+
+    std::string tempJsonFile;
+    ModuleMemory flashLoader(m_depthSensor, eeprom);
+    flashLoader.readModuleData(tempJsonFile, m_tempFiles);
+
+    m_depthSensor->cameraReset();
+
+    if (!tempJsonFile.empty()) {
+        return initialize(tempJsonFile);
+    } else {
+        LOG(ERROR) << "Error loading module data";
+        return Status::GENERIC_ERROR;
+    }*/
+        return aditof::Status::UNAVAILABLE;
 }
