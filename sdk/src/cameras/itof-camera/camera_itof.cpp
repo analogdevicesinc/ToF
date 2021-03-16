@@ -29,7 +29,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "camera_cmos.h"
+#include "camera_itof.h"
 
 #include <algorithm>
 #include <array>
@@ -39,7 +39,7 @@
 #include "tofi/floatTolin.h"
 #include "tofi/tofi_utils.h"
 
-CameraCmos::CameraCmos(
+CameraItof::CameraItof(
     std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
     std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms,
     std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &tSensors)
@@ -55,11 +55,11 @@ CameraCmos::CameraCmos(
     m_controls.emplace("syncMode", "0, 0");
     m_controls.emplace("loadModuleData", "call");
 
-    m_noArgCallables.emplace("powerUp", std::bind(&CameraCmos::powerUp, *this));
+    m_noArgCallables.emplace("powerUp", std::bind(&CameraItof::powerUp, *this));
     m_noArgCallables.emplace("powerDown",
-                             std::bind(&CameraCmos::powerUp, *this));
+                             std::bind(&CameraItof::powerUp, *this));
     m_noArgCallables.emplace("loadModuleData",
-                             std::bind(&CameraCmos::loadModuleData, *this));
+                             std::bind(&CameraItof::loadModuleData, *this));
 
     // Check Depth Sensor
     if (!depthSensor) {
@@ -72,25 +72,25 @@ CameraCmos::CameraCmos(
 
 }
 
-CameraCmos::~CameraCmos() {
+CameraItof::~CameraItof() {
     cleanupTempFiles();
     freeConfigData();
     // m_device->toggleFsync();
 }
 
-aditof::Status CameraCmos::initialize() { return aditof::Status::OK; }
+aditof::Status CameraItof::initialize() { return aditof::Status::OK; }
 //For now we keep the device open all the time
-aditof::Status CameraCmos::start() { return aditof::Status::OK; }
+aditof::Status CameraItof::start() { return aditof::Status::OK; }
 
-aditof::Status CameraCmos::stop() { return aditof::Status::OK; }
+aditof::Status CameraItof::stop() { return aditof::Status::OK; }
 
-aditof::Status CameraCmos::setMode(const std::string &mode,
+aditof::Status CameraItof::setMode(const std::string &mode,
                                    const std::string &modeFilename) {
     return aditof::Status::OK;
 }
 
 aditof::Status
-CameraCmos::getAvailableModes(std::vector<std::string> &availableModes) const {
+CameraItof::getAvailableModes(std::vector<std::string> &availableModes) const {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -110,21 +110,21 @@ CameraCmos::getAvailableModes(std::vector<std::string> &availableModes) const {
     return status;
 }
 
-aditof::Status CameraCmos::setFrameType(const std::string &frameType) {
+aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     return aditof::Status::OK;
 }
 
-aditof::Status CameraCmos::getAvailableFrameTypes(
+aditof::Status CameraItof::getAvailableFrameTypes(
     std::vector<std::string> &availableFrameTypes) const {
     return aditof::Status::OK;
 }
 
-aditof::Status CameraCmos::requestFrame(aditof::Frame *frame,
+aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
                                         aditof::FrameUpdateCallback /*cb*/) {
     return aditof::Status::OK;
 }
 
-aditof::Status CameraCmos::getDetails(aditof::CameraDetails &details) const {
+aditof::Status CameraItof::getDetails(aditof::CameraDetails &details) const {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -133,18 +133,18 @@ aditof::Status CameraCmos::getDetails(aditof::CameraDetails &details) const {
     return status;
 }
 
-std::shared_ptr<aditof::DepthSensorInterface> CameraCmos::getSensor() {
+std::shared_ptr<aditof::DepthSensorInterface> CameraItof::getSensor() {
     return m_depthSensor;
 }
 
-aditof::Status CameraCmos::getEeproms(
+aditof::Status CameraItof::getEeproms(
     std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms) {
     eeproms.clear();
 
     return aditof::Status::OK;
 }
 
-aditof::Status CameraCmos::getTemperatureSensors(
+aditof::Status CameraItof::getTemperatureSensors(
     std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &sensors) {
     sensors.clear();
 
@@ -152,7 +152,7 @@ aditof::Status CameraCmos::getTemperatureSensors(
 }
 
 aditof::Status
-CameraCmos::getAvailableControls(std::vector<std::string> &controls) const {
+CameraItof::getAvailableControls(std::vector<std::string> &controls) const {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -165,7 +165,7 @@ CameraCmos::getAvailableControls(std::vector<std::string> &controls) const {
     return status;
 }
 
-aditof::Status CameraCmos::setControl(const std::string &control,
+aditof::Status CameraItof::setControl(const std::string &control,
                                       const std::string &value) {
     using namespace aditof;
     Status status = Status::OK;
@@ -189,7 +189,7 @@ aditof::Status CameraCmos::setControl(const std::string &control,
     return status;
 }
 
-aditof::Status CameraCmos::getControl(const std::string &control,
+aditof::Status CameraItof::getControl(const std::string &control,
                                       std::string &value) const {
     using namespace aditof;
     Status status = Status::OK;
@@ -204,7 +204,7 @@ aditof::Status CameraCmos::getControl(const std::string &control,
     return status;
 }
 
-aditof::Status CameraCmos::convertCameraMode(const std::string &modes, uint8_t *convertedMode) {
+aditof::Status CameraItof::convertCameraMode(const std::string &modes, uint8_t *convertedMode) {
     std::vector<std::string> availableModes;
     aditof::Status status = aditof::Status::OK;
     if (status != getAvailableModes(availableModes)){
@@ -220,7 +220,7 @@ aditof::Status CameraCmos::convertCameraMode(const std::string &modes, uint8_t *
     return status;
 }
 
-aditof::Status CameraCmos::initComputeLibrary(void) {
+aditof::Status CameraItof::initComputeLibrary(void) {
    aditof::Status status = aditof::Status::OK;
 
     LOG(INFO) << "initComputeLibrary";
@@ -273,7 +273,7 @@ aditof::Status CameraCmos::initComputeLibrary(void) {
     return status;
 }
 
-aditof::Status CameraCmos::freeComputeLibrary(void) {
+aditof::Status CameraItof::freeComputeLibrary(void) {
        LOG(INFO) << "freeComputeLibrary";
 
     freeConfigData();
@@ -290,7 +290,7 @@ aditof::Status CameraCmos::freeComputeLibrary(void) {
     return aditof::Status::OK;
 }
 
-std::tuple<aditof::Status, int, int, int> CameraCmos::loadConfigData(void) {
+std::tuple<aditof::Status, int, int, int> CameraItof::loadConfigData(void) {
        uint32_t calFileSize = 0, jsonFileSize = 0, iniFileSize = 0, status = 0;
     freeConfigData();
 
@@ -342,7 +342,7 @@ std::tuple<aditof::Status, int, int, int> CameraCmos::loadConfigData(void) {
 //    return std::make_tuple(aditof::Status::UNAVAILABLE, 0, 0, 0);
 }
 
-void CameraCmos::freeConfigData(void) {
+void CameraItof::freeConfigData(void) {
     
     delete (m_jconfigData);
     m_jconfigData = NULL;
@@ -355,7 +355,7 @@ void CameraCmos::freeConfigData(void) {
     
 }
 
-aditof::Status CameraCmos::isValidFrame(const int numTotalFrames) {
+aditof::Status CameraItof::isValidFrame(const int numTotalFrames) {
     using namespace aditof;
 
     ModeInfo::modeInfo aModeInfo;
@@ -370,7 +370,7 @@ aditof::Status CameraCmos::isValidFrame(const int numTotalFrames) {
     return (aditof::Status::GENERIC_ERROR);
 }
 
-aditof::Status CameraCmos::isValidMode(const uint8_t /*hdr_mode*/) {
+aditof::Status CameraItof::isValidMode(const uint8_t /*hdr_mode*/) {
   /*  using namespace aditof;
     unsigned int mode = 0;
     m_depthSensor->getMode(mode);
@@ -384,7 +384,7 @@ aditof::Status CameraCmos::isValidMode(const uint8_t /*hdr_mode*/) {
 }
 
 aditof::Status
-CameraCmos::processFrame(uint8_t * /*rawFrame*/, uint16_t * /*captureData*/,
+CameraItof::processFrame(uint8_t * /*rawFrame*/, uint16_t * /*captureData*/,
                          uint8_t * /*head*/, const uint16_t /*embed_height*/,
                          const uint16_t /*embed_width*/,
                          aditof::FrameDetails & /*frameDetails*/) {
@@ -393,7 +393,7 @@ CameraCmos::processFrame(uint8_t * /*rawFrame*/, uint16_t * /*captureData*/,
     return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status CameraCmos::getCurrentModeInfo(ModeInfo::modeInfo &info) {
+aditof::Status CameraItof::getCurrentModeInfo(ModeInfo::modeInfo &info) {
     using namespace aditof;
     Status status = Status::OK;
     uint8_t convertedMode;
@@ -412,7 +412,7 @@ aditof::Status CameraCmos::getCurrentModeInfo(ModeInfo::modeInfo &info) {
     return Status::GENERIC_ERROR;
 }
 
-aditof::Status CameraCmos::cleanupTempFiles() {
+aditof::Status CameraItof::cleanupTempFiles() {
      using namespace aditof;
     Status status = Status::OK;
     for (const std::string& filename : m_tempFiles) {
@@ -426,25 +426,25 @@ aditof::Status CameraCmos::cleanupTempFiles() {
     return status;
 }
 
-aditof::Status CameraCmos::powerUp() {
+aditof::Status CameraItof::powerUp() {
     // TO DO
 //defined in device_interface.h -> depth_sensor_interface.h
     return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status CameraCmos::powerDown() {
+aditof::Status CameraItof::powerDown() {
     // TO DO
 //defined in device_interface.h -> depth_sensor_interface.h
     return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status CameraCmos::setCameraSyncMode(uint8_t mode, uint8_t level) {
+aditof::Status CameraItof::setCameraSyncMode(uint8_t mode, uint8_t level) {
 //defined in device_interface.h -> depth_sensor_interface.h
     //return m_depthSensor->setCameraSyncMode(mode, level);
         return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status CameraCmos::loadModuleData() {
+aditof::Status CameraItof::loadModuleData() {
   /*  using namespace aditof;
     Status status = Status::OK;
 
