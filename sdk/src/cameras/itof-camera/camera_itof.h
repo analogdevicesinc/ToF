@@ -29,8 +29,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef CAMERA_CMOS_H
-#define CAMERA_CMOS_H
+#ifndef CAMERA_ITOF_H
+#define CAMERA_ITOF_H
 
 #include <aditof/camera.h>
 #include <aditof/depth_sensor_interface.h>
@@ -74,13 +74,13 @@
  *   Accepted values: A string with this exact value: 'call'
  */
 
-class CameraCmos : public aditof::Camera {
+class CameraItof : public aditof::Camera {
   public:
-    CameraCmos(std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
+    CameraItof(std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
                std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms,
                std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
                    &tSensors);
-    ~CameraCmos();
+    ~CameraItof();
 
   public: // implements Camera
     aditof::Status initialize() override;
@@ -278,4 +278,4 @@ class CameraCmos : public aditof::Camera {
     std::vector<std::string> m_tempFiles;
 };
 
-#endif // CAMERA_CMOS_H
+#endif // CAMERA_ITOF_H
