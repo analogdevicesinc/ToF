@@ -51,6 +51,12 @@ Status TargetSensorEnumerator::getDepthSensors(
             break;
         }
         }
+        case SensorType::SENSOR_ADSD3100: {
+            auto sensor = std::make_shared<Addi9036Sensor>(
+                sInfo.driverPath, sInfo.subDevPath, sInfo.captureDev);
+            depthSensors.emplace_back(sensor);
+            break;
+        }
     }
 
     return Status::OK;

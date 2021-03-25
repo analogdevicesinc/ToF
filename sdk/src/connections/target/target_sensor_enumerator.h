@@ -54,6 +54,7 @@ class TargetSensorEnumerator : public aditof::SensorEnumeratorInterface {
   private:
     enum class SensorType {
         SENSOR_ADDI9036, //!< ADDI9036 CCD sensor
+        SENSOR_ADSD3100, //!< ADSD CMOS sensor
     };
 
     enum class TempSensorType {
