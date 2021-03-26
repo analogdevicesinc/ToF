@@ -124,3 +124,16 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
     m_depthData = m_fullData;
     m_irData = m_fullData + (details.width * details.height);
 }
+
+aditof::Status FrameImpl::getAvailableAttributes(
+    std::vector<std::string> & /*attributes*/) const {
+    return aditof::Status::OK;
+}
+aditof::Status FrameImpl::setAttribute(const std::string & /*attribute*/,
+                                       const std::string & /*value*/) {
+    return aditof::Status::OK;
+}
+aditof::Status FrameImpl::getAttribute(const std::string & /*attribute*/,
+                                       std::string & /*value*/) const {
+    return aditof::Status::OK;
+}
