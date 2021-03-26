@@ -64,4 +64,19 @@ Status Frame::getData(FrameDataType dataType, uint16_t **dataPtr) {
     return m_impl->getData(dataType, dataPtr);
 }
 
+Status
+Frame::getAvailableAttributes(std::vector<std::string> &attributes) const {
+    return m_impl->getAvailableAttributes(attributes);
+}
+
+Status Frame::setAttribute(const std::string &attribute,
+                           const std::string &value) {
+    return m_impl->setAttribute(attribute, value);
+}
+
+Status Frame::getAttribute(const std::string &attribute,
+                           std::string &value) const {
+    return m_impl->getAttribute(attribute, value);
+}
+
 } // namespace aditof

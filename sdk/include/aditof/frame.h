@@ -37,6 +37,7 @@
 #include "status_definitions.h"
 
 #include <memory>
+#include <vector>
 
 class FrameImpl;
 
@@ -99,6 +100,32 @@ class SDK_API Frame {
      * @return Status
      */
     Status getData(FrameDataType dataType, uint16_t **dataPtr);
+
+    /**
+     * @brief Gets the frames's list of attributes
+     * @param[out] attributes
+     * @return Status
+     */
+    virtual Status
+    getAvailableAttributes(std::vector<std::string> &attributes) const;
+
+    /**
+     * @brief Sets a specific frame attribute
+     * @param[in] attribute - Attribute name
+     * @param[in] value - Attribute value
+     * @return Status
+     */
+    virtual Status setAttribute(const std::string &attribute,
+                                const std::string &value);
+
+    /**
+     * @brief Gets the value of a specific frame attribute
+     * @param[in] attribute - Attribute name
+     * @param[out] value - Attribute value
+     * @return Status
+     */
+    virtual Status getAttribute(const std::string &attribute,
+                                std::string &value) const;
 
   private:
     std::unique_ptr<FrameImpl> m_impl;
