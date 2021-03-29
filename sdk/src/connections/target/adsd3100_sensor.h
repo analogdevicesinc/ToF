@@ -38,7 +38,9 @@
 class Adsd3100Sensor : public aditof::DepthSensorInterface,
                        public aditof::V4lBufferAccessInterface {
     public:
-        Adsd3100Sensor(const aditof::DeviceConstructionData &data);
+        Adsd3100Sensor(const std::string &driverPath,
+                            const std::string &driverSubPath,
+                            const std::string &captureDev);
         ~Adsd3100Sensor();
 
     public:
