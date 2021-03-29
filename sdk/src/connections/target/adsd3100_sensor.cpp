@@ -25,7 +25,7 @@
 #define V4L2_CID_AD_DEV_SET_CHIP_CONFIG 0xA00B00
 #define V4L2_CID_AD_DEV_READ_REG 0xA00B01
 #define CTRL_PACKET_SIZE 4096
-
+// Can be moved to target_definitions in "camera"/"platform"
 #define TEMP_SENSOR_DEV_PATH "/dev/i2c-1"
 #define LASER_TEMP_SENSOR_I2C_ADDR 0x49
 #define AFE_TEMP_SENSOR_I2C_ADDR 0x4b
@@ -86,8 +86,11 @@ static int xioctl(int fh, unsigned int request, void *arg) {
     return r;
 }
 
-Adsd3100Sensor::Adsd3100Sensor(const aditof::DeviceConstructionData &data)
-    : m_devData(data), m_implData(new Adsd3100Sensor::ImplData) {
+Adsd3100Sensor::Adsd3100Sensor(const std::string &driverPath,
+                               const std::string &driverSubPath,
+                               const std::string &captureDev)
+    : m_driverPath(driverPath), m_driverSubPath(driverSubPath),
+      m_captureDev(captureDev), m_implData(new Addi9036Sensor::ImplData) {
     m_implData->calibration_cache =
         std::unordered_map<mode_name_enum, CalibrationData>();
 }
@@ -124,86 +127,107 @@ Adsd3100Sensor::~Adsd3100Sensor() {
 }
 
 aditof::Status Adsd3100Sensor::open() {
-    using namespace aditof;
+using namespace aditof;
     Status status = Status::OK;
+
+    LOG(INFO) << "Opening device";
 
     struct stat st;
     struct v4l2_capability cap;
+    struct VideoDev *dev;
 
-    LOG(INFO) << "Opening Device";
-    std::vector<std::string> paths;
-    std::stringstream ss(m_devData.driverPath);
-    std::string token;
-    while (std::getline(ss, token, ';')) {
-        paths.push_back(token);
+    const char *devName, *subDevName, *cardName;
+
+    std::vector<std::string> driverPaths;
+    Utils::splitIntoTokens(m_driverPath, '|', driverPaths);
+
+    std::vector<std::string> driverSubPaths;
+    Utils::splitIntoTokens(m_driverSubPath, '|', driverSubPaths);
+
+    std::vector<std::string> cards;
+    std::string captureDeviceName(m_captureDev);
+    Utils::splitIntoTokens(captureDeviceName, '|', cards);
+
+    LOG(INFO) << "Looking for the following cards:";
+    for (const auto card : cards) {
+        LOG(INFO) << card;
     }
 
-    const char *devName = paths.front().c_str();
-    const char *subDevName = paths.back().c_str();
+    m_implData->numVideoDevs = driverSubPaths.size();
+    m_implData->videoDevs = new VideoDev[m_implData->numVideoDevs];
 
-    /* Open V4L2 device */
-    if (stat(devName, &st) == -1) {
-        LOG(WARNING) << "Cannot identify " << devName << "errno: " << errno
-                     << "error: " << strerror(errno);
-        return Status::GENERIC_ERROR;
-    }
+    for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
+        devName = driverPaths.at(i).c_str();
+        subDevName = driverSubPaths.at(i).c_str();
+        cardName = cards.at(i).c_str();
+        dev = &m_implData->videoDevs[i];
 
-    if (!S_ISCHR(st.st_mode)) {
-        LOG(WARNING) << devName << " is not a valid device";
-        return Status::GENERIC_ERROR;
-    }
+        /* Open V4L2 device */
+        if (stat(devName, &st) == -1) {
+            LOG(WARNING) << "Cannot identify " << devName << "errno: " << errno
+                         << "error: " << strerror(errno);
+            return Status::GENERIC_ERROR;
+        }
 
-    m_implData->fd = ::open(devName, O_RDWR | O_NONBLOCK, 0);
-    if (m_implData->fd == -1) {
-        LOG(WARNING) << "Cannot open " << devName << "errno: " << errno
-                     << "error: " << strerror(errno);
-        return Status::GENERIC_ERROR;
-    }
+        if (!S_ISCHR(st.st_mode)) {
+            LOG(WARNING) << devName << " is not a valid device";
+            return Status::GENERIC_ERROR;
+        }
 
-    if (xioctl(m_implData->fd, VIDIOC_QUERYCAP, &cap) == -1) {
-        LOG(WARNING) << devName << " VIDIOC_QUERYCAP error";
-        return Status::GENERIC_ERROR;
-    }
+        dev->fd = ::open(devName, O_RDWR | O_NONBLOCK, 0);
+        if (dev->fd == -1) {
+            LOG(WARNING) << "Cannot open " << devName << "errno: " << errno
+                         << "error: " << strerror(errno);
+            return Status::GENERIC_ERROR;
+        }
 
-    if (strcmp((char *)cap.card, CAPTURE_DEVICE_NAME)) {
-        LOG(WARNING) << "CAPTURE Device " << cap.card;
-        return Status::GENERIC_ERROR;
-    }
+        if (xioctl(dev->fd, VIDIOC_QUERYCAP, &cap) == -1) {
+            LOG(WARNING) << devName << " VIDIOC_QUERYCAP error";
+            return Status::GENERIC_ERROR;
+        }
 
-    if (!(cap.capabilities &
-          (V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE))) {
-        LOG(WARNING) << devName << " is not a video capture device";
-        return Status::GENERIC_ERROR;
-    }
+        if (strcmp((char *)cap.card, cardName)) {
+            LOG(WARNING) << "CAPTURE Device " << cap.card;
+            LOG(WARNING) << "Read " << cardName;
+            return Status::GENERIC_ERROR;
+        }
 
-    if (cap.capabilities & V4L2_CAP_VIDEO_CAPTURE_MPLANE) {
-        m_implData->videoBuffersType = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
-    } else {
-        m_implData->videoBuffersType = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    }
+        if (!(cap.capabilities &
+              (V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE))) {
+            LOG(WARNING) << devName << " is not a video capture device";
+            return Status::GENERIC_ERROR;
+        }
 
-    if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
-        LOG(WARNING) << devName << " does not support streaming i/o";
-        return Status::GENERIC_ERROR;
-    }
+        if (cap.capabilities & V4L2_CAP_VIDEO_CAPTURE_MPLANE) {
+            dev->videoBuffersType = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+        } else {
+            dev->videoBuffersType = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        }
 
-    /* Open V4L2 subdevice */
-    if (stat(subDevName, &st) == -1) {
-        LOG(WARNING) << "Cannot identify " << subDevName << " errno: " << errno
-                     << " error: " << strerror(errno);
-        return Status::GENERIC_ERROR;
-    }
+        if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
+            LOG(WARNING) << devName << " does not support streaming i/o";
+            return Status::GENERIC_ERROR;
+        }
 
-    if (!S_ISCHR(st.st_mode)) {
-        LOG(WARNING) << subDevName << " is not a valid device";
-        return Status::GENERIC_ERROR;
-    }
+        /* Open V4L2 subdevice */
+        if (stat(subDevName, &st) == -1) {
+            LOG(WARNING) << "Cannot identify " << subDevName
+                         << " errno: " << errno
+                         << " error: " << strerror(errno);
+            return Status::GENERIC_ERROR;
+        }
 
-    m_implData->sfd = ::open(subDevName, O_RDWR | O_NONBLOCK, 0);
-    if (m_implData->sfd == -1) {
-        LOG(WARNING) << "Cannot open " << subDevName << " errno: " << errno
-                     << " error: " << strerror(errno);
-        return Status::GENERIC_ERROR;
+        if (!S_ISCHR(st.st_mode)) {
+            LOG(WARNING) << subDevName << " is not a valid device";
+            return Status::GENERIC_ERROR;
+        }
+
+        dev->sfd = ::open(subDevName, O_RDWR | O_NONBLOCK, 0);
+        if (dev->sfd == -1) {
+            LOG(WARNING) << "Cannot open " << subDevName << " errno: " << errno
+                         << " error: " << strerror(errno);
+            return Status::GENERIC_ERROR;
+        }
     }
 
     return status;
