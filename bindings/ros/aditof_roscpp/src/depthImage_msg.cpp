@@ -48,7 +48,7 @@ void DepthImageMsg::FrameDataToMsg(const std::shared_ptr<Camera> &camera,
 
     setMetadataMembers(fDetails.width, fDetails.height / 2, tStamp);
 
-    uint16_t *frameData = getFrameData(frame, aditof::FrameDataType::DEPTH);
+    uint16_t *frameData = getFrameData(frame, "depth");
     if (!frameData) {
         LOG(ERROR) << "getFrameData call failed";
         return;

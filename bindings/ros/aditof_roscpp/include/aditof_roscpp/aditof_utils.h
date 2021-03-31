@@ -50,7 +50,7 @@ void applyNoiseReduction(const std::shared_ptr<aditof::Camera> &camera,
 void disableNoiseReduction(const std::shared_ptr<aditof::Camera> &camera);
 void getNewFrame(const std::shared_ptr<aditof::Camera> &camera,
                  aditof::Frame *frame);
-uint16_t *getFrameData(aditof::Frame *frame, aditof::FrameDataType dataType);
+uint16_t *getFrameData(aditof::Frame *frame, const std::string &dataType);
 
 aditof::IntrinsicParameters
 getIntrinsics(const std::shared_ptr<aditof::Camera> &camera);

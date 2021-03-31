@@ -54,18 +54,17 @@ PYBIND11_MODULE(aditofpython, m) {
 
     // Frame declarations
 
-    py::enum_<aditof::FrameDataType>(m, "FrameDataType")
-        .value("FullData", aditof::FrameDataType::FULL_DATA)
-        .value("Depth", aditof::FrameDataType::DEPTH)
-        .value("IR", aditof::FrameDataType::IR);
+    py::class_<aditof::FrameDataDetails>(m, "FrameDataDetails")
+        .def(py::init<>())
+        .def_readwrite("type", &aditof::FrameDataDetails::type)
+        .def_readwrite("width", &aditof::FrameDataDetails::width)
+        .def_readwrite("height", &aditof::FrameDataDetails::height);
 
     py::class_<aditof::FrameDetails>(m, "FrameDetails")
         .def(py::init<>())
-        .def_readwrite("width", &aditof::FrameDetails::width)
-        .def_readwrite("height", &aditof::FrameDetails::height)
-        .def_readwrite("fullDataWidth", &aditof::FrameDetails::fullDataWidth)
-        .def_readwrite("fullDataHeight", &aditof::FrameDetails::fullDataHeight)
-        .def_readwrite("type", &aditof::FrameDetails::type);
+        .def_readwrite("type", &aditof::FrameDetails::type)
+        .def_readwrite("dataDetails", &aditof::FrameDetails::dataDetails)
+        .def_readwrite("cameraMode", &aditof::FrameDetails::cameraMode);
 
     // Camera declarations
 
@@ -94,11 +93,32 @@ PYBIND11_MODULE(aditofpython, m) {
         .def_readwrite("maxDepth", &aditof::CameraDetails::maxDepth)
         .def_readwrite("bitCount", &aditof::CameraDetails::bitCount);
 
+    // Sensors declarations
+
+    py::class_<aditof::SensorDetails>(m, "SensorDetails")
+        .def(py::init<>())
+        .def_readwrite("sensorName", &aditof::SensorDetails::sensorName)
+        .def_readwrite("connectionType",
+                       &aditof::SensorDetails::connectionType);
+
+    py::class_<aditof::DepthSensorFrameContent>(m, "DepthSensorFrameContent")
+        .def(py::init<>())
+        .def_readwrite("type", &aditof::DepthSensorFrameContent::type)
+        .def_readwrite("width", &aditof::DepthSensorFrameContent::width)
+        .def_readwrite("height", &aditof::DepthSensorFrameContent::height);
+
+    py::class_<aditof::DepthSensorFrameType>(m, "DepthSensorFrameType")
+        .def(py::init<>())
+        .def_readwrite("type", &aditof::DepthSensorFrameType::type)
+        .def_readwrite("content", &aditof::DepthSensorFrameType::content)
+        .def_readwrite("width", &aditof::DepthSensorFrameType::width)
+        .def_readwrite("height", &aditof::DepthSensorFrameType::height);
+
     // Helpers
 
     struct frameData {
         uint16_t *pData;
-        aditof::FrameDetails details;
+        aditof::FrameDataDetails details;
     };
 
     py::class_<frameData>(m, "frameData", py::buffer_protocol())
@@ -226,17 +246,19 @@ PYBIND11_MODULE(aditofpython, m) {
         .def(py::init<>())
         .def("setDetails", &aditof::Frame::setDetails, py::arg("details"))
         .def("getDetails", &aditof::Frame::getDetails, py::arg("details"))
-        .def("getData",
-             [](aditof::Frame &frame,
-                aditof::FrameDataType dataType) -> frameData {
-                 frameData f;
+        .def("getDataDetails", &aditof::Frame::getDataDetails,
+             py::arg("dataType"), py::arg("dataDetails"))
+        .def(
+            "getData",
+            [](aditof::Frame &frame, const std::string &dataType) -> frameData {
+                frameData f;
 
-                 frame.getData(dataType, &f.pData);
-                 frame.getDetails(f.details);
+                frame.getData(dataType, &f.pData);
+                frame.getDataDetails(dataType, f.details);
 
-                 return f;
-             },
-             py::arg("dataType"));
+                return f;
+            },
+            py::arg("dataType"));
 
     // DepthSensorInterface
     py::class_<aditof::DepthSensorInterface,
@@ -247,7 +269,7 @@ PYBIND11_MODULE(aditofpython, m) {
         .def("stop", &aditof::DepthSensorInterface::stop)
         .def("getAvailableFrameTypes",
              [](aditof::DepthSensorInterface &device, py::list types) {
-                 std::vector<aditof::FrameDetails> typeList;
+                 std::vector<aditof::DepthSensorFrameType> typeList;
                  aditof::Status status =
                      device.getAvailableFrameTypes(typeList);
 

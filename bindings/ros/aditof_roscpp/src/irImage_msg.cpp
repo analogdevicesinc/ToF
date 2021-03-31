@@ -48,7 +48,7 @@ void IRImageMsg::FrameDataToMsg(const std::shared_ptr<Camera> &camera,
 
     setMetadataMembers(fDetails.width, fDetails.height / 2, tStamp);
 
-    uint16_t *frameData = getFrameData(frame, aditof::FrameDataType::IR);
+    uint16_t *frameData = getFrameData(frame, "ir");
     if (!frameData) {
         LOG(ERROR) << "getFrameData call failed";
         return;
