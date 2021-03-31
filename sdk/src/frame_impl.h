@@ -35,6 +35,7 @@
 #include <aditof/frame_definitions.h>
 #include <aditof/status_definitions.h>
 
+#include <memory>
 #include <stdint.h>
 #include <vector>
 
@@ -48,7 +49,9 @@ class FrameImpl {
   public: // from TofFrame
     aditof::Status setDetails(const aditof::FrameDetails &details);
     aditof::Status getDetails(aditof::FrameDetails &details) const;
-    aditof::Status getData(aditof::FrameDataType dataType, uint16_t **dataPtr);
+    aditof::Status getDataDetails(const std::string &dataType,
+                                  aditof::FrameDataDetails &details) const;
+    aditof::Status getData(const std::string &dataType, uint16_t **dataPtr);
     aditof::Status
     getAvailableAttributes(std::vector<std::string> &attributes) const;
     aditof::Status setAttribute(const std::string &attribute,
@@ -60,10 +63,9 @@ class FrameImpl {
     void allocFrameData(const aditof::FrameDetails &details);
 
   private:
+    struct ImplData;
     aditof::FrameDetails m_details;
-    uint16_t *m_depthData;
-    uint16_t *m_irData;
-    uint16_t *m_fullData;
+    std::unique_ptr<ImplData> m_implData;
 };
 
 #endif // FRAME_IMPL
