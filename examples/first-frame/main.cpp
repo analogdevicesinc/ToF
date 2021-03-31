@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
     }
 
     uint16_t *data1;
-    status = frame.getData(FrameDataType::FULL_DATA, &data1);
+    status = frame.getData("depth", &data1);
 
     if (status != Status::OK) {
         LOG(ERROR) << "Could not get frame data!";
@@ -107,8 +107,8 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    FrameDetails fDetails;
-    frame.getDetails(fDetails);
+    FrameDataDetails fDetails;
+    frame.getDataDetails("depth", fDetails);
     for (unsigned int i = 0; i < fDetails.width * fDetails.height; ++i) {
         std::cout << data1[i] << " ";
     }

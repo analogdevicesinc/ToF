@@ -780,8 +780,8 @@ void AdiTofDemoView::render() {
 
                 aditof::FrameDetails frameDetails;
                 m_capturedFrame->getDetails(frameDetails);
-                frameWidth = frameDetails.width;
-                frameHeight = frameDetails.height;
+                frameWidth = frameDetails.fullDataWidth;
+                frameHeight = frameDetails.fullDataHeight;
 
                 std::unique_lock<std::mutex> lock(m_frameCapturedMutex);
                 m_depthFrameAvailable = true;
@@ -797,8 +797,8 @@ void AdiTofDemoView::render() {
 
             aditof::FrameDetails frameDetails;
             m_capturedFrame->getDetails(frameDetails);
-            frameWidth = frameDetails.width;
-            frameHeight = frameDetails.height;
+            frameWidth = frameDetails.fullDataWidth;
+            frameHeight = frameDetails.fullDataHeight;
             m_ctrl->requestFrame();
         }
 
@@ -908,13 +908,13 @@ void AdiTofDemoView::_displayDepthImage() {
         lock.unlock(); // Lock is no longer needed
 
         uint16_t *data;
-        localFrame->getData(aditof::FrameDataType::DEPTH, &data);
+        localFrame->getData("depth", &data);
 
-        aditof::FrameDetails frameDetails;
-        localFrame->getDetails(frameDetails);
+        aditof::FrameDataDetails frameDepthDetails;
+        localFrame->getDataDetails("depth", frameDepthDetails);
 
-        int frameHeight = static_cast<int>(frameDetails.height);
-        int frameWidth = static_cast<int>(frameDetails.width);
+        int frameHeight = static_cast<int>(frameDepthDetails.height);
+        int frameWidth = static_cast<int>(frameDepthDetails.width);
 
         m_depthImage = cv::Mat(frameHeight, frameWidth, CV_16UC1, data);
         cv::Mat m_distanceImage =
@@ -980,13 +980,13 @@ void AdiTofDemoView::_displayIrImage() {
         lock.unlock(); // Lock is no longer needed
 
         uint16_t *irData;
-        localFrame->getData(aditof::FrameDataType::IR, &irData);
+        localFrame->getData("ir", &irData);
 
-        aditof::FrameDetails frameDetails;
-        localFrame->getDetails(frameDetails);
+        aditof::FrameDataDetails frameIrDetails;
+        localFrame->getDataDetails("ir", frameIrDetails);
 
-        int frameHeight = static_cast<int>(frameDetails.height);
-        int frameWidth = static_cast<int>(frameDetails.width);
+        int frameHeight = static_cast<int>(frameIrDetails.height);
+        int frameWidth = static_cast<int>(frameIrDetails.width);
         int max_value_of_IR_pixel = (1 << m_ctrl->getbitCount()) - 1;
 
         m_irImage = cv::Mat(frameHeight, frameWidth, CV_16UC1, irData);
@@ -1006,16 +1006,22 @@ void AdiTofDemoView::_displayBlendedImage() {
     std::shared_ptr<aditof::Frame> localFrame = m_capturedFrame;
 
     uint16_t *irData;
-    localFrame->getData(aditof::FrameDataType::IR, &irData);
+    localFrame->getData("ir", &irData);
 
     uint16_t *data;
-    localFrame->getData(aditof::FrameDataType::DEPTH, &data);
+    localFrame->getData("depth", &data);
 
-    aditof::FrameDetails frameDetails;
-    localFrame->getDetails(frameDetails);
+    aditof::FrameDataDetails frameIrDetails;
+    aditof::FrameDataDetails frameDepthDetails;
+    localFrame->getDataDetails("ir", frameIrDetails);
+    localFrame->getDataDetails("depth", frameDepthDetails);
 
-    int frameHeight = static_cast<int>(frameDetails.height);
-    int frameWidth = static_cast<int>(frameDetails.width);
+    if ((frameIrDetails.width != frameDepthDetails.width) ||
+        (frameIrDetails.height != frameDepthDetails.height))
+        return;
+
+    int frameHeight = static_cast<int>(frameIrDetails.height);
+    int frameWidth = static_cast<int>(frameIrDetails.width);
     int max_value_of_IR_pixel = (1 << m_ctrl->getbitCount()) - 1;
 
     m_irImage = cv::Mat(frameHeight, frameWidth, CV_16UC1, irData);

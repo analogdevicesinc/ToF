@@ -35,7 +35,7 @@
 #include <string.h>
 
 AditofDemoRecorder::AditofDemoRecorder()
-    : m_frameDetails{0, 0, 0, 0, ""}, m_recordTreadStop(true),
+    : m_frameDetails{"", {}, 0, 0, ""}, m_recordTreadStop(true),
       m_playbackThreadStop(true), m_shouldReadNewFrame(true),
       m_playBackEofReached(false), m_numberOfFrames(0) {}
 
@@ -59,8 +59,8 @@ void AditofDemoRecorder::startRecording(const std::string &fileName,
     m_recordFile.write(reinterpret_cast<const char *>(&fps),
                        sizeof(unsigned int));
 
-    m_frameDetails.height = height;
-    m_frameDetails.width = width;
+    m_frameDetails.fullDataHeight = height;
+    m_frameDetails.fullDataWidth = width;
 
     m_recordTreadStop = false;
     m_recordThread =
@@ -94,8 +94,8 @@ int AditofDemoRecorder::startPlayback(const std::string &fileName, int &fps) {
 
     m_numberOfFrames = (fileSize - sizeOfHeader) / sizeOfFrame;
 
-    m_frameDetails.height = height;
-    m_frameDetails.width = width;
+    m_frameDetails.fullDataHeight = height;
+    m_frameDetails.fullDataWidth = width;
 
     m_playbackThreadStop = false;
     m_playBackEofReached = false;
@@ -160,10 +160,10 @@ void AditofDemoRecorder::recordThread() {
         auto frame = m_recordQueue.dequeue();
 
         uint16_t *data;
-        frame->getData(aditof::FrameDataType::FULL_DATA, &data);
+        frame->getData("allData", &data);
 
-        unsigned int width = m_frameDetails.width;
-        unsigned int height = m_frameDetails.height;
+        unsigned int width = m_frameDetails.fullDataWidth;
+        unsigned int height = m_frameDetails.fullDataHeight;
 
         int size = static_cast<int>(sizeof(uint16_t) * width * height);
 
@@ -192,10 +192,10 @@ void AditofDemoRecorder::playbackThread() {
         frame->setDetails(m_frameDetails);
 
         uint16_t *frameDataLocation;
-        frame->getData(aditof::FrameDataType::FULL_DATA, &frameDataLocation);
+        frame->getData("allData", &frameDataLocation);
 
-        unsigned int width = m_frameDetails.width;
-        unsigned int height = m_frameDetails.height;
+        unsigned int width = m_frameDetails.fullDataWidth;
+        unsigned int height = m_frameDetails.fullDataHeight;
 
         if (m_playbackFile.eof()) {
             memset(frameDataLocation, 0, sizeof(uint16_t) * width * height);

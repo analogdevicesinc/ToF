@@ -44,14 +44,14 @@
 using namespace aditof;
 
 aditof::Status fromFrameToDepthMat(aditof::Frame &frame, cv::Mat &mat) {
-    aditof::FrameDetails frameDetails;
-    frame.getDetails(frameDetails);
+    aditof::FrameDataDetails frameDepthDetails;
+    frame.getDataDetails("depth", frameDepthDetails);
 
-    const int frameHeight = static_cast<int>(frameDetails.height);
-    const int frameWidth = static_cast<int>(frameDetails.width);
+    const int frameHeight = static_cast<int>(frameDepthDetails.height);
+    const int frameWidth = static_cast<int>(frameDepthDetails.width);
 
     uint16_t *depthData;
-    frame.getData(aditof::FrameDataType::DEPTH, &depthData);
+    frame.getData("depth", &depthData);
 
     if (depthData == nullptr) {
         return aditof::Status::GENERIC_ERROR;
@@ -63,14 +63,14 @@ aditof::Status fromFrameToDepthMat(aditof::Frame &frame, cv::Mat &mat) {
 }
 
 aditof::Status fromFrameToIrMat(aditof::Frame &frame, cv::Mat &mat) {
-    aditof::FrameDetails frameDetails;
-    frame.getDetails(frameDetails);
+    aditof::FrameDataDetails frameIrDetails;
+    frame.getDataDetails("ir", frameIrDetails);
 
-    const int frameHeight = static_cast<int>(frameDetails.height) / 2;
-    const int frameWidth = static_cast<int>(frameDetails.width);
+    const int frameHeight = static_cast<int>(frameIrDetails.height);
+    const int frameWidth = static_cast<int>(frameIrDetails.width);
 
     uint16_t *irData;
-    frame.getData(aditof::FrameDataType::IR, &irData);
+    frame.getData("ir", &irData);
 
     if (irData == nullptr) {
         return aditof::Status::GENERIC_ERROR;
