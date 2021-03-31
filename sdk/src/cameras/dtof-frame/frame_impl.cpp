@@ -122,15 +122,13 @@ aditof::Status FrameImpl::getData(const std::string &dataType,
 }
 
 void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
-    unsigned int totalWidth = 0;
-    unsigned int totalHeigth = 0;
+    unsigned int totalFrameSize = 0;
 
     for (const auto &details : details.dataDetails) {
-        totalWidth += details.width;
-        totalHeigth += details.height;
+        totalFrameSize += details.width * details.height;
     }
 
-    m_implData->m_allData.reset(new uint16_t[totalWidth * totalHeigth]);
+    m_implData->m_allData.reset(new uint16_t[totalFrameSize]);
     m_implData->m_dataLocations.emplace("allData", m_implData->m_allData.get());
 
     unsigned int pos = 0;
