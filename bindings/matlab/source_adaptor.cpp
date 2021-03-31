@@ -563,7 +563,7 @@ void SourceAdaptor::sendFrame(SourceAdaptor *adaptor) {
         if (frame) {
             if (adaptor->m_currentDisplayedType == aditof::FRAME_TYPE_IR_ID) {
                 uint16_t *data = nullptr;
-                frame->getData(aditof::FrameDataType::IR, &data);
+                frame->getData("ir", &data);
                 for (int i = 0; i < imageHeight * imageWidth; ++i) {
                     uint16_t value = (data[i] * (255.0 / currentMaxPixelValue));
                     imBuffer[i] = static_cast<uint8_t>(value);
@@ -572,7 +572,7 @@ void SourceAdaptor::sendFrame(SourceAdaptor *adaptor) {
                 frameType = imaqkit::frametypes::MONO8;
             } else {
                 uint16_t *data = nullptr;
-                frame->getData(aditof::FrameDataType::DEPTH, &data);
+                frame->getData("depth", &data);
                 for (int i = 0; i < imageHeight * imageWidth; ++i) {
                     int value =
                         ((static_cast<double>(data[i]) - minDepth) / (maxDepth - minDepth) * 255.0);
