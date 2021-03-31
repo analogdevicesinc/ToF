@@ -94,12 +94,21 @@ class SDK_API Frame {
     Status getDetails(FrameDetails &details) const;
 
     /**
+         * @brief Gets details of a type of data within the frame
+         * @param dataType
+         * @param[out] details
+         * @return Status
+         */
+    Status getDataDetails(const std::string &dataType,
+                          FrameDataDetails &details) const;
+
+    /**
      * @brief Gets the address where the specified data is being stored
      * @param dataType
      * @param[out] dataPtr
      * @return Status
      */
-    Status getData(FrameDataType dataType, uint16_t **dataPtr);
+    Status getData(const std::string &dataType, uint16_t **dataPtr);
 
     /**
      * @brief Gets the frames's list of attributes

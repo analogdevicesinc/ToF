@@ -61,7 +61,12 @@ Status Frame::getDetails(FrameDetails &details) const {
     return m_impl->getDetails(details);
 }
 
-Status Frame::getData(FrameDataType dataType, uint16_t **dataPtr) {
+Status Frame::getDataDetails(const std::string &dataType,
+                             FrameDataDetails &details) const {
+    return m_impl->getDataDetails(dataType, details);
+}
+
+Status Frame::getData(const std::string &dataType, uint16_t **dataPtr) {
     return m_impl->getData(dataType, dataPtr);
 }
 

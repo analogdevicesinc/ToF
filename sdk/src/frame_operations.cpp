@@ -33,9 +33,18 @@
 
 namespace aditof {
 
+bool operator==(const FrameDataDetails &lhs, const FrameDataDetails &rhs) {
+    return (lhs.type == rhs.type) && (lhs.width == rhs.width) &&
+           (lhs.height == rhs.height);
+}
+
+bool operator!=(const FrameDataDetails &lhs, const FrameDataDetails &rhs) {
+    return !(lhs == rhs);
+}
+
 bool operator==(const FrameDetails &lhs, const FrameDetails &rhs) {
-    return lhs.type == rhs.type && lhs.width == rhs.width && lhs.width &&
-           rhs.height;
+    return (lhs.type == rhs.type) && (lhs.cameraMode == rhs.cameraMode) &&
+           (lhs.dataDetails == rhs.dataDetails);
 }
 
 bool operator!=(const FrameDetails &lhs, const FrameDetails &rhs) {

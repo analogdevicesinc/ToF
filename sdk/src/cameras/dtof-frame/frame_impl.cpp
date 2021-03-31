@@ -32,40 +32,35 @@
 #include "frame_impl.h"
 #include <aditof/frame_operations.h>
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <fstream>
 #include <glog/logging.h>
+#include <unordered_map>
 
-FrameImpl::FrameImpl()
-    : m_details{0, 0, 0, 0, ""}, m_depthData(nullptr), m_irData(nullptr),
-      m_fullData(nullptr) {}
+struct FrameImpl::ImplData {
+    std::unordered_map<std::string, uint16_t *> m_dataLocations;
+    std::unique_ptr<uint16_t> m_allData;
+    size_t allDataNbBytes;
+};
 
-FrameImpl::~FrameImpl() {
-    if (m_fullData) {
-        delete[] m_fullData;
-        m_fullData = nullptr;
-    }
-}
+FrameImpl::FrameImpl() : m_implData(new FrameImpl::ImplData) {}
+
+FrameImpl::~FrameImpl() = default;
 
 FrameImpl::FrameImpl(const FrameImpl &op) {
     allocFrameData(op.m_details);
-    memcpy(m_fullData, op.m_fullData,
-           sizeof(uint16_t) * op.m_details.fullDataWidth *
-               op.m_details.fullDataHeight);
+    memcpy(m_implData->m_allData.get(), op.m_implData->m_allData.get(),
+           m_implData->allDataNbBytes);
     m_details = op.m_details;
 }
 
 FrameImpl &FrameImpl::operator=(const FrameImpl &op) {
     if (this != &op) {
-        if (m_fullData) {
-            delete[] m_fullData;
-            m_fullData = nullptr;
-        }
         allocFrameData(op.m_details);
-        memcpy(m_fullData, op.m_fullData,
-               sizeof(uint16_t) * op.m_details.fullDataWidth *
-                   op.m_details.fullDataHeight);
+        memcpy(m_implData->m_allData.get(), op.m_implData->m_allData.get(),
+               m_implData->allDataNbBytes);
         m_details = op.m_details;
     }
 
@@ -81,10 +76,6 @@ aditof::Status FrameImpl::setDetails(const aditof::FrameDetails &details) {
         return status;
     }
 
-    if (m_fullData) {
-        delete[] m_fullData;
-        m_fullData = nullptr;
-    }
     allocFrameData(details);
     m_details = details;
 
@@ -97,36 +88,61 @@ aditof::Status FrameImpl::getDetails(aditof::FrameDetails &details) const {
     return aditof::Status::OK;
 }
 
-aditof::Status FrameImpl::getData(aditof::FrameDataType dataType,
+aditof::Status
+FrameImpl::getDataDetails(const std::string &dataType,
+                          aditof::FrameDataDetails &details) const {
+    auto detailsIter =
+        std::find_if(m_details.dataDetails.begin(), m_details.dataDetails.end(),
+                     [&dataType](const aditof::FrameDataDetails &details) {
+                         return dataType == details.type;
+                     });
+    if (detailsIter == m_details.dataDetails.end()) {
+        LOG(WARNING) << "Could not find any details for type: " << dataType;
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    details = *detailsIter;
+
+    return aditof::Status::OK;
+}
+
+aditof::Status FrameImpl::getData(const std::string &dataType,
                                   uint16_t **dataPtr) {
     using namespace aditof;
 
-    switch (dataType) {
-    case FrameDataType::FULL_DATA: {
-        *dataPtr = m_fullData;
-        break;
-    }
-    case FrameDataType::IR: {
-        *dataPtr = m_irData;
-        break;
-    }
-    case FrameDataType::DEPTH: {
-        *dataPtr = m_depthData;
-        break;
-    }
+    if (m_implData->m_dataLocations.count(dataType) > 0) {
+        *dataPtr = m_implData->m_dataLocations[dataType];
+    } else {
+        dataPtr = nullptr;
+        LOG(ERROR) << dataType << " is not supported by this frame!";
+        return Status::INVALID_ARGUMENT;
     }
 
     return Status::OK;
 }
 
 void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
-    m_fullData = new uint16_t[details.width * details.height * 2];
-    m_depthData = m_fullData;
-    m_irData = m_fullData + (details.width * details.height);
+    unsigned int totalWidth = 0;
+    unsigned int totalHeigth = 0;
+
+    for (const auto &details : details.dataDetails) {
+        totalWidth += details.width;
+        totalHeigth += details.height;
+    }
+
+    m_implData->m_allData.reset(new uint16_t[totalWidth * totalHeigth]);
+    m_implData->m_dataLocations.emplace("allData", m_implData->m_allData.get());
+
+    unsigned int pos = 0;
+    for (const auto &details : details.dataDetails) {
+        m_implData->m_dataLocations.emplace(details.type,
+                                            m_implData->m_allData.get() + pos);
+        pos += details.width * details.height;
+    }
 }
 
-aditof::Status FrameImpl::getAvailableAttributes(
-    std::vector<std::string> & /*attributes*/) const {
+aditof::Status FrameImpl::getAvailableAttributes(std::vector<std::string> &
+                                                 /*attributes*/) const {
     return aditof::Status::OK;
 }
 aditof::Status FrameImpl::setAttribute(const std::string & /*attribute*/,
