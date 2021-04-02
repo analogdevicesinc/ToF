@@ -54,10 +54,10 @@ class Addi9036Sensor : public aditof::DepthSensorInterface,
     virtual aditof::Status open() override;
     virtual aditof::Status start() override;
     virtual aditof::Status stop() override;
+    virtual aditof::Status getAvailableFrameTypes(
+        std::vector<aditof::DepthSensorFrameType> &types) override;
     virtual aditof::Status
-    getAvailableFrameTypes(std::vector<aditof::FrameDetails> &types) override;
-    virtual aditof::Status
-    setFrameType(const aditof::FrameDetails &details) override;
+    setFrameType(const aditof::DepthSensorFrameType &type) override;
     virtual aditof::Status program(const uint8_t *firmware,
                                    size_t size) override;
     virtual aditof::Status getFrame(uint16_t *buffer) override;

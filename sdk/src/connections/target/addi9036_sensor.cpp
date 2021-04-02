@@ -308,7 +308,7 @@ aditof::Status Addi9036Sensor::stop() {
 }
 
 aditof::Status Addi9036Sensor::getAvailableFrameTypes(
-    std::vector<aditof::FrameDetails> &types) {
+    std::vector<aditof::DepthSensorFrameType> &types) {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -342,7 +342,7 @@ aditof::Status Addi9036Sensor::getAvailableFrameTypes(
 }
 
 aditof::Status
-Addi9036Sensor::setFrameType(const aditof::FrameDetails &details) {
+Addi9036Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     using namespace aditof;
     Status status = Status::OK;
     struct VideoDev *dev;

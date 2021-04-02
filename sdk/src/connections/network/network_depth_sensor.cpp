@@ -199,7 +199,7 @@ aditof::Status NetworkDepthSensor::stop() {
 }
 
 aditof::Status NetworkDepthSensor::getAvailableFrameTypes(
-    std::vector<aditof::FrameDetails> &types) {
+    std::vector<aditof::DepthSensorFrameType> &types) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -253,7 +253,7 @@ aditof::Status NetworkDepthSensor::getAvailableFrameTypes(
 }
 
 aditof::Status
-NetworkDepthSensor::setFrameType(const aditof::FrameDetails &details) {
+NetworkDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
