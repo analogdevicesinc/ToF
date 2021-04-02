@@ -35,6 +35,7 @@
 #include "aditof/connections.h"
 
 #include <string>
+#include <vector>
 
 /**
  * @brief Namespace aditof
@@ -55,6 +56,54 @@ struct SensorDetails {
      * @brief The type of connection with the sensor
      */
     ConnectionType connectionType;
+};
+
+/**
+ * @struct DepthSensorFrameContent
+ * @brief Describes the content of a frame. For example: A frame could contain
+ * depth and IR data.
+ */
+struct DepthSensorFrameContent {
+    /**
+     * @brief The type of frame content supported by the sensor
+     */
+    std::string type;
+
+    /**
+     * @brief The width of the frame content that the sensor can capture
+     */
+    unsigned int width;
+
+    /**
+     * @brief The height of the frame content that the sensor can capture
+     */
+    unsigned int height;
+};
+
+/**
+ * @struct DepthSensorFrameFormat
+ * @brief Describes the type of entire frame that a depth sensor can capture and transmit
+ */
+struct DepthSensorFrameType {
+    /**
+     * @brief The type of entire frame supported by the sensor
+     */
+    std::string type;
+
+    /**
+     * @brief Describes the content of the entire frame
+     */
+    std::vector<struct DepthSensorFrameContent> content;
+
+    /**
+     * @brief The width of the entire frame that the sensor can capture
+     */
+    unsigned int width;
+
+    /**
+     * @brief The height of the entire frame that the sensor can capture
+     */
+    unsigned int height;
 };
 
 } // namespace aditof
