@@ -7,7 +7,6 @@
 #include "adsd3100_sensor.h"
 #include "aditof/frame_operations.h"
 #include "utils.h"
-//#include <aditof/frame_operations.h>
 
 #include <algorithm>
 #include <arm_neon.h>
