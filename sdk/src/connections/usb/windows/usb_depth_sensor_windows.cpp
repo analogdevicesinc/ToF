@@ -514,16 +514,15 @@ aditof::Status UsbDepthSensor::getAvailableFrameTypes(
     Status status = Status::OK;
 
     // Hardcored for now
-    FrameDetails details;
+    DepthSensorFrameType frameType;
 
-    details.width = aditof::USB_FRAME_WIDTH;
-    details.height = aditof::USB_FRAME_HEIGHT;
-    details.fullDataWidth = details.width;
-    details.fullDataHeight = details.height * 2; //TODO
-    details.type = "depth_ir";
-    types.push_back(details);
+    frameType.type = "depth_ir";
+    frameType.width = aditof::USB_FRAME_WIDTH;
+    frameType.height = aditof::USB_FRAME_HEIGHT * 2;
+    types.push_back(frameType);
 
     // TO DO: Should get these details from the hardware/firmware
+    // Get the frame content information via UVC gadget
 
     return status;
 }
@@ -541,8 +540,8 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     }
     VIDEOINFOHEADER *pVih = reinterpret_cast<VIDEOINFOHEADER *>(
         m_implData->handle.pAmMediaType->pbFormat);
-    HEADER(pVih)->biWidth = details.fullDataWidth;
-    HEADER(pVih)->biHeight = details.fullDataHeight;
+    HEADER(pVih)->biWidth = type.width;
+    HEADER(pVih)->biHeight = type.height;
 
     hr = m_implData->handle.streamConf->SetFormat(
         m_implData->handle.pAmMediaType);

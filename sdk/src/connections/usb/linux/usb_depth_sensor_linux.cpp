@@ -167,16 +167,15 @@ aditof::Status UsbDepthSensor::getAvailableFrameTypes(
     Status status = Status::OK;
 
     // Hardcored for now
-    FrameDetails details;
+    DepthSensorFrameType frameType;
 
-    details.width = aditof::USB_FRAME_WIDTH;
-    details.height = aditof::USB_FRAME_HEIGHT;
-    details.fullDataWidth = details.width;
-    details.fullDataHeight = details.height * 2; //TODO
-    details.type = "depth_ir";
-    types.push_back(details);
+    frameType.type = "depth_ir";
+    frameType.width = aditof::USB_FRAME_WIDTH;
+    frameType.height = aditof::USB_FRAME_HEIGHT * 2;
+    types.push_back(frameType);
 
     // TO DO: Should get these details from the hardware/firmware
+    // Get the frame content information via UVC gadget
 
     return status;
 }
@@ -190,8 +189,8 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     // Buggy driver paranoia.
     unsigned int min;
 
-    m_implData->fmt.fmt.pix.width = details.fullDataWidth;
-    m_implData->fmt.fmt.pix.height = details.fullDataHeight;
+    m_implData->fmt.fmt.pix.width = type.width;
+    m_implData->fmt.fmt.pix.height = type.height;
 
     min = m_implData->fmt.fmt.pix.width * 2;
     if (m_implData->fmt.fmt.pix.bytesperline < min)
