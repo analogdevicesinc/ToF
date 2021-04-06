@@ -74,9 +74,8 @@ struct VideoDev {
 struct Addi9036Sensor::ImplData {
     uint8_t numVideoDevs;
     struct VideoDev *videoDevs;
-    aditof::FrameDetails frameDetails;
-    ImplData()
-        : numVideoDevs(1), videoDevs(nullptr), frameDetails{0, 0, 0, 0, ""} {}
+    aditof::DepthSensorFrameType frameType;
+    ImplData() : numVideoDevs(1), videoDevs(nullptr), frameType{"", {}, 0, 0} {}
 };
 
 // TO DO: This exists in linux_utils.h which is not included on Dragoboard.
@@ -312,31 +311,39 @@ aditof::Status Addi9036Sensor::getAvailableFrameTypes(
     using namespace aditof;
     Status status = Status::OK;
 
-    FrameDetails details;
+    DepthSensorFrameContent depthContent;
+    depthContent.width = aditof::FRAME_WIDTH;
+    depthContent.height = aditof::FRAME_HEIGHT;
+    depthContent.type = "depth";
 
-    details.width = aditof::FRAME_WIDTH;
-    details.height = aditof::FRAME_HEIGHT;
-    details.fullDataWidth = details.width;
-    details.fullDataHeight =
-        details.height * ((m_implData->numVideoDevs == 2) ? 1 : 2);
-    details.type = "depth_ir";
-    types.push_back(details);
+    DepthSensorFrameContent irContent;
+    irContent.width = aditof::FRAME_WIDTH;
+    irContent.height = aditof::FRAME_HEIGHT;
+    irContent.type = "ir";
 
-    details.width = aditof::FRAME_WIDTH;
-    details.height = aditof::FRAME_HEIGHT;
-    details.fullDataWidth = details.width;
-    details.fullDataHeight =
-        details.height * ((m_implData->numVideoDevs == 2) ? 1 : 2);
-    details.type = "depth_only";
-    types.push_back(details);
+    DepthSensorFrameType depthIrFrame;
+    depthIrFrame.type = "depth_ir";
+    depthIrFrame.width = depthContent.width;
+    depthIrFrame.height = depthContent.height + depthContent.height;
+    depthIrFrame.content.emplace_back(depthContent);
+    depthIrFrame.content.emplace_back(irContent);
 
-    details.width = aditof::FRAME_WIDTH;
-    details.height = aditof::FRAME_HEIGHT;
-    details.fullDataWidth = details.width;
-    details.fullDataHeight =
-        details.height * ((m_implData->numVideoDevs == 2) ? 1 : 2);
-    details.type = "ir_only";
-    types.push_back(details);
+    DepthSensorFrameType depthOnlyFrame;
+    depthOnlyFrame.type = "depth_only";
+    depthOnlyFrame.width = depthContent.width;
+    depthOnlyFrame.height = depthContent.height;
+    depthOnlyFrame.content.emplace_back(depthContent);
+
+    DepthSensorFrameType irOnlyFrame;
+    irOnlyFrame.type = "ir_only";
+    irOnlyFrame.width = irContent.width;
+    irOnlyFrame.height = irContent.height;
+    irOnlyFrame.content.emplace_back(irContent);
+
+    types.clear();
+    types.emplace_back(depthIrFrame);
+    types.emplace_back(depthOnlyFrame);
+    types.emplace_back(irOnlyFrame);
 
     return status;
 }
@@ -354,7 +361,7 @@ Addi9036Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
     for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
         dev = &m_implData->videoDevs[i];
-        if (details != m_implData->frameDetails) {
+        if (type.type != m_implData->frameType.type) {
             for (unsigned int i = 0; i < dev->nVideoBuffers; i++) {
                 if (munmap(dev->videoBuffers[i].start,
                            dev->videoBuffers[i].length) == -1) {
@@ -376,8 +383,8 @@ Addi9036Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 #if defined TOYBRICK //???
         fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_SBGGR12;
 #endif
-        fmt.fmt.pix.width = details.fullDataWidth;
-        fmt.fmt.pix.height = details.fullDataHeight;
+        fmt.fmt.pix.width = type.width;
+        fmt.fmt.pix.height = type.height / m_implData->numVideoDevs;
 
         if (xioctl(dev->fd, VIDIOC_S_FMT, &fmt) == -1) {
             LOG(WARNING) << "Setting Pixel Format error, errno: " << errno
@@ -443,7 +450,7 @@ Addi9036Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         }
     }
 
-    m_implData->frameDetails = details;
+    m_implData->frameType = type;
 
     return status;
 }
@@ -543,8 +550,8 @@ aditof::Status Addi9036Sensor::getFrame(uint16_t *buffer) {
     unsigned int buf_data_len;
     uint8_t *pdata[m_implData->numVideoDevs];
 
-    width = m_implData->frameDetails.width;
-    height = m_implData->frameDetails.height;
+    width = m_implData->frameType.content.begin()->width;
+    height = m_implData->frameType.content.begin()->height;
 
     for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
         dev = &m_implData->videoDevs[i];
@@ -584,16 +591,16 @@ aditof::Status Addi9036Sensor::getFrame(uint16_t *buffer) {
     } else if (!isBufferPacked(buf[0], width, height)) {
         // TODO: investigate optimizations for this (arm neon / 1024 bytes
         // chunks)
-        if (m_implData->frameDetails.type == "depth_only") {
+        if (m_implData->frameType.type == "depth_only") {
             memcpy(buffer, pdata[0], buf[0].bytesused);
-        } else if (m_implData->frameDetails.type == "ir_only") {
+        } else if (m_implData->frameType.type == "ir_only") {
 
             memcpy(buffer + (width * height), pdata[0], buf[0].bytesused);
         } else {
 #ifdef TOYBRICK
-            unsigned int fullDataWidth = m_implData->frameDetails.fullDataWidth;
+            unsigned int fullDataWidth = m_implData->frameType.width;
             unsigned int fullDataHeight =
-                m_implData->frameDetails.fullDataHeight;
+                m_implData->frameType.height / m_implData->numVideoDevs;
             uint32_t j = 0, j1 = width * height;
             for (uint32_t i = 0; i < fullDataHeight; i += 2) {
                 memcpy(buffer + j, pdata[0] + i * width * 2, width * 2);
@@ -631,8 +638,8 @@ aditof::Status Addi9036Sensor::getFrame(uint16_t *buffer) {
         uint16_t *irPtr = buffer + (width * height);
         unsigned int j = 0;
 
-        if (m_implData->frameDetails.type == "depth_only" ||
-                m_implData->frameDetails.type == "ir_only") {
+        if (m_implData->frameType.type == "depth_only" ||
+                m_implData->frameType.type == "ir_only") {
                 buf_data_len /= 2;
         }
         /* The frame is read from the device as an array of uint8_t's where
@@ -668,10 +675,10 @@ aditof::Status Addi9036Sensor::getFrame(uint16_t *buffer) {
             toStore.val[0] = aBuffer;
             toStore.val[1] = bBuffer;
 
-            if (m_implData->frameDetails.type == "depth_only") {
+            if (m_implData->frameType.type == "depth_only") {
                 vst2q_u16(depthPtr, toStore);
                 depthPtr += 16;
-            } else if (m_implData->frameDetails.type == "ir_only") {
+            } else if (m_implData->frameType.type == "ir_only") {
                 vst2q_u16(irPtr, toStore);
                 irPtr += 16;
             } else {
@@ -853,8 +860,8 @@ aditof::Status Addi9036Sensor::getInternalBufferPrivate(
         dev = &m_implData->videoDevs[0];
 
     *buffer = static_cast<uint8_t *>(dev->videoBuffers[buf.index].start);
-    buf_data_len =
-        m_implData->frameDetails.width * m_implData->frameDetails.height * 3;
+    buf_data_len = m_implData->frameType.content.front().width *
+                   m_implData->frameType.content.front().height * 3;
 
     return aditof::Status::OK;
 }
