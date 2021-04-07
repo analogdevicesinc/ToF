@@ -174,9 +174,9 @@ aditof::Status UsbDepthSensor::open() {
         return status;
     }
     //TODO remove this, for testing only
-    for (aditof::FrameDetails details: m_frameDetails){
-        LOG(INFO) << details.type << " " << details.width << " " << details.height << " " << details.dataDetails.size();
-    }
+    // for (aditof::FrameDetails details: m_frameDetails){
+    //     LOG(INFO) << details.type << " " << details.width << " " << details.height << " " << details.dataDetails.size();
+    // }
 
     m_implData->opened = true;
 

@@ -89,10 +89,8 @@ aditof::Status UsbUtils::getFrameDetails(std::vector<aditof::FrameDetails>& fram
     for (const payload::FrameDetails& frameDetailsPayload : frameDetailsVectorPayload.framedetails()){
         aditof::FrameDetails frameDetails;
 
-        frameDetails.width = frameDetailsPayload.width();
-        frameDetails.height = frameDetailsPayload.height();
         frameDetails.type = frameDetailsPayload.type();
-        frameDetails.cameraMode = frameDetailsPayload.cameraMode();
+        frameDetails.cameraMode = frameDetailsPayload.cameramode();
 
         for(const payload::FrameDataDetails& dataDetailsPayload : frameDetailsPayload.datadetails()){
             FrameDataDetails frameDataDetails;
@@ -100,7 +98,7 @@ aditof::Status UsbUtils::getFrameDetails(std::vector<aditof::FrameDetails>& fram
             frameDataDetails.width = dataDetailsPayload.width();
             frameDataDetails.height = dataDetailsPayload.height();
             frameDataDetails.type = dataDetailsPayload.type();
-            details.dataDetails.push_back(frameDataDetails);
+            frameDetails.dataDetails.push_back(frameDataDetails);
         }
 
         frameDetailsVector.push_back(frameDetails);
