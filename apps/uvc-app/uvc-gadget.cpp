@@ -1967,8 +1967,6 @@ void serializeAvailableFrameTypes(std::vector<aditof::FrameDetails> frameDetails
     for (const aditof::FrameDetails& frameDetails : frameDetailsVector){
         uvc_payload::FrameDetails* frameDetailsPayload = frameDetailsVectorPayload.add_framedetails();
         frameDetailsPayload->set_type(frameDetails.type);
-        frameDetailsPayload->set_width(frameDetails.width);
-        frameDetailsPayload->set_height(frameDetails.height);
         frameDetailsPayload->set_cameraMode(frameDetails.cameraMode);
 
         for (const aditof::FrameDataDetails& frameDataDetails : frameDetails.dataDetails){

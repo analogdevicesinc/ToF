@@ -14,9 +14,7 @@ message FrameDetails
 {
   string type = 10;
   repeated FrameDataDetails dataDetails = 20;
-  uint32 width = 30;   // The width of the frame
-  uint32 height = 40;  // The height of the frame
-  string cameraMode = 50;    // The type of the frame
+  string cameraMode = 30;    // The type of the frame
 }
 
 message FrameDetailsVector
