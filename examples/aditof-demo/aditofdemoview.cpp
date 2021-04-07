@@ -205,8 +205,7 @@ void AdiTofDemoView::render() {
     bool recordEnabled = false;
     bool playbackEnabled = false;
 
-    unsigned int frameHeight = 0;
-    unsigned int frameWidth = 0;
+    std::vector<aditof::FrameDataDetails> frameDataDetails;
 
     int numberOfFrames = 0;
 
@@ -458,7 +457,7 @@ void AdiTofDemoView::render() {
                     oldStatus = status;
                     status = "Recording into " + fileName;
                     m_ctrl->startRecording(
-                        fileName, frameHeight, frameWidth,
+                        fileName, frameDataDetails,
                         static_cast<unsigned int>(displayFps));
                 } else {
                     m_ctrl->stopRecording();
@@ -780,8 +779,7 @@ void AdiTofDemoView::render() {
 
                 aditof::FrameDetails frameDetails;
                 m_capturedFrame->getDetails(frameDetails);
-                frameWidth = frameDetails.fullDataWidth;
-                frameHeight = frameDetails.fullDataHeight;
+                frameDataDetails = frameDetails.dataDetails;
 
                 std::unique_lock<std::mutex> lock(m_frameCapturedMutex);
                 m_depthFrameAvailable = true;
@@ -797,8 +795,7 @@ void AdiTofDemoView::render() {
 
             aditof::FrameDetails frameDetails;
             m_capturedFrame->getDetails(frameDetails);
-            frameWidth = frameDetails.fullDataWidth;
-            frameHeight = frameDetails.fullDataHeight;
+            frameDataDetails = frameDetails.dataDetails;
             m_ctrl->requestFrame();
         }
 
