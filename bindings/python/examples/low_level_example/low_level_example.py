@@ -46,6 +46,9 @@ print("system.getCameraList()", status)
 
 camera1 = cameras[0]
 
+status = camera1.initialize()
+print("camera1.initialize()", status)
+
 modes = []
 status = camera1.getAvailableModes(modes)
 print("system.getAvailableModes()", status)
@@ -55,9 +58,6 @@ types = []
 status = camera1.getAvailableFrameTypes(types)
 print("system.getAvailableFrameTypes()", status)
 print(types)
-
-status = camera1.initialize()
-print("camera1.initialize()", status)
 
 camDetails = tof.CameraDetails()
 status = camera1.getDetails(camDetails)

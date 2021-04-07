@@ -177,6 +177,10 @@ if __name__ == "__main__":
     if not status:
         print("system.getCameraList() failed with status: ", status)
 
+    status = cameras[0].initialize()
+    if not status:
+        print("cameras[0].initialize() failed with status: ", status)
+
     modes = []
     status = cameras[0].getAvailableModes(modes)
     if not status:
@@ -186,10 +190,6 @@ if __name__ == "__main__":
     status = cameras[0].getAvailableFrameTypes(types)
     if not status:
         print("system.getAvailableFrameTypes() failed with status: ", status)
-
-    status = cameras[0].initialize()
-    if not status:
-        print("cameras[0].initialize() failed with status: ", status)
 
     status = cameras[0].setFrameType(types[0])
     if not status:
