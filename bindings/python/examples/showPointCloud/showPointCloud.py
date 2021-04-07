@@ -91,10 +91,10 @@ if __name__ == "__main__":
     # Get the first frame for details
     frame = tof.Frame()
     status = cameras[0].requestFrame(frame)
-    frameDetails = tof.FrameDetails()
-    status = frame.getDetails(frameDetails)
-    width = frameDetails.width
-    height = int(frameDetails.height / 2)
+    frameDataDetails = tof.FrameDataDetails()
+    status = frame.getDataDetails("depth", frameDataDetails)
+    width = frameDataDetails.width
+    height = frameDataDetails.height
 
     # Get intrinsic parameters from camera
     intrinsicParameters = camDetails.intrinsics
@@ -130,8 +130,8 @@ if __name__ == "__main__":
         if not status:
             print("cameras[0].requestFrame() failed with status: ", status)
 
-        depth_map = np.array(frame.getData(tof.FrameDataType.Depth), dtype="uint16", copy=False)
-        ir_map = np.array(frame.getData(tof.FrameDataType.IR), dtype="uint16", copy=False)
+        depth_map = np.array(frame.getData("depth"), dtype="uint16", copy=False)
+        ir_map = np.array(frame.getData("ir"), dtype="uint16", copy=False)
 
         # Create the IR image
         ir_map = ir_map[0: int(ir_map.shape[0] / 2), :]
