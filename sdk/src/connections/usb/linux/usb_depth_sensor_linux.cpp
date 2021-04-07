@@ -142,7 +142,7 @@ aditof::Status getDepthSensorFrameTypesInternal(int fd,
 aditof::Status UsbDepthSensor::open() {
     using namespace aditof;
     Status status = Status::OK;
-    std::string availableFrameTypesBlob;
+    std::string availableFrameTypesBlob = "";
 
     LOG(INFO) << "Opening device";
 
@@ -166,17 +166,21 @@ aditof::Status UsbDepthSensor::open() {
 
     status = getDepthSensorFrameTypesInternal(m_implData->fd, availableFrameTypesBlob);
     if (status != Status::OK){
+        LOG(ERROR) << "cannot get frame types from target";
         return status;
     }
 
+    LOG(INFO) << availableFrameTypesBlob;
+
     status = UsbUtils::getDepthSensorTypes(m_depthSensorFrameTypes, availableFrameTypesBlob);
     if (status != Status::OK){
+        LOG(ERROR) << "cannot deserialize frame types";
         return status;
     }
     //TODO remove this, for testing only
-    // for (aditof::FrameDetails details: m_frameDetails){
-    //     LOG(INFO) << details.type << " " << details.width << " " << details.height << " " << details.dataDetails.size();
-    // }
+    for (aditof::DepthSensorFrameType details: m_depthSensorFrameTypes){
+        LOG(INFO) << details.type << " " << details.width << " " << details.height << " " << details.content.size();
+    }
 
     m_implData->opened = true;
 
