@@ -227,11 +227,11 @@ aditof::Status AdiTofDemoController::readAFEregister(uint16_t *address,
     return camSensor->readAfeRegisters(address, data, noOfEntries);
 }
 
-void AdiTofDemoController::startRecording(const std::string &fileName,
-                                          unsigned int height,
-                                          unsigned int width,
-                                          unsigned int fps) {
-    m_recorder->startRecording(fileName, height, width, fps);
+void AdiTofDemoController::startRecording(
+    const std::string &fileName,
+    const std::vector<aditof::FrameDataDetails> &frameDataDetails,
+    unsigned int fps) {
+    m_recorder->startRecording(fileName, frameDataDetails, fps);
 }
 
 void AdiTofDemoController::stopRecording() { m_recorder->stopRecording(); }

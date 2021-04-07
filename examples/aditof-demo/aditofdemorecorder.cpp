@@ -35,9 +35,9 @@
 #include <string.h>
 
 AditofDemoRecorder::AditofDemoRecorder()
-    : m_frameDetails{"", {}, 0, 0, ""}, m_recordTreadStop(true),
-      m_playbackThreadStop(true), m_shouldReadNewFrame(true),
-      m_playBackEofReached(false), m_numberOfFrames(0) {}
+    : m_frameDataDetails{}, m_recordTreadStop(true), m_playbackThreadStop(true),
+      m_shouldReadNewFrame(true), m_playBackEofReached(false),
+      m_numberOfFrames(0) {}
 
 AditofDemoRecorder::~AditofDemoRecorder() {
     if (m_recordFile.is_open()) {
@@ -48,19 +48,26 @@ AditofDemoRecorder::~AditofDemoRecorder() {
     }
 }
 
-void AditofDemoRecorder::startRecording(const std::string &fileName,
-                                        unsigned int height, unsigned int width,
-                                        unsigned int fps) {
+void AditofDemoRecorder::startRecording(
+    const std::string &fileName,
+    const std::vector<aditof::FrameDataDetails> &frameDataDetails,
+    unsigned int fps) {
     m_recordFile.open(fileName, std::ios::binary);
-    m_recordFile.write(reinterpret_cast<const char *>(&height),
-                       sizeof(unsigned int));
-    m_recordFile.write(reinterpret_cast<const char *>(&width),
-                       sizeof(unsigned int));
     m_recordFile.write(reinterpret_cast<const char *>(&fps),
                        sizeof(unsigned int));
+    unsigned int numDetails = frameDataDetails.size();
+    m_recordFile.write(reinterpret_cast<const char *>(&numDetails),
+                       sizeof(unsigned int));
+    for (const auto &i : frameDataDetails) {
+        m_recordFile.write(i.type.c_str(), i.type.size());
+        m_recordFile.write("\n", 1);
+        m_recordFile.write(reinterpret_cast<const char *>(&i.height),
+                           sizeof(unsigned int));
+        m_recordFile.write(reinterpret_cast<const char *>(&i.width),
+                           sizeof(unsigned int));
+    }
 
-    m_frameDetails.fullDataHeight = height;
-    m_frameDetails.fullDataWidth = width;
+    m_frameDataDetails = frameDataDetails;
 
     m_recordTreadStop = false;
     m_recordThread =
@@ -76,26 +83,38 @@ void AditofDemoRecorder::stopRecording() {
 }
 
 int AditofDemoRecorder::startPlayback(const std::string &fileName, int &fps) {
-    unsigned int height = 0;
-    unsigned int width = 0;
-
     m_playbackFile.open(fileName, std::ios::binary);
 
     m_playbackFile.seekg(0, std::ios_base::end);
     int fileSize = m_playbackFile.tellg();
     m_playbackFile.seekg(0, std::ios_base::beg);
 
-    m_playbackFile.read(reinterpret_cast<char *>(&height), sizeof(int));
-    m_playbackFile.read(reinterpret_cast<char *>(&width), sizeof(int));
     m_playbackFile.read(reinterpret_cast<char *>(&fps), sizeof(int));
+    unsigned int numDetails;
+    m_playbackFile.read(reinterpret_cast<char *>(&numDetails),
+                        sizeof(unsigned int));
 
-    int sizeOfHeader = 3 * sizeof(int);
-    int sizeOfFrame = sizeof(uint16_t) * height * width;
+    m_frameDataDetails.clear();
+    for (unsigned int i = 0; i < numDetails; ++i) {
+        aditof::FrameDataDetails fDetails;
+
+        std::getline(m_playbackFile, fDetails.type);
+        m_playbackFile.read(reinterpret_cast<char *>(&fDetails.height),
+                            sizeof(unsigned int));
+        m_playbackFile.read(reinterpret_cast<char *>(&fDetails.width),
+                            sizeof(unsigned int));
+        m_frameDataDetails.emplace_back(fDetails);
+    }
+
+    int sizeOfFrame = 0;
+    int sizeOfHeader = sizeof(fps);
+    for (const auto &i : m_frameDataDetails) {
+        sizeOfHeader += i.type.size() + 1; // 1 is for the new line character
+        sizeOfHeader += sizeof(i.width) + sizeof(i.height);
+        sizeOfFrame += sizeof(uint16_t) * i.height * i.width;
+    }
 
     m_numberOfFrames = (fileSize - sizeOfHeader) / sizeOfFrame;
-
-    m_frameDetails.fullDataHeight = height;
-    m_frameDetails.fullDataWidth = width;
 
     m_playbackThreadStop = false;
     m_playBackEofReached = false;
@@ -159,15 +178,13 @@ void AditofDemoRecorder::recordThread() {
 
         auto frame = m_recordQueue.dequeue();
 
-        uint16_t *data;
-        frame->getData("allData", &data);
-
-        unsigned int width = m_frameDetails.fullDataWidth;
-        unsigned int height = m_frameDetails.fullDataHeight;
-
-        int size = static_cast<int>(sizeof(uint16_t) * width * height);
-
-        m_recordFile.write(reinterpret_cast<const char *>(data), size);
+        for (const auto &i : m_frameDataDetails) {
+            uint16_t *data;
+            frame->getData(i.type, &data);
+            unsigned int size = static_cast<unsigned int>(sizeof(uint16_t) *
+                                                          i.width * i.height);
+            m_recordFile.write(reinterpret_cast<const char *>(data), size);
+        }
     }
 }
 
@@ -189,21 +206,25 @@ void AditofDemoRecorder::playbackThread() {
         std::shared_ptr<aditof::Frame> frame =
             std::make_shared<aditof::Frame>();
         ;
-        frame->setDetails(m_frameDetails);
 
-        uint16_t *frameDataLocation;
-        frame->getData("allData", &frameDataLocation);
+        aditof::FrameDetails frameDetails;
+        frameDetails.dataDetails = m_frameDataDetails;
+        frame->setDetails(frameDetails);
 
-        unsigned int width = m_frameDetails.fullDataWidth;
-        unsigned int height = m_frameDetails.fullDataHeight;
+        for (const auto &i : m_frameDataDetails) {
+            uint16_t *frameDataLocation;
+            frame->getData(i.type, &frameDataLocation);
 
-        if (m_playbackFile.eof()) {
-            memset(frameDataLocation, 0, sizeof(uint16_t) * width * height);
-            m_playBackEofReached = true;
-        } else {
-            int size = static_cast<int>(sizeof(uint16_t) * width * height);
-            m_playbackFile.read(reinterpret_cast<char *>(frameDataLocation),
-                                size);
+            if (m_playbackFile.eof()) {
+                memset(frameDataLocation, 0,
+                       sizeof(uint16_t) * i.width * i.height);
+                m_playBackEofReached = true;
+            } else {
+                int size =
+                    static_cast<int>(sizeof(uint16_t) * i.width * i.height);
+                m_playbackFile.read(reinterpret_cast<char *>(frameDataLocation),
+                                    size);
+            }
         }
 
         m_playbackQueue.enqueue(frame);

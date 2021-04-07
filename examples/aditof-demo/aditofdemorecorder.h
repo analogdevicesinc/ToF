@@ -44,8 +44,10 @@ class AditofDemoRecorder {
     AditofDemoRecorder();
     ~AditofDemoRecorder();
 
-    void startRecording(const std::string &fileName, unsigned int height,
-                        unsigned int width, unsigned int fps);
+    void startRecording(
+        const std::string &fileName,
+        const std::vector<aditof::FrameDataDetails> &frameDataDetails,
+        unsigned int fps);
     void stopRecording();
 
     int startPlayback(const std::string &fileName, int &fps);
@@ -74,7 +76,7 @@ class AditofDemoRecorder {
     std::ofstream m_recordFile;
     std::ifstream m_playbackFile;
 
-    aditof::FrameDetails m_frameDetails;
+    std::vector<aditof::FrameDataDetails> m_frameDataDetails;
 
     std::thread m_recordThread;
     std::thread m_playbackThread;
