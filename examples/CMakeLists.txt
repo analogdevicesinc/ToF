@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(examples)
 
-add_subdirectory(aditof-demo)
-add_subdirectory(aditof-test)
+# add_subdirectory(aditof-demo)
+# add_subdirectory(aditof-test)
 add_subdirectory(first-frame)
 
 if (WITH_NETWORK)
@@ -20,8 +20,8 @@ endif()
 include(GNUInstallDirs)
 
 install(PROGRAMS
-    $<TARGET_FILE:aditof-demo>
-    $<TARGET_FILE:aditof-test>
+    # $<TARGET_FILE:aditof-demo>
+    # $<TARGET_FILE:aditof-test>
     $<TARGET_FILE:first-frame>
     DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

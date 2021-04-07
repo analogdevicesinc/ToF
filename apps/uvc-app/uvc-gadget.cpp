@@ -259,7 +259,8 @@ bool SensorStartedStreaming = false;
 int ad903x_hw = 0;
 char v4l2_subdev_prog_file[255] = "afe_firmware.bin";
 
-std::string availableFrameTypesBlob; //holds serialised (with protobuf) data about available frame types 
+//std::string availableFrameTypesBlob; //holds serialised (with protobuf) data about available frame types
+char *frameTypesBuffer = nullptr;
 char *sensorsInfoBuffer =
     nullptr; // Points to data holding information about available sensors. First two bytes contain the size of the data in the rest of the buffer
 
@@ -289,6 +290,8 @@ unsigned int storage_index = 0;
 unsigned char eeprom_data[128 * 1024];
 unsigned int sensors_read_pos = 0;
 unsigned int sensors_read_len = 0;
+unsigned int frame_types_read_pos = 0;
+unsigned int frame_types_read_len = 0;
 std::atomic<bool> eeprom_write_ready;
 std::thread eepromWriteThread;
 
@@ -1498,6 +1501,61 @@ static void uvc_events_process_control(struct uvc_device *dev, uint8_t req,
                 break;
             }
             break;
+         case 8: /* get available depth sensor frame types */
+            switch (req) {
+            case UVC_SET_CUR:
+                dev->set_cur_cs = cs;
+                resp->data[0] = 0x0;
+                resp->length = len;
+                break;
+
+            case UVC_GET_CUR:
+                //depthSensorFrameTypesBlob = depthSensorFrameTypesBlob.
+                resp->length = frame_types_read_len;//depthSensorFrameTypesBlob.size();
+                memcpy(resp->data, frameTypesBuffer + frame_types_read_pos,
+                       resp->length);
+                break;
+
+            case UVC_GET_INFO:
+                /*
+                 * We support Set and Get requests and don't
+                 * support async updates on an interrupt endpt
+                 */
+                resp->data[0] = 0x03;
+                resp->length = 1;
+                break;
+
+            case UVC_GET_LEN:
+                resp->data[0] = MAX_PACKET_SIZE; // 1 byte
+                resp->data[1] = 0x00;
+                resp->length = 2;
+                break;
+
+            case UVC_GET_MIN:
+            case UVC_GET_MAX:
+            case UVC_GET_DEF:
+            case UVC_GET_RES:
+                resp->data[0] = 0xff;
+                resp->length = 1;
+                break;
+
+            default:
+                printf("Unsupported bRequest: Received bRequest %x on cs %d\n",
+                       req, cs);
+                /*
+                 * We don't support this control, so STALL the
+                 * default control ep.
+                 */
+                resp->length = -EL2HLT;
+                /*
+                 * For every unsupported control request
+                 * set the request error code to appropriate
+                 * code.
+                 */
+                SET_REQ_ERROR_CODE(0x07, 1);
+                break;
+            }
+            break;
 
         default:
             printf("Unsupported cs: Received cs %d \n", cs);
@@ -1773,6 +1831,9 @@ static int uvc_events_process_data(struct uvc_device *dev,
                             storages[storage_index]);
                     }
                 }
+            } else if (dev->set_cur_cs == 8) {
+                frame_types_read_pos = *((unsigned int *)(data->data));
+                frame_types_read_len = data->data[4];
             }
             dev->set_cur_cs = 0;
             return 0;
@@ -1958,7 +2019,7 @@ static void uvc_events_init(struct uvc_device *dev) {
     sub.type = UVC_EVENT_STREAMOFF;
     ioctl(dev->uvc_fd, VIDIOC_SUBSCRIBE_EVENT, &sub);
 }
-
+/*
 void serializeAvailableFrameTypes(std::vector<aditof::FrameDataDetails> frameDetailsVector, std::string& availableFrameTypesBlob){
     using namespace google::protobuf::io;
     
@@ -1980,20 +2041,21 @@ void serializeAvailableFrameTypes(std::vector<aditof::FrameDataDetails> frameDet
 
     frameDetailsVectorPayload.SerializeToString(&availableFrameTypesBlob);
 }
-
+*/
 void serializeDepthSensorFrameTypes(std::vector<aditof::DepthSensorFrameType> depthSensorFrameTypes, std::string& serializedData){
     using namespace google::protobuf::io;
     
     uvc_payload::DepthSensorFrameTypeVector depthSensorFrameTypesPayload;
-    availableFrameTypesBlob = "";
+    serializedData = "";
 
     for (const aditof::DepthSensorFrameType& depthSensorFrameType : depthSensorFrameTypes){
-        uvc_payload::DepthSensorFrameType* depthSensorFrameTypePayload = frameDetailsVectorPayload.add_depthsensorframetypes();
+        LOG(INFO) << depthSensorFrameType.type << " " << depthSensorFrameType.width << " " << depthSensorFrameType.content.size();
+        uvc_payload::DepthSensorFrameType* depthSensorFrameTypePayload = depthSensorFrameTypesPayload.add_depthsensorframetypes();
         depthSensorFrameTypePayload->set_type(depthSensorFrameType.type);
         depthSensorFrameTypePayload->set_width(depthSensorFrameType.width);
         depthSensorFrameTypePayload->set_height(depthSensorFrameType.height);
         
-        for (const aditof::DepthSensorFrameContent& depthSensorFrameContent : frameDetails.dataDetails){
+        for (const aditof::DepthSensorFrameContent& depthSensorFrameContent : depthSensorFrameType.content){
             uvc_payload::DepthSensorFrameContent* depthSensorFrameContentPayload = depthSensorFrameTypePayload->add_depthsensorframecontent();
             depthSensorFrameContentPayload->set_type(depthSensorFrameContent.type);
             depthSensorFrameContentPayload->set_width(depthSensorFrameContent.width);
@@ -2002,6 +2064,8 @@ void serializeDepthSensorFrameTypes(std::vector<aditof::DepthSensorFrameType> de
     }
 
     depthSensorFrameTypesPayload.SerializeToString(&serializedData);
+
+    LOG(INFO) << serializedData;
 }
 
 /* ---------------------------------------------------------------------------
@@ -2383,11 +2447,19 @@ int main(int argc, char *argv[]) {
         break;
     }
 
+    std::string depthSensorFrameTypesBlob;
     std::vector<aditof::DepthSensorFrameType> depthSensorFrameTypes;
     camDepthSensor->getAvailableFrameTypes(depthSensorFrameTypes);
     
-    serializeDepthSensorFrameTypes(frameDetailsVector, depthSensorFrameTypesBlob);
+    serializeDepthSensorFrameTypes(depthSensorFrameTypes, depthSensorFrameTypesBlob);
     
+    const uint32_t frameTypebBuffLen = availableSensorsBlob.length();
+    frameTypesBuffer = new char[frameTypebBuffLen + sizeof(uint16_t)];
+    uint16_t *frameTypesBuffSize = reinterpret_cast<uint16_t *>(frameTypesBuffer);
+    *frameTypesBuffSize = frameTypebBuffLen;
+    memcpy(frameTypesBuffer + sizeof(uint16_t), depthSensorFrameTypesBlob.c_str(),
+           frameTypebBuffLen);
+
     camDepthSensor->setFrameType(depthSensorFrameTypes.front());
     camDepthSensor->start();
 
