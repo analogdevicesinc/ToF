@@ -34,7 +34,8 @@
 
 #include <string>
 #include <vector>
-
+#include <aditof/status_definitions.h>
+#include <aditof/frame_definitions.h>
 class UsbUtils {
   public:
     /**
@@ -54,6 +55,11 @@ class UsbUtils {
      */
     static std::vector<std::pair<std::string, unsigned int>>
     getTemperatureSensorNamesAndIds(const std::vector<std::string> &tokens);
+
+    /**
+     * TODO 
+     */
+     static aditof::Status getFrameDetails(std::vector<aditof::FrameDetails>& frameDetails, const std::string& availableFrameTypesBlob);
 };
 
 #endif // USB_UTILS_H
