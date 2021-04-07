@@ -36,6 +36,7 @@
 #include <vector>
 #include <aditof/status_definitions.h>
 #include <aditof/frame_definitions.h>
+#include <aditof/sensor_definitions.h>
 class UsbUtils {
   public:
     /**
@@ -55,6 +56,11 @@ class UsbUtils {
      */
     static std::vector<std::pair<std::string, unsigned int>>
     getTemperatureSensorNamesAndIds(const std::vector<std::string> &tokens);
+
+     /**
+     * TODO 
+     */
+     static aditof::Status getDepthSensorTypes(std::vector<aditof::DepthSensorFrameType>& depthSensorFrameTypes, const std::string& availableDepthSensorsFrameTypesBlob);
 
     /**
      * TODO 

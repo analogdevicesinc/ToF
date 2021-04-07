@@ -107,7 +107,7 @@ UsbDepthSensor::~UsbDepthSensor() {
 }
 
 
-aditof::Status getAvailableFrameTypesInternal(int fd,
+aditof::Status getDepthSensorFrameTypesInternal(int fd,
                                            std::string &availableFrameTypes) {
    // using namespace std;
     uint16_t bufferLength;
@@ -164,12 +164,12 @@ aditof::Status UsbDepthSensor::open() {
         return Status::GENERIC_ERROR;
     }
 
-    status = getAvailableFrameTypesInternal(m_implData->fd, availableFrameTypesBlob);
+    status = getDepthSensorFrameTypesInternal(m_implData->fd, availableFrameTypesBlob);
     if (status != Status::OK){
         return status;
     }
 
-    status = UsbUtils::getFrameDetails(m_frameDetails, availableFrameTypesBlob);
+    status = UsbUtils::getDepthSensorTypes(m_depthSensorFrameTypes, availableFrameTypesBlob);
     if (status != Status::OK){
         return status;
     }
