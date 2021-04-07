@@ -76,6 +76,39 @@ UsbUtils::getTemperatureSensorNamesAndIds(
     return v;
 }
 
+
+aditof::Status UsbUtils::getDepthSensorTypes(std::vector<aditof::DepthSensorFrameType>& depthSensorFrameTypes, const std::string& availableDepthSensorsFrameTypesBlob){
+    using namespace google::protobuf::io;
+
+    payload::DepthSensorFrameTypeVector depthSensorFrameTypesPayload;
+    if (!depthSensorFrameTypesPayload.ParseFromString(availableDepthSensorsFrameTypesBlob)){
+            return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    depthSensorFrameTypes.clear();
+
+    for (const payload::DepthSensorFrameType& depthSensorFrameTypePayload : depthSensorFrameTypesPayload.depthsensorframetypes()){
+        aditof::DepthSensorFrameType depthSensorFrameType;
+
+        depthSensorFrameType.type = depthSensorFrameTypePayload.type();
+        depthSensorFrameType.width = depthSensorFrameTypePayload.width();
+        depthSensorFrameType.height = depthSensorFrameTypePayload.height();
+
+        for(const payload::DepthSensorFrameContent& depthSensorFrameContentPayload : depthSensorFrameTypePayload.depthsensorframecontent()){
+            DepthSensorFrameContent depthSensorFrameContent;
+
+            depthSensorFrameContent.width = depthSensorFrameContentPayload.width();
+            depthSensorFrameContent.height = depthSensorFrameContentPayload.height();
+            depthSensorFrameContent.type = depthSensorFrameContentPayload.type();
+            depthSensorFrameType.content.push_back(depthSensorFrameContent);
+        }
+
+        depthSensorFrameTypes.push_back(depthSensorFrameType);
+    }
+
+    return aditof::Status::OK;
+}
+
 aditof::Status UsbUtils::getFrameDetails(std::vector<aditof::FrameDetails>& frameDetailsVector, const std::string& availableFrameTypesBlob){
     using namespace google::protobuf::io;
 

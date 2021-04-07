@@ -21,3 +21,23 @@ message FrameDetailsVector
 {
   repeated FrameDetails frameDetails = 10;
 }
+
+message DepthSensorFrameContent
+{
+  string type = 10;
+  uint32 width = 20;
+  uint32 height = 30;
+}
+
+message DepthSensorFrameType
+{
+  string type = 10;
+  repeated DepthSensorFrameContent depthSensorFrameContent = 20;
+  uint32 width = 30;
+  uint32 height = 40;
+}
+
+message DepthSensorFrameTypeVector
+{
+  repeated DepthSensorFrameType depthSensorFrameTypes = 10;
+}

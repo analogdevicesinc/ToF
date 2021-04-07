@@ -26,6 +26,7 @@
 #include <aditof/storage_interface.h>
 #include <aditof/temperature_sensor_interface.h>
 #include <aditof/version.h>
+#include <aditof/sensor_definitions.h>
 #include <atomic>
 #include <errno.h>
 #include <fcntl.h>
@@ -1958,7 +1959,7 @@ static void uvc_events_init(struct uvc_device *dev) {
     ioctl(dev->uvc_fd, VIDIOC_SUBSCRIBE_EVENT, &sub);
 }
 
-void serializeAvailableFrameTypes(std::vector<aditof::FrameDetails> frameDetailsVector, std::string& availableFrameTypesBlob){
+void serializeAvailableFrameTypes(std::vector<aditof::FrameDataDetails> frameDetailsVector, std::string& availableFrameTypesBlob){
     using namespace google::protobuf::io;
     
     uvc_payload::FrameDetailsVector frameDetailsVectorPayload;
@@ -1978,6 +1979,29 @@ void serializeAvailableFrameTypes(std::vector<aditof::FrameDetails> frameDetails
     }
 
     frameDetailsVectorPayload.SerializeToString(&availableFrameTypesBlob);
+}
+
+void serializeDepthSensorFrameTypes(std::vector<aditof::DepthSensorFrameType> depthSensorFrameTypes, std::string& serializedData){
+    using namespace google::protobuf::io;
+    
+    uvc_payload::DepthSensorFrameTypeVector depthSensorFrameTypesPayload;
+    availableFrameTypesBlob = "";
+
+    for (const aditof::DepthSensorFrameType& depthSensorFrameType : depthSensorFrameTypes){
+        uvc_payload::DepthSensorFrameType* depthSensorFrameTypePayload = frameDetailsVectorPayload.add_depthsensorframetypes();
+        depthSensorFrameTypePayload->set_type(depthSensorFrameType.type);
+        depthSensorFrameTypePayload->set_width(depthSensorFrameType.width);
+        depthSensorFrameTypePayload->set_height(depthSensorFrameType.height);
+        
+        for (const aditof::DepthSensorFrameContent& depthSensorFrameContent : frameDetails.dataDetails){
+            uvc_payload::DepthSensorFrameContent* depthSensorFrameContentPayload = depthSensorFrameTypePayload->add_depthsensorframecontent();
+            depthSensorFrameContentPayload->set_type(depthSensorFrameContent.type);
+            depthSensorFrameContentPayload->set_width(depthSensorFrameContent.width);
+            depthSensorFrameContentPayload->set_height(depthSensorFrameContent.height);
+        }
+    }
+
+    depthSensorFrameTypesPayload.SerializeToString(&serializedData);
 }
 
 /* ---------------------------------------------------------------------------
@@ -2359,12 +2383,12 @@ int main(int argc, char *argv[]) {
         break;
     }
 
-    std::vector<aditof::FrameDetails> frameDetailsVector;
-    camDepthSensor->getAvailableFrameTypes(frameDetailsVector);
+    std::vector<aditof::DepthSensorFrameType> depthSensorFrameTypes;
+    camDepthSensor->getAvailableFrameTypes(depthSensorFrameTypes);
     
-    serializeAvailableFrameTypes(frameDetailsVector, availableFrameTypesBlob);
+    serializeDepthSensorFrameTypes(frameDetailsVector, depthSensorFrameTypesBlob);
     
-    camDepthSensor->setFrameType(frameDetailsVector.front());
+    camDepthSensor->setFrameType(depthSensorFrameTypes.front());
     camDepthSensor->start();
 
     /* Init UVC events. */
