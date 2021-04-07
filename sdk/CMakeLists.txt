@@ -3,9 +3,12 @@ project(aditof)
 
 add_definitions(-DSDK_EXPORTS)
 find_package(glog 0.3.5 REQUIRED)
+find_package(Protobuf 3.9.0 REQUIRED)
+#generate protobufs for USB. TODO make sure this definitions are not overlaped if building WITH_NETWORK
+protobuf_generate_cpp(PROTO_SRCS PROTO_HRDS  src/connections/usb/usb_buffer.proto)
+get_filename_component(GENERATED_PROTO_FILES_DIR ${PROTO_HRDS} DIRECTORY)
 
 if ( WITH_NETWORK )
-    find_package(Protobuf 3.9.0 REQUIRED)
     find_package(Libwebsockets REQUIRED)
 
     protobuf_generate_cpp(PROTO_SRCS PROTO_HRDS src/connections/network/buffer.proto)
@@ -109,8 +112,8 @@ add_library(${PROJECT_NAME} SHARED
     ${PLATFORM_HEADERS}
     $<$<BOOL:${WITH_NETWORK}>:${NETWORK_SOURCES}>
     $<$<BOOL:${WITH_NETWORK}>:${NETWORK_HEADERS}>
-    $<$<BOOL:${WITH_NETWORK}>:${PROTO_SRCS}>
-    $<$<BOOL:${WITH_NETWORK}>:${PROTO_HDRS}>
+    ${PROTO_SRCS}
+    ${PROTO_HDRS}
 )
 
 # Add alias to aditof as aditof::aditof
@@ -148,6 +151,8 @@ else()
     target_link_libraries( ${PROJECT_NAME}
         PUBLIC
             glog::glog
+        PRIVATE
+            ${Protobuf_LIBRARIES}
     )
 endif()
 
