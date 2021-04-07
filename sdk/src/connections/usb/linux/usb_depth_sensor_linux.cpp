@@ -30,6 +30,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "connections/usb/usb_depth_sensor.h"
+#include "connections/usb/usb_utils.h"
 #include "usb_linux_utils.h"
 #include "utils.h"
 
@@ -105,9 +106,43 @@ UsbDepthSensor::~UsbDepthSensor() {
     }
 }
 
+
+aditof::Status getAvailableFrameTypesInternal(int fd,
+                                           std::string &availableFrameTypes) {
+   // using namespace std;
+    uint16_t bufferLength;
+
+    int ret = UsbLinuxUtils::uvcExUnitReadBuffer(
+        fd, 8, -1, 0, reinterpret_cast<uint8_t *>(&bufferLength),
+        sizeof(bufferLength));
+    LOG(INFO) << bufferLength;
+    if (ret < 0) {
+        LOG(WARNING)
+            << "Failed to read size of buffer holding sensors info. Error: "
+            << ret;
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    std::unique_ptr<uint8_t[]> data(new uint8_t[bufferLength + 1]);
+    ret = UsbLinuxUtils::uvcExUnitReadBuffer(fd, 8, -1, sizeof(bufferLength),
+                                             data.get(), bufferLength);
+    if (ret < 0) {
+        LOG(WARNING) << "Failed to read the content of buffer holding sensors "
+                        "info. Error: "
+                     << ret;
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    data[bufferLength] = '\0';
+    availableFrameTypes = reinterpret_cast<char *>(data.get());
+
+    return aditof::Status::OK;
+}
+
 aditof::Status UsbDepthSensor::open() {
     using namespace aditof;
     Status status = Status::OK;
+    std::string availableFrameTypesBlob;
 
     LOG(INFO) << "Opening device";
 
@@ -127,6 +162,20 @@ aditof::Status UsbDepthSensor::open() {
         LOG(WARNING) << "VIDIOC_G_FMT, error:" << errno << "("
                      << strerror(errno) << ")";
         return Status::GENERIC_ERROR;
+    }
+
+    status = getAvailableFrameTypesInternal(m_implData->fd, availableFrameTypesBlob);
+    if (status != Status::OK){
+        return status;
+    }
+
+    status = UsbUtils::getFrameDetails(m_frameDetails, availableFrameTypesBlob);
+    if (status != Status::OK){
+        return status;
+    }
+    //TODO remove this, for testing only
+    for (aditof::FrameDetails details: m_frameDetails){
+        LOG(INFO) << details.type << " " << details.width << " " << details.height << " " << details.dataDetails.size();
     }
 
     m_implData->opened = true;
