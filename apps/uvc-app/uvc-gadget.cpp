@@ -46,6 +46,7 @@
 #include <sys/types.h>
 #include <thread>
 #include <unistd.h>
+#include "buffer.pb.h"
 
 #define MAX_PACKET_SIZE 60
 
@@ -257,6 +258,7 @@ bool SensorStartedStreaming = false;
 int ad903x_hw = 0;
 char v4l2_subdev_prog_file[255] = "afe_firmware.bin";
 
+std::string availableFrameTypesBlob; //holds serialised (with protobuf) data about available frame types 
 char *sensorsInfoBuffer =
     nullptr; // Points to data holding information about available sensors. First two bytes contain the size of the data in the rest of the buffer
 
@@ -1956,6 +1958,30 @@ static void uvc_events_init(struct uvc_device *dev) {
     ioctl(dev->uvc_fd, VIDIOC_SUBSCRIBE_EVENT, &sub);
 }
 
+void serializeAvailableFrameTypes(std::vector<aditof::FrameDetails> frameDetailsVector, std::string& availableFrameTypesBlob){
+    using namespace google::protobuf::io;
+    
+    uvc_payload::FrameDetailsVector frameDetailsVectorPayload;
+    availableFrameTypesBlob = "";
+
+    for (const aditof::FrameDetails& frameDetails : frameDetailsVector){
+        uvc_payload::FrameDetails* frameDetailsPayload = frameDetailsVectorPayload.add_framedetails();
+        frameDetailsPayload->set_type(frameDetails.type);
+        frameDetailsPayload->set_width(frameDetails.width);
+        frameDetailsPayload->set_height(frameDetails.height);
+        frameDetailsPayload->set_cameraMode(frameDetails.cameraMode);
+
+        for (const aditof::FrameDataDetails& frameDataDetails : frameDetails.dataDetails){
+            uvc_payload::FrameDataDetails* frameDataDetailsPayload = frameDetailsPayload->add_datadetails();
+            frameDataDetailsPayload->set_type(frameDataDetails.type);
+            frameDataDetailsPayload->set_width(frameDataDetails.width);
+            frameDataDetailsPayload->set_height(frameDataDetails.height);
+        }
+    }
+
+    frameDetailsVectorPayload.SerializeToString(&availableFrameTypesBlob);
+}
+
 /* ---------------------------------------------------------------------------
  * main
  */
@@ -2337,7 +2363,9 @@ int main(int argc, char *argv[]) {
 
     std::vector<aditof::FrameDetails> frameDetailsVector;
     camDepthSensor->getAvailableFrameTypes(frameDetailsVector);
-
+    
+    serializeAvailableFrameTypes(frameDetailsVector, availableFrameTypesBlob);
+    
     camDepthSensor->setFrameType(frameDetailsVector.front());
     camDepthSensor->start();
 
