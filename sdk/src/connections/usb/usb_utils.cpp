@@ -32,6 +32,7 @@
 
 #include "connections/usb/usb_utils.h"
 #include "utils.h"
+#include "usb_buffer.pb.h"
 
 using namespace std;
 using namespace aditof;
@@ -73,4 +74,37 @@ UsbUtils::getTemperatureSensorNamesAndIds(
     }
 
     return v;
+}
+
+aditof::Status UsbUtils::getFrameDetails(std::vector<aditof::FrameDetails>& frameDetailsVector, const std::string& availableFrameTypesBlob){
+    using namespace google::protobuf::io;
+
+    payload::FrameDetailsVector frameDetailsVectorPayload;
+    if (!frameDetailsVectorPayload.ParseFromString(availableFrameTypesBlob)){
+            return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    frameDetailsVector.clear();
+
+    for (const payload::FrameDetails& frameDetailsPayload : frameDetailsVectorPayload.framedetails()){
+        aditof::FrameDetails frameDetails;
+
+        frameDetails.width = frameDetailsPayload.width();
+        frameDetails.height = frameDetailsPayload.height();
+        frameDetails.type = frameDetailsPayload.type();
+        frameDetails.cameraMode = frameDetailsPayload.cameraMode();
+
+        for(const payload::FrameDataDetails& dataDetailsPayload : frameDetailsPayload.datadetails()){
+            FrameDataDetails frameDataDetails;
+
+            frameDataDetails.width = dataDetailsPayload.width();
+            frameDataDetails.height = dataDetailsPayload.height();
+            frameDataDetails.type = dataDetailsPayload.type();
+            details.dataDetails.push_back(frameDataDetails);
+        }
+
+        frameDetailsVector.push_back(frameDetails);
+    }
+
+    return aditof::Status::OK;
 }
