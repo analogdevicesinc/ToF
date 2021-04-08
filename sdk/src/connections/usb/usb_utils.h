@@ -58,12 +58,18 @@ class UsbUtils {
     getTemperatureSensorNamesAndIds(const std::vector<std::string> &tokens);
 
      /**
-     * TODO 
+     * @brief Parses a vector of depthSensorFrameType from a protobuf.
+     * @param depthSensorFrameTypesVector - the parsed vector.
+     * @param availableDepthSensorsFrameTypesBlob - the buffer cotaining the serialized data.
+     * return aditof::Status
      */
      static aditof::Status getDepthSensorTypes(std::vector<aditof::DepthSensorFrameType>& depthSensorFrameTypesVector, const std::string& availableDepthSensorsFrameTypesBlob);
 
-    /**
-     * TODO 
+     /**
+     * @brief Parses a vector of FrameDetails from a protobuf.
+     * @param frameDetails - the parsed vector.
+     * @param availableFrameTypesBlob - the buffer cotaining the serialized data.
+     * return aditof::Status
      */
      static aditof::Status getFrameDetails(std::vector<aditof::FrameDetails>& frameDetails, const std::string& availableFrameTypesBlob);
 };
