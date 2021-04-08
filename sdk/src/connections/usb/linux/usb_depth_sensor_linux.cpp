@@ -132,10 +132,10 @@ aditof::Status getDepthSensorFrameTypesInternal(int fd,
                      << ret;
         return aditof::Status::GENERIC_ERROR;
     }
-
+    LOG(INFO) << bufferLength;
     data[bufferLength] = '\0';
     availableFrameTypes = reinterpret_cast<char *>(data.get());
-
+    LOG(INFO) << availableFrameTypes.size();
     return aditof::Status::OK;
 }
 
@@ -166,20 +166,14 @@ aditof::Status UsbDepthSensor::open() {
 
     status = getDepthSensorFrameTypesInternal(m_implData->fd, availableFrameTypesBlob);
     if (status != Status::OK){
-        LOG(ERROR) << "cannot get frame types from target";
+        LOG(ERROR) << "Cannot get frame types from target";
         return status;
     }
-
-    LOG(INFO) << availableFrameTypesBlob;
 
     status = UsbUtils::getDepthSensorTypes(m_depthSensorFrameTypes, availableFrameTypesBlob);
     if (status != Status::OK){
-        LOG(ERROR) << "cannot deserialize frame types";
+        LOG(ERROR) << "Cannot deserialize frame types";
         return status;
-    }
-    //TODO remove this, for testing only
-    for (aditof::DepthSensorFrameType details: m_depthSensorFrameTypes){
-        LOG(INFO) << details.type << " " << details.width << " " << details.height << " " << details.content.size();
     }
 
     m_implData->opened = true;
@@ -219,16 +213,7 @@ aditof::Status UsbDepthSensor::getAvailableFrameTypes(
     using namespace aditof;
     Status status = Status::OK;
 
-    // Hardcored for now
-    DepthSensorFrameType frameType;
-
-    frameType.type = "depth_ir";
-    frameType.width = aditof::USB_FRAME_WIDTH;
-    frameType.height = aditof::USB_FRAME_HEIGHT * 2;
-    types.push_back(frameType);
-
-    // TO DO: Should get these details from the hardware/firmware
-    // Get the frame content information via UVC gadget
+    types = m_depthSensorFrameTypes;
 
     return status;
 }

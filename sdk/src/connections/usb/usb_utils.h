@@ -60,7 +60,7 @@ class UsbUtils {
      /**
      * TODO 
      */
-     static aditof::Status getDepthSensorTypes(std::vector<aditof::DepthSensorFrameType>& depthSensorFrameTypes, const std::string& availableDepthSensorsFrameTypesBlob);
+     static aditof::Status getDepthSensorTypes(std::vector<aditof::DepthSensorFrameType>& depthSensorFrameTypesVector, const std::string& availableDepthSensorsFrameTypesBlob);
 
     /**
      * TODO 
