@@ -2554,6 +2554,11 @@ int main(int argc, char *argv[]) {
         sensorsInfoBuffer = nullptr;
     }
 
+    if (frameTypesBuffer) {
+        delete[] frameTypesBuffer;
+        frameTypesBuffer = nullptr;
+    }
+
     DLOG(INFO) << argv[0] << " "
                << "is now closing gracefully";
 
