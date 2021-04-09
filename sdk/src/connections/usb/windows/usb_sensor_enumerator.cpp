@@ -45,51 +45,6 @@
 
 using namespace aditof;
 
-static aditof::Status getAvailableSensors(IMoniker *Moniker,
-                                          std::string &advertisedSensorData) {
-    using namespace aditof;
-
-    IBaseFilter *pVideoInputFilter;
-
-    HRESULT hr = Moniker->BindToObject(nullptr, nullptr, IID_IBaseFilter,
-                                       (void **)&pVideoInputFilter);
-    if (!SUCCEEDED(hr)) {
-        LOG(WARNING) << "Failed to bind video input filter";
-        return Status::GENERIC_ERROR;
-    }
-
-    uint16_t bufferLength;
-    hr = UsbWindowsUtils::UvcExUnitReadBuffer(
-        pVideoInputFilter, 4, -1, 0, reinterpret_cast<uint8_t *>(&bufferLength),
-        sizeof(bufferLength));
-    if (FAILED(hr)) {
-        pVideoInputFilter->Release();
-        LOG(WARNING)
-            << "Failed to read size of buffer holding sensors info. Error: "
-            << hr;
-        return Status::GENERIC_ERROR;
-    }
-
-    std::unique_ptr<uint8_t[]> data(new uint8_t[bufferLength + 1]);
-    hr = UsbWindowsUtils::UvcExUnitReadBuffer(pVideoInputFilter, 4, -1,
-                                              sizeof(bufferLength), data.get(),
-                                              bufferLength);
-    if (FAILED(hr)) {
-        pVideoInputFilter->Release();
-        LOG(WARNING) << "Failed to read the content of buffer holding sensors "
-                        "info. Error: "
-                     << hr;
-        return Status::GENERIC_ERROR;
-    }
-
-    pVideoInputFilter->Release();
-
-    data[bufferLength] = '\0';
-    advertisedSensorData = reinterpret_cast<char *>(data.get());
-
-    return Status::OK;
-}
-
 UsbSensorEnumerator::~UsbSensorEnumerator() = default;
 
 Status UsbSensorEnumerator::searchSensors() {
@@ -142,7 +97,7 @@ Status UsbSensorEnumerator::searchSensors() {
                     DLOG(INFO) << "Found USB capture device: " << str;
 
                     std::string advertisedSensorData;
-                    status = getAvailableSensors(Moniker, advertisedSensorData);
+                    status = UsbWindowsUtils::uvcExUnitGetString(Moniker, 4, advertisedSensorData);
                     DLOG(INFO) << "Received the following buffer with "
                                   "available sensors "
                                   "from target: "

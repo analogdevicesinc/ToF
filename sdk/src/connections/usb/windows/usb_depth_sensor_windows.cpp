@@ -63,52 +63,6 @@ static std::wstring s2ws(const std::string &s) {
     return r;
 }
 
-
-static aditof::Status getFrameTypes(IMoniker *Moniker,
-                                          std::string &frameTypes) {
-    using namespace aditof;
-
-    IBaseFilter *pVideoInputFilter;
-
-    HRESULT hr = Moniker->BindToObject(nullptr, nullptr, IID_IBaseFilter,
-                                       (void **)&pVideoInputFilter);
-    if (!SUCCEEDED(hr)) {
-        LOG(WARNING) << "Failed to bind video input filter";
-        return Status::GENERIC_ERROR;
-    }
-
-    uint16_t bufferLength;
-    hr = UsbWindowsUtils::UvcExUnitReadBuffer(
-        pVideoInputFilter, 8, -1, 0, reinterpret_cast<uint8_t *>(&bufferLength),
-        sizeof(bufferLength));
-    if (FAILED(hr)) {
-        pVideoInputFilter->Release();
-        LOG(WARNING)
-            << "Failed to read size of buffer holding sensors info. Error: "
-            << hr;
-        return Status::GENERIC_ERROR;
-    }
-
-    std::unique_ptr<uint8_t[]> data(new uint8_t[bufferLength + 1]);
-    hr = UsbWindowsUtils::UvcExUnitReadBuffer(pVideoInputFilter, 8, -1,
-                                              sizeof(bufferLength), data.get(),
-                                              bufferLength);
-    if (FAILED(hr)) {
-        pVideoInputFilter->Release();
-        LOG(WARNING) << "Failed to read the content of buffer holding sensors "
-                        "info. Error: "
-                     << hr;
-        return Status::GENERIC_ERROR;
-    }
-
-    pVideoInputFilter->Release();
-
-    data[bufferLength] = '\0';
-    advertisedSensorData = reinterpret_cast<char *>(data.get());
-
-    return Status::OK;
-}
-
 static aditof::Status getDevice(IBaseFilter **pVideoInputFilter,
                                 const std::string &devName) {
     using namespace aditof;
@@ -159,7 +113,7 @@ static aditof::Status getDevice(IBaseFilter **pVideoInputFilter,
 
                     //TODO is it ok to read frame types here? done like this in order to avoid creating or exposing Moniker
                     std::string frameTypesBlob;
-                    getFrameTypes(Moniker, frameTypesBlob);
+                    UsbWindowsUtils::uvcExUnitGetString(Moniker, frameTypesBlob);
                     UsbUtils::getFrameTypes(m_depthSensorFrameTypes, frameTypesBlob);
                     
                     done = TRUE;

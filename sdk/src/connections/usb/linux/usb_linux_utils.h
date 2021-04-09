@@ -33,6 +33,8 @@
 #define USB_LINUX_UTILS_H
 
 #include <cstdint>
+#include <string>
+#include <aditof/status_definitions.h>
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
@@ -89,6 +91,14 @@ class UsbLinuxUtils {
     static int uvcExUnitWriteBuffer(int fd, uint8_t selector, int16_t id,
                                     uint32_t address, const uint8_t *data,
                                     uint32_t bufferLength);
+    /**
+     * @brief uvcExUnitGetString
+     * @param fd - The file descriptor for the UVC communication channel
+     * @param uvcControlId - The id of the uvc control 
+     * @param outStr - output string
+     * @return aditof::Status - Return OK if operation is succesful or an error code otherwise
+     */
+    static aditof::Status uvcExUnitGetString(int fd, int uvcControlId, std::string &outStr);
 };
 
 #endif // USB_LINUX_UTILS_H

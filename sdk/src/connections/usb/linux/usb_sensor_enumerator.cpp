@@ -47,36 +47,6 @@
 using namespace std;
 using namespace aditof;
 
-static aditof::Status getAvailableSensors(int fd,
-                                          string &advertisedSensorData) {
-    uint16_t bufferLength;
-
-    int ret = UsbLinuxUtils::uvcExUnitReadBuffer(
-        fd, 4, -1, 0, reinterpret_cast<uint8_t *>(&bufferLength),
-        sizeof(bufferLength));
-    if (ret < 0) {
-        LOG(WARNING)
-            << "Failed to read size of buffer holding sensors info. Error: "
-            << ret;
-        return aditof::Status::GENERIC_ERROR;
-    }
-
-    unique_ptr<uint8_t[]> data(new uint8_t[bufferLength + 1]);
-    ret = UsbLinuxUtils::uvcExUnitReadBuffer(fd, 4, -1, sizeof(bufferLength),
-                                             data.get(), bufferLength);
-    if (ret < 0) {
-        LOG(WARNING) << "Failed to read the content of buffer holding sensors "
-                        "info. Error: "
-                     << ret;
-        return aditof::Status::GENERIC_ERROR;
-    }
-
-    data[bufferLength] = '\0';
-    advertisedSensorData = reinterpret_cast<char *>(data.get());
-
-    return aditof::Status::OK;
-}
-
 UsbSensorEnumerator::~UsbSensorEnumerator() = default;
 
 Status UsbSensorEnumerator::searchSensors() {
@@ -164,7 +134,7 @@ Status UsbSensorEnumerator::searchSensors() {
         DLOG(INFO) << "Found USB capture device at: " << driverPath;
 
         string advertisedSensorData;
-        getAvailableSensors(fd, advertisedSensorData);
+        UsbLinuxUtils::uvcExUnitGetString(fd, 4, advertisedSensorData);
         DLOG(INFO) << "Received the following buffer with available sensors "
                       "from target: "
                    << advertisedSensorData;

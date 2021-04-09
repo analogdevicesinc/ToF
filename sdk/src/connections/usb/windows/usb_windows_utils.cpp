@@ -232,3 +232,48 @@ HRESULT UsbWindowsUtils::UvcExUnitWriteBuffer(IBaseFilter *pVideoInputFilter,
 
     return S_OK;
 }
+
+aditof::Status UsbWindowsUtils::uvcExUnitGetString(IMoniker *Moniker, int uvcControlId,
+                                          std::string &outStr) {
+    using namespace aditof;
+
+    IBaseFilter *pVideoInputFilter;
+
+    HRESULT hr = Moniker->BindToObject(nullptr, nullptr, IID_IBaseFilter,
+                                       (void **)&pVideoInputFilter);
+    if (!SUCCEEDED(hr)) {
+        LOG(WARNING) << "Failed to bind video input filter";
+        return Status::GENERIC_ERROR;
+    }
+
+    uint16_t bufferLength;
+    hr = UsbWindowsUtils::UvcExUnitReadBuffer(
+        pVideoInputFilter, uvcControlId, -1, 0, reinterpret_cast<uint8_t *>(&bufferLength),
+        sizeof(bufferLength));
+    if (FAILED(hr)) {
+        pVideoInputFilter->Release();
+        LOG(WARNING)
+            << "Failed to read size of buffer holding sensors info. Error: "
+            << hr;
+        return Status::GENERIC_ERROR;
+    }
+
+    std::unique_ptr<uint8_t[]> data(new uint8_t[bufferLength + 1]);
+    hr = UsbWindowsUtils::UvcExUnitReadBuffer(pVideoInputFilter, uvcControlId, -1,
+                                              sizeof(bufferLength), data.get(),
+                                              bufferLength);
+    if (FAILED(hr)) {
+        pVideoInputFilter->Release();
+        LOG(WARNING) << "Failed to read the content of buffer holding sensors "
+                        "info. Error: "
+                     << hr;
+        return Status::GENERIC_ERROR;
+    }
+
+    pVideoInputFilter->Release();
+
+    data[bufferLength] = '\0';
+    outStr = reinterpret_cast<char *>(data.get());
+
+    return Status::OK;
+}
