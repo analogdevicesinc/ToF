@@ -2068,6 +2068,16 @@ void serializeDepthSensorFrameTypes(std::vector<aditof::DepthSensorFrameType> de
     LOG(INFO) << serializedData;
 }
 
+//TODO better naming?
+//brief: fills buff with the size and contents of strBlob
+void fillUvcBuffer(char* &buff, std::string strBlob){
+    const uint16_t buffLen = availableSensorsBlob.length();
+    buff = new char[buffLen + sizeof(uint16_t)];
+    memcpy(buff, &buffLen, sizeof(uint16_t));
+    memcpy(buff + sizeof(uint16_t), depthSensorFrameTypesBlob.c_str(),
+           buffLen);
+}
+
 /* ---------------------------------------------------------------------------
  * main
  */
@@ -2198,12 +2208,7 @@ int main(int argc, char *argv[]) {
     DLOG(INFO) << "Message blob about available sensors to be sent to remote:";
     DLOG(INFO) << availableSensorsBlob;
 
-    const uint32_t buffLen = availableSensorsBlob.length();
-    sensorsInfoBuffer = new char[buffLen + sizeof(uint16_t)];
-    uint16_t *buffSize = reinterpret_cast<uint16_t *>(sensorsInfoBuffer);
-    *buffSize = buffLen;
-    memcpy(sensorsInfoBuffer + sizeof(uint16_t), availableSensorsBlob.c_str(),
-           buffLen);
+    fillUvcBuffer(sensorsInfoBuffer, availableSensorsBlob);
 
     while ((opt = getopt(argc, argv, "abdf:hi:m:n:o:r:s:t:u:v:p:")) != -1) {
         switch (opt) {
@@ -2453,12 +2458,7 @@ int main(int argc, char *argv[]) {
     
     serializeDepthSensorFrameTypes(depthSensorFrameTypes, depthSensorFrameTypesBlob);
     
-    const uint32_t frameTypebBuffLen = availableSensorsBlob.length();
-    frameTypesBuffer = new char[frameTypebBuffLen + sizeof(uint16_t)];
-    uint16_t *frameTypesBuffSize = reinterpret_cast<uint16_t *>(frameTypesBuffer);
-    *frameTypesBuffSize = frameTypebBuffLen;
-    memcpy(frameTypesBuffer + sizeof(uint16_t), depthSensorFrameTypesBlob.c_str(),
-           frameTypebBuffLen);
+    fillUvcBuffer(frameTypesBuffer, depthSensorFrameTypesBlob);
 
     camDepthSensor->setFrameType(depthSensorFrameTypes.front());
     camDepthSensor->start();
