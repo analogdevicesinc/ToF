@@ -2068,9 +2068,8 @@ void serializeDepthSensorFrameTypes(std::vector<aditof::DepthSensorFrameType> de
     LOG(INFO) << serializedData;
 }
 
-//TODO better naming?
 //brief: fills buff with the size and contents of strBlob
-void fillUvcBuffer(char* &buff, std::string strBlob){
+void marshallString(char* &buff, std::string strBlob){
     const uint16_t buffLen = availableSensorsBlob.length();
     buff = new char[buffLen + sizeof(uint16_t)];
     memcpy(buff, &buffLen, sizeof(uint16_t));
@@ -2208,7 +2207,7 @@ int main(int argc, char *argv[]) {
     DLOG(INFO) << "Message blob about available sensors to be sent to remote:";
     DLOG(INFO) << availableSensorsBlob;
 
-    fillUvcBuffer(sensorsInfoBuffer, availableSensorsBlob);
+    marshallString(sensorsInfoBuffer, availableSensorsBlob);
 
     while ((opt = getopt(argc, argv, "abdf:hi:m:n:o:r:s:t:u:v:p:")) != -1) {
         switch (opt) {
@@ -2458,7 +2457,7 @@ int main(int argc, char *argv[]) {
     
     serializeDepthSensorFrameTypes(depthSensorFrameTypes, depthSensorFrameTypesBlob);
     
-    fillUvcBuffer(frameTypesBuffer, depthSensorFrameTypesBlob);
+    marshallString(frameTypesBuffer, depthSensorFrameTypesBlob);
 
     camDepthSensor->setFrameType(depthSensorFrameTypes.front());
     camDepthSensor->start();
