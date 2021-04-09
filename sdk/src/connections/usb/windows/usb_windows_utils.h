@@ -31,6 +31,9 @@
  */
 #pragma once
 
+#include <aditof/status_definitions.h>
+#include <string>
+
 #include <dshow.h>
 #include <initguid.h>
 #include <strmif.h>
@@ -200,4 +203,6 @@ class UsbWindowsUtils {
                                         ULONG selector, int16_t id,
                                         uint32_t address, const uint8_t *data,
                                         uint32_t bufferLength);
+
+    static aditof::Status uvcExUnitGetString(int fd, int uvcControlId, std::string &outStr);
 };

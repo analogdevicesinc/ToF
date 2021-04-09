@@ -36,6 +36,7 @@
 #include <linux/usb/video.h>
 #include <linux/uvcvideo.h>
 #include <sys/ioctl.h>
+#include <memory>
 
 #ifdef DEBUG_USB
 #include <iostream>
@@ -228,4 +229,35 @@ int UsbLinuxUtils::uvcExUnitWriteBuffer(int fd, uint8_t selector, int16_t id,
     }
 
     return ret;
+}
+
+
+aditof::Status UsbLinuxUtils::uvcExUnitGetString(int fd, int uvcControlId, std::string &outStr) {
+    uint16_t bufferLength;
+
+    int ret = UsbLinuxUtils::uvcExUnitReadBuffer(
+        fd, uvcControlId, -1, 0, reinterpret_cast<uint8_t *>(&bufferLength),
+        sizeof(bufferLength));
+
+    if (ret < 0) {
+        LOG(WARNING)
+            << "Failed to read size of buffer holding sensors info. Error: "
+            << ret;
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    std::unique_ptr<uint8_t[]> data(new uint8_t[bufferLength + 1]);
+    ret = UsbLinuxUtils::uvcExUnitReadBuffer(fd, uvcControlId, -1, sizeof(bufferLength),
+                                             data.get(), bufferLength);
+    if (ret < 0) {
+        LOG(WARNING) << "Failed to read the content of buffer holding sensors "
+                        "info. Error: "
+                     << ret;
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    data[bufferLength] = '\0';
+    outStr = reinterpret_cast<char *>(data.get());
+
+    return aditof::Status::OK;
 }

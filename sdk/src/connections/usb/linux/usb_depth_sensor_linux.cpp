@@ -106,39 +106,6 @@ UsbDepthSensor::~UsbDepthSensor() {
     }
 }
 
-
-aditof::Status getDepthSensorFrameTypesInternal(int fd,
-                                           std::string &availableFrameTypes) {
-   // using namespace std;
-    uint16_t bufferLength;
-
-    int ret = UsbLinuxUtils::uvcExUnitReadBuffer(
-        fd, 8, -1, 0, reinterpret_cast<uint8_t *>(&bufferLength),
-        sizeof(bufferLength));
-    LOG(INFO) << bufferLength;
-    if (ret < 0) {
-        LOG(WARNING)
-            << "Failed to read size of buffer holding sensors info. Error: "
-            << ret;
-        return aditof::Status::GENERIC_ERROR;
-    }
-
-    std::unique_ptr<uint8_t[]> data(new uint8_t[bufferLength + 1]);
-    ret = UsbLinuxUtils::uvcExUnitReadBuffer(fd, 8, -1, sizeof(bufferLength),
-                                             data.get(), bufferLength);
-    if (ret < 0) {
-        LOG(WARNING) << "Failed to read the content of buffer holding sensors "
-                        "info. Error: "
-                     << ret;
-        return aditof::Status::GENERIC_ERROR;
-    }
-    LOG(INFO) << bufferLength;
-    data[bufferLength] = '\0';
-    availableFrameTypes = reinterpret_cast<char *>(data.get());
-    LOG(INFO) << availableFrameTypes.size();
-    return aditof::Status::OK;
-}
-
 aditof::Status UsbDepthSensor::open() {
     using namespace aditof;
     Status status = Status::OK;
@@ -164,7 +131,7 @@ aditof::Status UsbDepthSensor::open() {
         return Status::GENERIC_ERROR;
     }
 
-    status = getDepthSensorFrameTypesInternal(m_implData->fd, availableFrameTypesBlob);
+    status = UsbLinuxUtils::uvcExUnitGetString(m_implData->fd, 8, availableFrameTypesBlob);
     if (status != Status::OK){
         LOG(ERROR) << "Cannot get frame types from target";
         return status;
