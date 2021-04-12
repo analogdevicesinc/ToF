@@ -85,6 +85,16 @@ struct FrameDetails {
     std::string cameraMode;
 };
 
+/**
+ * @struct Point3I
+ * @brief Holds the xyz values of a frame
+ */
+struct Point3I {
+    int16_t a; //!< X Information
+    int16_t b; //!< Y Information
+    int16_t c; //!< Z Information
+};
+
 } // namespace aditof
 
 #endif // FRAME_DEFINITIONS_H
