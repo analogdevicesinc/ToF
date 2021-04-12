@@ -25,12 +25,17 @@ if (USE_CHICONY)
         message( FATAL_ERROR "USE_CHICONY only works when on RaspberryPI. CMake will exit." )
     endif()
     set(CAMERA_DIR "cameras/chicony-006")
+    set(FRAME_DIR "cameras/dtof-frame")
 elseif(USE_FXTOF1)
     set(CAMERA_DIR "cameras/ad-fxtof1-ebz")
+    set(FRAME_DIR "cameras/dtof-frame")
 elseif(USE_ITOF)
     set(CAMERA_DIR "cameras/itof-camera")
+    set(FRAME_DIR "cameras/itof-frame")
+    add_definitions(-DITOF)
 else ()
     set(CAMERA_DIR "cameras/ad-96tof1-ebz")
+    set(FRAME_DIR "cameras/dtof-frame")
 endif()    
 
 if( WIN32 )
@@ -81,12 +86,13 @@ file(GLOB PLATFORM_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/${TARGET_SPECIFIC_DIR}/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connections/usb/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/${FRAME_DIR}/*.cpp
 )
 file(GLOB PLATFORM_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${OS_SPECIFIC_DIR}/*.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/connections/usb/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/${TARGET_SPECIFIC_DIR}/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/connections/usb/*.h
 )
 
 file(GLOB NETWORK_SOURCES
