@@ -2068,10 +2068,10 @@ void serializeDepthSensorFrameTypes(std::vector<aditof::DepthSensorFrameType> de
 
 //brief: fills buff with the size and contents of strBlob
 void marshallString(char* &buff, std::string strBlob){
-    const uint16_t buffLen = availableSensorsBlob.length();
+    const uint16_t buffLen = strBlob.length();
     buff = new char[buffLen + sizeof(uint16_t)];
     memcpy(buff, &buffLen, sizeof(uint16_t));
-    memcpy(buff + sizeof(uint16_t), depthSensorFrameTypesBlob.c_str(),
+    memcpy(buff + sizeof(uint16_t), strBlob.c_str(),
            buffLen);
 }
 
