@@ -259,7 +259,6 @@ bool SensorStartedStreaming = false;
 int ad903x_hw = 0;
 char v4l2_subdev_prog_file[255] = "afe_firmware.bin";
 
-//std::string availableFrameTypesBlob; //holds serialised (with protobuf) data about available frame types
 char *frameTypesBuffer = nullptr;
 char *sensorsInfoBuffer =
     nullptr; // Points to data holding information about available sensors. First two bytes contain the size of the data in the rest of the buffer
@@ -1510,8 +1509,7 @@ static void uvc_events_process_control(struct uvc_device *dev, uint8_t req,
                 break;
 
             case UVC_GET_CUR:
-                //depthSensorFrameTypesBlob = depthSensorFrameTypesBlob.
-                resp->length = frame_types_read_len;//depthSensorFrameTypesBlob.size();
+                resp->length = frame_types_read_len;
                 memcpy(resp->data, frameTypesBuffer + frame_types_read_pos,
                        resp->length);
                 break;

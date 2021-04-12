@@ -14,7 +14,7 @@ message FrameDetails
 {
   string type = 10;
   repeated FrameDataDetails dataDetails = 20;
-  string cameraMode = 30;    // The type of the frame
+  string cameraMode = 30;
 }
 
 message FrameDetailsVector
