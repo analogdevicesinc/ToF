@@ -38,6 +38,7 @@
 #include <memory>
 #include <stdint.h>
 #include <vector>
+#include <map>
 
 class FrameImpl {
   public:
@@ -57,7 +58,7 @@ class FrameImpl {
     aditof::Status setAttribute(const std::string &attribute,
                                 const std::string &value);
     aditof::Status getAttribute(const std::string &attribute,
-                                std::string &value) const;
+                                std::string &value);
 
   private:
     void allocFrameData(const aditof::FrameDetails &details);
@@ -66,6 +67,9 @@ class FrameImpl {
     struct ImplData;
     aditof::FrameDetails m_details;
     std::unique_ptr<ImplData> m_implData;
+    std::map<std::string, std::string> m_attributes;
+    template<typename IntType> aditof::Status getIntAttribute(const std::string &attribute_key, IntType &attribute_value);
+    aditof::FrameDataDetails getFrameDetailByName(const aditof::FrameDetails &details, const std::string name);
 };
 
 #endif // FRAME_IMPL

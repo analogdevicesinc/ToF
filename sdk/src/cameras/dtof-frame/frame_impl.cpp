@@ -148,6 +148,6 @@ aditof::Status FrameImpl::setAttribute(const std::string & /*attribute*/,
     return aditof::Status::OK;
 }
 aditof::Status FrameImpl::getAttribute(const std::string & /*attribute*/,
-                                       std::string & /*value*/) const {
+                                       std::string & /*value*/) {
     return aditof::Status::OK;
 }
