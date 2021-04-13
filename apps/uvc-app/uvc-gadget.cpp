@@ -2017,29 +2017,7 @@ static void uvc_events_init(struct uvc_device *dev) {
     sub.type = UVC_EVENT_STREAMOFF;
     ioctl(dev->uvc_fd, VIDIOC_SUBSCRIBE_EVENT, &sub);
 }
-/*
-void serializeAvailableFrameTypes(std::vector<aditof::FrameDataDetails> frameDetailsVector, std::string& availableFrameTypesBlob){
-    using namespace google::protobuf::io;
-    
-    uvc_payload::FrameDetailsVector frameDetailsVectorPayload;
-    availableFrameTypesBlob = "";
 
-    for (const aditof::FrameDetails& frameDetails : frameDetailsVector){
-        uvc_payload::FrameDetails* frameDetailsPayload = frameDetailsVectorPayload.add_framedetails();
-        frameDetailsPayload->set_type(frameDetails.type);
-        frameDetailsPayload->set_cameramode(frameDetails.cameraMode);
-
-        for (const aditof::FrameDataDetails& frameDataDetails : frameDetails.dataDetails){
-            uvc_payload::FrameDataDetails* frameDataDetailsPayload = frameDetailsPayload->add_datadetails();
-            frameDataDetailsPayload->set_type(frameDataDetails.type);
-            frameDataDetailsPayload->set_width(frameDataDetails.width);
-            frameDataDetailsPayload->set_height(frameDataDetails.height);
-        }
-    }
-
-    frameDetailsVectorPayload.SerializeToString(&availableFrameTypesBlob);
-}
-*/
 void serializeDepthSensorFrameTypes(std::vector<aditof::DepthSensorFrameType> depthSensorFrameTypes, std::string& serializedData){
     using namespace google::protobuf::io;
     
