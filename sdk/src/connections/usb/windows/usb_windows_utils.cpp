@@ -32,6 +32,7 @@
 
 #include <glog/logging.h>
 #include <usb_windows_utils.h>
+#include <memory>
 
 HRESULT
 UsbWindowsUtils::UvcFindNodeAndGetControl(ExUnitHandle *handle,
@@ -233,20 +234,13 @@ HRESULT UsbWindowsUtils::UvcExUnitWriteBuffer(IBaseFilter *pVideoInputFilter,
     return S_OK;
 }
 
-aditof::Status UsbWindowsUtils::uvcExUnitGetString(IMoniker *Moniker, int uvcControlId,
+aditof::Status UsbWindowsUtils::uvcExUnitGetString(IBaseFilter *pVideoInputFilter, int uvcControlId,
                                           std::string &outStr) {
     using namespace aditof;
 
-    IBaseFilter *pVideoInputFilter;
+	HRESULT hr;
+	uint16_t bufferLength;
 
-    HRESULT hr = Moniker->BindToObject(nullptr, nullptr, IID_IBaseFilter,
-                                       (void **)&pVideoInputFilter);
-    if (!SUCCEEDED(hr)) {
-        LOG(WARNING) << "Failed to bind video input filter";
-        return Status::GENERIC_ERROR;
-    }
-
-    uint16_t bufferLength;
     hr = UsbWindowsUtils::UvcExUnitReadBuffer(
         pVideoInputFilter, uvcControlId, -1, 0, reinterpret_cast<uint8_t *>(&bufferLength),
         sizeof(bufferLength));

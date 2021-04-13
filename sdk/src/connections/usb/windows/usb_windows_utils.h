@@ -204,5 +204,5 @@ class UsbWindowsUtils {
                                         uint32_t address, const uint8_t *data,
                                         uint32_t bufferLength);
 
-    static aditof::Status uvcExUnitGetString(int fd, int uvcControlId, std::string &outStr);
+    static aditof::Status uvcExUnitGetString(IBaseFilter *pVideoInputFilter, int uvcControlId, std::string &outStr);
 };

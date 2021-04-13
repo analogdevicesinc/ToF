@@ -97,7 +97,17 @@ Status UsbSensorEnumerator::searchSensors() {
                     DLOG(INFO) << "Found USB capture device: " << str;
 
                     std::string advertisedSensorData;
-                    status = UsbWindowsUtils::uvcExUnitGetString(Moniker, 4, advertisedSensorData);
+
+					IBaseFilter *pVideoInputFilter;
+
+					HRESULT hr = Moniker->BindToObject(nullptr, nullptr, IID_IBaseFilter,
+						(void **)&pVideoInputFilter);
+					if (!SUCCEEDED(hr)) {
+						LOG(WARNING) << "Failed to bind video input filter";
+						return Status::GENERIC_ERROR;
+					}
+
+                    status = UsbWindowsUtils::uvcExUnitGetString(pVideoInputFilter, 4, advertisedSensorData);
                     DLOG(INFO) << "Received the following buffer with "
                                   "available sensors "
                                   "from target: "
