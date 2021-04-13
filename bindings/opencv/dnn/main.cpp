@@ -134,23 +134,24 @@ int main(int argc, char *argv[]) {
 
     cv::namedWindow("Display Objects Depth and IR", cv::WINDOW_AUTOSIZE);
     cv::namedWindow("Display Objects Depth", cv::WINDOW_AUTOSIZE);
-
+	
+	//TODO review usage of frame details
     cv::Size cropSize;
-    if ((float)frameDetails.width / (float)(frameDetails.height) >
+	if ((float)frameDetails.dataDetails.front().width / (float)(frameDetails.dataDetails.front().height) >
         WHRatio) {
         cropSize = cv::Size(
-            static_cast<int>((float)(frameDetails.height) * WHRatio),
-            (frameDetails.height));
+            static_cast<int>((float)(frameDetails.dataDetails.front().height) * WHRatio),
+            (frameDetails.dataDetails.front().height));
     } else {
         cropSize =
-            cv::Size(frameDetails.width,
-                     static_cast<int>((float)frameDetails.width / WHRatio));
+            cv::Size(frameDetails.dataDetails.front().width,
+                     static_cast<int>((float)frameDetails.dataDetails.front().width / WHRatio));
     }
 
-    cv::Rect crop(cv::Point(frameDetails.width - cropSize.width,
-                            frameDetails.height - cropSize.height),
+    cv::Rect crop(cv::Point(frameDetails.dataDetails.front().width - cropSize.width,
+                            frameDetails.dataDetails.front().height - cropSize.height),
                   cropSize);
-
+	
     // Look up table to adjust image => use gamma correction
     float gamma = 0.4f;
     cv::Mat lookUpTable(1, 256, CV_8U);
