@@ -4,15 +4,15 @@ project(aditof)
 add_definitions(-DSDK_EXPORTS)
 find_package(glog 0.3.5 REQUIRED)
 find_package(Protobuf 3.9.0 REQUIRED)
-#generate protobufs for USB. TODO make sure this definitions are not overlaped if building WITH_NETWORK
+
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS src/connections/usb/usb_buffer.proto)
 get_filename_component(GENERATED_PROTO_FILES_DIR ${PROTO_HDRS} DIRECTORY)
 
 if ( WITH_NETWORK )
     find_package(Libwebsockets REQUIRED)
 
-    protobuf_generate_cpp(PROTO_SRCS PROTO_HRDS src/connections/network/buffer.proto)
-    get_filename_component(GENERATED_PROTO_FILES_DIR ${PROTO_HRDS} DIRECTORY)
+    protobuf_generate_cpp(NET_PROTO_SRCS NET_PROTO_HRDS src/connections/network/buffer.proto)
+    get_filename_component(GENERATED_NET_PROTO_FILES_DIR ${NET_PROTO_HRDS} DIRECTORY)
 endif()
 
 file(GLOB SOURCES
@@ -112,6 +112,8 @@ add_library(${PROJECT_NAME} SHARED
     ${PLATFORM_HEADERS}
     $<$<BOOL:${WITH_NETWORK}>:${NETWORK_SOURCES}>
     $<$<BOOL:${WITH_NETWORK}>:${NETWORK_HEADERS}>
+    $<$<BOOL:${WITH_NETWORK}>:${NET_PROTO_SRCS}>
+    $<$<BOOL:${WITH_NETWORK}>:${NET_PROTO_HDRS}>
     ${PROTO_SRCS}
     ${PROTO_HDRS}
 )
@@ -128,7 +130,9 @@ target_include_directories(${PROJECT_NAME}
         src/${OS_SPECIFIC_DIR}/${TARGET_SPECIFIC_DIR}
         src/${CAMERA_DIR}/
         ${Protobuf_INCLUDE_DIRS}
+        ${GENERATED_NET_PROTO_FILES_DIR}
         ${GENERATED_PROTO_FILES_DIR}
+        ${GENERATED_NET_PROTO_FILES_DIR}
         ${LIBWEBSOCKETS_INCLUDE_DIRS}
         ${OPENSSL_INCLUDE_DIRS}
 )

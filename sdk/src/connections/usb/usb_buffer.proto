@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package payload;
+package usb_payload;
 
 
 message FrameDataDetails
