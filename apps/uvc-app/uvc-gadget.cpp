@@ -2422,7 +2422,7 @@ int main(int argc, char *argv[]) {
 
     std::string depthSensorFrameTypesBlob;
     std::vector<aditof::DepthSensorFrameType> depthSensorFrameTypes;
-    uvc_payload::DepthSensorFrameTypeVector;
+    uvc_payload::DepthSensorFrameTypeVector depthSensorFrameTypesPayload;
     camDepthSensor->getAvailableFrameTypes(depthSensorFrameTypes);
     
     convertDepthSensorFrameTypesToProtoMsg(depthSensorFrameTypes, depthSensorFrameTypesPayload);
