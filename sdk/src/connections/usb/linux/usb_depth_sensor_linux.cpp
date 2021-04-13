@@ -109,7 +109,7 @@ UsbDepthSensor::~UsbDepthSensor() {
 aditof::Status UsbDepthSensor::open() {
     using namespace aditof;
     Status status = Status::OK;
-    std::string availableFrameTypesBlob = "";
+    std::string availableFrameTypesBlob;
 
     LOG(INFO) << "Opening device";
 
