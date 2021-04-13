@@ -49,6 +49,8 @@
 #include <unistd.h>
 #include "buffer.pb.h"
 
+using namespace google::protobuf::io;
+
 #define MAX_PACKET_SIZE 60
 
 /* Enable debug prints. */
@@ -2018,12 +2020,7 @@ static void uvc_events_init(struct uvc_device *dev) {
     ioctl(dev->uvc_fd, VIDIOC_SUBSCRIBE_EVENT, &sub);
 }
 
-void serializeDepthSensorFrameTypes(std::vector<aditof::DepthSensorFrameType> depthSensorFrameTypes, std::string& serializedData){
-    using namespace google::protobuf::io;
-    
-    uvc_payload::DepthSensorFrameTypeVector depthSensorFrameTypesPayload;
-    serializedData = "";
-
+void convertDepthSensorFrameTypesToProtoMsg(std::vector<aditof::DepthSensorFrameType> depthSensorFrameTypes, uvc_payload::DepthSensorFrameTypeVector& depthSensorFrameTypesPayload){    
     for (const aditof::DepthSensorFrameType& depthSensorFrameType : depthSensorFrameTypes){
         LOG(INFO) << depthSensorFrameType.type << " " << depthSensorFrameType.width << " " << depthSensorFrameType.content.size();
         uvc_payload::DepthSensorFrameType* depthSensorFrameTypePayload = depthSensorFrameTypesPayload.add_depthsensorframetypes();
@@ -2038,10 +2035,6 @@ void serializeDepthSensorFrameTypes(std::vector<aditof::DepthSensorFrameType> de
             depthSensorFrameContentPayload->set_height(depthSensorFrameContent.height);
         }
     }
-
-    depthSensorFrameTypesPayload.SerializeToString(&serializedData);
-
-    LOG(INFO) << serializedData;
 }
 
 //brief: fills buff with the size and contents of strBlob
@@ -2429,10 +2422,11 @@ int main(int argc, char *argv[]) {
 
     std::string depthSensorFrameTypesBlob;
     std::vector<aditof::DepthSensorFrameType> depthSensorFrameTypes;
+    uvc_payload::DepthSensorFrameTypeVector;
     camDepthSensor->getAvailableFrameTypes(depthSensorFrameTypes);
     
-    serializeDepthSensorFrameTypes(depthSensorFrameTypes, depthSensorFrameTypesBlob);
-    
+    convertDepthSensorFrameTypesToProtoMsg(depthSensorFrameTypes, depthSensorFrameTypesPayload);
+    depthSensorFrameTypesPayload.SerializeToString(&depthSensorFrameTypesBlob);
     marshallString(frameTypesBuffer, depthSensorFrameTypesBlob);
 
     camDepthSensor->setFrameType(depthSensorFrameTypes.front());
