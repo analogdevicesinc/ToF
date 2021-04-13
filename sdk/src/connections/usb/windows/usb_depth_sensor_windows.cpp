@@ -361,7 +361,7 @@ aditof::Status UsbDepthSensor::open() {
 		return status;
 	}
 	
-	status = UsbUtils::getDepthSensorTypes(m_depthSensorFrameTypes, frameTypesBlob);
+	status = UsbUtils::convertDepthSensorTypes(m_depthSensorFrameTypes, frameTypesBlob);
 	if (status != Status::OK) {
 		LOG(WARNING) << "Cannot deserialize frame types from target";
 		return status;
