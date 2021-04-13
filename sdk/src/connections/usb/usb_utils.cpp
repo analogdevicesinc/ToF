@@ -87,14 +87,14 @@ aditof::Status UsbUtils::convertDepthSensorTypes(std::vector<aditof::DepthSensor
 
     depthSensorFrameTypes.clear();
 
-    for (const payload::DepthSensorFrameType& depthSensorFrameTypePayload : depthSensorFrameTypesPayload.depthsensorframetypes()){
+    for (const auto& depthSensorFrameTypePayload : depthSensorFrameTypesPayload.depthsensorframetypes()){
         aditof::DepthSensorFrameType depthSensorFrameType;
 
         depthSensorFrameType.type = depthSensorFrameTypePayload.type();
         depthSensorFrameType.width = depthSensorFrameTypePayload.width();
         depthSensorFrameType.height = depthSensorFrameTypePayload.height();
 
-        for(const payload::DepthSensorFrameContent& depthSensorFrameContentPayload : depthSensorFrameTypePayload.depthsensorframecontent()){
+        for(const auto& depthSensorFrameContentPayload : depthSensorFrameTypePayload.depthsensorframecontent()){
             DepthSensorFrameContent depthSensorFrameContent;
 
             depthSensorFrameContent.width = depthSensorFrameContentPayload.width();
@@ -119,13 +119,13 @@ aditof::Status UsbUtils::convertFrameDetails(std::vector<aditof::FrameDetails>& 
 
     frameDetailsVector.clear();
 
-    for (const payload::FrameDetails& frameDetailsPayload : frameDetailsVectorPayload.framedetails()){
+    for (const auto& frameDetailsPayload : frameDetailsVectorPayload.framedetails()){
         aditof::FrameDetails frameDetails;
 
         frameDetails.type = frameDetailsPayload.type();
         frameDetails.cameraMode = frameDetailsPayload.cameramode();
 
-        for(const payload::FrameDataDetails& dataDetailsPayload : frameDetailsPayload.datadetails()){
+        for(const auto& dataDetailsPayload : frameDetailsPayload.datadetails()){
             FrameDataDetails frameDataDetails;
 
             frameDataDetails.width = dataDetailsPayload.width();
