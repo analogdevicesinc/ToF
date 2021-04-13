@@ -63,7 +63,7 @@ class UsbUtils {
      * @param availableDepthSensorsFrameTypesBlob - the buffer cotaining the serialized data.
      * return aditof::Status
      */
-     static aditof::Status getDepthSensorTypes(std::vector<aditof::DepthSensorFrameType>& depthSensorFrameTypesVector, const std::string& availableDepthSensorsFrameTypesBlob);
+     static aditof::Status convertDepthSensorTypes(std::vector<aditof::DepthSensorFrameType>& depthSensorFrameTypesVector, const std::string& availableDepthSensorsFrameTypesBlob);
 
      /**
      * @brief Parses a vector of FrameDetails from a protobuf.
@@ -71,7 +71,7 @@ class UsbUtils {
      * @param availableFrameTypesBlob - the buffer cotaining the serialized data.
      * return aditof::Status
      */
-     static aditof::Status getFrameDetails(std::vector<aditof::FrameDetails>& frameDetails, const std::string& availableFrameTypesBlob);
+     static aditof::Status convertFrameDetails(std::vector<aditof::FrameDetails>& frameDetails, const std::string& availableFrameTypesBlob);
 };
 
 #endif // USB_UTILS_H

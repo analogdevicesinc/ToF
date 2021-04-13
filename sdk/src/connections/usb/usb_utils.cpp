@@ -77,7 +77,7 @@ UsbUtils::getTemperatureSensorNamesAndIds(
 }
 
 
-aditof::Status UsbUtils::getDepthSensorTypes(std::vector<aditof::DepthSensorFrameType>& depthSensorFrameTypes, const std::string& availableDepthSensorsFrameTypesBlob){
+aditof::Status UsbUtils::convertDepthSensorTypes(std::vector<aditof::DepthSensorFrameType>& depthSensorFrameTypes, const std::string& availableDepthSensorsFrameTypesBlob){
     using namespace google::protobuf::io;
 
     payload::DepthSensorFrameTypeVector depthSensorFrameTypesPayload;
@@ -109,7 +109,7 @@ aditof::Status UsbUtils::getDepthSensorTypes(std::vector<aditof::DepthSensorFram
     return aditof::Status::OK;
 }
 
-aditof::Status UsbUtils::getFrameDetails(std::vector<aditof::FrameDetails>& frameDetailsVector, const std::string& availableFrameTypesBlob){
+aditof::Status UsbUtils::convertFrameDetails(std::vector<aditof::FrameDetails>& frameDetailsVector, const std::string& availableFrameTypesBlob){
     using namespace google::protobuf::io;
 
     payload::FrameDetailsVector frameDetailsVectorPayload;
