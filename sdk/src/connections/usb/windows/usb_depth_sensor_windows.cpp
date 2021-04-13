@@ -110,11 +110,6 @@ static aditof::Status getDevice(IBaseFilter **pVideoInputFilter,
                     if (!SUCCEEDED(hr)) {
                         LOG(WARNING) << "Failed to bind video input filter";
                     }
-
-                    //TODO is it ok to read frame types here? done like this in order to avoid creating or exposing Moniker
-                    std::string frameTypesBlob;
-                    UsbWindowsUtils::uvcExUnitGetString(Moniker, frameTypesBlob);
-                    UsbUtils::getFrameTypes(m_depthSensorFrameTypes, frameTypesBlob);
                     
                     done = TRUE;
                 }
@@ -359,6 +354,18 @@ aditof::Status UsbDepthSensor::open() {
         return status;
     }
 
+	std::string frameTypesBlob;
+	status = UsbWindowsUtils::uvcExUnitGetString(m_implData->handle.pVideoInputFilter, 8, frameTypesBlob);
+	if (status != Status::OK) {
+		LOG(WARNING) << "Cannot get frame types via UVC";
+		return status;
+	}
+	
+	status = UsbUtils::getDepthSensorTypes(m_depthSensorFrameTypes, frameTypesBlob);
+	if (status != Status::OK) {
+		LOG(WARNING) << "Cannot deserialize frame types from target";
+		return status;
+	}
     std::wstring stemp = s2ws(m_driverPath);
     hr = m_implData->handle.pGraph->AddFilter(
         m_implData->handle.pVideoInputFilter, stemp.c_str());
