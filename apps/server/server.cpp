@@ -366,29 +366,47 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
 
     case GET_AVAILABLE_FRAME_TYPES: {
-        std::vector<aditof::FrameDetails> frameDetails;
+        std::vector<aditof::DepthSensorFrameType> aditofFrameTypes;
+
         aditof::Status status =
-            camDepthSensor->getAvailableFrameTypes(frameDetails);
-        for (auto detail : frameDetails) {
-            auto type = buff_send.add_available_frame_types();
-            type->set_width(detail.width);
-            type->set_height(detail.height);
-            type->set_type(detail.type);
-            type->set_full_data_width(detail.fullDataWidth);
-            type->set_full_data_height(detail.fullDataHeight);
+            camDepthSensor->getAvailableFrameTypes(aditofFrameTypes);
+        for (const auto &aditofType : aditofFrameTypes) {
+            auto protoType = buff_send.add_available_frame_types();
+
+            protoType->set_width(aditofType.width);
+            protoType->set_height(aditofType.height);
+            protoType->set_type(aditofType.type);
+            for (const auto &aditofContent : aditofType.content) {
+                auto protoContent = protoType->add_depthsensorframecontent();
+                protoContent->set_type(aditofContent.type);
+                protoContent->set_width(aditofContent.width);
+                protoContent->set_height(aditofContent.height);
+            }
         }
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
 
     case SET_FRAME_TYPE: {
-        aditof::FrameDetails details;
-        details.width = buff_recv.frame_type().width();
-        details.height = buff_recv.frame_type().height();
-        details.type = buff_recv.frame_type().type();
-        details.fullDataWidth = buff_recv.frame_type().full_data_width();
-        details.fullDataWidth = buff_recv.frame_type().full_data_height();
-        aditof::Status status = camDepthSensor->setFrameType(details);
+        aditof::DepthSensorFrameType aditofFrameType;
+
+        aditofFrameType.width = buff_recv.frame_type().width();
+        aditofFrameType.height = buff_recv.frame_type().height();
+        aditofFrameType.type = buff_recv.frame_type().type();
+        for (int i = 0;
+             i < buff_recv.frame_type().depthsensorframecontent().size(); ++i) {
+            aditof::DepthSensorFrameContent aditofFrameContent;
+
+            aditofFrameContent.type =
+                buff_recv.frame_type().depthsensorframecontent(i).type();
+            aditofFrameContent.width =
+                buff_recv.frame_type().depthsensorframecontent(i).width();
+            aditofFrameContent.height =
+                buff_recv.frame_type().depthsensorframecontent(i).height();
+            aditofFrameType.content.emplace_back(aditofFrameContent);
+        }
+
+        aditof::Status status = camDepthSensor->setFrameType(aditofFrameType);
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
