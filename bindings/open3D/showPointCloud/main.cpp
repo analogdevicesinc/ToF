@@ -116,8 +116,8 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "Could not request frame!";
         return 0;
     }
-    aditof::FrameDetails frameDetails;
-    frame.getDetails(frameDetails);
+    aditof::FrameDataDetails frameDetails;
+    frame.getDataDetails("depth",frameDetails);
     int frameHeight = static_cast<int>(frameDetails.height);
     int frameWidth = static_cast<int>(frameDetails.width);
 

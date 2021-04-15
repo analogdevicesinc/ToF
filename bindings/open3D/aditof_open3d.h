@@ -32,7 +32,7 @@
 #ifndef ADITOF_OPEN3D_H
 #define ADITOF_OPEN3D_H
 
-#include <open3D/Open3D.h>
+#include <open3d/Open3D.h>
 #include <aditof/frame.h>
 #include <aditof/status_definitions.h>
 
@@ -41,14 +41,14 @@ using namespace open3d;
 namespace aditof {
 Status fromFrameToDepthImg(Frame &frame, int camera_rangeMin,
                            int camera_rangeMax, geometry::Image &image) {
-    FrameDetails frameDetails;
-    frame.getDetails(frameDetails);
+    FrameDataDetails frameDetails;
+    frame.getDataDetails("depth",frameDetails);
 
     const int frameHeight = static_cast<int>(frameDetails.height);
     const int frameWidth = static_cast<int>(frameDetails.width);
 
     uint16_t *depthData;
-    frame.getData(FrameDataType::DEPTH, &depthData);
+    frame.getData("depth", &depthData);
 
     if (depthData == nullptr) {
         return Status::GENERIC_ERROR;
@@ -71,14 +71,14 @@ Status fromFrameToDepthImg(Frame &frame, int camera_rangeMin,
 }
 
 Status fromFrameTo16bitsDepth(Frame &frame, geometry::Image &image) {
-    FrameDetails frameDetails;
-    frame.getDetails(frameDetails);
+    FrameDataDetails frameDetails;
+    frame.getDataDetails("depth",frameDetails);
 
     const int frameHeight = static_cast<int>(frameDetails.height);
     const int frameWidth = static_cast<int>(frameDetails.width);
 
     uint16_t *depthData;
-    frame.getData(FrameDataType::DEPTH, &depthData);
+    frame.getData("depth", &depthData);
 
     if (depthData == nullptr) {
         return Status::GENERIC_ERROR;
@@ -94,15 +94,15 @@ Status fromFrameTo16bitsDepth(Frame &frame, geometry::Image &image) {
 }
 
 Status fromFrameToIRImg(Frame &frame, int bitCount, geometry::Image &image) {
-    FrameDetails frameDetails;
-    frame.getDetails(frameDetails);
+    FrameDataDetails frameDetails;
+    frame.getDataDetails("ir",frameDetails);
 
     const int frameHeight = static_cast<int>(frameDetails.height);
-    const int frameWidth = static_cast<int>(frameDetails.width);
+    const int frameWidth = static_cast<int>(frameDetails.height);
     int max_value_of_IR_pixel = (1 << bitCount) - 1;
 
     uint16_t *irData;
-    frame.getData(FrameDataType::IR, &irData);
+    frame.getData("ir", &irData);
 
     if (irData == nullptr) {
         return Status::GENERIC_ERROR;
