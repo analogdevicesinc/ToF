@@ -45,7 +45,7 @@ struct CalibrationData {
 struct NetworkDepthSensor::ImplData {
     NetworkHandle handle;
     std::string ip;
-    aditof::FrameDetails frameDetails_cache;
+    aditof::DepthSensorFrameType frameTypeCache;
     std::unordered_map<std::string, CalibrationData> calibration_cache;
     bool opened;
 };
@@ -235,16 +235,26 @@ aditof::Status NetworkDepthSensor::getAvailableFrameTypes(
     }
 
     for (int i = 0; i < net->recv_buff.available_frame_types_size(); i++) {
-        payload::FrameDetails details = net->recv_buff.available_frame_types(i);
-        aditof::FrameDetails aditofDetails;
+        payload::DepthSensorFrameType protoFrameType =
+            net->recv_buff.available_frame_types(i);
+        aditof::DepthSensorFrameType aditofFrameType;
 
-        aditofDetails.width = details.width();
-        aditofDetails.height = details.height();
-        aditofDetails.type = details.type();
-        aditofDetails.fullDataWidth = details.full_data_width();
-        aditofDetails.fullDataHeight = details.full_data_height();
+        aditofFrameType.type = protoFrameType.type();
+        for (int j = 0; j < protoFrameType.depthsensorframecontent_size();
+             ++j) {
+            payload::DepthSensorFrameContent protoFrameContent =
+                protoFrameType.depthsensorframecontent(j);
+            aditof::DepthSensorFrameContent aditofFrameContent;
 
-        types.push_back(aditofDetails);
+            aditofFrameContent.type = protoFrameContent.type();
+            aditofFrameContent.width = protoFrameContent.width();
+            aditofFrameContent.height = protoFrameContent.height();
+            aditofFrameType.content.emplace_back(aditofFrameContent);
+        }
+        aditofFrameType.width = protoFrameType.width();
+        aditofFrameType.height = protoFrameType.height();
+
+        types.push_back(aditofFrameType);
     }
 
     Status status = static_cast<Status>(net->recv_buff.status());
@@ -265,13 +275,17 @@ NetworkDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     }
 
     net->send_buff.set_func_name("SetFrameType");
-    net->send_buff.mutable_frame_type()->set_width(details.width);
-    net->send_buff.mutable_frame_type()->set_height(details.height);
-    net->send_buff.mutable_frame_type()->set_type(details.type);
-    net->send_buff.mutable_frame_type()->set_full_data_width(
-        details.fullDataWidth);
-    net->send_buff.mutable_frame_type()->set_full_data_height(
-        details.fullDataHeight);
+    net->send_buff.mutable_frame_type()->set_width(type.width);
+    net->send_buff.mutable_frame_type()->set_height(type.height);
+    net->send_buff.mutable_frame_type()->set_type(type.type);
+    for (const auto &content : type.content) {
+        auto protoFameContent =
+            net->send_buff.mutable_frame_type()->add_depthsensorframecontent();
+
+        protoFameContent->set_type(content.type);
+        protoFameContent->set_width(content.width);
+        protoFameContent->set_height(content.height);
+    }
     net->send_buff.set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
@@ -293,7 +307,7 @@ NetworkDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     Status status = static_cast<Status>(net->recv_buff.status());
 
     if (status == Status::OK) {
-        m_implData->frameDetails_cache = details;
+        m_implData->frameTypeCache = type;
     }
 
     return status;
@@ -376,11 +390,11 @@ aditof::Status NetworkDepthSensor::getFrame(uint16_t *buffer) {
     // Deinterleave data. The server sends raw data (uninterleaved) for better
     // throughput (raw data chunck is smaller, deinterleaving is usually slower
     // on target).
-
+    //TO DO: move this outside of this class (Maybe in camera) since is camera specific
     aditof::deinterleave(net->recv_buff.bytes_payload(0).c_str(), buffer,
                          net->recv_buff.bytes_payload(0).length(),
-                         m_implData->frameDetails_cache.fullDataWidth,
-                         m_implData->frameDetails_cache.fullDataHeight);
+                         m_implData->frameTypeCache.width,
+                         m_implData->frameTypeCache.height);
 
     return status;
 }
