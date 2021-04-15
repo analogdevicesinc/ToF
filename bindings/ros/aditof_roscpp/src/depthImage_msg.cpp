@@ -43,10 +43,10 @@ DepthImageMsg::DepthImageMsg(const std::shared_ptr<aditof::Camera> &camera,
 
 void DepthImageMsg::FrameDataToMsg(const std::shared_ptr<Camera> &camera,
                                    aditof::Frame *frame, ros::Time tStamp) {
-    FrameDetails fDetails;
-    frame->getDetails(fDetails);
+    FrameDataDetails fDetails;
+    frame->getDataDetails("depth",fDetails);
 
-    setMetadataMembers(fDetails.width, fDetails.height / 2, tStamp);
+    setMetadataMembers(fDetails.width, fDetails.height, tStamp);
 
     uint16_t *frameData = getFrameData(frame, "depth");
     if (!frameData) {

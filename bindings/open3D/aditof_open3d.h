@@ -98,7 +98,7 @@ Status fromFrameToIRImg(Frame &frame, int bitCount, geometry::Image &image) {
     frame.getDataDetails("ir",frameDetails);
 
     const int frameHeight = static_cast<int>(frameDetails.height);
-    const int frameWidth = static_cast<int>(frameDetails.height);
+    const int frameWidth = static_cast<int>(frameDetails.width);
     int max_value_of_IR_pixel = (1 << bitCount) - 1;
 
     uint16_t *irData;
