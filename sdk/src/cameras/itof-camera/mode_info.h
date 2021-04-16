@@ -29,6 +29,7 @@ class ModeInfo {
         uint8_t subframes;
         uint16_t embed_width;
         uint16_t embed_height;
+        uint8_t passive_ir;
     } modeInfo;
 
     /**
@@ -56,8 +57,7 @@ class ModeInfo {
   private:
     static modeInfo g_modeInfoData[]; //static array of all modes supported
     static ModeInfo *m_instance;      //single instance
-    ModeInfo() {
-    } // private so that it can not be called, always access through getInstance()
+    ModeInfo() {} // private so that it can not be called, always access through getInstance()
     ModeInfo(const ModeInfo &);            // copy constructor is private
     ModeInfo &operator=(const ModeInfo &); // assignment operator is private
 };
