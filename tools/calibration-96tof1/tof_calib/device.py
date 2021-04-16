@@ -194,7 +194,7 @@ def get_depth_image(cam_handle):
     status = cam_handle.requestFrame(frame)
     # logger.debug(status)
 
-    depth_image = np.array(frame.getData(tof.FrameDataType.Depth), copy=True)
+    depth_image = np.array(frame.getData("depth"), copy=True)
     return depth_image
 
 
@@ -205,7 +205,7 @@ def get_ir_image(cam_handle):
     status = cam_handle.requestFrame(frame)
     # logger.debug(status)
 
-    ir_image = np.array(frame.getData(tof.FrameDataType.IR), copy=True)
+    ir_image = np.array(frame.getData("ir"), copy=True)
     return ir_image
 
 
@@ -216,7 +216,7 @@ def get_depth_ir_image(cam_handle):
     status = cam_handle.requestFrame(frame)
     # logger.debug(status)
 
-    depth_image = np.array(frame.getData(tof.FrameDataType.Depth), copy=True)
-    ir_image = np.array(frame.getData(tof.FrameDataType.IR), copy=True)
+    depth_image = np.array(frame.getData("depth"), copy=True)
+    ir_image = np.array(frame.getData("ir"), copy=True)
 
     return depth_image, ir_image
