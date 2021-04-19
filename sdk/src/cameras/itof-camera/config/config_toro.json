@@ -1,0 +1,5 @@
+{
+"sensorFirmware": "camera_configuration_toro.cfg",
+"CCB_Calibration": "camera_calibration.ccb",
+"VAUX_POWER_VOLTAGE": "18"
+}
