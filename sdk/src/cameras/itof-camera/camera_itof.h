@@ -79,7 +79,8 @@ class CameraItof : public aditof::Camera {
     CameraItof(std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
                std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms,
                std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
-                   &tSensors);
+                   &tSensors,
+               std::string config);
     ~CameraItof();
 
   public: // implements Camera
@@ -200,7 +201,7 @@ class CameraItof : public aditof::Camera {
     aditof::Status processFrame(uint8_t *rawFrame, uint16_t *captureData,
                                 uint8_t *head, const uint16_t embed_height,
                                 const uint16_t embed_width,
-                                aditof::FrameDetails &frameDetails);
+                                aditof::Frame *frame);
 
     /**
      * @brief Gets the information about the current mode set
@@ -252,16 +253,30 @@ class CameraItof : public aditof::Camera {
      */
     aditof::Status loadModuleData();
 
+    /**
+     * @brief Apply calibration to the frame captured
+     * Based on the platform the camera is connected to Windows/Linux/Mac corresponding implementation of applyCalibrationToFrame is done.
+     * @param[in] frame - Frame captured
+     * @param[in] mode - Mode the camera is set work in
+     * @return aditof::Status
+     * @see aditof::Status
+     */
+    aditof::Status applyCalibrationToFrame(uint16_t *frame, const unsigned int mode);
+
   private:
     using noArgCallable = std::function<aditof::Status()>;
 
     aditof::CameraDetails m_details;
     std::shared_ptr<aditof::DepthSensorInterface> m_depthSensor;
     std::shared_ptr<aditof::StorageInterface> m_eeprom;
+    std::shared_ptr<aditof::TemperatureSensorInterface> m_tempSensor;
     std::unordered_map<std::string, std::string> m_controls;
     std::map<std::string, noArgCallable> m_noArgCallables;
 
     bool m_devStarted;
+    bool m_eepromInitialized;
+    bool m_tempSensorInitialized;
+    std::string m_config;
     // Calibration m_calibration;
 
     uint8_t *m_calData = NULL;
@@ -276,6 +291,7 @@ class CameraItof : public aditof::Camera {
     std::string m_ini_depth;
     uint16_t m_modechange_framedrop_count = 0;
     std::vector<std::string> m_tempFiles;
+    std::vector<aditof::DepthSensorFrameType> m_availableSensorFrameTypes;
 };
 
 #endif // CAMERA_ITOF_H
