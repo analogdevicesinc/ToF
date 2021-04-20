@@ -79,8 +79,7 @@ class CameraItof : public aditof::Camera {
     CameraItof(std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
                std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms,
                std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
-                   &tSensors,
-               std::string config);
+                   &tSensors);
     ~CameraItof();
 
   public: // implements Camera
@@ -276,7 +275,6 @@ class CameraItof : public aditof::Camera {
     bool m_devStarted;
     bool m_eepromInitialized;
     bool m_tempSensorInitialized;
-    std::string m_config;
     // Calibration m_calibration;
 
     uint8_t *m_calData = NULL;

@@ -46,10 +46,9 @@
 CameraItof::CameraItof(
     std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
     std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms,
-    std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &tSensors,
-    std::string config)
+    std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &tSensors)
     : m_depthSensor(depthSensor), m_devStarted(false),
-      m_modechange_framedrop_count(0), m_config(config) {
+      m_modechange_framedrop_count(0) {
     m_details.mode = "short_throw";
     m_details.cameraId = "";
 
@@ -100,7 +99,8 @@ aditof::Status CameraItof::initialize() {
     }
 
     // Parse config.json
-    std::ifstream ifs(m_config.c_str());
+    std::string config = m_controls["initialization_config"];
+    std::ifstream ifs(config.c_str());
     std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
     std::vector<std::pair<std::string, int32_t>> device_settings;
 
@@ -152,8 +152,8 @@ aditof::Status CameraItof::initialize() {
         if (cJSON_IsString(json_vaux_voltage) && (json_vaux_voltage->valuestring != NULL)) {
             device_settings.push_back(std::make_pair(json_vaux_voltage->string, atoi(json_vaux_voltage->valuestring)));
         }
-    } else if (!m_config.empty()) {
-        LOG(ERROR) << "Couldn't parse " << m_config.c_str();
+    } else if (!config.empty()) {
+        LOG(ERROR) << "Couldn't parse config file: " << config.c_str();
         return Status::GENERIC_ERROR;
     }
 
