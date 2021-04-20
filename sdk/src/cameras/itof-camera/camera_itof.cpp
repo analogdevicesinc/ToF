@@ -624,6 +624,11 @@ std::tuple<aditof::Status, int, int, int> CameraItof::loadConfigData(void) {
     return std::make_tuple(aditof::Status::OK, calFileSize, jsonFileSize, iniFileSize);
 }
 
+void CameraItof::freeConfigData(void)
+{
+    // TO DO:
+}
+
 aditof::Status CameraItof::isValidFrame(const int numTotalFrames) {
     using namespace aditof;
 
