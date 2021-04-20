@@ -318,7 +318,7 @@ run_docker() {
     docker run --rm --privileged multiarch/qemu-user-static:register --reset
 
     sudo docker run --rm=true \
-			-v `pwd`:/aditof_sdk:rw \
+			-v `pwd`:/aditof-sdk-rework:rw \
 			${docker} \
-            /bin/bash -xe ${script} /aditof_sdk ${script_args}
+            /bin/bash -xe ${script} /aditof-sdk-rework ${script_args}
 }

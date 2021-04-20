@@ -37,12 +37,12 @@ sudo apt-get install git wget tar make abootimg simg2img mount qemu-user-static 
         Specify the patches that will be applied to kernel_repo.
         Default: kernel_4_9_27
 --branch
-        Specify the aditof_sdk branch/tag that will be built.
+        Specify the aditof-sdk-rework branch/tag that will be built.
         Default: master
 --image_name
         Specify the name of the resulting image.
         Default: dragonboard410c_latest_<sha of HEAD commit from "branch">
 ```
 #### Troubleshooting
-1. For the script to work with other `kernel_branch` / `kernel_repo` values make sure to specify the `kernel_patches` which is the folder containing this patches. This folder must be in [the linux patches for dragonboard folder](https://github.com/analogdevicesinc/aditof_sdk/tree/master/sdcard-images-utils/dragonboard410c/linux-patches)
-2. In case an error occurs while running the script due to a missing package, or something else, before attempting to run again make sure to remove the folder in which the script temporarily works. The folder should be `.temp` and should be at the same level as the `image.sh` script (../aditof_sdk/sdcard-images-utils/dragonboard410c/utils)
+1. For the script to work with other `kernel_branch` / `kernel_repo` values make sure to specify the `kernel_patches` which is the folder containing this patches. This folder must be in [the linux patches for dragonboard folder](https://github.com/analogdevicesinc/aditof-sdk-rework/tree/master/sdcard-images-utils/dragonboard410c/linux-patches)
+2. In case an error occurs while running the script due to a missing package, or something else, before attempting to run again make sure to remove the folder in which the script temporarily works. The folder should be `.temp` and should be at the same level as the `image.sh` script (../aditof-sdk-rework/sdcard-images-utils/dragonboard410c/utils)

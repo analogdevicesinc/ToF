@@ -15,7 +15,7 @@ To get TENSORFLOW  model configuration files (**frozen_inference_graph.pb and ma
 
 For running the python program use:
 ```console
-python maskr_cnn.py --model local_path\aditof_sdk\bindings\python\examples\maskr_cnn\frozen_inference_graph.pb --config local_path\aditof_sdk\bindings\python\examples\maskr_cnn\mask_rcnn_inception_v2_coco_2018_01_28.pbtxt --classes local_path\aditof_sdk\bindings\python\examples\maskr_cnn\object_detection_classes_coco.txt
+python maskr_cnn.py --model local_path\aditof-sdk-rework\bindings\python\examples\maskr_cnn\frozen_inference_graph.pb --config local_path\aditof-sdk-rework\bindings\python\examples\maskr_cnn\mask_rcnn_inception_v2_coco_2018_01_28.pbtxt --classes local_path\aditof-sdk-rework\bindings\python\examples\maskr_cnn\object_detection_classes_coco.txt
 ```
 
 ![Display Image](/doc/img/maskrcnn_python.png)

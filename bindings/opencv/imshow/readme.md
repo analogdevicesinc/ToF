@@ -3,7 +3,7 @@
 ### Overview
 This example demonstrates how to capture data from the TOF system and display it using OpenCV
 
-![Display Image](https://github.com/analogdevicesinc/aditof_sdk/blob/master/doc/img/imshow.png)
+![Display Image](https://github.com/analogdevicesinc/aditof-sdk-rework/blob/master/doc/img/imshow.png)
 
 The following code snippet is used to convert the `aditof::Frame` into a `cv::Mat` containing the depth information
 ```cpp

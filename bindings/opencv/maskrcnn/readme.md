@@ -20,7 +20,7 @@ Afterward copy the two TENSORFLOW model configuration files (**frozen_inference_
 For running the program with different configuration files use the parameters: *model, config and classes*. 
 For example:
 ```console
- --model=local_path\aditof_sdk\bindings\python\examples\maskr_cnn\frozen_inference_graph.pb --config=local_path\aditof_sdk\bindings\python\examples\maskr_cnn\mask_rcnn_inception_v2_coco_2018_01_28.pbtxt --classes=local_path\aditof_sdk\bindings\python\examples\maskr_cnn\object_detection_classes_coco.txt
+ --model=local_path\aditof-sdk-rework\bindings\python\examples\maskr_cnn\frozen_inference_graph.pb --config=local_path\aditof-sdk-rework\bindings\python\examples\maskr_cnn\mask_rcnn_inception_v2_coco_2018_01_28.pbtxt --classes=local_path\aditof-sdk-rework\bindings\python\examples\maskr_cnn\object_detection_classes_coco.txt
 ```
 
 ![Display Image](/doc/img/maskrcnn_cpp.png) 

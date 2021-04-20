@@ -43,7 +43,7 @@ print_help() {
         echo "        Specify the patches that will be applied to kernel_repo. "
         echo "        Default: kernel_4_9_27 "
         echo "--branch"
-        echo "        Specify the aditof_sdk branch/tag that will be built. "
+        echo "        Specify the aditof-sdk-rework branch/tag that will be built. "
         echo "        Default: master "
         echo "--image_name"
         echo "        Specify the name of the resulting image. "
@@ -231,13 +231,13 @@ sudo cp -rf ${KERNEL_MODULES_PATH}/lib/modules/4.9-camera-lt-qcom /mnt/lib/modul
 
 # ########## build sdk
 
-[ -d "aditof_sdk" ] || {
-        git clone --branch "${branch}" --depth 1 https://github.com/analogdevicesinc/aditof_sdk
+[ -d "aditof-sdk-rework" ] || {
+        git clone --branch "${branch}" --depth 1 https://github.com/analogdevicesinc/aditof-sdk-rework
 }
 
 sha=""
 if [[ -z "${image_name}" ]]; then
-        pushd "aditof_sdk"
+        pushd "aditof-sdk-rework"
         sha=$(git log --pretty=format:'%h' -n 1)
         image_name="dragonboard410c_latest_${sha}.img"
         popd
@@ -245,7 +245,7 @@ fi
 
 sudo mkdir -p /mnt/home/linaro/workspace
 sudo mkdir -p /mnt/home/linaro/workspace/github
-# sudo cp -r aditof_sdk/ /mnt/home/linaro/workspace/github
+# sudo cp -r aditof-sdk-rework/ /mnt/home/linaro/workspace/github
 
 touch /mnt/home/linaro/info.txt
 echo "sdk version: ${branch} (${sha})" >> /mnt/home/linaro/info.txt

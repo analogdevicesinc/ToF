@@ -9,7 +9,7 @@ When building the adaptor, specify the cmake option `-DWITH_MATLAB=on`. If MATLA
 
 The output of the build is a dymanic library (.so for Linux and .dll for Windows) that is to be loaded in MATLAB by using the Image Acquisition Toolbox specific functions. The `aditof_imaq.m` script provides a full example on how to use the custom adaptor in MATLAB. Before running the `aditof_imaq.m` script make sure to copy the aditof.so/dll and the aditofadapter.so/dll to the folder where the script is.
 
-The adaptor binaries for Linux and Windows are provided as part of the [SDK releases](https://github.com/analogdevicesinc/aditof_sdk/releases/latest).
+The adaptor binaries for Linux and Windows are provided as part of the [SDK releases](https://github.com/analogdevicesinc/aditof-sdk-rework/releases/latest).
 
 ### Troubleshooting
 
