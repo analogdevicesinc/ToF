@@ -18,7 +18,7 @@ cd /home/linaro/workspace/github
 wget http://swdownloads.analog.com/cse/aditof/deps-dragonboard.tar.xz
 tar -xf deps-dragonboard.tar.xz
 
-sed -i 's+/home/linaro/workspace/github/aditof_sdk/deps/installed/opencv-3.4.1+/usr/local+g' /home/linaro/workspace/github/deps/opencv-3.4.1/lib/pkgconfig/opencv.pc
+sed -i 's+/home/linaro/workspace/github/aditof-sdk-rework/deps/installed/opencv-3.4.1+/usr/local+g' /home/linaro/workspace/github/deps/opencv-3.4.1/lib/pkgconfig/opencv.pc
 
 cp -r /home/linaro/workspace/github/deps/opencv-3.4.1/* /usr/local/
 cp -r /home/linaro/workspace/github/deps/glog/* /usr/local/
@@ -40,9 +40,9 @@ sudo rm -rf /home/linaro/workspace/github/deps-dragonboard.tar.xz
 
 sudo ldconfig
 
-git clone --branch $1 https://github.com/analogdevicesinc/aditof_sdk
+git clone --branch $1 https://github.com/analogdevicesinc/aditof-sdk-rework
 
-cd aditof_sdk
+cd aditof-sdk-rework
 
 mkdir -p build
 cd build
@@ -56,7 +56,7 @@ make -j8
 # This is not an issue as we don't need to reload the rules in this context
 sudo make install-udev-rules
 
-cd /home/linaro/workspace/github/aditof_sdk/apps/daemon
+cd /home/linaro/workspace/github/aditof-sdk-rework/apps/daemon
 sudo cp tof-programming.service /etc/systemd/system/
 mkdir -p build
 cd build
@@ -64,7 +64,7 @@ cmake ..
 make -j8
 sudo systemctl enable tof-programming
 
-cd /home/linaro/workspace/github/aditof_sdk/utils/dragonboard
+cd /home/linaro/workspace/github/aditof-sdk-rework/utils/dragonboard
 sudo cp config_pipe.service /etc/systemd/system/
 sudo systemctl enable config_pipe
 
@@ -72,7 +72,7 @@ mkdir -p /home/linaro/Desktop
 cd /home/linaro/Desktop
 touch aditof-demo.sh
 echo '#!/bin/bash' >> aditof-demo.sh
-echo 'cd /home/linaro/workspace/github/aditof_sdk/build/examples/aditof-demo' >> aditof-demo.sh
+echo 'cd /home/linaro/workspace/github/aditof-sdk-rework/build/examples/aditof-demo' >> aditof-demo.sh
 echo './aditof-demo' >> aditof-demo.sh
 sudo chmod +x aditof-demo.sh
 

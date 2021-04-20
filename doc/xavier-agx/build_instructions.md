@@ -15,10 +15,10 @@ To build the SDK and run the included applications and example code the followin
 The SD card image already contains all the SDK dependencies and there's no need to install them again. To update and build the SDK just follow the steps below.
 
 ```console
-analog@xavier:~/workspace/aditof_sdk$ git pull
-analog@xavier:~/workspace/aditof_sdk$ cd build
-analog@xavier:~/workspace/aditof_sdk/build$ cmake -DXAVIER=1 ..
-analog@xavier:~/workspace/aditof_sdk/build$ make -j4
+analog@xavier:~/workspace/aditof-sdk-rework$ git pull
+analog@xavier:~/workspace/aditof-sdk-rework$ cd build
+analog@xavier:~/workspace/aditof-sdk-rework/build$ cmake -DXAVIER=1 ..
+analog@xavier:~/workspace/aditof-sdk-rework/build$ make -j4
 ```
 
 ## Linux Kernel

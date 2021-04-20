@@ -51,8 +51,8 @@ cmake --build . --target install --config Release
 ### Download and build SDK only
 * Follow below steps to download the SDK, generate MS Visual Studio project and build it directly from command line
 ```console
-git clone https://github.com/analogdevicesinc/aditof_sdk
-cd aditof_sdk
+git clone https://github.com/analogdevicesinc/aditof-sdk-rework
+cd aditof-sdk-rework
 mkdir build
 cd build
 cmake -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk\deps\glog\build_0_3_5\local_path\glog;C:\projects\aditof-sdk\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\aditof-sdk\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 14 2015 Win64" -DOPENSSL_INCLUDE_DIRS="C:\OpenSSL-Win64\include" -DWITH_EXAMPLES=off ..
@@ -83,14 +83,14 @@ OPENCV_PATH=C:\opencv\build\x64\vc14\bin
 ### Build SDK with examples and in Visual Studio
 - Generate the VisualStudio solution
 ```console
-cd aditof_sdk
+cd aditof-sdk-rework
 mkdir build
 cd build
 cmake -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk\deps\glog\build_0_3_5\local_path\glog;C:\projects\aditof-sdk\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\aditof-sdk\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 14 2015 Win64" -DOPENSSL_INCLUDE_DIRS="C:\OpenSSL-Win64\include" -DWITH_EXAMPLES=on ..
 ```
-- Open 'adi_tof_project.sln' generated in 'aditof_sdk\build' in MS Visual Studio 2015
+- Open 'adi_tof_project.sln' generated in 'aditof-sdk-rework\build' in MS Visual Studio 2015
 - Select 'Release' build
-- Application binaries are created in 'aditof_sdk\build\example\aditof-demo\Release' directory
+- Application binaries are created in 'aditof-sdk-rework\build\example\aditof-demo\Release' directory
 
 
 ## SDK with bindings
@@ -105,7 +105,7 @@ cmake -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk\deps\glog\build_0_3_5\local_pa
 * OpenCV
 
 ### Steps to build the SDK
-- Run the script located in: 'aditof_sdk\scripts\windows' with the suitable configuration parameters. <br>
+- Run the script located in: 'aditof-sdk-rework\scripts\windows' with the suitable configuration parameters. <br>
 The following example runs the script with generator **Visual Studio 14 2015 Win64** and configuration **Release**. The sdk will be built in folder: **current_script_path\build** and the dependencies will be installed in folder: **current_script_path\deps\installed**.
 Use parameter *-h* or *--help* for more information regarding the parameters. 
 ```
