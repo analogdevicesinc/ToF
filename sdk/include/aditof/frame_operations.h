@@ -39,6 +39,23 @@ namespace aditof {
 /**
  * @brief operator ==
  *
+ * @param lhs - LHS FrameDataDetails
+ * @param rhs - RHS FrameDataDetails
+ * @return bool
+ */
+bool operator==(const FrameDataDetails &lhs, const FrameDataDetails &rhs);
+
+/**
+ * @brief operator !=
+ *
+ * @param lhs - LHS FrameDataDetails
+ * @param rhs - RHS FrameDataDetails
+ * @return bool
+ */
+bool operator!=(const FrameDataDetails &lhs, const FrameDataDetails &rhs);
+/**
+ * @brief operator ==
+ *
  * @param lhs - LHS FrameDetails
  * @param rhs - RHS FrameDetails
  * @return bool
