@@ -48,9 +48,9 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
         virtual aditof::Status start() override;
         virtual aditof::Status stop() override;
         virtual aditof::Status
-        getAvailableFrameTypes(std::vector<aditof::FrameDetails> &types) override;
+        getAvailableFrameTypes(std::vector<aditof::DepthSensorFrameType> &types) override;
         virtual aditof::Status
-        setFrameType(const aditof::FrameDetails &details) override;
+        setFrameType(const aditof::DepthSensorFrameType &type) override;
         virtual aditof::Status program(const uint8_t *firmware,
                                    size_t size) override;
         virtual aditof::Status getFrame(uint16_t *buffer) override;
@@ -64,5 +64,37 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
         getDetails(aditof::SensorDetails &details) const override;
         virtual aditof::Status getHandle(void **handle) override;
 
-        aditof::Status Adsd3100Sensor::writeConfigBlock(const uint32_t offset);
-}
+    public: // implements V4lBufferAccessInterface
+    // Methods that give a finer control than getFrame()
+    // And worksif there is only one v4lbuffer (if many, then I don't know, maybe restructure this interface)
+    virtual aditof::Status waitForBuffer() override;
+    virtual aditof::Status
+    dequeueInternalBuffer(struct v4l2_buffer &buf) override;
+    virtual aditof::Status
+    getInternalBuffer(uint8_t **buffer, uint32_t &buf_data_len,
+                      const struct v4l2_buffer &buf) override;
+    virtual aditof::Status
+    enqueueInternalBuffer(struct v4l2_buffer &buf) override;
+    virtual aditof::Status
+    getDeviceFileDescriptor(int &fileDescriptor) override;
+
+    private:
+        aditof::Status writeConfigBlock(const uint32_t offset);
+        aditof::Status waitForBufferPrivate(struct VideoDev *dev = nullptr);
+        aditof::Status dequeueInternalBufferPrivate(struct v4l2_buffer &buf,
+                                                    struct VideoDev *dev = nullptr);
+        aditof::Status getInternalBufferPrivate(uint8_t **buffer,
+                                                uint32_t &buf_data_len,
+                                                const struct v4l2_buffer &buf,
+                                                struct VideoDev *dev = nullptr);
+        aditof::Status enqueueInternalBufferPrivate(struct v4l2_buffer &buf,
+                                                    struct VideoDev *dev = nullptr);
+
+    private:
+        struct ImplData;
+        aditof::SensorDetails m_sensorDetails;
+        std::string m_driverPath;
+        std::string m_driverSubPath;
+        std::string m_captureDev;
+        std::unique_ptr<ImplData> m_implData;
+};

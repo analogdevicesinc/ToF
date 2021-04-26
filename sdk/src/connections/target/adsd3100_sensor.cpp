@@ -12,9 +12,11 @@
 #include <arm_neon.h>
 #include <cmath>
 #include <fcntl.h>
+#include <fstream>
 #include <glog/logging.h>
 #include <linux/videodev2.h>
 #include <sstream>
+#include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unordered_map>
@@ -56,21 +58,24 @@ struct ConfigurationData {
     uint32_t values;
 };
 
-struct Adsd3100Sensor::ImplData {
+struct VideoDev {
     int fd;
     int sfd;
     struct buffer *videoBuffers;
     unsigned int nVideoBuffers;
-    struct v4l2_plane planes[1];
-    aditof::FrameDetails frameDetails;
-    bool started;
+    struct v4l2_plane planes[8];
     enum v4l2_buf_type videoBuffersType;
-    std::unordered_map<mode_name_enum, CalibrationData> calibration_cache;
+    bool started;
 
-    ImplData()
-        : fd(-1), sfd(-1), nVideoBuffers(0),
-          videoBuffers(nullptr), frameDetails{0, 0, "", {0.0f, 1.0f}},
+    VideoDev()
+        : fd(-1), sfd(-1), videoBuffers(nullptr), nVideoBuffers(0),
           started(false) {}
+};
+struct Adsd3100Sensor::ImplData {
+     uint8_t numVideoDevs;
+    struct VideoDev *videoDevs;
+    aditof::DepthSensorFrameType frameType;
+    ImplData() : numVideoDevs(1), videoDevs(nullptr), frameType{"", {}, 0, 0} {}
 };
 
 // TO DO: This exists in linux_utils.h which is not included on Dragoboard.
@@ -89,44 +94,46 @@ Adsd3100Sensor::Adsd3100Sensor(const std::string &driverPath,
                                const std::string &driverSubPath,
                                const std::string &captureDev)
     : m_driverPath(driverPath), m_driverSubPath(driverSubPath),
-      m_captureDev(captureDev), m_implData(new Addi9036Sensor::ImplData) {
-    m_implData->calibration_cache =
-        std::unordered_map<mode_name_enum, CalibrationData>();
-}
+      m_captureDev(captureDev), m_implData(new Adsd3100Sensor::ImplData) {}
 
 Adsd3100Sensor::~Adsd3100Sensor() {
-    if (m_implData->started) {
-        stop();
-    }
+  struct VideoDev *dev;
 
-    for (auto it = m_implData->calibration_cache.begin();
-         it != m_implData->calibration_cache.begin(); ++it) {
-        delete[] it->second.cache;
-        it->second.cache = nullptr;
-    }
-
-    for (unsigned int i = 0; i < m_implData->nVideoBuffers; i++) {
-        if (munmap(m_implData->videoBuffers[i].start,
-                   m_implData->videoBuffers[i].length) == -1) {
-            LOG(WARNING) << "munmap error "
-                         << "errno: " << errno << " error: " << strerror(errno);
+    for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
+        dev = &m_implData->videoDevs[i];
+        if (dev->started) {
+            stop();
         }
     }
-    free(m_implData->videoBuffers);
 
-    if (close(m_implData->fd) == -1) {
-        LOG(WARNING) << "close m_implData->fd error "
-                     << "errno: " << errno << " error: " << strerror(errno);
-    }
+    for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
+        dev = &m_implData->videoDevs[i];
 
-    if (close(m_implData->sfd) == -1) {
-        LOG(WARNING) << "close m_implData->sfd error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        for (unsigned int i = 0; i < dev->nVideoBuffers; i++) {
+            if (munmap(dev->videoBuffers[i].start,
+                       dev->videoBuffers[i].length) == -1) {
+                LOG(WARNING)
+                    << "munmap error "
+                    << "errno: " << errno << " error: " << strerror(errno);
+            }
+        }
+        free(dev->videoBuffers);
+
+        if (close(dev->fd) == -1) {
+            LOG(WARNING) << "close m_implData->fd error "
+                         << "errno: " << errno << " error: " << strerror(errno);
+        }
+
+        if (close(dev->sfd) == -1) {
+            LOG(WARNING) << "close m_implData->sfd error "
+                         << "errno: " << errno << " error: " << strerror(errno);
+        }
     }
 }
 
 aditof::Status Adsd3100Sensor::open() {
 using namespace aditof;
+     using namespace aditof;
     Status status = Status::OK;
 
     LOG(INFO) << "Opening device";
@@ -233,67 +240,43 @@ using namespace aditof;
 }
 
 aditof::Status Adsd3100Sensor::start() {
-    using namespace aditof;
+   using namespace aditof;
     Status status = Status::OK;
-
-    if (m_implData->started) {
-        LOG(INFO) << "Device already started";
-        return Status::BUSY;
-    }
-    LOG(INFO) << "Starting device";
-
-    uint16_t nAddr = 0x000C;
-    uint16_t nData = 0x00C5;
-    Adsd3100Sensor::writeAfeRegisters(&nAddr, &nData, 1);
-
-    /* Verify the Sequencer is waiting for the FSYNC */
-    uint32_t nCounter = 0;
-
-    while((nCounter < 100) && (nData != 0x2))
-    {
-            nAddr = 0x0256;
-            Adsd3100Sensor::readAfeRegisters(&nAddr, &nData, 1);
-            nCounter++;
-    }
-    if(nData != 0x2)
-    {
-
-        LOG(WARNING) << "Failure: Sequencer was unable to initialize. Stuck in state " << nData;
-
-        if(nData = 0xF)
-        {
-            nAddr = 0x032;
-            uint16_t nErrorCode;
-            Adsd3100Sensor::readAfeRegisters(&nAddr, &nErrorCode, 1);
-            LOG(WARNING) << "Sequencer error code " << nErrorCode;    
-        }
-        return Status::GENERIC_ERROR;
-    }
-
+    struct VideoDev *dev;
     struct v4l2_buffer buf;
-    for (unsigned int i = 0; i < m_implData->nVideoBuffers; i++) {
-        CLEAR(buf);
-        buf.type = m_implData->videoBuffersType;
-        buf.memory = V4L2_MEMORY_MMAP;
-        buf.index = i;
-        buf.m.planes = m_implData->planes;
-        buf.length = 1;
 
-        if (xioctl(m_implData->fd, VIDIOC_QBUF, &buf) == -1) {
-            LOG(WARNING) << "mmap error "
+    for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
+        dev = &m_implData->videoDevs[i];
+        if (dev->started) {
+            LOG(INFO) << "Device already started";
+            return Status::BUSY;
+        }
+        LOG(INFO) << "Starting device " << i;
+
+        for (unsigned int i = 0; i < dev->nVideoBuffers; i++) {
+            CLEAR(buf);
+            buf.type = dev->videoBuffersType;
+            buf.memory = V4L2_MEMORY_MMAP;
+            buf.index = i;
+            buf.m.planes = dev->planes;
+            buf.length = 1;
+
+            if (xioctl(dev->fd, VIDIOC_QBUF, &buf) == -1) {
+                LOG(WARNING)
+                    << "mmap error "
+                    << "errno: " << errno << " error: " << strerror(errno);
+                return Status::GENERIC_ERROR;
+            }
+        }
+
+        if (xioctl(dev->fd, VIDIOC_STREAMON, &dev->videoBuffersType) != 0) {
+            LOG(WARNING) << "VIDIOC_STREAMON error "
                          << "errno: " << errno << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
         }
-    }
 
-    if (xioctl(m_implData->fd, VIDIOC_STREAMON,
-               &m_implData->videoBuffersType) == -1) {
-        LOG(WARNING) << "VIDIOC_STREAMON error "
-                     << "errno: " << errno << " error: " << strerror(errno);
-        return Status::GENERIC_ERROR;
+        dev->started = true;
     }
-
-    m_implData->started = true;
 
     return status;
 }
@@ -301,147 +284,174 @@ aditof::Status Adsd3100Sensor::start() {
 aditof::Status Adsd3100Sensor::stop() {
     using namespace aditof;
     Status status = Status::OK;
+    struct VideoDev *dev;
 
-    if (!m_implData->started) {
-        LOG(INFO) << "Device already stopped";
-        return Status::BUSY;
+    for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
+        dev = &m_implData->videoDevs[i];
+
+        if (!dev->started) {
+            LOG(INFO) << "Device " << i << " already stopped";
+            return Status::BUSY;
+        }
+        LOG(INFO) << "Stopping device";
+
+        if (xioctl(dev->fd, VIDIOC_STREAMOFF, &dev->videoBuffersType) != 0) {
+            LOG(WARNING) << "VIDIOC_STREAMOFF error "
+                         << "errno: " << errno << " error: " << strerror(errno);
+            return Status::GENERIC_ERROR;
+        }
+
+        dev->started = false;
     }
-    LOG(INFO) << "Stopping device";
-
-    uint16_t nAddr = 0x000C;
-    uint16_t nData = 0x00C2;
-    Adsd3100Sensor::writeAfeRegisters(&nAddr, &nData, 1);
-
-    if (xioctl(m_implData->fd, VIDIOC_STREAMOFF,
-               &m_implData->videoBuffersType) == -1) {
-        LOG(WARNING) << "VIDIOC_STREAMOFF error "
-                     << "errno: " << errno << " error: " << strerror(errno);
-        return Status::GENERIC_ERROR;
-    }
-
-    m_implData->started = false;
 
     return status;
 }
 
 aditof::Status
-Adsd3100Sensor::getAvailableFrameTypes(std::vector<aditof::FrameDetails> &types) {
+Adsd3100Sensor::getAvailableFrameTypes(
+    std::vector<aditof::DepthSensorFrameType> &types) {
     using namespace aditof;
     Status status = Status::OK;
 
-    FrameDetails details;
+    DepthSensorFrameContent depthContent;
+    depthContent.width = 4096
+    depthContent.height = 256;
+    depthContent.type = "depth";
 
-    details.width = 1024;
-    details.height = 1024;
-    details.cal_data.offset = 0;
-    details.cal_data.gain = 1;
-    details.type = "depth_ir";
-    types.push_back(details);
+    DepthSensorFrameContent irContent;
+    irContent.width = 4096;
+    irContent.height = 256;
+    irContent.type = "ir";
 
-    details.width = 1024;
-    details.height = 1024;
-    details.cal_data.offset = 0;
-    details.cal_data.gain = 1;
-    details.type = "raw";
-    types.push_back(details);
+    DepthSensorFrameType depthIrFrame;
+    depthIrFrame.type = "depth_ir";
+    depthIrFrame.width = depthContent.width;
+    depthIrFrame.height = depthContent.height + depthContent.height;
+    depthIrFrame.content.emplace_back(depthContent);
+    depthIrFrame.content.emplace_back(irContent);
+
+    DepthSensorFrameType depthOnlyFrame;
+    depthOnlyFrame.type = "depth_only";
+    depthOnlyFrame.width = depthContent.width;
+    depthOnlyFrame.height = depthContent.height;
+    depthOnlyFrame.content.emplace_back(depthContent);
+
+    DepthSensorFrameType irOnlyFrame;
+    irOnlyFrame.type = "ir_only";
+    irOnlyFrame.width = irContent.width;
+    irOnlyFrame.height = irContent.height;
+    irOnlyFrame.content.emplace_back(irContent);
+
+    types.clear();
+    types.emplace_back(depthIrFrame);
+    types.emplace_back(depthOnlyFrame);
+    types.emplace_back(irOnlyFrame);
 
     return status;
 }
 
-aditof::Status Adsd3100Sensor::setFrameType(const aditof::FrameDetails &details) {
+aditof::Status Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     using namespace aditof;
     Status status = Status::OK;
+    struct VideoDev *dev;
 
     struct v4l2_requestbuffers req;
     struct v4l2_format fmt;
     struct v4l2_buffer buf;
     size_t length, offset;
 
-    if (details != m_implData->frameDetails) {
-        for (unsigned int i = 0; i < m_implData->nVideoBuffers; i++) {
-            if (munmap(m_implData->videoBuffers[i].start,
-                       m_implData->videoBuffers[i].length) == -1) {
+    for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
+        dev = &m_implData->videoDevs[i];
+        if (type.type != m_implData->frameType.type) {
+            for (unsigned int i = 0; i < dev->nVideoBuffers; i++) {
+                if (munmap(dev->videoBuffers[i].start,
+                           dev->videoBuffers[i].length) == -1) {
+                    LOG(WARNING)
+                        << "munmap error "
+                        << "errno: " << errno << " error: " << strerror(errno);
+                    return Status::GENERIC_ERROR;
+                }
+            }
+            free(dev->videoBuffers);
+            dev->nVideoBuffers = 0;
+        } else if (dev->nVideoBuffers) {
+            return status;
+        }
+
+        /* Set the frame format in the driver */
+        CLEAR(fmt);
+        fmt.type = dev->videoBuffersType;
+#if defined TOYBRICK //???
+        fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_SBGGR12;
+#endif
+        fmt.fmt.pix.width = type.width;
+        fmt.fmt.pix.height = type.height / m_implData->numVideoDevs;
+
+        if (xioctl(dev->fd, VIDIOC_S_FMT, &fmt) == -1) {
+            LOG(WARNING) << "Setting Pixel Format error, errno: " << errno
+                         << " error: " << strerror(errno);
+            return Status::GENERIC_ERROR;
+        }
+
+        /* Allocate the video buffers in the driver */
+        CLEAR(req);
+        req.count = 4;
+        req.type = dev->videoBuffersType;
+        req.memory = V4L2_MEMORY_MMAP;
+
+        if (xioctl(dev->fd, VIDIOC_REQBUFS, &req) == -1) {
+            LOG(WARNING) << "VIDIOC_REQBUFS error "
+                         << "errno: " << errno << " error: " << strerror(errno);
+            return Status::GENERIC_ERROR;
+        }
+
+        dev->videoBuffers =
+            (buffer *)calloc(req.count, sizeof(*dev->videoBuffers));
+        if (!dev->videoBuffers) {
+            LOG(WARNING) << "Failed to allocate video m_implData->videoBuffers";
+            return Status::GENERIC_ERROR;
+        }
+
+        for (dev->nVideoBuffers = 0; dev->nVideoBuffers < req.count;
+             dev->nVideoBuffers++) {
+            CLEAR(buf);
+            buf.type = dev->videoBuffersType;
+            buf.memory = V4L2_MEMORY_MMAP;
+            buf.index = dev->nVideoBuffers;
+            buf.m.planes = dev->planes;
+            buf.length = 1;
+
+            if (xioctl(dev->fd, VIDIOC_QUERYBUF, &buf) == -1) {
                 LOG(WARNING)
-                    << "munmap error "
+                    << "VIDIOC_QUERYBUF error "
                     << "errno: " << errno << " error: " << strerror(errno);
                 return Status::GENERIC_ERROR;
             }
+
+            if (dev->videoBuffersType == V4L2_BUF_TYPE_VIDEO_CAPTURE) {
+                length = buf.length;
+                offset = buf.m.offset;
+            } else {
+                length = buf.m.planes[0].length;
+                offset = buf.m.planes[0].m.mem_offset;
+            }
+
+            dev->videoBuffers[dev->nVideoBuffers].start =
+                mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_SHARED, dev->fd,
+                     offset);
+
+            if (dev->videoBuffers[dev->nVideoBuffers].start == MAP_FAILED) {
+                LOG(WARNING)
+                    << "mmap error "
+                    << "errno: " << errno << " error: " << strerror(errno);
+                return Status::GENERIC_ERROR;
+            }
+
+            dev->videoBuffers[dev->nVideoBuffers].length = length;
         }
-        free(m_implData->videoBuffers);
-        m_implData->nVideoBuffers = 0;
-    } else if (m_implData->nVideoBuffers) {
-        return status;
     }
 
-    /* Set the frame format in the driver */
-    CLEAR(fmt);
-    fmt.type = m_implData->videoBuffersType;
-    fmt.fmt.pix.width = details.width;
-    fmt.fmt.pix.height = details.height;
-
-    if (xioctl(m_implData->fd, VIDIOC_S_FMT, &fmt) == -1) {
-        LOG(WARNING) << "Setting Pixel Format error, errno: " << errno
-                     << " error: " << strerror(errno);
-        return Status::GENERIC_ERROR;
-    }
-
-    /* Allocate the video buffers in the driver */
-    CLEAR(req);
-    req.count = 2;
-    req.type = m_implData->videoBuffersType;
-    req.memory = V4L2_MEMORY_MMAP;
-
-    if (xioctl(m_implData->fd, VIDIOC_REQBUFS, &req) == -1) {
-        LOG(WARNING) << "VIDIOC_REQBUFS error "
-                     << "errno: " << errno << " error: " << strerror(errno);
-        return Status::GENERIC_ERROR;
-    }
-
-    m_implData->videoBuffers =
-        (buffer *)calloc(req.count, sizeof(*m_implData->videoBuffers));
-    if (!m_implData->videoBuffers) {
-        LOG(WARNING) << "Failed to allocate video m_implData->videoBuffers";
-        return Status::GENERIC_ERROR;
-    }
-
-    for (m_implData->nVideoBuffers = 0; m_implData->nVideoBuffers < req.count;
-         m_implData->nVideoBuffers++) {
-        CLEAR(buf);
-        buf.type = m_implData->videoBuffersType;
-        buf.memory = V4L2_MEMORY_MMAP;
-        buf.index = m_implData->nVideoBuffers;
-        buf.m.planes = m_implData->planes;
-        buf.length = 1;
-
-        if (xioctl(m_implData->fd, VIDIOC_QUERYBUF, &buf) == -1) {
-            LOG(WARNING) << "VIDIOC_QUERYBUF error "
-                         << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
-        }
-
-        if (m_implData->videoBuffersType == V4L2_BUF_TYPE_VIDEO_CAPTURE) {
-            length = buf.length;
-            offset = buf.m.offset;
-        } else {
-            length = buf.m.planes[0].length;
-            offset = buf.m.planes[0].m.mem_offset;
-        }
-
-        m_implData->videoBuffers[m_implData->nVideoBuffers].start =
-            mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_SHARED,
-                 m_implData->fd, offset);
-
-        if (m_implData->videoBuffers[m_implData->nVideoBuffers].start ==
-            MAP_FAILED) {
-            LOG(WARNING) << "mmap error "
-                         << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
-        }
-
-        m_implData->videoBuffers[m_implData->nVideoBuffers].length = length;
-    }
-
-    m_implData->frameDetails = details;
+    m_implData->frameType = type;
 
     return status;
 }
@@ -449,267 +459,302 @@ aditof::Status Adsd3100Sensor::setFrameType(const aditof::FrameDetails &details)
 aditof::Status Adsd3100Sensor::program(const uint8_t *firmware, size_t size) {
     using namespace aditof;
     Status status = Status::OK;
-    uint32_t offset;
+//     uint32_t offset;
 
-    /* Dummy Write To Kick Things off */
-    uint16_t nAddr = 0x112u;
-    uint16_t nData = 0x112u;
-    Adsd3100Sensor::writeAfeRegisters(&nAddr, &nData, 1);
+//     /* Dummy Write To Kick Things off */
+//     uint16_t nAddr = 0x112u;
+//     uint16_t nData = 0x112u;
+//     Adsd3100Sensor::writeAfeRegisters(&nAddr, &nData, 1);
 
-    m_configuration.getConfigOffset(offset_type_register, &offset);
-    writeConfigBlock(offset);
+//     m_configuration.getConfigOffset(offset_type_register, &offset);
+//     writeConfigBlock(offset);
 
-    /* Enable All Digital Clocks */
-    nAddr = 0x14u;
-    nData = 0x0u;
-    Adsd3100Sensor::writeAfeRegisters(&nAddr, &nData, 1);
+//     /* Enable All Digital Clocks */
+//     nAddr = 0x14u;
+//     nData = 0x0u;
+//     Adsd3100Sensor::writeAfeRegisters(&nAddr, &nData, 1);
 
-    m_configuration.getConfigOffset(offset_type_lx5_ram, &offset);
-    writeConfigBlock(offset);
+//     m_configuration.getConfigOffset(offset_type_lx5_ram, &offset);
+//     writeConfigBlock(offset);
 
-    m_configuration.getConfigOffset(offset_type_lx5_dram_bank0, &offset);
-    writeConfigBlock(offset);
+//     m_configuration.getConfigOffset(offset_type_lx5_dram_bank0, &offset);
+//     writeConfigBlock(offset);
 
-    m_configuration.getConfigOffset(offset_type_lx5_dram_bank1, &offset);
-    writeConfigBlock(offset);
+//     m_configuration.getConfigOffset(offset_type_lx5_dram_bank1, &offset);
+//     writeConfigBlock(offset);
 
-    m_configuration.getConfigOffset(offset_type_lx5_dram_bank2, &offset);
-    writeConfigBlock(offset);
+//     m_configuration.getConfigOffset(offset_type_lx5_dram_bank2, &offset);
+//     writeConfigBlock(offset);
 
-    m_configuration.getConfigOffset(offset_type_lx5_dram_bank3, &offset);
-    writeConfigBlock(offset);
+//     m_configuration.getConfigOffset(offset_type_lx5_dram_bank3, &offset);
+//     writeConfigBlock(offset);
 
-    m_configuration.getConfigOffset(offset_type_seqram, &offset);
-    writeConfigBlock(offset);
+//     m_configuration.getConfigOffset(offset_type_seqram, &offset);
+//     writeConfigBlock(offset);
 
-    m_configuration.getConfigOffset(offset_type_mapram, &offset);
-    writeConfigBlock(offset);
+//     m_configuration.getConfigOffset(offset_type_mapram, &offset);
+//     writeConfigBlock(offset);
 
-    m_configuration.getConfigOffset(offset_type_wavram, &offset);
-    writeConfigBlock(offset);
+//     m_configuration.getConfigOffset(offset_type_wavram, &offset);
+//     writeConfigBlock(offset);
 
-    m_configuration.getConfigOffset(offset_type_misc_register, &offset);
-    writeConfigBlock(offset);
+//     m_configuration.getConfigOffset(offset_type_misc_register, &offset);
+//     writeConfigBlock(offset);
 
-    /* TODO : REMOVE ONCE WE CAN GET THIS FROM EFUSE */
-    uint16_t DataPast = 0x00;
-    uint16_t AddrPast = 0x00;
-    char buf[1024];
+//     /* TODO : REMOVE ONCE WE CAN GET THIS FROM EFUSE */
+//     uint16_t DataPast = 0x00;
+//     uint16_t AddrPast = 0x00;
+//     char buf[1024];
 
-    FILE *fp;
-    fp = fopen("raw_calibration","r");
-    uint32_t nSize = 25754;
-    for (uint32_t i = 0; i < nSize; i++)
-    {
-         fread(buf,4 ,1, fp);
-         buf[4]='\0';
-         nAddr = (uint16_t)strtol(&buf[0], NULL, 16); 
+//     FILE *fp;
+//     fp = fopen("raw_calibration","r");
+//     uint32_t nSize = 25754;
+//     for (uint32_t i = 0; i < nSize; i++)
+//     {
+//          fread(buf,4 ,1, fp);
+//          buf[4]='\0';
+//          nAddr = (uint16_t)strtol(&buf[0], NULL, 16); 
 
-         fread(buf,1 ,1, fp);
-         fread(buf,4 ,1, fp);
-         buf[4]='\0';
-         nData = (uint16_t)strtol(&buf[0], NULL, 16); 
-         fread(buf,2 ,1, fp);
-        if((nData == DataPast) && (AddrPast == nAddr))
-        {
-            uint16_t dummyRead[2u];
-            dummyRead[0] = 0x112u;
-            dummyRead[1] = 0x0u;
-            Adsd3100Sensor::writeAfeRegisters(&dummyRead[0], &dummyRead[1], 1);
-        }
-         Adsd3100Sensor::writeAfeRegisters(&nAddr, &nData, 1);
+//          fread(buf,1 ,1, fp);
+//          fread(buf,4 ,1, fp);
+//          buf[4]='\0';
+//          nData = (uint16_t)strtol(&buf[0], NULL, 16); 
+//          fread(buf,2 ,1, fp);
+//         if((nData == DataPast) && (AddrPast == nAddr))
+//         {
+//             uint16_t dummyRead[2u];
+//             dummyRead[0] = 0x112u;
+//             dummyRead[1] = 0x0u;
+//             Adsd3100Sensor::writeAfeRegisters(&dummyRead[0], &dummyRead[1], 1);
+//         }
+//          Adsd3100Sensor::writeAfeRegisters(&nAddr, &nData, 1);
 
-        DataPast = nData;
-        AddrPast = nAddr;
-    }
+//         DataPast = nData;
+//         AddrPast = nAddr;
+//     }
 
-#if ADI_DEBUG
-    /* Verify data */
-    fseek(fp, 0, SEEK_SET);
-    for (uint32_t i = 0; i < nSize; i++)
-    {
-         uint16_t Data2;
-         fread(buf,4 ,1, fp);
-         buf[4]='\0';
-         nAddr = (uint16_t)strtol(&buf[0], NULL, 16); 
+// #if ADI_DEBUG
+//     /* Verify data */
+//     fseek(fp, 0, SEEK_SET);
+//     for (uint32_t i = 0; i < nSize; i++)
+//     {
+//          uint16_t Data2;
+//          fread(buf,4 ,1, fp);
+//          buf[4]='\0';
+//          nAddr = (uint16_t)strtol(&buf[0], NULL, 16); 
 
-         fread(buf,1 ,1, fp);
-         fread(buf,4 ,1, fp);
-         buf[4]='\0';
-         Data2 = (uint16_t)strtol(&buf[0], NULL, 16); 
-         fread(buf,2 ,1, fp);
+//          fread(buf,1 ,1, fp);
+//          fread(buf,4 ,1, fp);
+//          buf[4]='\0';
+//          Data2 = (uint16_t)strtol(&buf[0], NULL, 16); 
+//          fread(buf,2 ,1, fp);
 
-         if(nAddr == 0x0)
-         {
-            uint16_t tmp = 4;
-            Adsd3100Sensor::writeAfeRegisters(&tmp, &Data2, 1);
-         }
-         else if(nAddr == 0x500)
-         {
-            Adsd3100Sensor::writeAfeRegisters(&nAddr, &Data2, 1);
-         }
-         else if(nAddr == 0x502)
-         {
-            Adsd3100Sensor::writeAfeRegisters(&nAddr, &Data2, 1);
-         }
-         else if(nAddr == 0xE04)
-         {
-            Adsd3100Sensor::writeAfeRegisters(&nAddr, &Data2, 1);
-         }
-         else if(nAddr == 0xE06)
-         {
-            Adsd3100Sensor::writeAfeRegisters(&nAddr, &Data2, 1);
-         }
-         else if(nAddr == 0x80C)
-         {
-            /* VDMA address read/write offset*/
-            Adsd3100Sensor::writeAfeRegisters(&nAddr, &Data2, 1);
-         }
-         else if(nAddr == 0x14)
-         {
-            /* Skip digital clock gating because this changes throughout */
-            continue;
-         }
-         else if(nAddr == 0x132)
-         {
-            /* Skip latched writes */
-            continue;
-         }
-         else if(nAddr == 0x126)
-         {
-            /* Skip latched writes */
-            continue;
-         }
-         else if(nAddr == 0x528)
-         {
-            /* Changes throughout boot process */
-            continue;
-         }
-         else if(nAddr == 0x4)
-         {
-            /* Skip setup writes for a read */
-            continue;
-         }
-         else
-         {
-            if(nAddr == 0x2)
-            {
-                /* Read instead of write*/
-                nAddr = 0x6;
-            }
-            if(nAddr == 0x504)
-            {
-                /* Read instead of write*/
-                nAddr = 0x506;
-            }
-            if(nAddr == 0xE08)
-            {
-                /* Read instead of write*/
-                nAddr = 0xE0A;
-            }
-            if(AddrPast == nAddr)
-            {
-                uint16_t dummyRead[2];
-                dummyRead[0] = 0x112;
-                Adsd3100Sensor::readAfeRegisters(&dummyRead[0], &dummyRead[1], 1);
-            }
-             Adsd3100Sensor::readAfeRegisters(&nAddr, &DataPast, 1);
-             if(DataPast != Data2)
-             {
-                printf("FAILURE: Read Data2 %.4X != Expected data %.4X at address %.4X\n", DataPast, Data2, nAddr);
-                return Status::GENERIC_ERROR;
-             }          
-             DataPast = Data2;
-             AddrPast = nAddr;
-         }
-    }
-#endif
-    fclose(fp);
+//          if(nAddr == 0x0)
+//          {
+//             uint16_t tmp = 4;
+//             Adsd3100Sensor::writeAfeRegisters(&tmp, &Data2, 1);
+//          }
+//          else if(nAddr == 0x500)
+//          {
+//             Adsd3100Sensor::writeAfeRegisters(&nAddr, &Data2, 1);
+//          }
+//          else if(nAddr == 0x502)
+//          {
+//             Adsd3100Sensor::writeAfeRegisters(&nAddr, &Data2, 1);
+//          }
+//          else if(nAddr == 0xE04)
+//          {
+//             Adsd3100Sensor::writeAfeRegisters(&nAddr, &Data2, 1);
+//          }
+//          else if(nAddr == 0xE06)
+//          {
+//             Adsd3100Sensor::writeAfeRegisters(&nAddr, &Data2, 1);
+//          }
+//          else if(nAddr == 0x80C)
+//          {
+//             /* VDMA address read/write offset*/
+//             Adsd3100Sensor::writeAfeRegisters(&nAddr, &Data2, 1);
+//          }
+//          else if(nAddr == 0x14)
+//          {
+//             /* Skip digital clock gating because this changes throughout */
+//             continue;
+//          }
+//          else if(nAddr == 0x132)
+//          {
+//             /* Skip latched writes */
+//             continue;
+//          }
+//          else if(nAddr == 0x126)
+//          {
+//             /* Skip latched writes */
+//             continue;
+//          }
+//          else if(nAddr == 0x528)
+//          {
+//             /* Changes throughout boot process */
+//             continue;
+//          }
+//          else if(nAddr == 0x4)
+//          {
+//             /* Skip setup writes for a read */
+//             continue;
+//          }
+//          else
+//          {
+//             if(nAddr == 0x2)
+//             {
+//                 /* Read instead of write*/
+//                 nAddr = 0x6;
+//             }
+//             if(nAddr == 0x504)
+//             {
+//                 /* Read instead of write*/
+//                 nAddr = 0x506;
+//             }
+//             if(nAddr == 0xE08)
+//             {
+//                 /* Read instead of write*/
+//                 nAddr = 0xE0A;
+//             }
+//             if(AddrPast == nAddr)
+//             {
+//                 uint16_t dummyRead[2];
+//                 dummyRead[0] = 0x112;
+//                 Adsd3100Sensor::readAfeRegisters(&dummyRead[0], &dummyRead[1], 1);
+//             }
+//              Adsd3100Sensor::readAfeRegisters(&nAddr, &DataPast, 1);
+//              if(DataPast != Data2)
+//              {
+//                 printf("FAILURE: Read Data2 %.4X != Expected data %.4X at address %.4X\n", DataPast, Data2, nAddr);
+//                 return Status::GENERIC_ERROR;
+//              }          
+//              DataPast = Data2;
+//              AddrPast = nAddr;
+//          }
+//     }
+// #endif
+//     fclose(fp);
 
     return status;
 }
 
 aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
-    using namespace aditof;
-    Status status = Status::OK;
+     using namespace aditof;
+    struct v4l2_buffer buf[m_implData->numVideoDevs];
+    struct VideoDev *dev;
+    Status status;
 
-    fd_set fds;
-    struct timeval tv;
-    int r;
-    struct v4l2_buffer buf;
+    for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
+        dev = &m_implData->videoDevs[i];
+        status = waitForBufferPrivate(dev);
+        if (status != Status::OK) {
+            return status;
+        }
 
-    unsigned int width;
-    unsigned int height;
-    unsigned int offset[2];
-    unsigned int offset_idx;
-
-    FD_ZERO(&fds);
-    FD_SET(m_implData->fd, &fds);
-
-    tv.tv_sec = 60;
-    tv.tv_usec = 0;
-
-    r = select(m_implData->fd + 1, &fds, NULL, NULL, &tv);
-
-    if (r == -1) {
-        LOG(WARNING) << "select error "
-                     << "errno: " << errno << " error: " << strerror(errno);
-        return Status::GENERIC_ERROR;
-    } else if (r == 0) {
-        LOG(WARNING) << "select timeout";
-        return Status::GENERIC_ERROR;
-    }
-
-    CLEAR(buf);
-    buf.type = m_implData->videoBuffersType;
-    buf.memory = V4L2_MEMORY_MMAP;
-    buf.length = 1;
-    buf.m.planes = m_implData->planes;
-
-    if (xioctl(m_implData->fd, VIDIOC_DQBUF, &buf) == -1) {
-        LOG(WARNING) << "VIDIOC_DQBUF error "
-                     << "errno: " << errno << " error: " << strerror(errno);
-        switch (errno) {
-        case EAGAIN:
-        case EIO:
-            break;
-        default:
-            return Status::GENERIC_ERROR;
+        status = dequeueInternalBufferPrivate(buf[i], dev);
+        if (status != Status::OK) {
+            return status;
         }
     }
 
-    if (buf.index >= m_implData->nVideoBuffers) {
-        LOG(WARNING) << "Not enough buffers avaialable";
-        return Status::GENERIC_ERROR;
+    unsigned int width;
+    unsigned int height;
+    unsigned int buf_data_len;
+    uint8_t *pdata[m_implData->numVideoDevs];
+
+    width = m_implData->frameType.content.begin()->width;
+    height = m_implData->frameType.content.begin()->height;
+
+    for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
+        dev = &m_implData->videoDevs[i];
+        status = getInternalBufferPrivate(&pdata[i], buf_data_len, buf[i], dev);
+        if (status != Status::OK) {
+            return status;
+        }
     }
 
-    width = m_implData->frameDetails.width;
-    height = m_implData->frameDetails.height;
-    const uint8_t *pdata =
-        static_cast<uint8_t *>(m_implData->videoBuffers[buf.index].start);
-    offset[0] = 0;
-    offset[1] = height * width / 2;
-    if ((width == 668)) {
+    auto isBufferPacked = [](const struct v4l2_buffer &buf, unsigned int width,
+                             unsigned int height) {
+        unsigned int bytesused = 0;
+        if (buf.type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
+            bytesused = buf.m.planes[0].bytesused;
+        } else {
+            bytesused = buf.bytesused;
+        }
+
+        return bytesused == (width * height * 3);
+    };
+
+    if (width == 668) {
         unsigned int j = 0;
-        for (unsigned int i = 0; i < (height * width * 3 / 2); i += 3) {
+        for (unsigned int i = 0; i < (buf_data_len); i += 3) {
             if ((i != 0) && (i % (336 * 3) == 0)) {
                 j -= 4;
             }
 
-            buffer[j] = (((unsigned short)*(pdata + i)) << 4) |
-                        (((unsigned short)*(pdata + i + 2)) & 0x000F);
+            buffer[j] = (((unsigned short)*(pdata[0] + i)) << 4) |
+                        (((unsigned short)*(pdata[0] + i + 2)) & 0x000F);
             j++;
 
-            buffer[j] = (((unsigned short)*(pdata + i + 1)) << 4) |
-                        ((((unsigned short)*(pdata + i + 2)) & 0x00F0) >> 4);
+            buffer[j] = (((unsigned short)*(pdata[0] + i + 1)) << 4) |
+                        ((((unsigned short)*(pdata[0] + i + 2)) & 0x00F0) >> 4);
             j++;
         }
+    } else if (!isBufferPacked(buf[0], width, height)) {
+        // TODO: investigate optimizations for this (arm neon / 1024 bytes
+        // chunks)
+        if (m_implData->frameType.type == "depth_only") {
+            memcpy(buffer, pdata[0], buf[0].bytesused);
+        } else if (m_implData->frameType.type == "ir_only") {
+
+            memcpy(buffer + (width * height), pdata[0], buf[0].bytesused);
+        } else {
+#ifdef TOYBRICK
+            unsigned int fullDataWidth = m_implData->frameType.width;
+            unsigned int fullDataHeight =
+                m_implData->frameType.height / m_implData->numVideoDevs;
+            uint32_t j = 0, j1 = width * height;
+            for (uint32_t i = 0; i < fullDataHeight; i += 2) {
+                memcpy(buffer + j, pdata[0] + i * width * 2, width * 2);
+                j += width;
+                memcpy(buffer + j1, pdata[0] + (i + 1) * width * 2, width * 2);
+                j1 += width;
+            }
+            for (uint32_t i = 0; i < fullDataWidth * fullDataHeight; i += 2) {
+                buffer[i] =
+                    ((buffer[i] & 0x00FF) << 4) | ((buffer[i]) & 0xF000) >> 12;
+                buffer[i + 1] = ((buffer[i + 1] & 0x00FF) << 4) |
+                                ((buffer[i + 1]) & 0xF000) >> 12;
+            }
+#else
+            // Not Packed and type == "depth_ir"
+            uint16_t *ptr_depth = (uint16_t *)pdata[0];
+            uint16_t *ptr_ir = (uint16_t *)pdata[1];
+            uint16_t *ptr_buff_depth = buffer;
+            uint16_t *ptr_buff_ir = buffer + (width * height);
+            //discard 4 LSB of depth (due to Nvidia RAW memory storage type)
+            for (unsigned int k = 0; k < buf[0].bytesused / 2; k += 2) {
+                ptr_buff_depth[k] = (*(ptr_depth + k) >> 4);
+                ptr_buff_depth[k + 1] = (*(ptr_depth + k + 1) >> 4);
+            }
+            for (unsigned int k = 0; k < buf[0].bytesused / 2; k += 2) {
+                ptr_buff_ir[k] = (*(ptr_ir + k) >> 4);
+                ptr_buff_ir[k + 1] = (*(ptr_ir + k + 1) >> 4);
+            }
+#endif
+        }
+
     } else {
         // clang-format off
         uint16_t *depthPtr = buffer;
-        uint16_t *irPtr = buffer + (width * height) / 2;
+        uint16_t *irPtr = buffer + (width * height);
         unsigned int j = 0;
 
+        if (m_implData->frameType.type == "depth_only" ||
+                m_implData->frameType.type == "ir_only") {
+                buf_data_len /= 2;
+        }
         /* The frame is read from the device as an array of uint8_t's where
          * every 3 uint8_t's can produce 2 uint16_t's that have only 12 bits
          * in use.
@@ -718,14 +763,14 @@ aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
          * We obtain uint16_t f1 = (a << 4) | (c & 0x000F)
          * and uint16_t f2 = (b << 4) | ((c & 0x00F0) >> 4);
          */
-        for (unsigned int i = 0; i < (height * width * 3 / 2); i += 24) {
+        for (unsigned int i = 0; i < (buf_data_len); i += 24) {
             /* Read 24 bytes from pdata and deinterleave them in 3 separate 8 bytes packs
              *                                   |-> a1 a2 a3 ... a8
              * a1 b1 c1 a2 b2 c2 ... a8 b8 c8  ->|-> b1 b2 b3 ... b8
              *                                   |-> c1 c2 c3 ... c8
-             * then convert all the values to uint16_t          
+             * then convert all the values to uint16_t
              */
-            uint8x8x3_t data = vld3_u8(pdata);
+            uint8x8x3_t data = vld3_u8(pdata[0]);
             uint16x8_t aData = vmovl_u8(data.val[0]);
             uint16x8_t bData = vmovl_u8(data.val[1]);
             uint16x8_t cData = vmovl_u8(data.val[2]);
@@ -743,97 +788,105 @@ aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
             toStore.val[0] = aBuffer;
             toStore.val[1] = bBuffer;
 
-            /* Store the 16 frame pixel in the corresponding image */
-            if ((j / width) % 2) {
+            if (m_implData->frameType.type == "depth_only") {
+                vst2q_u16(depthPtr, toStore);
+                depthPtr += 16;
+            } else if (m_implData->frameType.type == "ir_only") {
                 vst2q_u16(irPtr, toStore);
                 irPtr += 16;
             } else {
-                vst2q_u16(depthPtr, toStore);
-                depthPtr += 16;
+                /* Store the 16 frame pixel in the corresponding image */
+                if ((j / width) % 2) {
+                    vst2q_u16(irPtr, toStore);
+                    irPtr += 16;
+                } else {
+                    vst2q_u16(depthPtr, toStore);
+                    depthPtr += 16;
+                }
             }
-
             j += 16;
-            pdata += 24;
+            pdata[0] += 24;
         }
         // clang-format on
     }
 
-    if (xioctl(m_implData->fd, VIDIOC_QBUF, &buf) == -1) {
-        LOG(WARNING) << "VIDIOC_QBUF error "
-                     << "errno: " << errno << " error: " << strerror(errno);
-        return Status::GENERIC_ERROR;
+    for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
+        dev = &m_implData->videoDevs[i];
+        status = enqueueInternalBufferPrivate(buf[i], dev);
+        if (status != Status::OK) {
+            return status;
+        }
     }
 
     return status;
 }
 
+
+
 aditof::Status Adsd3100Sensor::readAfeRegisters(const uint16_t *address,
-                                             uint16_t *data, size_t length) {
+                                                uint16_t *data, size_t length) {
     using namespace aditof;
+    struct VideoDev *dev = &m_implData->videoDevs[0];
     Status status = Status::OK;
 
     static struct v4l2_ext_control extCtrl;
     static struct v4l2_ext_controls extCtrls;
-    static uint16_t readBuf[1];
-    
+
+    extCtrl.size = 2048 * sizeof(unsigned short);
 
     for (size_t i = 0; i < length; i++) {
-
-        /* The address is 14-bits and should not utilize the upper most bits */
-        if((address[i] >> 14u) != 0u)
-        {
-            return Status::GENERIC_ERROR;
-        }
-
-        readBuf[0] = address[i];
-        usleep(500);
-        extCtrl.size = 8000;
-        extCtrl.p_u16 = const_cast<uint16_t *>(&readBuf[0]);
+        uint16_t aux_address = address[i];
+        extCtrl.p_u16 = const_cast<uint16_t *>(&aux_address);
         extCtrl.id = V4L2_CID_AD_DEV_READ_REG;
         memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
         extCtrls.controls = &extCtrl;
         extCtrls.count = 1;
 
-        if (xioctl(m_implData->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-            LOG(WARNING) << "Read AFE Register error "
-                         << "errno: " << errno << " error: " << strerror(errno) << " at address " << address[i];
+        if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+            LOG(WARNING) << "Programming AFE error "
+                         << "errno: " << errno << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
         }
         data[i] = *extCtrl.p_u16;
-        printf("%.4X %.4X \n", address[i],  data[i]);
     }
 
     return status;
 }
 
 aditof::Status Adsd3100Sensor::writeAfeRegisters(const uint16_t *address,
-                                              const uint16_t *data,
-                                              size_t length) {
+                                                 const uint16_t *data,
+                                                 size_t length) {
     using namespace aditof;
     Status status = Status::OK;
 
     static struct v4l2_ext_control extCtrl;
     static struct v4l2_ext_controls extCtrls;
-    static uint16_t writeBuf[2];
+    struct VideoDev *dev = &m_implData->videoDevs[0];
+    static unsigned char buf[CTRL_PACKET_SIZE];
     unsigned short sampleCnt = 0;
 
-    for (size_t i = 0; i < length; i++) {
-        usleep(100);
+    length *= 2 * sizeof(unsigned short);
+    while (length) {
+        memset(buf, 0, CTRL_PACKET_SIZE);
+        size_t maxBytesToSend =
+            length > CTRL_PACKET_SIZE ? CTRL_PACKET_SIZE : length;
+        for (size_t i = 0; i < maxBytesToSend; i += 4) {
+            *(unsigned short *)(buf + i) = address[sampleCnt];
+            *(unsigned short *)(buf + i + 2) = data[sampleCnt];
+            sampleCnt++;
+        }
+        length -= maxBytesToSend;
 
-        writeBuf[0] = address[i];
-        writeBuf[1] = data[i];
-        printf("%.4X %.4X \n", address[i],  data[i]);
-
-        extCtrl.size = 8000;
-        extCtrl.p_u16 = (uint16_t *)&writeBuf;
+        extCtrl.size = 2048 * sizeof(unsigned short);
+        extCtrl.p_u16 = (unsigned short *)buf;
         extCtrl.id = V4L2_CID_AD_DEV_SET_CHIP_CONFIG;
         memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
         extCtrls.controls = &extCtrl;
         extCtrls.count = 1;
 
-        if (xioctl(m_implData->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+        if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
             LOG(WARNING) << "Programming AFE error "
-                         << "errno: " << errno << " error: " << strerror(errno) << " at address " << address[i] << " with data " << data[i];
+                         << "errno: " << errno << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
         }
     }
@@ -841,6 +894,140 @@ aditof::Status Adsd3100Sensor::writeAfeRegisters(const uint16_t *address,
     return status;
 }
 
+
+aditof::Status
+Adsd3100Sensor::getDetails(aditof::SensorDetails &details) const {
+    details = m_sensorDetails;
+    return aditof::Status::OK;
+}
+
+aditof::Status Adsd3100Sensor::getHandle(void **handle) {
+    *handle = nullptr;
+    return aditof::Status::OK;
+}
+
+aditof::Status Adsd3100Sensor::waitForBufferPrivate(struct VideoDev *dev) {
+    fd_set fds;
+    struct timeval tv;
+    int r;
+
+    if (dev == nullptr)
+        dev = &m_implData->videoDevs[0];
+
+    FD_ZERO(&fds);
+    FD_SET(dev->fd, &fds);
+
+    tv.tv_sec = 20;
+    tv.tv_usec = 0;
+
+    r = select(dev->fd + 1, &fds, NULL, NULL, &tv);
+
+    if (r == -1) {
+        LOG(WARNING) << "select error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return aditof::Status::GENERIC_ERROR;
+    } else if (r == 0) {
+        LOG(WARNING) << "select timeout";
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    return aditof ::Status::OK;
+}
+
+aditof::Status
+Adsd3100Sensor::dequeueInternalBufferPrivate(struct v4l2_buffer &buf,
+                                             struct VideoDev *dev) {
+    using namespace aditof;
+    Status status = Status::OK;
+
+    if (dev == nullptr)
+        dev = &m_implData->videoDevs[0];
+
+    CLEAR(buf);
+    buf.type = dev->videoBuffersType;
+    buf.memory = V4L2_MEMORY_MMAP;
+    buf.length = 1;
+    buf.m.planes = dev->planes;
+
+    if (xioctl(dev->fd, VIDIOC_DQBUF, &buf) == -1) {
+        LOG(WARNING) << "VIDIOC_DQBUF error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        switch (errno) {
+        case EAGAIN:
+        case EIO:
+            break;
+        default:
+            return Status::GENERIC_ERROR;
+        }
+    }
+
+    if (buf.index >= dev->nVideoBuffers) {
+        LOG(WARNING) << "Not enough buffers avaialable";
+        return Status::GENERIC_ERROR;
+    }
+
+    return status;
+}
+
+aditof::Status Adsd3100Sensor::getInternalBufferPrivate(
+    uint8_t **buffer, uint32_t &buf_data_len, const struct v4l2_buffer &buf,
+    struct VideoDev *dev) {
+    if (dev == nullptr)
+        dev = &m_implData->videoDevs[0];
+
+    *buffer = static_cast<uint8_t *>(dev->videoBuffers[buf.index].start);
+    buf_data_len = m_implData->frameType.content.front().width *
+                   m_implData->frameType.content.front().height * 3;
+
+    return aditof::Status::OK;
+}
+
+aditof::Status
+Adsd3100Sensor::enqueueInternalBufferPrivate(struct v4l2_buffer &buf,
+                                             struct VideoDev *dev) {
+    if (dev == nullptr)
+        dev = &m_implData->videoDevs[0];
+
+    if (xioctl(dev->fd, VIDIOC_QBUF, &buf) == -1) {
+        LOG(WARNING) << "VIDIOC_QBUF error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    return aditof::Status::OK;
+}
+
+aditof::Status Adsd3100Sensor::getDeviceFileDescriptor(int &fileDescriptor) {
+    using namespace aditof;
+    struct VideoDev *dev = &m_implData->videoDevs[0];
+
+    if (dev->fd != -1) {
+        fileDescriptor = dev->fd;
+        return Status::OK;
+    }
+
+    return Status::INVALID_ARGUMENT;
+}
+
+aditof::Status Adsd3100Sensor::waitForBuffer() {
+    return waitForBufferPrivate();
+}
+
+aditof::Status Adsd3100Sensor::dequeueInternalBuffer(struct v4l2_buffer &buf) {
+    return dequeueInternalBufferPrivate(buf);
+}
+
+aditof::Status
+Adsd3100Sensor::getInternalBuffer(uint8_t **buffer, uint32_t &buf_data_len,
+                                  const struct v4l2_buffer &buf) {
+    return getInternalBufferPrivate(buffer, buf_data_len, buf);
+}
+
+aditof::Status Adsd3100Sensor::enqueueInternalBuffer(struct v4l2_buffer &buf) {
+    return enqueueInternalBufferPrivate(buf);
+}
+
+#define  DEFAULT_CONFIG_FILE_NAME "TODO"
 aditof::Status Adsd3100Sensor::writeConfigBlock(const uint32_t offset){
     FILE *fid;
     ConfigurationData configuration_data;
