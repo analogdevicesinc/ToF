@@ -6,6 +6,7 @@
 /********************************************************************************/
 #include "mode_info.h"
 #include <iostream>
+#include <algorithm>
 
 // TODO: load this information from camera module EEPROM
 ModeInfo::modeInfo ModeInfo::g_modeInfoData[] = {
@@ -46,7 +47,7 @@ unsigned int ModeInfo::getNumModes() {
 }
 
 
-aditof::Status convertCameraMode(const std::string &mode, uint8_t *convertedMode) {
+aditof::Status convertCameraMode(const std::string &mode, uint8_t& convertedMode) {
     aditof::Status status = aditof::Status::OK;
 
     auto it = std::find(g_availableModes.begin(), g_availableModes.end(), mode);
@@ -54,6 +55,6 @@ aditof::Status convertCameraMode(const std::string &mode, uint8_t *convertedMode
         return aditof::Status::GENERIC_ERROR;
     }
 
-    *convertedMode = (it - g_availableModes.begin());
+    convertedMode = (it - g_availableModes.begin());
     return status;
 }

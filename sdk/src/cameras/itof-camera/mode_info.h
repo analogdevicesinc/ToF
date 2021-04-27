@@ -26,7 +26,7 @@ const std::vector<std::string> g_availableModes = {
     "mp"
 };
 
-aditof::Status convertCameraMode(const std::string &modes, uint8_t *convertedMode);
+aditof::Status convertCameraMode(const std::string &modes, uint8_t& convertedMode);
 
 /**
  * @class ModeInfo
