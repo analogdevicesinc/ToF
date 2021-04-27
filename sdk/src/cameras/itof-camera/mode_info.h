@@ -9,23 +9,24 @@
 
 #include <aditof/status_definitions.h>
 #include <cstdint>
+#include <vector>
+#include <string>
 
 const std::vector<std::string> g_availableModes = {
   "short_throw",
-  "long_throw",
-  "aHat1", 
-  "pcm",
-  "long_throw_native",
-  "mp_pcm",
-  "chip_char",
-  "qmp",
-  "pcm8",
-  "ahat2",
-  "mp"
+    "long_throw",
+    "aHat1", 
+    "pcm",
+    "long_throw_native",
+    "mp_pcm",
+    "chip_char",
+    "qmp",
+    "pcm8",
+    "ahat2",
+    "mp"
 };
 
-
-aditof::Status convertCameraMode(const std::string &mode, uint8_t *convertedMode);
+aditof::Status convertCameraMode(const std::string &modes, uint8_t *convertedMode);
 
 /**
  * @class ModeInfo

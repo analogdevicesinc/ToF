@@ -97,4 +97,9 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
         std::string m_driverSubPath;
         std::string m_captureDev;
         std::unique_ptr<ImplData> m_implData;
+
+        const std::vector<aditof::DepthSensorFrameType> availableFrameTypes=
+        {
+            
+        };
 };

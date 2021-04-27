@@ -494,18 +494,6 @@ aditof::Status CameraItof::getControl(const std::string &control,
     return status;
 }
 
-aditof::Status convertCameraMode(const std::string &mode, uint8_t *convertedMode) {
-    aditof::Status status = aditof::Status::OK;
-
-    auto it = std::find (g_availableModes.begin(), g_availableModes.end(), mode);
-    if (it == g_availableModes.end()){
-        return aditof::Status::GENERIC_ERROR;
-    }
-
-    *convertedMode = (it - g_availableModes.begin());
-    return status;
-}
-
 aditof::Status CameraItof::initComputeLibrary(void) {
     aditof::Status status = aditof::Status::OK;
 
