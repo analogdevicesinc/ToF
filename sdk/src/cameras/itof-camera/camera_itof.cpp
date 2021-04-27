@@ -505,7 +505,7 @@ aditof::Status CameraItof::initComputeLibrary(void) {
     size_t calFileSize = 0, jsonFileSize = 0, iniFileSize = 0;
     std::tie(configStatus, calFileSize, jsonFileSize, iniFileSize) = loadConfigData();
 
-    status = convertCameraMode(m_details.mode, &convertedMode);
+    status = convertCameraMode(m_details.mode, convertedMode);
 
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Invalid mode!";
@@ -742,7 +742,7 @@ aditof::Status CameraItof::getCurrentModeInfo(ModeInfo::modeInfo &info) {
     Status status = Status::OK;
     uint8_t convertedMode;
 
-    status = convertCameraMode(m_details.mode, &convertedMode);
+    status = convertCameraMode(m_details.mode, convertedMode);
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Invalid mode!";
         return aditof::Status::GENERIC_ERROR;
