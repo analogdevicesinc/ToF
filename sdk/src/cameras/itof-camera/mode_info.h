@@ -10,6 +10,23 @@
 #include <aditof/status_definitions.h>
 #include <cstdint>
 
+const std::vector<std::string> g_availableModes = {
+  "short_throw",
+  "long_throw",
+  "aHat1", 
+  "pcm",
+  "long_throw_native",
+  "mp_pcm",
+  "chip_char",
+  "qmp",
+  "pcm8",
+  "ahat2",
+  "mp"
+};
+
+
+aditof::Status convertCameraMode(const std::string &mode, uint8_t *convertedMode);
+
 /**
  * @class ModeInfo
  * @brief Singleton definition of Mode details (width, height, total captures, embedded_width, embedded_height)

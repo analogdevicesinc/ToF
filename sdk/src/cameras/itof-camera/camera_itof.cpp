@@ -253,19 +253,8 @@ aditof::Status
 CameraItof::getAvailableModes(std::vector<std::string> &availableModes) const {
     using namespace aditof;
     Status status = Status::OK;
-    availableModes.clear();
 
-    availableModes.emplace_back("short_throw");
-    availableModes.emplace_back("long_throw");
-    availableModes.emplace_back("aHat1"); 
-    availableModes.emplace_back("pcm");
-    availableModes.emplace_back("long_throw_native");
-    availableModes.emplace_back("mp_pcm");
-    availableModes.emplace_back("chip_char");
-    availableModes.emplace_back("qmp");
-    availableModes.emplace_back("pcm8");
-    availableModes.emplace_back("ahat2");
-    availableModes.emplace_back("mp");
+    availableModes = g_availableModes;
 
     return status;
 }
@@ -505,19 +494,15 @@ aditof::Status CameraItof::getControl(const std::string &control,
     return status;
 }
 
-aditof::Status CameraItof::convertCameraMode(const std::string &modes, uint8_t *convertedMode) {
-    std::vector<std::string> availableModes;
+aditof::Status convertCameraMode(const std::string &mode, uint8_t *convertedMode) {
     aditof::Status status = aditof::Status::OK;
-    if (status != getAvailableModes(availableModes)){
-        return aditof::Status::GENERIC_ERROR;
-    };
 
-    auto it = std::find (availableModes.begin(), availableModes.end(), modes);
-    if (it == availableModes.end()){
+    auto it = std::find (g_availableModes.begin(), g_availableModes.end(), mode);
+    if (it == g_availableModes.end()){
         return aditof::Status::GENERIC_ERROR;
     }
 
-    *convertedMode = (it - availableModes.begin());
+    *convertedMode = (it - g_availableModes.begin());
     return status;
 }
 
