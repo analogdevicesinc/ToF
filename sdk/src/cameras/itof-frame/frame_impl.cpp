@@ -156,8 +156,10 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
     FrameDataDetails frame_detail;
 
     //get attributes 
-    getIntAttribute<uint16_t>("embed_hdr_length", embed_hdr_length);
-    getIntAttribute<uint8_t>("total_captures", total_captures);
+    // getIntAttribute<uint16_t>("embed_hdr_length", embed_hdr_length);
+    // getIntAttribute<uint8_t>("total_captures", total_captures);
+    embed_hdr_length = 1;
+    total_captures = 1;
 
     //compute total size TODO this could be precomputed TBD @dNechita
     for (FrameDataDetails frameDetail : details.dataDetails){
