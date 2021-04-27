@@ -159,6 +159,8 @@ aditof::Status CameraItof::initialize() {
 
     m_depthSensor->open();
 
+    m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
+
     LOG(INFO) << "Camera initialized";
 
     return Status::OK;

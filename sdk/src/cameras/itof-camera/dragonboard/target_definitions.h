@@ -32,4 +32,6 @@
 #ifndef TARGET_DEFINITIONS_H
 #define TARGET_DEFINITIONS_H
 
+static const char *CAPTURE_DEVICE_NAME = "mxc-isi-cap";
+
 #endif // TARGET_DEFINITIONS_H

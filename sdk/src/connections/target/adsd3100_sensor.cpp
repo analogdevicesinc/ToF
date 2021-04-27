@@ -318,40 +318,7 @@ Adsd3100Sensor::getAvailableFrameTypes(
     types = availableFrameTypes;
 
     LOG(INFO) << types.front();
-
-    // // DepthSensorFrameContent depthContent;
-    // // depthContent.width = 4096
-    // // depthContent.height = 256;
-    // // depthContent.type = "depth";
-
-    // DepthSensorFrameContent irContent;
-    // irContent.width = 4096;
-    // irContent.height = 256;
-    // irContent.type = "ir";
-
-    // // DepthSensorFrameType depthIrFrame;
-    // // depthIrFrame.type = "depth_ir";
-    // // depthIrFrame.width = depthContent.width;
-    // // depthIrFrame.height = depthContent.height + depthContent.height;
-    // // depthIrFrame.content.emplace_back(depthContent);
-    // // depthIrFrame.content.emplace_back(irContent);
-
-    // // DepthSensorFrameType depthOnlyFrame;
-    // // depthOnlyFrame.type = "depth_only";
-    // // depthOnlyFrame.width = depthContent.width;
-    // // depthOnlyFrame.height = depthContent.height;
-    // // depthOnlyFrame.content.emplace_back(depthContent);
-
-    // DepthSensorFrameType irOnlyFrame;
-    // irOnlyFrame.type = "ir_only";
-    // irOnlyFrame.width = irContent.width;
-    // irOnlyFrame.height = irContent.height;
-    // irOnlyFrame.content.emplace_back(irContent);
-
-    // types.clear();
-    // // types.emplace_back(depthIrFrame);
-    // // types.emplace_back(depthOnlyFrame);
-    // types.emplace_back(irOnlyFrame);
+    LOG(INFO) << types.back();
 
     return status;
 }
