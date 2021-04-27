@@ -47,6 +47,16 @@ using namespace aditof;
 Status TargetSensorEnumerator::searchSensors() {
     Status status = Status::OK;
 
+
+        std::string devPath = "/dev/video1";
+        std::string subdevPath = "/dev/video1";
+
+        SensorInfo sInfo;
+        sInfo.sensorType = SensorType::SENSOR_ADSD3100;
+        sInfo.driverPath = devPath;
+        sInfo.subDevPath = subdevPath;
+        sInfo.captureDev = CAPTURE_DEVICE_NAME;
+        m_sensorsInfo.emplace_back(sInfo);
+
     return status;
 }
-
