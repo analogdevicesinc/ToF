@@ -376,7 +376,7 @@ aditof::Status setMode(const std::string& mode){
 
 aditof::Status Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     using namespace aditof;
-    Status  = Status::OK;
+    Status status = Status::OK;
     struct VideoDev *dev;
 
     struct v4l2_requestbuffers req;
