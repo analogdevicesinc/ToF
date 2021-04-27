@@ -148,44 +148,42 @@ aditof::FrameDataDetails FrameImpl::getFrameDetailByName(const aditof::FrameDeta
 }
 
 void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
+    using namespace aditof;
     unsigned int totalSize = 0;
-    uint16_t embed_height, embed_width, embed_hdr_length;
+    unsigned int pos = 0;
+    uint16_t  embed_hdr_length;
     uint8_t total_captures;
-    aditof::FrameDataDetails frame_detail;
+    FrameDataDetails frame_detail;
 
-    getIntAttribute<uint16_t>("embed_height", embed_height);
-    getIntAttribute<uint16_t>("embed_width", embed_width);
+    //get attributes 
     getIntAttribute<uint16_t>("embed_hdr_length", embed_hdr_length);
     getIntAttribute<uint8_t>("total_captures", total_captures);
 
-    totalSize += embed_height * embed_width; //frame data
-    totalSize += (embed_hdr_length / 2) * total_captures; //header data
-    frame_detail = getFrameDetailByName(details, "raw");
-    totalSize += frame_detail.height * frame_detail.width * total_captures; //raw data
-    frame_detail = getFrameDetailByName(details, "depth");
-    totalSize += frame_detail.height * frame_detail.width; //depth data
-    frame_detail = getFrameDetailByName(details, "ir");
-    totalSize += frame_detail.height * frame_detail.width; //IR data
-    frame_detail = getFrameDetailByName(details, "xyz");
-    totalSize += frame_detail.height * frame_detail.width * sizeof(aditof::Point3I); //XYZ data
+    //compute total size TODO this could be precomputed TBD @dNechita
+    for (FrameDataDetails frameDetail : details.dataDetails){
+        if (frame_detail.type == "header"){
+             totalSize += (embed_hdr_length / 2) * total_captures;
+        }
+        else{
+            totalSize += frame_detail.height * frame_detail.width * total_captures;
+        }
+    }
 
-    unsigned int pos = 0;
+    //store pointers to the contents described by FrameDetails
     m_implData->m_allData.reset(new uint16_t[totalSize]);
-
+    //TODO wouldn`t it be safer to store relative position to .get() instead of absolute address ? TBD @dNechita
     m_implData->m_dataLocations.emplace("frameData", m_implData->m_allData.get()); //frame data
-    pos += embed_height * embed_width;
-    m_implData->m_dataLocations.emplace("header", m_implData->m_allData.get() + pos); //header data
-    pos += (embed_hdr_length / 2) * total_captures;
-    m_implData->m_dataLocations.emplace("raw", m_implData->m_allData.get() + pos); //raw data
-    frame_detail = getFrameDetailByName(details, "raw");
-    pos += frame_detail.height * frame_detail.width * total_captures;
-    m_implData->m_dataLocations.emplace("depth", m_implData->m_allData.get() + pos); //depth data
-    frame_detail = getFrameDetailByName(details, "depth");
-    pos += frame_detail.height * frame_detail.width * total_captures;
-    m_implData->m_dataLocations.emplace("ir", m_implData->m_allData.get() + pos); //IR data
-    frame_detail = getFrameDetailByName(details, "ir");
-    pos += frame_detail.height * frame_detail.width * total_captures;
-    m_implData->m_dataLocations.emplace("xyz", m_implData->m_allData.get() + pos); //XYZ data
+
+    for (FrameDataDetails frameDetail : details.dataDetails){
+        m_implData->m_dataLocations.emplace(frameDetail.type, m_implData->m_allData.get() + pos); //raw data
+        if (frame_detail.type == "header"){
+             pos += (embed_hdr_length / 2) * total_captures;
+        }
+        else{
+            pos += frame_detail.height * frame_detail.width * total_captures;
+        }
+    }
+
 }
 
 aditof::Status FrameImpl::getAvailableAttributes(std::vector<std::string> &attributes) const {

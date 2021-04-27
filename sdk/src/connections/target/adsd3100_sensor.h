@@ -32,7 +32,7 @@
 
 #include "aditof/depth_sensor_interface.h"
 #include "connections/target/v4l_buffer_access_interface.h"
-
+#include "cameras/itof-camera/mode_info.h"
 #include <memory>
 
 class Adsd3100Sensor : public aditof::DepthSensorInterface,

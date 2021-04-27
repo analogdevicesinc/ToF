@@ -20,6 +20,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unordered_map>
+#include "cameras/itof-camera/mode_info.h"
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
@@ -313,28 +314,28 @@ Adsd3100Sensor::getAvailableFrameTypes(
     using namespace aditof;
     Status status = Status::OK;
 
-    DepthSensorFrameContent depthContent;
-    depthContent.width = 4096
-    depthContent.height = 256;
-    depthContent.type = "depth";
+    // DepthSensorFrameContent depthContent;
+    // depthContent.width = 4096
+    // depthContent.height = 256;
+    // depthContent.type = "depth";
 
     DepthSensorFrameContent irContent;
     irContent.width = 4096;
     irContent.height = 256;
     irContent.type = "ir";
 
-    DepthSensorFrameType depthIrFrame;
-    depthIrFrame.type = "depth_ir";
-    depthIrFrame.width = depthContent.width;
-    depthIrFrame.height = depthContent.height + depthContent.height;
-    depthIrFrame.content.emplace_back(depthContent);
-    depthIrFrame.content.emplace_back(irContent);
+    // DepthSensorFrameType depthIrFrame;
+    // depthIrFrame.type = "depth_ir";
+    // depthIrFrame.width = depthContent.width;
+    // depthIrFrame.height = depthContent.height + depthContent.height;
+    // depthIrFrame.content.emplace_back(depthContent);
+    // depthIrFrame.content.emplace_back(irContent);
 
-    DepthSensorFrameType depthOnlyFrame;
-    depthOnlyFrame.type = "depth_only";
-    depthOnlyFrame.width = depthContent.width;
-    depthOnlyFrame.height = depthContent.height;
-    depthOnlyFrame.content.emplace_back(depthContent);
+    // DepthSensorFrameType depthOnlyFrame;
+    // depthOnlyFrame.type = "depth_only";
+    // depthOnlyFrame.width = depthContent.width;
+    // depthOnlyFrame.height = depthContent.height;
+    // depthOnlyFrame.content.emplace_back(depthContent);
 
     DepthSensorFrameType irOnlyFrame;
     irOnlyFrame.type = "ir_only";
@@ -343,22 +344,51 @@ Adsd3100Sensor::getAvailableFrameTypes(
     irOnlyFrame.content.emplace_back(irContent);
 
     types.clear();
-    types.emplace_back(depthIrFrame);
-    types.emplace_back(depthOnlyFrame);
+    // types.emplace_back(depthIrFrame);
+    // types.emplace_back(depthOnlyFrame);
     types.emplace_back(irOnlyFrame);
 
     return status;
 }
 
+aditof::Status setModeByIndex(uint8_t modeIndex){
+    //TODO
+    return aditof::Status::OK;
+}
+
+aditof::Status setMode(const std::string& mode){
+    uint8_t modeIndex;
+    aditof::Status status = aditof::Status::OK;
+    LOG(INFO) << "Setting camera mode to " << mode;
+    //get mode index by name
+    status = convertCameraMode(mode, modeIndex);
+    if (status != aditof::Status::OK){
+        return status;
+    }
+    //get register value by mode index - nothing to do, the value corresponds to the index
+    //set register / control
+    status = setModeByIndex(modeIndex);
+    if (status != aditof::Status::OK){
+        return status;
+    }
+    return aditof::Status::OK;
+}
+
 aditof::Status Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     using namespace aditof;
-    Status status = Status::OK;
+    Status  = Status::OK;
     struct VideoDev *dev;
 
     struct v4l2_requestbuffers req;
     struct v4l2_format fmt;
     struct v4l2_buffer buf;
     size_t length, offset;
+
+    status = setMode(type.type);
+    if (status != aditof::Status::OK){
+        LOG(INFO) << "Failed to set camera mode";
+        return status;
+    }
 
     for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
         dev = &m_implData->videoDevs[i];
@@ -674,141 +704,7 @@ aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
         }
     }
 
-    auto isBufferPacked = [](const struct v4l2_buffer &buf, unsigned int width,
-                             unsigned int height) {
-        unsigned int bytesused = 0;
-        if (buf.type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
-            bytesused = buf.m.planes[0].bytesused;
-        } else {
-            bytesused = buf.bytesused;
-        }
-
-        return bytesused == (width * height * 3);
-    };
-
-    if (width == 668) {
-        unsigned int j = 0;
-        for (unsigned int i = 0; i < (buf_data_len); i += 3) {
-            if ((i != 0) && (i % (336 * 3) == 0)) {
-                j -= 4;
-            }
-
-            buffer[j] = (((unsigned short)*(pdata[0] + i)) << 4) |
-                        (((unsigned short)*(pdata[0] + i + 2)) & 0x000F);
-            j++;
-
-            buffer[j] = (((unsigned short)*(pdata[0] + i + 1)) << 4) |
-                        ((((unsigned short)*(pdata[0] + i + 2)) & 0x00F0) >> 4);
-            j++;
-        }
-    } else if (!isBufferPacked(buf[0], width, height)) {
-        // TODO: investigate optimizations for this (arm neon / 1024 bytes
-        // chunks)
-        if (m_implData->frameType.type == "depth_only") {
-            memcpy(buffer, pdata[0], buf[0].bytesused);
-        } else if (m_implData->frameType.type == "ir_only") {
-
-            memcpy(buffer + (width * height), pdata[0], buf[0].bytesused);
-        } else {
-#ifdef TOYBRICK
-            unsigned int fullDataWidth = m_implData->frameType.width;
-            unsigned int fullDataHeight =
-                m_implData->frameType.height / m_implData->numVideoDevs;
-            uint32_t j = 0, j1 = width * height;
-            for (uint32_t i = 0; i < fullDataHeight; i += 2) {
-                memcpy(buffer + j, pdata[0] + i * width * 2, width * 2);
-                j += width;
-                memcpy(buffer + j1, pdata[0] + (i + 1) * width * 2, width * 2);
-                j1 += width;
-            }
-            for (uint32_t i = 0; i < fullDataWidth * fullDataHeight; i += 2) {
-                buffer[i] =
-                    ((buffer[i] & 0x00FF) << 4) | ((buffer[i]) & 0xF000) >> 12;
-                buffer[i + 1] = ((buffer[i + 1] & 0x00FF) << 4) |
-                                ((buffer[i + 1]) & 0xF000) >> 12;
-            }
-#else
-            // Not Packed and type == "depth_ir"
-            uint16_t *ptr_depth = (uint16_t *)pdata[0];
-            uint16_t *ptr_ir = (uint16_t *)pdata[1];
-            uint16_t *ptr_buff_depth = buffer;
-            uint16_t *ptr_buff_ir = buffer + (width * height);
-            //discard 4 LSB of depth (due to Nvidia RAW memory storage type)
-            for (unsigned int k = 0; k < buf[0].bytesused / 2; k += 2) {
-                ptr_buff_depth[k] = (*(ptr_depth + k) >> 4);
-                ptr_buff_depth[k + 1] = (*(ptr_depth + k + 1) >> 4);
-            }
-            for (unsigned int k = 0; k < buf[0].bytesused / 2; k += 2) {
-                ptr_buff_ir[k] = (*(ptr_ir + k) >> 4);
-                ptr_buff_ir[k + 1] = (*(ptr_ir + k + 1) >> 4);
-            }
-#endif
-        }
-
-    } else {
-        // clang-format off
-        uint16_t *depthPtr = buffer;
-        uint16_t *irPtr = buffer + (width * height);
-        unsigned int j = 0;
-
-        if (m_implData->frameType.type == "depth_only" ||
-                m_implData->frameType.type == "ir_only") {
-                buf_data_len /= 2;
-        }
-        /* The frame is read from the device as an array of uint8_t's where
-         * every 3 uint8_t's can produce 2 uint16_t's that have only 12 bits
-         * in use.
-         * Ex: consider uint8_t a, b, c;
-         * We first convert a, b, c to uint16_t
-         * We obtain uint16_t f1 = (a << 4) | (c & 0x000F)
-         * and uint16_t f2 = (b << 4) | ((c & 0x00F0) >> 4);
-         */
-        for (unsigned int i = 0; i < (buf_data_len); i += 24) {
-            /* Read 24 bytes from pdata and deinterleave them in 3 separate 8 bytes packs
-             *                                   |-> a1 a2 a3 ... a8
-             * a1 b1 c1 a2 b2 c2 ... a8 b8 c8  ->|-> b1 b2 b3 ... b8
-             *                                   |-> c1 c2 c3 ... c8
-             * then convert all the values to uint16_t
-             */
-            uint8x8x3_t data = vld3_u8(pdata[0]);
-            uint16x8_t aData = vmovl_u8(data.val[0]);
-            uint16x8_t bData = vmovl_u8(data.val[1]);
-            uint16x8_t cData = vmovl_u8(data.val[2]);
-
-            uint16x8_t lowMask = vdupq_n_u16(0x000F);
-            uint16x8_t highMask = vdupq_n_u16(0x00F0);
-
-            /* aBuffer = (a << 4) | (c & 0x000F) for every a and c value*/
-            uint16x8_t aBuffer = vorrq_u16(vshlq_n_u16(aData, 4), vandq_u16(cData, lowMask));
-
-            /* bBuffer = (b << 4) | ((c & 0x00F0) >> 4) for every b and c value*/
-            uint16x8_t bBuffer = vorrq_u16(vshlq_n_u16(bData, 4), vshrq_n_u16(vandq_u16(cData, highMask), 4));
-
-            uint16x8x2_t toStore;
-            toStore.val[0] = aBuffer;
-            toStore.val[1] = bBuffer;
-
-            if (m_implData->frameType.type == "depth_only") {
-                vst2q_u16(depthPtr, toStore);
-                depthPtr += 16;
-            } else if (m_implData->frameType.type == "ir_only") {
-                vst2q_u16(irPtr, toStore);
-                irPtr += 16;
-            } else {
-                /* Store the 16 frame pixel in the corresponding image */
-                if ((j / width) % 2) {
-                    vst2q_u16(irPtr, toStore);
-                    irPtr += 16;
-                } else {
-                    vst2q_u16(depthPtr, toStore);
-                    depthPtr += 16;
-                }
-            }
-            j += 16;
-            pdata[0] += 24;
-        }
-        // clang-format on
-    }
+    memcpy(buffer, (uint16_t *)pdata[0], buf[0].bytesused);
 
     for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
         dev = &m_implData->videoDevs[i];

@@ -45,3 +45,15 @@ unsigned int ModeInfo::getNumModes() {
            sizeof(ModeInfo::g_modeInfoData[0]);
 }
 
+
+aditof::Status convertCameraMode(const std::string &mode, uint8_t *convertedMode) {
+    aditof::Status status = aditof::Status::OK;
+
+    auto it = std::find (g_availableModes.begin(), g_availableModes.end(), mode);
+    if (it == g_availableModes.end()){
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    *convertedMode = (it - g_availableModes.begin());
+    return status;
+}
