@@ -271,6 +271,7 @@ int firmware_size = 0, flen = 0;
 const static int FIRMWARE_CAPACITY = 16384;
 char firmware[FIRMWARE_CAPACITY] = {0};
 unsigned short reg_addr;
+std::string frameTypeBlob;
 
 /* Available sensors */
 std::vector<std::shared_ptr<aditof::DepthSensorInterface>> depthSensors;
@@ -301,6 +302,9 @@ unsigned char temp_index = 0;
 
 /* forward declarations */
 static int uvc_video_stream(struct uvc_device *dev, int enable);
+void convertProtoMsgToDepthSensorFrameType(
+    uvc_payload::DepthSensorFrameType &protoMsg,
+    aditof::DepthSensorFrameType &aditofStruct);
 
 std::atomic<bool> stop;
 
@@ -1556,6 +1560,71 @@ static void uvc_events_process_control(struct uvc_device *dev, uint8_t req,
                 break;
             }
             break;
+        case 9: /* set frame type */
+            switch (req) {
+            case UVC_SET_CUR:
+                USB_REQ_DEBUG("Received SET_CUR on %d\n", cs);
+                dev->set_cur_cs = cs;
+
+                resp->data[0] = 0x0;
+                resp->length = len;
+                break;
+
+            case UVC_GET_CUR:
+                USB_REQ_DEBUG("Received GET_CUR on %d\n", cs);
+
+                resp->length = 2;
+                break;
+
+            case UVC_GET_INFO:
+                USB_REQ_DEBUG("Received GET_INFO on %d\n", cs);
+
+                /*
+                 * We support Set and Get requests and don't
+                 * support async updates on an interrupt endpt
+                 */
+                resp->data[0] = 0x03;
+                resp->length = 1;
+                break;
+
+            case UVC_GET_LEN:
+                USB_REQ_DEBUG("Received GET_LEN on %d\n", cs);
+
+                resp->data[0] = MAX_PACKET_SIZE; // 60 bytes
+                resp->data[1] = 0x00;
+                resp->length = 2;
+
+                USB_REQ_DEBUG("Responding with size %x for cs: %d\n",
+                              resp->data[0], cs);
+                break;
+
+            case UVC_GET_MIN:
+            case UVC_GET_MAX:
+            case UVC_GET_DEF:
+            case UVC_GET_RES:
+                USB_REQ_DEBUG("Received %x on %d\n", req, cs);
+
+                resp->data[0] = 0xff;
+                resp->length = 1;
+                break;
+
+            default:
+                printf("Unsupported bRequest: Received bRequest %x on cs %d\n",
+                       req, cs);
+                /*
+                 * We don't support this control, so STALL the
+                 * default control ep.
+                 */
+                resp->length = -EL2HLT;
+                /*
+                 * For every unsupported control request
+                 * set the request error code to appropriate
+                 * code.
+                 */
+                SET_REQ_ERROR_CODE(0x07, 1);
+                break;
+            }
+            break;
 
         default:
             printf("Unsupported cs: Received cs %d \n", cs);
@@ -1834,6 +1903,36 @@ static int uvc_events_process_data(struct uvc_device *dev,
             } else if (dev->set_cur_cs == 8) {
                 frame_types_read_pos = *((unsigned int *)(data->data));
                 frame_types_read_len = data->data[4];
+            } else if (dev->set_cur_cs == 9) {
+                unsigned char packet_size = data->data[4];
+                std::string packet(
+                    reinterpret_cast<const char *>(&data->data[5]),
+                    packet_size);
+                frameTypeBlob += packet;
+                // TO DO: we assume that if the size of the last packet is smaller than the previous ones then it was the last one.
+                // Problem is if it happens that the last packet is not smaller, in which case we don't know it was the last one. Fix this!
+                // (same issue is for when writing the EEPROM
+                if (data->data[4] < MAX_PACKET_SIZE - 5) {
+                    uvc_payload::DepthSensorFrameType protoFrameType;
+
+                    bool ok = protoFrameType.ParseFromString(frameTypeBlob);
+                    if (ok) {
+                        aditof::DepthSensorFrameType aditofFrameType;
+
+                        convertProtoMsgToDepthSensorFrameType(protoFrameType,
+                                                              aditofFrameType);
+                        aditof::Status status =
+                            camDepthSensor->setFrameType(aditofFrameType);
+                        if (status != aditof::Status::OK) {
+                            LOG(ERROR)
+                                << "Failed to set frame type on depth sensor";
+                        }
+                    } else {
+                        LOG(ERROR) << "Failed to deserialize string containing "
+                                      "frame type received from remote";
+                    }
+                    frameTypeBlob.clear();
+                }
             }
             dev->set_cur_cs = 0;
             return 0;
@@ -2046,6 +2145,22 @@ void convertDepthSensorFrameTypesToProtoMsg(
             depthSensorFrameContentPayload->set_height(
                 depthSensorFrameContent.height);
         }
+    }
+}
+
+void convertProtoMsgToDepthSensorFrameType(
+    uvc_payload::DepthSensorFrameType &protoMsg,
+    aditof::DepthSensorFrameType &aditofStruct) {
+    aditofStruct.type = protoMsg.type();
+    aditofStruct.width = protoMsg.width();
+    aditofStruct.height = protoMsg.height();
+    for (int i = 0; i < protoMsg.depthsensorframecontent_size(); ++i) {
+        aditof::DepthSensorFrameContent content;
+
+        content.type = protoMsg.depthsensorframecontent(i).type();
+        content.width = protoMsg.depthsensorframecontent(i).width();
+        content.height = protoMsg.depthsensorframecontent(i).height();
+        aditofStruct.content.emplace_back(content);
     }
 }
 
