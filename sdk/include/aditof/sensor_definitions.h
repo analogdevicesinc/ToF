@@ -36,6 +36,7 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 
 /**
  * @brief Namespace aditof
@@ -104,8 +105,26 @@ struct DepthSensorFrameType {
      * @brief The height of the entire frame that the sensor can capture
      */
     unsigned int height;
-};
 
+
+};
+inline std::ostream& operator << (std::ostream& o, const DepthSensorFrameContent& a)
+{
+    o << "T: " << a.type << "\tW: " << a.width << "\tH: "<< a.height << "\n";
+    return o;
+}
+
+inline std::ostream& operator << (std::ostream& o, const DepthSensorFrameType& a)
+{
+    o << "DepthSensorFrame\n" << 
+        "T: " << a.type << "\tW: " << a.width << "\tH: "<< a.height << "\n";
+        for (const DepthSensorFrameContent content : a.content){
+            o << content;
+        }
+    return o;
+}
 } // namespace aditof
+
+
 
 #endif // SENSOR_DEFINITIONS_H

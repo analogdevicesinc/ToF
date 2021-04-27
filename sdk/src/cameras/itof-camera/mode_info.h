@@ -11,9 +11,10 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <ostream>
 
 const std::vector<std::string> g_availableModes = {
-  "short_throw",
+    "short_throw",
     "long_throw",
     "aHat1", 
     "pcm",
