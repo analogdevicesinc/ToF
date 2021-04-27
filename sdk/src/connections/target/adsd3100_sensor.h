@@ -100,6 +100,19 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
 
         const std::vector<aditof::DepthSensorFrameType> availableFrameTypes=
         {
-            
+            {"short_throw", 
+                {
+                    {"depth", 111, 222},
+                    {"ir", 333, 333}
+                },
+                120, 130, 
+            },
+            {"pcm", 
+                {
+                    {"ir", 4026, 256}
+                },
+                4026, 256,
+            },
+
         };
 };
