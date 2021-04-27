@@ -20,13 +20,14 @@
 #include "../../sdk/src/connections/target/v4l_buffer_access_interface.h"
 #include "uvc.h"
 
+#include "buffer.pb.h"
 #include <aditof/depth_sensor_interface.h>
+#include <aditof/sensor_definitions.h>
 #include <aditof/sensor_enumerator_factory.h>
 #include <aditof/sensor_enumerator_interface.h>
 #include <aditof/storage_interface.h>
 #include <aditof/temperature_sensor_interface.h>
 #include <aditof/version.h>
-#include <aditof/sensor_definitions.h>
 #include <atomic>
 #include <errno.h>
 #include <fcntl.h>
@@ -47,7 +48,6 @@
 #include <sys/types.h>
 #include <thread>
 #include <unistd.h>
-#include "buffer.pb.h"
 
 using namespace google::protobuf::io;
 
@@ -1502,7 +1502,7 @@ static void uvc_events_process_control(struct uvc_device *dev, uint8_t req,
                 break;
             }
             break;
-         case 8: /* get available depth sensor frame types */
+        case 8: /* get available depth sensor frame types */
             switch (req) {
             case UVC_SET_CUR:
                 dev->set_cur_cs = cs;
@@ -2020,30 +2020,41 @@ static void uvc_events_init(struct uvc_device *dev) {
     ioctl(dev->uvc_fd, VIDIOC_SUBSCRIBE_EVENT, &sub);
 }
 
-void convertDepthSensorFrameTypesToProtoMsg(std::vector<aditof::DepthSensorFrameType> depthSensorFrameTypes, uvc_payload::DepthSensorFrameTypeVector& depthSensorFrameTypesPayload){    
-    for (const aditof::DepthSensorFrameType& depthSensorFrameType : depthSensorFrameTypes){
-        LOG(INFO) << depthSensorFrameType.type << " " << depthSensorFrameType.width << " " << depthSensorFrameType.content.size();
-        uvc_payload::DepthSensorFrameType* depthSensorFrameTypePayload = depthSensorFrameTypesPayload.add_depthsensorframetypes();
+void convertDepthSensorFrameTypesToProtoMsg(
+    std::vector<aditof::DepthSensorFrameType> depthSensorFrameTypes,
+    uvc_payload::DepthSensorFrameTypeVector &depthSensorFrameTypesPayload) {
+    for (const aditof::DepthSensorFrameType &depthSensorFrameType :
+         depthSensorFrameTypes) {
+        LOG(INFO) << depthSensorFrameType.type << " "
+                  << depthSensorFrameType.width << " "
+                  << depthSensorFrameType.content.size();
+        uvc_payload::DepthSensorFrameType *depthSensorFrameTypePayload =
+            depthSensorFrameTypesPayload.add_depthsensorframetypes();
         depthSensorFrameTypePayload->set_type(depthSensorFrameType.type);
         depthSensorFrameTypePayload->set_width(depthSensorFrameType.width);
         depthSensorFrameTypePayload->set_height(depthSensorFrameType.height);
-        
-        for (const aditof::DepthSensorFrameContent& depthSensorFrameContent : depthSensorFrameType.content){
-            uvc_payload::DepthSensorFrameContent* depthSensorFrameContentPayload = depthSensorFrameTypePayload->add_depthsensorframecontent();
-            depthSensorFrameContentPayload->set_type(depthSensorFrameContent.type);
-            depthSensorFrameContentPayload->set_width(depthSensorFrameContent.width);
-            depthSensorFrameContentPayload->set_height(depthSensorFrameContent.height);
+
+        for (const aditof::DepthSensorFrameContent &depthSensorFrameContent :
+             depthSensorFrameType.content) {
+            uvc_payload::DepthSensorFrameContent
+                *depthSensorFrameContentPayload =
+                    depthSensorFrameTypePayload->add_depthsensorframecontent();
+            depthSensorFrameContentPayload->set_type(
+                depthSensorFrameContent.type);
+            depthSensorFrameContentPayload->set_width(
+                depthSensorFrameContent.width);
+            depthSensorFrameContentPayload->set_height(
+                depthSensorFrameContent.height);
         }
     }
 }
 
 //brief: fills buff with the size and contents of strBlob
-void marshallString(char* &buff, const std::string& strBlob){
+void marshallString(char *&buff, const std::string &strBlob) {
     const uint16_t buffLen = strBlob.length();
     buff = new char[buffLen + sizeof(uint16_t)];
     memcpy(buff, &buffLen, sizeof(uint16_t));
-    memcpy(buff + sizeof(uint16_t), strBlob.c_str(),
-           buffLen);
+    memcpy(buff + sizeof(uint16_t), strBlob.c_str(), buffLen);
 }
 
 /* ---------------------------------------------------------------------------
@@ -2424,8 +2435,9 @@ int main(int argc, char *argv[]) {
     std::vector<aditof::DepthSensorFrameType> depthSensorFrameTypes;
     uvc_payload::DepthSensorFrameTypeVector depthSensorFrameTypesPayload;
     camDepthSensor->getAvailableFrameTypes(depthSensorFrameTypes);
-    
-    convertDepthSensorFrameTypesToProtoMsg(depthSensorFrameTypes, depthSensorFrameTypesPayload);
+
+    convertDepthSensorFrameTypesToProtoMsg(depthSensorFrameTypes,
+                                           depthSensorFrameTypesPayload);
     depthSensorFrameTypesPayload.SerializeToString(&depthSensorFrameTypesBlob);
     marshallString(frameTypesBuffer, depthSensorFrameTypesBlob);
 
