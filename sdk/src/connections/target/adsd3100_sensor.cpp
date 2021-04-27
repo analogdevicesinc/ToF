@@ -315,10 +315,7 @@ Adsd3100Sensor::getAvailableFrameTypes(
     using namespace aditof;
     Status status = Status::OK;
 
-    types = availableFrameTypes;
-
-    LOG(INFO) << types.front();
-    LOG(INFO) << types.back();
+    types = availableFrameTypes; //TBD shall we copy / move vector instead of assign 
 
     return status;
 }
@@ -383,11 +380,9 @@ aditof::Status Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &
         /* Set the frame format in the driver */
         CLEAR(fmt);
         fmt.type = dev->videoBuffersType;
-#if defined TOYBRICK //???
-        fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_SBGGR12;
-#endif
-        fmt.fmt.pix.width = type.width;
-        fmt.fmt.pix.height = type.height / m_implData->numVideoDevs;
+        fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_Y16;
+        fmt.fmt.pix.width = type.width; //TODO
+        fmt.fmt.pix.height = type.height;
 
         if (xioctl(dev->fd, VIDIOC_S_FMT, &fmt) == -1) {
             LOG(WARNING) << "Setting Pixel Format error, errno: " << errno
