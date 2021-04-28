@@ -317,16 +317,36 @@ aditof::Status CameraItof::getAvailableFrameTypes(
     return status;
 }
 
+aditof::Status setAttributesByMode(aditof::Frame* frame, const ModeInfo::modeInfo& modeInfo){
+    aditof::Status status = aditof::Status::OK;
+//assume frame is != nullptr as it is checked before calling this
+    frame->setAttribute("mode", std::to_string(modeInfo.mode));
+    frame->setAttribute("width", std::to_string(modeInfo.width));
+    frame->setAttribute("height", std::to_string(modeInfo.height));
+    frame->setAttribute("subframes", std::to_string(modeInfo.subframes));
+    frame->setAttribute("embed_width", std::to_string(modeInfo.embed_width));
+    frame->setAttribute("embed_height", std::to_string(modeInfo.embed_height));
+    frame->setAttribute("passive_ir", std::to_string(modeInfo.passive_ir));
+
+    return status;
+}
+
 aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
                                         aditof::FrameUpdateCallback /*cb*/) {
     using namespace aditof;
     Status status = Status::OK;
+
+    if (frame == nullptr){
+        return Status::INVALID_ARGUMENT;
+    }
 
     // std::string totalCapturesStr;
     // uint8_t totalCaptures;
 
     // frame->getAttribute("total_captures", totalCapturesStr);
     // totalCaptures = std::atoi(totalCapturesStr.c_str());
+
+    setAttributesByMode(frame, ModeInfo::getInstance()->getModeInfo(m_details.mode));
 
     FrameDetails frameDetails;
     frame->getDetails(frameDetails);

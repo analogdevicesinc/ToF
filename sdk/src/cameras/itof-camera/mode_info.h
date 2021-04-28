@@ -68,6 +68,14 @@ class ModeInfo {
     modeInfo getModeInfo(unsigned int mode);
 
     /**
+     * @brief Get the modeinformation based on mode
+     * param[in] mode - Mode for which the information is needed
+     * @return modeInfo*
+     * @see modeInfo
+     */
+    modeInfo getModeInfo(const std::string& mode);
+
+    /**
      * @brief Get the number of modes supported
      * @return int
      */

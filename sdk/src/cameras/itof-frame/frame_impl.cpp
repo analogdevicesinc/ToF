@@ -31,6 +31,7 @@
  */
 
 #include "frame_impl.h"
+#include "aditof_internal.h"
 #include "aditof/frame_operations.h"
 
 #include <algorithm>
@@ -40,13 +41,32 @@
 #include <glog/logging.h>
 #include <unordered_map>
 
+const std::vector<std::string> availableAttributes = {
+    "mode",
+    "width",
+    "height",
+    "subframes",
+    "embed_width", 
+    "embed_height", 
+    "passive_ir", 
+    "total_captures",
+    "embed_hdr_length"
+};
+
 struct FrameImpl::ImplData {
     std::unordered_map<std::string, uint16_t *> m_dataLocations;
     std::unique_ptr<uint16_t> m_allData;
     size_t allDataNbBytes;
 };
 
-FrameImpl::FrameImpl() : m_implData(new FrameImpl::ImplData) {}
+FrameImpl::FrameImpl() : m_implData(new FrameImpl::ImplData) {
+    for (auto attributeKey : availableAttributes){
+        m_attributes.emplace(attributeKey, "");
+        if (attributeKey == "embed_hdr_length"){
+            m_attributes[attributeKey] = std::to_string(EMBED_HDR_LENGTH);
+        }
+    }
+}
 
 FrameImpl::~FrameImpl() = default;
 
