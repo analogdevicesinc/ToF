@@ -30,8 +30,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "connections/usb/usb_depth_sensor.h"
-#include "usb_windows_utils.h"
 #include "connections/usb/usb_utils.h"
+#include "usb_windows_utils.h"
 
 #include "device_utils.h"
 
@@ -110,7 +110,7 @@ static aditof::Status getDevice(IBaseFilter **pVideoInputFilter,
                     if (!SUCCEEDED(hr)) {
                         LOG(WARNING) << "Failed to bind video input filter";
                     }
-                    
+
                     done = TRUE;
                 }
             }
@@ -354,18 +354,20 @@ aditof::Status UsbDepthSensor::open() {
         return status;
     }
 
-	std::string frameTypesBlob;
-	status = UsbWindowsUtils::uvcExUnitGetString(m_implData->handle.pVideoInputFilter, 8, frameTypesBlob);
-	if (status != Status::OK) {
-		LOG(WARNING) << "Cannot get frame types via UVC";
-		return status;
-	}
-	
-	status = UsbUtils::convertDepthSensorTypes(m_depthSensorFrameTypes, frameTypesBlob);
-	if (status != Status::OK) {
-		LOG(WARNING) << "Cannot deserialize frame types from target";
-		return status;
-	}
+    std::string frameTypesBlob;
+    status = UsbWindowsUtils::uvcExUnitGetString(
+        m_implData->handle.pVideoInputFilter, 8, frameTypesBlob);
+    if (status != Status::OK) {
+        LOG(WARNING) << "Cannot get frame types via UVC";
+        return status;
+    }
+
+    status = UsbUtils::convertDepthSensorTypes(m_depthSensorFrameTypes,
+                                               frameTypesBlob);
+    if (status != Status::OK) {
+        LOG(WARNING) << "Cannot deserialize frame types from target";
+        return status;
+    }
     std::wstring stemp = s2ws(m_driverPath);
     hr = m_implData->handle.pGraph->AddFilter(
         m_implData->handle.pVideoInputFilter, stemp.c_str());
@@ -543,6 +545,23 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         LOG(WARNING) << "failed 7";
         return Status::GENERIC_ERROR;
     }
+
+    // Send the frame type and all its content all the way to target
+    std::string serializedData;
+
+    UsbUtils::convertDepthSensorFrameTypeToSerializedProtobuf(type,
+                                                              serializedData);
+    hr = UsbWindowsUtils::UvcExUnitWriteBuffer(
+        m_implData->handle.pVideoInputFilter, 9, -1, 0,
+        reinterpret_cast<const uint8_t *>(serializedData.c_str()),
+        serializedData.size());
+    if (FAILED(hr)) {
+        LOG(WARNING)
+            << "Failed to write frame type over UVC extension unit. Error: "
+            << hr;
+        return Status::GENERIC_ERROR;
+    }
+
     VIDEOINFOHEADER *pVih = reinterpret_cast<VIDEOINFOHEADER *>(
         m_implData->handle.pAmMediaType->pbFormat);
     HEADER(pVih)->biWidth = type.width;
