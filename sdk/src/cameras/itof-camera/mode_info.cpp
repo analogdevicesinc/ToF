@@ -58,3 +58,11 @@ aditof::Status convertCameraMode(const std::string &mode, uint8_t& convertedMode
     convertedMode = (it - g_availableModes.begin());
     return status;
 }
+
+ModeInfo::modeInfo ModeInfo::getModeInfo(const std::string& mode){
+    unsigned char modeIndex;
+
+    convertCameraMode(mode, modeIndex);
+    
+    return getModeInfo(modeIndex);
+}
