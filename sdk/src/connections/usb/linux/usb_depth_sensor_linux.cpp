@@ -131,14 +131,16 @@ aditof::Status UsbDepthSensor::open() {
         return Status::GENERIC_ERROR;
     }
 
-    status = UsbLinuxUtils::uvcExUnitGetString(m_implData->fd, 8, availableFrameTypesBlob);
-    if (status != Status::OK){
+    status = UsbLinuxUtils::uvcExUnitGetString(m_implData->fd, 8,
+                                               availableFrameTypesBlob);
+    if (status != Status::OK) {
         LOG(ERROR) << "Cannot get frame types from target";
         return status;
     }
 
-    status = UsbUtils::convertDepthSensorTypes(m_depthSensorFrameTypes, availableFrameTypesBlob);
-    if (status != Status::OK){
+    status = UsbUtils::convertDepthSensorTypes(m_depthSensorFrameTypes,
+                                               availableFrameTypesBlob);
+    if (status != Status::OK) {
         LOG(ERROR) << "Cannot deserialize frame types";
         return status;
     }
@@ -190,6 +192,22 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     using namespace aditof;
 
     Status status = Status::OK;
+
+    // Send the frame type and all its content all the way to target
+    std::string serializedData;
+
+    UsbUtils::convertDepthSensorFrameTypeToSerializedProtobuf(type,
+                                                              serializedData);
+    int ret = UsbLinuxUtils::uvcExUnitWriteBuffer(
+        m_implData->fd, 9, -1, 0,
+        reinterpret_cast<const uint8_t *>(serializedData.c_str()),
+        serializedData.size());
+    if (ret < 0) {
+        LOG(WARNING)
+            << "Failed to write frame type over UVC extension unit. Error: "
+            << ret;
+        return Status::GENERIC_ERROR;
+    }
 
     // Buggy driver paranoia.
     unsigned int min;
