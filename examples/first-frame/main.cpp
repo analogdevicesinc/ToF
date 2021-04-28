@@ -72,17 +72,17 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    std::vector<std::string> modes;
-    camera->getAvailableModes(modes);
-    if (modes.empty()) {
-        LOG(ERROR) << "no camera modes available!";
-        return 0;
-    }
-    status = camera->setMode(modes.front());
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not set camera mode!";
-        return 0;
-    }
+    // std::vector<std::string> modes;
+    // camera->getAvailableModes(modes);
+    // if (modes.empty()) {
+    //     LOG(ERROR) << "no camera modes available!";
+    //     return 0;
+    // }
+    // status = camera->setMode(modes.front());
+    // if (status != Status::OK) {
+    //     LOG(ERROR) << "Could not set camera mode!";
+    //     return 0;
+    // }
 
     aditof::Frame frame;
 
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
     }
 
     uint16_t *data1;
-    status = frame.getData("depth", &data1);
+    status = frame.getData("ir", &data1);
 
     if (status != Status::OK) {
         LOG(ERROR) << "Could not get frame data!";
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
     }
 
     FrameDataDetails fDetails;
-    frame.getDataDetails("depth", fDetails);
+    frame.getDataDetails("ir", fDetails);
     for (unsigned int i = 0; i < fDetails.width * fDetails.height; ++i) {
         std::cout << data1[i] << " ";
     }
