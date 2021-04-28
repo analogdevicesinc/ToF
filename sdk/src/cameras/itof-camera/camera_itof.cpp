@@ -157,8 +157,6 @@ aditof::Status CameraItof::initialize() {
         return Status::GENERIC_ERROR;
     }
 
-    m_depthSensor->open();
-
     m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
 
     LOG(INFO) << "Camera initialized";
@@ -244,7 +242,7 @@ aditof::Status CameraItof::stop() {
 }
 
 aditof::Status CameraItof::setMode(const std::string &mode,
-                                   const std::string &modeFilename) {    
+                                   const std::string &modeFilename = "") {    
     LOG(INFO) << "Chosen mode: " << mode;
     m_details.mode = mode;
 
@@ -277,6 +275,8 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         return Status::INVALID_ARGUMENT;
     }
 
+    setMode(frameType);
+
     status = m_depthSensor->setFrameType(*frameTypeIt);
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to set frame type";
@@ -293,13 +293,13 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
     }
 
-    if (!m_devStarted) {
+    //if (!m_devStarted) {
         status = m_depthSensor->start();
         if (status != Status::OK) {
             return status;
         }
         m_devStarted = true;
-    }
+    //}
 
     return status;
 }
@@ -320,10 +320,11 @@ aditof::Status CameraItof::getAvailableFrameTypes(
 aditof::Status setAttributesByMode(aditof::Frame* frame, const ModeInfo::modeInfo& modeInfo){
     aditof::Status status = aditof::Status::OK;
 //assume frame is != nullptr as it is checked before calling this
+    
     frame->setAttribute("mode", std::to_string(modeInfo.mode));
     frame->setAttribute("width", std::to_string(modeInfo.width));
     frame->setAttribute("height", std::to_string(modeInfo.height));
-    frame->setAttribute("subframes", std::to_string(modeInfo.subframes));
+    frame->setAttribute("total_captures", std::to_string(modeInfo.subframes));
     frame->setAttribute("embed_width", std::to_string(modeInfo.embed_width));
     frame->setAttribute("embed_height", std::to_string(modeInfo.embed_height));
     frame->setAttribute("passive_ir", std::to_string(modeInfo.passive_ir));
@@ -360,6 +361,8 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
 
     uint16_t *irFrame = nullptr;
     frame->getData("ir", &irFrame);
+
+    irFrame[0] = 2;
 
     status = m_depthSensor->getFrame(irFrame);
     if (status != Status::OK) {

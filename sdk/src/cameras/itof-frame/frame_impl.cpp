@@ -55,7 +55,7 @@ const std::vector<std::string> availableAttributes = {
 
 struct FrameImpl::ImplData {
     std::unordered_map<std::string, uint16_t *> m_dataLocations;
-    std::unique_ptr<uint16_t> m_allData;
+    std::shared_ptr<uint16_t> m_allData;
     size_t allDataNbBytes;
 };
 
@@ -173,21 +173,18 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
     unsigned int pos = 0;
     uint16_t  embed_hdr_length;
     uint8_t total_captures;
-    FrameDataDetails frame_detail;
 
     //get attributes 
-    // getIntAttribute<uint16_t>("embed_hdr_length", embed_hdr_length);
-    // getIntAttribute<uint8_t>("total_captures", total_captures);
-    embed_hdr_length = 1;
-    total_captures = 1;
+    getIntAttribute<uint16_t>("embed_hdr_length", embed_hdr_length);
+    getIntAttribute<uint8_t>("total_captures", total_captures);
 
     //compute total size TODO this could be precomputed TBD @dNechita
     for (FrameDataDetails frameDetail : details.dataDetails){
-        if (frame_detail.type == "header"){
-             totalSize += (embed_hdr_length / 2) * total_captures;
+        if (frameDetail.type == "header"){
+            totalSize += (embed_hdr_length / 2) * total_captures;
         }
         else{
-            totalSize += frame_detail.height * frame_detail.width * total_captures;
+            totalSize += frameDetail.height * frameDetail.width * total_captures;
         }
     }
 
@@ -198,11 +195,12 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
 
     for (FrameDataDetails frameDetail : details.dataDetails){
         m_implData->m_dataLocations.emplace(frameDetail.type, m_implData->m_allData.get() + pos); //raw data
-        if (frame_detail.type == "header"){
+        LOG(INFO) << frameDetail.type;
+        if (frameDetail.type == "header"){
              pos += (embed_hdr_length / 2) * total_captures;
         }
         else{
-            pos += frame_detail.height * frame_detail.width * total_captures;
+            pos += frameDetail.height * frameDetail.width * total_captures;
         }
     }
 

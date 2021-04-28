@@ -103,9 +103,9 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
 
             {"pcm", 
                 {
-                    {"ir", 4026, 256}
+                    {"ir", 4096, 256}
                 },
-                4026, 256,
+                4096, 256,
             },
                 {"short_throw", //type 
                 {
