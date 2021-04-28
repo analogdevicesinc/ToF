@@ -76,6 +76,16 @@ class UsbUtils {
     static aditof::Status
     convertFrameDetails(std::vector<aditof::FrameDetails> &frameDetails,
                         const std::string &availableFrameTypesBlob);
+
+    /**
+     * @brief Converts a DepthSensorFrameType to a serialized protobuf message.
+     * @param depthSensorFrameTypes - the structure to convert.
+     * @param[out] depthSensorFrameTypeBlob - the buffer cotaining the serialized data.
+     * return aditof::Status
+     */
+    static aditof::Status convertDepthSensorFrameTypeToSerializedProtobuf(
+        const aditof::DepthSensorFrameType &depthSensorFrameType,
+        std::string &depthSensorFrameTypeBlob);
 };
 
 #endif // USB_UTILS_H
