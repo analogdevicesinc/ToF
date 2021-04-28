@@ -32,11 +32,11 @@
 #ifndef USB_UTILS_H
 #define USB_UTILS_H
 
-#include <string>
-#include <vector>
-#include <aditof/status_definitions.h>
 #include <aditof/frame_definitions.h>
 #include <aditof/sensor_definitions.h>
+#include <aditof/status_definitions.h>
+#include <string>
+#include <vector>
 class UsbUtils {
   public:
     /**
@@ -57,21 +57,25 @@ class UsbUtils {
     static std::vector<std::pair<std::string, unsigned int>>
     getTemperatureSensorNamesAndIds(const std::vector<std::string> &tokens);
 
-     /**
+    /**
      * @brief Parses a vector of depthSensorFrameType from a protobuf.
      * @param depthSensorFrameTypesVector - the parsed vector.
      * @param availableDepthSensorsFrameTypesBlob - the buffer cotaining the serialized data.
      * return aditof::Status
      */
-     static aditof::Status convertDepthSensorTypes(std::vector<aditof::DepthSensorFrameType>& depthSensorFrameTypesVector, const std::string& availableDepthSensorsFrameTypesBlob);
+    static aditof::Status convertDepthSensorTypes(
+        std::vector<aditof::DepthSensorFrameType> &depthSensorFrameTypesVector,
+        const std::string &availableDepthSensorsFrameTypesBlob);
 
-     /**
+    /**
      * @brief Parses a vector of FrameDetails from a protobuf.
      * @param frameDetails - the parsed vector.
      * @param availableFrameTypesBlob - the buffer cotaining the serialized data.
      * return aditof::Status
      */
-     static aditof::Status convertFrameDetails(std::vector<aditof::FrameDetails>& frameDetails, const std::string& availableFrameTypesBlob);
+    static aditof::Status
+    convertFrameDetails(std::vector<aditof::FrameDetails> &frameDetails,
+                        const std::string &availableFrameTypesBlob);
 };
 
 #endif // USB_UTILS_H

@@ -31,8 +31,8 @@
  */
 
 #include "connections/usb/usb_utils.h"
-#include "utils.h"
 #include "usb_buffer.pb.h"
+#include "utils.h"
 
 using namespace std;
 using namespace aditof;
@@ -76,30 +76,37 @@ UsbUtils::getTemperatureSensorNamesAndIds(
     return v;
 }
 
-
-aditof::Status UsbUtils::convertDepthSensorTypes(std::vector<aditof::DepthSensorFrameType>& depthSensorFrameTypes, const std::string& availableDepthSensorsFrameTypesBlob){
+aditof::Status UsbUtils::convertDepthSensorTypes(
+    std::vector<aditof::DepthSensorFrameType> &depthSensorFrameTypes,
+    const std::string &availableDepthSensorsFrameTypesBlob) {
     using namespace google::protobuf::io;
 
     usb_payload::DepthSensorFrameTypeVector depthSensorFrameTypesPayload;
-    if (!depthSensorFrameTypesPayload.ParseFromString(availableDepthSensorsFrameTypesBlob)){
-            return aditof::Status::INVALID_ARGUMENT;
+    if (!depthSensorFrameTypesPayload.ParseFromString(
+            availableDepthSensorsFrameTypesBlob)) {
+        return aditof::Status::INVALID_ARGUMENT;
     }
 
     depthSensorFrameTypes.clear();
 
-    for (const auto& depthSensorFrameTypePayload : depthSensorFrameTypesPayload.depthsensorframetypes()){
+    for (const auto &depthSensorFrameTypePayload :
+         depthSensorFrameTypesPayload.depthsensorframetypes()) {
         aditof::DepthSensorFrameType depthSensorFrameType;
 
         depthSensorFrameType.type = depthSensorFrameTypePayload.type();
         depthSensorFrameType.width = depthSensorFrameTypePayload.width();
         depthSensorFrameType.height = depthSensorFrameTypePayload.height();
 
-        for(const auto& depthSensorFrameContentPayload : depthSensorFrameTypePayload.depthsensorframecontent()){
+        for (const auto &depthSensorFrameContentPayload :
+             depthSensorFrameTypePayload.depthsensorframecontent()) {
             DepthSensorFrameContent depthSensorFrameContent;
 
-            depthSensorFrameContent.width = depthSensorFrameContentPayload.width();
-            depthSensorFrameContent.height = depthSensorFrameContentPayload.height();
-            depthSensorFrameContent.type = depthSensorFrameContentPayload.type();
+            depthSensorFrameContent.width =
+                depthSensorFrameContentPayload.width();
+            depthSensorFrameContent.height =
+                depthSensorFrameContentPayload.height();
+            depthSensorFrameContent.type =
+                depthSensorFrameContentPayload.type();
             depthSensorFrameType.content.push_back(depthSensorFrameContent);
         }
 
@@ -109,23 +116,27 @@ aditof::Status UsbUtils::convertDepthSensorTypes(std::vector<aditof::DepthSensor
     return aditof::Status::OK;
 }
 
-aditof::Status UsbUtils::convertFrameDetails(std::vector<aditof::FrameDetails>& frameDetailsVector, const std::string& availableFrameTypesBlob){
+aditof::Status UsbUtils::convertFrameDetails(
+    std::vector<aditof::FrameDetails> &frameDetailsVector,
+    const std::string &availableFrameTypesBlob) {
     using namespace google::protobuf::io;
 
     usb_payload::FrameDetailsVector frameDetailsVectorPayload;
-    if (!frameDetailsVectorPayload.ParseFromString(availableFrameTypesBlob)){
-            return aditof::Status::INVALID_ARGUMENT;
+    if (!frameDetailsVectorPayload.ParseFromString(availableFrameTypesBlob)) {
+        return aditof::Status::INVALID_ARGUMENT;
     }
 
     frameDetailsVector.clear();
 
-    for (const auto& frameDetailsPayload : frameDetailsVectorPayload.framedetails()){
+    for (const auto &frameDetailsPayload :
+         frameDetailsVectorPayload.framedetails()) {
         aditof::FrameDetails frameDetails;
 
         frameDetails.type = frameDetailsPayload.type();
         frameDetails.cameraMode = frameDetailsPayload.cameramode();
 
-        for(const auto& dataDetailsPayload : frameDetailsPayload.datadetails()){
+        for (const auto &dataDetailsPayload :
+             frameDetailsPayload.datadetails()) {
             FrameDataDetails frameDataDetails;
 
             frameDataDetails.width = dataDetailsPayload.width();
