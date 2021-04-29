@@ -34,6 +34,8 @@
 #include <aditof/system.h>
 #include <glog/logging.h>
 #include <iostream>
+#include <fstream>
+#include <ios>
 
 using namespace aditof;
 
@@ -68,24 +70,24 @@ int main(int argc, char *argv[]) {
     
     
     }
-
-    status = camera->setFrameType("pcm"); //hardcoded for now as it is the simples kind of frame
+    /*status = camera->setFrameType(frameTypes.front());
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 0;
+    }*/
+
+    std::vector<std::string> modes;
+    camera->getAvailableModes(modes);
+    if (modes.empty()) {
+        LOG(ERROR) << "no camera modes available!";
+        return 0;
     }
 
-    // std::vector<std::string> modes;
-    // camera->getAvailableModes(modes);
-    // if (modes.empty()) {
-    //     LOG(ERROR) << "no camera modes available!";
-    //     return 0;
-    // }
-    // status = camera->setMode(modes.front());
-    // if (status != Status::OK) {
-    //     LOG(ERROR) << "Could not set camera mode!";
-    //     return 0;
-    // }
+    status = camera->setMode(modes[5]);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not set camera mode!";
+        return 0;
+    }
 
     aditof::Frame frame;
 
@@ -109,12 +111,11 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "no memory allocated in frame";
         return 0;
     }
-
+    std::ofstream g("/home/cristi/fallout/utils/depth.bin", std::ios::binary);
     FrameDataDetails fDetails;
-    frame.getDataDetails("ir", fDetails);
-    for (unsigned int i = 0; i < 100; ++i){//fDetails.width * fDetails.height; ++i) {
-        std::cout << data1[i] << " ";
-    }
+    frame.getDataDetails("depth", fDetails);
+
+    g.write((char*)data1, fDetails.width * fDetails.height * sizeof(uint16_t));
 
     return 0;
 }

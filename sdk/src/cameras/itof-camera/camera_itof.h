@@ -293,6 +293,8 @@ class CameraItof : public aditof::Camera {
     uint16_t m_modechange_framedrop_count = 0;
     std::vector<std::string> m_tempFiles;
     std::vector<aditof::DepthSensorFrameType> m_availableSensorFrameTypes;
+private:
+    aditof::Status initializeFrame(aditof::Frame*);
 };
 
 #endif // CAMERA_ITOF_H

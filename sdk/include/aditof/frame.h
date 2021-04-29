@@ -135,6 +135,7 @@ class SDK_API Frame {
      */
     virtual Status getAttribute(const std::string &attribute,
                                 std::string &value) const;
+    Status allocFrameData();
 
   private:
     std::unique_ptr<FrameImpl> m_impl;

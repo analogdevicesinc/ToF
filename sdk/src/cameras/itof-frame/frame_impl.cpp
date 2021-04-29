@@ -174,7 +174,11 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
     uint16_t  embed_hdr_length;
     uint8_t total_captures;
 
+<<<<<<< HEAD
     //get attributes 
+=======
+    //get attributes
+>>>>>>> depth_compute: use depth_compute library for ITOF frame processing.
     getIntAttribute<uint16_t>("embed_hdr_length", embed_hdr_length);
     getIntAttribute<uint8_t>("total_captures", total_captures);
 
@@ -217,10 +221,10 @@ aditof::Status FrameImpl::getAvailableAttributes(std::vector<std::string> &attri
 
 aditof::Status FrameImpl::setAttribute(const std::string &attribute,
                                        const std::string &value) {
-    if (m_attributes.find(attribute) == m_attributes.end()) {
+    /*if (m_attributes.find(attribute) == m_attributes.end()) {
         LOG(WARNING) << "Could not find any attribute with name: " << attribute;
         return aditof::Status::INVALID_ARGUMENT;
-    }
+    }*/
 
     m_attributes[attribute] = value;
     return aditof::Status::OK;
