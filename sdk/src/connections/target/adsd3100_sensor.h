@@ -100,19 +100,76 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
 
         const std::vector<aditof::DepthSensorFrameType> availableFrameTypes =
         {
-
-            {"pcm", 
+            //frame type
+            {"short_throw",  
+                {  //type, width, height
+                    {"depth", 512, 512}, 
+                    {"ir", 333, 333}
+                },
+                //width, height
+                120, 130, 
+            },
+            {"long_throw",  
+                { 
+                    {"depth", 512, 512}, 
+                    {"ir", 333, 333}
+                },
+                120, 130, 
+            },
+            {"aHat1",  
+                { 
+                    {"depth", 512, 512}, 
+                    {"ir", 333, 333}
+                },
+                120, 130, 
+            },
+            {"pcm",
                 {
                     {"ir", 4096, 256}
                 },
                 4096, 256,
             },
-                {"short_throw", //type 
+            {"long_throw_native", 
                 {
-                    {"depth", 111, 222},
-                    {"ir", 333, 333}
+                    {"ir", 4096, 256}
                 },
-                120, 130, 
+                4096, 256,
+            },
+            {"mp_pcm", 
+                {
+                    {"ir", 4096, 256}
+                },
+                4096, 256,
+            },
+            {"chip_char", 
+                {
+                    {"ir", 4096, 256}
+                },
+                4096, 256,
+            },
+            {"qmp", 
+                {
+                    {"ir", 4096, 256}
+                },
+                4096, 256,
+            },
+            {"pcm8", 
+                {
+                    {"ir", 4096, 256}
+                },
+                4096, 256,
+            },
+            {"ahat2", 
+                {
+                    {"ir", 4096, 256}
+                },
+                4096, 256,
+            },
+            {"mp", 
+                {
+                    {"ir", 4096, 256}
+                },
+                4096, 256,
             },
 
         };
