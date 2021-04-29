@@ -43,6 +43,7 @@
 #include "connections/target/target_sensor_enumerator.h"
 #else
 #include "connections/usb/usb_sensor_enumerator.h"
+#include "connections/offline/offline_sensor_enumerator.h"
 #ifdef HAS_NETWORK
 #include "connections/network/network_sensor_enumerator.h"
 #endif
@@ -77,4 +78,10 @@ SensorEnumeratorFactory::buildNetworkSensorEnumerator(const std::string &ip) {
 #endif
 #endif
     return nullptr;
+}
+
+std::unique_ptr<SensorEnumeratorInterface>
+SensorEnumeratorFactory::buildOfflineSensorEnumerator() {
+    return std::unique_ptr<SensorEnumeratorInterface>(
+                new OfflineSensorEnumerator());
 }
