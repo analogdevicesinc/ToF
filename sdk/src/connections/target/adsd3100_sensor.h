@@ -90,6 +90,9 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
         aditof::Status enqueueInternalBufferPrivate(struct v4l2_buffer &buf,
                                                     struct VideoDev *dev = nullptr);
 
+        aditof::Status setModeByIndex(uint8_t modeIndex);
+        aditof::Status setMode(const std::string& mode);
+
     private:
         struct ImplData;
         aditof::SensorDetails m_sensorDetails;

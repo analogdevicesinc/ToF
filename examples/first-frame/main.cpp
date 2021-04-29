@@ -65,8 +65,11 @@ int main(int argc, char *argv[]) {
     if (frameTypes.empty()) {
         std::cout << "no frame type avaialble!";
         return 0;
+    
+    
     }
-    status = camera->setFrameType(frameTypes.front());
+
+    status = camera->setFrameType("pcm"); //hardcoded for now as it is the simples kind of frame
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 0;
@@ -109,7 +112,7 @@ int main(int argc, char *argv[]) {
 
     FrameDataDetails fDetails;
     frame.getDataDetails("ir", fDetails);
-    for (unsigned int i = 0; i < fDetails.width * fDetails.height; ++i) {
+    for (unsigned int i = 0; i < 100; ++i){//fDetails.width * fDetails.height; ++i) {
         std::cout << data1[i] << " ";
     }
 
