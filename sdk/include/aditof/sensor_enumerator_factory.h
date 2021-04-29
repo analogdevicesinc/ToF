@@ -68,6 +68,13 @@ class SDK_API SensorEnumeratorFactory {
      */
     static std::unique_ptr<SensorEnumeratorInterface>
     buildNetworkSensorEnumerator(const std::string &ip);
+
+    /**
+     * Factory method to create an offline enumerator.
+     * @return std::unique_ptr<DeviceEnumeratorInterface>
+     */
+    static std::unique_ptr<SensorEnumeratorInterface>
+    buildOfflineSensorEnumerator();
 };
 
 } // namespace aditof

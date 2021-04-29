@@ -98,8 +98,14 @@ Status SystemImpl::getCameraList(
         // Assume SDK is running on remote
         sensorEnumerator = SensorEnumeratorFactory::buildUsbSensorEnumerator();
         if (!sensorEnumerator) {
+            LOG(INFO) << "No USB Enumerator found.";
+    #ifdef HAS_OFFLINE
+            LOG(INFO) << "Creating offline sensor.";
+            sensorEnumerator = SensorEnumeratorFactory::buildOfflineSensorEnumerator();
+    #else
             LOG(ERROR) << "Failed to create UsbSensorEnumerator";
             return Status::GENERIC_ERROR;
+    #endif
         }
     }
     sensorEnumerator->searchSensors();
