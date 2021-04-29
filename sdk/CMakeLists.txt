@@ -112,6 +112,13 @@ file(GLOB NETWORK_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connections/network/*.h
 )
 
+file(GLOB OFFLINE_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/connections/offline/*.cpp
+)
+file(GLOB OFFLINE_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/connections/offline/*.h
+)
+
 # Create target and set properties
 add_library(${PROJECT_NAME} SHARED
     ${SOURCES}
@@ -121,6 +128,8 @@ add_library(${PROJECT_NAME} SHARED
     $<$<BOOL:${WITH_NETWORK}>:${NETWORK_HEADERS}>
     $<$<BOOL:${WITH_NETWORK}>:${NET_PROTO_SRCS}>
     $<$<BOOL:${WITH_NETWORK}>:${NET_PROTO_HDRS}>
+    $<$<BOOL:${WITH_OFFLINE}>:${OFFLINE_SOURCES}>
+    $<$<BOOL:${WITH_OFFLINE}>:${OFFLINE_HEADERS}>
     ${PROTO_SRCS}
     ${PROTO_HDRS}
 )
@@ -185,6 +194,14 @@ endif()
 #LIBTOFI_LIBDIR_PATH - path to libtofi_config.so and libtofi_compute.so folder
 
 if (USE_ITOF)
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+	if (NOT LIBTOFI_LIBDIR_PATH)
+        		set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
+    	endif()
+	
+>>>>>>> cmake: added CMake options for offline depth sensor.
 	if ( UNIX )
     		add_library(libtofi_compute SHARED IMPORTED)
     		set_target_properties(libtofi_compute PROPERTIES
@@ -214,6 +231,26 @@ if (USE_ITOF)
 
 	target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_compute)
 	target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_config)
+=======
+    message("${CMAKE_SOURCE_DIR}/../libs")
+    if (NOT LIBTOFI_LIBDIR_PATH)
+        set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
+    endif()
+    message(${LIBTOFI_LIBDIR_PATH})
+    add_library(libtofi_compute SHARED IMPORTED)
+    set_target_properties(libtofi_compute PROPERTIES
+         IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_compute.so"
+         IMPORTED_NO_SONAME 1
+    )
+    target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_compute)
+
+    add_library(libtofi_config SHARED IMPORTED)
+    set_target_properties(libtofi_config PROPERTIES
+             IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_config.so"
+             IMPORTED_NO_SONAME 1
+         )
+    target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_config)
+>>>>>>> cmake: added CMake options for offline depth sensor.
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCC)
