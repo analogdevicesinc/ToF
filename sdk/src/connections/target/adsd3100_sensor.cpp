@@ -27,6 +27,7 @@
 #define V4L2_CID_AD_DEV_SET_CHIP_CONFIG 0xA00B00
 #define V4L2_CID_AD_DEV_READ_REG 0xA00B01
 #define CTRL_PACKET_SIZE 4096
+#define CTRL_SET_MODE (0x9819e0)
 // Can be moved to target_definitions in "camera"/"platform"
 #define TEMP_SENSOR_DEV_PATH "/dev/i2c-1"
 #define LASER_TEMP_SENSOR_I2C_ADDR 0x49
@@ -168,6 +169,8 @@ using namespace aditof;
         subDevName = driverSubPaths.at(i).c_str();
         cardName = cards.at(i).c_str();
         dev = &m_implData->videoDevs[i];
+
+        LOG(INFO) << "device: " << devName << "\tsubdevice: " << subDevName;
 
         /* Open V4L2 device */
         if (stat(devName, &st) == -1) {
@@ -320,12 +323,28 @@ Adsd3100Sensor::getAvailableFrameTypes(
     return status;
 }
 
-aditof::Status setModeByIndex(uint8_t modeIndex){
-    //TODO
-    return aditof::Status::OK;
+aditof::Status Adsd3100Sensor::setModeByIndex(uint8_t modeIndex){
+    using namespace aditof;
+    struct VideoDev *dev = &m_implData->videoDevs[0];
+    Status status = Status::OK;
+
+    static struct v4l2_control ctrl;
+    
+    memset(&ctrl, 0, sizeof(ctrl));
+    
+    ctrl.id = CTRL_SET_MODE;
+    ctrl.value = modeIndex;
+
+    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
+        LOG(WARNING) << "Setting Mode error "
+                        << "errno: " << errno << " error: " << strerror(errno);
+        status = Status::GENERIC_ERROR;
+    }
+
+    return status;
 }
 
-aditof::Status setMode(const std::string& mode){
+aditof::Status Adsd3100Sensor::setMode(const std::string& mode){
     uint8_t modeIndex;
     aditof::Status status = aditof::Status::OK;
     LOG(INFO) << "Setting camera mode to " << mode;

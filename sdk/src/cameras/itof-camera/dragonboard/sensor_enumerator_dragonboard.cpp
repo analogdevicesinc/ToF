@@ -49,7 +49,7 @@ Status TargetSensorEnumerator::searchSensors() {
 
 
         std::string devPath = "/dev/video1";
-        std::string subdevPath = "/dev/video1";
+        std::string subdevPath = "/dev/v4l-subdev1";
 
         SensorInfo sInfo;
         sInfo.sensorType = SensorType::SENSOR_ADSD3100;
