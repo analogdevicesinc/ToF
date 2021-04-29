@@ -42,6 +42,7 @@
 #include "cJSON/cJSON.c"
 #include "tofi/floatTolin.h"
 #include "tofi/tofi_utils.h"
+#include "tofi/tofi_config.h"
 
 CameraItof::CameraItof(
     std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
@@ -75,6 +76,8 @@ CameraItof::CameraItof(
     m_depthSensor->getDetails(sDetails);
     m_details.connection = sDetails.connectionType;
 
+    m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
+    initialize();
 }
 
 CameraItof::~CameraItof() {
@@ -100,7 +103,8 @@ aditof::Status CameraItof::initialize() {
     }
 
     // Parse config.json
-    std::string config = m_controls["initialization_config"];
+    //std::string config = m_controls["initialization_config"];
+    std::string config = "/home/cristi/old_sdk/sdk/config/config_default.json";
     std::ifstream ifs(config.c_str());
     std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
     std::vector<std::pair<std::string, int32_t>> device_settings;
@@ -112,7 +116,7 @@ aditof::Status CameraItof::initialize() {
         if (cJSON_IsString(json_sensorFirmware_file) && (json_sensorFirmware_file->valuestring != NULL)) {
             if (m_sensorFirmwareFile.empty()) {
                 // save firmware file location
-                m_sensorFirmwareFile = json_sensorFirmware_file->valuestring;
+                m_sensorFirmwareFile = "/home/cristi/aditof-sdk-rework/sdk/src/cameras/itof-camera/config/" + std::string(json_sensorFirmware_file->valuestring);
             } else {
                 LOG(WARNING) << "Duplicate firmware file ignored: " << json_sensorFirmware_file->valuestring;
             }
@@ -123,7 +127,7 @@ aditof::Status CameraItof::initialize() {
         if (cJSON_IsString(json_ccb_calibration_file) && (json_ccb_calibration_file->valuestring != NULL)) {
             if (m_ccb_calibrationFile.empty()) {
                 // save calibration file location
-                m_ccb_calibrationFile = json_ccb_calibration_file->valuestring;
+                m_ccb_calibrationFile = "/home/cristi/aditof-sdk-rework/sdk/src/cameras/itof-camera/config/" + std::string(json_ccb_calibration_file->valuestring);
             } else {
                 LOG(WARNING) << "Duplicate calibration file ignored: " << json_ccb_calibration_file->valuestring;
             }
@@ -139,7 +143,7 @@ aditof::Status CameraItof::initialize() {
         const cJSON *json_depth_ini_file = cJSON_GetObjectItemCaseSensitive(config_json, "DEPTH_INI");
         if (cJSON_IsString(json_depth_ini_file) && (json_depth_ini_file->valuestring != NULL)) {
             // save depth ini file location
-            m_ini_depth = json_depth_ini_file->valuestring;
+            m_ini_depth = "/home/cristi/aditof-sdk-rework/sdk/src/cameras/itof-camera/config/" + std::string(json_depth_ini_file->valuestring);
         }
 
         // Get optional power config
@@ -326,14 +330,40 @@ aditof::Status setAttributesByMode(aditof::Frame& frame, const ModeInfo::modeInf
     return status;
 }
 
+aditof::Status CameraItof::initializeFrame(aditof::Frame *frame) {
+    ModeInfo::modeInfo modeInfo;
+    getCurrentModeInfo(modeInfo);
+    frame->setAttribute("total_captures", std::to_string(modeInfo.subframes));
+    frame->setAttribute("embed_height", std::to_string(modeInfo.embed_height));
+    frame->setAttribute("embed_width", std::to_string(modeInfo.embed_width));
+    frame->setAttribute("embed_hdr_length", std::to_string(EMBED_HDR_LENGTH));
+    aditof::FrameDetails details;
+    aditof::FrameDataDetails frameDataDetail;
+    frameDataDetail.width = modeInfo.width;
+    frameDataDetail.height = modeInfo.height;
+    frameDataDetail.type = "raw";
+    details.dataDetails.emplace_back(frameDataDetail);
+    frameDataDetail.type = "ir";
+    details.dataDetails.emplace_back(frameDataDetail);
+    frameDataDetail.type = "xyz";
+    details.dataDetails.emplace_back(frameDataDetail);
+    frameDataDetail.type = "depth";
+    details.dataDetails.emplace_back(frameDataDetail);
+    frame->setDetails(details);
+    return aditof::Status::OK;
+}
+
 aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
                                         aditof::FrameUpdateCallback /*cb*/) {
     using namespace aditof;
     Status status = Status::OK;
+    std::string totalCapturesStr;
+    uint8_t totalCaptures;
 
     if (frame == nullptr){
         return Status::INVALID_ARGUMENT;
     }
+    initializeFrame(frame);
 
     // std::string totalCapturesStr;
     // uint8_t totalCaptures;
@@ -346,9 +376,9 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     FrameDetails frameDetails;
     frame->getDetails(frameDetails);
 
-    if (m_details.frameType != frameDetails) {
+    /*if (m_details.frameType != frameDetails) {
         frame->setDetails(m_details.frameType);
-    }
+    }*/
 
     // uint16_t *frameDataLocation = nullptr;
     // frame->getData("raw", &frameDataLocation);
@@ -358,7 +388,8 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
 
     irFrame[0] = 2;
 
-    status = m_depthSensor->getFrame(irFrame);
+    status = m_depthSensor->getFrame(embedFrame);
+
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to get embedded frame from device";
         return status;
@@ -369,13 +400,14 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     // uint16_t *header = nullptr;
     // frame->getData("header", &header);
 
-    // if (!frameDataLocation && !embedFrame && !header) {
-    //     LOG(WARNING) << "getframe failed to allocated valid frame";
-    //     return status;
-    // }
+    if (!frameDataLocation && !header) {
+        LOG(WARNING) << "getframe failed to allocated valid frame";
+        return status;
+    }
 
-    // uint16_t embed_width = 0;
-    // uint16_t embed_height = 0;
+    initComputeLibrary();
+    uint16_t embed_width = 0;
+    uint16_t embed_height = 0;
 
     // ModeInfo::modeInfo aModeInfo;
     // status = getCurrentModeInfo(aModeInfo);
@@ -401,27 +433,29 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     //     frameDataLocation[i] = Convert11bitFloat2LinearVal(frameDataLocation[i]);
     // }
 
-    // if (totalCaptures > 1 && m_details.frameType.type == "depth_ir") {
+    if (totalCaptures > 1) {
 
     //     if (NULL == m_tofi_compute_context) {
     //         LOG(ERROR) << "Depth compute libray not initialized";
     //         return Status::GENERIC_ERROR;
     //     }
 
-    //     uint32_t ret = TofiCompute(frameDataLocation, m_tofi_compute_context, NULL);
-    //     if (ret != ADI_TOFI_SUCCESS) {
-    //         LOG(INFO) << "TofiCompute failed";
-    //         return Status::GENERIC_ERROR;
-    //     }
+        uint32_t ret = TofiCompute(frameDataLocation, m_tofi_compute_context, NULL);
+
+        if (ret != ADI_TOFI_SUCCESS) {
+            LOG(INFO) << "TofiCompute failed";
+            return Status::GENERIC_ERROR;
+        }
 
     //     uint16_t *depthFrameLocation;
     //     frame->getData("depth", &depthFrameLocation);
     //     memcpy(depthFrameLocation, (uint8_t *)m_tofi_compute_context->p_depth_frame,
     //         (frameDataDetail.height * frameDataDetail.width * sizeof(uint16_t)));
 
-    //     uint16_t *irFrameLocation;
-    //     frame->getData("ir", &irFrameLocation);
-    //     memcpy(irFrameLocation, (uint8_t *)m_tofi_compute_context->p_ab_frame, (frameDataDetail.height * frameDataDetail.width * sizeof(uint16_t)));
+
+        uint16_t *irFrameLocation;
+        frame->getData("ir", &irFrameLocation);
+        memcpy(irFrameLocation, m_tofi_compute_context->p_ab_frame, (frameDataDetail.height * frameDataDetail.width * sizeof(uint16_t)));
 
     //     applyCalibrationToFrame(frameDataLocation, std::atoi(m_details.mode.c_str()));
 
@@ -519,7 +553,7 @@ aditof::Status CameraItof::initComputeLibrary(void) {
     aditof::Status status = aditof::Status::OK;
 
     LOG(INFO) << "initComputeLibrary";
-    freeComputeLibrary();
+    //freeComputeLibrary();
     uint8_t convertedMode;
 
     aditof::Status configStatus;
@@ -670,10 +704,10 @@ CameraItof::processFrame(uint8_t *rawFrame, uint16_t *captureData,
     uint16_t REG_MODE_ID_CURR = 0;
     uint8_t Mode = 0;
 
-    chipID = rawFrame[0] | (rawFrame[1] << 8); // header[0]: [15:0] Chip ID register
+    /*chipID = (rawFrame[0] | (rawFrame[1] << 8)) >> 4; // header[0]: [15:0] Chip ID register
     if (chipID != CHIPID) {
         LOG(WARNING) << "Invalid ChipID";
-        return Status::GENERIC_ERROR;
+        //return Status::GENERIC_ERROR;
     }
 
     // REG_CAPTURE_ID[49] word:contains [5:0] = Capture Number; [11:6] = Number of Captures per Frame; [15:12] = Number of Frequencies Per Frame
@@ -697,12 +731,17 @@ CameraItof::processFrame(uint8_t *rawFrame, uint16_t *captureData,
 
     if (isValidFrame(totalCaptures + 1) != Status::OK) {
         return Status::GENERIC_ERROR; // Invalid number of subframes
-    }
+    }*/
 
-    FrameWidth = rawFrame[FRAME_WIDTH_LOC] | (rawFrame[FRAME_WIDTH_LOC + 1] << 8);    // header[6]: [10:0] The width of the ROI in pixels
-    FrameHeight = rawFrame[FRAME_HEIGHT_LOC] | (rawFrame[FRAME_HEIGHT_LOC + 1] << 8); // header[7]: [10:0] The height of the ROI in pixels
-    FrameNum = rawFrame[FRAME_NUM_LOC] | (rawFrame[FRAME_NUM_LOC + 1] << 8);          // header[4]: [15:0] FrameNumber running count
-    frame->setAttribute("frameNum", std::to_string(FrameNum));
+    //FrameWidth = rawFrame[FRAME_WIDTH_LOC] | (rawFrame[FRAME_WIDTH_LOC + 1] << 8);    // header[6]: [10:0] The width of the ROI in pixels
+    //FrameHeight = rawFrame[FRAME_HEIGHT_LOC] | (rawFrame[FRAME_HEIGHT_LOC + 1] << 8); // header[7]: [10:0] The height of the ROI in pixels
+    //FrameNum = rawFrame[FRAME_NUM_LOC] | (rawFrame[FRAME_NUM_LOC + 1] << 8);          // header[4]: [15:0] FrameNumber running count
+    std::string fn;
+    frame->getAttribute("total_captures", fn);
+    FrameNum = std::atoi(fn.c_str());
+    FrameWidth = 1024;
+    FrameHeight = 1024;
+    //frame->setAttribute("frameNum", std::to_string(FrameNum));
 
     if (captureID != 0) {
         // Todo: what are the valid captureID values? handle accordingly
@@ -711,9 +750,13 @@ CameraItof::processFrame(uint8_t *rawFrame, uint16_t *captureData,
     // Ex: for Mode=5, rawSubFrameSize will (12289 * 640 * 2)/(9 + 1) - 128
     uint64_t rawSubFrameSize = ((embed_height * embed_width * 2) / (totalCaptures + 1)) - 128;
     uint64_t subFrameSize = FrameWidth * FrameHeight; // capture size without header
+    uint16_t *p = (uint16_t*) rawFrame;
+    for (int i = 0; i < FrameNum * FrameWidth * FrameHeight; ++ i) {
+        captureData[i] = p[i] >> 4;
+    }
 
     // parse embedded frame and get header data
-    for (int fr = 0; fr < 1 + totalCaptures; fr++) {
+    /*for (int fr = 0; fr < 1 + totalCaptures; fr++) {
         uint64_t subFrameOffset = fr * (EMBED_HDR_LENGTH + rawSubFrameSize);
         uint8_t *ptr = rawFrame + subFrameOffset;
 
@@ -723,12 +766,12 @@ CameraItof::processFrame(uint8_t *rawFrame, uint16_t *captureData,
         uint16_t newFrameNum = rawFrame[FRAME_NUM_LOC + subFrameOffset] |
                                (rawFrame[(FRAME_NUM_LOC + 1) + subFrameOffset] << 8);
 
-        captureID = REG_CAPTURE_ID & 0x3F;
+        //captureID = REG_CAPTURE_ID & 0x3F;
 
-        memcpy(&head[fr * EMBED_HDR_LENGTH], ptr, sizeof(uint8_t) * EMBED_HDR_LENGTH);
+        //memcpy(&head[fr * EMBED_HDR_LENGTH], ptr, sizeof(uint8_t) * EMBED_HDR_LENGTH);
 
-        chipID =
-            rawFrame[CHIPID_LOC + subFrameOffset] | (rawFrame[(CHIPID_LOC + 1) + subFrameOffset] << 8);
+        //chipID =
+        //    rawFrame[CHIPID_LOC + subFrameOffset] | (rawFrame[(CHIPID_LOC + 1) + subFrameOffset] << 8);
 
         if (chipID != CHIPID) {
             LOG(WARNING) << "Invalid frame: invalid chipID";
@@ -753,7 +796,16 @@ CameraItof::processFrame(uint8_t *rawFrame, uint16_t *captureData,
             captureData[2 * i + fr * subFrameSize] = ((int16_t)rawFrame[k + 3 * i]) | ((((int16_t)rawFrame[k + 3 * i + 1]) & 0xF) << 8);
             captureData[2 * i + 1 + fr * subFrameSize] = (((int16_t)rawFrame[k + 3 * i + 1]) >> 4) | (((int16_t)rawFrame[k + 3 * i + 2]) << 4);
         }
-    }
+
+        for (uint64_t i = 0; i < rawSubFrameSize; ++ i) {
+            //captureData[i] = (((rawFrame[i] & 0xF) << 8) >> 4) | (rawFrame[i] >> 8);
+            captureData[i] = rawFrame[i] >> 4;
+        }
+
+        for (int i = 0; i < rawSubFrameSize; ++ i) {
+            captureData[i] = rawFrame[i];
+        }
+    }*/
 
     return status;
 }
