@@ -89,6 +89,12 @@ jobs:
         DOCKER: "virgilix/toybrick"
         EXTRA_CMAKE_FLAGS: "-DTOYBRICK=1 -DUSE_FXTOF1=1"
 
+      #IMX / ITOF
+      ubuntu_18_imx:
+        imageName: 'ubuntu-18.04'
+        DOCKER: "danielguramulta/aditof-sdk-debian" #TODO update this to a dedicated docker
+        EXTRA_CMAKE_FLAGS: "-DUSE_ITOF=1"
+
       #code quality
       clang_format:
         imageName: 'ubuntu-20.04'
