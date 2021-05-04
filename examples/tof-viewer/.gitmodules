@@ -1,0 +1,18 @@
+[submodule "external/imgui/imgui"]
+	path = external/imgui/src
+	url = https://github.com/ocornut/imgui
+[submodule "external/aditof_sdk/aditof_sdk"]
+	path = external/aditof_sdk/src
+	url = https://github.com/analogdevicesinc/aditof_sdk
+[submodule "external/aditof_cmos_sdk/src"]
+	path = external/aditof_cmos_sdk/src
+	url = https://bitbucket.analog.com/scm/tofi/sdk.git
+[submodule "external/libusb/libusb"]
+	path = external/libusb/src
+	url = https://github.com/libusb/libusb.git
+[submodule "external/FSF/utilities"]
+	path = external/FSF/src
+	url = https://bitbucket.analog.com/scm/tofi/utilities.git
+[submodule "external/newton_host_driver/newton_host_driver"]
+	path = external/newton_host_driver/src
+	url = https://bitbucket.analog.com/scm/tofi/newton_host_driver.git

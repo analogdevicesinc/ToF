@@ -1,0 +1,43 @@
+<!--Sample XML input file for non grouped packets-->
+<InputFile>
+	<!--GroupedParam: valid values:
+	    [g, ng, ag]
+		g (grouped):
+			Input: One or more non grouped data files.
+			Output: One grouped data file containing crypto modified data.
+		ng (not grouped):
+			Input: One non grouped data file.
+			Output: One data file containing crypto modified data
+		ag (already grouped):
+			Input: One grouped data file
+			Output: One grouped data file containing crypto modified data specified in DataAttributes section
+	-->
+	<GroupedParam>g</GroupedParam>
+
+	<!-- Files to be modified 
+	     Usage:
+		name="path to file to be modified"
+		value= [e,s,-]
+			e (encrypted)
+			s (signed)
+			- (do nothing)
+	-->
+	<Files>
+<!--		<file name="C:\Users\sualshi\Documents\HSP\kevhuo\python\python\1sp_payload">e</file>-->
+<!--		<file name="C:\Users\sualshi\Documents\HSP\kevhuo\python\python\1sp_enc_625">s</file>-->
+<!--		<file name="C:\Users\sualshi\Documents\HSP\kevhuo\python\python\1sp_new_header.txt">-</file>-->
+<!--		<file name="C:\Users\sualshi\Documents\HSP\kevhuo\python\python\auth_cert_txt.txt">s</file>-->
+		<file name="../out/adi_retest1sp/$(CONFIG)/retest_adi_test_encrypted_800.txt">e</file>
+	</Files>
+	<Keys>
+<!--		<privatekey name="./TestKey1.pem"></privatekey>-->
+		<privatekey name="TestKey1.pem"></privatekey>
+		<encryptionkey name="encrypt_key.bin"></encryptionkey>
+		<initialvector name="initial_vector.bin"></initialvector>
+	</Keys>
+
+	<Modes>
+		<signMode name="" ></signMode>
+	</Modes>
+
+</InputFile>

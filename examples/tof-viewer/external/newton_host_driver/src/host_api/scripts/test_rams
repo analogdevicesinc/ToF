@@ -1,0 +1,20 @@
+~/host_api/scripts/setup
+~/host_api/examples/c/linux/newton_control.exe load useq_seq_ram ~/host_api/dataFiles/useq_seq_ram.txt
+~/host_api/examples/c/linux/newton_control.exe verify useq_seq_ram ~/host_api/dataFiles/useq_seq_ram.txt
+~/host_api/examples/c/linux/newton_control.exe load useq_map_ram ~/host_api/dataFiles/useq_map_ram.txt
+~/host_api/examples/c/linux/newton_control.exe verify useq_map_ram ~/host_api/dataFiles/useq_map_ram.txt
+~/host_api/examples/c/linux/newton_control.exe load useq_wave_ram ~/host_api/dataFiles/useq_wave_ram.txt
+~/host_api/examples/c/linux/newton_control.exe verify useq_wave_ram ~/host_api/dataFiles/useq_wave_ram.txt
+~/host_api/examples/c/linux/newton_control.exe load de_ram ~/host_api/dataFiles/de_ram.txt
+~/host_api/examples/c/linux/newton_control.exe verify de_ram ~/host_api/dataFiles/de_ram.txt
+~/host_api/examples/c/linux/newton_control.exe load de_ram ~/host_api/dataFiles/de_ram.txt
+~/host_api/examples/c/linux/newton_control.exe verify de_ram ~/host_api/dataFiles/de_ram.txt
+~/host_api/examples/c/linux/newton_control.exe load de_ram ~/host_api/dataFiles/de_ram.txt
+~/host_api/examples/c/linux/newton_control.exe verify de_ram ~/host_api/dataFiles/de_ram.txt
+~/host_api/examples/c/linux/newton_control.exe load de_ram ~/host_api/dataFiles/de_ram.txt
+~/host_api/examples/c/linux/newton_control.exe verify de_ram ~/host_api/dataFiles/de_ram.txt
+~/host_api/examples/c/linux/newton_control.exe load lps1_ram ~/host_api/dataFiles/lps1_ram.txt
+~/host_api/examples/c/linux/newton_control.exe verify lps1_ram ~/host_api/dataFiles/lps1_ram.txt
+~/host_api/examples/c/linux/newton_control.exe load lps2_ram ~/host_api/dataFiles/lps1_ram.txt
+~/host_api/examples/c/linux/newton_control.exe verify lps1_ram ~/host_api/dataFiles/lps1_ram.txt
+

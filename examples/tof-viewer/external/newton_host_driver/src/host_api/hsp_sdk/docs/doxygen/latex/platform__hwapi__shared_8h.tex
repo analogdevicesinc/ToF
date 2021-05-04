@@ -1,0 +1,52 @@
+\hypertarget{platform__hwapi__shared_8h}{\section{platform\-\_\-hwapi\-\_\-shared.\-h File Reference}
+\label{platform__hwapi__shared_8h}\index{platform\-\_\-hwapi\-\_\-shared.\-h@{platform\-\_\-hwapi\-\_\-shared.\-h}}
+}
+
+
+Structure in shared memory that is used by platform specific A\-P\-Is.  
+
+
+{\ttfamily \#include \char`\"{}include/sharedram\-\_\-struct.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}include/aes\-\_\-cmd.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}include/ccs\-\_\-cmd.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}include/pka\-\_\-cmd.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}include/sha\-\_\-cmd.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}utils/generic/generic.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}hwapi/hwapi\-\_\-shared.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}apbmailbox.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}debug/postcode/postcode.\-h\char`\"{}}\\*
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structPlatform__Hwapi__Shared}{Platform\-\_\-\-Hwapi\-\_\-\-Shared}
+\begin{DoxyCompactList}\small\item\em Structure in shared memory that is used by all H\-S\-P related A\-P\-Is. This structure will be placed at the end of shared memory. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{platform__hwapi__shared_8h_a0ba5ece77c1a7ecda042cf48de50c8af}{\#define {\bfseries P\-L\-A\-T\-F\-O\-R\-M\-\_\-\-H\-W\-A\-P\-I\-\_\-\-S\-H\-A\-R\-E\-D\-\_\-\-S\-T\-R\-U\-C\-T\-\_\-\-A\-D\-D\-R\-E\-S\-S}~(H\-W\-A\-P\-I\-\_\-\-S\-H\-A\-R\-E\-D\-\_\-\-S\-T\-R\-U\-C\-T\-\_\-\-A\-D\-D\-R\-E\-S\-S -\/ sizeof(\hyperlink{platform__hwapi__shared_8h_acbb974d98634e93da535f40b89b27949}{Platform\-\_\-\-Hwapi\-\_\-\-Shared\-\_\-t}))}\label{platform__hwapi__shared_8h_a0ba5ece77c1a7ecda042cf48de50c8af}
+
+\item 
+\hypertarget{platform__hwapi__shared_8h_ab110cf8146f6da434236c3deb8a0070d}{\#define {\bfseries P\-L\-A\-T\-F\-O\-R\-M\-\_\-\-H\-W\-A\-P\-I\-\_\-\-S\-H\-A\-R\-E\-D\-\_\-\-S\-T\-R\-U\-C\-T\-\_\-\-P\-T\-R}~((Ptr\-\_\-platform\-\_\-\-Hwapi\-\_\-\-Shared\-\_\-t)P\-L\-A\-T\-F\-O\-R\-M\-\_\-\-H\-W\-A\-P\-I\-\_\-\-S\-H\-A\-R\-E\-D\-\_\-\-S\-T\-R\-U\-C\-T\-\_\-\-A\-D\-D\-R\-E\-S\-S)}\label{platform__hwapi__shared_8h_ab110cf8146f6da434236c3deb8a0070d}
+
+\item 
+\hypertarget{platform__hwapi__shared_8h_af7801c14dad025d858f32b64d3e2abdb}{\#define {\bfseries P\-L\-A\-T\-F\-O\-R\-M\-\_\-\-S\-H\-A\-R\-E\-D\-\_\-\-E\-N\-C\-\_\-\-C\-M\-D\-\_\-\-P\-K\-T\-\_\-\-S\-T\-R\-U\-C\-T\-\_\-\-P\-T\-R}(n)~(\&(P\-L\-A\-T\-F\-O\-R\-M\-\_\-\-H\-W\-A\-P\-I\-\_\-\-S\-H\-A\-R\-E\-D\-\_\-\-S\-T\-R\-U\-C\-T\-\_\-\-P\-T\-R-\/$>$encrypted\-Cmd\-Pkt\-List\mbox{[}n\mbox{]}))}\label{platform__hwapi__shared_8h_af7801c14dad025d858f32b64d3e2abdb}
+
+\item 
+\hypertarget{platform__hwapi__shared_8h_a424d704236c46cdf783f9a17b65bd0a0}{\#define {\bfseries P\-L\-A\-T\-F\-O\-R\-M\-\_\-\-S\-H\-A\-R\-E\-D\-\_\-\-E\-N\-\_\-\-C\-M\-D\-\_\-\-P\-K\-T\-\_\-\-C\-N\-T\-\_\-\-S\-T\-R\-U\-C\-T\-\_\-\-P\-T\-R}~(\&(P\-L\-A\-T\-F\-O\-R\-M\-\_\-\-H\-W\-A\-P\-I\-\_\-\-S\-H\-A\-R\-E\-D\-\_\-\-S\-T\-R\-U\-C\-T\-\_\-\-P\-T\-R-\/$>$encrypted\-Cmd\-Pkt\-Cnt))}\label{platform__hwapi__shared_8h_a424d704236c46cdf783f9a17b65bd0a0}
+
+\end{DoxyCompactItemize}
+\subsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{platform__hwapi__shared_8h_acbb974d98634e93da535f40b89b27949}{typedef struct \\*
+\hyperlink{structPlatform__Hwapi__Shared}{Platform\-\_\-\-Hwapi\-\_\-\-Shared} \hyperlink{platform__hwapi__shared_8h_acbb974d98634e93da535f40b89b27949}{Platform\-\_\-\-Hwapi\-\_\-\-Shared\-\_\-t}}\label{platform__hwapi__shared_8h_acbb974d98634e93da535f40b89b27949}
+
+\begin{DoxyCompactList}\small\item\em Structure in shared memory that is used by all H\-S\-P related A\-P\-Is. This structure will be placed at the end of shared memory. \end{DoxyCompactList}\item 
+\hypertarget{platform__hwapi__shared_8h_a30e51105bdfe641dd428d93efa75623a}{typedef volatile \\*
+\hyperlink{platform__hwapi__shared_8h_acbb974d98634e93da535f40b89b27949}{Platform\-\_\-\-Hwapi\-\_\-\-Shared\-\_\-t} $\ast$ {\bfseries Ptr\-\_\-platform\-\_\-\-Hwapi\-\_\-\-Shared\-\_\-t}}\label{platform__hwapi__shared_8h_a30e51105bdfe641dd428d93efa75623a}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Structure in shared memory that is used by platform specific A\-P\-Is. 

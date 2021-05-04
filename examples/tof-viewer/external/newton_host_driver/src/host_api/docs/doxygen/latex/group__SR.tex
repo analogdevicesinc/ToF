@@ -1,0 +1,162 @@
+\hypertarget{group__SR}{}\doxysection{Status Register (SR) Register}
+\label{group__SR}\index{Status Register (SR) Register@{Status Register (SR) Register}}
+
+
+Status Register (SR) Register.  
+
+
+\doxysubsection*{Modules}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{group__IMR}{Interrupt Mask Register (\+I\+M\+R) Register}}
+\begin{DoxyCompactList}\small\item\em Interrupt Mask Register (I\+MR) Register. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct__ADI__SPIM__REGS__SR__t}{\+\_\+\+A\+D\+I\+\_\+\+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+t}}
+\item 
+struct \mbox{\hyperlink{structADI__SPIM__REGS__SR__t}{A\+D\+I\+\_\+\+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+t}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{group__SR_ga362b04039abe490d1d4a9616b3d9d77f}\label{group__SR_ga362b04039abe490d1d4a9616b3d9d77f}} 
+typedef struct \mbox{\hyperlink{struct__ADI__SPIM__REGS__SR__t}{\+\_\+\+A\+D\+I\+\_\+\+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+t}} {\bfseries A\+D\+I\+\_\+\+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+t}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{group__SR_gad55ef62b695092752414a9d08eade04e}{A\+D\+I\+\_\+\+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+B\+U\+SY}} \{ \mbox{\hyperlink{group__SR_ggad55ef62b695092752414a9d08eade04eaec9508ccb1976389c023437b6f0fe5f9}{S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+B\+U\+S\+Y\+\_\+\+I\+N\+A\+C\+T\+I\+VE}} = 0, 
+\mbox{\hyperlink{group__SR_ggad55ef62b695092752414a9d08eade04ea8f9c390bd1346b7bf852130d6649f06d}{S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+B\+U\+S\+Y\+\_\+\+A\+C\+T\+I\+VE}} = 1
+ \}
+\item 
+enum \mbox{\hyperlink{group__SR_ga5c5e3993e7bdd97c4f87c1d8255d62ac}{A\+D\+I\+\_\+\+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+T\+F\+NF}} \{ \mbox{\hyperlink{group__SR_gga5c5e3993e7bdd97c4f87c1d8255d62aca0dbca344dd78f24a7c7069643fa7fc21}{S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+T\+F\+N\+F\+\_\+\+F\+U\+LL}} = 0, 
+\mbox{\hyperlink{group__SR_gga5c5e3993e7bdd97c4f87c1d8255d62aca7a7f9af75dd5f5fa7b6f5a7d6d8d43aa}{S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+T\+F\+N\+F\+\_\+\+N\+O\+T\+\_\+\+F\+U\+LL}} = 1
+ \}
+\item 
+enum \mbox{\hyperlink{group__SR_gab102be27d7110ad7258afdf7a47322a0}{A\+D\+I\+\_\+\+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+T\+FE}} \{ \mbox{\hyperlink{group__SR_ggab102be27d7110ad7258afdf7a47322a0a74ce52f42047a64478d39b5597e72472}{S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+T\+F\+E\+\_\+\+N\+O\+T\+\_\+\+E\+M\+P\+TY}} = 0, 
+\mbox{\hyperlink{group__SR_ggab102be27d7110ad7258afdf7a47322a0a8e41f4af089e162979ab137ab019c632}{S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+T\+F\+E\+\_\+\+E\+M\+P\+TY}} = 1
+ \}
+\item 
+enum \mbox{\hyperlink{group__SR_ga334f1f3ea78f85b75ea05719a754aa6c}{A\+D\+I\+\_\+\+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+R\+F\+NE}} \{ \mbox{\hyperlink{group__SR_gga334f1f3ea78f85b75ea05719a754aa6ca195b8c1c03e95d441e660ddc8f3f3533}{S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+R\+F\+N\+E\+\_\+\+E\+M\+P\+TY}} = 0, 
+\mbox{\hyperlink{group__SR_gga334f1f3ea78f85b75ea05719a754aa6caf7d2c7ee718dde504ccdb9248603663f}{S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+R\+F\+N\+E\+\_\+\+N\+O\+T\+\_\+\+E\+M\+P\+TY}} = 1
+ \}
+\item 
+enum \mbox{\hyperlink{group__SR_ga5c951326090481e8e45b1fb1d1ac0969}{A\+D\+I\+\_\+\+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+R\+FF}} \{ \mbox{\hyperlink{group__SR_gga5c951326090481e8e45b1fb1d1ac0969a2f00e50d72fe7645c0ee9053c351c29f}{S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+R\+F\+F\+\_\+\+N\+O\+T\+\_\+\+F\+U\+LL}} = 0, 
+\mbox{\hyperlink{group__SR_gga5c951326090481e8e45b1fb1d1ac0969aca3d7cd10e1f94e957fa91667fcf0499}{S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+R\+F\+F\+\_\+\+F\+U\+LL}} = 1
+ \}
+\item 
+enum \mbox{\hyperlink{group__SR_gaa6b8c97faf68198ce5e5f8867e223bac}{A\+D\+I\+\_\+\+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+D\+C\+OL}} \{ \mbox{\hyperlink{group__SR_ggaa6b8c97faf68198ce5e5f8867e223bacae7367a08328e6c067e8f60b90ce4c535}{S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+D\+C\+O\+L\+\_\+\+N\+O\+\_\+\+E\+R\+R\+O\+R\+\_\+\+C\+O\+N\+D\+I\+T\+I\+ON}} = 0, 
+\mbox{\hyperlink{group__SR_ggaa6b8c97faf68198ce5e5f8867e223baca28f3899859ae4561a449b160a2971315}{S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+D\+C\+O\+L\+\_\+\+T\+X\+\_\+\+C\+O\+L\+L\+I\+S\+I\+O\+N\+\_\+\+E\+R\+R\+OR}} = 1
+ \}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+Status Register (SR) Register. 
+
+
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{group__SR_gad55ef62b695092752414a9d08eade04e}\label{group__SR_gad55ef62b695092752414a9d08eade04e}} 
+\index{Status Register (SR) Register@{Status Register (SR) Register}!ADI\_SPIM\_REGS\_SR\_BUSY@{ADI\_SPIM\_REGS\_SR\_BUSY}}
+\index{ADI\_SPIM\_REGS\_SR\_BUSY@{ADI\_SPIM\_REGS\_SR\_BUSY}!Status Register (SR) Register@{Status Register (SR) Register}}
+\doxysubsubsection{\texorpdfstring{ADI\_SPIM\_REGS\_SR\_BUSY}{ADI\_SPIM\_REGS\_SR\_BUSY}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{group__SR_gad55ef62b695092752414a9d08eade04e}{A\+D\+I\+\_\+\+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+B\+U\+SY}}}
+
+========================================================================\hypertarget{group__SR_autotoc_md398}{}\doxysubsection{\textbackslash{}brief No description provided}\label{group__SR_autotoc_md398}
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SPIM\_REGS\_SR\_BUSY\_INACTIVE@{SPIM\_REGS\_SR\_BUSY\_INACTIVE}!Status Register (SR) Register@{Status Register (SR) Register}}\index{Status Register (SR) Register@{Status Register (SR) Register}!SPIM\_REGS\_SR\_BUSY\_INACTIVE@{SPIM\_REGS\_SR\_BUSY\_INACTIVE}}}\mbox{\Hypertarget{group__SR_ggad55ef62b695092752414a9d08eade04eaec9508ccb1976389c023437b6f0fe5f9}\label{group__SR_ggad55ef62b695092752414a9d08eade04eaec9508ccb1976389c023437b6f0fe5f9}} 
+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+B\+U\+S\+Y\+\_\+\+I\+N\+A\+C\+T\+I\+VE&S\+SI is Idle/\+Disabled \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SPIM\_REGS\_SR\_BUSY\_ACTIVE@{SPIM\_REGS\_SR\_BUSY\_ACTIVE}!Status Register (SR) Register@{Status Register (SR) Register}}\index{Status Register (SR) Register@{Status Register (SR) Register}!SPIM\_REGS\_SR\_BUSY\_ACTIVE@{SPIM\_REGS\_SR\_BUSY\_ACTIVE}}}\mbox{\Hypertarget{group__SR_ggad55ef62b695092752414a9d08eade04ea8f9c390bd1346b7bf852130d6649f06d}\label{group__SR_ggad55ef62b695092752414a9d08eade04ea8f9c390bd1346b7bf852130d6649f06d}} 
+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+B\+U\+S\+Y\+\_\+\+A\+C\+T\+I\+VE&S\+SI is Active \\
+\hline
+
+\end{DoxyEnumFields}
+\mbox{\Hypertarget{group__SR_gaa6b8c97faf68198ce5e5f8867e223bac}\label{group__SR_gaa6b8c97faf68198ce5e5f8867e223bac}} 
+\index{Status Register (SR) Register@{Status Register (SR) Register}!ADI\_SPIM\_REGS\_SR\_DCOL@{ADI\_SPIM\_REGS\_SR\_DCOL}}
+\index{ADI\_SPIM\_REGS\_SR\_DCOL@{ADI\_SPIM\_REGS\_SR\_DCOL}!Status Register (SR) Register@{Status Register (SR) Register}}
+\doxysubsubsection{\texorpdfstring{ADI\_SPIM\_REGS\_SR\_DCOL}{ADI\_SPIM\_REGS\_SR\_DCOL}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{group__SR_gaa6b8c97faf68198ce5e5f8867e223bac}{A\+D\+I\+\_\+\+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+D\+C\+OL}}}
+
+========================================================================\hypertarget{group__SR_autotoc_md403}{}\doxysubsection{\textbackslash{}brief No description provided}\label{group__SR_autotoc_md403}
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SPIM\_REGS\_SR\_DCOL\_NO\_ERROR\_CONDITION@{SPIM\_REGS\_SR\_DCOL\_NO\_ERROR\_CONDITION}!Status Register (SR) Register@{Status Register (SR) Register}}\index{Status Register (SR) Register@{Status Register (SR) Register}!SPIM\_REGS\_SR\_DCOL\_NO\_ERROR\_CONDITION@{SPIM\_REGS\_SR\_DCOL\_NO\_ERROR\_CONDITION}}}\mbox{\Hypertarget{group__SR_ggaa6b8c97faf68198ce5e5f8867e223bacae7367a08328e6c067e8f60b90ce4c535}\label{group__SR_ggaa6b8c97faf68198ce5e5f8867e223bacae7367a08328e6c067e8f60b90ce4c535}} 
+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+D\+C\+O\+L\+\_\+\+N\+O\+\_\+\+E\+R\+R\+O\+R\+\_\+\+C\+O\+N\+D\+I\+T\+I\+ON&No Data Error Condition \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SPIM\_REGS\_SR\_DCOL\_TX\_COLLISION\_ERROR@{SPIM\_REGS\_SR\_DCOL\_TX\_COLLISION\_ERROR}!Status Register (SR) Register@{Status Register (SR) Register}}\index{Status Register (SR) Register@{Status Register (SR) Register}!SPIM\_REGS\_SR\_DCOL\_TX\_COLLISION\_ERROR@{SPIM\_REGS\_SR\_DCOL\_TX\_COLLISION\_ERROR}}}\mbox{\Hypertarget{group__SR_ggaa6b8c97faf68198ce5e5f8867e223baca28f3899859ae4561a449b160a2971315}\label{group__SR_ggaa6b8c97faf68198ce5e5f8867e223baca28f3899859ae4561a449b160a2971315}} 
+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+D\+C\+O\+L\+\_\+\+T\+X\+\_\+\+C\+O\+L\+L\+I\+S\+I\+O\+N\+\_\+\+E\+R\+R\+OR&TX Data Collision Error \\
+\hline
+
+\end{DoxyEnumFields}
+\mbox{\Hypertarget{group__SR_ga5c951326090481e8e45b1fb1d1ac0969}\label{group__SR_ga5c951326090481e8e45b1fb1d1ac0969}} 
+\index{Status Register (SR) Register@{Status Register (SR) Register}!ADI\_SPIM\_REGS\_SR\_RFF@{ADI\_SPIM\_REGS\_SR\_RFF}}
+\index{ADI\_SPIM\_REGS\_SR\_RFF@{ADI\_SPIM\_REGS\_SR\_RFF}!Status Register (SR) Register@{Status Register (SR) Register}}
+\doxysubsubsection{\texorpdfstring{ADI\_SPIM\_REGS\_SR\_RFF}{ADI\_SPIM\_REGS\_SR\_RFF}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{group__SR_ga5c951326090481e8e45b1fb1d1ac0969}{A\+D\+I\+\_\+\+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+R\+FF}}}
+
+========================================================================\hypertarget{group__SR_autotoc_md402}{}\doxysubsection{\textbackslash{}brief No description provided}\label{group__SR_autotoc_md402}
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SPIM\_REGS\_SR\_RFF\_NOT\_FULL@{SPIM\_REGS\_SR\_RFF\_NOT\_FULL}!Status Register (SR) Register@{Status Register (SR) Register}}\index{Status Register (SR) Register@{Status Register (SR) Register}!SPIM\_REGS\_SR\_RFF\_NOT\_FULL@{SPIM\_REGS\_SR\_RFF\_NOT\_FULL}}}\mbox{\Hypertarget{group__SR_gga5c951326090481e8e45b1fb1d1ac0969a2f00e50d72fe7645c0ee9053c351c29f}\label{group__SR_gga5c951326090481e8e45b1fb1d1ac0969a2f00e50d72fe7645c0ee9053c351c29f}} 
+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+R\+F\+F\+\_\+\+N\+O\+T\+\_\+\+F\+U\+LL&RX F\+I\+FO is not full \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SPIM\_REGS\_SR\_RFF\_FULL@{SPIM\_REGS\_SR\_RFF\_FULL}!Status Register (SR) Register@{Status Register (SR) Register}}\index{Status Register (SR) Register@{Status Register (SR) Register}!SPIM\_REGS\_SR\_RFF\_FULL@{SPIM\_REGS\_SR\_RFF\_FULL}}}\mbox{\Hypertarget{group__SR_gga5c951326090481e8e45b1fb1d1ac0969aca3d7cd10e1f94e957fa91667fcf0499}\label{group__SR_gga5c951326090481e8e45b1fb1d1ac0969aca3d7cd10e1f94e957fa91667fcf0499}} 
+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+R\+F\+F\+\_\+\+F\+U\+LL&Rx F\+I\+FO is full \\
+\hline
+
+\end{DoxyEnumFields}
+\mbox{\Hypertarget{group__SR_ga334f1f3ea78f85b75ea05719a754aa6c}\label{group__SR_ga334f1f3ea78f85b75ea05719a754aa6c}} 
+\index{Status Register (SR) Register@{Status Register (SR) Register}!ADI\_SPIM\_REGS\_SR\_RFNE@{ADI\_SPIM\_REGS\_SR\_RFNE}}
+\index{ADI\_SPIM\_REGS\_SR\_RFNE@{ADI\_SPIM\_REGS\_SR\_RFNE}!Status Register (SR) Register@{Status Register (SR) Register}}
+\doxysubsubsection{\texorpdfstring{ADI\_SPIM\_REGS\_SR\_RFNE}{ADI\_SPIM\_REGS\_SR\_RFNE}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{group__SR_ga334f1f3ea78f85b75ea05719a754aa6c}{A\+D\+I\+\_\+\+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+R\+F\+NE}}}
+
+========================================================================\hypertarget{group__SR_autotoc_md401}{}\doxysubsection{\textbackslash{}brief No description provided}\label{group__SR_autotoc_md401}
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SPIM\_REGS\_SR\_RFNE\_EMPTY@{SPIM\_REGS\_SR\_RFNE\_EMPTY}!Status Register (SR) Register@{Status Register (SR) Register}}\index{Status Register (SR) Register@{Status Register (SR) Register}!SPIM\_REGS\_SR\_RFNE\_EMPTY@{SPIM\_REGS\_SR\_RFNE\_EMPTY}}}\mbox{\Hypertarget{group__SR_gga334f1f3ea78f85b75ea05719a754aa6ca195b8c1c03e95d441e660ddc8f3f3533}\label{group__SR_gga334f1f3ea78f85b75ea05719a754aa6ca195b8c1c03e95d441e660ddc8f3f3533}} 
+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+R\+F\+N\+E\+\_\+\+E\+M\+P\+TY&Rx F\+I\+FO is empty \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SPIM\_REGS\_SR\_RFNE\_NOT\_EMPTY@{SPIM\_REGS\_SR\_RFNE\_NOT\_EMPTY}!Status Register (SR) Register@{Status Register (SR) Register}}\index{Status Register (SR) Register@{Status Register (SR) Register}!SPIM\_REGS\_SR\_RFNE\_NOT\_EMPTY@{SPIM\_REGS\_SR\_RFNE\_NOT\_EMPTY}}}\mbox{\Hypertarget{group__SR_gga334f1f3ea78f85b75ea05719a754aa6caf7d2c7ee718dde504ccdb9248603663f}\label{group__SR_gga334f1f3ea78f85b75ea05719a754aa6caf7d2c7ee718dde504ccdb9248603663f}} 
+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+R\+F\+N\+E\+\_\+\+N\+O\+T\+\_\+\+E\+M\+P\+TY&Rx F\+I\+FO is nonempty \\
+\hline
+
+\end{DoxyEnumFields}
+\mbox{\Hypertarget{group__SR_gab102be27d7110ad7258afdf7a47322a0}\label{group__SR_gab102be27d7110ad7258afdf7a47322a0}} 
+\index{Status Register (SR) Register@{Status Register (SR) Register}!ADI\_SPIM\_REGS\_SR\_TFE@{ADI\_SPIM\_REGS\_SR\_TFE}}
+\index{ADI\_SPIM\_REGS\_SR\_TFE@{ADI\_SPIM\_REGS\_SR\_TFE}!Status Register (SR) Register@{Status Register (SR) Register}}
+\doxysubsubsection{\texorpdfstring{ADI\_SPIM\_REGS\_SR\_TFE}{ADI\_SPIM\_REGS\_SR\_TFE}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{group__SR_gab102be27d7110ad7258afdf7a47322a0}{A\+D\+I\+\_\+\+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+T\+FE}}}
+
+========================================================================\hypertarget{group__SR_autotoc_md400}{}\doxysubsection{\textbackslash{}brief No description provided}\label{group__SR_autotoc_md400}
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SPIM\_REGS\_SR\_TFE\_NOT\_EMPTY@{SPIM\_REGS\_SR\_TFE\_NOT\_EMPTY}!Status Register (SR) Register@{Status Register (SR) Register}}\index{Status Register (SR) Register@{Status Register (SR) Register}!SPIM\_REGS\_SR\_TFE\_NOT\_EMPTY@{SPIM\_REGS\_SR\_TFE\_NOT\_EMPTY}}}\mbox{\Hypertarget{group__SR_ggab102be27d7110ad7258afdf7a47322a0a74ce52f42047a64478d39b5597e72472}\label{group__SR_ggab102be27d7110ad7258afdf7a47322a0a74ce52f42047a64478d39b5597e72472}} 
+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+T\+F\+E\+\_\+\+N\+O\+T\+\_\+\+E\+M\+P\+TY&Tx F\+I\+FO is nonempty \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SPIM\_REGS\_SR\_TFE\_EMPTY@{SPIM\_REGS\_SR\_TFE\_EMPTY}!Status Register (SR) Register@{Status Register (SR) Register}}\index{Status Register (SR) Register@{Status Register (SR) Register}!SPIM\_REGS\_SR\_TFE\_EMPTY@{SPIM\_REGS\_SR\_TFE\_EMPTY}}}\mbox{\Hypertarget{group__SR_ggab102be27d7110ad7258afdf7a47322a0a8e41f4af089e162979ab137ab019c632}\label{group__SR_ggab102be27d7110ad7258afdf7a47322a0a8e41f4af089e162979ab137ab019c632}} 
+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+T\+F\+E\+\_\+\+E\+M\+P\+TY&Tx F\+I\+FO is empty \\
+\hline
+
+\end{DoxyEnumFields}
+\mbox{\Hypertarget{group__SR_ga5c5e3993e7bdd97c4f87c1d8255d62ac}\label{group__SR_ga5c5e3993e7bdd97c4f87c1d8255d62ac}} 
+\index{Status Register (SR) Register@{Status Register (SR) Register}!ADI\_SPIM\_REGS\_SR\_TFNF@{ADI\_SPIM\_REGS\_SR\_TFNF}}
+\index{ADI\_SPIM\_REGS\_SR\_TFNF@{ADI\_SPIM\_REGS\_SR\_TFNF}!Status Register (SR) Register@{Status Register (SR) Register}}
+\doxysubsubsection{\texorpdfstring{ADI\_SPIM\_REGS\_SR\_TFNF}{ADI\_SPIM\_REGS\_SR\_TFNF}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{group__SR_ga5c5e3993e7bdd97c4f87c1d8255d62ac}{A\+D\+I\+\_\+\+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+T\+F\+NF}}}
+
+========================================================================\hypertarget{group__SR_autotoc_md399}{}\doxysubsection{\textbackslash{}brief No description provided}\label{group__SR_autotoc_md399}
+\begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SPIM\_REGS\_SR\_TFNF\_FULL@{SPIM\_REGS\_SR\_TFNF\_FULL}!Status Register (SR) Register@{Status Register (SR) Register}}\index{Status Register (SR) Register@{Status Register (SR) Register}!SPIM\_REGS\_SR\_TFNF\_FULL@{SPIM\_REGS\_SR\_TFNF\_FULL}}}\mbox{\Hypertarget{group__SR_gga5c5e3993e7bdd97c4f87c1d8255d62aca0dbca344dd78f24a7c7069643fa7fc21}\label{group__SR_gga5c5e3993e7bdd97c4f87c1d8255d62aca0dbca344dd78f24a7c7069643fa7fc21}} 
+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+T\+F\+N\+F\+\_\+\+F\+U\+LL&Tx F\+I\+FO is full \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{SPIM\_REGS\_SR\_TFNF\_NOT\_FULL@{SPIM\_REGS\_SR\_TFNF\_NOT\_FULL}!Status Register (SR) Register@{Status Register (SR) Register}}\index{Status Register (SR) Register@{Status Register (SR) Register}!SPIM\_REGS\_SR\_TFNF\_NOT\_FULL@{SPIM\_REGS\_SR\_TFNF\_NOT\_FULL}}}\mbox{\Hypertarget{group__SR_gga5c5e3993e7bdd97c4f87c1d8255d62aca7a7f9af75dd5f5fa7b6f5a7d6d8d43aa}\label{group__SR_gga5c5e3993e7bdd97c4f87c1d8255d62aca7a7f9af75dd5f5fa7b6f5a7d6d8d43aa}} 
+S\+P\+I\+M\+\_\+\+R\+E\+G\+S\+\_\+\+S\+R\+\_\+\+T\+F\+N\+F\+\_\+\+N\+O\+T\+\_\+\+F\+U\+LL&Tx F\+I\+FO is not Full \\
+\hline
+
+\end{DoxyEnumFields}

@@ -1,0 +1,19 @@
+[Load Prod Fuses]
+[Load ROM Firmware]
+./newton reset_hsp
+
+./newtown load_cmd ./test_files/operating_sequences/msft_prod_1sp_operating_seq_for_adi_prod.txt
+./newtown load_cmd ./test_files/msft_prod1sp/release/msft_signed_group_prod_1sp_zero_key_enc.txt
+
+./newton reset_hsp
+
+./newton load cmd_file ./test_files/operating_sequences/adi_prod_1sp_operating_seq.txt
+./newton load cmd_file ./test_files/adi_keys/adi_public_key_hkms624.txt
+./newton load cmd_file ./test_files/adi_prod1sp/release/adi_signed_group_prod_1sp_zero_key_enc.txt
+
+./newton reset_hsp
+
+./newton load cmd_file ./test_files/operating_sequences/adi_prod_1sp_operating_seq.txt
+./newton load cmd_file ./test_files/adi_keys/adi_public_key_hkms624.txt
+./newton load cmd_file ./test_files/adi_prod1sp/release/adi_signed_group_prod_1sp_test_key_enc.txt
+./newton reset_hsp

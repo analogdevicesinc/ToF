@@ -1,0 +1,252 @@
+\hypertarget{sha_8h}{\section{sha.\-h File Reference}
+\label{sha_8h}\index{sha.\-h@{sha.\-h}}
+}
+
+
+Header file for S\-H\-A engine block.  
+
+
+{\ttfamily \#include \char`\"{}utils/generic/generic.\-h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{sha_8h_a7b4bbf50f237712b1e9bcc3283e41199}{\#define \hyperlink{sha_8h_a7b4bbf50f237712b1e9bcc3283e41199}{S\-H\-A\-\_\-\-B\-L\-O\-C\-K\-\_\-\-S\-I\-Z\-E}~64}\label{sha_8h_a7b4bbf50f237712b1e9bcc3283e41199}
+
+\begin{DoxyCompactList}\small\item\em Size of a single S\-H\-A block. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{sha_8h_a61eb73fcf09ea8e4c92209617afc218c}{Sha\-\_\-\-Flags\-\_\-t} \{ \hyperlink{sha_8h_a61eb73fcf09ea8e4c92209617afc218ca629d1bad1d9de034094ea001e5e40b4e}{S\-H\-A\-\_\-\-N\-O\-\_\-\-F\-L\-A\-G\-S} = 0x00000000, 
+\hyperlink{sha_8h_a61eb73fcf09ea8e4c92209617afc218ca966b71b568dc911965f41ca0fb838fcd}{S\-H\-A\-\_\-\-R\-E\-V\-E\-R\-S\-E\-\_\-\-O\-U\-T\-P\-U\-T\-\_\-\-F\-L\-A\-G} = 0x00000001, 
+\hyperlink{sha_8h_a61eb73fcf09ea8e4c92209617afc218caedb742d7e2672975d78797e120421fe4}{S\-H\-A\-\_\-\-A\-S\-Y\-N\-C\-\_\-\-M\-O\-D\-E\-\_\-\-F\-L\-A\-G} = 0x00000002
+ \}
+\begin{DoxyCompactList}\small\item\em S\-H\-A option flags. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{sha_8h_a37d61e73395469aa51845c222150e453}{Sha\-Init} (void)
+\begin{DoxyCompactList}\small\item\em Initialize the S\-H\-A block. \end{DoxyCompactList}\item 
+void \hyperlink{sha_8h_a401733257b9088f30838df4f54247798}{Sha\-Prepare\-Cmd} (uint32\-\_\-t sha\-Command, Ptr\-\_\-\-Msg256\-\_\-t digest, uint32\-\_\-t byte\-Count, uint32\-\_\-t message\-Bytes, const void $\ast$message, Const\-Ptr\-\_\-\-Msg256\-\_\-t initial\-Digest)
+\begin{DoxyCompactList}\small\item\em Prepare a S\-H\-A command. \end{DoxyCompactList}\item 
+void \hyperlink{sha_8h_ae12388bd449a8940ca5f54a05589f53c}{Sha\-Execute\-Cmd} (bool wait\-Completion)
+\begin{DoxyCompactList}\small\item\em Execute a S\-H\-A command. \end{DoxyCompactList}\item 
+void \hyperlink{sha_8h_aa36256000223b351f8f36428e3ac91cd}{Sha\-Wait\-Cmd\-Complete} (void)
+\begin{DoxyCompactList}\small\item\em Wait for a S\-H\-A command to complete. \end{DoxyCompactList}\item 
+void \hyperlink{sha_8h_a57a2380154d4542db73bc9075ac4f2a4}{Sha256} (const void $\ast$message, size\-\_\-t length, Ptr\-\_\-\-Msg256\-\_\-t digest, uint32\-\_\-t flags)
+\begin{DoxyCompactList}\small\item\em Run S\-H\-A 256 to generate 256-\/bit digest. \end{DoxyCompactList}\item 
+void \hyperlink{sha_8h_a923daeb848df4aa8f1bcb1995c03b281}{Sha256\-Start\-New} (size\-\_\-t message\-Length, uint32\-\_\-t flags)
+\begin{DoxyCompactList}\small\item\em Begin a new S\-H\-A 256 procedure. \end{DoxyCompactList}\item 
+void \hyperlink{sha_8h_aaa10e604bde7ad91ac25281af784e1fc}{Sha256\-Provide\-Data} (const void $\ast$data, size\-\_\-t length)
+\begin{DoxyCompactList}\small\item\em Provide a buffer of data for a S\-H\-A 256 procedure. \end{DoxyCompactList}\item 
+void \hyperlink{sha_8h_ab43f9ffe29e0aebc23c35df1fe22d39e}{Sha256\-Wait\-Complete} (void)
+\begin{DoxyCompactList}\small\item\em Wait for a S\-H\-A 256 procedure to complete. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Header file for S\-H\-A engine block. 
+
+\subsection{Enumeration Type Documentation}
+\hypertarget{sha_8h_a61eb73fcf09ea8e4c92209617afc218c}{\index{sha.\-h@{sha.\-h}!Sha\-\_\-\-Flags\-\_\-t@{Sha\-\_\-\-Flags\-\_\-t}}
+\index{Sha\-\_\-\-Flags\-\_\-t@{Sha\-\_\-\-Flags\-\_\-t}!sha.h@{sha.\-h}}
+\subsubsection[{Sha\-\_\-\-Flags\-\_\-t}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf Sha\-\_\-\-Flags\-\_\-t}}}\label{sha_8h_a61eb73fcf09ea8e4c92209617afc218c}
+
+
+S\-H\-A option flags. 
+
+\begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{S\-H\-A\-\_\-\-N\-O\-\_\-\-F\-L\-A\-G\-S@{S\-H\-A\-\_\-\-N\-O\-\_\-\-F\-L\-A\-G\-S}!sha.\-h@{sha.\-h}}\index{sha.\-h@{sha.\-h}!S\-H\-A\-\_\-\-N\-O\-\_\-\-F\-L\-A\-G\-S@{S\-H\-A\-\_\-\-N\-O\-\_\-\-F\-L\-A\-G\-S}}\item[{\em 
+\hypertarget{sha_8h_a61eb73fcf09ea8e4c92209617afc218ca629d1bad1d9de034094ea001e5e40b4e}{S\-H\-A\-\_\-\-N\-O\-\_\-\-F\-L\-A\-G\-S}\label{sha_8h_a61eb73fcf09ea8e4c92209617afc218ca629d1bad1d9de034094ea001e5e40b4e}
+}]No flags. \index{S\-H\-A\-\_\-\-R\-E\-V\-E\-R\-S\-E\-\_\-\-O\-U\-T\-P\-U\-T\-\_\-\-F\-L\-A\-G@{S\-H\-A\-\_\-\-R\-E\-V\-E\-R\-S\-E\-\_\-\-O\-U\-T\-P\-U\-T\-\_\-\-F\-L\-A\-G}!sha.\-h@{sha.\-h}}\index{sha.\-h@{sha.\-h}!S\-H\-A\-\_\-\-R\-E\-V\-E\-R\-S\-E\-\_\-\-O\-U\-T\-P\-U\-T\-\_\-\-F\-L\-A\-G@{S\-H\-A\-\_\-\-R\-E\-V\-E\-R\-S\-E\-\_\-\-O\-U\-T\-P\-U\-T\-\_\-\-F\-L\-A\-G}}\item[{\em 
+\hypertarget{sha_8h_a61eb73fcf09ea8e4c92209617afc218ca966b71b568dc911965f41ca0fb838fcd}{S\-H\-A\-\_\-\-R\-E\-V\-E\-R\-S\-E\-\_\-\-O\-U\-T\-P\-U\-T\-\_\-\-F\-L\-A\-G}\label{sha_8h_a61eb73fcf09ea8e4c92209617afc218ca966b71b568dc911965f41ca0fb838fcd}
+}]Flag indicating that the output digest bytes should be reversed after the S\-H\-A operation compeltes. This is to accomodate different endianness requirements. \index{S\-H\-A\-\_\-\-A\-S\-Y\-N\-C\-\_\-\-M\-O\-D\-E\-\_\-\-F\-L\-A\-G@{S\-H\-A\-\_\-\-A\-S\-Y\-N\-C\-\_\-\-M\-O\-D\-E\-\_\-\-F\-L\-A\-G}!sha.\-h@{sha.\-h}}\index{sha.\-h@{sha.\-h}!S\-H\-A\-\_\-\-A\-S\-Y\-N\-C\-\_\-\-M\-O\-D\-E\-\_\-\-F\-L\-A\-G@{S\-H\-A\-\_\-\-A\-S\-Y\-N\-C\-\_\-\-M\-O\-D\-E\-\_\-\-F\-L\-A\-G}}\item[{\em 
+\hypertarget{sha_8h_a61eb73fcf09ea8e4c92209617afc218caedb742d7e2672975d78797e120421fe4}{S\-H\-A\-\_\-\-A\-S\-Y\-N\-C\-\_\-\-M\-O\-D\-E\-\_\-\-F\-L\-A\-G}\label{sha_8h_a61eb73fcf09ea8e4c92209617afc218caedb742d7e2672975d78797e120421fe4}
+}]Flag indicating that S\-H\-A operations be performed in asynchronous mode. This causes the A\-P\-I to return while the current S\-H\-A operation is still in progress. \end{description}
+\end{Desc}
+
+
+\subsection{Function Documentation}
+\hypertarget{sha_8h_a57a2380154d4542db73bc9075ac4f2a4}{\index{sha.\-h@{sha.\-h}!Sha256@{Sha256}}
+\index{Sha256@{Sha256}!sha.h@{sha.\-h}}
+\subsubsection[{Sha256}]{\setlength{\rightskip}{0pt plus 5cm}void Sha256 (
+\begin{DoxyParamCaption}
+\item[{const void $\ast$}]{message, }
+\item[{size\-\_\-t}]{length, }
+\item[{Ptr\-\_\-\-Msg256\-\_\-t}]{digest, }
+\item[{uint32\-\_\-t}]{flags}
+\end{DoxyParamCaption}
+)}}\label{sha_8h_a57a2380154d4542db73bc9075ac4f2a4}
+
+
+Run S\-H\-A 256 to generate 256-\/bit digest. 
+
+{\bfseries Description\-:} Exercise the S\-H\-A engine to output a 256 bit hash.
+
+
+\begin{DoxyParams}{Parameters}
+{\em message} & Pointer to the message to be hashed. Will be copied into shared memory (i.\-e. H\-S\-P accessible) if necessary.\\
+\hline
+{\em length} & Length of the message.\\
+\hline
+{\em digest} & Pointer to output buffer to receive the digest output. (Does not need to be in shared memory.)\\
+\hline
+{\em flags} & Combination of {\ttfamily Sha\-\_\-\-Flags\-\_\-t} values to further control the behavior of the S\-H\-A operation. N\-O\-T\-E\-: Asynchronous mode is not available with this A\-P\-I.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\hypertarget{sha_8h_aaa10e604bde7ad91ac25281af784e1fc}{\index{sha.\-h@{sha.\-h}!Sha256\-Provide\-Data@{Sha256\-Provide\-Data}}
+\index{Sha256\-Provide\-Data@{Sha256\-Provide\-Data}!sha.h@{sha.\-h}}
+\subsubsection[{Sha256\-Provide\-Data}]{\setlength{\rightskip}{0pt plus 5cm}void Sha256\-Provide\-Data (
+\begin{DoxyParamCaption}
+\item[{const void $\ast$}]{data, }
+\item[{size\-\_\-t}]{length}
+\end{DoxyParamCaption}
+)}}\label{sha_8h_aaa10e604bde7ad91ac25281af784e1fc}
+
+
+Provide a buffer of data for a S\-H\-A 256 procedure. 
+
+{\bfseries Description\-:} Provides a buffer of data for a currently in-\/progress S\-H\-A256 procedure, which will have beeen started with a call to {\ttfamily Sha256\-Start\-New}. This A\-P\-I can work asynchronously. It will wait for any previous H\-S\-P operation to complete before starting processing of this buffer, and will return before the processing is complete. Thus it will be necessary to call {\ttfamily Sha256\-Wait\-Complete} before accessing the result.
+
+
+\begin{DoxyParams}{Parameters}
+{\em data} & Pointer to data to hash. Must be in shared memory (i.\-e. H\-S\-P accessible). Must also be a mutliple of {\ttfamily S\-H\-A\-\_\-\-B\-L\-O\-C\-K\-\_\-\-S\-I\-Z\-E} bytes (64 bytes) unless it is the final buffer to be hashed.\\
+\hline
+{\em length} & Length of buffer, in bytes.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\hypertarget{sha_8h_a923daeb848df4aa8f1bcb1995c03b281}{\index{sha.\-h@{sha.\-h}!Sha256\-Start\-New@{Sha256\-Start\-New}}
+\index{Sha256\-Start\-New@{Sha256\-Start\-New}!sha.h@{sha.\-h}}
+\subsubsection[{Sha256\-Start\-New}]{\setlength{\rightskip}{0pt plus 5cm}void Sha256\-Start\-New (
+\begin{DoxyParamCaption}
+\item[{size\-\_\-t}]{message\-Length, }
+\item[{uint32\-\_\-t}]{flags}
+\end{DoxyParamCaption}
+)}}\label{sha_8h_a923daeb848df4aa8f1bcb1995c03b281}
+
+
+Begin a new S\-H\-A 256 procedure. 
+
+{\bfseries Description\-:} Indicates the start of a new S\-H\-A256 procedure (asynchronously chained S\-H\-A256 operations). It is expected that {\ttfamily Sha256\-Provide\-Data} will be called repeatedly until {\ttfamily message\-Length} bytes have been received.
+
+
+\begin{DoxyParams}{Parameters}
+{\em message\-Length} & Total length of data to be hashed, in bytes.\\
+\hline
+{\em flags} & Combination of {\ttfamily Sha\-\_\-\-Flags\-\_\-t} values to further control the behavior of the S\-H\-A procedure.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\hypertarget{sha_8h_ab43f9ffe29e0aebc23c35df1fe22d39e}{\index{sha.\-h@{sha.\-h}!Sha256\-Wait\-Complete@{Sha256\-Wait\-Complete}}
+\index{Sha256\-Wait\-Complete@{Sha256\-Wait\-Complete}!sha.h@{sha.\-h}}
+\subsubsection[{Sha256\-Wait\-Complete}]{\setlength{\rightskip}{0pt plus 5cm}void Sha256\-Wait\-Complete (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{sha_8h_ab43f9ffe29e0aebc23c35df1fe22d39e}
+
+
+Wait for a S\-H\-A 256 procedure to complete. 
+
+{\bfseries Description\-:} Waits for any in-\/progress S\-H\-A256 procedure to complete. Once this A\-P\-I returns, the final resulting hash value will be available in shared memory (see {\ttfamily S\-H\-A\-R\-E\-D\-\_\-\-S\-H\-A256\-\_\-\-D\-I\-G\-E\-S\-T\-\_\-\-P\-T\-R}) and ready for functions such as {\ttfamily Shack\-Ecc\-Verify\-Signature}.
+
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\hypertarget{sha_8h_ae12388bd449a8940ca5f54a05589f53c}{\index{sha.\-h@{sha.\-h}!Sha\-Execute\-Cmd@{Sha\-Execute\-Cmd}}
+\index{Sha\-Execute\-Cmd@{Sha\-Execute\-Cmd}!sha.h@{sha.\-h}}
+\subsubsection[{Sha\-Execute\-Cmd}]{\setlength{\rightskip}{0pt plus 5cm}void Sha\-Execute\-Cmd (
+\begin{DoxyParamCaption}
+\item[{bool}]{wait\-Completion}
+\end{DoxyParamCaption}
+)}}\label{sha_8h_ae12388bd449a8940ca5f54a05589f53c}
+
+
+Execute a S\-H\-A command. 
+
+{\bfseries Description\-:} Executes a S\-H\-A command (prepared by calling {\ttfamily Sha\-Prepare\-Cmd}), optionally waiting for it to complete.
+
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\hypertarget{sha_8h_a37d61e73395469aa51845c222150e453}{\index{sha.\-h@{sha.\-h}!Sha\-Init@{Sha\-Init}}
+\index{Sha\-Init@{Sha\-Init}!sha.h@{sha.\-h}}
+\subsubsection[{Sha\-Init}]{\setlength{\rightskip}{0pt plus 5cm}void Sha\-Init (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{sha_8h_a37d61e73395469aa51845c222150e453}
+
+
+Initialize the S\-H\-A block. 
+
+{\bfseries Description\-:} Initializes the S\-H\-A block so that it is ready to receive commands. This basically just involves waiting for the hardware to come out of reset.
+
+
+\begin{DoxyParams}{Parameters}
+{\em void} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\hypertarget{sha_8h_a401733257b9088f30838df4f54247798}{\index{sha.\-h@{sha.\-h}!Sha\-Prepare\-Cmd@{Sha\-Prepare\-Cmd}}
+\index{Sha\-Prepare\-Cmd@{Sha\-Prepare\-Cmd}!sha.h@{sha.\-h}}
+\subsubsection[{Sha\-Prepare\-Cmd}]{\setlength{\rightskip}{0pt plus 5cm}void Sha\-Prepare\-Cmd (
+\begin{DoxyParamCaption}
+\item[{uint32\-\_\-t}]{sha\-Command, }
+\item[{Ptr\-\_\-\-Msg256\-\_\-t}]{digest, }
+\item[{uint32\-\_\-t}]{byte\-Count, }
+\item[{uint32\-\_\-t}]{message\-Bytes, }
+\item[{const void $\ast$}]{message, }
+\item[{Const\-Ptr\-\_\-\-Msg256\-\_\-t}]{initial\-Digest}
+\end{DoxyParamCaption}
+)}}\label{sha_8h_a401733257b9088f30838df4f54247798}
+
+
+Prepare a S\-H\-A command. 
+
+{\bfseries Description\-:} Prepares a S\-H\-A command (in shared memory) using the given parameters so that it is ready for execution.
+
+
+\begin{DoxyParams}{Parameters}
+{\em sha\-Command} & S\-H\-A command code as defined in hspcmd.\-h.\\
+\hline
+{\em digest} & Pointer to where the first byte of final digest should be written. Caller is responsible for allocating memory. No address alignment requirements.\\
+\hline
+{\em byte\-Count} & Used as 'message length' for padding. Only valid for A\-U\-T\-O\-P\-A\-D commands, ignore otherwise.\\
+\hline
+{\em message\-Bytes} & Size of message to be hashed. Must be a non-\/zero multiple of {\ttfamily S\-H\-A\-\_\-\-B\-L\-O\-C\-K\-\_\-\-S\-I\-Z\-E} bytes (64 bytes) for non-\/\-A\-U\-T\-O\-P\-A\-D commands. Any byte count, including zero, for A\-U\-T\-O\-P\-A\-D commands.\\
+\hline
+{\em message} & Pointer to the first byte of message for engine to hash. Message must be in contiguous memory. No address alignment requirements.\\
+\hline
+{\em initial\-Digest} & Pointer to the first byte of initial digest. Initial digest must be in contiguous memory. Only valid for L\-O\-A\-D commands, ignore otherwise. No address alignment requirements.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\hypertarget{sha_8h_aa36256000223b351f8f36428e3ac91cd}{\index{sha.\-h@{sha.\-h}!Sha\-Wait\-Cmd\-Complete@{Sha\-Wait\-Cmd\-Complete}}
+\index{Sha\-Wait\-Cmd\-Complete@{Sha\-Wait\-Cmd\-Complete}!sha.h@{sha.\-h}}
+\subsubsection[{Sha\-Wait\-Cmd\-Complete}]{\setlength{\rightskip}{0pt plus 5cm}void Sha\-Wait\-Cmd\-Complete (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{sha_8h_aa36256000223b351f8f36428e3ac91cd}
+
+
+Wait for a S\-H\-A command to complete. 
+
+{\bfseries Description\-:} Waits for a S\-H\-A command (from calling {\ttfamily Sha\-Execute\-Cmd} with {\ttfamily wait\-Completion} set to {\ttfamily false}) to complete before returning.
+
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}

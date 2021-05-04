@@ -1,0 +1,12 @@
+[RTL with real OBS]
+[Load Prod Fuses]
+
+./newton reset_hsp
+
+./newton load_rom ./Real_Pri_OBS_Build/patched_rom/out_vhx/adi-drop-1.0-debug_patched.vhx
+./newton reset_hsp
+
+./newton load cmd_file ./test_files_1_0_integration/operating_sequences/msft_prod_1sp_operating_seq_for_adi_prod.txt
+./newton load cmd_file ./Real_Pri_OBS_Build/newton_payloads/signedZero_adi-drop-1.0-msft-prod1sp-debug.txt
+
+./newton reset_hsp
