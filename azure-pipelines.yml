@@ -32,6 +32,10 @@ jobs:
 
       ubuntu_20_04_x86_64:
         imageName: 'ubuntu-20.04'
+
+      ubuntu_20_04_x86_64_imx:
+        imageName: 'ubuntu-20.04'
+        EXTRA_CMAKE_FLAGS: "-DUSE_ITOF=1"
       
       #DB
       Dragonboard:
