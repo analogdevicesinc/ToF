@@ -14,3 +14,10 @@ if (RASPBERRYPI)
                 add_subdirectory(server)
         endif()
 endif()
+
+
+if (NXP)
+        if (WITH_NETWORK)
+                add_subdirectory(server)
+        endif()
+endif()
