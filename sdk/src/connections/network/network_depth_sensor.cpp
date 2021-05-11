@@ -386,7 +386,11 @@ aditof::Status NetworkDepthSensor::getFrame(uint16_t *buffer) {
         LOG(WARNING) << "getFrame() failed on target";
         return status;
     }
-
+    
+//when using ITOF camera the data is already deinterleaved, so a simple copy is enough
+#ifdef ITOF
+    memcpy(buffer, net->recv_buff.bytes_payload(0).c_str(), net->recv_buff.bytes_payload(0).length());
+#else
     // Deinterleave data. The server sends raw data (uninterleaved) for better
     // throughput (raw data chunck is smaller, deinterleaving is usually slower
     // on target).
@@ -395,7 +399,7 @@ aditof::Status NetworkDepthSensor::getFrame(uint16_t *buffer) {
                          net->recv_buff.bytes_payload(0).length(),
                          m_implData->frameTypeCache.width,
                          m_implData->frameTypeCache.height);
-
+#endif
     return status;
 }
 
