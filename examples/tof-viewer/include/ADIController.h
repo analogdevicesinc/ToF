@@ -7,10 +7,10 @@
 #ifndef ADICONTROLLER_H
 #define ADICONTROLLER_H
 
-#include <camera.h>
-#include <device_interface.h>
-#include <frame.h>
-#include <system.h>
+#include <aditof/camera.h>
+#include <aditof/depth_sensor_interface.h>
+#include <aditof/frame.h>
+#include <aditof/system.h>
 
 #include <atomic>
 #include <functional>
@@ -52,13 +52,8 @@ namespace adicontroller
 		*			imagers.
 		*/
 		std::string getMode() const;
-		//void setMode(const std::string& mode);//for CCD
-		
-		/**
-		* @brief			Set the camera mode, directly from SDK.
-		* @param	mode	Index mode declared on SDK
-		*/
-		void setMode(const int mode);//Changed this to be compliant with master branch in sdk. 8/31/2020
+
+		void setMode(const std::string& mode);
 
 		/**
 		* @brief	Fetch all supported modes. The information comes directly from SDK
@@ -166,7 +161,7 @@ namespace adicontroller
 		*/
 		bool startPointCloudBinToFSFConversion(const std::string& fileName, int& frames, int& width, int& height);
 
-		std::vector<aditof::Camera*> m_cameras;//for CMOS
+		std::vector<std::shared_ptr<aditof::Camera>> m_cameras;
 		aditof::System m_system;
 		std::unique_ptr<ADIToFRecorder> m_recorder;
 		bool panicStop = false;

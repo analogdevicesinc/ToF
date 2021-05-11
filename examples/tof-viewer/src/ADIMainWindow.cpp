@@ -22,7 +22,7 @@
 #include <fstream>
 #include <ADIFSFOptions.h>
 #include <usbcommand/ADIUSBcmd/usbcommand.h>
-#include <c_json/cJSON.h>
+#include <cJSON/cJSON.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
