@@ -13,7 +13,6 @@ using namespace adicontroller;
 
 ADIController::ADIController() : m_cameraInUse(-1), m_frameRequested(false), m_recorder(new ADIToFRecorder())
 {
-    m_system.initialize();
     m_system.getCameraList(m_cameras);
     if (m_cameras.size()) 
 	{
@@ -72,9 +71,7 @@ std::string ADIController::getMode() const
 	return "";
 }
 
-/*void ADIController::setMode(const std::string& mode)*/ //for CCD
-
-void ADIController::setMode(const int mode)//for CMOS
+void ADIController::setMode(const std::string& mode)
 {
 	if (m_cameraInUse == -1) 
 	{
@@ -108,10 +105,10 @@ std::pair<float, float> ADIController::getTemperature()
 	
 	//aditof::DeviceInterface* device = camera->getDevice();
 	//std::shared_ptr<aditof::DeviceInterface> device = camera->getDevice();//for CCD
-	DeviceInterface* device = camera->getDevice();//for CMOS
+	// DeviceInterface* device = camera->getDevice();//for CMOS
 
-	device->readAfeTemp(returnValue.first);
-	device->readLaserTemp(returnValue.second);
+	// device->readAfeTemp(returnValue.first);
+	// device->readLaserTemp(returnValue.second);
 
 	return returnValue;
 }
@@ -120,9 +117,9 @@ aditof::Status ADIController::writeAFEregister(uint16_t* address,
 	uint16_t* data,
 	uint16_t noOfEntries) 
 {
-	auto device =
-		m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getDevice();
-	return device->writeAfeRegisters(address, data, noOfEntries);
+	auto depthSensor =
+		m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getSensor();
+	return depthSensor->writeAfeRegisters(address, data, noOfEntries);
 }
 
 aditof::Status ADIController::readAFEregister(uint16_t* address,
@@ -130,8 +127,9 @@ aditof::Status ADIController::readAFEregister(uint16_t* address,
 	uint16_t noOfEntries) 
 {
 
-	auto device = m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getDevice();
-	return device->readAfeRegisters(address, data, noOfEntries);
+	auto depthSensor =
+		m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getSensor();
+	return depthSensor->readAfeRegisters(address, data, noOfEntries);
 }
 
 void ADIController::startRecording(const std::string& fileName,
@@ -253,8 +251,8 @@ int ADIController::getRangeMax() const
 	aditof::CameraDetails cameraDetails;
 	m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getDetails(
 		cameraDetails);
-	//return cameraDetails.maxDepth; //for CCD
-	return cameraDetails.range;//for CMOS now
+	return cameraDetails.maxDepth; //for CCD
+	//return cameraDetails.range;//for CMOS now
 }
 
 int ADIController::getRangeMin() const
@@ -262,8 +260,8 @@ int ADIController::getRangeMin() const
 	aditof::CameraDetails cameraDetails;
 	m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getDetails(
 		cameraDetails);
-	//return cameraDetails.minDepth; //for CCD
-	return cameraDetails.range;//for CMOS now
+	return cameraDetails.minDepth; //for CCD
+	//return cameraDetails.range;//for CMOS now
 }
 
 int ADIController::getbitCount() const
@@ -271,6 +269,6 @@ int ADIController::getbitCount() const
 	aditof::CameraDetails cameraDetails;
 	m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getDetails(
 		cameraDetails);
-	//return cameraDetails.bitCount; //for CCD
-	return cameraDetails.range;//for CMOS now
+	return cameraDetails.bitCount; //for CCD
+	//return cameraDetails.range;//for CMOS now
 }

@@ -9,7 +9,7 @@
 #ifndef ADIVIEW_H
 #define ADIVIEW_H
 
-#include "frame.h"
+#include <aditof/frame.h>
 #include <fstream>
 
 #include "ADIController.h"

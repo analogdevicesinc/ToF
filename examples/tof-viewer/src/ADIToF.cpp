@@ -10,7 +10,7 @@
 //
 #include <cctype>
 #include <iostream>
-#include "system.h"
+#include <aditof/system.h>
 #include <glog/logging.h>
 
 #include "ADIMainWindow.h"

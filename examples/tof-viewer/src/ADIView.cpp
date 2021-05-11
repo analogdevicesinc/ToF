@@ -151,7 +151,7 @@ void ADIView::render()
 						int selectedMode = 0;
 						//m_ctrl->setMode(modes[selectedMode]);//for CCD
 						//m_ctrl->setMode(mode_name_enum::mode_name_short_throw);//for CMOS now
-						m_ctrl->setMode(10);//Changed this to be compliant with Master branch on the sdk. 8/31/2020
+						m_ctrl->setMode("mp");//Changed this to be compliant with Master branch on the sdk. 8/31/2020
 
 						m_ctrl->StartCapture();
 						m_ctrl->requestFrame();
@@ -212,23 +212,19 @@ void ADIView::render()
 				
 				aditof::System system;
 				aditof::Status status;
-				std::vector<aditof::Camera*> cameras;//for CMOS
-				//std::vector<std::shared_ptr<aditof::Camera>> cameras;//for CCD
+                std::vector<std::shared_ptr<aditof::Camera>> cameras;
 
 				// Initialize TOF system
-				status = system.initialize();
 				status = system.getCameraList(cameras);
 
 				// Initialize first TOF camera
-				aditof::Camera* camera1 = cameras.front();//for CMOS
-				//std::shared_ptr<aditof::Camera> camera1 = cameras.front();//for CCD
+                std::shared_ptr<aditof::Camera> camera1 = cameras.front();
 				status = camera1->initialize();
 
 
 
 				// Choose the frame type the camera should produce
-				//std::vector<std::string> frameTypes;
-				std::vector<aditof::FrameDetails> frameTypes;
+                std::vector<std::string> frameTypes;
 				camera1->getAvailableFrameTypes(frameTypes);
 				status = camera1->setFrameType(frameTypes.front());
 				// Place the camera in a specific mode
@@ -243,12 +239,12 @@ void ADIView::render()
 				status = camera1->start();
 				status = camera1->requestFrame(&frame);
 				uint16_t* data;
-				frame.getData(aditof::FrameDataType::DEPTH, &data);
+                frame.getData("depth", &data);
 
-				aditof::FrameDetails frameDetails;
-				status = frame.getDetails(frameDetails);
-				int frameWidth = frameDetails.width;
-				int frameHeight = frameDetails.height;
+                aditof::FrameDataDetails frameDepthDetails;
+                status = frame.getDataDetails("depth", frameDepthDetails);
+                int frameWidth = frameDepthDetails.width;
+                int frameHeight = frameDepthDetails.height;
 				
 				
 				/*status = camera1->requestFrame(&frame);*/
@@ -309,21 +305,16 @@ void ADIView::_displayIrImage()
 		
 		lock.unlock(); // Lock is no longer needed
 
-		m_capturedFrame->getData(aditof::FrameDataType::IR, &ir_video_data);
+        m_capturedFrame->getData("ir", &ir_video_data);
 		
 		
-		aditof::FrameDetails frameDetails;
-		frameDetails.height = 0;
-		frameDetails.width = 0;
-		m_capturedFrame->getDetails(frameDetails);
+        aditof::FrameDataDetails frameIrDetails;
+        frameIrDetails.height = 0;
+        frameIrDetails.width = 0;
+        m_capturedFrame->getDataDetails("ir", frameIrDetails);
 
-		//Works for CCD
-		/*frameHeight = static_cast<int>(frameDetails.height) / 2;
-		frameWidth = static_cast<int>(frameDetails.width);*/
-		
-
-		frameHeight = static_cast<int>(frameDetails.height);
-		frameWidth = static_cast<int>(frameDetails.width);
+        frameHeight = static_cast<int>(frameIrDetails.height);
+        frameWidth = static_cast<int>(frameIrDetails.width);
 
 		//int max_value_of_IR_pixel = 8191;//(1 << m_ctrl->getbitCount()) - 1; //Range is not supported yet. It will be for next deve.
 		int max_value_of_IR_pixel = maxABPixelValue;//8191;//Range is not supported yet. It will be for next deve.
@@ -392,22 +383,17 @@ void ADIView::_displayDepthImage()
 		t1 = std::chrono::high_resolution_clock::now();
 		
 		uint16_t* data;
-		localFrame->getData(aditof::FrameDataType::DEPTH, &depth_video_data);
+        localFrame->getData("depth", &depth_video_data);
 		t2 = std::chrono::high_resolution_clock::now();
 
 		time_span = t2 - t1;//Delayed process time
 		averagemilliSecs = (time_span + millisecondsPast) / 2;//average time to get Depth data
 		millisecondsPast = time_span;
-		aditof::FrameDetails frameDetails;
-		localFrame->getDetails(frameDetails);
-		/****/
-		//This works for CCD
-		/****/
-		//int frameHeight = static_cast<int>(frameDetails.height) / 2;
-		//int frameWidth = static_cast<int>(frameDetails.width);
+        aditof::FrameDataDetails frameDepthDetails;
+        localFrame->getDataDetails("depth", frameDepthDetails);
 		
-		frameHeight = static_cast<int>(frameDetails.height);
-		frameWidth = static_cast<int>(frameDetails.width);
+        frameHeight = static_cast<int>(frameDepthDetails.height);
+        frameWidth = static_cast<int>(frameDepthDetails.width);
 
 		constexpr uint8_t PixelMax = std::numeric_limits<uint8_t>::max();
 		size_t imageSize = frameHeight * frameWidth;
@@ -418,12 +404,12 @@ void ADIView::_displayDepthImage()
 		/*int max = m_ctrl->getRangeMax();
 		int min = m_ctrl->getRangeMin();*/
 
+        std::string attrVal;
+        m_capturedFrame->getAttribute("total_captures", attrVal);
+        uint8_t totalcaptures = static_cast<uint8_t>(std::stoi(attrVal));
 
-		uint16_t* headerData;
-		m_capturedFrame->getData(aditof::FrameDataType::EMBED_HDR, &headerData);		
-		uint8_t totalcaptures = frameDetails.totalCaptures;		
 		// Get a subframe to get temperature and time stamp
-		uint16_t* subframeHeader = &headerData[0];
+        //uint16_t* subframeHeader = &headerData[0];
 		//TODO: Find the right equation
 		//temperature_c = subframeHeader[aditof::TEMP_SENSOR_ADC];
 		//temperature_c = (temperature_c - 1493.55) * 5.45;
@@ -477,7 +463,7 @@ void ADIView::_displayBlendedImage()
 	std::shared_ptr<aditof::Frame> localFrame = m_capturedFrame;
 
 	uint16_t* irData;
-	localFrame->getData(aditof::FrameDataType::IR, &irData);
+    localFrame->getData("ir", &irData);
 }
 
 void ADIView::_displayPointCloudImage()
@@ -502,13 +488,13 @@ void ADIView::_displayPointCloudImage()
 		lock.unlock(); // Lock is no longer needed
 
 		//Get XYZ table
-		m_capturedFrame->getData(aditof::FrameDataType::XYZ, &pointCloud_video_data);
-		aditof::FrameDetails frameDetails;
-		frameDetails.height = 0;
-		frameDetails.width = 0;
-		m_capturedFrame->getDetails(frameDetails);
-		frameHeight = static_cast<int>(frameDetails.height);
-		frameWidth = static_cast<int>(frameDetails.width);
+        m_capturedFrame->getData("xyz", &pointCloud_video_data);
+        aditof::FrameDataDetails frameXyzDetails;
+        frameXyzDetails.height = 0;
+        frameXyzDetails.width = 0;
+        m_capturedFrame->getDataDetails("xyz", frameXyzDetails);
+        frameHeight = static_cast<int>(frameXyzDetails.height);
+        frameWidth = static_cast<int>(frameXyzDetails.width);
 
 		//Size is [XX, YY, ZZ] x Width x Height 
 		size_t frameSize = frameHeight * frameWidth * 3;
