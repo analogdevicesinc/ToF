@@ -859,7 +859,7 @@ aditof::Status Adsd3100Sensor::getInternalBufferPrivate(
 
     *buffer = static_cast<uint8_t *>(dev->videoBuffers[buf.index].start);
     buf_data_len = m_implData->frameType.content.front().width *
-                   m_implData->frameType.content.front().height * 3;
+                   m_implData->frameType.content.front().height * 2;
 
     return aditof::Status::OK;
 }
