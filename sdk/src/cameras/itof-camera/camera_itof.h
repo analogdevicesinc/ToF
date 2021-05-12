@@ -72,6 +72,11 @@
  *                    Must be called after initialize() and powerUp(). Calibration or Firmware
  *                    data are NOT loaded if already defined by initialize() config file.
  *   Accepted values: A string with this exact value: 'call'
+ *
+ * enableDepthCompute
+ *   Description:     Enable or disable the depth processing on the frames received from the sensor
+ *                    Must be called after getFrame() where the depth processing happens.
+ *   Accepted values: One of the following strings: 'on' or 'off'
  */
 
 class CameraItof : public aditof::Camera {
