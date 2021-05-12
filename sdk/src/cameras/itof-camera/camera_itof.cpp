@@ -64,6 +64,7 @@ CameraItof::CameraItof(
                              std::bind(&CameraItof::powerUp, *this));
     m_noArgCallables.emplace("loadModuleData",
                              std::bind(&CameraItof::loadModuleData, *this));
+    m_controls.emplace("enableDepthCompute", "off");
 
     // Check Depth Sensor
     if (!depthSensor) {
@@ -175,7 +176,7 @@ aditof::Status CameraItof::start() {
     frame.getAttribute("total_captures", totalCapturesStr);
     totalCaptures = std::atoi(totalCapturesStr.c_str());
 
-    if (m_details.frameType.type == "depth_ir" && totalCaptures > 1) {
+    if (m_controls["enableDepthCompute"] == "on" && totalCaptures > 1) {
        status = initComputeLibrary();
        if (Status::OK != status) {
            LOG(ERROR) << "Initializing compute libraries failed.";
@@ -368,6 +369,8 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         LOG(WARNING) << "Failed to get embedded frame from device";
         return status;
     }
+
+    // TO DO: use control 'enableDepthCompute' to enable or bypass the depth compute (instead of checking if frame type is "depth_ir"
 
     // uint16_t *header = nullptr;
     // frame->getData("header", &header);
