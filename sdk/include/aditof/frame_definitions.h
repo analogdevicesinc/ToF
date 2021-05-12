@@ -83,6 +83,26 @@ struct FrameDetails {
      * @brief The mode the camera was set when the frame was captured.
      */
     std::string cameraMode;
+
+    /**
+     * @brief The width of the frame.
+     */
+    unsigned int width;
+
+    /**
+     * @brief The height of the frame.
+     */
+    unsigned int height;
+
+    /**
+     * @brief totalCaptures or subframes in a frame
+     */
+    uint8_t totalCaptures;
+
+    /**
+    * @brief is a passive IR frame appended
+    */
+    bool passiveIRCaptured;
 };
 
 /**
