@@ -286,6 +286,9 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     // Store the frame details in camera details
     m_details.frameType.type = (*frameTypeIt).type;
     // TO DO: m_details.frameType.cameraMode =
+    m_details.frameType.width = ModeInfo::getInstance()->getModeInfo(frameType).width;
+    m_details.frameType.height = ModeInfo::getInstance()->getModeInfo(frameType).height;
+    m_details.frameType.totalCaptures = ModeInfo::getInstance()->getModeInfo(frameType).subframes;
     for (const auto item : (*frameTypeIt).content) {
         FrameDataDetails fDataDetails;
         fDataDetails.type = item.type;
