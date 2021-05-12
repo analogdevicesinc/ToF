@@ -4,6 +4,7 @@ project(examples)
 add_subdirectory(aditof-demo)
 add_subdirectory(aditof-test)
 add_subdirectory(first-frame)
+add_subdirectory(data-collect)
 
 if (WITH_NETWORK)
     add_subdirectory(first-frame-network)
