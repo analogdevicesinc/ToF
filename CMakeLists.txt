@@ -30,6 +30,12 @@ option(USE_ITOF "Use ITOF camera?" OFF)
 option(USE_FXTOF1 "Use FXTOF1 camera?" OFF)
 option(WITH_TOOLS "Build tools?" OFF)
 
+if (USE_ITOF)
+        if (NOT LIBTOFI_LIBDIR_PATH)
+                set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
+        endif()
+endif()
+
 if (WITH_NETWORK)
         add_definitions(-DHAS_NETWORK)
 endif()
