@@ -363,15 +363,11 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     if (frame == nullptr){
         return Status::INVALID_ARGUMENT;
     }
+    
     initializeFrame(frame);
 
-    // std::string totalCapturesStr;
-    // uint8_t totalCaptures;
-
-    // frame->getAttribute("total_captures", totalCapturesStr);
-    // totalCaptures = std::atoi(totalCapturesStr.c_str());
-
-    setAttributesByMode(*frame, ModeInfo::getInstance()->getModeInfo(m_details.mode));
+    frame->getAttribute("total_captures", totalCapturesStr);
+    totalCaptures = std::atoi(totalCapturesStr.c_str());
 
     FrameDetails frameDetails;
     frame->getDetails(frameDetails);
@@ -380,13 +376,11 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         frame->setDetails(m_details.frameType);
     }*/
 
-    // uint16_t *frameDataLocation = nullptr;
-    // frame->getData("raw", &frameDataLocation);
+    uint16_t *frameDataLocation = nullptr;
+    frame->getData("raw", &frameDataLocation);
 
-    uint16_t *irFrame = nullptr;
-    frame->getData("ir", &irFrame);
-
-    irFrame[0] = 2;
+    uint16_t *embedFrame = nullptr;
+    frame->getData("frameData", &embedFrame);
 
     status = m_depthSensor->getFrame(embedFrame);
 
@@ -395,10 +389,15 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         return status;
     }
 
+<<<<<<< HEAD
     // TO DO: use control 'enableDepthCompute' to enable or bypass the depth compute (instead of checking if frame type is "depth_ir"
 
     // uint16_t *header = nullptr;
     // frame->getData("header", &header);
+=======
+    uint16_t *header = nullptr;
+    frame->getData("header", &header);
+>>>>>>> rebase with master
 
     if (!frameDataLocation && !header) {
         LOG(WARNING) << "getframe failed to allocated valid frame";
@@ -409,36 +408,36 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     uint16_t embed_width = 0;
     uint16_t embed_height = 0;
 
-    // ModeInfo::modeInfo aModeInfo;
-    // status = getCurrentModeInfo(aModeInfo);
-    // if (status != Status::OK) {
-    //     LOG(WARNING) << "Failed to get mode info";
-    //     return status;
-    // }
+    ModeInfo::modeInfo aModeInfo;
+    status = getCurrentModeInfo(aModeInfo);
+    if (status != Status::OK) {
+        LOG(WARNING) << "Failed to get mode info";
+        return status;
+    }
 
-    // embed_height = aModeInfo.embed_height;
-    // embed_width = aModeInfo.embed_width;
+    embed_height = aModeInfo.embed_height;
+    embed_width = aModeInfo.embed_width;
 
-    // status = processFrame((uint8_t *)embedFrame, frameDataLocation, (uint8_t *)header, embed_height, embed_width, frame);
-    // if (status != Status::OK) {
-    //     LOG(WARNING) << "Failed to process the frame";
-    //     return status;
-    // }
+    status = processFrame((uint8_t *)embedFrame, frameDataLocation, (uint8_t *)header, embed_height, embed_width, frame);
+    if (status != Status::OK) {
+        LOG(WARNING) << "Failed to process the frame";
+        return status;
+    }
 
-    // FrameDataDetails frameDataDetail = *std::find_if(frameDetails.dataDetails.begin(), frameDetails.dataDetails.end(),
-    //                                                  [](const aditof::FrameDataDetails frame_detail) {
-    //                                                      return frame_detail.type == "raw";
-    //                                                  });
-    // for (unsigned int i = 0; i < (frameDataDetail.height * frameDataDetail.width * totalCaptures); ++i) {
-    //     frameDataLocation[i] = Convert11bitFloat2LinearVal(frameDataLocation[i]);
-    // }
+    FrameDataDetails frameDataDetail = *std::find_if(frameDetails.dataDetails.begin(), frameDetails.dataDetails.end(),
+                                                     [](const aditof::FrameDataDetails frame_detail) {
+                                                         return frame_detail.type == "raw";
+                                                     });
+    for (unsigned int i = 0; i < (frameDataDetail.height * frameDataDetail.width * totalCaptures); ++i) {
+        frameDataLocation[i] = Convert11bitFloat2LinearVal(frameDataLocation[i]);
+    }
 
     if (totalCaptures > 1) {
 
-    //     if (NULL == m_tofi_compute_context) {
-    //         LOG(ERROR) << "Depth compute libray not initialized";
-    //         return Status::GENERIC_ERROR;
-    //     }
+        if (NULL == m_tofi_compute_context) {
+            LOG(ERROR) << "Depth compute libray not initialized";
+            return Status::GENERIC_ERROR;
+        }
 
         uint32_t ret = TofiCompute(frameDataLocation, m_tofi_compute_context, NULL);
 
@@ -456,12 +455,12 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         frame->getData("ir", &irFrameLocation);
         memcpy(irFrameLocation, m_tofi_compute_context->p_ab_frame, (frameDataDetail.height * frameDataDetail.width * sizeof(uint16_t)));
 
-    //     applyCalibrationToFrame(frameDataLocation, std::atoi(m_details.mode.c_str()));
+        applyCalibrationToFrame(frameDataLocation, std::atoi(m_details.mode.c_str()));
 
-    //     uint16_t *xyzFrameLocation;
-    //     frame->getData("xyz", &xyzFrameLocation);
-    //     memcpy(xyzFrameLocation, m_tofi_compute_context->p_xyz_frame, (frameDataDetail.height * frameDataDetail.width * sizeof(aditof::Point3I)));
-    // }
+        uint16_t *xyzFrameLocation;
+        frame->getData("xyz", &xyzFrameLocation);
+        memcpy(xyzFrameLocation, m_tofi_compute_context->p_xyz_frame, (frameDataDetail.height * frameDataDetail.width * sizeof(aditof::Point3I)));
+    }
 
     return Status::OK;
 }

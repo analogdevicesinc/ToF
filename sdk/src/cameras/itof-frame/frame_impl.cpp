@@ -174,11 +174,7 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
     uint16_t  embed_hdr_length;
     uint8_t total_captures;
 
-<<<<<<< HEAD
     //get attributes 
-=======
-    //get attributes
->>>>>>> depth_compute: use depth_compute library for ITOF frame processing.
     getIntAttribute<uint16_t>("embed_hdr_length", embed_hdr_length);
     getIntAttribute<uint8_t>("total_captures", total_captures);
 
