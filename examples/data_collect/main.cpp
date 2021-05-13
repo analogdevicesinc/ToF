@@ -368,39 +368,12 @@ int main(int argc, char *argv[]) {
         LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data from JSON config file...";
     }
 
-    std::vector<std::string> modes;
-    camera->getAvailableModes(modes);
-    if (modes.empty()) {
-        LOG(ERROR) << "no camera modes available!";
-        return 0;
-    }
-    if (mode < 0 || mode >= modes.size()) {
-        LOG(ERROR) << "Camera mode: " << mode << "is out of range. The range for mode values is: 0 -" << modes.size();
-        return 0;
-    }
-
-    // Set the mode first so that camera interface will know about the mode to operate on
-    status = camera->setMode(modes.at(mode));
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not set camera mode!";
-        return 0;
-    }
-
-    // Get frame types based on the mode set
-    std::vector<FrameDetails> frameDetailsList;
-    status = camera->getAvailableFrameTypes(frameDetailsList);
-    if (status != Status::OK || frameDetailsList.empty()) {
-        LOG(ERROR) << "Could not aquire frame types";
-        return 0;
-    }
-
     // Set UVC format type and camera frame details
-    aditof::FrameDetails details;
     if ("raw" == frame_type) {
-        details = frameDetailsList.back();
+        camera->setControl("enableDepthCompute", "off");
         Fsfparams.raw_frames = true;
     } else if ("depth" == frame_type) {
-        details = frameDetailsList.front();
+        camera->setControl("enableDepthCompute", "on");
         Fsfparams.raw_frames = false;
     }
     else {
@@ -408,7 +381,19 @@ int main(int argc, char *argv[]) {
         return 0;      
     }
 
-    status = camera->setFrameType(details);
+    // Get frame types
+    std::vector<std::string> frameTypes;
+    status = camera->getAvailableFrameTypes(frameTypes);
+    if (status != Status::OK || frameTypes.empty()) {
+        LOG(ERROR) << "Could not aquire frame types";
+        return 0;
+    }
+
+    if (mode < 0 || mode >= frameTypes.size()) {
+        LOG(ERROR) << "Camera mode: " << mode << "is out of range. The range for mode values is: 0 -" << frameTypes.size();
+        return 0;
+    }
+    status = camera->setFrameType(frameTypes[mode]);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 0;
@@ -428,15 +413,15 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
-        std::string attrVal;
-        frame.getAttribute("total_captures", attrVal);
-        int totalCaptures = std::stoi(attrVal);
+        CameraDetails camDetails;
+        camera->getDetails(camDetails);
+        int totalCaptures = camDetails.frameType.totalCaptures;
 
         if (Fsfparams.raw_frames) {
             for (int ix = 0; ix < totalCaptures; ++ix) {
                 aditof::StreamInfo info = {};
                 aditof::Stream stream = {};
-                if (details.passiveIRCaptured && ix == totalCaptures - 1) {
+                if (camDetails.frameType.passiveIRCaptured && ix == totalCaptures - 1) {
                     info.StreamType = static_cast<uint32_t>(StreamType::STREAM_TYPE_COMMON_MODE);
                 }
                 else {
@@ -470,7 +455,7 @@ int main(int argc, char *argv[]) {
         }
         LOG(INFO) << "FSF File name: " << fsf_file;  
 
-        if (FsfStatus::SUCCESS != fsf_setparameters(&Fsfparams, &details)) {
+        if (FsfStatus::SUCCESS != fsf_setparameters(&Fsfparams, &camDetails.frameType)) {
             LOG(ERROR) << "Error initializeing FSF file!";
             return 0;
         }
@@ -492,7 +477,7 @@ int main(int argc, char *argv[]) {
 
     aditof::Frame frame;
     FrameDetails fDetails;
-    FrameDataType frameType;
+    std::string frameType;
     
     uint16_t *frameBuffer;
     uint8_t  *headerBuffer;
@@ -507,7 +492,7 @@ int main(int argc, char *argv[]) {
     // Wait until the warmup time is finished
     if (warmup_time > 0) {
         do {
-            frameType = FrameDataType::RAW;
+            frameType = "raw";
             uint16_t *pRawFrame;
             status = camera->requestFrame(&frame);
             if (status != Status::OK) {
@@ -543,15 +528,15 @@ int main(int argc, char *argv[]) {
         std::string attrVal;
         frame.getAttribute("total_captures", attrVal);
         subFrames = std::stoi(attrVal);
-        frameType = FrameDataType::RAW;
+        frameType = "raw";
 
         // Depth Data
         if (frame_type == "depth") {
             frame_size = sizeof(uint16_t) * height * width;
-            frameType = FrameDataType::DEPTH;
+            frameType = "raw";
         } else if (frame_type == "raw") {
             frame_size = sizeof(uint16_t) * height * width * subFrames;
-            frameType = FrameDataType::RAW;
+            frameType = "raw";
         } else {
             LOG(WARNING) << "Can't recognize frame data type!";
         }
@@ -584,7 +569,7 @@ int main(int argc, char *argv[]) {
         }
 
         uint16_t *pHeader = nullptr;
-        status = frame.getData(FrameDataType::EMBED_HDR, &pHeader);            
+        status = frame.getData("embeded_header", &pHeader);            
         if (status != Status::OK) {
             LOG(ERROR) << "Could not get frame header data!";
             return 0;
@@ -593,7 +578,7 @@ int main(int argc, char *argv[]) {
             LOG(ERROR) << "no memory allocated in frame header";
             return 0;
         }
-        memcpy(headerBuffer, (uint8_t *)pHeader, header_data_size);        
+        memcpy(headerBuffer, (uint8_t *)pHeader, header_data_size);
 
         // Create thread to handle the file I/O of copying raw/depth images to file
 #ifdef _WIN32
