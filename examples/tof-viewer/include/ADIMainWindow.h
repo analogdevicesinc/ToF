@@ -456,7 +456,6 @@ namespace adiMainWindow
 		const ImVec2 InvalidHoveredPixel = ImVec2(-1, -1);
 		std::vector<std::string> _cameraModes;
 		std::vector<std::pair<int, std::string>> m_cameraModes;
-		std::map<std::string, int> cameraModes;
 
 		const ImVec2 depthWinSize = ImVec2(0, 0);
 		ImVec2 sourceDepthImageDimensions;

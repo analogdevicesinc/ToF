@@ -1169,12 +1169,17 @@ void ADIMainWindow::InitCamera()
 		"ToFViewer " + version);
 
 	aditof::Status status = aditof::Status::OK;
-	aditof::System system;
 	
 	auto camera = view->m_ctrl->m_cameras[0];//already initialized on constructor
 		
 	 // user can pass any config.json stored anywhere in HW	
-	status = camera->initialize(m_configFiles[configSelection].second);
+	status = camera->setControl("initialization_config", m_configFiles[configSelection].second);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Could not set the initialization config file!";
+        return;
+    }
+
+    status = camera->initialize();
 	if (status != aditof::Status::OK) {
 		LOG(ERROR) << "Could not initialize camera!";
 		return;
@@ -1216,77 +1221,29 @@ void ADIMainWindow::InitCamera()
 		ifs.close();
 	}
 
-	status = camera->powerUp();
-	if (status != aditof::Status::OK) {
-		my_log.AddLog("Could not PowerUp camera!");
-		return;
-	}
+	status = camera->setControl("powerUp", "call");
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Could not PowerUp camera!";
+        return;
+    }
 	
     // load optional configuration data from module memory
-    status = camera->loadModuleData();
+    status = camera->setControl("loadModuleData", "call");
     if (status != aditof::Status::OK) {
         LOG(INFO) << "No CCB/CFG data found in camera module,";
         LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data from JSON config file...";
     }
 
-	camera->getAvailableModes(_cameraModes);	
-	//TODO: Find a better way to map the below enum.
+	camera->getAvailableFrameTypes(_cameraModes);
 	//Remove QMP
 	/*if (std::find(_cameraModes.begin(), _cameraModes.end(), "qmp") != _cameraModes.end())
 	{
 		_cameraModes.erase(std::remove(_cameraModes.begin(), _cameraModes.end(), "qmp"));
 	}*/
-	
-	for (int modeCount = 0; modeCount < _cameraModes.size(); modeCount++)
+
+	for (int i = 0; i < _cameraModes.size(); ++i)
 	{
-		if (_cameraModes.at(modeCount) == "short_throw")
-		{
-			cameraModes.emplace(_cameraModes.at(modeCount), (int)aditof::ModeName::short_throw);
-		}
-		if (_cameraModes.at(modeCount) == "long_throw")
-		{
-			cameraModes.emplace(_cameraModes.at(modeCount), (int)aditof::ModeName::long_throw);
-		}
-		if (_cameraModes.at(modeCount) == "ahat1")
-		{
-			cameraModes.emplace(_cameraModes.at(modeCount), (int)aditof::ModeName::ahat1);
-		}
-		if (_cameraModes.at(modeCount) == "pcm")
-		{
-			cameraModes.emplace(_cameraModes.at(modeCount), (int)aditof::ModeName::pcm);
-		}
-		if (_cameraModes.at(modeCount) == "long_throw_native")
-		{
-			cameraModes.emplace(_cameraModes.at(modeCount), (int)aditof::ModeName::long_throw_native);
-		}
-		if (_cameraModes.at(modeCount) == "mp_pcm")
-		{
-			cameraModes.emplace(_cameraModes.at(modeCount), (int)aditof::ModeName::mp_pcm);
-		}
-		if (_cameraModes.at(modeCount) == "chip_char")
-		{
-			cameraModes.emplace(_cameraModes.at(modeCount), (int)aditof::ModeName::chip_char);
-		}
-		if (_cameraModes.at(modeCount) == "qmp")
-		{
-			cameraModes.emplace(_cameraModes.at(modeCount), (int)aditof::ModeName::qmp);//Disable QMP for now
-		}
-		if (_cameraModes.at(modeCount) == "pcm8")
-		{
-			cameraModes.emplace(_cameraModes.at(modeCount), (int)aditof::ModeName::pcm8);
-		}
-		if (_cameraModes.at(modeCount) == "ahat2")
-		{
-			cameraModes.emplace(_cameraModes.at(modeCount), (int)aditof::ModeName::ahat2);
-		}
-		if (_cameraModes.at(modeCount) == "mp")
-		{
-			cameraModes.emplace(_cameraModes.at(modeCount), (int)aditof::ModeName::mp);
-			modeSelection = modeCount;//Set MP as a default
-		}
-		
-		m_cameraModes.emplace_back(modeCount, _cameraModes.at(modeCount));
-		
+		m_cameraModes.emplace_back(i, _cameraModes.at(i));
 	}
 
 	//prepareCamera("mp");//Default is Mega Pixel	
@@ -1296,26 +1253,19 @@ void ADIMainWindow::InitCamera()
 void ADIMainWindow::prepareCamera(std::string mode)
 {
 	aditof::Status status = aditof::Status::OK;
-	std::vector<aditof::FrameDetails> frameTypes;
-	
-	status = view->m_ctrl->m_cameras[0]->setMode(cameraModes[mode]);
+
+	status = view->m_ctrl->m_cameras[0]->setFrameType(mode);
 	if (status != aditof::Status::OK) {
 		my_log.AddLog("Could not set camera mode!");
 		return;
 	}
+
+	aditof::CameraDetails camDetails;
+	status = view->m_ctrl->m_cameras[0]->getDetails(camDetails);
+	int totalCaptures = camDetails.frameType.totalCaptures;
 	
-	view->m_ctrl->m_cameras[0]->getAvailableFrameTypes(frameTypes);
-	if (frameTypes.empty()) {
-		my_log.AddLog("no frame type avaialble!");
-		return;
-	}
-	
-	view->m_ctrl->m_recorder->m_frameDetails.totalCaptures = frameTypes[0].totalCaptures;
-	status = view->m_ctrl->m_cameras[0]->setFrameType(frameTypes.front());
-	if (status != aditof::Status::OK) {
-		my_log.AddLog("Could not set camera frame type!");
-		return;
-	}
+	view->m_ctrl->m_recorder->m_frameDetails.totalCaptures = totalCaptures;
+	status = view->m_ctrl->m_cameras[0]->setControl("enableDepthCompute", "off");
 
 	// Program the camera with cfg passed, set the mode by writing to 0x200 and start the camera
 	status = view->m_ctrl->m_cameras[0]->start();
