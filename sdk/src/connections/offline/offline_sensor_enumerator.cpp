@@ -2,7 +2,7 @@
 #include "offline_depth_sensor.h"
 
 OfflineSensorEnumerator::OfflineSensorEnumerator() {
-    m_sensorsInfo.emplace_back(std::string("/home/cristi/mode5/raw.bin"));
+    m_sensorsInfo.emplace_back(std::string(std::string(PROJECT_DIR) + "/raw.bin"));
 }
 
 aditof::Status OfflineSensorEnumerator::getDepthSensors(std::vector<std::shared_ptr<aditof::DepthSensorInterface> > &depthSensors) {

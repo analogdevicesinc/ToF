@@ -57,6 +57,8 @@ if (USE_ITOF)
         add_definitions(-DITOF)
 endif()
 
+add_definitions(-DPROJECT_DIR="${CMAKE_SOURCE_DIR}")
+
 add_subdirectory(sdk)
 add_subdirectory(apps)
 
