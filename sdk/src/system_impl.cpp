@@ -88,9 +88,13 @@ Status SystemImpl::getCameraList(
     std::vector<std::shared_ptr<Camera>> &cameraList) const {
 
     cameraList.clear();
-
+    std::unique_ptr<SensorEnumeratorInterface> sensorEnumerator;
+    #ifdef HAS_OFFLINE
+    LOG(INFO) << "Creating offline sensor.";
+    sensorEnumerator = SensorEnumeratorFactory::buildOfflineSensorEnumerator();
+    #else
     // At first, assume SDK is running on target
-    std::unique_ptr<SensorEnumeratorInterface> sensorEnumerator =
+    sensorEnumerator =
         SensorEnumeratorFactory::buildTargetSensorEnumerator();
     if (!sensorEnumerator) {
         DLOG(INFO) << "Could not create TargetSensorEnumerator because SDK is "
@@ -99,15 +103,13 @@ Status SystemImpl::getCameraList(
         sensorEnumerator = SensorEnumeratorFactory::buildUsbSensorEnumerator();
         if (!sensorEnumerator) {
             LOG(INFO) << "No USB Enumerator found.";
-    #ifdef HAS_OFFLINE
-            LOG(INFO) << "Creating offline sensor.";
-            sensorEnumerator = SensorEnumeratorFactory::buildOfflineSensorEnumerator();
-    #else
+
             LOG(ERROR) << "Failed to create UsbSensorEnumerator";
             return Status::GENERIC_ERROR;
-    #endif
         }
     }
+    #endif
+
     sensorEnumerator->searchSensors();
     cameraList = buildCameras(std::move(sensorEnumerator));
 
