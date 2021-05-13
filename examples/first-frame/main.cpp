@@ -111,11 +111,12 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "no memory allocated in frame";
         return 0;
     }
-    std::ofstream g("/home/cristi/fallout/utils/depth.bin", std::ios::binary);
+    std::ofstream g(std::string(PROJECT_DIR) + "/build/out.bin", std::ios::binary);
     FrameDataDetails fDetails;
     frame.getDataDetails("depth", fDetails);
 
     g.write((char*)data1, fDetails.width * fDetails.height * sizeof(uint16_t));
 
+    g.close();
     return 0;
 }

@@ -104,7 +104,7 @@ aditof::Status CameraItof::initialize() {
 
     // Parse config.json
     //std::string config = m_controls["initialization_config"];
-    std::string config = "/home/cristi/old_sdk/sdk/config/config_default.json";
+    std::string config = std::string(PROJECT_DIR) + "/sdk/src/cameras/itof-camera/config/config_default.json";
     std::ifstream ifs(config.c_str());
     std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
     std::vector<std::pair<std::string, int32_t>> device_settings;
@@ -116,7 +116,7 @@ aditof::Status CameraItof::initialize() {
         if (cJSON_IsString(json_sensorFirmware_file) && (json_sensorFirmware_file->valuestring != NULL)) {
             if (m_sensorFirmwareFile.empty()) {
                 // save firmware file location
-                m_sensorFirmwareFile = "/home/cristi/aditof-sdk-rework/sdk/src/cameras/itof-camera/config/" + std::string(json_sensorFirmware_file->valuestring);
+                m_sensorFirmwareFile = std::string(PROJECT_DIR) + "/sdk/src/cameras/itof-camera/config/" + std::string(json_sensorFirmware_file->valuestring);
             } else {
                 LOG(WARNING) << "Duplicate firmware file ignored: " << json_sensorFirmware_file->valuestring;
             }
@@ -127,7 +127,7 @@ aditof::Status CameraItof::initialize() {
         if (cJSON_IsString(json_ccb_calibration_file) && (json_ccb_calibration_file->valuestring != NULL)) {
             if (m_ccb_calibrationFile.empty()) {
                 // save calibration file location
-                m_ccb_calibrationFile = "/home/cristi/aditof-sdk-rework/sdk/src/cameras/itof-camera/config/" + std::string(json_ccb_calibration_file->valuestring);
+                m_ccb_calibrationFile = std::string(PROJECT_DIR) + "/sdk/src/cameras/itof-camera/config/" + std::string(json_ccb_calibration_file->valuestring);
             } else {
                 LOG(WARNING) << "Duplicate calibration file ignored: " << json_ccb_calibration_file->valuestring;
             }
@@ -143,7 +143,7 @@ aditof::Status CameraItof::initialize() {
         const cJSON *json_depth_ini_file = cJSON_GetObjectItemCaseSensitive(config_json, "DEPTH_INI");
         if (cJSON_IsString(json_depth_ini_file) && (json_depth_ini_file->valuestring != NULL)) {
             // save depth ini file location
-            m_ini_depth = "/home/cristi/aditof-sdk-rework/sdk/src/cameras/itof-camera/config/" + std::string(json_depth_ini_file->valuestring);
+            m_ini_depth = std::string(PROJECT_DIR) + "/sdk/src/cameras/itof-camera/config/" + std::string(json_depth_ini_file->valuestring);
         }
 
         // Get optional power config
@@ -340,7 +340,7 @@ aditof::Status CameraItof::initializeFrame(aditof::Frame *frame) {
     aditof::FrameDetails details;
     aditof::FrameDataDetails frameDataDetail;
     frameDataDetail.width = modeInfo.width;
-    frameDataDetail.height = modeInfo.height;
+    frameDataDetail.height = modeInfo.height;//TODO-hardcoded
     frameDataDetail.type = "raw";
     details.dataDetails.emplace_back(frameDataDetail);
     frameDataDetail.type = "ir";
@@ -447,12 +447,11 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
             return Status::GENERIC_ERROR;
         }
 
-    //     uint16_t *depthFrameLocation;
-    //     frame->getData("depth", &depthFrameLocation);
-    //     memcpy(depthFrameLocation, (uint8_t *)m_tofi_compute_context->p_depth_frame,
-    //         (frameDataDetail.height * frameDataDetail.width * sizeof(uint16_t)));
-
-
+        uint16_t *depthFrameLocation;
+        frame->getData("depth", &depthFrameLocation);
+        memcpy(depthFrameLocation, (uint8_t *)m_tofi_compute_context->p_depth_frame,
+            (frameDataDetail.height * frameDataDetail.width * sizeof(uint16_t)));
+  
         uint16_t *irFrameLocation;
         frame->getData("ir", &irFrameLocation);
         memcpy(irFrameLocation, m_tofi_compute_context->p_ab_frame, (frameDataDetail.height * frameDataDetail.width * sizeof(uint16_t)));
@@ -739,7 +738,7 @@ CameraItof::processFrame(uint8_t *rawFrame, uint16_t *captureData,
     std::string fn;
     frame->getAttribute("total_captures", fn);
     FrameNum = std::atoi(fn.c_str());
-    FrameWidth = 1024;
+    FrameWidth = 1024; //TODO-hardcoded 
     FrameHeight = 1024;
     //frame->setAttribute("frameNum", std::to_string(FrameNum));
 
