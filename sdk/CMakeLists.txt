@@ -91,6 +91,7 @@ endif()
 file(GLOB PLATFORM_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${OS_SPECIFIC_DIR}/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/tofi/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/${TARGET_SPECIFIC_DIR}/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connections/usb/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${FRAME_DIR}/*.cpp
@@ -98,6 +99,7 @@ file(GLOB PLATFORM_SOURCES
 file(GLOB PLATFORM_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${OS_SPECIFIC_DIR}/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/tofi/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/${TARGET_SPECIFIC_DIR}/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connections/usb/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${FRAME_DIR}/*.h
@@ -183,22 +185,41 @@ endif()
 #LIBTOFI_LIBDIR_PATH - path to libtofi_config.so and libtofi_compute.so folder
 
 if (USE_ITOF)
-    if (NOT LIBTOFI_LIBDIR_PATH)
-        set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
-    endif()
-    add_library(libtofi_compute SHARED IMPORTED)
-    set_target_properties(libtofi_compute PROPERTIES
-         IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_compute.so"
-         IMPORTED_NO_SONAME 1
-    )
-    target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_compute)
+	if ( UNIX )
+    		if (NOT LIBTOFI_LIBDIR_PATH)
+        		set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
+    		endif()
 
-    add_library(libtofi_config SHARED IMPORTED)
-    set_target_properties(libtofi_config PROPERTIES
-             IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_config.so"
-             IMPORTED_NO_SONAME 1
-         )
-    target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_config)
+    		add_library(libtofi_compute SHARED IMPORTED)
+    		set_target_properties(libtofi_compute PROPERTIES
+	 		IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_compute.so"
+         		IMPORTED_NO_SONAME 1
+    		)
+    		target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_compute)
+
+    		add_library(libtofi_config SHARED IMPORTED)
+    		set_target_properties(libtofi_config PROPERTIES
+         		IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_config.so"
+         		IMPORTED_NO_SONAME 1
+		)
+    		target_link_libraries(${PROJECT_NAME} PUBLIC libtofi_config)
+	else()
+    		if (NOT LIBTOFI_LIBDIR_PATH)
+        		set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
+    		endif()
+
+    		add_library(libtofi_compute SHARED IMPORTED)
+    		set_target_properties(libtofi_compute PROPERTIES
+	 		IMPORTED_IMPLIB "${LIBTOFI_LIBDIR_PATH}/tofi_compute.lib"
+         		IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/tofi_compute.dll")
+    		target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_compute)
+
+    		add_library(libtofi_config SHARED IMPORTED)
+    		set_target_properties(libtofi_config PROPERTIES
+         		IMPORTED_IMPLIB "${LIBTOFI_LIBDIR_PATH}/tofi_config.lib"
+         		IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/tofi_config.dll")
+    		target_link_libraries(${PROJECT_NAME} PUBLIC libtofi_config)
+	endif()	
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCC)
