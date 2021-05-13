@@ -185,10 +185,6 @@ endif()
 #LIBTOFI_LIBDIR_PATH - path to libtofi_config.so and libtofi_compute.so folder
 
 if (USE_ITOF)
-	if (NOT LIBTOFI_LIBDIR_PATH)
-        		set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
-    	endif()
-	
 	if ( UNIX )
     		add_library(libtofi_compute SHARED IMPORTED)
     		set_target_properties(libtofi_compute PROPERTIES
