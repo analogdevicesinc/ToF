@@ -185,41 +185,39 @@ endif()
 #LIBTOFI_LIBDIR_PATH - path to libtofi_config.so and libtofi_compute.so folder
 
 if (USE_ITOF)
-	if ( UNIX )
-    		if (NOT LIBTOFI_LIBDIR_PATH)
+	if (NOT LIBTOFI_LIBDIR_PATH)
         		set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
-    		endif()
-
+    	endif()
+	
+	if ( UNIX )
     		add_library(libtofi_compute SHARED IMPORTED)
     		set_target_properties(libtofi_compute PROPERTIES
 	 		IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_compute.so"
          		IMPORTED_NO_SONAME 1
     		)
-    		target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_compute)
 
     		add_library(libtofi_config SHARED IMPORTED)
     		set_target_properties(libtofi_config PROPERTIES
          		IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_config.so"
          		IMPORTED_NO_SONAME 1
 		)
-    		target_link_libraries(${PROJECT_NAME} PUBLIC libtofi_config)
-	else()
-    		if (NOT LIBTOFI_LIBDIR_PATH)
-        		set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
-    		endif()
 
+	elseif( WIN32 )
     		add_library(libtofi_compute SHARED IMPORTED)
     		set_target_properties(libtofi_compute PROPERTIES
 	 		IMPORTED_IMPLIB "${LIBTOFI_LIBDIR_PATH}/tofi_compute.lib"
          		IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/tofi_compute.dll")
-    		target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_compute)
-
+    		
     		add_library(libtofi_config SHARED IMPORTED)
     		set_target_properties(libtofi_config PROPERTIES
          		IMPORTED_IMPLIB "${LIBTOFI_LIBDIR_PATH}/tofi_config.lib"
          		IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/tofi_config.dll")
-    		target_link_libraries(${PROJECT_NAME} PUBLIC libtofi_config)
+	else()
+		message( FATAL_ERROR "Unsupported platform for libtofi_compute and libtofi_config. CMake will exit." )
 	endif()	
+
+	target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_compute)
+	target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_config)
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCC)
