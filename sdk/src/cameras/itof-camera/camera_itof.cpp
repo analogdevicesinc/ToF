@@ -389,15 +389,10 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         return status;
     }
 
-<<<<<<< HEAD
     // TO DO: use control 'enableDepthCompute' to enable or bypass the depth compute (instead of checking if frame type is "depth_ir"
 
-    // uint16_t *header = nullptr;
-    // frame->getData("header", &header);
-=======
     uint16_t *header = nullptr;
     frame->getData("header", &header);
->>>>>>> rebase with master
 
     if (!frameDataLocation && !header) {
         LOG(WARNING) << "getframe failed to allocated valid frame";
