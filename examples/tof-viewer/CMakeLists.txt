@@ -83,9 +83,9 @@ target_include_directories(ADIToFGUI PUBLIC
 #	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/external/aditof_cmos_sdk/src/sdk/config $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
 #	)
 
-#if(WIN32)
-#	# copy sdk lib to exe directory
-#	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-#					COMMAND ${CMAKE_COMMAND} -E copy_directory $<TARGET_LINKER_FILE_DIR:aditof> ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>
-#					VERBATIM)
-#endif()
+if(WIN32)
+	# copy sdk lib to exe directory
+	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+					COMMAND ${CMAKE_COMMAND} -E copy_directory $<TARGET_LINKER_FILE_DIR:aditof> ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>
+					VERBATIM)
+endif()
