@@ -70,22 +70,9 @@ int main(int argc, char *argv[]) {
     
     
     }
-    /*status = camera->setFrameType(frameTypes.front());
+    status = camera->setFrameType("pcm");
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
-        return 0;
-    }*/
-
-    std::vector<std::string> modes;
-    camera->getAvailableModes(modes);
-    if (modes.empty()) {
-        LOG(ERROR) << "no camera modes available!";
-        return 0;
-    }
-
-    status = camera->setMode(modes[5]);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not set camera mode!";
         return 0;
     }
 
@@ -102,6 +89,7 @@ int main(int argc, char *argv[]) {
     uint16_t *data1;
     status = frame.getData("ir", &data1);
 
+
     if (status != Status::OK) {
         LOG(ERROR) << "Could not get frame data!";
         return 0;
@@ -111,9 +99,10 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "no memory allocated in frame";
         return 0;
     }
+
     std::ofstream g(std::string(PROJECT_DIR) + "/build/out.bin", std::ios::binary);
     FrameDataDetails fDetails;
-    frame.getDataDetails("depth", fDetails);
+    frame.getDataDetails("ir", fDetails);
 
     g.write((char*)data1, fDetails.width * fDetails.height * sizeof(uint16_t));
 
