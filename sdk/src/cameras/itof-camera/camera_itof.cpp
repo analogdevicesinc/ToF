@@ -359,25 +359,38 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     Status status = Status::OK;
     std::string totalCapturesStr;
     uint8_t totalCaptures;
+     ModeInfo::modeInfo aModeInfo;
 
     if (frame == nullptr){
         return Status::INVALID_ARGUMENT;
     }
-    
-    initializeFrame(frame);
 
-    frame->getAttribute("total_captures", totalCapturesStr);
-    totalCaptures = std::atoi(totalCapturesStr.c_str());
+    status = getCurrentModeInfo(aModeInfo);
+    if (status != Status::OK) {
+        LOG(WARNING) << "Failed to get mode info";
+        return status;
+    }
+
+    setAttributesByMode(*frame, aModeInfo);
 
     FrameDetails frameDetails;
     frame->getDetails(frameDetails);
 
-    /*if (m_details.frameType != frameDetails) {
+    if (m_details.frameType != frameDetails) {
         frame->setDetails(m_details.frameType);
-    }*/
+    }
+  //  initializeFrame(frame);
+
+    frame->getAttribute("total_captures", totalCapturesStr);
+    totalCaptures = std::atoi(totalCapturesStr.c_str());
 
     uint16_t *frameDataLocation = nullptr;
-    frame->getData("raw", &frameDataLocation);
+    if (m_details.frameType.type == "pcm"){
+        frame->getData("ir", &frameDataLocation);
+    }
+    else{
+        frame->getData("raw", &frameDataLocation);
+    }
 
     uint16_t *embedFrame = nullptr;
     frame->getData("frameData", &embedFrame);
@@ -394,7 +407,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     uint16_t *header = nullptr;
     frame->getData("header", &header);
 
-    if (!frameDataLocation && !header) {
+    if (!frameDataLocation /*&& !header*/) {
         LOG(WARNING) << "getframe failed to allocated valid frame";
         return status;
     }
@@ -402,13 +415,6 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     initComputeLibrary();
     uint16_t embed_width = 0;
     uint16_t embed_height = 0;
-
-    ModeInfo::modeInfo aModeInfo;
-    status = getCurrentModeInfo(aModeInfo);
-    if (status != Status::OK) {
-        LOG(WARNING) << "Failed to get mode info";
-        return status;
-    }
 
     embed_height = aModeInfo.embed_height;
     embed_width = aModeInfo.embed_width;
@@ -419,10 +425,11 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         return status;
     }
 
-    FrameDataDetails frameDataDetail = *std::find_if(frameDetails.dataDetails.begin(), frameDetails.dataDetails.end(),
+    FrameDataDetails frameDataDetail = *std::find_if(m_details.frameType.dataDetails.begin(), m_details.frameType.dataDetails.end(),
                                                      [](const aditof::FrameDataDetails frame_detail) {
-                                                         return frame_detail.type == "raw";
+                                                         return frame_detail.type == "ir";
                                                      });
+   
     for (unsigned int i = 0; i < (frameDataDetail.height * frameDataDetail.width * totalCaptures); ++i) {
         frameDataLocation[i] = Convert11bitFloat2LinearVal(frameDataLocation[i]);
     }
@@ -744,6 +751,7 @@ CameraItof::processFrame(uint8_t *rawFrame, uint16_t *captureData,
     uint64_t rawSubFrameSize = ((embed_height * embed_width * 2) / (totalCaptures + 1)) - 128;
     uint64_t subFrameSize = FrameWidth * FrameHeight; // capture size without header
     uint16_t *p = (uint16_t*) rawFrame;
+
     for (int i = 0; i < FrameNum * FrameWidth * FrameHeight; ++ i) {
         captureData[i] = p[i] >> 4;
     }

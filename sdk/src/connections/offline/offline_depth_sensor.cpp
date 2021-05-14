@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <cstring>
+#include "../target/adsd3100_sensor.h"
 
 OfflineDepthSensor::OfflineDepthSensor(std::string path) : m_path(path) {}
 
@@ -21,27 +22,23 @@ aditof::Status OfflineDepthSensor::open() {
 }
 
 aditof::Status OfflineDepthSensor::start() {
-    return aditof::Status::UNAVAILABLE;
+    return aditof::Status::OK;
 }
 
 aditof::Status OfflineDepthSensor::stop() {
-    return aditof::Status::UNAVAILABLE;
+    return aditof::Status::OK;
 }
 
 aditof::Status OfflineDepthSensor::getAvailableFrameTypes(
         std::vector<aditof::DepthSensorFrameType> &types) {
     aditof::DepthSensorFrameType frameType;
-    frameType.type = "depth_ir";
-    frameType.width = 1024;
-    frameType.height = 1024;
-    types.clear();
-    types.emplace_back(frameType);
+    types = availableFrameTypes;
     return aditof::Status::OK;
 }
 
 aditof::Status
 OfflineDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
-    return aditof::Status::UNAVAILABLE;
+    return aditof::Status::OK;
 }
 
 aditof::Status OfflineDepthSensor::program(const uint8_t *firmware,

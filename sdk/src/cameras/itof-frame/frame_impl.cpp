@@ -190,12 +190,13 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
 
     //store pointers to the contents described by FrameDetails
     m_implData->m_allData.reset(new uint16_t[totalSize]);
+   
     //TODO wouldn`t it be safer to store relative position to .get() instead of absolute address ? TBD @dNechita
     m_implData->m_dataLocations.emplace("frameData", m_implData->m_allData.get()); //frame data
-
     for (FrameDataDetails frameDetail : details.dataDetails){
         m_implData->m_dataLocations.emplace(frameDetail.type, m_implData->m_allData.get() + pos); //raw data
         LOG(INFO) << frameDetail.type;
+
         if (frameDetail.type == "header"){
              pos += (embed_hdr_length / 2) * total_captures;
         }
