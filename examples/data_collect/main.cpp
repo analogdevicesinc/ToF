@@ -462,11 +462,12 @@ int main(int argc, char *argv[]) {
     }
 
     // Program the camera with cfg passed, set the mode by writing to 0x200 and start the camera
-    status = camera->start();
+    // TO DO: remove start from being called in setFrameType
+    /*status = camera->start();
     if (status != Status::OK) {
         LOG(ERROR) << "Could not start camera!";
         return 0;
-    }
+    }*/
 
     if (ext_frame_sync_en == 0) {
         status = camera->setControl("syncMode", "0, 0"); // Master, timer driven
@@ -533,10 +534,10 @@ int main(int argc, char *argv[]) {
         // Depth Data
         if (frame_type == "depth") {
             frame_size = sizeof(uint16_t) * height * width;
-            frameType = "raw";
+            frameType = "depth";
         } else if (frame_type == "raw") {
             frame_size = sizeof(uint16_t) * height * width * subFrames;
-            frameType = "raw";
+            frameType = "frameData"; // TO DO: change this to "raw" when it gets done
         } else {
             LOG(WARNING) << "Can't recognize frame data type!";
         }
@@ -568,17 +569,18 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
-        uint16_t *pHeader = nullptr;
-        status = frame.getData("embeded_header", &pHeader);            
-        if (status != Status::OK) {
-            LOG(ERROR) << "Could not get frame header data!";
-            return 0;
-        }
-        if (!pHeader) {
-            LOG(ERROR) << "no memory allocated in frame header";
-            return 0;
-        }
-        memcpy(headerBuffer, (uint8_t *)pHeader, header_data_size);
+        // TO DO: uncomment this one the header becomes available
+        // uint16_t *pHeader = nullptr;
+        // status = frame.getData("embeded_header", &pHeader);
+        // if (status != Status::OK) {
+        //     LOG(WARNING) << "Could not get frame header data!";
+        //     return 0;
+        // }
+        // if (!pHeader) {
+        //     LOG(ERROR) << "no memory allocated in frame header";
+        //     return 0;
+        // }
+        // memcpy(headerBuffer, (uint8_t *)pHeader, header_data_size);
 
         // Create thread to handle the file I/O of copying raw/depth images to file
 #ifdef _WIN32
