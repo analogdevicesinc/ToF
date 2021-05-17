@@ -39,6 +39,12 @@ For more details on building the SDK on an embedded platform please check the **
 | Raspberry Pi 3,4 | [User Guide](doc/raspberrypi3/chicony_user_guide.md) | [![Build Status](https://travis-ci.com/analogdevicesinc/aditof-sdk-rework.svg?branch=master)](https://travis-ci.com/analogdevicesinc/aditof-sdk-rework) | [![SD card image](https://img.shields.io/badge/release-latest_sd_card_image-blue.svg)](http://swdownloads.analog.com/cse/aditof/raspberrypi-chicony-latest-image.tar.xz) |
 | Nvidia Jetson Nano | [User Guide](https://wiki.analog.com/resources/eval/user-guides/ad-96tof1-ebz/ug_jetson) <br> [Build Instructions](doc/jetson/build_instructions.md) | [![Build Status](https://travis-ci.com/analogdevicesinc/aditof-sdk-rework.svg?branch=master)](https://travis-ci.com/analogdevicesinc/aditof-sdk-rework) | [![SD card image](https://img.shields.io/badge/release-latest_sd_card_image-blue.svg)](http://swdownloads.analog.com/cse/aditof/jetson-latest.tar.xz) |
 
+### ITOF camera
+| Operating system | Documentation |
+| --------- | ----------- |
+| Windows | [Build instructions](doc/itof/windows_build_instructions.md) |
+| Linux | [Build instructions](doc/itof/linux_build_instructions.md) |
+
 [How to write the SD card image onto the SD card?](doc/sdcard_burn.md)
 
 ## SDK documentation
