@@ -178,14 +178,21 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
     getIntAttribute<uint16_t>("embed_hdr_length", embed_hdr_length);
     getIntAttribute<uint8_t>("total_captures", total_captures);
 
+    auto getSubframeSize = [embed_hdr_length, total_captures](FrameDataDetails frameDetail){
+        if (frameDetail.type == "header"){
+            return (unsigned long int)(embed_hdr_length / 2) * total_captures;
+        }
+        else if(frameDetail.type == "xyz"){
+            return (unsigned long int)frameDetail.height * frameDetail.width * sizeof(Point3I);
+        }
+        else {
+            return (unsigned long int)frameDetail.height * frameDetail.width * total_captures;
+        }
+    };
+
     //compute total size TODO this could be precomputed TBD @dNechita
     for (FrameDataDetails frameDetail : details.dataDetails){
-        if (frameDetail.type == "header"){
-            totalSize += (embed_hdr_length / 2) * total_captures;
-        }
-        else{
-            totalSize += frameDetail.height * frameDetail.width * total_captures;
-        }
+        totalSize += getSubframeSize(frameDetail);
     }
 
     //store pointers to the contents described by FrameDetails
@@ -197,12 +204,7 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
         m_implData->m_dataLocations.emplace(frameDetail.type, m_implData->m_allData.get() + pos); //raw data
         LOG(INFO) << frameDetail.type;
 
-        if (frameDetail.type == "header"){
-             pos += (embed_hdr_length / 2) * total_captures;
-        }
-        else{
-            pos += frameDetail.height * frameDetail.width * total_captures;
-        }
+        pos  += getSubframeSize(frameDetail);
     }
 
 }
