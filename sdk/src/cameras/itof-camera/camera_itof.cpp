@@ -209,15 +209,6 @@ aditof::Status CameraItof::start() {
        m_CameraProgrammed = true;
     }
 
-    // set mode
-    uint16_t mode_register_addr = SET_MODE_REG_ADDR;
-    uint16_t mode_value = std::atoi(m_details.mode.c_str());
-    status = m_depthSensor->writeAfeRegisters(&mode_register_addr, &mode_value, 1);
-    if (Status::OK != status) {
-       LOG(ERROR) << "Error writing to set mode register.";
-       return Status::GENERIC_ERROR;
-    }
-
     // Removing the delay between set mode and start which was a temporary fix for mode change (MP<->QMP)
     #ifdef _WIN32
     //std::this_thread::sleep_for(std::chrono::seconds(20));
