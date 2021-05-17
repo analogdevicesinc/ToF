@@ -803,13 +803,15 @@ aditof::Status CameraItof::cleanupTempFiles() {
 aditof::Status CameraItof::powerUp() {
     // TO DO
     //defined in device_interface.h -> depth_sensor_interface.h
-    return aditof::Status::UNAVAILABLE;
+    LOG(INFO) << "Not implemented yet";
+    return aditof::Status::OK;
 }
 
 aditof::Status CameraItof::powerDown() {
     // TO DO
     //defined in device_interface.h -> depth_sensor_interface.h
-    return aditof::Status::UNAVAILABLE;
+    LOG(INFO) << "Not implemented yet";
+    return aditof::Status::OK;
 }
 
 aditof::Status CameraItof::setCameraSyncMode(uint8_t mode, uint8_t level) {
@@ -842,7 +844,8 @@ aditof::Status CameraItof::loadModuleData() {
         LOG(ERROR) << "Error loading module data";
         return Status::GENERIC_ERROR;
     }*/
-    return aditof::Status::UNAVAILABLE;
+    LOG(INFO) << "Not implemented yet";
+    return aditof::Status::OK;
 }
 
 aditof::Status CameraItof::applyCalibrationToFrame(uint16_t *frame, const unsigned int mode) {
