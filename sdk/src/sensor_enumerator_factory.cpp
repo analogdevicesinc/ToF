@@ -82,6 +82,9 @@ SensorEnumeratorFactory::buildNetworkSensorEnumerator(const std::string &ip) {
 
 std::unique_ptr<SensorEnumeratorInterface>
 SensorEnumeratorFactory::buildOfflineSensorEnumerator() {
-    return std::unique_ptr<SensorEnumeratorInterface>(
+	#ifdef HAS_OFFLINE
+    	return std::unique_ptr<SensorEnumeratorInterface>(
                 new OfflineSensorEnumerator());
+	#endif
+	return nullptr;
 }
