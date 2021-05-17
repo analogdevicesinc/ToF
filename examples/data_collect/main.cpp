@@ -66,7 +66,7 @@ static const char kUsagePublic[] =
     R"(Data Collect.
     Usage:
       data_collect FILE
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--fsf <0|1>] [--wt <warmup>] FILE
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--fsf <0|1>] [--wt <warmup>] [--ip <ip>] FILE
       data_collect (-h | --help) 
 
     Arguments:
@@ -80,6 +80,7 @@ static const char kUsagePublic[] =
       --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
       --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
       --wt <warmup>      Warmup Time (in seconds) before data capture [default: 0]
+      --ip <ip>          Ip address [default: ""]
 
     Valid mode (--m) options are:
         3: Passive IR
@@ -92,7 +93,7 @@ static const char kUsageInternal[] =
     R"(Data Collect.
     Usage:
       data_collect FILE
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--ft <frame_type>] [--fsf <0|1>] [--wt <warmup>] FILE
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--ft <frame_type>] [--fsf <0|1>] [--wt <warmup>] [--ip <ip>] FILE
       data_collect (-h | --help) 
 
     Arguments:
@@ -106,7 +107,8 @@ static const char kUsageInternal[] =
       --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
       --ft <frame_type>  Type of frame to be captured [default: raw]
       --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
-      --wt <warmup>      Warmup Time (in seconds) before data capture [default: 0]    
+      --wt <warmup>      Warmup Time (in seconds) before data capture [default: 0]
+      --ip <ip>          Ip address [default: ""]    
 )";
 
 
@@ -229,6 +231,7 @@ int main(int argc, char *argv[]) {
     uint32_t fps_counter = 0;
     uint32_t ext_frame_sync_en = 0;
     uint32_t warmup_time = 0;
+    std::string ip = "";
 
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
@@ -294,6 +297,15 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // Parsing ip
+    if (args["--ip"]) {
+        ip = args["--ip"].asString();
+        if (ip.empty()) {
+            LOG(ERROR) << "Invalid ip (--ip) from command line!";
+            return 0;
+        }
+    }
+
     if (args["--ext_fsync"]) {
         ext_frame_sync_en = args["--ext_fsync"].asLong();
     }
@@ -332,9 +344,19 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "Frame type is: " << frame_type;
     LOG(INFO) << "Warm Up Time is: " << warmup_time <<" seconds";
 
+    if (!ip.empty()) {
+        LOG(INFO) << "Ip address is: " << ip;
+    }
+
     System system;
     std::vector<std::shared_ptr<Camera>> cameras;
-    system.getCameraList(cameras);
+    
+    if (ip.empty()) {
+        system.getCameraList(cameras);
+    } else {
+        system.getCameraListAtIp(cameras, ip);
+    }
+
     if (cameras.empty()) {
         LOG(WARNING) << "No cameras found";
         return 0;
