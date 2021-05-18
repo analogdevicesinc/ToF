@@ -52,9 +52,12 @@ if (WITH_OFFLINE)
         set(MODE5_PATH "${CMAKE_CURRENT_BINARY_DIR}/${MODE5_FILE}")
 
         message("Downloading raw frames into ${CMAKE_CURRENT_BINARY_DIR}")
-
-        file(DOWNLOAD "${MODE3_URL}" "${MODE3_PATH}")
-        file(DOWNLOAD "${MODE5_URL}" "${MODE5_PATH}")
+        if (NOT EXISTS ${MODE3_PATH})
+                file(DOWNLOAD "${MODE3_URL}" "${MODE3_PATH}")
+        endif()
+        if (NOT EXISTS ${MODE5_PATH})
+                file(DOWNLOAD "${MODE5_URL}" "${MODE5_PATH}")
+        endif()
 endif()
 
 if (USE_CHICONY)
