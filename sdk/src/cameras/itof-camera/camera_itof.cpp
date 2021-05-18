@@ -75,9 +75,6 @@ CameraItof::CameraItof(
     aditof::SensorDetails sDetails;
     m_depthSensor->getDetails(sDetails);
     m_details.connection = sDetails.connectionType;
-
-    m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
-    initialize();
 }
 
 CameraItof::~CameraItof() {
