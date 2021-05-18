@@ -58,4 +58,12 @@ add_custom_command( TARGET ${PROJECT_NAME} POST_BUILD
 )
 endif()
 
+if ( WIN32 )
+   if (MSVC)
+      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:4194304")
+   else ()
+      set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--stack,4194304")
+   endif()
+endif()
+
 target_link_libraries(${PROJECT_NAME} PRIVATE aditof)
