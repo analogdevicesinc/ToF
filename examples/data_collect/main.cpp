@@ -17,9 +17,9 @@
 #include <string>
 #include <vector>
 #include <ctime>
+#include <chrono>
 
 #ifdef _WIN32
-#include <chrono>
 #include <thread>
 #include <windows.h>
 #else
