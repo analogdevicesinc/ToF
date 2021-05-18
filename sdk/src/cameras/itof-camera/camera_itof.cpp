@@ -54,7 +54,7 @@ CameraItof::CameraItof(
     m_details.cameraId = "";
 
     // Define some of the controls of this camera
-    m_controls.emplace("initialization_config", "");
+    m_controls.emplace("initialization_config", std::string(PROJECT_DIR) + "/sdk/src/cameras/itof-camera/config/config_default.json");
     m_controls.emplace("powerUp", "call");
     m_controls.emplace("powerDown", "call");
     m_controls.emplace("syncMode", "0, 0");
@@ -100,8 +100,7 @@ aditof::Status CameraItof::initialize() {
     }
 
     // Parse config.json
-    //std::string config = m_controls["initialization_config"];
-    std::string config = std::string(PROJECT_DIR) + "/sdk/src/cameras/itof-camera/config/config_default.json";
+    std::string config = m_controls["initialization_config"];
     std::ifstream ifs(config.c_str());
     std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
     std::vector<std::pair<std::string, int32_t>> device_settings;
