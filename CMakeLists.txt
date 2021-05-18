@@ -42,7 +42,19 @@ if (WITH_NETWORK)
 endif()
 
 if (WITH_OFFLINE)
-    add_definitions(-DHAS_OFFLINE)
+        add_definitions(-DHAS_OFFLINE)
+        
+        set(MODE3_FILE "mode3_raw.bin")
+        set(MODE5_FILE "mode5_raw.bin")
+        set(MODE3_URL "swdownloads.analog.com/cse/aditof/resources/itof/frames/${MODE3_FILE}")
+        set(MODE5_URL "swdownloads.analog.com/cse/aditof/resources/itof/frames/${MODE5_FILE}")
+        set(MODE3_PATH "${CMAKE_CURRENT_BINARY_DIR}/${MODE3_FILE}")
+        set(MODE5_PATH "${CMAKE_CURRENT_BINARY_DIR}/${MODE5_FILE}")
+
+        message("Downloading raw frames into ${CMAKE_CURRENT_BINARY_DIR}")
+
+        file(DOWNLOAD "${MODE3_URL}" "${MODE3_PATH}")
+        file(DOWNLOAD "${MODE5_URL}" "${MODE5_PATH}")
 endif()
 
 if (USE_CHICONY)
