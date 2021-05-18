@@ -85,11 +85,5 @@ Status Frame::getAttribute(const std::string &attribute,
     return m_impl->getAttribute(attribute, value);
 }
 
-Status Frame::allocFrameData() {
-    FrameDetails details;
-    m_impl->getDetails(details);
-    m_impl->allocFrameData(details);
-    return aditof::Status::OK;
-}
 
 } // namespace aditof
