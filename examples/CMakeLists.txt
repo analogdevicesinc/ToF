@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 2.8)
 project(examples)
 
-add_subdirectory(aditof-demo)
-add_subdirectory(aditof-test)
+if ( NOT NXP )
+    add_subdirectory(aditof-demo)
+    add_subdirectory(aditof-test)
+endif()
+
 add_subdirectory(first-frame)
 add_subdirectory(data_collect)
 
@@ -20,12 +23,20 @@ endif()
 
 include(GNUInstallDirs)
 
-install(PROGRAMS
-    $<TARGET_FILE:aditof-demo>
-    $<TARGET_FILE:aditof-test>
-    $<TARGET_FILE:first-frame>
-    DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
+if ( NXP )
+    install(PROGRAMS
+        $<TARGET_FILE:first-frame>
+        $<TARGET_FILE:data_collect>
+        DESTINATION ${CMAKE_INSTALL_BINDIR} )
+
+else()
+    install(PROGRAMS
+        $<TARGET_FILE:aditof-demo>
+        $<TARGET_FILE:aditof-test>
+        $<TARGET_FILE:first-frame>
+        $<TARGET_FILE:data_collect>
+        DESTINATION ${CMAKE_INSTALL_BINDIR} )
+endif()
 
 if(WIN32)
     include(FindOpenSSL)
