@@ -80,7 +80,7 @@ static const char kUsagePublic[] =
       --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
       --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
       --wt <warmup>      Warmup Time (in seconds) before data capture [default: 0]
-      --ip <ip>          Ip address [default: ""]
+      --ip <ip>          Camera IP address
 
     Valid mode (--m) options are:
         3: Passive IR
@@ -108,7 +108,7 @@ static const char kUsageInternal[] =
       --ft <frame_type>  Type of frame to be captured [default: raw]
       --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
       --wt <warmup>      Warmup Time (in seconds) before data capture [default: 0]
-      --ip <ip>          Ip address [default: ""]    
+      --ip <ip>          Camera IP address
 )";
 
 
@@ -231,7 +231,7 @@ int main(int argc, char *argv[]) {
     uint32_t fps_counter = 0;
     uint32_t ext_frame_sync_en = 0;
     uint32_t warmup_time = 0;
-    std::string ip = "";
+    std::string ip;
 
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
