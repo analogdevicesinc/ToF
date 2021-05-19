@@ -131,8 +131,10 @@ SystemImpl::getCameraListAtIp(std::vector<std::shared_ptr<Camera>> &cameraList,
                       "with the option WITH_NETWORK=on";
         return Status::GENERIC_ERROR;
     }
-    sensorEnumerator->searchSensors();
-    cameraList = buildCameras(std::move(sensorEnumerator));
+    Status status = sensorEnumerator->searchSensors();
+    if (status == Status::OK) {
+        cameraList = buildCameras(std::move(sensorEnumerator));
+    }
 
-    return Status::OK;
+    return status;
 }
