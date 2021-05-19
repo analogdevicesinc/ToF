@@ -1382,11 +1382,14 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect)
 			/*displayIR = true;*/
 		}
 		displayIR = true;
+		displyaDepth = checkCameraSetToReceiveContent("depth");
+
 		synchronizeDepthIRVideo();
 
 		displayActiveBrightnessWindow(overlayFlags);
 		
-		displayDepthWindow(overlayFlags);
+		if (displyaDepth)
+			displayDepthWindow(overlayFlags);
 		
 		break;
 	case 1://Point Cloud Window
@@ -2201,4 +2204,16 @@ void ADIMainWindow::MatrixMultiply(mat4x4 out, mat4x4 a, mat4x4 b)
 	mat4x4_dup(atmp, a);
 	mat4x4_dup(btmp, b);
 	mat4x4_mul(out, a, b);
+}
+
+bool ADIMainWindow::checkCameraSetToReceiveContent(
+    const std::string &contentType) {
+	aditof::CameraDetails camDetails;
+	view->m_ctrl->m_cameras[0]->getDetails(camDetails);
+	auto dataDetails = camDetails.frameType.dataDetails;
+	auto it = std::find_if(dataDetails.begin(), dataDetails.end(),
+            [&contentType](const aditof::FrameDataDetails details) {
+								return details.type == contentType;
+							});
+	return (it != dataDetails.end());
 }
