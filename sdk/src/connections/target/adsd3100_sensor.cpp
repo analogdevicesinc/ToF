@@ -22,6 +22,13 @@
 #include <unordered_map>
 #include "cameras/itof-camera/mode_info.h"
 
+ struct buffer_t {
+    void   *start;
+    size_t  length;
+    size_t  offset;
+ };
+
+
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
 #define V4L2_CID_AD_DEV_SET_CHIP_CONFIG 0xA00B00
@@ -35,7 +42,7 @@
 
 
 #define ADI_DEBUG 1
-
+#define REQ_COUNT 10
 struct buffer {
     void *start;
     size_t length;
@@ -411,7 +418,7 @@ aditof::Status Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &
 
         /* Allocate the video buffers in the driver */
         CLEAR(req);
-        req.count = 4;
+        req.count = REQ_COUNT;
         req.type = dev->videoBuffersType;
         req.memory = V4L2_MEMORY_MMAP;
 
@@ -657,44 +664,35 @@ aditof::Status Adsd3100Sensor::program(const uint8_t *firmware, size_t size) {
 
 aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
      using namespace aditof;
-    struct v4l2_buffer buf[m_implData->numVideoDevs];
+    struct v4l2_buffer buf[REQ_COUNT];
     struct VideoDev *dev;
     Status status;
+    unsigned int buf_data_len;
+    uint8_t *pdata[m_implData->numVideoDevs];
+    
+    dev = &m_implData->videoDevs[0];
 
-    for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
-        dev = &m_implData->videoDevs[i];
+    for (int idx = 0; idx < REQ_COUNT; idx++) {
         status = waitForBufferPrivate(dev);
         if (status != Status::OK) {
             return status;
         }
 
-        status = dequeueInternalBufferPrivate(buf[i], dev);
+        status = dequeueInternalBufferPrivate(buf[idx], dev);
         if (status != Status::OK) {
             return status;
         }
-    }
 
-    unsigned int width;
-    unsigned int height;
-    unsigned int buf_data_len;
-    uint8_t *pdata[m_implData->numVideoDevs];
-
-    width = m_implData->frameType.content.begin()->width;
-    height = m_implData->frameType.content.begin()->height;
-
-    for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
-        dev = &m_implData->videoDevs[i];
-        status = getInternalBufferPrivate(&pdata[i], buf_data_len, buf[i], dev);
+        dev = &m_implData->videoDevs[0];
+        status = getInternalBufferPrivate(&pdata[idx], buf_data_len, buf[idx], dev);
         if (status != Status::OK) {
             return status;
         }
-    }
 
-    memcpy(buffer, (uint16_t *)pdata[0], buf[0].bytesused);
+        memcpy(buffer + buf_data_len * idx, (uint16_t *)pdata[idx], buf[idx].bytesused);
 
-    for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
-        dev = &m_implData->videoDevs[i];
-        status = enqueueInternalBufferPrivate(buf[i], dev);
+        dev = &m_implData->videoDevs[0];
+        status = enqueueInternalBufferPrivate(buf[idx], dev);
         if (status != Status::OK) {
             return status;
         }
