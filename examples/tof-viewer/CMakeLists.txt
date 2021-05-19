@@ -78,10 +78,11 @@ target_include_directories(ADIToFGUI PUBLIC
 #endif()
 
 # Copying necessary dlls from SDK
-#add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-#	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/external/aditof_cmos_sdk/src/sdk/lib/${OS_SPECIFIC_DIR} $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
-#	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/external/aditof_cmos_sdk/src/sdk/config $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
-#	)
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${LIBTOFI_LIBDIR_PATH} $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../../sdk/src/cameras/itof-camera/config $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../../sdk/src/cameras/itof-camera/config $<TARGET_FILE_DIR:${PROJECT_NAME}>/../
+	)
 
 if(WIN32)
 	# copy sdk lib to exe directory
