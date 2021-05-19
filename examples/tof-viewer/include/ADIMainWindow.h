@@ -447,6 +447,12 @@ namespace adiMainWindow
 		*/
 		void displayPointCloudWindow(ImGuiWindowFlags overlayFlags);
 
+		/**
+		* @brief Checks if the frame type set in camera has a certain
+		*        content. (e.g. 'depth', 'ir', 'xyz', etc.)
+		*/
+		bool checkCameraSetToReceiveContent(const std::string &contentType);
+
 		std::vector<std::pair<int, std::string>> m_configFiles;
 		int configSelection = 0;
 
