@@ -49,6 +49,7 @@ using namespace google::protobuf::io;
 static int interrupted = 0;
 
 /* Available sensors */
+std::vector<std::shared_ptr<aditof::DepthSensorInterface>> depthSensors;
 static std::vector<std::shared_ptr<aditof::StorageInterface>> storages;
 static std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
     temperatureSensors;
@@ -281,8 +282,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     switch (s_map_api_Values[buff_recv.func_name()]) {
 
     case FIND_SENSORS: {
-        std::vector<std::shared_ptr<aditof::DepthSensorInterface>> depthSensors;
-
         if (!sensors_are_created) {
             auto sensorsEnumerator =
                 aditof::SensorEnumeratorFactory::buildTargetSensorEnumerator();
