@@ -687,20 +687,20 @@ aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
             return status;
         }
 
-        dev = &m_implData->videoDevs[0];
         status = getInternalBufferPrivate(&pdata[idx], buf_data_len, buf[idx], dev);
         if (status != Status::OK) {
             return status;
         }
 
-        memcpy(buffer + buf_data_len * i, (uint16_t *)pdata[idx], buf[i].bytesused);
+	    memcpy(buffer + (buf_data_len / sizeof(uint16_t)) * idx, pdata, buf[idx].bytesused);
 
-        dev = &m_implData->videoDevs[0];
         status = enqueueInternalBufferPrivate(buf[idx], dev);
         if (status != Status::OK) {
             return status;
         }
     }
+	
+
 
     return status;
 }
