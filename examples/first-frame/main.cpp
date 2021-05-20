@@ -39,13 +39,38 @@
 
 using namespace aditof;
 
+Status save_frame(aditof::Frame& frame, std::string frameType){
+	
+    uint16_t *data1;
+    FrameDataDetails fDetails;
+    Status status = Status::OK;
+    
+    status = frame.getData(frameType, &data1);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not get frame data " + frameType + "!";
+        return status;
+    }
+
+    if (!data1) {
+        LOG(ERROR) << "no memory allocated in frame";
+        return status;
+    }
+
+    std::ofstream g(std::string(PROJECT_DIR) + "/build/out_" + frameType + "_" + fDetails.type + ".bin", std::ios::binary);
+    frame.getDataDetails(frameType, fDetails);
+    g.write((char*)data1, fDetails.width * fDetails.height * sizeof(uint16_t));
+    g.close();
+
+    return status;
+}
+
 int main(int argc, char *argv[]) {
 
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
 
-    Status status = Status::OK;
 
+    Status status = Status::OK;
     System system;
 
     std::vector<std::shared_ptr<Camera>> cameras;
@@ -70,7 +95,7 @@ int main(int argc, char *argv[]) {
     
     
     }
-    status = camera->setFrameType("pcm");
+    status = camera->setFrameType("mp_pcm");
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 0;
@@ -86,26 +111,8 @@ int main(int argc, char *argv[]) {
         LOG(INFO) << "succesfully requested frame!";
     }
 
-    uint16_t *data1;
-    status = frame.getData("ir", &data1);
+    save_frame(frame, "ir");
+    save_frame(frame, "depth");
 
-
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not get frame data!";
-        return 0;
-    }
-
-    if (!data1) {
-        LOG(ERROR) << "no memory allocated in frame";
-        return 0;
-    }
-
-    std::ofstream g(std::string(PROJECT_DIR) + "/build/out.bin", std::ios::binary);
-    FrameDataDetails fDetails;
-    frame.getDataDetails("ir", fDetails);
-
-    g.write((char*)data1, fDetails.width * fDetails.height * sizeof(uint16_t));
-
-    g.close();
     return 0;
 }
