@@ -62,15 +62,18 @@ NetworkDepthSensor::NetworkDepthSensor(const std::string &ip)
 NetworkDepthSensor::~NetworkDepthSensor() {
     std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
 
-    if (!m_implData->handle.net->isServer_Connected()) {
-        LOG(WARNING) << "Not connected to server";
-    }
+    // If channel communication has been opened, let the server know we're hanging up
+    if (m_implData->opened) {
+        if (!m_implData->handle.net->isServer_Connected()) {
+            LOG(WARNING) << "Not connected to server";
+        }
 
-    m_implData->handle.net->send_buff.set_func_name("HangUp");
-    m_implData->handle.net->send_buff.set_expect_reply(false);
+        m_implData->handle.net->send_buff.set_func_name("HangUp");
+        m_implData->handle.net->send_buff.set_expect_reply(false);
 
-    if (m_implData->handle.net->SendCommand() != 0) {
-        LOG(WARNING) << "Send Command Failed";
+        if (m_implData->handle.net->SendCommand() != 0) {
+            LOG(WARNING) << "Send Command Failed";
+        }
     }
 
     delete m_implData->handle.net;
