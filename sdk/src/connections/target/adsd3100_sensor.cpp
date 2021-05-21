@@ -22,6 +22,8 @@
 #include <unordered_map>
 #include "cameras/itof-camera/mode_info.h"
 
+#define MAX_SUBFRAMES_COUNT 10
+#define EXTRA_BUFFERS_COUNT 5
  struct buffer_t {
     void   *start;
     size_t  length;
@@ -264,8 +266,6 @@ aditof::Status Adsd3100Sensor::start() {
         }
         LOG(INFO) << "Starting device " << i;
 
-	LOG(INFO) << dev->nVideoBuffers;
-
         for (unsigned int i = 0; i < dev->nVideoBuffers; i++) {
             CLEAR(buf);
             buf.type = dev->videoBuffersType;
@@ -387,6 +387,8 @@ aditof::Status Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &
         return status;
     }
 
+    m_capturesPerFrame = ModeInfo::getInstance()->getModeInfo(type.type).subframes;
+
     for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
         dev = &m_implData->videoDevs[i];
         if (type.type != m_implData->frameType.type) {
@@ -409,8 +411,8 @@ aditof::Status Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &
         CLEAR(fmt);
         fmt.type = dev->videoBuffersType;
         fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
-        fmt.fmt.pix.width = 4096;//type.width; 
-        fmt.fmt.pix.height = 256;//type.height;
+        fmt.fmt.pix.width = type.width; 
+        fmt.fmt.pix.height = type.height;
 
         if (xioctl(dev->fd, VIDIOC_S_FMT, &fmt) == -1) {
             LOG(WARNING) << "Setting Pixel Format error, errno: " << errno
@@ -420,7 +422,7 @@ aditof::Status Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &
 
         /* Allocate the video buffers in the driver */
         CLEAR(req);
-        req.count = REQ_COUNT + 5;
+        req.count = m_capturesPerFrame + EXTRA_BUFFERS_COUNT;
         req.type = dev->videoBuffersType;
         req.memory = V4L2_MEMORY_MMAP;
 
@@ -666,16 +668,15 @@ aditof::Status Adsd3100Sensor::program(const uint8_t *firmware, size_t size) {
 
 aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
      using namespace aditof;
-    struct v4l2_buffer buf[REQ_COUNT];
+    struct v4l2_buffer buf[MAX_SUBFRAMES_COUNT];
     struct VideoDev *dev;
     Status status;
     unsigned int buf_data_len;
+    uint8_t *pdata[m_implData->numVideoDevs];
     
     dev = &m_implData->videoDevs[0];
 
-    for (int idx = 0; idx < REQ_COUNT; idx++) {
-    	uint8_t *pdata;
-
+    for (int idx = 0; idx < m_capturesPerFrame; idx++) {
         status = waitForBufferPrivate(dev);
         if (status != Status::OK) {
             return status;
@@ -686,21 +687,13 @@ aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
             return status;
         }
 
-        status = getInternalBufferPrivate(&pdata, buf_data_len, buf[idx], dev);
+        dev = &m_implData->videoDevs[0];
+        status = getInternalBufferPrivate(&pdata[idx], buf_data_len, buf[idx], dev);
         if (status != Status::OK) {
             return status;
         }
 
-	LOG(INFO) << buf[idx].bytesused << " " <<buf_data_len * sizeof(uint16_t);
-	LOG(INFO) << idx;
-
-        std::ofstream g(std::string(PROJECT_DIR) + "/build/out" + std::to_string(idx) + ".bin", std::ios::binary);
-
-	g.write((char*)pdata, buf[idx].bytesused);
-	
-	g.close();
-
-	memcpy(buffer + buf_data_len * idx, (uint16_t *)pdata, buf[idx].bytesused);
+        memcpy(buffer + buf_data_len * i, (uint16_t *)pdata[idx], buf[i].bytesused);
 
         dev = &m_implData->videoDevs[0];
         status = enqueueInternalBufferPrivate(buf[idx], dev);
@@ -709,7 +702,6 @@ aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
         }
     }
 
-LOG(INFO) << "";
     return status;
 }
 
@@ -868,8 +860,8 @@ aditof::Status Adsd3100Sensor::getInternalBufferPrivate(
         dev = &m_implData->videoDevs[0];
 
     *buffer = static_cast<uint8_t *>(dev->videoBuffers[buf.index].start);
-    buf_data_len = 4096 * 256 * 2; 	//m_implData->frameType.content.front().width *
-                   			//m_implData->frameType.content.front().height * 2;
+    buf_data_len = m_implData->frameType.content.front().width *
+                   m_implData->frameType.content.front().height * 2;
 
     return aditof::Status::OK;
 }
