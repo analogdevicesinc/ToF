@@ -105,7 +105,7 @@ namespace adiviewer
 		double m_blendValue = 0.5;		
 		int maxRange = 5000;
 		int minRange = 0;
-		int maxABPixelValue = 8191;
+		int maxABPixelValue = 511;
 		/**************/
 		//OpenCV  here
 		/**
