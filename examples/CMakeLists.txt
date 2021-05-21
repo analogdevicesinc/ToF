@@ -8,7 +8,9 @@ endif()
 
 add_subdirectory(first-frame)
 add_subdirectory(data_collect)
-add_subdirectory(tof-viewer)
+if (WIN32)
+    add_subdirectory(tof-viewer)
+endif()
 
 if (WITH_NETWORK)
     add_subdirectory(first-frame-network)
