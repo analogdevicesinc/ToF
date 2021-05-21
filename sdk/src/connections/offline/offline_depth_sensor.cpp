@@ -2,7 +2,6 @@
 #include <fstream>
 #include <iostream>
 #include <cstring>
-#include "../target/adsd3100_sensor.h"
 
 OfflineDepthSensor::OfflineDepthSensor(std::string path) : m_path(path) {}
 
