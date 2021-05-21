@@ -101,7 +101,7 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
         std::string m_captureDev;
         std::unique_ptr<ImplData> m_implData;
         uint8_t m_capturesPerFrame;
-        
+
          const std::vector<aditof::DepthSensorFrameType> availableFrameTypes =
         {
             //frame type
@@ -153,7 +153,7 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
                     {"embedded_header", 1, 128},
 
                 },
-                1024, (10240 + 1024 * 3), //TODO header size not counted here
+                4096, 256, //TODO header size not counted here
             },
             {"chip_char", 
                 {
