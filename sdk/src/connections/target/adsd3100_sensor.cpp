@@ -666,6 +666,12 @@ aditof::Status Adsd3100Sensor::program(const uint8_t *firmware, size_t size) {
     return status;
 }
 
+void saveFrame(std::string id, char* data, size_t size){
+    std::ofstream g(std::string(PROJECT_DIR) + "/build/out" + id + ".bin", std::ios::binary);
+    g.write(data, size);
+    g.close();
+}
+
 aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
      using namespace aditof;
     struct v4l2_buffer buf[MAX_SUBFRAMES_COUNT];
@@ -692,6 +698,8 @@ aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
             return status;
         }
 
+        saveFrame(std::to_string(idx), (char*)pdata, buf[idx].bytesused);
+
 	    memcpy(buffer + (buf_data_len / sizeof(uint16_t)) * idx, pdata, buf[idx].bytesused);
 
         status = enqueueInternalBufferPrivate(buf[idx], dev);
@@ -700,7 +708,7 @@ aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
         }
     }
 	
-
+    saveFrame("_full_raw", (char*)buffer, buf_data_len * m_capturesPerFrame);
 
     return status;
 }
