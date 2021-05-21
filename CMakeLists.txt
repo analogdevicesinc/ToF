@@ -41,17 +41,23 @@ if (WITH_NETWORK)
         add_definitions(-DHAS_NETWORK)
 endif()
 
+set(RESOURCES_DIR "${CMAKE_BINARY_DIR}/resources")
+make_directory(${RESOURCES_DIR})
+
 if (WITH_OFFLINE)
         add_definitions(-DHAS_OFFLINE)
+
+        set(RESOURCES_OFFLINE_DIR "${RESOURCES_DIR}/offline")
+        make_directory(${RESOURCES_OFFLINE_DIR})
         
         set(MODE3_FILE "mode3_raw.bin")
         set(MODE5_FILE "mode5_raw.bin")
         set(MODE3_URL "swdownloads.analog.com/cse/aditof/resources/itof/frames/${MODE3_FILE}")
         set(MODE5_URL "swdownloads.analog.com/cse/aditof/resources/itof/frames/${MODE5_FILE}")
-        set(MODE3_PATH "${CMAKE_CURRENT_BINARY_DIR}/${MODE3_FILE}")
-        set(MODE5_PATH "${CMAKE_CURRENT_BINARY_DIR}/${MODE5_FILE}")
+        set(MODE3_PATH "${RESOURCES_OFFLINE_DIR}/${MODE3_FILE}")
+        set(MODE5_PATH "${RESOURCES_OFFLINE_DIR}/${MODE5_FILE}")
 
-        message("Downloading raw frames into ${CMAKE_CURRENT_BINARY_DIR}")
+        message("Downloading raw frames into ${RESOURCES_OFFLINE_DIR}")
         if (NOT EXISTS ${MODE3_PATH})
                 file(DOWNLOAD "${MODE3_URL}" "${MODE3_PATH}")
         endif()
@@ -73,6 +79,7 @@ if (USE_ITOF)
 endif()
 
 add_definitions(-DPROJECT_DIR="${CMAKE_SOURCE_DIR}")
+add_definitions(-DRESOURCES="${RESOURCES_DIR}")
 
 add_subdirectory(sdk)
 add_subdirectory(apps)
