@@ -411,8 +411,8 @@ aditof::Status Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &
         CLEAR(fmt);
         fmt.type = dev->videoBuffersType;
         fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
-        fmt.fmt.pix.width = 4096;//type.width; 
-        fmt.fmt.pix.height = 256;//type.height;
+        fmt.fmt.pix.width = type.width; 
+        fmt.fmt.pix.height = type.height;
 
         if (xioctl(dev->fd, VIDIOC_S_FMT, &fmt) == -1) {
             LOG(WARNING) << "Setting Pixel Format error, errno: " << errno
