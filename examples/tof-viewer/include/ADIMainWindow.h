@@ -453,6 +453,8 @@ namespace adiMainWindow
 		*/
 		bool checkCameraSetToReceiveContent(const std::string &contentType);
 
+		bool m_skipNetworkCameras;
+		std::string m_cameraIp;
 		std::vector<std::pair<int, std::string>> m_configFiles;
 		int configSelection = 0;
 

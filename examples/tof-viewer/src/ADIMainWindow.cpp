@@ -58,7 +58,8 @@ GLFWimage icons[1];
 GLFWimage logos[1];
 GLuint logo_texture;
 ADIMainWindow::ADIMainWindow()
-{
+: m_skipNetworkCameras(false)
+	{
 #if Debug
 	SYSTEM_INFO sysInfo;
 	FILETIME ftime, fsys, fuser;
@@ -79,6 +80,42 @@ ADIMainWindow::ADIMainWindow()
 	stream = freopen("log.txt", "w", stderr); // Added missing pointer
 	setvbuf(stream, 0, _IONBF, 0); // No Buffering
 	input = fopen("log.txt", "r");
+
+	// Parse config file for this application
+	//Parse config.json
+	std::ifstream ifs("tof-viewer_config.json");
+	std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
+	cJSON* config_json = cJSON_Parse(content.c_str());
+
+	if (config_json != NULL)
+	{
+		// Get option to look or not for network cameras
+		const cJSON* json_skip_network_cameras = cJSON_GetObjectItemCaseSensitive(config_json, "skip_network_cameras");
+		if (cJSON_IsString(json_skip_network_cameras) && (json_skip_network_cameras->valuestring != NULL))
+		{
+			std::string value = json_skip_network_cameras->valuestring;
+			if (value == "on") {
+				m_skipNetworkCameras = true;
+			} else if (value == "off") {
+				m_skipNetworkCameras = false;
+			} else {
+				LOG(WARNING) << "Invalid value for 'skip_network_cameras'. Accepted values: on, off";
+			}
+		}
+
+		// Get the IP address of the network camera to which the application should try to connect to
+		const cJSON* json_camera_ip = cJSON_GetObjectItemCaseSensitive(config_json, "camera_ip");
+		if (cJSON_IsString(json_camera_ip) && (json_camera_ip->valuestring != NULL))
+		{
+			m_cameraIp = json_camera_ip->valuestring;
+		}
+
+		cJSON_Delete(config_json);
+	}
+	if (!ifs.fail())
+	{
+		ifs.close();
+	}
 }
 
 ADIMainWindow::~ADIMainWindow()
@@ -448,6 +485,19 @@ void ADIMainWindow::RefreshDevices()
 		}
 	
 	}
+
+	if (!m_skipNetworkCameras) {
+		// Add network camera
+		aditof::System system;
+		std::vector<std::shared_ptr<aditof::Camera>> cameras;
+		system.getCameraListAtIp(cameras, m_cameraIp);
+
+		if (cameras.size() > 0) {
+			int index = m_connectedDevices.size();
+			m_connectedDevices.emplace_back(index, "ToF Camera" + std::to_string(index));
+		}
+	}
+
 	if (!m_connectedDevices.empty())
 	{
 		//Search for configuration files with .json extension		
@@ -771,7 +821,7 @@ void ADIMainWindow::ShowPlaybackTree()
 			{
 				if (view == NULL)
 				{
-					auto controller = std::make_shared<adicontroller::ADIController>();
+					auto controller = std::make_shared<adicontroller::ADIController>(m_skipNetworkCameras ? "" : m_cameraIp);
 					view = std::make_shared<adiviewer::ADIView>(controller,
 						"Record Viewer");
 				}				
@@ -897,7 +947,7 @@ void ADIMainWindow::ShowPlaybackTree()
 				{
 					if (view == NULL)
 					{
-						auto controller = std::make_shared<adicontroller::ADIController>();
+						auto controller = std::make_shared<adicontroller::ADIController>(m_skipNetworkCameras ? "" : m_cameraIp);
 						view = std::make_shared<adiviewer::ADIView>(controller,
 							"Record Viewer");
 					}
@@ -1164,7 +1214,7 @@ void ADIMainWindow::InitCamera()
 
 	std::string version = aditof::getApiVersion();
 	my_log.AddLog("Preparing camera. Please wait...\n");
-	auto controller = std::make_shared<adicontroller::ADIController>();
+	auto controller = std::make_shared<adicontroller::ADIController>(m_skipNetworkCameras ? "" : m_cameraIp);
 	view = std::make_shared<adiviewer::ADIView>(controller,
 		"ToFViewer " + version);
 
@@ -1315,7 +1365,7 @@ void ADIMainWindow::InitCCDCamera()
 	std::string version = aditof::getApiVersion();
 	my_log.AddLog("Preparing camera. Please wait...\n");
 	
-	auto controller = std::make_shared<adicontroller::ADIController>();	
+	auto controller = std::make_shared<adicontroller::ADIController>(m_skipNetworkCameras ? "" : m_cameraIp);
 	
 	my_log.AddLog("Camera ready.\n");
 	//my_log.AddLog(sbuf->pubsetbuf);

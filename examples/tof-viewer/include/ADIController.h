@@ -29,7 +29,7 @@ namespace adicontroller
 		/**
 		* @brief	Constructor. Creates instance of main frame pointer and the first camera in the bus
 		*/
-		ADIController();
+		ADIController(const std::string &cameraIP = "");
 
 		/**
 		* @brief	Controller destructor

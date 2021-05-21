@@ -11,9 +11,13 @@
 
 using namespace adicontroller;
 
-ADIController::ADIController() : m_cameraInUse(-1), m_frameRequested(false), m_recorder(new ADIToFRecorder())
+ADIController::ADIController(const std::string &cameraIp) : m_cameraInUse(-1), m_frameRequested(false), m_recorder(new ADIToFRecorder())
 {
-    m_system.getCameraList(m_cameras);
+	if (cameraIp.length() > 0) {
+        m_system.getCameraListAtIp(m_cameras, cameraIp);
+	} else {
+        m_system.getCameraList(m_cameras);
+	}
     if (m_cameras.size()) 
 	{
         // Use the first camera that is found
