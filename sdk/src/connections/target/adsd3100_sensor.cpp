@@ -23,7 +23,7 @@
 #include "cameras/itof-camera/mode_info.h"
 
 #define MAX_SUBFRAMES_COUNT 10
-#define EXTRA_BUFFERS_COUNT 5
+#define EXTRA_BUFFERS_COUNT 0
  struct buffer_t {
     void   *start;
     size_t  length;
@@ -411,8 +411,8 @@ aditof::Status Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &
         CLEAR(fmt);
         fmt.type = dev->videoBuffersType;
         fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
-        fmt.fmt.pix.width = type.width; 
-        fmt.fmt.pix.height = type.height;
+        fmt.fmt.pix.width = 4096;//type.width; 
+        fmt.fmt.pix.height = 256;//type.height;
 
         if (xioctl(dev->fd, VIDIOC_S_FMT, &fmt) == -1) {
             LOG(WARNING) << "Setting Pixel Format error, errno: " << errno
@@ -678,10 +678,13 @@ aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
     struct VideoDev *dev;
     Status status;
     unsigned int buf_data_len;
-    uint8_t *pdata[m_implData->numVideoDevs];
+    uint8_t *pdata;
     
     dev = &m_implData->videoDevs[0];
 
+
+
+    LOG(INFO) << std::to_string(m_capturesPerFrame);
     for (int idx = 0; idx < m_capturesPerFrame; idx++) {
         status = waitForBufferPrivate(dev);
         if (status != Status::OK) {
@@ -693,21 +696,19 @@ aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
             return status;
         }
 
-        status = getInternalBufferPrivate(&pdata[idx], buf_data_len, buf[idx], dev);
+        status = getInternalBufferPrivate(&pdata, buf_data_len, buf[idx], dev);
         if (status != Status::OK) {
             return status;
         }
+	saveFrame(std::to_string(idx), (char*)pdata, buf[idx].bytesused);
 
-        saveFrame(std::to_string(idx), (char*)pdata, buf[idx].bytesused);
-
-	    memcpy(buffer + (buf_data_len / sizeof(uint16_t)) * idx, pdata, buf[idx].bytesused);
+	memcpy(buffer + (buf_data_len / sizeof(uint16_t)) * idx, pdata, buf[idx].bytesused);
 
         status = enqueueInternalBufferPrivate(buf[idx], dev);
         if (status != Status::OK) {
             return status;
         }
     }
-	
     saveFrame("_full_raw", (char*)buffer, buf_data_len * m_capturesPerFrame);
 
     return status;
@@ -868,8 +869,7 @@ aditof::Status Adsd3100Sensor::getInternalBufferPrivate(
         dev = &m_implData->videoDevs[0];
 
     *buffer = static_cast<uint8_t *>(dev->videoBuffers[buf.index].start);
-    buf_data_len = m_implData->frameType.content.front().width *
-                   m_implData->frameType.content.front().height * 2;
+    buf_data_len = buf.bytesused;
 
     return aditof::Status::OK;
 }
