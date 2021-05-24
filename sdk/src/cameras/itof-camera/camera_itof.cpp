@@ -327,29 +327,6 @@ aditof::Status setAttributesByMode(aditof::Frame& frame, const ModeInfo::modeInf
     return status;
 }
 
-aditof::Status CameraItof::initializeFrame(aditof::Frame *frame) {
-    ModeInfo::modeInfo modeInfo;
-    getCurrentModeInfo(modeInfo);
-    frame->setAttribute("total_captures", std::to_string(modeInfo.subframes));
-    frame->setAttribute("embed_height", std::to_string(modeInfo.embed_height));
-    frame->setAttribute("embed_width", std::to_string(modeInfo.embed_width));
-    frame->setAttribute("embed_hdr_length", std::to_string(EMBED_HDR_LENGTH));
-    aditof::FrameDetails details;
-    aditof::FrameDataDetails frameDataDetail;
-    frameDataDetail.width = modeInfo.width;
-    frameDataDetail.height = modeInfo.height;//TODO-hardcoded
-    frameDataDetail.type = "raw";
-    details.dataDetails.emplace_back(frameDataDetail);
-    frameDataDetail.type = "ir";
-    details.dataDetails.emplace_back(frameDataDetail);
-    frameDataDetail.type = "xyz";
-    details.dataDetails.emplace_back(frameDataDetail);
-    frameDataDetail.type = "depth";
-    details.dataDetails.emplace_back(frameDataDetail);
-    frame->setDetails(details);
-    return aditof::Status::OK;
-}
-
 aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
                                         aditof::FrameUpdateCallback /*cb*/) {
     using namespace aditof;
@@ -362,9 +339,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         return Status::INVALID_ARGUMENT;
     }
 
-    DLOG(INFO) << "current mode details: " << m_details.mode;
     status = getCurrentModeInfo(aModeInfo);
-    DLOG(INFO) << "current mode Info: " << aModeInfo.mode + 100;
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to get mode info";
         return status;
@@ -378,7 +353,6 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     if (m_details.frameType != frameDetails) {
         frame->setDetails(m_details.frameType);
     }
-  //  initializeFrame(frame);
 
     frame->getAttribute("total_captures", totalCapturesStr);
     totalCaptures = std::atoi(totalCapturesStr.c_str());
@@ -395,8 +369,6 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     frame->getData("frameData", &embedFrame);
 
     status = m_depthSensor->getFrame(embedFrame);
-
-DLOG(INFO) << "got frame from sensor";
 
 if (status != Status::OK) {
         LOG(WARNING) << "Failed to get embedded frame from device";
@@ -420,7 +392,6 @@ if (status != Status::OK) {
     embed_width = aModeInfo.embed_width;
 
     status = processFrame((uint8_t *)embedFrame, frameDataLocation, (uint8_t *)header, embed_height, embed_width, frame);
- DLOG(INFO) << "processed frame";
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to process the frame";
         return status;
@@ -435,14 +406,12 @@ if (status != Status::OK) {
         frameDataLocation[i] = Convert11bitFloat2LinearVal(frameDataLocation[i]);
     }
 
-DLOG(INFO) << "converted to linead";
     if (totalCaptures > 1) {
 
         if (NULL == m_tofi_compute_context) {
             LOG(ERROR) << "Depth compute libray not initialized";
             return Status::GENERIC_ERROR;
         }
-	DLOG(INFO) << "runnning tofi compute";
         uint32_t ret = TofiCompute(frameDataLocation, m_tofi_compute_context, NULL);
 
         if (ret != ADI_TOFI_SUCCESS) {
