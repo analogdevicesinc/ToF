@@ -691,17 +691,22 @@ aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
         if (status != Status::OK) {
             return status;
         }
-	saveFrame(std::to_string(idx), (char*)pdata, buf[idx].bytesused);
+        #ifdef SAVE_RAW_FRAMES
+	    saveFrame(std::to_string(idx), (char*)pdata, buf[idx].bytesused);
+        #endif
 
-	memcpy(buffer + (buf_data_len / sizeof(uint16_t)) * idx, pdata, buf[idx].bytesused);
+	    memcpy(buffer + (buf_data_len / sizeof(uint16_t)) * idx, pdata, buf[idx].bytesused);
 
         status = enqueueInternalBufferPrivate(buf[idx], dev);
         if (status != Status::OK) {
             return status;
         }
     }
+    
+    #ifdef SAVE_RAW_FRAMES
     saveFrame("_full_raw", (char*)buffer, buf_data_len * m_capturesPerFrame);
-
+    #endif
+    
     return status;
 }
 
