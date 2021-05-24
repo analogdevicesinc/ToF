@@ -177,8 +177,7 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
     //get attributes 
     getIntAttribute<uint16_t>("embed_hdr_length", embed_hdr_length);
     getIntAttribute<uint8_t>("total_captures", total_captures);
-	DLOG(INFO) << "embed_hdr_length " << embed_hdr_length;
-	DLOG(INFO) << "total_captures " << total_captures;
+
     auto getSubframeSize = [embed_hdr_length, total_captures](FrameDataDetails frameDetail){
         if (frameDetail.type == "header"){
             return (unsigned long int)(embed_hdr_length / 2) * total_captures;
@@ -195,7 +194,7 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
     for (FrameDataDetails frameDetail : details.dataDetails){
         totalSize += getSubframeSize(frameDetail);
     }
-    DLOG(INFO) << "alloc " << totalSize << " for " << details.type << " frame";
+
     //store pointers to the contents described by FrameDetails
     m_implData->m_allData.reset(new uint16_t[totalSize]);
    

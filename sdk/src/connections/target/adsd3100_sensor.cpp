@@ -24,12 +24,6 @@
 
 #define MAX_SUBFRAMES_COUNT 10
 #define EXTRA_BUFFERS_COUNT 0
- struct buffer_t {
-    void   *start;
-    size_t  length;
-    size_t  offset;
- };
-
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
@@ -682,9 +676,6 @@ aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
     
     dev = &m_implData->videoDevs[0];
 
-
-
-    LOG(INFO) << std::to_string(m_capturesPerFrame);
     for (int idx = 0; idx < m_capturesPerFrame; idx++) {
         status = waitForBufferPrivate(dev);
         if (status != Status::OK) {
