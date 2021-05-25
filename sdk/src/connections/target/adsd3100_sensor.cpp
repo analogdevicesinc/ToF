@@ -22,8 +22,8 @@
 #include <unordered_map>
 #include "cameras/itof-camera/mode_info.h"
 
-#define MAX_SUBFRAMES_COUNT 10
-#define EXTRA_BUFFERS_COUNT 0
+#define MAX_SUBFRAMES_COUNT 10 // maximum number of subframes that are used to create a full frame (maximum total_captures of all modes)
+#define EXTRA_BUFFERS_COUNT 0  // how many extra buffers are sent to the driver in addition to the total_captures of a mode
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
