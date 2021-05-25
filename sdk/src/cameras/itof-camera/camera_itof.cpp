@@ -370,7 +370,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
 
     status = m_depthSensor->getFrame(embedFrame);
 
-if (status != Status::OK) {
+    if (status != Status::OK) {
         LOG(WARNING) << "Failed to get embedded frame from device";
         return status;
     }
