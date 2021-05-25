@@ -397,12 +397,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         return status;
     }
 
-    FrameDataDetails frameDataDetail = *std::find_if(m_details.frameType.dataDetails.begin(), m_details.frameType.dataDetails.end(),
-                                                     [](const aditof::FrameDataDetails frame_detail) {
-                                                         return frame_detail.type == "depth";
-                                                     });
-   
-    for (unsigned int i = 0; i < (frameDataDetail.height * frameDataDetail.width * totalCaptures); ++i) {
+    for (unsigned int i = 0; i < (m_details.frameType.height * m_details.frameType.width * totalCaptures); ++i) {
         frameDataLocation[i] = Convert11bitFloat2LinearVal(frameDataLocation[i]);
     }
 
@@ -422,17 +417,17 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         uint16_t *depthFrameLocation;
         frame->getData("depth", &depthFrameLocation);
         memcpy(depthFrameLocation, (uint8_t *)m_tofi_compute_context->p_depth_frame,
-            (frameDataDetail.height * frameDataDetail.width * sizeof(uint16_t)));
+            (m_details.frameType.height * m_details.frameType.width * sizeof(uint16_t)));
   
         uint16_t *irFrameLocation;
         frame->getData("ir", &irFrameLocation);
-        memcpy(irFrameLocation, m_tofi_compute_context->p_ab_frame, (frameDataDetail.height * frameDataDetail.width * sizeof(uint16_t)));
+        memcpy(irFrameLocation, m_tofi_compute_context->p_ab_frame, (m_details.frameType.height * m_details.frameType.width * sizeof(uint16_t)));
 
         applyCalibrationToFrame(frameDataLocation, std::atoi(m_details.mode.c_str()));
 
         uint16_t *xyzFrameLocation;
         frame->getData("xyz", &xyzFrameLocation);
-        memcpy(xyzFrameLocation, m_tofi_compute_context->p_xyz_frame, (frameDataDetail.height * frameDataDetail.width * sizeof(aditof::Point3I)));
+        memcpy(xyzFrameLocation, m_tofi_compute_context->p_xyz_frame, (m_details.frameType.height * m_details.frameType.width * sizeof(aditof::Point3I)));
     }
 
     return Status::OK;
