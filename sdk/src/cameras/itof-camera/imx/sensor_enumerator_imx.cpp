@@ -58,7 +58,7 @@ aditof::Status findDevicePathsAtVideo(const std::string &video,
 
     /* Run media-ctl to get the video processing pipes */
     char cmd[64];
-    sprintf(cmd, "sudo media-ctl -d %s --print-dot", video.c_str());
+    sprintf(cmd, "media-ctl -d %s --print-dot", video.c_str());
     FILE *fp = popen(cmd, "r");
     if (!fp) {
         LOG(WARNING) << "Error running media-ctl";
