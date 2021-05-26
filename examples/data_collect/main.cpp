@@ -482,14 +482,12 @@ int main(int argc, char *argv[]) {
             return 0;
         }
     }
-
-    // Program the camera with cfg passed, set the mode by writing to 0x200 and start the camera
-    // TO DO: remove start from being called in setFrameType
-    /*status = camera->start();
+    
+    status = camera->start();
     if (status != Status::OK) {
         LOG(ERROR) << "Could not start camera!";
         return 0;
-    }*/
+    }
 
     if (ext_frame_sync_en == 0) {
         status = camera->setControl("syncMode", "0, 0"); // Master, timer driven
