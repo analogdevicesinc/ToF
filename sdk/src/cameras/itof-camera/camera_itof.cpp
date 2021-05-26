@@ -384,7 +384,6 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         return status;
     }
 
-    initComputeLibrary();
     uint16_t embed_width = 0;
     uint16_t embed_height = 0;
 
