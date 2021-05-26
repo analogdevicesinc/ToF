@@ -288,14 +288,6 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
     }
 
-    //if (!m_devStarted) {
-        status = m_depthSensor->start();
-        if (status != Status::OK) {
-            return status;
-        }
-        m_devStarted = true;
-    //}
-
     return status;
 }
 
