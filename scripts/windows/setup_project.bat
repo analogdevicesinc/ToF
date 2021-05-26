@@ -214,9 +214,9 @@ CALL :install_protobuf %config_type% %generator%
 CALL :install_websockets %config_type% %generator%
 
 ::build the project with the selected options
-set CMAKE_OPTIONS=-DUSE_ITOF=1 -DWITH_PYTHON=on -DWITH_OPENCV=on
+set CMAKE_OPTIONS=-DUSE_ITOF=1 -DWITH_PYTHON=off -DWITH_OPENCV=off
 pushd %build_dire%
-cmake -G %generator% -DUSE_ITOF=1 -DWITH_PYTHON=on -DWITH_OPENCV=on -DOpenCV_DIR="%openCVPath%\build\x64\%vs%\lib" -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" -DOPENSSL_INCLUDE_DIRS="%openSSLPath%\include" %source_dir%
+cmake -G %generator% -DUSE_ITOF=1 -DWITH_PYTHON=off -DWITH_OPENCV=off -DOpenCV_DIR="%openCVPath%\build\x64\%vs%\lib" -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" -DOPENSSL_INCLUDE_DIRS="%openSSLPath%\include" %source_dir%
 cmake --build . --config %config_type%
 cmake --build . --config %config_type% --target copy-dll-opencv 
 cmake --build . --config %config_type% --target copy-dll-example
