@@ -90,7 +90,11 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "Could not set camera mode!";
         return 0;
     }
-
+    status = camera->start();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not start the camera!";
+        return 0;
+    }
     aditof::Frame frame;
 
     status = camera->requestFrame(&frame);
