@@ -42,7 +42,7 @@ OfflineDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
 aditof::Status OfflineDepthSensor::program(const uint8_t *firmware,
                        size_t size) {
-    return aditof::Status::UNAVAILABLE;
+    return aditof::Status::OK;
 }
 
 aditof::Status OfflineDepthSensor::readAfeRegisters(const uint16_t *address,
