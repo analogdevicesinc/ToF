@@ -169,14 +169,8 @@ aditof::Status CameraItof::initialize() {
 aditof::Status CameraItof::start() {
     using namespace aditof;
     Status status = Status::OK;
-    std::string totalCapturesStr;
-    uint8_t totalCaptures;
-    Frame frame;
 
-    frame.getAttribute("total_captures", totalCapturesStr);
-    totalCaptures = std::atoi(totalCapturesStr.c_str());
-
-    if (m_controls["enableDepthCompute"] == "on" && totalCaptures > 1) {
+    if (m_controls["enableDepthCompute"] == "on" && m_details.frameType.totalCaptures > 1) {
        status = initComputeLibrary();
        if (Status::OK != status) {
            LOG(ERROR) << "Initializing compute libraries failed.";
