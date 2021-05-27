@@ -56,7 +56,7 @@ Status save_frame(aditof::Frame& frame, std::string frameType){
         return status;
     }
 
-    std::ofstream g(std::string(PROJECT_DIR) + "/build/out_" + frameType + "_" + fDetails.type + ".bin", std::ios::binary);
+    std::ofstream g("out_" + frameType + "_" + fDetails.type + ".bin", std::ios::binary);
     frame.getDataDetails(frameType, fDetails);
     g.write((char*)data1, fDetails.width * fDetails.height * sizeof(uint16_t));
     g.close();
