@@ -78,7 +78,8 @@ if (USE_ITOF)
         add_definitions(-DITOF)
 endif()
 
-add_definitions(-DPROJECT_DIR="${CMAKE_SOURCE_DIR}")
+set(CONFIG_DIR_NAME "config")
+add_definitions(-DCONFIG_DIR_NAME="${CONFIG_DIR_NAME}")
 add_definitions(-DRESOURCES="${RESOURCES_DIR}")
 
 add_subdirectory(sdk)

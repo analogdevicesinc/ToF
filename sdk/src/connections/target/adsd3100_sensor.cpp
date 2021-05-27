@@ -661,7 +661,7 @@ aditof::Status Adsd3100Sensor::program(const uint8_t *firmware, size_t size) {
 }
 
 void saveFrame(std::string id, char* data, size_t size){
-    std::ofstream g(std::string(PROJECT_DIR) + "/build/out" + id + ".bin", std::ios::binary);
+    std::ofstream g("out" + id + ".bin", std::ios::binary);
     g.write(data, size);
     g.close();
 }
