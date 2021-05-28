@@ -2,26 +2,6 @@ syntax = "proto3";
 
 package usb_payload;
 
-
-message FrameDataDetails
-{
-    string type = 10;
-    uint32 width = 20;
-    uint32 height = 30;
-}
-
-message FrameDetails
-{
-  string type = 10;
-  repeated FrameDataDetails dataDetails = 20;
-  string cameraMode = 30;
-}
-
-message FrameDetailsVector
-{
-  repeated FrameDetails frameDetails = 10;
-}
-
 message DepthSensorFrameContent
 {
   string type = 10;
