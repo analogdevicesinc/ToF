@@ -116,41 +116,6 @@ aditof::Status UsbUtils::convertDepthSensorTypes(
     return aditof::Status::OK;
 }
 
-aditof::Status UsbUtils::convertFrameDetails(
-    std::vector<aditof::FrameDetails> &frameDetailsVector,
-    const std::string &availableFrameTypesBlob) {
-    using namespace google::protobuf::io;
-
-    usb_payload::FrameDetailsVector frameDetailsVectorPayload;
-    if (!frameDetailsVectorPayload.ParseFromString(availableFrameTypesBlob)) {
-        return aditof::Status::INVALID_ARGUMENT;
-    }
-
-    frameDetailsVector.clear();
-
-    for (const auto &frameDetailsPayload :
-         frameDetailsVectorPayload.framedetails()) {
-        aditof::FrameDetails frameDetails;
-
-        frameDetails.type = frameDetailsPayload.type();
-        frameDetails.cameraMode = frameDetailsPayload.cameramode();
-
-        for (const auto &dataDetailsPayload :
-             frameDetailsPayload.datadetails()) {
-            FrameDataDetails frameDataDetails;
-
-            frameDataDetails.width = dataDetailsPayload.width();
-            frameDataDetails.height = dataDetailsPayload.height();
-            frameDataDetails.type = dataDetailsPayload.type();
-            frameDetails.dataDetails.push_back(frameDataDetails);
-        }
-
-        frameDetailsVector.push_back(frameDetails);
-    }
-
-    return aditof::Status::OK;
-}
-
 aditof::Status UsbUtils::convertDepthSensorFrameTypeToSerializedProtobuf(
     const aditof::DepthSensorFrameType &depthSensorFrameType,
     std::string &depthSensorFrameTypeBlob) {
