@@ -49,7 +49,7 @@ CameraItof::CameraItof(
     std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms,
     std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &tSensors)
     : m_depthSensor(depthSensor), m_devStarted(false),
-      m_modechange_framedrop_count(0) {
+      m_modechange_framedrop_count(0), m_xyzEnabled(false) {
     m_details.mode = "short_throw";
     m_details.cameraId = "";
 
@@ -275,6 +275,10 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     m_details.frameType.height = ModeInfo::getInstance()->getModeInfo(frameType).height;
     m_details.frameType.totalCaptures = ModeInfo::getInstance()->getModeInfo(frameType).subframes;
     for (const auto item : (*frameTypeIt).content) {
+        if (item.type == "xyz" && !m_xyzEnabled) {
+            continue;
+        }
+
         FrameDataDetails fDataDetails;
         fDataDetails.type = item.type;
         fDataDetails.width = item.width;
@@ -347,7 +351,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     if (m_details.frameType.type == "pcm"){
         frame->getData("ir", &frameDataLocation);
     }
-    else{
+    else {
         frame->getData("raw", &frameDataLocation);
     }
 
@@ -410,9 +414,11 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
 
         applyCalibrationToFrame(frameDataLocation, std::atoi(m_details.mode.c_str()));
 
-        uint16_t *xyzFrameLocation;
-        frame->getData("xyz", &xyzFrameLocation);
-        memcpy(xyzFrameLocation, m_tofi_compute_context->p_xyz_frame, (m_details.frameType.height * m_details.frameType.width * sizeof(aditof::Point3I)));
+        if (m_xyzEnabled) {
+            uint16_t* xyzFrameLocation;
+            frame->getData("xyz", &xyzFrameLocation);
+            memcpy(xyzFrameLocation, m_tofi_compute_context->p_xyz_frame, (m_details.frameType.height * m_details.frameType.width * sizeof(aditof::Point3I)));
+        }
     }
 
     return Status::OK;
@@ -598,6 +604,13 @@ std::tuple<aditof::Status, int, int, int> CameraItof::loadConfigData(void) {
     if (status == 0) {
         LOG(INFO) << "Unable to load cfile contents\n";
         return retErr;
+    }
+
+    std::string depthData((char*)m_depthINIData, GetDataFileSize(m_ini_depth.c_str()));
+    int pos = depthData.find("xyzEnable", 0);
+
+    if (depthData.at(pos + strlen("xyzEnable=")) == '1') {
+        m_xyzEnabled = true;
     }
 
     return std::make_tuple(aditof::Status::OK, calFileSize, jsonFileSize, iniFileSize);
