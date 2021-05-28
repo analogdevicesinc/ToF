@@ -290,6 +290,7 @@ class CameraItof : public aditof::Camera {
     std::string m_sensorFirmwareFile;
     std::string m_ccb_calibrationFile;
     std::string m_ini_depth;
+    bool m_xyzEnabled;
     uint16_t m_modechange_framedrop_count = 0;
     std::vector<std::string> m_tempFiles;
     std::vector<aditof::DepthSensorFrameType> m_availableSensorFrameTypes;
