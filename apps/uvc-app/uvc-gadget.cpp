@@ -53,6 +53,7 @@
 using namespace google::protobuf::io;
 
 #define MAX_PACKET_SIZE 60
+#define MAX_BUFF_SIZE 60
 
 /* Enable debug prints. */
 //#define ENABLE_BUFFER_DEBUG
@@ -210,7 +211,18 @@ int firmware_size = 0, flen = 0;
 const static int FIRMWARE_CAPACITY = 16384;
 char firmware[FIRMWARE_CAPACITY] = {0};
 unsigned short reg_addr;
-std::string frameTypeBlob;
+
+/* Client request will be read by uvc-gadget */
+std::string clientRequestBlob;
+size_t clientRequestBlobLength;
+size_t clientRequestCharsRead;
+bool hasClientRequestLengthSet = false;
+
+/* Server response will be read by remote */
+std::string serverResponseBlob;
+size_t serverResponseBlobLength;
+size_t serverResponseCharsRead;
+size_t hasServerResponseLengthRead = false;
 
 /* Available sensors */
 std::vector<std::shared_ptr<aditof::DepthSensorInterface>> depthSensors;
@@ -245,6 +257,16 @@ void convertProtoMsgToDepthSensorFrameType(
 std::atomic<bool> stop;
 
 void stopHandler(int code) { stop.store(true); }
+
+/* ---------------------------------------------------------------------------
+ * Time of flight SDK related
+ */
+uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest &clientRequestMsg)
+{
+  uvc_payload::ServerResponse response;
+  // TO DO: handle all requests & construct the server response
+  return response;
+}
 
 /* ---------------------------------------------------------------------------
  * V4L2 streaming related
@@ -868,8 +890,8 @@ static void uvc_events_process_control(struct uvc_device *dev, uint8_t req,
   case 3:
     SET_REQ_ERROR_CODE(0x00, 1);
     switch (cs) {
-    case 1: /* EEPROM Read */
-    case 2: /* EEPROM Write */
+    case 1: /* Client request */
+    case 2: /* Server response */
     case 3: /* EEPROM Write */
     case 4: /* EEPROM Write */
       switch (req) {
@@ -1089,6 +1111,46 @@ static int uvc_events_process_data(struct uvc_device *dev,
   default:
     USB_REQ_DEBUG("control: %d, length: %d cs: %d\n", dev->control,
                   data->length, dev->set_cur_cs);
+    if (dev->set_cur_cs == 1) { // Client request
+
+      //Store the client request string sent from remote and parse it when all has been received
+      if (hasClientRequestLengthSet) {
+        // Read one packet and append
+        size_t remainingCharsToRead = clientRequestBlobLength - clientRequestCharsRead;
+        size_t packetSize = (remainingCharsToRead > MAX_BUFF_SIZE) ? MAX_BUFF_SIZE : remainingCharsToRead;
+        clientRequestBlob.append(reinterpret_cast<const char *>(data->data), packetSize);
+        clientRequestCharsRead += packetSize;
+
+        if (remainingCharsToRead == 0) {
+          // de-serialize client request
+          uvc_payload::ClientRequest clientRequestMsg;
+          bool parsed = clientRequestMsg.ParseFromString(clientRequestBlob);
+
+          // Honor the request & set the response to be read (optional) afterwards by remote
+          if (parsed) {
+            uvc_payload::ServerResponse serverResponseMsg = handleClientRequest(clientRequestMsg);
+
+            // serialize server response
+            serverResponseMsg.SerializeToString(serverResponseBlob);
+            serverResponseBlobLength = serverResponseBlob.size();
+            serverResponseCharsRead = 0;
+            hasServerResponseLengthRead = false;
+          } else {
+            LOG(ERROR) << "Failed to deserialize string containing client request";
+          }
+
+          // reset to default
+          clientRequestBlobLength = 0;
+          clientRequestCharsRead = 0;
+          hasClientRequestLengthSet = false;
+        }
+      } else {
+        size_t clientRequestBlobLength = *(reinterpret_cast<size_t *>(data->data));
+        clientRequestBlob.reserve(clientRequestBlobLength);
+        clientRequestCharsRead = 0;
+        hasClientRequestLengthSet = true;
+      }
+    }
   }
   
   ctrl = (struct uvc_streaming_control *)&data->data;
