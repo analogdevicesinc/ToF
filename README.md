@@ -44,6 +44,7 @@ For more details on building the SDK on an embedded platform please check the **
 | --------- | ----------- |
 | Windows | [Build instructions](doc/itof/windows_build_instructions.md) |
 | Linux | [Build instructions](doc/itof/linux_build_instructions.md) |
+| NXP | [Build instructions](doc/itof/nxp_build_instructions.md) |
 
 [How to write the SD card image onto the SD card?](doc/sdcard_burn.md)
 
@@ -82,4 +83,5 @@ For more details about the SDK check the links below:
 | examples | Example code for the supported programming languages |
 | scripts | Useful development scripts |
 | sdk | SDK source code |
+
 
