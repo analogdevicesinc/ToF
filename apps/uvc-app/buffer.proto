@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package usb_payload;
+package uvc_payload;
 
 enum Status   // This must match precisely the Status list from status_definitions.h
 {
