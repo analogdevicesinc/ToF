@@ -12,6 +12,13 @@ enum Status   // This must match precisely the Status list from status_definitio
   GENERIC_ERROR = 5;
 }
 
+enum FunctionName
+{
+  SEARCH_SENSORS = 0;
+  GET_AVAILABLE_FRAME_TYPES = 1;
+  SET_FRAME_TYPE = 2;
+}
+
 message StorageInfo
 {
   string name = 10;
@@ -52,7 +59,7 @@ message DepthSensorFrameTypeVector
 
 message ClientRequest
 {
-  string func_name = 10;                // Name of an API function
+  FunctionName func_name = 10;          // Name of an API function
   repeated int32 func_int32_param = 20; // List of function parameters of type int32
   repeated float func_float_param = 30; // List of function parameters of type float
   repeated bytes func_bytes_param = 40; // List of function parameters of type byte-array

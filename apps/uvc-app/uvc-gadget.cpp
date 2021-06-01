@@ -229,6 +229,7 @@ std::vector<std::shared_ptr<aditof::DepthSensorInterface>> depthSensors;
 std::vector<std::shared_ptr<aditof::StorageInterface>> storages;
 std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
     temperatureSensors;
+bool sensors_are_created = false;
 
 /* UVC only works with one depth sensor */
 std::shared_ptr<aditof::DepthSensorInterface> camDepthSensor;
@@ -264,7 +265,78 @@ void stopHandler(int code) { stop.store(true); }
 uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest &clientRequestMsg)
 {
   uvc_payload::ServerResponse response;
-  // TO DO: handle all requests & construct the server response
+
+  switch (clientRequestMsg.func_name()) {
+  case uvc_payload::FunctionName::SEARCH_SENSORS: {
+    if (sensors_are_created == false) {
+      // Build the enumerator
+      auto sensorsEnumerator =
+        aditof::SensorEnumeratorFactory::buildTargetSensorEnumerator();
+      if (!sensorsEnumerator) {
+        const std::string errorMsg("Failed to construct a sensors enumerator!");
+        LOG(ERROR) << errorMsg;
+        response.set_message(errorMsg);
+        response.set_status(static_cast<uvc_payload::Status>(aditof::Status::UNAVAILBLE));
+        break;
+      }
+
+      // Search for sensors
+      sensorsEnumerator->searchSensors();
+      sensorsEnumerator->getDepthSensors(depthSensors);
+      sensorsEnumerator->getStorages(storages);
+      sensorsEnumerator->getTemperatureSensors(temperatureSensors);
+      sensors_are_created = true;
+    }
+
+    // Add information about available sensors
+
+    // Depth sensor
+    if (depthSensors.size() < 1) {
+      response.set_message("No depth sensors are available");
+      response.set_status(::uvc_payload::Status::UNREACHABLE);
+      break;
+    }
+    camDepthSensor = depthSensors.front();
+    aditof::SensorDetails depthSensorDetails;
+    camDepthSensor->getDetails(depthSensorDetails);
+    auto pbSensorsInfo = buff_send.mutable_sensors_info();
+    sensorV4lBufAccess =
+      std::dynamic_pointer_cast<aditof::V4lBufferAccessInterface>(
+        camDepthSensor);
+
+    // Storages
+    int storage_id = 0;
+    for (const auto &storage : storages) {
+      std::string name;
+      storage->getName(name);
+      auto pbStorageInfo = pbSensorsInfo->add_storages();
+      pbStorageInfo->set_name(name);
+      pbStorageInfo->set_id(storage_id);
+      ++storage_id;
+    }
+
+    // Temperature sensors
+    int temp_sensor_id = 0;
+    for (const auto &sensor : temperatureSensors) {
+      std::string name;
+      sensor->getName(name);
+      auto pbTempSensorInfo = pbSensorsInfo->add_temp_sensors();
+      pbTempSensorInfo->set_name(name);
+      pbTempSensorInfo->set_id(temp_sensor_id);
+      ++temp_sensor_id;
+    }
+
+    response.set_status(static_cast<::uvc_payload::Status>(aditof::Status::OK));
+  }
+  default: {
+    const std::string errorMsg("Unknown function name set in the client request");
+    LOG(ERROR) << errorMsg;
+    response.set_message(errorMsg);
+    response.set_status(static_cast<uvc_payload::Status>(aditof::Status::INVALID_ARGUMENT));
+    break;
+  }
+  } // switch
+
   return response;
 }
 

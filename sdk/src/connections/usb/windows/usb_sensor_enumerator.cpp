@@ -29,6 +29,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "usb_buffer.pb.h"
 #include "connections/usb/usb_sensor_enumerator.h"
 #include "connections/usb/usb_depth_sensor.h"
 #include "connections/usb/usb_storage.h"
@@ -107,23 +108,55 @@ Status UsbSensorEnumerator::searchSensors() {
 						return Status::GENERIC_ERROR;
 					}
 
-                    status = UsbWindowsUtils::uvcExUnitGetString(pVideoInputFilter, 4, advertisedSensorData);
-                    DLOG(INFO) << "Received the following buffer with "
-                                  "available sensors "
-                                  "from target: "
-                               << advertisedSensorData;
-                    if (status == Status::OK) {
-                        vector<string> sensorsPaths;
-                        Utils::splitIntoTokens(advertisedSensorData, ';',
-                                               sensorsPaths);
-                        m_sensorsInfo.emplace_back(sInfo);
+                    // Query the sensors that are available on target
 
-                        m_storagesInfo =
-                            UsbUtils::getStorageNamesAndIds(sensorsPaths);
+                    // Send request
+                    usb_payload::ClientRequest requestMsg;
+                    requestMsg.set_func_name(usb_payload::FunctionName::SEARCH_SENSORS);
+                    std::string requestStr;
+                    requestMsg.SerializeToString(&requestStr);
+                    status = UsbWindowsUtils::uvcExUnitSendRequest(pVideoInputFilter, requestStr);
+                    if (status != aditof::Status::OK) {
+                        LOG(ERROR) << "Request to search for sensors failed";
+                        return status;
+                    }
 
-                        m_temperatureSensorsInfo =
-                            UsbUtils::getTemperatureSensorNamesAndIds(
-                                sensorsPaths);
+                    // Read UVC gadget response
+                    std::string responseStr;
+                    status = UsbWindowsUtils::uvcExUnitGetResponse(pVideoInputFilter, responseStr);
+                    if (status != aditof::Status::OK) {
+                        LOG(ERROR) << "Request to search for sensors failed";
+                        return status;
+                    }
+                    usb_payload::ServerResponse responseMsg;
+                    bool parsed = responseMsg.ParseFromString(responseStr);
+                    if (!parsed) {
+                        LOG(ERROR) << "Failed to deserialize string containing client request";
+                        return aditof::Status::INVALID_ARGUMENT;
+                    }
+
+                    DLOG(INFO) << "Received the following message with "
+                                  "available sensors from target: "
+                               << responseMsg.DebugString();
+
+                    if (responseMsg.status() != usb_payload::Status::OK) {
+                        LOG(ERROR) << "Search for sensors operation failed on UVC gadget: ";
+                        return static_cast<aditof::Status>(responseMsg.status());
+                    }
+
+                    // If request and response went well, extract data from response
+                    m_sensorsInfo.emplace_back(sInfo);
+
+                    m_storagesInfo.clear();
+                    for (int i = 0; i < responseMsg.SensorsInfo.storages_size(); ++i) {
+                        usb_payload::StorageInfo *storage = responseMsg.SensorsInfo.storages(i);
+                        m_storagesInfo.emplace_back(std::make_pair(storage->name, storage->id));
+                    }
+
+                    m_temperatureSensorsInfo.clear();
+                    for (int i = 0; i < responseMsg.SensorsInfo.temp_sensors_size(); ++i) {
+                        usb_payload::TemperatureSensorInfo *tempSensor = responseMsg.SensorsInfo.temp_sensors(i);
+                        m_storagesInfo.emplace_back(std::make_pair(tempSensor->name, tempSensor->id));
                     }
                 }
             }
