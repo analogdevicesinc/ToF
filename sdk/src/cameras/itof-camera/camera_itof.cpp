@@ -49,7 +49,7 @@ CameraItof::CameraItof(
     std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms,
     std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &tSensors)
     : m_depthSensor(depthSensor), m_devStarted(false),
-      m_modechange_framedrop_count(0), m_xyzEnabled(false) {
+      m_modechange_framedrop_count(0), m_xyzEnabled(false), m_loadedConfigData(false) {
     m_details.mode = "short_throw";
     m_details.cameraId = "";
 
@@ -72,6 +72,7 @@ CameraItof::CameraItof(
         LOG(WARNING) << "Invalid instance of a depth sensor";
         return;
     }
+
     aditof::SensorDetails sDetails;
     m_depthSensor->getDetails(sDetails);
     m_details.connection = sDetails.connectionType;
@@ -156,6 +157,14 @@ aditof::Status CameraItof::initialize() {
     } else if (!config.empty()) {
         LOG(ERROR) << "Couldn't parse config file: " << config.c_str();
         return Status::GENERIC_ERROR;
+    }
+
+    aditof::Status configStatus = loadConfigData();
+    if (configStatus == aditof::Status::OK) {
+        m_loadedConfigData = true;
+    } else {
+        LOG(INFO) << "loadConfigData failed";
+        return aditof::Status::GENERIC_ERROR;
     }
 
     m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
@@ -514,8 +523,7 @@ aditof::Status CameraItof::initComputeLibrary(void) {
     uint8_t convertedMode;
 
     aditof::Status configStatus;
-    size_t calFileSize = 0, jsonFileSize = 0, iniFileSize = 0;
-    std::tie(configStatus, calFileSize, jsonFileSize, iniFileSize) = loadConfigData();
+    size_t calFileSize = m_calFileSize, jsonFileSize = m_jsonFileSize, iniFileSize = m_iniFileSize;
 
     status = convertCameraMode(m_details.mode, convertedMode);
 
@@ -524,7 +532,7 @@ aditof::Status CameraItof::initComputeLibrary(void) {
         return aditof::Status::GENERIC_ERROR;
     }
 
-    if (configStatus == aditof::Status::OK) {
+    if (m_loadedConfigData) {
         ConfigFileData calData = {m_calData, calFileSize};
         uint32_t status = ADI_TOFI_SUCCESS;
 
@@ -547,7 +555,7 @@ aditof::Status CameraItof::initComputeLibrary(void) {
             }
         }
     } else {
-        LOG(INFO) << "loadConfigData failed";
+        LOG(INFO) << "Could not initialize compute library because config data hasn't been loaded";
         return aditof::Status::GENERIC_ERROR;
     }
 
@@ -574,11 +582,14 @@ aditof::Status CameraItof::freeComputeLibrary(void) {
     return aditof::Status::OK;
 }
 
-std::tuple<aditof::Status, int, int, int> CameraItof::loadConfigData(void) {
-    uint32_t calFileSize = 0, jsonFileSize = 0, iniFileSize = 0, status = 0;
+aditof::Status CameraItof::loadConfigData(void) {
+    uint32_t status = 0;
+    uint32_t calFileSize = 0;
+    uint32_t jsonFileSize = 0;
+    uint32_t iniFileSize = 0;
     freeConfigData();
 
-    std::tuple<aditof::Status, int, int, int> retErr = std::make_tuple(aditof::Status::GENERIC_ERROR, 0, 0, 0);
+    aditof::Status retErr = aditof::Status::GENERIC_ERROR;
 
     if (!m_ini_depth.empty()) {
 
@@ -613,7 +624,11 @@ std::tuple<aditof::Status, int, int, int> CameraItof::loadConfigData(void) {
         m_xyzEnabled = true;
     }
 
-    return std::make_tuple(aditof::Status::OK, calFileSize, jsonFileSize, iniFileSize);
+    m_calFileSize = calFileSize;
+    m_jsonFileSize = jsonFileSize;
+    m_iniFileSize = iniFileSize;
+
+    return aditof::Status::OK;
 }
 
 void CameraItof::freeConfigData(void)
