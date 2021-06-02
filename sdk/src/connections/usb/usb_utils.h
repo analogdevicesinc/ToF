@@ -40,6 +40,7 @@
 
 namespace usb_payload {
   class DepthSensorFrameTypeVector;
+  class DepthSensorFrameType;
 }
 
 class UsbUtils {
@@ -82,14 +83,13 @@ class UsbUtils {
                         const std::string &availableFrameTypesBlob);
 
     /**
-     * @brief Converts a DepthSensorFrameType to a serialized protobuf message.
-     * @param depthSensorFrameTypes - the structure to convert.
-     * @param[out] depthSensorFrameTypeBlob - the buffer cotaining the serialized data.
-     * return aditof::Status
+     * @brief Converts a DepthSensorFrameType to a protobuf message.
+     * @param depthSensorFrameType - the structure to convert.
+     * @param[out] protoMsg - the buffer cotaining the serialized data.
      */
-    static aditof::Status convertDepthSensorFrameTypeToSerializedProtobuf(
+    static void depthSensorFrameTypeToProtoMsg(
         const aditof::DepthSensorFrameType &depthSensorFrameType,
-        std::string &depthSensorFrameTypeBlob);
+        usb_payload::DepthSensorFrameType *protoMsg);
 };
 
 #endif // USB_UTILS_H

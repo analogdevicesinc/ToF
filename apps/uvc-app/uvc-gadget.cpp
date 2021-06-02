@@ -345,6 +345,16 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
     break;
   }
 
+  case uvc_payload::FunctionName::SET_FRAME_TYPE: {
+    aditof::DepthSensorFrameType> frameType;
+    convertProtoMsgToDepthSensorFrameType(clientRequestMsg.frame_type(), frameType);
+
+    aditof::Status status = camDepthSensor->setFrameType(frameType);
+    response.set_status(static_cast<::uvc_payload::Status>(status));
+
+    break;
+  }
+
   default: {
     const std::string errorMsg("Unknown function name set in the client request");
     LOG(ERROR) << errorMsg;
@@ -1394,7 +1404,7 @@ void convertDepthSensorFrameTypesToProtoMsg(
 }
 
 void convertProtoMsgToDepthSensorFrameType(
-    uvc_payload::DepthSensorFrameType &protoMsg,
+    const uvc_payload::DepthSensorFrameType &protoMsg,
     aditof::DepthSensorFrameType &aditofStruct) {
   aditofStruct.type = protoMsg.type();
   aditofStruct.width = protoMsg.width();

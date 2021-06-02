@@ -372,7 +372,7 @@ aditof::Status UsbDepthSensor::open() {
     std::string responseStr;
     status = UsbWindowsUtils::uvcExUnitGetResponse(m_implData->handle.pVideoInputFilter, responseStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Request to get available frame types failed";
+        LOG(ERROR) << "Response for get available frame types request failed";
         return status;
     }
     usb_payload::ServerResponse responseMsg;
@@ -574,19 +574,31 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     }
 
     // Send the frame type and all its content all the way to target
-    std::string serializedData;
+    usb_payload::ClientRequest requestMsg;
+    auto frameTypeMsg = requestMsg.mutable_frame_type();
+    UsbUtils::depthSensorFrameTypeToProtoMsg(type, frameTypeMsg);
 
-    UsbUtils::convertDepthSensorFrameTypeToSerializedProtobuf(type,
-                                                              serializedData);
-    hr = UsbWindowsUtils::UvcExUnitWriteBuffer(
-        m_implData->handle.pVideoInputFilter, 9, -1, 0,
-        reinterpret_cast<const uint8_t *>(serializedData.c_str()),
-        serializedData.size());
-    if (FAILED(hr)) {
-        LOG(WARNING)
-            << "Failed to write frame type over UVC extension unit. Error: "
-            << hr;
-        return Status::GENERIC_ERROR;
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbWindowsUtils::uvcExUnitGetResponse(m_implData->handle.pVideoInputFilter, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to get available frame types failed";
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    DLOG(INFO) << "Received the following message with "
+                    "available frame types from target: "
+                << responseMsg.DebugString();
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Set frame type operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
     }
 
     VIDEOINFOHEADER *pVih = reinterpret_cast<VIDEOINFOHEADER *>(
