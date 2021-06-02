@@ -76,44 +76,31 @@ UsbUtils::getTemperatureSensorNamesAndIds(
     return v;
 }
 
-aditof::Status UsbUtils::convertDepthSensorTypes(
+void UsbUtils::protoMsgToDepthSensorFrameTypes(
     std::vector<aditof::DepthSensorFrameType> &depthSensorFrameTypes,
-    const std::string &availableDepthSensorsFrameTypesBlob) {
+    const usb_payload::DepthSensorFrameTypeVector &protoMsg) {
     using namespace google::protobuf::io;
-
-    usb_payload::DepthSensorFrameTypeVector depthSensorFrameTypesPayload;
-    if (!depthSensorFrameTypesPayload.ParseFromString(
-            availableDepthSensorsFrameTypesBlob)) {
-        return aditof::Status::INVALID_ARGUMENT;
-    }
 
     depthSensorFrameTypes.clear();
 
-    for (const auto &depthSensorFrameTypePayload :
-         depthSensorFrameTypesPayload.depthsensorframetypes()) {
+    for (const auto &frameTypeMsg : protoMsg.depthsensorframetypes()) {
         aditof::DepthSensorFrameType depthSensorFrameType;
 
-        depthSensorFrameType.type = depthSensorFrameTypePayload.type();
-        depthSensorFrameType.width = depthSensorFrameTypePayload.width();
-        depthSensorFrameType.height = depthSensorFrameTypePayload.height();
+        depthSensorFrameType.type = frameTypeMsg.type();
+        depthSensorFrameType.width = frameTypeMsg.width();
+        depthSensorFrameType.height = frameTypeMsg.height();
 
-        for (const auto &depthSensorFrameContentPayload :
-             depthSensorFrameTypePayload.depthsensorframecontent()) {
+        for (const auto &frameContentMsg : frameTypeMsg.depthsensorframecontent()) {
             DepthSensorFrameContent depthSensorFrameContent;
 
-            depthSensorFrameContent.width =
-                depthSensorFrameContentPayload.width();
-            depthSensorFrameContent.height =
-                depthSensorFrameContentPayload.height();
-            depthSensorFrameContent.type =
-                depthSensorFrameContentPayload.type();
+            depthSensorFrameContent.width = frameContentMsg.width();
+            depthSensorFrameContent.height = frameContentMsg.height();
+            depthSensorFrameContent.type = frameContentMsg.type();
             depthSensorFrameType.content.push_back(depthSensorFrameContent);
         }
 
         depthSensorFrameTypes.push_back(depthSensorFrameType);
     }
-
-    return aditof::Status::OK;
 }
 
 aditof::Status UsbUtils::convertDepthSensorFrameTypeToSerializedProtobuf(

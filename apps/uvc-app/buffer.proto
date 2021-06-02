@@ -72,7 +72,7 @@ message ServerResponse
   repeated int32 int32_payload = 20;                         // List of structures of type int32 for transporting data back to client
   repeated float float_payload = 30;                         // List of structures of type float for transporting data back to client
   repeated bytes bytes_payload = 40;                         // List of structures of type byte-array for transporting data back to client
-  repeated DepthSensorFrameType available_frame_types = 50;  // List of supported frame types
+  DepthSensorFrameTypeVector available_frame_types = 50;     // List of supported frame types
   SensorsInfo sensors_info = 60;                             // List of information about existing devices on the same platform as the server
   string message = 70;                                       // Additional message (if any)
 }

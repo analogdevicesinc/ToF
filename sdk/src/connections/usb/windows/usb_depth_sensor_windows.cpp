@@ -29,6 +29,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "usb_buffer.pb.h"
 #include "connections/usb/usb_depth_sensor.h"
 #include "connections/usb/usb_utils.h"
 #include "usb_windows_utils.h"
@@ -354,20 +355,46 @@ aditof::Status UsbDepthSensor::open() {
         return status;
     }
 
-    std::string frameTypesBlob;
-    status = UsbWindowsUtils::uvcExUnitGetString(
-        m_implData->handle.pVideoInputFilter, 8, frameTypesBlob);
-    if (status != Status::OK) {
-        LOG(WARNING) << "Cannot get frame types via UVC";
+    // Query the target about the frame types that are supported by the depth sensor
+
+    // Send request
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::GET_AVAILABLE_FRAME_TYPES);
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbWindowsUtils::uvcExUnitSendRequest(m_implData->handle.pVideoInputFilter, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to get available frame types failed";
         return status;
     }
 
-    status = UsbUtils::convertDepthSensorTypes(m_depthSensorFrameTypes,
-                                               frameTypesBlob);
-    if (status != Status::OK) {
-        LOG(WARNING) << "Cannot deserialize frame types from target";
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbWindowsUtils::uvcExUnitGetResponse(m_implData->handle.pVideoInputFilter, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to get available frame types failed";
         return status;
     }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    DLOG(INFO) << "Received the following message with "
+                    "available sensors from target: "
+                << responseMsg.DebugString();
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Get available frame types operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
+
+    // If request and response went well, extract data from response
+    UsbUtils::protoMsgToDepthSensorFrameTypes(m_depthSensorFrameTypes,
+        responseMsg.available_frame_types());
+
     std::wstring stemp = s2ws(m_driverPath);
     hr = m_implData->handle.pGraph->AddFilter(
         m_implData->handle.pVideoInputFilter, stemp.c_str());

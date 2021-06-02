@@ -131,7 +131,7 @@ Status UsbSensorEnumerator::searchSensors() {
                     usb_payload::ServerResponse responseMsg;
                     bool parsed = responseMsg.ParseFromString(responseStr);
                     if (!parsed) {
-                        LOG(ERROR) << "Failed to deserialize string containing client request";
+                        LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
                         return aditof::Status::INVALID_ARGUMENT;
                     }
 
@@ -140,7 +140,7 @@ Status UsbSensorEnumerator::searchSensors() {
                                << responseMsg.DebugString();
 
                     if (responseMsg.status() != usb_payload::Status::OK) {
-                        LOG(ERROR) << "Search for sensors operation failed on UVC gadget: ";
+                        LOG(ERROR) << "Search for sensors operation failed on UVC gadget";
                         return static_cast<aditof::Status>(responseMsg.status());
                     }
 
@@ -148,15 +148,15 @@ Status UsbSensorEnumerator::searchSensors() {
                     m_sensorsInfo.emplace_back(sInfo);
 
                     m_storagesInfo.clear();
-                    for (int i = 0; i < responseMsg.SensorsInfo.storages_size(); ++i) {
-                        usb_payload::StorageInfo *storage = responseMsg.SensorsInfo.storages(i);
-                        m_storagesInfo.emplace_back(std::make_pair(storage->name, storage->id));
+                    for (int i = 0; i < responseMsg.sensors_info().storages_size(); ++i) {
+                        auto storage = responseMsg.sensors_info().storages(i);
+                        m_storagesInfo.emplace_back(std::make_pair(storage.name(), storage.id()));
                     }
 
                     m_temperatureSensorsInfo.clear();
-                    for (int i = 0; i < responseMsg.SensorsInfo.temp_sensors_size(); ++i) {
-                        usb_payload::TemperatureSensorInfo *tempSensor = responseMsg.SensorsInfo.temp_sensors(i);
-                        m_storagesInfo.emplace_back(std::make_pair(tempSensor->name, tempSensor->id));
+                    for (int i = 0; i < responseMsg.sensors_info().temp_sensors_size(); ++i) {
+                        auto tempSensor = responseMsg.sensors_info().temp_sensors(i);
+                        m_storagesInfo.emplace_back(std::make_pair(tempSensor.name(), tempSensor.id()));
                     }
                 }
             }
