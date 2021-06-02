@@ -620,8 +620,10 @@ aditof::Status CameraItof::loadConfigData(void) {
     std::string depthData((char*)m_depthINIData, GetDataFileSize(m_ini_depth.c_str()));
     int pos = depthData.find("xyzEnable", 0);
 
-    if (depthData.at(pos + strlen("xyzEnable=")) == '1') {
-        m_xyzEnabled = true;
+    if (pos != std::string::npos) {
+        if (depthData.at(pos + strlen("xyzEnable=")) == '1') {
+            m_xyzEnabled = true;
+        }
     }
 
     m_calFileSize = calFileSize;
