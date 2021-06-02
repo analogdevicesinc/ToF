@@ -157,11 +157,11 @@ class CameraItof : public aditof::Camera {
 
     /**
      * @brief Opens the CCB file passed in as part of Json file using initialize(), and loads the calibration blocks into member variable
-     * @return std::tuple<aditof::Status, int, int, int>
+     * @return aditof::Status
      * @see aditof::Status
      * @see <a href='../config/config_default.json'>config_default.json</a>
      */
-    std::tuple<aditof::Status, int, int, int> loadConfigData(void);
+    aditof::Status loadConfigData(void);
 
     /**
      * @brief Frees the calibration member variables created while loading the CCB contents
@@ -285,6 +285,10 @@ class CameraItof : public aditof::Camera {
     uint8_t *m_jconfigData = NULL;
     TofiConfig *m_tofi_config = NULL;
     TofiComputeContext *m_tofi_compute_context = NULL;
+    int m_calFileSize;
+    int m_jsonFileSize;
+    int m_iniFileSize;
+    bool m_loadedConfigData;
 
     bool m_CameraProgrammed = false;
     std::string m_sensorFirmwareFile;
