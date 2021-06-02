@@ -267,6 +267,7 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
   uvc_payload::ServerResponse response;
 
   switch (clientRequestMsg.func_name()) {
+
   case uvc_payload::FunctionName::SEARCH_SENSORS: {
     if (sensors_are_created == false) {
       // Build the enumerator
@@ -327,7 +328,23 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
     }
 
     response.set_status(static_cast<::uvc_payload::Status>(aditof::Status::OK));
+
+    break;
   }
+
+  case uvc_payload::FunctionName::GET_AVAILABLE_FRAME_TYPES: {
+    std::vector<aditof::DepthSensorFrameType> frameTypes;
+    auto depthSensorFrameTypesMsg = response.mutable_available_frame_types();
+
+    camDepthSensor->getAvailableFrameTypes(depthSensorFrameTypes);
+    convertDepthSensorFrameTypesToProtoMsg(depthSensorFrameTypes,
+                                         *depthSensorFrameTypesMsg);
+
+    response.set_status(static_cast<::uvc_payload::Status>(aditof::Status::OK));
+
+    break;
+  }
+
   default: {
     const std::string errorMsg("Unknown function name set in the client request");
     LOG(ERROR) << errorMsg;

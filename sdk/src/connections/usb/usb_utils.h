@@ -37,6 +37,11 @@
 #include <aditof/status_definitions.h>
 #include <string>
 #include <vector>
+
+namespace usb_payload {
+  class DepthSensorFrameTypeVector;
+}
+
 class UsbUtils {
   public:
     /**
@@ -58,14 +63,13 @@ class UsbUtils {
     getTemperatureSensorNamesAndIds(const std::vector<std::string> &tokens);
 
     /**
-     * @brief Parses a vector of depthSensorFrameType from a protobuf.
-     * @param depthSensorFrameTypesVector - the parsed vector.
-     * @param availableDepthSensorsFrameTypesBlob - the buffer cotaining the serialized data.
-     * return aditof::Status
+     * @brief Converts from protobuf message to aditof type (vector of DepthSensorFrameType)
+     * @param[out] depthSensorFrameTypes - the vector obtained from conversion
+     * @param protoMsg - The protobuf message to be converted
      */
-    static aditof::Status convertDepthSensorTypes(
+    static void protoMsgToDepthSensorFrameTypes(
         std::vector<aditof::DepthSensorFrameType> &depthSensorFrameTypesVector,
-        const std::string &availableDepthSensorsFrameTypesBlob);
+        const usb_payload::DepthSensorFrameTypeVector &protoMsg);
 
     /**
      * @brief Parses a vector of FrameDetails from a protobuf.
