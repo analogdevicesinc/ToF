@@ -262,6 +262,48 @@ void stopHandler(int code) { stop.store(true); }
 /* ---------------------------------------------------------------------------
  * Time of flight SDK related
  */
+
+void convertDepthSensorFrameTypesToProtoMsg(
+    std::vector<aditof::DepthSensorFrameType> depthSensorFrameTypes,
+    uvc_payload::DepthSensorFrameTypeVector &depthSensorFrameTypesPayload) {
+  for (const aditof::DepthSensorFrameType &depthSensorFrameType :
+       depthSensorFrameTypes) {
+    LOG(INFO) << depthSensorFrameType.type << " " << depthSensorFrameType.width
+              << " " << depthSensorFrameType.content.size();
+    uvc_payload::DepthSensorFrameType *depthSensorFrameTypePayload =
+        depthSensorFrameTypesPayload.add_depthsensorframetypes();
+    depthSensorFrameTypePayload->set_type(depthSensorFrameType.type);
+    depthSensorFrameTypePayload->set_width(depthSensorFrameType.width);
+    depthSensorFrameTypePayload->set_height(depthSensorFrameType.height);
+
+    for (const aditof::DepthSensorFrameContent &depthSensorFrameContent :
+         depthSensorFrameType.content) {
+      uvc_payload::DepthSensorFrameContent *depthSensorFrameContentPayload =
+          depthSensorFrameTypePayload->add_depthsensorframecontent();
+      depthSensorFrameContentPayload->set_type(depthSensorFrameContent.type);
+      depthSensorFrameContentPayload->set_width(depthSensorFrameContent.width);
+      depthSensorFrameContentPayload->set_height(
+          depthSensorFrameContent.height);
+    }
+  }
+}
+
+void convertProtoMsgToDepthSensorFrameType(
+    const uvc_payload::DepthSensorFrameType &protoMsg,
+    aditof::DepthSensorFrameType &aditofStruct) {
+  aditofStruct.type = protoMsg.type();
+  aditofStruct.width = protoMsg.width();
+  aditofStruct.height = protoMsg.height();
+  for (int i = 0; i < protoMsg.depthsensorframecontent_size(); ++i) {
+    aditof::DepthSensorFrameContent content;
+
+    content.type = protoMsg.depthsensorframecontent(i).type();
+    content.width = protoMsg.depthsensorframecontent(i).width();
+    content.height = protoMsg.depthsensorframecontent(i).height();
+    aditofStruct.content.emplace_back(content);
+  }
+}
+
 uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest &clientRequestMsg)
 {
   uvc_payload::ServerResponse response;
@@ -277,7 +319,7 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
         const std::string errorMsg("Failed to construct a sensors enumerator!");
         LOG(ERROR) << errorMsg;
         response.set_message(errorMsg);
-        response.set_status(static_cast<uvc_payload::Status>(aditof::Status::UNAVAILBLE));
+        response.set_status(static_cast<uvc_payload::Status>(aditof::Status::UNAVAILABLE));
         break;
       }
 
@@ -300,7 +342,7 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
     camDepthSensor = depthSensors.front();
     aditof::SensorDetails depthSensorDetails;
     camDepthSensor->getDetails(depthSensorDetails);
-    auto pbSensorsInfo = buff_send.mutable_sensors_info();
+    auto pbSensorsInfo = response.mutable_sensors_info();
     sensorV4lBufAccess =
       std::dynamic_pointer_cast<aditof::V4lBufferAccessInterface>(
         camDepthSensor);
@@ -336,8 +378,8 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
     std::vector<aditof::DepthSensorFrameType> frameTypes;
     auto depthSensorFrameTypesMsg = response.mutable_available_frame_types();
 
-    camDepthSensor->getAvailableFrameTypes(depthSensorFrameTypes);
-    convertDepthSensorFrameTypesToProtoMsg(depthSensorFrameTypes,
+    camDepthSensor->getAvailableFrameTypes(frameTypes);
+    convertDepthSensorFrameTypesToProtoMsg(frameTypes,
                                          *depthSensorFrameTypesMsg);
 
     response.set_status(static_cast<::uvc_payload::Status>(aditof::Status::OK));
@@ -346,7 +388,7 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
   }
 
   case uvc_payload::FunctionName::SET_FRAME_TYPE: {
-    aditof::DepthSensorFrameType> frameType;
+    aditof::DepthSensorFrameType frameType;
     convertProtoMsgToDepthSensorFrameType(clientRequestMsg.frame_type(), frameType);
 
     aditof::Status status = camDepthSensor->setFrameType(frameType);
@@ -1230,7 +1272,7 @@ static int uvc_events_process_data(struct uvc_device *dev,
             uvc_payload::ServerResponse serverResponseMsg = handleClientRequest(clientRequestMsg);
 
             // serialize server response
-            serverResponseMsg.SerializeToString(serverResponseBlob);
+            serverResponseMsg.SerializeToString(&serverResponseBlob);
             serverResponseBlobLength = serverResponseBlob.size();
             serverResponseCharsRead = 0;
             hasServerResponseLengthRead = false;
@@ -1376,47 +1418,6 @@ static void uvc_events_init(struct uvc_device *dev) {
   ioctl(dev->uvc_fd, VIDIOC_SUBSCRIBE_EVENT, &sub);
   sub.type = UVC_EVENT_STREAMOFF;
   ioctl(dev->uvc_fd, VIDIOC_SUBSCRIBE_EVENT, &sub);
-}
-
-void convertDepthSensorFrameTypesToProtoMsg(
-    std::vector<aditof::DepthSensorFrameType> depthSensorFrameTypes,
-    uvc_payload::DepthSensorFrameTypeVector &depthSensorFrameTypesPayload) {
-  for (const aditof::DepthSensorFrameType &depthSensorFrameType :
-       depthSensorFrameTypes) {
-    LOG(INFO) << depthSensorFrameType.type << " " << depthSensorFrameType.width
-              << " " << depthSensorFrameType.content.size();
-    uvc_payload::DepthSensorFrameType *depthSensorFrameTypePayload =
-        depthSensorFrameTypesPayload.add_depthsensorframetypes();
-    depthSensorFrameTypePayload->set_type(depthSensorFrameType.type);
-    depthSensorFrameTypePayload->set_width(depthSensorFrameType.width);
-    depthSensorFrameTypePayload->set_height(depthSensorFrameType.height);
-
-    for (const aditof::DepthSensorFrameContent &depthSensorFrameContent :
-         depthSensorFrameType.content) {
-      uvc_payload::DepthSensorFrameContent *depthSensorFrameContentPayload =
-          depthSensorFrameTypePayload->add_depthsensorframecontent();
-      depthSensorFrameContentPayload->set_type(depthSensorFrameContent.type);
-      depthSensorFrameContentPayload->set_width(depthSensorFrameContent.width);
-      depthSensorFrameContentPayload->set_height(
-          depthSensorFrameContent.height);
-    }
-  }
-}
-
-void convertProtoMsgToDepthSensorFrameType(
-    const uvc_payload::DepthSensorFrameType &protoMsg,
-    aditof::DepthSensorFrameType &aditofStruct) {
-  aditofStruct.type = protoMsg.type();
-  aditofStruct.width = protoMsg.width();
-  aditofStruct.height = protoMsg.height();
-  for (int i = 0; i < protoMsg.depthsensorframecontent_size(); ++i) {
-    aditof::DepthSensorFrameContent content;
-
-    content.type = protoMsg.depthsensorframecontent(i).type();
-    content.width = protoMsg.depthsensorframecontent(i).width();
-    content.height = protoMsg.depthsensorframecontent(i).height();
-    aditofStruct.content.emplace_back(content);
-  }
 }
 
 // brief: fills buff with the size and contents of strBlob
