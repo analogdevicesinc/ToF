@@ -70,17 +70,17 @@ static const char kUsagePublic[] =
       data_collect (-h | --help) 
 
     Arguments:
-      FILE            Input config_default.json file (which has *.ccb and *.cfg)
+      FILE            Input config_default.json 
 
     Options:
       -h --help          Show this screen.
-      --f <folder>       Input folder to save data to. Max folder name size is 512. [default: ./]
+      --f <folder>       Output folder (Max length: 512) [default: ./]
       --n <ncapture>     Number of frames to capture. [default: 1]
       --m <mode>         Mode to capture data in. [default: 10]
       --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
       --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
-      --wt <warmup>      Warmup Time (in seconds) before data capture [default: 0]
-      --ip <ip>          Camera IP address
+      --wt <warmup>      Warmup Time (in seconds) [default: 0]
+      --ip <ip>          Camera IP
 
     Valid mode (--m) options are:
         3: Passive IR
@@ -97,18 +97,18 @@ static const char kUsageInternal[] =
       data_collect (-h | --help) 
 
     Arguments:
-      FILE            Input config_default.json file (which has *.ccb and *.cfg)
+      FILE            Input config_default.json 
 
     Options:
       -h --help          Show this screen.
-      --f <folder>       Input folder to save data to. Max folder name size is 512. [default: ./]
+      --f <folder>       Output folder [default: ./]
       --n <ncapture>     Number of frames to capture. [default: 1]
       --m <mode>         Mode to capture data in. [default: 10]
       --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
-      --ft <frame_type>  Type of frame to be captured [default: raw]
+      --ft <frame_type>  Type of frame [default: raw]
       --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
-      --wt <warmup>      Warmup Time (in seconds) before data capture [default: 0]
-      --ip <ip>          Camera IP address
+      --wt <warmup>      Warmup Time (in seconds) [default: 0]
+      --ip <ip>          Camera IP
 )";
 
 
