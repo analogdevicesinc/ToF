@@ -1350,6 +1350,8 @@ static int uvc_events_process_data(struct uvc_device *dev,
         hasClientRequestLengthSet = true;
       }
     }
+
+    return 0;
   }
   
   ctrl = (struct uvc_streaming_control *)&data->data;
