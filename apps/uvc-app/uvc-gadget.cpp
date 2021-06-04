@@ -229,7 +229,6 @@ std::vector<std::shared_ptr<aditof::DepthSensorInterface>> depthSensors;
 std::vector<std::shared_ptr<aditof::StorageInterface>> storages;
 std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
     temperatureSensors;
-bool sensors_are_created = false;
 
 /* UVC only works with one depth sensor */
 std::shared_ptr<aditof::DepthSensorInterface> camDepthSensor;
@@ -311,41 +310,16 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
   switch (clientRequestMsg.func_name()) {
 
   case uvc_payload::FunctionName::SEARCH_SENSORS: {
-    if (sensors_are_created == false) {
-      // Build the enumerator
-      auto sensorsEnumerator =
-        aditof::SensorEnumeratorFactory::buildTargetSensorEnumerator();
-      if (!sensorsEnumerator) {
-        const std::string errorMsg("Failed to construct a sensors enumerator!");
-        LOG(ERROR) << errorMsg;
-        response.set_message(errorMsg);
-        response.set_status(static_cast<uvc_payload::Status>(aditof::Status::UNAVAILABLE));
-        break;
-      }
-
-      // Search for sensors
-      sensorsEnumerator->searchSensors();
-      sensorsEnumerator->getDepthSensors(depthSensors);
-      sensorsEnumerator->getStorages(storages);
-      sensorsEnumerator->getTemperatureSensors(temperatureSensors);
-      sensors_are_created = true;
-    }
-
-    // Add information about available sensors
-
     // Depth sensor
     if (depthSensors.size() < 1) {
       response.set_message("No depth sensors are available");
       response.set_status(::uvc_payload::Status::UNREACHABLE);
       break;
     }
-    camDepthSensor = depthSensors.front();
+
     aditof::SensorDetails depthSensorDetails;
     camDepthSensor->getDetails(depthSensorDetails);
     auto pbSensorsInfo = response.mutable_sensors_info();
-    sensorV4lBufAccess =
-      std::dynamic_pointer_cast<aditof::V4lBufferAccessInterface>(
-        camDepthSensor);
 
     // Storages
     int storage_id = 0;
