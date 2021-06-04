@@ -58,7 +58,11 @@ Status UsbSensorEnumerator::searchSensors() {
 
     hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
+#if defined(ITOF)
+    std::string devName("UVC Camera");
+#else
     std::string devName("ADI TOF DEPTH SENSOR");
+#endif
     ICreateDevEnum *DevEnum = NULL;
 
     hr = CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC_SERVER,
