@@ -332,17 +332,18 @@ aditof::Status UsbWindowsUtils::uvcExUnitGetResponse(IBaseFilter *pVideoInputFil
         return Status::GENERIC_ERROR;
     }
 
+    uint8_t packet[MAX_BUF_SIZE];
+
     // Read the length of the string we're about to read next from the UVC gadget
-    size_t stringLength;
-    hr = UvcExUnitGetProperty(&handle, uvcGetRequestControl, reinterpret_cast<uint8_t *>(&stringLength), MAX_BUF_SIZE);
+    hr = UvcExUnitGetProperty(&handle, uvcGetRequestControl, packet, MAX_BUF_SIZE);
     if (FAILED(hr)) {
         LOG(WARNING) << "Failed to read the length of the response string. Error: " << hr;
         return Status::GENERIC_ERROR;
     }
+    size_t stringLength = reinterpret_cast<size_t *>(packet)[0];
 
     responseStr.reserve(stringLength);
 
-    uint8_t packet[MAX_BUF_SIZE];
     size_t readBytes = 0;
     size_t readlength = 0;
 
