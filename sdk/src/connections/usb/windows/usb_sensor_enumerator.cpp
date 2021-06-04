@@ -117,6 +117,8 @@ Status UsbSensorEnumerator::searchSensors() {
                     // Send request
                     usb_payload::ClientRequest requestMsg;
                     requestMsg.set_func_name(usb_payload::FunctionName::SEARCH_SENSORS);
+                    requestMsg.add_func_int32_param(1); // TO DO: Check if this is needed. Without it, the serialized string will be empty.
+
                     std::string requestStr;
                     requestMsg.SerializeToString(&requestStr);
                     status = UsbWindowsUtils::uvcExUnitSendRequest(pVideoInputFilter, requestStr);

@@ -1090,6 +1090,7 @@ static void uvc_events_process_control(struct uvc_device *dev, uint8_t req,
           SET_REQ_ERROR_CODE(0x07, 1);
           break;
       }
+      break;
     case 2: /* Server response */
     case 3: /* EEPROM Write */
     case 4: /* EEPROM Write */
@@ -1319,6 +1320,7 @@ static int uvc_events_process_data(struct uvc_device *dev,
         size_t packetSize = (remainingCharsToRead > MAX_BUFF_SIZE) ? MAX_BUFF_SIZE : remainingCharsToRead;
         clientRequestBlob.append(reinterpret_cast<const char *>(data->data), packetSize);
         clientRequestCharsRead += packetSize;
+        remainingCharsToRead -= clientRequestCharsRead;
 
         if (remainingCharsToRead == 0) {
           // de-serialize client request
@@ -1344,7 +1346,7 @@ static int uvc_events_process_data(struct uvc_device *dev,
           hasClientRequestLengthSet = false;
         }
       } else {
-        size_t clientRequestBlobLength = *(reinterpret_cast<size_t *>(data->data));
+        clientRequestBlobLength = *(reinterpret_cast<size_t *>(data->data));
         clientRequestBlob.reserve(clientRequestBlobLength);
         clientRequestCharsRead = 0;
         hasClientRequestLengthSet = true;
