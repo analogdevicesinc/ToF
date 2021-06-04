@@ -1092,6 +1092,85 @@ static void uvc_events_process_control(struct uvc_device *dev, uint8_t req,
       }
       break;
     case 2: /* Server response */
+      switch (req) {
+        case UVC_SET_CUR:
+          USB_REQ_DEBUG("Received SET_CUR on %d\n", cs);
+          dev->set_cur_cs = cs;
+
+          resp->data[0] = 0x0;
+          resp->length = len;
+          break;
+
+        case UVC_GET_CUR:
+          USB_REQ_DEBUG("Received GET_CUR on %d\n", cs);
+
+          if (!hasServerResponseLengthRead) {
+            size_t len = sizeof(serverResponseBlobLength);
+            memcpy(resp->data, reinterpret_cast<uint8_t *>(&serverResponseBlobLength), len);
+
+            resp->length = len;
+          } else {
+            size_t bytesToRead = (serverResponseBlobLength - serverResponseCharsRead > MAX_BUFF_SIZE) ?
+              MAX_BUFF_SIZE : serverResponseBlobLength - serverResponseCharsRead;
+            const char *strData = serverResponseBlob.data();
+            memcpy(resp->data, strData + serverResponseCharsRead, bytesToRead);
+            serverResponseCharsRead += bytesToRead;
+
+            if (serverResponseCharsRead == serverResponseBlobLength) {
+              // We're read the entire response, now reset things to default
+              serverResponseCharsRead = 0;
+              hasServerResponseLengthRead = false;
+            }
+
+            resp->length = bytesToRead;
+          }
+
+          break;
+
+        case UVC_GET_INFO:
+        USB_REQ_DEBUG("Received GET_INFO on %d\n", cs);
+
+        resp->data[0] = UVC_CTRL_FLAG_SET_CUR | UVC_CTRL_FLAG_GET_CUR;
+        resp->length = 1;
+        break;
+
+        case UVC_GET_LEN:
+          USB_REQ_DEBUG("Received GET_LEN on %d\n", cs);
+
+          resp->data[0] = MAX_PACKET_SIZE; // 60 bytes
+          resp->data[1] = 0x00;
+          resp->length = 2;
+
+          USB_REQ_DEBUG("Responding with size %x for cs: %d\n", resp->data[0],
+                        cs);
+          break;
+
+        case UVC_GET_MIN:
+        case UVC_GET_MAX:
+        case UVC_GET_DEF:
+        case UVC_GET_RES:
+          USB_REQ_DEBUG("Received %x on %d\n", req, cs);
+
+          resp->data[0] = 0xff;
+          resp->length = 1;
+          break;
+        default:
+          printf("Unsupported bRequest: Received bRequest %x on cs %d\n", req,
+                 cs);
+          /*
+          * We don't support this control, so STALL the
+          * default control ep.
+          */
+          resp->length = -EL2HLT;
+          /*
+          * For every unsupported control request
+          * set the request error code to appropriate
+          * code.
+          */
+          SET_REQ_ERROR_CODE(0x07, 1);
+          break;
+      }
+      break;
     case 3: /* EEPROM Write */
     case 4: /* EEPROM Write */
       switch (req) {
