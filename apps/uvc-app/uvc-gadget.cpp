@@ -1081,6 +1081,7 @@ static void uvc_events_process_control(struct uvc_device *dev, uint8_t req,
           if (!hasServerResponseLengthRead) {
             size_t len = sizeof(serverResponseBlobLength);
             memcpy(resp->data, reinterpret_cast<uint8_t *>(&serverResponseBlobLength), len);
+            hasServerResponseLengthRead = true;
 
             resp->length = len;
           } else {
