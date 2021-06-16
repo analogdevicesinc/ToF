@@ -112,7 +112,7 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
                     {"embedded_header", 1, 128}
                 },
                 //width, height
-                120, 130, 
+                4096, 64, 
             },
             {"long_throw",  
                 { 
@@ -120,7 +120,7 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
                     {"ir", 333, 333},
                     {"embedded_header", 1, 128}
                 },
-                120, 130, 
+                4096, 130, 
             },
             {"aHat1",  
                 { 
@@ -128,11 +128,11 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
                     {"ir", 333, 333},
                     {"embedded_header", 1, 128}
                 },
-                120, 130, 
+                4096, 64, 
             },
             {"pcm",
                 {
-                    {"ir", 4096, 256},
+                    {"ir", 1024, 1024},
                     {"embedded_header", 1, 128}
                 },
                 4096, 256, //TODO header size not counted here
@@ -153,7 +153,7 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
                     {"embedded_header", 1, 128},
 
                 },
-                4096, 256, //TODO header size not counted here
+                4096, 2560, //TODO header size not counted here
             },
             {"chip_char", 
                 {
@@ -164,14 +164,17 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
             },
             {"qmp", 
                 {
-                    {"ir", 4096, 256},
-                    {"embedded_header", 1, 128}
+                     {"raw", 512, 5120},
+                     {"ir", 512, 512},
+                     {"xyz", 512, 512},
+                     {"depth", 512, 512},
+                     {"embedded_header", 1, 128}
                 },
-                4096, 256,
+                4096, 640,
             },
             {"pcm8", 
                 {
-                    {"ir", 4096, 256},
+                    {"ir", 1024, 1024},
                     {"embedded_header", 1, 128}
                 },
                 4096, 256,
@@ -181,16 +184,15 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
                     {"ir", 4096, 256},
                     {"embedded_header", 1, 128}
                 },
-                4096, 256,
+                4096, 192,
             },
             {"mp", 
                 {
-                    {"ir", 4096, 256},
+                    {"raw", 1024, 9216},
                     {"embedded_header", 1, 128}
                 },
-                4096, 256,
+                4096, 2304,
             },
 
         };
 };
-
