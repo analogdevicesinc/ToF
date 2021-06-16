@@ -44,6 +44,8 @@
 #include "tofi/tofi_utils.h"
 #include "tofi/tofi_config.h"
 
+#define CONFIG_DIR_NAME "/sdk/src/cameras/itof-camera/config/"
+
 CameraItof::CameraItof(
     std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
     std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms,
@@ -141,6 +143,9 @@ aditof::Status CameraItof::initialize() {
         if (cJSON_IsString(json_depth_ini_file) && (json_depth_ini_file->valuestring != NULL)) {
             // save depth ini file location
             m_ini_depth = std::string(CONFIG_DIR_NAME) + "/" + std::string(json_depth_ini_file->valuestring);
+        } else {
+             LOG(ERROR) << "DEPTH_INI not defined in JSON config file";
+             return Status::GENERIC_ERROR;
         }
 
         // Get optional power config
@@ -399,7 +404,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         frameDataLocation[i] = Convert11bitFloat2LinearVal(frameDataLocation[i]);
     }
 
-    if (totalCaptures > 1) {
+    if ((totalCaptures > 1) && (m_controls["enableDepthCompute"] == "on")) {
 
         if (NULL == m_tofi_compute_context) {
             LOG(ERROR) << "Depth compute libray not initialized";
