@@ -44,7 +44,7 @@
 #include "tofi/tofi_utils.h"
 #include "tofi/tofi_config.h"
 
-#define CONFIG_DIR_NAME "/sdk/src/cameras/itof-camera/config"
+#define CONFIG_DIR_NAME "config"
 
 CameraItof::CameraItof(
     std::shared_ptr<aditof::DepthSensorInterface> depthSensor,

@@ -186,7 +186,7 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
             return (unsigned long int)(frameDetail.height * frameDetail.width * sizeof(Point3I));
         }
         else {
-            return (unsigned long int)frameDetail.height * frameDetail.width * total_captures;
+            return (unsigned long int)frameDetail.height * frameDetail.width;
         }
     };
 

@@ -1735,7 +1735,7 @@ int main(int argc, char *argv[]) {
   /* Set parameters as passed by user. */
   if (default_resolution == 0) {
     udev->width = 4096;
-    udev->height = 256;
+    udev->height = 2560;
   } else {
     udev->width = 4096;
     udev->height = 64;
