@@ -661,21 +661,16 @@ aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
     unsigned int offset[2];
     unsigned int offset_idx;
 
-    unsigned short *tmpbuffer = nullptr;
-
     VIDEOINFOHEADER *pVi = reinterpret_cast<VIDEOINFOHEADER *>(
         m_implData->handle.pAmMediaType->pbFormat);
     int currentWidth = HEADER(pVi)->biWidth;
     int currentHeight = HEADER(pVi)->biHeight;
 
-    tmpbuffer = (unsigned short *)malloc(currentWidth * currentHeight *
-                                         sizeof(unsigned short));
-
     while (retryCount < 1000) {
         if (m_implData->handle.pCB->newFrame == 1) {
             long bufferSize = currentWidth * currentHeight * 2;
             hr = m_implData->handle.pGrabber->GetCurrentBuffer(
-                (long *)&bufferSize, (long *)tmpbuffer);
+                (long *)&bufferSize, (long *)buffer);
             if (hr != S_OK) {
                 LOG(WARNING) << "Incorrect Buffer Size allocated, Allocate "
                                 "bigger buffer";
@@ -691,12 +686,6 @@ aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
             retryCount++;
         }
     }
-
-    aditof::deinterleave((const char *)tmpbuffer, buffer,
-                         currentWidth * currentHeight * 3 / 2, currentWidth,
-                         currentHeight);
-
-    free(tmpbuffer);
 
     return retryCount >= 1000 ? Status::GENERIC_ERROR : status;
 }
