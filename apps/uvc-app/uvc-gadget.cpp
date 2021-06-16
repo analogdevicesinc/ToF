@@ -132,12 +132,17 @@ struct uvc_format_info {
 static const struct uvc_frame_info uvc_frames_yuyv[] = {
     {
         4096,
-        256,
+        2560,
         {666666, 1000000, 5000000, 0},
     },
     {
         4096,
-        64,
+        640,
+        {666666, 1000000, 5000000, 0},
+    },
+    {
+        4096,
+        256,
         {666666, 1000000, 5000000, 0},
     },
     {
@@ -1374,7 +1379,7 @@ static int uvc_events_process_data(struct uvc_device *dev,
         size_t packetSize = (remainingCharsToRead > MAX_BUFF_SIZE) ? MAX_BUFF_SIZE : remainingCharsToRead;
         clientRequestBlob.append(reinterpret_cast<const char *>(data->data), packetSize);
         clientRequestCharsRead += packetSize;
-        remainingCharsToRead -= clientRequestCharsRead;
+        remainingCharsToRead -= packetSize;
 
         if (remainingCharsToRead == 0) {
           // de-serialize client request
@@ -1557,8 +1562,8 @@ static void usage(const char *argv0) {
                   "0 = MMAP\n\t"
                   "1 = USER_PTR\n");
   fprintf(stderr, " -r <resolution> Select frame resolution:\n\t"
-                  "0 = 4096x256,\n\t"
-                  "1 = 4096x64,\n\t");
+                  "0 = 4096x2560,\n\t"
+                  "1 = 4096x640,\n\t");
   fprintf(stderr, " -u device	UVC Video Output device\n");
   fprintf(stderr, " -v device	V4L2 Video Capture device\n");
   fprintf(stderr, " -a Indicate that this is TOF hw\n");
@@ -1587,7 +1592,7 @@ int main(int argc, char *argv[]) {
   int ret, opt, nfds;
   /* Frame format/resolution related params. */
   int default_resolution = 0; /* 4096x256 */
-  int nbufs = 15;              /* Ping-Pong buffers */
+  int nbufs = 4;              /* Ping-Pong buffers */
   enum io_method uvc_io_method = IO_METHOD_USERPTR;
 
   DLOG(INFO) << "This UVC instance is using aditof sdk version: "
@@ -1695,7 +1700,7 @@ int main(int argc, char *argv[]) {
   /* Seperating v4l2 resolution from UVC resolution, depending on HW,
    * this can be set to - TOF: 640x960 or D3: 1280x720 */
   fmt.fmt.pix.width = default_resolution == 0 ? 4096 : 4096;
-  fmt.fmt.pix.height = default_resolution == 0 ? 256 : 64;
+  fmt.fmt.pix.height = default_resolution == 0 ? 2560 : 640;
 
   fmt.fmt.pix.sizeimage = fmt.fmt.pix.width * fmt.fmt.pix.height * 2;
   fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
@@ -1755,8 +1760,6 @@ int main(int argc, char *argv[]) {
                                          depthSensorFrameTypesPayload);
   depthSensorFrameTypesPayload.SerializeToString(&depthSensorFrameTypesBlob);
   marshallString(frameTypesBuffer, depthSensorFrameTypesBlob);
-
-  camDepthSensor->setFrameType(depthSensorFrameTypes[3]);
 
   /* Init UVC events. */
   uvc_events_init(udev);
