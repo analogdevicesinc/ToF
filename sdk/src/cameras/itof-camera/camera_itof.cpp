@@ -394,13 +394,14 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     embed_height = aModeInfo.embed_height;
     embed_width = aModeInfo.embed_width;
 
-    status = processFrame((uint8_t *)embedFrame, frameDataLocation, (uint8_t *)header, embed_height, embed_width, frame);
+    //status = processFrame((uint8_t *)embedFrame, frameDataLocation, (uint8_t *)header, embed_height, embed_width, frame);
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to process the frame";
         return status;
     }
 
     for (unsigned int i = 0; i < (m_details.frameType.height * m_details.frameType.width * totalCaptures); ++i) {
+        frameDataLocation[i] = frameDataLocation[i] >> 4;
         frameDataLocation[i] = Convert11bitFloat2LinearVal(frameDataLocation[i]);
     }
 
