@@ -565,55 +565,36 @@ aditof::Status
 UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     using namespace aditof;
     Status status = Status::OK;
-
     HRESULT hr = m_implData->handle.streamConf->GetFormat(
         &(m_implData->handle.pAmMediaType));
     if (FAILED(hr)) {
         LOG(WARNING) << "failed 7";
         return Status::GENERIC_ERROR;
     }
-
     // Send the frame type and all its content all the way to target
     usb_payload::ClientRequest requestMsg;
     auto frameTypeMsg = requestMsg.mutable_frame_type();
     UsbUtils::depthSensorFrameTypeToProtoMsg(type, frameTypeMsg);
-
-    // Read UVC gadget response
-    std::string responseStr;
-    status = UsbWindowsUtils::uvcExUnitGetResponse(m_implData->handle.pVideoInputFilter, responseStr);
+    // Send request
+    requestMsg.set_func_name(usb_payload::FunctionName::SET_FRAME_TYPE);
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbWindowsUtils::uvcExUnitSendRequest(
+        m_implData->handle.pVideoInputFilter, requestStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Request to get available frame types failed";
+        LOG(ERROR) << "Set frame type operation failed on UVC gadget";
         return status;
     }
-    usb_payload::ServerResponse responseMsg;
-    bool parsed = responseMsg.ParseFromString(responseStr);
-    if (!parsed) {
-        LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
-        return aditof::Status::INVALID_ARGUMENT;
-    }
-
-    DLOG(INFO) << "Received the following message with "
-                    "available frame types from target: "
-                << responseMsg.DebugString();
-
-    if (responseMsg.status() != usb_payload::Status::OK) {
-        LOG(ERROR) << "Set frame type operation failed on UVC gadget";
-        return static_cast<aditof::Status>(responseMsg.status());
-    }
-
     VIDEOINFOHEADER *pVih = reinterpret_cast<VIDEOINFOHEADER *>(
         m_implData->handle.pAmMediaType->pbFormat);
     HEADER(pVih)->biWidth = type.width;
     HEADER(pVih)->biHeight = type.height;
-
     hr = m_implData->handle.streamConf->SetFormat(
         m_implData->handle.pAmMediaType);
-
     if (FAILED(hr)) {
         LOG(WARNING) << "Could not set requested resolution (Frame Index)\n";
         return Status::GENERIC_ERROR;
     }
-
     return status;
 }
 
