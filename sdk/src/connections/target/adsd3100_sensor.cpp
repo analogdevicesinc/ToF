@@ -23,7 +23,7 @@
 #include "cameras/itof-camera/mode_info.h"
 
 #define MAX_SUBFRAMES_COUNT 10 // maximum number of subframes that are used to create a full frame (maximum total_captures of all modes)
-#define EXTRA_BUFFERS_COUNT 4  // how many extra buffers are sent to the driver in addition to the total_captures of a mode
+#define EXTRA_BUFFERS_COUNT 3  // how many extra buffers are sent to the driver in addition to the total_captures of a mode
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
@@ -374,6 +374,7 @@ aditof::Status Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &
     struct v4l2_format fmt;
     struct v4l2_buffer buf;
     size_t length, offset;
+    size_t pix_fallout, pix_drv;
 
     status = setMode(type.type);
     if (status != aditof::Status::OK){
@@ -381,7 +382,13 @@ aditof::Status Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &
         return status;
     }
 
-    m_capturesPerFrame = ModeInfo::getInstance()->getModeInfo(type.type).subframes;
+     //We have two resolution domains. First is driver one which is defined in adsd3100_sensor.h
+     //The second is the depthcompute input domain defined in mode_info.cpp
+     //The total number of pixels between these two should be equal
+     //Here compute the number of frames that should be requested to the driver based on the required number of pixels from g_modeInfoData[]
+     pix_fallout = ModeInfo::getInstance()->getModeInfo(type.type).width * ModeInfo::getInstance()->getModeInfo(type.type).height * ModeInfo::getInstance()->getModeInfo(type.type).subframes;
+     pix_drv = type.width * type.height;
+     m_capturesPerFrame = pix_fallout / pix_drv;
 
     for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
         dev = &m_implData->videoDevs[i];
@@ -397,6 +404,16 @@ aditof::Status Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &
             }
             free(dev->videoBuffers);
             dev->nVideoBuffers = 0;
+            CLEAR(req);
+	        req.count = 0;
+	        req.type = dev->videoBuffersType;
+	        req.memory = V4L2_MEMORY_MMAP;
+
+	        if (xioctl(dev->fd, VIDIOC_REQBUFS, &req) == -1) {
+	            LOG(WARNING) << "VIDIOC_REQBUFS error "
+	                         << "errno: " << errno << " error: " << strerror(errno);
+	            return Status::GENERIC_ERROR;
+	        }
         } else if (dev->nVideoBuffers) {
             return status;
         }
