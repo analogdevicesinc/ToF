@@ -41,6 +41,7 @@ typedef struct {
   int16_t *p_xyz_frame;           ///< Pointer to the XYZ Frame
   void *p_tofi_processor_config;  ///< Pointer to the Processor Config
   void *p_cal_config;             ///< Pointer to the Calibration config data
+  uint16_t *p_depth16_frame;      ///< Pointer to the Depth16 Frame
 } TofiComputeContext;
 
 /// Function to Initialize the configuration for TOFI compute context
