@@ -259,19 +259,19 @@ CameraItof::getAvailableModes(std::vector<std::string> &availableModes) const {
     return status;
 }
 
-aditof::Status CameraItof::setFrameType(const std::string &frameType) {
+aditof::Status CameraItof::setFrameType(const std::string& frameType) {
     using namespace aditof;
     Status status = Status::OK;
 
     auto frameTypeIt = std::find_if(
         m_availableSensorFrameTypes.begin(), m_availableSensorFrameTypes.end(),
-        [&frameType](const DepthSensorFrameType &d) {
+        [&frameType](const DepthSensorFrameType& d) {
             return (d.type == frameType);
         });
 
     if (frameTypeIt == m_availableSensorFrameTypes.end()) {
         LOG(WARNING) << "Frame type: " << frameType
-                     << " not supported by camera";
+            << " not supported by camera";
         return Status::INVALID_ARGUMENT;
     }
 
@@ -282,6 +282,14 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         LOG(WARNING) << "Failed to set frame type";
         return status;
     }
+
+    if (frameType == "pcm") {
+        m_controls["enableDepthCompute"] = "off";
+    }
+    else {
+        m_controls["enableDepthCompute"] = "on";
+    }
+
     // Store the frame details in camera details
     m_details.frameType.type = (*frameTypeIt).type;
     // TO DO: m_details.frameType.cameraMode =
