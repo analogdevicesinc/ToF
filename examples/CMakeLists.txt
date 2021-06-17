@@ -38,5 +38,6 @@ else()
         $<TARGET_FILE:aditof-test>
         $<TARGET_FILE:first-frame>
         $<TARGET_FILE:data_collect>
+	$<TARGET_FILE:ADIToFGUI>
         DESTINATION ${CMAKE_INSTALL_BINDIR} )
 endif()
