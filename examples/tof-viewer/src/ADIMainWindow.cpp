@@ -497,6 +497,17 @@ void ADIMainWindow::RefreshDevices()
 			m_connectedDevices.emplace_back(index, "ToF Camera" + std::to_string(index));
 		}
 	}
+	else {
+		// Add USB camera
+		aditof::System system;
+		std::vector<std::shared_ptr<aditof::Camera>> cameras;
+		system.getCameraList(cameras);
+
+		if (cameras.size() > 0) {
+			int index = m_connectedDevices.size();
+			m_connectedDevices.emplace_back(index, "ToF Camera" + std::to_string(index));
+		}
+	}
 
 	if (!m_connectedDevices.empty())
 	{
