@@ -23,6 +23,7 @@ extern "C" {  // only need to export C interface if
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "tofi_camera_intrinsics.h"
 #include "tofi_error.h"
 
 typedef struct ConfigFileData {
@@ -37,8 +38,10 @@ typedef struct XYZTable {
 } XYZTable;
 
 typedef struct TofiConfig {
-  uint32_t n_rows;     ///< Number of rows
-  uint32_t n_cols;     ///< Number of Columns
+  uint32_t n_rows;  ///< Number of rows
+  uint32_t n_cols;  ///< Number of Columns
+  CameraIntrinsics
+      *p_camera_intrinsics;  ///< Pointer to the camera intrinsic parameters
   XYZTable xyz_table;  ///< Structure holding pointer to the X,Y,and Z table
   const struct CAL_LSDAC_BLOCK_V1
       *p_lsdac_block;  ///< Pointer to the LSDAC Block
@@ -47,6 +50,7 @@ typedef struct TofiConfig {
   const struct CAL_ADDRVAL_REG_BLOCK_V1
       *p_cal_reg_block;           ///< Pointer to the register writes block
   const void *p_tofi_cal_config;  ///< Pointer to the calibration config block
+  const char *p_tofi_config_str;  ///< Pointer to a string of ini config data
 } TofiConfig;
 
 ///

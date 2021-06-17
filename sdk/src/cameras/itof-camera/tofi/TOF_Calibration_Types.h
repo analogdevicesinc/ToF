@@ -8,6 +8,12 @@
 #ifndef TOF_CALIBRATION_TYPES_H
 #define TOF_CALIBRATION_TYPES_H
 
+#ifdef _WIN32
+//disable zero-length array warning in MSVC
+#pragma warning( push )
+#pragma warning( disable : 4200 )
+#endif
+
 #include <stdint.h>
 
 #define CALIB_FILE_VER_NEW_FORMAT 0x0301
@@ -356,5 +362,9 @@ struct CAL_RELATIVE_ILLUM_BLOCK
   uint16_t Model[]; // Number of elements called out by nSamples field + Padding
   // (if number of samples are odd)
 };
+
+#ifdef _WIN32
+#pragma warning( pop )
+#endif
 
 #endif // TOF_CALIBRATION_TYPES_H
