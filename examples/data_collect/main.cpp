@@ -390,19 +390,6 @@ int main(int argc, char *argv[]) {
         LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data from JSON config file...";
     }
 
-    // Set UVC format type and camera frame details
-    if ("raw" == frame_type) {
-        camera->setControl("enableDepthCompute", "off");
-        Fsfparams.raw_frames = true;
-    } else if ("depth" == frame_type) {
-        camera->setControl("enableDepthCompute", "on");
-        Fsfparams.raw_frames = false;
-    }
-    else {
-        LOG(ERROR) << "unsupported frame type!";
-        return 0;      
-    }
-
     // Get frame types
     std::vector<std::string> frameTypes;
     status = camera->getAvailableFrameTypes(frameTypes);
@@ -420,6 +407,19 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 0;
     }    
+
+    // Set UVC format type and camera frame details
+    if ("raw" == frame_type) {
+        camera->setControl("enableDepthCompute", "off");
+        Fsfparams.raw_frames = true;
+    } else if ("depth" == frame_type) {
+        camera->setControl("enableDepthCompute", "on");
+        Fsfparams.raw_frames = false;
+    }
+    else {
+        LOG(ERROR) << "unsupported frame type!";
+        return 0;      
+    }
 
     char fsf_file[MAX_FILE_PATH_SIZE];  
     char time_buffer[128];
