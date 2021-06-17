@@ -413,8 +413,14 @@ int main(int argc, char *argv[]) {
         camera->setControl("enableDepthCompute", "off");
         Fsfparams.raw_frames = true;
     } else if ("depth" == frame_type) {
-        camera->setControl("enableDepthCompute", "on");
-        Fsfparams.raw_frames = false;
+        if ((frameTypes[mode] == "pcm") || (frameTypes[mode] == "pcm8")) {
+            LOG(ERROR) << frameTypes[mode] << " mode doesn't contain depth data, please set --ft (frameType) to raw.";
+            return 0;
+        }
+        else {
+            camera->setControl("enableDepthCompute", "on");
+            Fsfparams.raw_frames = false;
+        }
     }
     else {
         LOG(ERROR) << "unsupported frame type!";
