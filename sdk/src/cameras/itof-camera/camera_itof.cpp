@@ -283,7 +283,7 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
         return status;
     }
 
-    if (frameType == "pcm") {
+    if ((frameType == "pcm") || (frameType == "pcm8")) {
         m_controls["enableDepthCompute"] = "off";
     }
     else {
