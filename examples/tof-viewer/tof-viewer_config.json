@@ -3,6 +3,5 @@
 "CCB_Calibration": "camera_calibration.ccb",
 "VAUX_POWER_VOLTAGE": "18",
 "skip_network_cameras": "on",
-"camera_ip": "192.168.1.2",
-"DEPTH_INI": "RawToDepth.ini"
+"camera_ip": "192.168.1.2"
 }

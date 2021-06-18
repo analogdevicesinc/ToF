@@ -140,13 +140,9 @@ aditof::Status CameraItof::initialize() {
 
         // Get depth ini file location
         const cJSON *json_depth_ini_file = cJSON_GetObjectItemCaseSensitive(config_json, "DEPTH_INI");
-        if (cJSON_IsString(json_depth_ini_file) && (json_depth_ini_file->valuestring != NULL)) {
+        if (cJSON_IsString(json_depth_ini_file) && (json_depth_ini_file->valuestring != NULL))
             // save depth ini file location
             m_ini_depth = std::string(CONFIG_DIR_NAME) + "/" + std::string(json_depth_ini_file->valuestring);
-        } else {
-             LOG(ERROR) << "DEPTH_INI not defined in JSON config file";
-             return Status::GENERIC_ERROR;
-        }
 
         // Get optional power config
         const cJSON *json_vaux_pwr = cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_ENABLE");
