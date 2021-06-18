@@ -531,7 +531,12 @@ aditof::Status UsbDepthSensor::start() {
     using namespace aditof;
     Status status = Status::OK;
 
-    // Nothing to do
+    // RUN THE STREAM
+    HRESULT hr = m_implData->handle.pControl->Run();
+    if (FAILED(hr)) {
+        LOG(WARNING) << "ERROR: Could not start graph";
+        return Status::GENERIC_ERROR;
+    }
 
     return status;
 }
@@ -639,13 +644,6 @@ aditof::Status UsbDepthSensor::program(const uint8_t *firmware, size_t size) {
             LOG(WARNING) << " Error in Programming AFE";
             return Status::GENERIC_ERROR;
         }
-    }
-
-    // RUN THE STREAM
-    hr = m_implData->handle.pControl->Run();
-    if (FAILED(hr)) {
-        LOG(WARNING) << "ERROR: Could not start graph";
-        return Status::GENERIC_ERROR;
     }
 
     return Status::OK;
