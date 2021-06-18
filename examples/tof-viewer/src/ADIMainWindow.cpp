@@ -1326,7 +1326,7 @@ void ADIMainWindow::prepareCamera(std::string mode)
 	int totalCaptures = camDetails.frameType.totalCaptures;
 	
 	view->m_ctrl->m_recorder->m_frameDetails.totalCaptures = totalCaptures;
-	status = view->m_ctrl->m_cameras[0]->setControl("enableDepthCompute", "off");
+	//status = view->m_ctrl->m_cameras[0]->setControl("enableDepthCompute", "off");
 
 	// Program the camera with cfg passed, set the mode by writing to 0x200 and start the camera
 	status = view->m_ctrl->m_cameras[0]->start();
