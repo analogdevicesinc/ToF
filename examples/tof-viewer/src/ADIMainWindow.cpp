@@ -1410,7 +1410,7 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect)
 				stopPlayCCD();
 				break;
 			}
-			
+			prepareCamera(m_cameraModes[modeSelection].second);
 			view->m_ctrl->StartCapture();
 			view->m_ctrl->requestFrame();
 			captureSeparateEnabled = false;
@@ -1462,7 +1462,7 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect)
 				stopPlayCCD();
 				break;
 			}
-
+			prepareCamera(m_cameraModes[modeSelection].second);
 			view->m_ctrl->StartCapture();
 			view->m_ctrl->requestFrame();
 			captureSeparateEnabled = false;
