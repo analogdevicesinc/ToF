@@ -366,7 +366,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     totalCaptures = std::atoi(totalCapturesStr.c_str());
 
     uint16_t *frameDataLocation = nullptr;
-    if (m_details.frameType.type == "pcm"){
+    if ((m_details.frameType.type == "pcm") || (m_details.frameType.type == "pcm8")){
         frame->getData("ir", &frameDataLocation);
     }
     else {
