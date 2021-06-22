@@ -171,12 +171,22 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
     using namespace aditof;
     unsigned int totalSize = 0;
     unsigned int pos = 0;
-    uint16_t  embed_hdr_length;
-    uint8_t total_captures;
+    uint16_t  embed_hdr_length = 0;
+    uint8_t total_captures = 0;
+    Status status;
 
     //get attributes 
-    getIntAttribute<uint16_t>("embed_hdr_length", embed_hdr_length);
-    getIntAttribute<uint8_t>("total_captures", total_captures);
+    status = getIntAttribute<uint16_t>("embed_hdr_length", embed_hdr_length);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to get embed_hdr_length attribute!";
+        return;
+    }
+
+    status = getIntAttribute<uint8_t>("total_captures", total_captures);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to get total_captures attribute!";
+        return;
+    }
 
     auto getSubframeSize = [embed_hdr_length, total_captures](FrameDataDetails frameDetail){
         if (frameDetail.type == "header"){

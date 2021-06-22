@@ -1583,7 +1583,7 @@ int main(int argc, char *argv[]) {
   signal(SIGTERM, stopHandler);
   signal(SIGQUIT, stopHandler);
 
-  struct uvc_device *udev;
+  struct uvc_device *udev = nullptr;
   struct timeval tv;
   struct v4l2_format fmt;
   const char *uvc_devname = "/dev/video0";
