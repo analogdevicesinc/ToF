@@ -17,6 +17,8 @@ enum FunctionName
   SEARCH_SENSORS = 0;
   GET_AVAILABLE_FRAME_TYPES = 1;
   SET_FRAME_TYPE = 2;
+  READ_REGISTERS = 3;
+  WRITE_REGISTERS = 4;
 }
 
 message StorageInfo
