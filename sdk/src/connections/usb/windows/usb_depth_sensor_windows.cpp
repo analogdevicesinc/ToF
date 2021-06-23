@@ -692,37 +692,48 @@ aditof::Status UsbDepthSensor::readAfeRegisters(const uint16_t *address,
                                                 uint16_t *data, size_t length) {
     using namespace aditof;
 
-    ExUnitHandle handle;
-    ULONG pageSize = 60;
+    Status status = Status::OK;
+    
+    // TO DO: is it required to call UvcFindNodeAndGetControl here?
 
-    HRESULT hr = UsbWindowsUtils::UvcFindNodeAndGetControl(
-        &handle, &m_implData->handle.pVideoInputFilter);
-    if (hr != S_OK) {
-        LOG(WARNING) << "Failed to find node and get control. Error: "
-                     << std::hex << hr;
-        return Status::GENERIC_ERROR;
+    // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::READ_REGISTERS);
+    requestMsg.add_func_int32_param(static_cast<::google::int32>(length));
+    requestMsg.add_func_bytes_param(address, length * sizeof(uint16_t));
+
+    // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbWindowsUtils::uvcExUnitSendRequest(m_implData->handle.pVideoInputFilter, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to read registers failed";
+        return status;
     }
 
-    for (size_t j = 0; j < length; j++) {
-        hr = UsbWindowsUtils::UvcExUnitSetProperty(
-            &handle, 2, reinterpret_cast<const uint8_t *>(&address[j]),
-            pageSize);
-        if (FAILED(hr)) {
-            LOG(WARNING)
-                << "Failed to set property via UVC extension unit. Error: "
-                << std::hex << hr;
-            return Status::GENERIC_ERROR;
-        }
-
-        hr = UsbWindowsUtils::UvcExUnitGetProperty(
-            &handle, 2, reinterpret_cast<uint8_t *>(&data[j]), pageSize);
-        if (FAILED(hr)) {
-            LOG(WARNING)
-                << "Failed to get property via UVC extension unit. Error: "
-                << std::hex << hr;
-            return Status::GENERIC_ERROR;
-        }
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbWindowsUtils::uvcExUnitGetResponse(m_implData->handle.pVideoInputFilter, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to get response of the request to read registers";
+        return status;
     }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    DLOG(INFO) << "Received the following message: " << responseMsg.DebugString();
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Read registers operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
+
+    // If request and response went well, extract data from response
+    memcpy(data, responseMsg.bytes_payload(0).c_str(), responseMsg.bytes_payload(0).length());
 
     return Status::OK;
 }
@@ -732,56 +743,45 @@ aditof::Status UsbDepthSensor::writeAfeRegisters(const uint16_t *address,
                                                  size_t length) {
     using namespace aditof;
 
-    ExUnitHandle handle;
+    Status status = Status::OK;
 
-    HRESULT hr = UsbWindowsUtils::UvcFindNodeAndGetControl(
-        &handle, &m_implData->handle.pVideoInputFilter);
-    if (hr != S_OK) {
-        LOG(WARNING) << "Failed to find node and get control. Error: "
-                     << std::hex << hr;
-        return Status::GENERIC_ERROR;
+    // TO DO: is it required to call UvcFindNodeAndGetControl here?
+
+    // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::WRITE_REGISTERS);
+    requestMsg.add_func_int32_param(static_cast<::google::int32>(length));
+    requestMsg.add_func_bytes_param(address, length * sizeof(uint16_t));
+    requestMsg.add_func_bytes_param(data, length * sizeof(uint16_t));
+
+    // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbWindowsUtils::uvcExUnitSendRequest(m_implData->handle.pVideoInputFilter, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to write registers failed";
+        return status;
     }
 
-    BYTE buf[MAX_BUF_SIZE];
-    BYTE sampleCnt = 0;
-    BYTE b = sizeof(uint16_t); // Size (in bytes) of an AFE register
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbWindowsUtils::uvcExUnitGetResponse(m_implData->handle.pVideoInputFilter, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to get response of the request to write registers";
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
 
-    length *= 2 * sizeof(uint16_t);
+    DLOG(INFO) << "Received the following message: " << responseMsg.DebugString();
 
-    const BYTE *pAddr = reinterpret_cast<const BYTE *>(address);
-    const BYTE *pData = reinterpret_cast<const BYTE *>(data);
-    const BYTE *ptr = pAddr;
-    bool pointingAtAddr = true;
-
-    while (length) {
-        memset(buf, 0, MAX_BUF_SIZE);
-        buf[0] = length > MAX_PACKET_SIZE ? 0x01 : 0x02;
-        buf[1] = length > MAX_PACKET_SIZE ? MAX_PACKET_SIZE
-                                          : static_cast<BYTE>(length);
-        for (int n = 0; n < buf[1]; ++n) {
-            if ((sampleCnt / b) && (sampleCnt % b == 0)) {
-                if (pointingAtAddr) {
-                    pAddr = ptr;
-                    ptr = pData;
-                } else {
-                    pData = ptr;
-                    ptr = pAddr;
-                }
-                pointingAtAddr = !pointingAtAddr;
-            }
-            buf[2 + n] = *ptr++;
-            ++sampleCnt;
-        }
-        length -= buf[1];
-
-        hr = UsbWindowsUtils::UvcExUnitSetProperty(&handle, 1, &buf[0],
-                                                   MAX_BUF_SIZE);
-        if (FAILED(hr)) {
-            LOG(WARNING)
-                << "Failed to set property via UVC extension unit. Error: "
-                << std::hex << hr;
-            return Status::GENERIC_ERROR;
-        }
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Read registers operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
     }
 
     return Status::OK;
