@@ -1400,6 +1400,7 @@ static int uvc_events_process_data(struct uvc_device *dev,
           }
 
           // reset to default
+          clientRequestBlob.clear();
           clientRequestBlobLength = 0;
           clientRequestCharsRead = 0;
           hasClientRequestLengthSet = false;
