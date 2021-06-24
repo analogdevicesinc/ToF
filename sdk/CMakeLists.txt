@@ -197,9 +197,13 @@ endif()
 #LIBTOFI_LIBDIR_PATH - path to libtofi_config.so and libtofi_compute.so folder
 
 if (USE_ITOF)
-
 	if (NOT LIBTOFI_LIBDIR_PATH)
-        		set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
+        if( WITH_DISABLE_DEPTH_LIBS )
+                #find_path ( LIB_LOCATION NAMES tofi_compute.dll PATHS "${CMAKE_BINARY_DIR}/apps/empty-library-generator/")
+        		set(LIBTOFI_LIBDIR_PATH ${LIB_LOCATION} PARENT_SCOPE)
+        else()
+                set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs" PARENT_SCOPE)
+        endif()
     endif()
 	
 	if ( UNIX )
