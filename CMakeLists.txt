@@ -30,6 +30,7 @@ option(USE_CHICONY "Use Chicony 006 camera?" OFF)
 option(USE_ITOF "Use ITOF camera?" ON)
 option(USE_FXTOF1 "Use FXTOF1 camera?" OFF)
 option(WITH_TOOLS "Build tools?" OFF)
+option(USE_DEPTH_COMPUTE_STUBS "Use empty generated libs?" OFF)
 
 if (WITH_NETWORK)
         add_definitions(-DHAS_NETWORK)
@@ -70,10 +71,11 @@ endif()
 
 if (USE_ITOF)
         add_definitions(-DITOF)
+        set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs" CACHE STRING "" FORCE)
 endif()
 
-if(WITH_DISABLE_DEPTH_LIBS)
-        add_definitions(-DWITH_DISABLE_DEPTH_LIBS)
+if(USE_DEPTH_COMPUTE_STUBS)
+        add_definitions(-DUSE_DEPTH_COMPUTE_STUBS)
 endif()
 
 set(CONFIG_DIR_NAME "config")
