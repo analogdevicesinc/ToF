@@ -26,8 +26,8 @@ SOFTWARE.
 
 #include <cstdint>
 #include <memory>
-#include "aditof/device_interface.h"
-#include "aditof/eeprom_interface.h"
+#include "aditof/depth_sensor_interface.h"
+#include "aditof/storage_interface.h"
 
 /**
  * @brief Namespace aditof
@@ -92,11 +92,11 @@ class ModuleMemory {
 public:
     /**
      * @brief Constructor
-     * @param[in] - device, USB/EHTERNET/Local device interface connected to module memory flash/eeprom
+     * @param[in] - depthSensor, USB/EHTERNET/Local sensor interface connected to module memory flash/eeprom
      * @param[in] - module memory device specific implementataion (eeprom/flash)
-     * @see DeviceInterface
+     * @see DepthSensorInterface
      */
-    ModuleMemory(DeviceInterface *const device, std::shared_ptr<EepromInterface> &eeprom) : m_device(device), m_eeprom(eeprom) {}
+    ModuleMemory(std::shared_ptr<DepthSensorInterface> depthSensor, std::shared_ptr<StorageInterface> eeprom) : m_depthSensor(depthSensor), m_eeprom(eeprom) {}
     
     /**
      * @brief Destructor
@@ -154,8 +154,8 @@ protected:
     std::string writeTempCFG(const uint8_t *const cfgFileData, const uint32_t length);
     std::string writeTempJSON(const std::string ccbFilename, const std::string cfgFilename);
 
-    DeviceInterface *m_device = nullptr;
-    std::shared_ptr<EepromInterface> m_eeprom = nullptr;
+    std::shared_ptr<DepthSensorInterface> m_depthSensor;
+    std::shared_ptr<StorageInterface> m_eeprom;
 };
 
 } // namespace aditof
