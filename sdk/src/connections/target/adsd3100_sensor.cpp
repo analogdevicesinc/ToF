@@ -27,9 +27,8 @@
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
-#define V4L2_CID_AD_DEV_SET_CHIP_CONFIG 0xA00B00
-#define V4L2_CID_AD_DEV_READ_REG 0xA00B01
-#define CTRL_PACKET_SIZE 4096
+#define V4L2_CID_AD_DEV_CHIP_CONFIG (0x9819e1)
+#define CTRL_PACKET_SIZE 65537
 #define CTRL_SET_MODE (0x9819e0)
 // Can be moved to target_definitions in "camera"/"platform"
 #define TEMP_SENSOR_DEV_PATH "/dev/i2c-1"
@@ -737,24 +736,30 @@ aditof::Status Adsd3100Sensor::readAfeRegisters(const uint16_t *address,
 
     static struct v4l2_ext_control extCtrl;
     static struct v4l2_ext_controls extCtrls;
+    static uint16_t buf[CTRL_PACKET_SIZE];
 
-    extCtrl.size = 2048 * sizeof(unsigned short);
+    /*
+    Control structure:
+    uint16_t reg_addr
+    uint16_t values_nr
+    uint16_t [65535] val
+    */
+    extCtrl.size = CTRL_PACKET_SIZE * sizeof(uint16_t);
 
-    for (size_t i = 0; i < length; i++) {
-        uint16_t aux_address = address[i];
-        extCtrl.p_u16 = const_cast<uint16_t *>(&aux_address);
-        extCtrl.id = V4L2_CID_AD_DEV_READ_REG;
-        memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
-        extCtrls.controls = &extCtrl;
-        extCtrls.count = 1;
+    buf[0] = address[0];
+    buf[1] = (uint16_t)length;
+    extCtrl.p_u16 = buf;
+    extCtrl.id = V4L2_CID_AD_DEV_CHIP_CONFIG;
+    memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
+    extCtrls.controls = &extCtrl;
+    extCtrls.count = 1;
 
-        if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-            LOG(WARNING) << "Programming AFE error "
-                         << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
-        }
-        data[i] = *extCtrl.p_u16;
+    if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+        LOG(WARNING) << "Reading ADSD3100 error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return Status::GENERIC_ERROR;
     }
+    memcpy(data, extCtrl.p_u16 + 2, length * sizeof(uint16_t));
 
     return status;
 }
@@ -768,33 +773,31 @@ aditof::Status Adsd3100Sensor::writeAfeRegisters(const uint16_t *address,
     static struct v4l2_ext_control extCtrl;
     static struct v4l2_ext_controls extCtrls;
     struct VideoDev *dev = &m_implData->videoDevs[0];
-    static unsigned char buf[CTRL_PACKET_SIZE];
-    unsigned short sampleCnt = 0;
+    static uint16_t buf[CTRL_PACKET_SIZE];
 
-    length *= 2 * sizeof(unsigned short);
-    while (length) {
-        memset(buf, 0, CTRL_PACKET_SIZE);
-        size_t maxBytesToSend =
-            length > CTRL_PACKET_SIZE ? CTRL_PACKET_SIZE : length;
-        for (size_t i = 0; i < maxBytesToSend; i += 4) {
-            *(unsigned short *)(buf + i) = address[sampleCnt];
-            *(unsigned short *)(buf + i + 2) = data[sampleCnt];
-            sampleCnt++;
-        }
-        length -= maxBytesToSend;
+    /*
+    Control structure:
+    uint16_t reg_addr must have write flag set (0x8000)
+    uint16_t values_nr
+    uint16_t [65535] val
+    */
 
-        extCtrl.size = 2048 * sizeof(unsigned short);
-        extCtrl.p_u16 = (unsigned short *)buf;
-        extCtrl.id = V4L2_CID_AD_DEV_SET_CHIP_CONFIG;
-        memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
-        extCtrls.controls = &extCtrl;
-        extCtrls.count = 1;
+    memset(&buf, 0, CTRL_PACKET_SIZE * sizeof(uint16_t));
+    buf[0] = address[0] | 0x8000;
+    buf[1] = (uint16_t)length;
+    memcpy(&buf[2], data, (length > 65535) ? (65535 * 2) : length * 2);
 
-        if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-            LOG(WARNING) << "Programming AFE error "
-                         << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
-        }
+    extCtrl.size = CTRL_PACKET_SIZE * sizeof(uint16_t);
+    extCtrl.p_u16 = buf;
+    extCtrl.id = V4L2_CID_AD_DEV_CHIP_CONFIG;
+    memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
+    extCtrls.controls = &extCtrl;
+    extCtrls.count = 1;
+
+    if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+        LOG(WARNING) << "Writing ADSD3100 error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return Status::GENERIC_ERROR;
     }
 
     return status;
