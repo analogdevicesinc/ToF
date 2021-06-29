@@ -43,6 +43,7 @@
 #include "tofi/floatTolin.h"
 #include "tofi/tofi_utils.h"
 #include "tofi/tofi_config.h"
+#include <iostream>
 
 
 CameraItof::CameraItof(
@@ -61,11 +62,11 @@ CameraItof::CameraItof(
     m_controls.emplace("syncMode", "0, 0");
     m_controls.emplace("loadModuleData", "call");
 
-    m_noArgCallables.emplace("powerUp", std::bind(&CameraItof::powerUp, *this));
+    m_noArgCallables.emplace("powerUp", std::bind(&CameraItof::powerUp, this));
     m_noArgCallables.emplace("powerDown",
-                             std::bind(&CameraItof::powerUp, *this));
+                             std::bind(&CameraItof::powerUp, this));
     m_noArgCallables.emplace("loadModuleData",
-                             std::bind(&CameraItof::loadModuleData, *this));
+                             std::bind(&CameraItof::loadModuleData, this));
     m_controls.emplace("enableDepthCompute", "on");
 
     // Check Depth Sensor
