@@ -78,12 +78,30 @@ CameraItof::CameraItof(
     aditof::SensorDetails sDetails;
     m_depthSensor->getDetails(sDetails);
     m_details.connection = sDetails.connectionType;
+
+
+    // Look for EEPROM
+    auto eeprom_iter =
+        std::find_if(eeproms.begin(), eeproms.end(),
+                [this](std::shared_ptr<aditof::StorageInterface> e) {
+                        std::string name;
+                        e->getName(name);
+                        return name == m_eepromDeviceName;
+                 });
+    if (eeprom_iter == eeproms.end())
+        LOG(WARNING) << "Could not find " << m_eepromDeviceName
+                << " while looking for storage";
+    else
+        m_eeprom = *eeprom_iter;
 }
 
 CameraItof::~CameraItof() {
     cleanupTempFiles();
     freeConfigData();
     // m_device->toggleFsync();
+    if (m_eepromInitialized) {
+        m_eeprom->close();
+    }
 }
 
 aditof::Status CameraItof::initialize() {
@@ -169,6 +187,23 @@ aditof::Status CameraItof::initialize() {
     }
 
     m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
+
+    void *handle;
+    aditof::Status status = m_depthSensor->getHandle(&handle);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to obtain the handle";
+        return status;
+    }
+
+    // Open communication with EEPROM
+    status = m_eeprom->open(handle);
+    if (status != Status::OK) {
+        std::string name;
+        m_eeprom->getName(name);
+        LOG(ERROR) << "Failed to open EEPROM with name " << name;
+        return status;
+    }
+    m_eepromInitialized = true;
 
     LOG(INFO) << "Camera initialized";
 
@@ -856,18 +891,15 @@ aditof::Status CameraItof::setCameraSyncMode(uint8_t mode, uint8_t level) {
 }
 
 aditof::Status CameraItof::loadModuleData() {
-  /*  using namespace aditof;
+    using namespace aditof;
     Status status = Status::OK;
 
     cleanupTempFiles();
-//EepromInterface -> StorageInterface
-    std::shared_ptr<EepromInterface> eeprom = aditof::EepromFactory::getInstance().getDevice(m_eepromDeviceName);
-    if (eeprom == nullptr) {
-        LOG(ERROR) << "Undefined module memory device";
-        return Status::GENERIC_ERROR;
-    }
-
+    if (!m_eepromInitialized) {
+        LOG(ERROR) << "Memory interface can't be accessed";
     std::string tempJsonFile;
+
+    /*
     ModuleMemory flashLoader(m_depthSensor, eeprom);
     flashLoader.readModuleData(tempJsonFile, m_tempFiles);
 

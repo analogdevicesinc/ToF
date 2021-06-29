@@ -146,6 +146,11 @@ Status TargetSensorEnumerator::searchSensors() {
         m_sensorsInfo.emplace_back(sInfo);
     }
 
+    StorageInfo eepromInfo;
+    eepromInfo.driverName = EEPROM_NAME;
+    eepromInfo.driverPath = EEPROM_DEV_PATH;
+    m_storagesInfo.emplace_back(eepromInfo);
+
     return status;
 }
 
