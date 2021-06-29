@@ -33,7 +33,7 @@
 #include "aditof/frame.h"
 #include "aditof_internal.h"
 #include "aditof/frame_operations.h"
-
+#include "module_memory.h"
 #include <algorithm>
 #include <array>
 #include <fstream>
