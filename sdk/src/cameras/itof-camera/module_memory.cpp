@@ -77,7 +77,7 @@ bool ModuleMemory::verifyChunkHeader(const TOF_ChunkHeader_t *const pChunkHeader
 
 Status ModuleMemory::readChunkHeader( uint8_t *const buffer, int32_t chunkDataAddr) {
 
-    Status status = m_device->readEeprom(chunkDataAddr, buffer, sizeof(TOF_ChunkHeader_t));
+    Status status = m_depthSensor->readEeprom(chunkDataAddr, buffer, sizeof(TOF_ChunkHeader_t));
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to read module memory";
         return Status::GENERIC_ERROR;
@@ -224,7 +224,7 @@ std::string ModuleMemory::writeTempCFG(const uint8_t *const cfgFileData, const u
 }
 
 Status ModuleMemory::readLegacyModuleCCB( std::string &tempJsonFile, std::vector<std::string> &tempFiles, std::string &ccbSerialNumber) {
-    if (nullptr == m_device) {
+    if (nullptr == m_depthSensor) {
         return Status::GENERIC_ERROR;
     }
 
@@ -234,7 +234,7 @@ Status ModuleMemory::readLegacyModuleCCB( std::string &tempJsonFile, std::vector
     // Read file header
     uint8_t memoryBuffer[sizeof(CAL_FILE_HEADER_V1)] = {0};
     CAL_FILE_HEADER_V1 *fileheader = (CAL_FILE_HEADER_V1 *)memoryBuffer;
-    Status status = m_device->readEeprom(chunkDataAddr, memoryBuffer, sizeof(CAL_FILE_HEADER_V1));
+    Status status = m_depthSensor->readEeprom(chunkDataAddr, memoryBuffer, sizeof(CAL_FILE_HEADER_V1));
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to read module memory";
         return Status::GENERIC_ERROR;
@@ -257,7 +257,7 @@ Status ModuleMemory::readLegacyModuleCCB( std::string &tempJsonFile, std::vector
         return Status::GENERIC_ERROR;
     }
 
-    status = m_device->readEeprom(chunkDataAddr, pccbdata, fileheader->CalibFileSize);
+    status = m_depthSensor->readEeprom(chunkDataAddr, pccbdata, fileheader->CalibFileSize);
     if (status == Status::OK) {
         std::string ccbFilename = writeTempCCB(pccbdata, fileheader->CalibFileSize);
         if (!ccbFilename.empty()) {
@@ -284,7 +284,7 @@ Status ModuleMemory::readLegacyModuleCCB( std::string &tempJsonFile, std::vector
 }
 
 Status ModuleMemory::readModuleData( std::string &tempJsonFile, std::vector<std::string> &tempFiles) {
-    if (nullptr == m_device) {
+    if (nullptr == m_depthSensor) {
         return Status::GENERIC_ERROR;
     }
 
@@ -327,7 +327,7 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, std::vector<std:
             break;
         }
 
-        if (Status::OK == m_device->readEeprom(chunkDataAddr, pChunkData, pChunkHeader->chunkSizeBytes)) {
+        if (Status::OK == m_depthSensor->readEeprom(chunkDataAddr, pChunkData, pChunkHeader->chunkSizeBytes)) {
             int payloadSize = pChunkHeader->chunkSizeBytes - sizeof(uint32_t); // data size - CRC in bytes
             uint32_t blockCRC = *((uint32_t *)(pChunkData + payloadSize));
             if (crcFast(pChunkData, payloadSize) == blockCRC) {
@@ -475,7 +475,7 @@ Status ModuleMemory::createModuleImage(const uint8_t *ccbData, uint32_t ccbSize,
         ;
     }
 
-    m_device->writeEeprom(0, write_buff, imageSize);
+    m_depthSensor->writeEeprom(0, write_buff, imageSize);
 
     free(write_buff);
     return aditof::Status::OK;
@@ -483,7 +483,7 @@ Status ModuleMemory::createModuleImage(const uint8_t *ccbData, uint32_t ccbSize,
 
 Status ModuleMemory::writeModuleData(const std::string &ccbFileName, const std::string &cfgFileName) {
 
-    if (nullptr == m_device || nullptr == m_eeprom) {
+    if (nullptr == m_depthSensor || nullptr == m_eeprom) {
         LOG(INFO) << "Write failed, cannot connect to module flash.";
         return Status::GENERIC_ERROR;
     }
@@ -492,7 +492,7 @@ Status ModuleMemory::writeModuleData(const std::string &ccbFileName, const std::
     LOG(INFO) << "   Loading CCB file: " << ccbFileName;
     LOG(INFO) << "   Loading CFG file: " << cfgFileName;
 
-    if (Status::OK != m_eeprom->open(m_device)) {
+    if (Status::OK != m_eeprom->open(m_depthSensor)) {
         LOG(ERROR) << "Invalid Flash device, aborting flash programming!";
         return aditof::Status::GENERIC_ERROR;        
     } 
