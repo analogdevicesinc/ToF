@@ -903,10 +903,11 @@ aditof::Status CameraItof::loadModuleData() {
     ModuleMemory flashLoader(m_depthSensor, eeprom);
     flashLoader.readModuleData(tempJsonFile, m_tempFiles);
 
-    m_depthSensor->cameraReset();
+    // m_depthSensor->cameraReset(); TO DO: figure out if this is required or how to do the reset since there is currenlty no cameraReset() in DepthSensorInterface
 
     if (!tempJsonFile.empty()) {
-        return initialize(tempJsonFile);
+        setControl("initialization_config", tempJsonFile);
+        return initialize();
     } else {
         LOG(ERROR) << "Error loading module data";
         return Status::GENERIC_ERROR;
