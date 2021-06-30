@@ -99,6 +99,8 @@ Status UsbStorage::open(void *handle) {
         LOG(ERROR) << "Open flash memory operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
     }
+
+    return status;
 }
 
 Status UsbStorage::read(const uint32_t address, uint8_t *data,
