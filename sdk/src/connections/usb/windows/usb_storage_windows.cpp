@@ -31,6 +31,11 @@
  */
 #include "connections/usb/usb_storage.h"
 #include "usb_windows_utils.h"
+#include "usb_buffer.pb.h"
+#include "connections/usb/usb_utils.h"
+#include "usb_windows_utils.h"
+
+#include "device_utils.h"
 
 #include <chrono>
 #include <glog/logging.h>
@@ -40,14 +45,13 @@
 using namespace aditof;
 
 struct UsbStorage::ImplData {
-    struct UsbHandle *handle;
+    UsbHandle *handle;
     std::string name;
     unsigned char id;
 };
 
 UsbStorage::UsbStorage(const std::string &name, unsigned char id)
     : m_implData(new ImplData) {
-    m_implData->handle = nullptr;
     m_implData->name = name;
     m_implData->id = id;
 }
@@ -61,7 +65,43 @@ Status UsbStorage::open(void *handle) {
     }
     m_implData->handle = reinterpret_cast<struct UsbHandle *>(handle);
 
-    return Status::OK;
+    using namespace aditof;
+
+    Status status = Status::OK;
+
+    // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::STORAGE_OPEN);
+
+    // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbWindowsUtils::uvcExUnitSendRequest(m_implData->handle->pVideoInputFilter, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request open flash storage failed";
+        return status;
+    }
+
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbWindowsUtils::uvcExUnitGetResponse(m_implData->handle->pVideoInputFilter, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to get response of the request to open flash memory";
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    DLOG(INFO) << "Received the following message: " << responseMsg.DebugString();
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Open flash memory operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
 }
 
 Status UsbStorage::read(const uint32_t address, uint8_t *data,
@@ -147,6 +187,44 @@ Status UsbStorage::write(const uint32_t address, const uint8_t *data,
 }
 
 Status UsbStorage::close() {
+    using namespace aditof;
+
+    Status status = Status::OK;
+
+    // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::STORAGE_CLOSE);
+
+        // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbWindowsUtils::uvcExUnitSendRequest(m_implData->handle->pVideoInputFilter, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request close flash storage failed";
+        return status;
+    }
+
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbWindowsUtils::uvcExUnitGetResponse(m_implData->handle->pVideoInputFilter, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to get response of the request to close flash memory";
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    DLOG(INFO) << "Received the following message: " << responseMsg.DebugString();
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Close flash memory operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
+
     m_implData->handle = nullptr;
 
     return Status::OK;
