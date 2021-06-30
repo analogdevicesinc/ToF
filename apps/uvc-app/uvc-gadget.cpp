@@ -405,6 +405,38 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
     break;
   }
 
+  case uvc_payload::FunctionName::STORAGE_OPEN: {
+    LOG(INFO) << "MESSAGE OPEN: " << clientRequestMsg.DebugString();
+    aditof::Status status = aditof::Status::OK;
+    response.set_status(static_cast<::uvc_payload::Status>(status));
+
+    break;
+  }
+
+    case uvc_payload::FunctionName::STORAGE_READ: {
+    LOG(INFO) << "MESSAGE READ: " << clientRequestMsg.DebugString();
+    aditof::Status status = aditof::Status::OK;
+    response.set_status(static_cast<::uvc_payload::Status>(status));
+
+    break;
+  }
+
+  case uvc_payload::FunctionName::STORAGE_WRITE: {
+    LOG(INFO) << "MESSAGE WRITE: " << clientRequestMsg.DebugString();
+    aditof::Status status = aditof::Status::OK;
+    response.set_status(static_cast<::uvc_payload::Status>(status));
+
+    break;
+  }
+
+    case uvc_payload::FunctionName::STORAGE_CLOSE: {
+    LOG(INFO) << "MESSAGE CLOSE: " << clientRequestMsg.DebugString();
+    aditof::Status status = aditof::Status::OK;
+    response.set_status(static_cast<::uvc_payload::Status>(status));
+
+    break;
+  }
+
   default: {
     const std::string errorMsg("Unknown function name set in the client request");
     LOG(ERROR) << errorMsg;
