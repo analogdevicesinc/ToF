@@ -19,6 +19,10 @@ enum FunctionName
   SET_FRAME_TYPE = 2;
   READ_REGISTERS = 3;
   WRITE_REGISTERS = 4;
+  STORAGE_OPEN = 5;
+  STORAGE_READ = 6;
+  STORAGE_WRITE = 7;
+  STORAGE_CLOSE = 8;
 }
 
 message StorageInfo
