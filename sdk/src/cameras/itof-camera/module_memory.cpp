@@ -27,10 +27,10 @@ SOFTWARE.
 #include <ccb.h>
 #include <glog/logging.h>
 
-#include "aditof/configuration.h"
-#include "aditof/aditof_common.h"
-#include "aditof/temporary_filename.h"
-#include "crc.h"
+#include "configuration.h"
+#include "aditof_common.h"
+#include "temporary_filename.h"
+#include <ccb.h>
 #include "module_memory.h"
 
 namespace aditof {
