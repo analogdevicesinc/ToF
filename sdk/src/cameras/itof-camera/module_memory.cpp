@@ -30,8 +30,8 @@ SOFTWARE.
 #include "configuration.h"
 #include "aditof_common.h"
 #include "temporary_filename.h"
-#include <ccb.h>
 #include "module_memory.h"
+#include "crc.h"
 
 namespace aditof {
 
