@@ -895,7 +895,7 @@ aditof::Status CameraItof::loadModuleData() {
     Status status = Status::OK;
 
     cleanupTempFiles();
-    if (!m_eepromInitialized) {
+    if (!m_eepromInitialized)
         LOG(ERROR) << "Memory interface can't be accessed";
     std::string tempJsonFile;
 
