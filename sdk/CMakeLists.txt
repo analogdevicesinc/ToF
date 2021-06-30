@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(aditof)
 
+add_subdirectory(common/adi/ccb)
+
 add_definitions(-DSDK_EXPORTS)
 find_package(glog 0.3.5 REQUIRED)
 find_package(Protobuf 3.9.0 REQUIRED)
@@ -228,6 +230,8 @@ if (USE_ITOF)
 
 	target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_compute)
 	target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_config)
+
+    target_link_libraries(${PROJECT_NAME} PRIVATE ccb)
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCC)
