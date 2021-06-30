@@ -29,12 +29,9 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "usb_buffer.pb.h"
 #include "connections/usb/usb_storage.h"
 #include "usb_windows_utils.h"
-#include "usb_buffer.pb.h"
-#include "connections/usb/usb_utils.h"
-#include "usb_windows_utils.h"
-
 #include "device_utils.h"
 
 #include <chrono>
@@ -63,7 +60,7 @@ Status UsbStorage::open(void *handle) {
         LOG(ERROR) << "Invalid handle";
         return Status::INVALID_ARGUMENT;
     }
-    m_implData->handle = reinterpret_cast<struct UsbHandle *>(handle);
+    m_implData->handle = reinterpret_cast<UsbHandle *>(handle);
 
     using namespace aditof;
 
