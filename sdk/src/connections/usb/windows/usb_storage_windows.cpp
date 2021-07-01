@@ -114,15 +114,51 @@ Status UsbStorage::read(const uint32_t address, uint8_t *data,
         return Status::INVALID_ARGUMENT;
     }
 
-    HRESULT hr = UsbWindowsUtils::UvcExUnitReadBuffer(
-        m_implData->handle->pVideoInputFilter, 5, m_implData->id, address, data,
-        bytesCount);
-    if (FAILED(hr)) {
-        LOG(WARNING)
-            << "Failed to read buffer through UVC extension unit. Error: "
-            << hr;
-        return Status::GENERIC_ERROR;
+        using namespace aditof;
+
+    Status status = Status::OK;
+
+    // TO DO: is it required to call UvcFindNodeAndGetControl here?
+
+    // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::STORAGE_READ);
+    requestMsg.add_func_int32_param(static_cast<::google::int32>(bytesCount));
+    requestMsg.add_func_int32_param(static_cast<::google::int32>(address));
+    requestMsg.add_func_bytes_param(data, bytesCount);
+
+    // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbWindowsUtils::uvcExUnitSendRequest(m_implData->handle->pVideoInputFilter, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to read memory failed";
+        return status;
     }
+
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbWindowsUtils::uvcExUnitGetResponse(m_implData->handle->pVideoInputFilter, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to get response of the request to read memory";
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    DLOG(INFO) << "Received the following message: " << responseMsg.DebugString();
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Read registers operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
+   
+    memcpy(data, responseMsg.bytes_payload(0).c_str(), responseMsg.bytes_payload(0).length());
+
     return Status::OK;
 }
 
