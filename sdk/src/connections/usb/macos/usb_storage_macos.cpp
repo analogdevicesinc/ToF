@@ -58,6 +58,12 @@ aditof::Status UsbStorage::write(const uint32_t, const uint8_t *,
     return Status::UNAVAILABLE;
 }
 
+Status UsbStorage::getCapacity(size_t &nbBytes) const
+{
+    // TO DO when enabling macos support
+    return Status::UNAVAILABLE;
+}
+
 aditof::Status UsbStorage::close() {
     // TO DO when enabling macos support
     return Status::UNAVAILABLE;
