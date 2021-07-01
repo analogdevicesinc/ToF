@@ -215,17 +215,6 @@ aditof::Status CameraItof::start() {
     using namespace aditof;
     Status status = Status::OK;
 
-    if (m_controls["enableDepthCompute"] == "on" && m_details.frameType.totalCaptures > 1) {
-       status = initComputeLibrary();
-       if (Status::OK != status) {
-           LOG(ERROR) << "Initializing compute libraries failed.";
-           return Status::GENERIC_ERROR;
-       }
-    }
-    else {
-       freeComputeLibrary();
-    }
-
     if (m_sensorFirmwareFile.empty()) {
        LOG(ERROR) << "No firmware file defined!";
     }
@@ -337,6 +326,17 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
         fDataDetails.width = item.width;
         fDataDetails.height = item.height;
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
+    }
+
+    if (m_controls["enableDepthCompute"] == "on" && m_details.frameType.totalCaptures > 1) {
+        status = initComputeLibrary();
+        if (Status::OK != status) {
+            LOG(ERROR) << "Initializing compute libraries failed.";
+            return Status::GENERIC_ERROR;
+        }
+    }
+    else {
+        freeComputeLibrary();
     }
 
     return status;
