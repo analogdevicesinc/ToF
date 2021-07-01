@@ -77,7 +77,7 @@ bool ModuleMemory::verifyChunkHeader(const TOF_ChunkHeader_t *const pChunkHeader
 
 Status ModuleMemory::readChunkHeader( uint8_t *const buffer, int32_t chunkDataAddr) {
 
-    Status status = m_depthSensor->readEeprom(chunkDataAddr, buffer, sizeof(TOF_ChunkHeader_t));
+    Status status = m_eeprom->read(chunkDataAddr, buffer, sizeof(TOF_ChunkHeader_t));
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to read module memory";
         return Status::GENERIC_ERROR;
@@ -234,7 +234,7 @@ Status ModuleMemory::readLegacyModuleCCB( std::string &tempJsonFile, std::vector
     // Read file header
     uint8_t memoryBuffer[sizeof(CAL_FILE_HEADER_V1)] = {0};
     CAL_FILE_HEADER_V1 *fileheader = (CAL_FILE_HEADER_V1 *)memoryBuffer;
-    Status status = m_depthSensor->readEeprom(chunkDataAddr, memoryBuffer, sizeof(CAL_FILE_HEADER_V1));
+    Status status = m_eeprom->read(chunkDataAddr, memoryBuffer, sizeof(CAL_FILE_HEADER_V1));
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to read module memory";
         return Status::GENERIC_ERROR;
@@ -257,7 +257,7 @@ Status ModuleMemory::readLegacyModuleCCB( std::string &tempJsonFile, std::vector
         return Status::GENERIC_ERROR;
     }
 
-    status = m_depthSensor->readEeprom(chunkDataAddr, pccbdata, fileheader->CalibFileSize);
+    status = m_eeprom->read(chunkDataAddr, pccbdata, fileheader->CalibFileSize);
     if (status == Status::OK) {
         std::string ccbFilename = writeTempCCB(pccbdata, fileheader->CalibFileSize);
         if (!ccbFilename.empty()) {
@@ -327,7 +327,7 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, std::vector<std:
             break;
         }
 
-        if (Status::OK == m_depthSensor->readEeprom(chunkDataAddr, pChunkData, pChunkHeader->chunkSizeBytes)) {
+        if (Status::OK == m_eeprom->read(chunkDataAddr, pChunkData, pChunkHeader->chunkSizeBytes)) {
             int payloadSize = pChunkHeader->chunkSizeBytes - sizeof(uint32_t); // data size - CRC in bytes
             uint32_t blockCRC = *((uint32_t *)(pChunkData + payloadSize));
             if (crcFast(pChunkData, payloadSize) == blockCRC) {
@@ -475,7 +475,7 @@ Status ModuleMemory::createModuleImage(const uint8_t *ccbData, uint32_t ccbSize,
         ;
     }
 
-    m_depthSensor->writeEeprom(0, write_buff, imageSize);
+    m_eeprom->write(0, write_buff, imageSize);
 
     free(write_buff);
     return aditof::Status::OK;
