@@ -79,6 +79,13 @@ class StorageInterface {
                                  const size_t bytesCount) = 0;
 
     /**
+     * @brief Retrieves the storage capacity of the memory in bytes
+     * @param[out] nbBytes - The number of bytes that describes the size of the storage
+     * @return Status
+     */
+    virtual aditof::Status getCapacity(size_t &nbBytes) const = 0;
+
+    /**
      * @brief Close the communication channel with the storage.
      * @return Status
      */

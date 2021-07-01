@@ -121,6 +121,18 @@ Status Eeprom::write(const uint32_t address, const uint8_t *data,
     return Status::OK;
 }
 
+Status Eeprom::getCapacity(size_t &nbBytes) const
+{
+    Status status = Status::OK;
+    if (m_implData->eepromDev.fd) {
+        nbBytes = static_cast<size_t>(m_implData->eepromDev.length);
+    } else {
+        status = Status::UNREACHABLE;
+    }
+
+    return status;
+}
+
 Status Eeprom::close() {
     if (m_implData->eepromDev.fd) {
         fclose(m_implData->eepromDev.fd);
