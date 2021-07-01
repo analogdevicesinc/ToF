@@ -437,7 +437,7 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
     size_t length = static_cast<size_t>(clientRequestMsg.func_int32_param(0));
     const uint32_t address = static_cast<const uint32_t>(
             clientRequestMsg.func_int32_param(1));
-    uint8_t *data = reinterpret_cast<uint8_t *>(const_cast<uint8_t>(
+    const uint8_t *data = reinterpret_cast<uint8_t *>(const_cast<uint8_t>(
             clientRequestMsg.func_bytes_param(0).c_str()));
 
     aditof::Status status = storages[0]->write(address, data, length);
