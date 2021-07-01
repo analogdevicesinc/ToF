@@ -268,7 +268,7 @@ Status UsbStorage::getCapacity(size_t &nbBytes) const
     }
    
     memcpy(&nbBytes, responseMsg.bytes_payload(0).c_str(), responseMsg.bytes_payload(0).length());
-    LOG(INFO) << "SIZE READ: " << nbBytes;
+
     return Status::OK;
 }
 
