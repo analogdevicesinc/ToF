@@ -19,7 +19,7 @@ extern "C" {  // only need to export C interface if
 #define TOFI_CONFIG_API
 #endif
 
-#include "TOF_Calibration_Types.h"
+#include <TOF_Calibration_Types.h>
 #include <stdint.h>
 #include <stdlib.h>
 
