@@ -50,7 +50,7 @@ CameraItof::CameraItof(
     std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
     std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms,
     std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &tSensors)
-    : m_depthSensor(depthSensor), m_devStarted(false),
+    : m_depthSensor(depthSensor), m_devStarted(false), m_eepromInitialized(false),
       m_modechange_framedrop_count(0), m_xyzEnabled(false), m_loadedConfigData(false) {
     m_details.mode = "short_throw";
     m_details.cameraId = "";
@@ -88,11 +88,13 @@ CameraItof::CameraItof(
                         e->getName(name);
                         return name == m_eepromDeviceName;
                  });
-    if (eeprom_iter == eeproms.end())
+    if (eeprom_iter == eeproms.end()) {
         LOG(WARNING) << "Could not find " << m_eepromDeviceName
-                << " while looking for storage";
-    else
+                     << " while looking for storage";
+        m_eeprom = NULL;
+    } else {
         m_eeprom = *eeprom_iter;
+    }
 }
 
 CameraItof::~CameraItof() {
@@ -195,15 +197,17 @@ aditof::Status CameraItof::initialize() {
         return status;
     }
 
-    // Open communication with EEPROM
-    status = m_eeprom->open(handle);
-    if (status != Status::OK) {
-        std::string name;
-        m_eeprom->getName(name);
-        LOG(ERROR) << "Failed to open EEPROM with name " << name;
-        return status;
+    if (m_eeprom) {
+        // Open communication with EEPROM
+        status = m_eeprom->open(handle);
+        if (status != Status::OK) {
+            std::string name;
+            m_eeprom->getName(name);
+            LOG(ERROR) << "Failed to open EEPROM with name " << name;
+            return status;
+        }
+        m_eepromInitialized = true;
     }
-    m_eepromInitialized = true;
 
     LOG(INFO) << "Camera initialized";
 
@@ -262,7 +266,7 @@ aditof::Status CameraItof::stop() {
 }
 
 aditof::Status CameraItof::setMode(const std::string &mode,
-                                   const std::string &modeFilename = "") {    
+                                   const std::string &modeFilename = "") {
     LOG(INFO) << "Chosen mode: " << mode;
     m_details.mode = mode;
 
@@ -357,7 +361,7 @@ aditof::Status CameraItof::getAvailableFrameTypes(
 
 aditof::Status setAttributesByMode(aditof::Frame& frame, const ModeInfo::modeInfo& modeInfo){
     aditof::Status status = aditof::Status::OK;
- 
+
     frame.setAttribute("embed_hdr_length", std::to_string(EMBED_HDR_LENGTH));
     frame.setAttribute("mode", std::to_string(modeInfo.mode));
     frame.setAttribute("width", std::to_string(modeInfo.width));
@@ -461,7 +465,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         frame->getData("depth", &depthFrameLocation);
         memcpy(depthFrameLocation, (uint8_t *)m_tofi_compute_context->p_depth_frame,
             (m_details.frameType.height * m_details.frameType.width * sizeof(uint16_t)));
-  
+
         uint16_t *irFrameLocation;
         frame->getData("ir", &irFrameLocation);
         memcpy(irFrameLocation, m_tofi_compute_context->p_ab_frame, (m_details.frameType.height * m_details.frameType.width * sizeof(uint16_t)));
@@ -765,7 +769,7 @@ CameraItof::processFrame(uint8_t *rawFrame, uint16_t *captureData,
     std::string fn;
     frame->getAttribute("total_captures", fn);
     FrameNum = std::atoi(fn.c_str());
-    FrameWidth = 1024; //TODO-hardcoded 
+    FrameWidth = 1024; //TODO-hardcoded
     FrameHeight = 1024;
     //frame->setAttribute("frameNum", std::to_string(FrameNum));
 
@@ -852,7 +856,7 @@ aditof::Status CameraItof::getCurrentModeInfo(ModeInfo::modeInfo &info) {
     if (pModeInfo && 0 <= convertedMode && convertedMode < pModeInfo->getNumModes()) {
         info = pModeInfo->getModeInfo(convertedMode);
         return Status::OK;
-    } 
+    }
     return Status::GENERIC_ERROR;
 }
 
@@ -895,8 +899,10 @@ aditof::Status CameraItof::loadModuleData() {
     Status status = Status::OK;
 
     cleanupTempFiles();
-    if (!m_eepromInitialized)
+    if (!m_eepromInitialized) {
         LOG(ERROR) << "Memory interface can't be accessed";
+        return Status::GENERIC_ERROR;
+    }
     std::string tempJsonFile;
 
     ModuleMemory flashLoader(m_eeprom);
