@@ -484,11 +484,6 @@ Status ModuleMemory::writeModuleData(const std::string &ccbFileName, const std::
     LOG(INFO) << "   Loading CCB file: " << ccbFileName;
     LOG(INFO) << "   Loading CFG file: " << cfgFileName;
 
-    if (Status::OK != m_eeprom->open()) {
-        LOG(ERROR) << "Invalid Flash device, aborting flash programming!";
-        return aditof::Status::GENERIC_ERROR;        
-    } 
-
     uint8_t *ccbData = NULL;
     uint8_t *cfgData = NULL;
     uint32_t ccbSize = loadfileData(ccbFileName, &ccbData);
