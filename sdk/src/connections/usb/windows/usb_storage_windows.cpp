@@ -173,49 +173,47 @@ Status UsbStorage::write(const uint32_t address, const uint8_t *data,
         return Status::INVALID_ARGUMENT;
     }
 
-    HRESULT hr = UsbWindowsUtils::UvcExUnitWriteBuffer(
-        m_implData->handle->pVideoInputFilter, 6, m_implData->id, address, data,
-        bytesCount);
-    if (FAILED(hr)) {
-        LOG(WARNING)
-            << "Failed to write buffer through UVC extension unit. Error: "
-            << hr;
-        return Status::GENERIC_ERROR;
+    using namespace aditof;
+
+    Status status = Status::OK;
+
+    // TO DO: is it required to call UvcFindNodeAndGetControl here?
+
+    // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::STORAGE_WRITE);
+    requestMsg.add_func_int32_param(static_cast<::google::int32>(bytesCount));
+    requestMsg.add_func_int32_param(static_cast<::google::int32>(address));
+    requestMsg.add_func_bytes_param(data, bytesCount);
+
+    // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbWindowsUtils::uvcExUnitSendRequest(m_implData->handle->pVideoInputFilter, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to write registers failed";
+        return status;
     }
 
-    ExUnitHandle handle;
-
-    hr = UsbWindowsUtils::UvcFindNodeAndGetControl(
-        &handle, &m_implData->handle->pVideoInputFilter);
-    if (hr != S_OK) {
-        LOG(WARNING) << "Failed to find node and get control. Error: "
-                     << std::hex << hr;
-        return Status::GENERIC_ERROR;
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbWindowsUtils::uvcExUnitGetResponse(m_implData->handle->pVideoInputFilter, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to get response of the request to write registers";
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
     }
 
-    uint8_t eepromWriteStatus = 0;
-    int attempts = 300;
+    DLOG(INFO) << "Received the following message: " << responseMsg.DebugString();
 
-    while (eepromWriteStatus == 0 && attempts > 0) {
-        hr = UsbWindowsUtils::UvcExUnitGetProperty(&handle, 7,
-                                                   &eepromWriteStatus, 1);
-        --attempts;
-        if (FAILED(hr)) {
-            LOG(WARNING)
-                << "Failed to read a property via UVC extension unit. Error: "
-                << hr;
-            return Status::GENERIC_ERROR;
-        }
-
-        if (!eepromWriteStatus) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
-    }
-
-    if (attempts == 0 && eepromWriteStatus == 0) {
-        LOG(WARNING) << "Write operation failed. Target is in a state where "
-                        "EEPROM write operations cannot be done.";
-        return Status::GENERIC_ERROR;
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Read registers operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
     }
 
     return Status::OK;

@@ -406,21 +406,22 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
   }
 
   case uvc_payload::FunctionName::STORAGE_OPEN: {
-    LOG(INFO) << "MESSAGE OPEN: " << clientRequestMsg.DebugString();
+
     aditof::Status status = aditof::Status::OK;
     response.set_status(static_cast<::uvc_payload::Status>(status));
-    storages->getName(name);
 
     break;
   }
 
     case uvc_payload::FunctionName::STORAGE_READ: {
-    LOG(INFO) << "MESSAGE READ: " << clientRequestMsg.DebugString();
+
     size_t length = static_cast<size_t>(clientRequestMsg.func_int32_param(0));
     const uint32_t address = static_cast<const uint32_t>(
             clientRequestMsg.func_int32_param(1));
     uint8_t *data = new uint8_t[length];
+
     aditof::Status status = storages[0]->read(address, data, length);
+
     if (status == aditof::Status::OK) {
       response.add_bytes_payload(data, length * sizeof(uint8_t));
     }
@@ -432,21 +433,23 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
   }
 
   case uvc_payload::FunctionName::STORAGE_WRITE: {
-    LOG(INFO) << "MESSAGE READ: " << clientRequestMsg.DebugString();
+
     size_t length = static_cast<size_t>(clientRequestMsg.func_int32_param(0));
-    const uint32_t *address = reinterpret_cast<const uint32_t *>(
+    const uint32_t address = static_cast<const uint32_t>(
             clientRequestMsg.func_int32_param(1));
     const uint8_t *data = reinterpret_cast<const uint8_t *>(
             clientRequestMsg.func_bytes_param(0).c_str());
-    aditof::Status status = storages[0]->write(*address, data, length);
 
+    aditof::Status status = aditof::Status::OK;//storages[0]->write(address, data, length);
+	LOG(INFO) <<"RECEIVED DATA:"<<data[0] << " " << data[1] << " " <<data[2];
+    
     response.set_status(static_cast<::uvc_payload::Status>(status));
 
     break;
   }
 
     case uvc_payload::FunctionName::STORAGE_CLOSE: {
-    LOG(INFO) << "MESSAGE CLOSE: " << clientRequestMsg.DebugString();
+
     aditof::Status status = aditof::Status::OK;
     response.set_status(static_cast<::uvc_payload::Status>(status));
 
