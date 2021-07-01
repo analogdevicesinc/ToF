@@ -899,8 +899,7 @@ aditof::Status CameraItof::loadModuleData() {
         LOG(ERROR) << "Memory interface can't be accessed";
     std::string tempJsonFile;
 
-    /*
-    ModuleMemory flashLoader(m_depthSensor, eeprom);
+    ModuleMemory flashLoader(m_eeprom);
     flashLoader.readModuleData(tempJsonFile, m_tempFiles);
 
     // m_depthSensor->cameraReset(); TO DO: figure out if this is required or how to do the reset since there is currenlty no cameraReset() in DepthSensorInterface
@@ -911,12 +910,9 @@ aditof::Status CameraItof::loadModuleData() {
     } else {
         LOG(ERROR) << "Error loading module data";
         return Status::GENERIC_ERROR;
-    }*/
-    LOG(INFO) << "Not implemented yet";
-    return aditof::Status::OK;
+    }
 }
 
 aditof::Status CameraItof::applyCalibrationToFrame(uint16_t *frame, const unsigned int mode) {
     return aditof::Status::UNAVAILABLE;
 }
-
