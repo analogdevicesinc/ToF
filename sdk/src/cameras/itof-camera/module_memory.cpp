@@ -435,11 +435,6 @@ Status ModuleMemory::createModuleImage(const uint8_t *ccbData, uint32_t ccbSize,
         return aditof::Status::GENERIC_ERROR;
     }
 
-    if (Status::OK != m_eeprom->eraseBlocks(0, imageSize)) {
-        LOG(ERROR) << "Module Flash erase failed!";
-        return aditof::Status::GENERIC_ERROR;
-    }
-
     uint8_t *write_buff = (uint8_t *)malloc(imageSize);
     if (NULL == write_buff) {
         LOG(WARNING) << "malloc failed, out of memory?";
