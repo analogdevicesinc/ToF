@@ -457,14 +457,13 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
 
   case uvc_payload::FunctionName::STORAGE_READ_CAPACITY: {
 
-    size_t *data = new size_t;
+    size_t data;
 
     aditof::Status status = storages[0]->getCapacity(data);
-    LOG(INFO) << " READ SIZE " << *data;
+
     if (status == aditof::Status::OK) {
-      response.add_bytes_payload(data,sizeof(size_t));
+      response.add_bytes_payload(&data,sizeof(size_t));
     }
-    delete[] data;
 
     response.set_status(static_cast<::uvc_payload::Status>(status));
 
