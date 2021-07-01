@@ -172,6 +172,12 @@ Status NetworkStorage::write(const uint32_t address, const uint8_t *data,
     return status;
 }
 
+Status NetworkStorage::getCapacity(size_t &nbBytes) const
+{
+    // TO DO: implement
+    return aditof::Status::UNAVAILABLE;
+}
+
 Status NetworkStorage::close() {
     Network *net = m_implData->handle->net;
     std::unique_lock<std::mutex> mutex_lock(m_implData->handle->net_mutex);
