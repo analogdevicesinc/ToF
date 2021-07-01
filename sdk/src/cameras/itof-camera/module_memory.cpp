@@ -430,7 +430,13 @@ Status ModuleMemory::createModuleImage(const uint8_t *ccbData, uint32_t ccbSize,
         imageSize += cfgHeader.headerSizeBytes + cfgHeader.chunkSizeBytes;
     }
 
-    if (imageSize > m_eeprom->getCapacity()) {
+    size_t eepromCapacity;
+    aditof::Status status = m_eeprom->getCapacity(eepromCapacity);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to get the memory capacity!";
+        return status;
+    }
+    if (imageSize > eepromCapacity) {
         LOG(ERROR) << "Module data size exceeds Flash memory capacity!";
         return aditof::Status::GENERIC_ERROR;
     }
