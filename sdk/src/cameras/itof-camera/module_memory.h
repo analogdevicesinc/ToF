@@ -26,7 +26,6 @@ SOFTWARE.
 
 #include <cstdint>
 #include <memory>
-#include "aditof/depth_sensor_interface.h"
 #include "aditof/storage_interface.h"
 
 /**
@@ -92,11 +91,10 @@ class ModuleMemory {
 public:
     /**
      * @brief Constructor
-     * @param[in] - depthSensor, USB/EHTERNET/Local sensor interface connected to module memory flash/eeprom
      * @param[in] - module memory device specific implementataion (eeprom/flash)
-     * @see DepthSensorInterface
+     * @see StorageInterface
      */
-    ModuleMemory(std::shared_ptr<DepthSensorInterface> depthSensor, std::shared_ptr<StorageInterface> eeprom) : m_depthSensor(depthSensor), m_eeprom(eeprom) {}
+    ModuleMemory(std::shared_ptr<StorageInterface> eeprom) :m_eeprom(eeprom) {}
     
     /**
      * @brief Destructor
@@ -154,7 +152,6 @@ protected:
     std::string writeTempCFG(const uint8_t *const cfgFileData, const uint32_t length);
     std::string writeTempJSON(const std::string ccbFilename, const std::string cfgFilename);
 
-    std::shared_ptr<DepthSensorInterface> m_depthSensor;
     std::shared_ptr<StorageInterface> m_eeprom;
 };
 
