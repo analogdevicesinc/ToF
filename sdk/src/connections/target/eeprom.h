@@ -48,6 +48,7 @@ class Eeprom : public StorageInterface {
                                 const size_t bytesCount) override;
     virtual aditof::Status write(const uint32_t address, const uint8_t *data,
                                  const size_t bytesCount) override;
+    virtual aditof::Status getCapacity(size_t &nbBytes) const override;
     virtual aditof::Status close() override;
     virtual aditof::Status getName(std::string &name) const override;
 
