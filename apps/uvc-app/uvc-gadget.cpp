@@ -455,6 +455,22 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
     break;
   }
 
+  case uvc_payload::FunctionName::STORAGE_READ_CAPACITY: {
+
+    size_t *data = new size_t;
+
+    aditof::Status status = storages[0]->getCapacity(data);
+    LOG(INFO) << " READ SIZE " << *data;
+    if (status == aditof::Status::OK) {
+      response.add_bytes_payload(data,sizeof(size_t));
+    }
+    delete[] data;
+
+    response.set_status(static_cast<::uvc_payload::Status>(status));
+
+    break;
+  }
+
   default: {
     const std::string errorMsg("Unknown function name set in the client request");
     LOG(ERROR) << errorMsg;
