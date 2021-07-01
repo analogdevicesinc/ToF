@@ -136,6 +136,12 @@ Status UsbStorage::write(const uint32_t address, const uint8_t *data,
     return Status::OK;
 }
 
+Status UsbStorage::getCapacity(size_t &nbBytes) const
+{
+    // TO DO: implement
+    return aditof::Status::UNAVAILABLE;
+}
+
 Status UsbStorage::close() {
     m_implData->fd = -1;
 
