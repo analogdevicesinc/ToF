@@ -267,7 +267,7 @@ Status UsbStorage::getCapacity(size_t &nbBytes) const
         return static_cast<aditof::Status>(responseMsg.status());
     }
    
-    memcpy(&nbBytes, responseMsg.bytes_payload(0).c_str(), responseMsg.bytes_payload(0).length());
+    nbBytes = responseMsg.int32_payload(0);
 
     return Status::OK;
 }
