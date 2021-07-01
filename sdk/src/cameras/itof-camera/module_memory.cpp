@@ -224,10 +224,6 @@ std::string ModuleMemory::writeTempCFG(const uint8_t *const cfgFileData, const u
 }
 
 Status ModuleMemory::readLegacyModuleCCB( std::string &tempJsonFile, std::vector<std::string> &tempFiles, std::string &ccbSerialNumber) {
-    if (nullptr == m_depthSensor) {
-        return Status::GENERIC_ERROR;
-    }
-
     // legacy module ccb data offset 1 sector
     uint32_t chunkDataAddr = 4096; 
 
@@ -284,10 +280,6 @@ Status ModuleMemory::readLegacyModuleCCB( std::string &tempJsonFile, std::vector
 }
 
 Status ModuleMemory::readModuleData( std::string &tempJsonFile, std::vector<std::string> &tempFiles) {
-    if (nullptr == m_depthSensor) {
-        return Status::GENERIC_ERROR;
-    }
-
     // module data is always starts at address 0
     uint32_t chunkDataAddr = 0x0000;
 
@@ -483,7 +475,7 @@ Status ModuleMemory::createModuleImage(const uint8_t *ccbData, uint32_t ccbSize,
 
 Status ModuleMemory::writeModuleData(const std::string &ccbFileName, const std::string &cfgFileName) {
 
-    if (nullptr == m_depthSensor || nullptr == m_eeprom) {
+    if (!m_eeprom) {
         LOG(INFO) << "Write failed, cannot connect to module flash.";
         return Status::GENERIC_ERROR;
     }
@@ -492,7 +484,7 @@ Status ModuleMemory::writeModuleData(const std::string &ccbFileName, const std::
     LOG(INFO) << "   Loading CCB file: " << ccbFileName;
     LOG(INFO) << "   Loading CFG file: " << cfgFileName;
 
-    if (Status::OK != m_eeprom->open(m_depthSensor)) {
+    if (Status::OK != m_eeprom->open()) {
         LOG(ERROR) << "Invalid Flash device, aborting flash programming!";
         return aditof::Status::GENERIC_ERROR;        
     } 
