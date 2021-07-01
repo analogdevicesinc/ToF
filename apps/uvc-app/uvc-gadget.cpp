@@ -462,7 +462,7 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
     aditof::Status status = storages[0]->getCapacity(data);
 
     if (status == aditof::Status::OK) {
-      response.add_bytes_payload(&data,sizeof(size_t));
+      response.add_int32_payload(data);
     }
 
     response.set_status(static_cast<::uvc_payload::Status>(status));
