@@ -214,49 +214,22 @@ aditof::Status CameraItof::initialize() {
     return Status::OK;
 }
 
-//For now we keep the device open all the time
 aditof::Status CameraItof::start() {
     using namespace aditof;
     Status status = Status::OK;
 
-    if (m_sensorFirmwareFile.empty()) {
-       LOG(ERROR) << "No firmware file defined!";
-    }
-
-    // Program the camera only once, while changing mode just setmode and start the camera
-    // FPGA or USB device takes care of sending fsync
-    if (!m_sensorFirmwareFile.empty() && !m_CameraProgrammed) {
-       status = m_depthSensor->program((const uint8_t *)m_sensorFirmwareFile.c_str(), 0);
-       if (Status::OK != status) {
-           LOG(ERROR) << "Error during programming the camera.";
-           return Status::GENERIC_ERROR;
-       }
-
-       /*status = m_depthSensor->setCalibrationParams(m_details.mode, 0, 0);
-       if (Status::OK != status) {
-           LOG(ERROR) << "Error during calibrating the camera.";
-           return Status::GENERIC_ERROR;
-       }*/
-
+    // Program the camera firmware only once, re-starting requires
+    // only setmode and start the camera.
+    if (!m_CameraProgrammed) {
+       // TO DO: implement this
        m_CameraProgrammed = true;
     }
 
-    // Removing the delay between set mode and start which was a temporary fix for mode change (MP<->QMP)
-    #ifdef _WIN32
-    //std::this_thread::sleep_for(std::chrono::seconds(20));
-    #endif
-
     status = m_depthSensor->start();
     if (Status::OK != status) {
-       LOG(ERROR) << "Error writing start command.";
+       LOG(ERROR) << "Error starting image sensor.";
        return Status::GENERIC_ERROR;
     }
-
-    /*status = m_depthSensor->toggleFsync();
-    if (Status::OK != status) {
-       LOG(ERROR) << "Error toggling fsync.";
-       return Status::GENERIC_ERROR;
-    }*/
 
     return aditof::Status::OK;
 }
