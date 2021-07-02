@@ -381,8 +381,9 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
     const uint16_t *address = reinterpret_cast<const uint16_t *>(
             clientRequestMsg.func_bytes_param(0).c_str());
     uint16_t *data = new uint16_t[length];
+    bool burst = static_cast<bool>(clientRequestMsg.func_int32_param(1));
 
-    aditof::Status status = camDepthSensor->readRegisters(address, data, length);
+    aditof::Status status = camDepthSensor->readRegisters(address, data, length, burst);
     if (status == aditof::Status::OK) {
       response.add_bytes_payload(data, length * sizeof(uint16_t));
     }
@@ -398,8 +399,9 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
             clientRequestMsg.func_bytes_param(0).c_str());
     const uint16_t *data = reinterpret_cast<const uint16_t *>(
             clientRequestMsg.func_bytes_param(1).c_str());
+    bool burst = static_cast<bool>(clientRequestMsg.func_int32_param(1));
 
-    aditof::Status status = camDepthSensor->writeRegisters(address, data, length);
+    aditof::Status status = camDepthSensor->writeRegisters(address, data, length, burst);
     response.set_status(static_cast<::uvc_payload::Status>(status));
 
     break;
