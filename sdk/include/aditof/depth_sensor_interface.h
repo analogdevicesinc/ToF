@@ -114,7 +114,7 @@ class DepthSensorInterface {
      * @return Status
      */
     virtual aditof::Status readRegisters(const uint16_t *address,
-                                            uint16_t *data, size_t length) = 0;
+                                            uint16_t *data, size_t length, bool burst = true) = 0;
 
     /**
      * @brief Write to multiple AFE registers.
@@ -126,7 +126,7 @@ class DepthSensorInterface {
      */
     virtual aditof::Status writeRegisters(const uint16_t *address,
                                              const uint16_t *data,
-                                             size_t length) = 0;
+                                             size_t length, bool burst = true) = 0;
 
     /**
      * @brief Get a structure that contains information about the instance of
