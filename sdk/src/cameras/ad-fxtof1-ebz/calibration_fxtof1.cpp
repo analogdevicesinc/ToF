@@ -278,7 +278,7 @@ aditof::Status CalibrationFxTof1::setMode(
     /*Execute the mode change command*/
     uint16_t afeRegsAddr[] = {0x4000, 0x4001, 0x7c22};
     uint16_t afeRegsVal[] = {mode_id, 0x0004, 0x0004};
-    depthSensor->writeAfeRegisters(afeRegsAddr, afeRegsVal, 5);
+    depthSensor->writeRegisters(afeRegsAddr, afeRegsVal, 5);
 
     return Status::OK;
 }

@@ -708,7 +708,7 @@ aditof::Status Addi9036Sensor::getFrame(uint16_t *buffer) {
     return status;
 }
 
-aditof::Status Addi9036Sensor::readAfeRegisters(const uint16_t *address,
+aditof::Status Addi9036Sensor::readRegisters(const uint16_t *address,
                                                 uint16_t *data, size_t length) {
     using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
@@ -738,7 +738,7 @@ aditof::Status Addi9036Sensor::readAfeRegisters(const uint16_t *address,
     return status;
 }
 
-aditof::Status Addi9036Sensor::writeAfeRegisters(const uint16_t *address,
+aditof::Status Addi9036Sensor::writeRegisters(const uint16_t *address,
                                                  const uint16_t *data,
                                                  size_t length) {
     using namespace aditof;

@@ -298,7 +298,7 @@ void SourceAdaptor::setSmallSignalValue(int16_t value) {
     // TO DO: This breaks things over USB. Works well on the target and
     // over network.
     if (m_camera) {
-        m_camera->getSensor()->writeAfeRegisters(afeRegsAddr, afeRegsVal, 5);
+        m_camera->getSensor()->writeRegisters(afeRegsAddr, afeRegsVal, 5);
     }
 }
 

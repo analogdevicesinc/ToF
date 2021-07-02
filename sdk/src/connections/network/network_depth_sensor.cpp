@@ -406,7 +406,7 @@ aditof::Status NetworkDepthSensor::getFrame(uint16_t *buffer) {
     return status;
 }
 
-aditof::Status NetworkDepthSensor::readAfeRegisters(const uint16_t *address,
+aditof::Status NetworkDepthSensor::readRegisters(const uint16_t *address,
                                                     uint16_t *data,
                                                     size_t length) {
     using namespace aditof;
@@ -419,7 +419,7 @@ aditof::Status NetworkDepthSensor::readAfeRegisters(const uint16_t *address,
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("ReadAfeRegisters");
+    net->send_buff.set_func_name("readRegisters");
     net->send_buff.add_func_int32_param(static_cast<::google::int32>(length));
     net->send_buff.add_func_bytes_param(address, length * sizeof(uint16_t));
     net->send_buff.add_func_bytes_param(data, length * sizeof(uint16_t));
@@ -451,7 +451,7 @@ aditof::Status NetworkDepthSensor::readAfeRegisters(const uint16_t *address,
     return status;
 }
 
-aditof::Status NetworkDepthSensor::writeAfeRegisters(const uint16_t *address,
+aditof::Status NetworkDepthSensor::writeRegisters(const uint16_t *address,
                                                      const uint16_t *data,
                                                      size_t length) {
     using namespace aditof;
@@ -464,7 +464,7 @@ aditof::Status NetworkDepthSensor::writeAfeRegisters(const uint16_t *address,
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("WriteAfeRegisters");
+    net->send_buff.set_func_name("writeRegisters");
     net->send_buff.add_func_int32_param(static_cast<::google::int32>(length));
     net->send_buff.add_func_bytes_param(address, length * sizeof(uint16_t));
     net->send_buff.add_func_bytes_param(data, length * sizeof(uint16_t));

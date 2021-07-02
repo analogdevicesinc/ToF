@@ -49,7 +49,7 @@ def write_AFE_reg(cam_handle, addr, data):
 
     sensor = cam_handle.getSensor()
 
-    status = sensor.writeAfeRegisters(
+    status = sensor.writeRegisters(
         address_array, data_array, len(data_array))
     # logger.debug(status)
 
@@ -68,7 +68,7 @@ def read_AFE_reg(cam_handle, addr, length):
     data_array = np.zeros(length, dtype='uint16')
 
     sensor = cam_handle.getSensor()
-    status = sensor.readAfeRegisters(address_array, data_array, length)
+    status = sensor.readRegisters(address_array, data_array, length)
     # logger.debug(status)
 
     return data_array

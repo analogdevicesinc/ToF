@@ -215,7 +215,7 @@ aditof::Status AdiTofDemoController::writeAFEregister(uint16_t *address,
 
     auto camSensor =
         m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getSensor();
-    return camSensor->writeAfeRegisters(address, data, noOfEntries);
+    return camSensor->writeRegisters(address, data, noOfEntries);
 }
 
 aditof::Status AdiTofDemoController::readAFEregister(uint16_t *address,
@@ -224,7 +224,7 @@ aditof::Status AdiTofDemoController::readAFEregister(uint16_t *address,
 
     auto camSensor =
         m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getSensor();
-    return camSensor->readAfeRegisters(address, data, noOfEntries);
+    return camSensor->readRegisters(address, data, noOfEntries);
 }
 
 void AdiTofDemoController::startRecording(

@@ -113,7 +113,7 @@ class DepthSensorInterface {
      * @param length - the number of registers to read
      * @return Status
      */
-    virtual aditof::Status readAfeRegisters(const uint16_t *address,
+    virtual aditof::Status readRegisters(const uint16_t *address,
                                             uint16_t *data, size_t length) = 0;
 
     /**
@@ -124,7 +124,7 @@ class DepthSensorInterface {
      * @param length - the number of registers to write
      * @return Status
      */
-    virtual aditof::Status writeAfeRegisters(const uint16_t *address,
+    virtual aditof::Status writeRegisters(const uint16_t *address,
                                              const uint16_t *data,
                                              size_t length) = 0;
 

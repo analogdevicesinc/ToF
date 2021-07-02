@@ -87,7 +87,7 @@ print(eeprom_read_data, "at address:", eeprom_read_address)
 # Read a couple of bytes from AFE
 afe_read_addresses = np.array([0x4001, 0x7c22], dtype=np.uint16)
 afe_read_data = np.array([0, 0], dtype=np.uint16)
-cam1Sensor.readAfeRegisters(afe_read_addresses, afe_read_data, len(afe_read_data))
+cam1Sensor.readRegisters(afe_read_addresses, afe_read_data, len(afe_read_data))
 print(afe_read_data, "at addresses:", afe_read_addresses)
 
 # Read temperatures from available temperature sensors

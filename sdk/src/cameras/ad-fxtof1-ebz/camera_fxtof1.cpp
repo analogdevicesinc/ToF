@@ -257,11 +257,11 @@ aditof::Status CameraFxTof1::setMode(const std::string &mode,
     if (m_details.frameType.type == "depth_only") {
         uint16_t afeRegsAddr[5] = {0x4001, 0x7c22, 0xc3da, 0x4001, 0x7c22};
         uint16_t afeRegsVal[5] = {0x0006, 0x0004, 0x03, 0x0007, 0x0004};
-        m_depthSensor->writeAfeRegisters(afeRegsAddr, afeRegsVal, 5);
+        m_depthSensor->writeRegisters(afeRegsAddr, afeRegsVal, 5);
     } else if (m_details.frameType.type == "ir_only") {
         uint16_t afeRegsAddr[5] = {0x4001, 0x7c22, 0xc3da, 0x4001, 0x7c22};
         uint16_t afeRegsVal[5] = {0x0006, 0x0004, 0x05, 0x0007, 0x0004};
-        m_depthSensor->writeAfeRegisters(afeRegsAddr, afeRegsVal, 5);
+        m_depthSensor->writeRegisters(afeRegsAddr, afeRegsVal, 5);
     }
 
     m_details.mode = mode;
@@ -467,7 +467,7 @@ aditof::Status CameraFxTof1::setNoiseReductionTreshold(uint16_t treshold) {
     afeRegsVal[2] |= treshold;
     m_noiseReductionThreshold = treshold;
 
-    return m_depthSensor->writeAfeRegisters(afeRegsAddr, afeRegsVal, 5);
+    return m_depthSensor->writeRegisters(afeRegsAddr, afeRegsVal, 5);
 }
 
 aditof::Status CameraFxTof1::setIrGammaCorrection(float gamma) {
@@ -488,12 +488,12 @@ aditof::Status CameraFxTof1::setIrGammaCorrection(float gamma) {
                              y_val[3], y_val[4], y_val[5], y_val[6],
                              y_val[7], y_val[8], 0x0007,   0x0004};
 
-    status = m_depthSensor->writeAfeRegisters(afeRegsAddr, afeRegsVal, 8);
+    status = m_depthSensor->writeRegisters(afeRegsAddr, afeRegsVal, 8);
     if (status != Status::OK) {
         return status;
     }
     status =
-        m_depthSensor->writeAfeRegisters(afeRegsAddr + 8, afeRegsVal + 8, 8);
+        m_depthSensor->writeRegisters(afeRegsAddr + 8, afeRegsVal + 8, 8);
     if (status != Status::OK) {
         return status;
     }

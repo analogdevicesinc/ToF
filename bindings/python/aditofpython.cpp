@@ -304,7 +304,7 @@ PYBIND11_MODULE(aditofpython, m) {
                 uint16_t address) {
                   uint16_t addrPtr[1], dataPtr[1];
                   addrPtr[0] = address;
-                  device.readAfeRegisters(addrPtr, dataPtr, 1);
+                  device.readRegisters(addrPtr, dataPtr, 1);
                   return dataPtr[0];
              },
              py::arg("address"))
@@ -314,7 +314,7 @@ PYBIND11_MODULE(aditofpython, m) {
                    uint16_t addrPtr[1], dataPtr[1];
                    addrPtr[0] = address;
                    dataPtr[0] = data;
-                   return device.writeAfeRegisters(addrPtr, dataPtr, 1);
+                   return device.writeRegisters(addrPtr, dataPtr, 1);
              },
              py::arg("address"), py::arg("data"))
         .def("regwriteburst",
@@ -327,10 +327,10 @@ PYBIND11_MODULE(aditofpython, m) {
                     addrPtr[0] |= 0x4000;
                   py::buffer_info dataBuffInfo = data.request();
                   uint16_t *dataPtr = static_cast<uint16_t *>(dataBuffInfo.ptr);
-                  return device.writeAfeRegisters(addrPtr, dataPtr, data.size());
+                  return device.writeRegisters(addrPtr, dataPtr, data.size());
              },
              py::arg("address"), py::arg("data"), py::arg("increment"))
-        .def("readAfeRegisters",
+        .def("readRegisters",
              [](aditof::DepthSensorInterface &device,
                 py::array_t<uint16_t> address, py::array_t<uint16_t> data,
                 size_t length) {
@@ -340,10 +340,10 @@ PYBIND11_MODULE(aditofpython, m) {
                  py::buffer_info dataBuffInfo = data.request(true);
                  uint16_t *dataPtr = static_cast<uint16_t *>(dataBuffInfo.ptr);
 
-                 return device.readAfeRegisters(addrPtr, dataPtr, length);
+                 return device.readRegisters(addrPtr, dataPtr, length);
              },
              py::arg("address"), py::arg("data"), py::arg("length"))
-        .def("writeAfeRegisters",
+        .def("writeRegisters",
              [](aditof::DepthSensorInterface &device,
                 py::array_t<uint16_t> address, py::array_t<uint16_t> data,
                 size_t length) {
@@ -353,7 +353,7 @@ PYBIND11_MODULE(aditofpython, m) {
                  py::buffer_info dataBuffInfo = data.request();
                  uint16_t *dataPtr = static_cast<uint16_t *>(dataBuffInfo.ptr);
 
-                 return device.writeAfeRegisters(addrPtr, dataPtr, length);
+                 return device.writeRegisters(addrPtr, dataPtr, length);
              },
              py::arg("address"), py::arg("data"), py::arg("length"));
 

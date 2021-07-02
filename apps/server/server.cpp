@@ -462,7 +462,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             buff_recv.func_bytes_param(0).c_str());
         uint16_t *data = new uint16_t[length];
         aditof::Status status =
-            camDepthSensor->readAfeRegisters(address, data, length);
+            camDepthSensor->readRegisters(address, data, length);
         if (status == aditof::Status::OK) {
             buff_send.add_bytes_payload(data, length * sizeof(uint16_t));
         }
@@ -478,7 +478,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         const uint16_t *data = reinterpret_cast<const uint16_t *>(
             buff_recv.func_bytes_param(1).c_str());
         aditof::Status status =
-            camDepthSensor->writeAfeRegisters(address, data, length);
+            camDepthSensor->writeRegisters(address, data, length);
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
@@ -659,8 +659,8 @@ void Initialize() {
     s_map_api_Values["SetFrameType"] = SET_FRAME_TYPE;
     s_map_api_Values["Program"] = PROGRAM;
     s_map_api_Values["GetFrame"] = GET_FRAME;
-    s_map_api_Values["ReadAfeRegisters"] = READ_AFE_REGISTERS;
-    s_map_api_Values["WriteAfeRegisters"] = WRITE_AFE_REGISTERS;
+    s_map_api_Values["readRegisters"] = READ_AFE_REGISTERS;
+    s_map_api_Values["writeRegisters"] = WRITE_AFE_REGISTERS;
     s_map_api_Values["StorageOpen"] = STORAGE_OPEN;
     s_map_api_Values["StorageRead"] = STORAGE_READ;
     s_map_api_Values["StorageWrite"] = STORAGE_WRITE;
