@@ -463,7 +463,7 @@ aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
     return status;
 }
 
-aditof::Status UsbDepthSensor::readAfeRegisters(const uint16_t *address,
+aditof::Status UsbDepthSensor::readRegisters(const uint16_t *address,
                                                 uint16_t *data, size_t length) {
     using namespace aditof;
     int ret;
@@ -483,7 +483,7 @@ aditof::Status UsbDepthSensor::readAfeRegisters(const uint16_t *address,
     return Status::OK;
 }
 
-aditof::Status UsbDepthSensor::writeAfeRegisters(const uint16_t *address,
+aditof::Status UsbDepthSensor::writeRegisters(const uint16_t *address,
                                                  const uint16_t *data,
                                                  size_t length) {
     using namespace aditof;

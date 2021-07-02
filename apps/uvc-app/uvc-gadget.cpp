@@ -382,7 +382,7 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
             clientRequestMsg.func_bytes_param(0).c_str());
     uint16_t *data = new uint16_t[length];
 
-    aditof::Status status = camDepthSensor->readAfeRegisters(address, data, length);
+    aditof::Status status = camDepthSensor->readRegisters(address, data, length);
     if (status == aditof::Status::OK) {
       response.add_bytes_payload(data, length * sizeof(uint16_t));
     }
@@ -399,7 +399,7 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
     const uint16_t *data = reinterpret_cast<const uint16_t *>(
             clientRequestMsg.func_bytes_param(1).c_str());
 
-    aditof::Status status = camDepthSensor->writeAfeRegisters(address, data, length);
+    aditof::Status status = camDepthSensor->writeRegisters(address, data, length);
     response.set_status(static_cast<::uvc_payload::Status>(status));
 
     break;

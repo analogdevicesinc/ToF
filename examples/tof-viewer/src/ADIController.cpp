@@ -123,7 +123,7 @@ aditof::Status ADIController::writeAFEregister(uint16_t* address,
 {
 	auto depthSensor =
 		m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getSensor();
-	return depthSensor->writeAfeRegisters(address, data, noOfEntries);
+	return depthSensor->writeRegisters(address, data, noOfEntries);
 }
 
 aditof::Status ADIController::readAFEregister(uint16_t* address,
@@ -133,7 +133,7 @@ aditof::Status ADIController::readAFEregister(uint16_t* address,
 
 	auto depthSensor =
 		m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getSensor();
-	return depthSensor->readAfeRegisters(address, data, noOfEntries);
+	return depthSensor->readRegisters(address, data, noOfEntries);
 }
 
 void ADIController::startRecording(const std::string& fileName,

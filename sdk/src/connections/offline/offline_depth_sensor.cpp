@@ -45,13 +45,13 @@ aditof::Status OfflineDepthSensor::program(const uint8_t *firmware,
     return aditof::Status::OK;
 }
 
-aditof::Status OfflineDepthSensor::readAfeRegisters(const uint16_t *address,
+aditof::Status OfflineDepthSensor::readRegisters(const uint16_t *address,
                                         uint16_t *data,
                                 size_t length) {
     return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status OfflineDepthSensor::writeAfeRegisters(const uint16_t *address,
+aditof::Status OfflineDepthSensor::writeRegisters(const uint16_t *address,
                                          const uint16_t *data,
                                                      size_t length) {
     return aditof::Status::UNAVAILABLE;
