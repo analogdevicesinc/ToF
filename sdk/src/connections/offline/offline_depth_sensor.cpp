@@ -47,13 +47,13 @@ aditof::Status OfflineDepthSensor::program(const uint8_t *firmware,
 
 aditof::Status OfflineDepthSensor::readRegisters(const uint16_t *address,
                                         uint16_t *data,
-                                size_t length) {
+                                size_t length, bool burst /*=true*/) {
     return aditof::Status::UNAVAILABLE;
 }
 
 aditof::Status OfflineDepthSensor::writeRegisters(const uint16_t *address,
                                          const uint16_t *data,
-                                                     size_t length) {
+                                                     size_t length, bool burst /*=true*/) {
     return aditof::Status::UNAVAILABLE;
 }
 
