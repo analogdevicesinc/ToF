@@ -63,10 +63,10 @@ class Addi9036Sensor : public aditof::DepthSensorInterface,
     virtual aditof::Status getFrame(uint16_t *buffer) override;
     virtual aditof::Status readRegisters(const uint16_t *address,
                                             uint16_t *data,
-                                            size_t length) override;
+                                            size_t length, bool burst = true) override;
     virtual aditof::Status writeRegisters(const uint16_t *address,
                                              const uint16_t *data,
-                                             size_t length) override;
+                                             size_t length, bool burst = true) override;
     virtual aditof::Status
     getDetails(aditof::SensorDetails &details) const override;
     virtual aditof::Status getHandle(void **handle) override;
