@@ -111,6 +111,8 @@ class DepthSensorInterface {
      * @param data - a valid location to store the content read from AFE
      * registers
      * @param length - the number of registers to read
+     * @param burst - if enabled the function will read data starting from the provided
+     * address; if disabled it will read data from the provided address list .
      * @return Status
      */
     virtual aditof::Status readRegisters(const uint16_t *address,
@@ -122,6 +124,8 @@ class DepthSensorInterface {
      * written
      * @param data - the location of the content to be written to AFE registers
      * @param length - the number of registers to write
+     * @param burst - if enabled the function will write data starting from the provided
+     * address; if disabled it will write data at the provided address list .
      * @return Status
      */
     virtual aditof::Status writeRegisters(const uint16_t *address,
