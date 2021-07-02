@@ -456,13 +456,14 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
-    case READ_AFE_REGISTERS: {
+    case READ_REGISTERS: {
         size_t length = static_cast<size_t>(buff_recv.func_int32_param(0));
         const uint16_t *address = reinterpret_cast<const uint16_t *>(
             buff_recv.func_bytes_param(0).c_str());
         uint16_t *data = new uint16_t[length];
+        bool burst = static_cast<bool>(buff_recv.func_int32_param(1));
         aditof::Status status =
-            camDepthSensor->readRegisters(address, data, length);
+            camDepthSensor->readRegisters(address, data, length, burst);
         if (status == aditof::Status::OK) {
             buff_send.add_bytes_payload(data, length * sizeof(uint16_t));
         }
@@ -471,14 +472,15 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
-    case WRITE_AFE_REGISTERS: {
+    case WRITE_REGISTERS: {
         size_t length = static_cast<size_t>(buff_recv.func_int32_param(0));
         const uint16_t *address = reinterpret_cast<const uint16_t *>(
             buff_recv.func_bytes_param(0).c_str());
         const uint16_t *data = reinterpret_cast<const uint16_t *>(
             buff_recv.func_bytes_param(1).c_str());
+        bool burst = static_cast<bool>(buff_recv.func_int32_param(1));
         aditof::Status status =
-            camDepthSensor->writeRegisters(address, data, length);
+            camDepthSensor->writeRegisters(address, data, length, burst);
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
@@ -659,8 +661,8 @@ void Initialize() {
     s_map_api_Values["SetFrameType"] = SET_FRAME_TYPE;
     s_map_api_Values["Program"] = PROGRAM;
     s_map_api_Values["GetFrame"] = GET_FRAME;
-    s_map_api_Values["readRegisters"] = READ_AFE_REGISTERS;
-    s_map_api_Values["writeRegisters"] = WRITE_AFE_REGISTERS;
+    s_map_api_Values["ReadRegisters"] = READ_REGISTERS;
+    s_map_api_Values["WriteRegisters"] = WRITE_REGISTERS;
     s_map_api_Values["StorageOpen"] = STORAGE_OPEN;
     s_map_api_Values["StorageRead"] = STORAGE_READ;
     s_map_api_Values["StorageWrite"] = STORAGE_WRITE;
