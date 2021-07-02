@@ -408,7 +408,7 @@ aditof::Status NetworkDepthSensor::getFrame(uint16_t *buffer) {
 
 aditof::Status NetworkDepthSensor::readRegisters(const uint16_t *address,
                                                     uint16_t *data,
-                                                    size_t length) {
+                                                    size_t length, bool burst /*=true*/) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -419,8 +419,9 @@ aditof::Status NetworkDepthSensor::readRegisters(const uint16_t *address,
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("readRegisters");
+    net->send_buff.set_func_name("ReadRegisters");
     net->send_buff.add_func_int32_param(static_cast<::google::int32>(length));
+    net->send_buff.add_func_int32_param(static_cast<::google::int32>(burst));
     net->send_buff.add_func_bytes_param(address, length * sizeof(uint16_t));
     net->send_buff.add_func_bytes_param(data, length * sizeof(uint16_t));
     net->send_buff.set_expect_reply(true);
@@ -453,7 +454,7 @@ aditof::Status NetworkDepthSensor::readRegisters(const uint16_t *address,
 
 aditof::Status NetworkDepthSensor::writeRegisters(const uint16_t *address,
                                                      const uint16_t *data,
-                                                     size_t length) {
+                                                     size_t length, bool burst /*=true*/) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -464,8 +465,9 @@ aditof::Status NetworkDepthSensor::writeRegisters(const uint16_t *address,
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("writeRegisters");
+    net->send_buff.set_func_name("WriteRegisters");
     net->send_buff.add_func_int32_param(static_cast<::google::int32>(length));
+    net->send_buff.add_func_int32_param(static_cast<::google::int32>(burst));
     net->send_buff.add_func_bytes_param(address, length * sizeof(uint16_t));
     net->send_buff.add_func_bytes_param(data, length * sizeof(uint16_t));
     net->send_buff.set_expect_reply(true);
