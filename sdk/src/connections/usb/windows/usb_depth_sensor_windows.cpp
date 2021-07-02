@@ -689,7 +689,7 @@ aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
 }
 
 aditof::Status UsbDepthSensor::readRegisters(const uint16_t *address,
-                                                uint16_t *data, size_t length) {
+                                                uint16_t *data, size_t length, bool burst /*=true*/) {
     using namespace aditof;
 
     Status status = Status::OK;
@@ -700,6 +700,7 @@ aditof::Status UsbDepthSensor::readRegisters(const uint16_t *address,
     usb_payload::ClientRequest requestMsg;
     requestMsg.set_func_name(usb_payload::FunctionName::READ_REGISTERS);
     requestMsg.add_func_int32_param(static_cast<::google::int32>(length));
+    requestMsg.add_func_int32_param(static_cast<::google::int32>(burst));
     requestMsg.add_func_bytes_param(address, length * sizeof(uint16_t));
 
     // Send request
@@ -740,7 +741,7 @@ aditof::Status UsbDepthSensor::readRegisters(const uint16_t *address,
 
 aditof::Status UsbDepthSensor::writeRegisters(const uint16_t *address,
                                                  const uint16_t *data,
-                                                 size_t length) {
+                                                 size_t length, bool burst /*=true*/) {
     using namespace aditof;
 
     Status status = Status::OK;
@@ -751,6 +752,7 @@ aditof::Status UsbDepthSensor::writeRegisters(const uint16_t *address,
     usb_payload::ClientRequest requestMsg;
     requestMsg.set_func_name(usb_payload::FunctionName::WRITE_REGISTERS);
     requestMsg.add_func_int32_param(static_cast<::google::int32>(length));
+    requestMsg.add_func_int32_param(static_cast<::google::int32>(burst));
     requestMsg.add_func_bytes_param(address, length * sizeof(uint16_t));
     requestMsg.add_func_bytes_param(data, length * sizeof(uint16_t));
 
