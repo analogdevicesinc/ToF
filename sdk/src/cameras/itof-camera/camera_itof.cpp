@@ -30,6 +30,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "camera_itof.h"
+#include "calibration_itof.h"
 #include "aditof/frame.h"
 #include "aditof_internal.h"
 #include "aditof/frame_operations.h"
@@ -126,7 +127,6 @@ aditof::Status CameraItof::initialize() {
     std::string config = m_controls["initialization_config"];
     std::ifstream ifs(config.c_str());
     std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
-    std::vector<std::pair<std::string, int32_t>> device_settings;
 
     cJSON *config_json = cJSON_Parse(content.c_str());
     if (config_json != NULL) {
@@ -167,13 +167,13 @@ aditof::Status CameraItof::initialize() {
         // Get optional power config
         const cJSON *json_vaux_pwr = cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_ENABLE");
         if (cJSON_IsString(json_vaux_pwr) && (json_vaux_pwr->valuestring != NULL)) {
-            device_settings.push_back(std::make_pair(json_vaux_pwr->string, atoi(json_vaux_pwr->valuestring)));
+            m_sensor_settings.push_back(std::make_pair(json_vaux_pwr->string, atoi(json_vaux_pwr->valuestring)));
         }
 
         // Get optional power config
         const cJSON *json_vaux_voltage = cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_VOLTAGE");
         if (cJSON_IsString(json_vaux_voltage) && (json_vaux_voltage->valuestring != NULL)) {
-            device_settings.push_back(std::make_pair(json_vaux_voltage->string, atoi(json_vaux_voltage->valuestring)));
+            m_sensor_settings.push_back(std::make_pair(json_vaux_voltage->string, atoi(json_vaux_voltage->valuestring)));
         }
     } else if (!config.empty()) {
         LOG(ERROR) << "Couldn't parse config file: " << config.c_str();
@@ -221,7 +221,26 @@ aditof::Status CameraItof::start() {
     // Program the camera firmware only once, re-starting requires
     // only setmode and start the camera.
     if (!m_CameraProgrammed) {
-       // TO DO: implement this
+        CalibrationItof calib(m_depthSensor);
+
+        status = calib.writeConfiguration(m_sensorFirmwareFile);
+        if (Status::OK != status) {
+            LOG(ERROR) << "Error writing camera firmware.";
+            return status;
+        }
+
+        status = calib.writeCalibration(m_ccb_calibrationFile);
+        if (Status::OK != status) {
+            LOG(ERROR) << "Error writing camera calibration data.";
+            return status;
+        }
+
+        status = calib.writeSettings(m_sensor_settings);
+        if (Status::OK != status) {
+            LOG(ERROR) << "Error writing camera settings.";
+            return status;
+        }
+
        m_CameraProgrammed = true;
     }
 
