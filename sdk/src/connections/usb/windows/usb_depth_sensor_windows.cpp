@@ -655,9 +655,6 @@ aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
 
     int retryCount = 0;
     HRESULT hr;
-    int i, j;
-    unsigned int offset[2];
-    unsigned int offset_idx;
 
     VIDEOINFOHEADER *pVi = reinterpret_cast<VIDEOINFOHEADER *>(
         m_implData->handle.pAmMediaType->pbFormat);
