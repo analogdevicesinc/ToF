@@ -23,6 +23,8 @@ SOFTWARE.
 */
 #include "calibration_itof.h"
 
+#include <glog/logging.h>
+
 using namespace aditof;
 
 namespace adsd3100 {
