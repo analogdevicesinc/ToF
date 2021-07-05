@@ -23,6 +23,8 @@ SOFTWARE.
 */
 #include "calibration_itof.h"
 
+#include <aditof/depth_sensor_interface.h>
+
 #include <glog/logging.h>
 
 using namespace aditof;
@@ -127,8 +129,45 @@ CalibrationItof::CalibrationItof(std::shared_ptr<DepthSensorInterface> sensor)
 
 Status
 CalibrationItof::writeConfiguration(const std::string &configurationFile) {
-    // TO DO: implement this
-    return Status::OK;
+    Status status = Status::OK;
+
+    FILE *fd;
+    fopen_s(&fd, (const char *)configurationFile.c_str(), "rb");
+    if (!fd) {
+        LOG(WARNING) << "Cannot open sensor configuration file: "
+                     << configurationFile;
+        return Status::GENERIC_ERROR;
+    }
+
+    m_configuration.parseConfigFile((const char *)configurationFile.c_str());
+
+    uint32_t offset;
+    m_configuration.getConfigOffset(offset_type_register, &offset);
+    fseek(fd, offset, SEEK_SET);
+    writeConfigBlock(fd);
+
+    // disabled all digital clock gating before writing to RAMs
+    unsigned short regAddr = adsd3100::DIG_PWR_DOWN_CLOCK_GATED_CMD;
+    uint16_t regdata = adsd3100::DIG_PWR_DOWN_OPERATING_CMD;
+    m_sensor->writeRegisters(&regAddr, &regdata, 1);
+
+    const int num_write_blocks = 9;
+    offset_type_enum block_writes[num_write_blocks] = {
+        offset_type_lx5_ram,        offset_type_lx5_dram_bank0,
+        offset_type_lx5_dram_bank1, offset_type_lx5_dram_bank2,
+        offset_type_lx5_dram_bank3, offset_type_seqram,
+        offset_type_mapram,         offset_type_wavram,
+        offset_type_misc_register,
+    };
+
+    for (int i = 0; i < num_write_blocks; ++i) {
+        m_configuration.getConfigOffset(block_writes[i], &offset);
+        fseek(fd, offset, SEEK_SET);
+        writeConfigBlock(fd);
+    }
+
+    fclose(fd);
+    return status;
 }
 
 Status CalibrationItof::writeCalibration(const std::string &calibrationFile) {
@@ -165,4 +204,107 @@ Status CalibrationItof::writeSettings(
 Status CalibrationItof::writeDefaultCalibration() {
     // TO DO: implement this
     return Status::OK;
+}
+
+Status CalibrationItof::writeConfigBlock(FILE *fd) {
+    using namespace aditof;
+    Status status = Status::OK;
+
+    config_block config_block;
+
+    /* Read blocks*/
+    fread(&config_block.BlockID, UINT_16_BYTES, 1u, fd);
+    fread(&config_block.BlockVer, UINT_16_BYTES, 1u, fd);
+    fread(&config_block.BlockSize, UINT_32_BYTES, 1u, fd);
+    fread(&config_block.blsBurstLayout, UINT_16_BYTES, 1u, fd);
+    fread(&config_block.nBurstSetupWrites, UINT_16_BYTES, 1u, fd);
+    fread(config_block.BurstSetupWrites, UINT_16_BYTES, 4u, fd);
+
+    if (config_block.nBurstSetupWrites > 0) {
+
+        uint16_t *burstAddr = (uint16_t *)malloc(
+            sizeof(uint16_t) * config_block.nBurstSetupWrites);
+        uint16_t *burstData = (uint16_t *)malloc(
+            sizeof(uint16_t) * config_block.nBurstSetupWrites);
+        for (uint32_t i = 0u; i < config_block.nBurstSetupWrites; i++) {
+            // fprintf(fp, "0x%4.4x, 0x%4.4x\n", config_block.BurstSetupWrites[2*i], config_block.BurstSetupWrites[2*i+1]);
+            burstAddr[i] = config_block.BurstSetupWrites[2 * i];
+            burstData[i] = config_block.BurstSetupWrites[2 * i + 1];
+        }
+
+        status = m_sensor->writeRegisters(burstAddr, burstData,
+                                          config_block.nBurstSetupWrites);
+
+        if (status != Status::OK) {
+            LOG(WARNING) << "Error writting setup registers to imager sensor";
+        }
+
+        free(burstAddr);
+        free(burstData);
+    }
+
+    fread(&config_block.startAddress, UINT_16_BYTES, 1u, fd);
+    fread(&config_block.rsvd, UINT_16_BYTES, 1u, fd);
+    fread(&config_block.nValues, UINT_32_BYTES, 1u, fd);
+
+    if (config_block.blsBurstLayout == 1) {
+
+        /* Burst Write */
+        uint8_t *Data =
+            (uint8_t *)malloc(config_block.nValues * sizeof(uint16_t));
+
+        for (uint32_t i = 0u; i < config_block.nValues; i++) {
+
+            uint16_t aux = 0;
+            if (fread(&aux, UINT_16_BYTES, 1, fd) != 1) {
+                LOG(WARNING) << "Error reading cfg file";
+            }
+            //byte swap for burst write
+            Data[2 * i] = aux >> 8;
+            Data[2 * i + 1] = aux & 0xFF;
+            aux = Data[2 * i] << 8 | Data[2 * i + 1];
+        }
+
+        status =
+            m_sensor->writeRegisters(&config_block.startAddress,
+                                     reinterpret_cast<const uint16_t *>(Data),
+                                     config_block.nValues, true);
+        if (status != Status::OK) {
+            LOG(WARNING)
+                << "Error writting indirect registers to imager sensor";
+        }
+        free(Data);
+
+    } else {
+
+        /* Address data pairs */
+        uint16_t numDataPairs = config_block.nValues / 2;
+        uint16_t *data = (uint16_t *)malloc(sizeof(uint16_t) * numDataPairs);
+        uint16_t *addr = (uint16_t *)malloc(sizeof(uint16_t) * numDataPairs);
+        for (uint32_t i = 0u; i < numDataPairs; i++) {
+
+            uint16_t nAddr;
+            uint16_t nData;
+            if (fread(&nAddr, sizeof(uint16_t), 1u, fd) != 1) {
+                LOG(WARNING) << "Error reading cfg file";
+            }
+
+            if (fread(&nData, sizeof(uint16_t), 1u, fd) != 1) {
+                LOG(WARNING) << "Error reading cfg file";
+            }
+
+            addr[i] = nAddr;
+            data[i] = nData;
+        }
+
+        status = m_sensor->writeRegisters(addr, data, numDataPairs);
+        if (status != Status::OK) {
+            LOG(WARNING) << "Error writting registers to imager sensor";
+        }
+
+        free(data);
+        free(addr);
+    }
+
+    return status;
 }

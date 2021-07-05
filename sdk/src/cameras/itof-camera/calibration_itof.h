@@ -49,6 +49,7 @@ class CalibrationItof {
 
   private:
     aditof::Status writeDefaultCalibration();
+    aditof::Status writeConfigBlock(FILE *fd);
 
   private:
     std::shared_ptr<aditof::DepthSensorInterface> m_sensor;
