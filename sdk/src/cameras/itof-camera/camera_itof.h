@@ -38,7 +38,6 @@
 #include <aditof/temperature_sensor_interface.h>
 #include <map>
 #include <unordered_map>
-// #include "calibration.h"
  #include "tofi/tofi_compute.h"
  #include "tofi/tofi_config.h"
 // #include "aditof_internal.h"
@@ -278,7 +277,6 @@ class CameraItof : public aditof::Camera {
     bool m_devStarted;
     bool m_eepromInitialized;
     bool m_tempSensorInitialized;
-    // Calibration m_calibration;
 
     uint8_t *m_calData = NULL;
     uint8_t *m_depthINIData = NULL;
