@@ -106,7 +106,7 @@ file(GLOB PLATFORM_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/${TARGET_SPECIFIC_DIR}/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connections/usb/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${FRAME_DIR}/*.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/common/adi/ccb/TOF_Calibration_Types.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/common/adi/ccb/include/TOF_Calibration_Types.h
 )
 
 file(GLOB NETWORK_SOURCES
