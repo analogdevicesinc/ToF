@@ -24,6 +24,8 @@ SOFTWARE.
 #ifndef CALIBRATION_ITOF_H
 #define CALIBRATION_ITOF_H
 
+#include "adsd3100_configuration.h"
+
 #include <aditof/status_definitions.h>
 
 #include <memory>
@@ -50,6 +52,7 @@ class CalibrationItof {
 
   private:
     std::shared_ptr<aditof::DepthSensorInterface> m_sensor;
+    aditof::ADSD3100Configuration m_configuration;
 };
 
 #endif /*CALIBRATION_ITOF_H*/
