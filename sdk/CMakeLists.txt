@@ -197,13 +197,11 @@ endif()
 #LIBTOFI_LIBDIR_PATH - path to libtofi_config.so and libtofi_compute.so folder
 
 if (USE_ITOF)
-	if (LIBTOFI_LIBDIR_PATH)
-        if( USE_DEPTH_COMPUTE_STUBS )
-                find_path ( LIB_LOCATION NAMES tofi_compute.dll PATHS "${CMAKE_BINARY_DIR}/apps/depth-compute-stub/")
-        		set(LIBTOFI_LIBDIR_PATH ${LIB_LOCATION} CACHE STRING "" FORCE)
-        else()
-                set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs" CACHE STRING "" FORCE)
-        endif()
+    if( USE_DEPTH_COMPUTE_STUBS )
+            find_path ( LIB_LOCATION NAMES tofi_compute.dll PATHS "${CMAKE_BINARY_DIR}/common/adi/depth-compute-stub/")
+    		set(LIBTOFI_LIBDIR_PATH ${LIB_LOCATION} CACHE STRING "" FORCE)
+    else()
+            set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs" CACHE STRING "" FORCE)
     endif()
 	
 	if ( UNIX )
