@@ -76,6 +76,7 @@ endif()
 
 if(USE_DEPTH_COMPUTE_STUBS)
         add_definitions(-DUSE_DEPTH_COMPUTE_STUBS)
+        add_subdirectory(common/adi/depth-compute-stub)
 endif()
 
 set(CONFIG_DIR_NAME "config")
