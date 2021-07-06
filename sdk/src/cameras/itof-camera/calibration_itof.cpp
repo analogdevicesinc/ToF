@@ -26,6 +26,7 @@ SOFTWARE.
 #include <aditof/depth_sensor_interface.h>
 
 #include <glog/logging.h>
+#include "ccb.h"
 
 using namespace aditof;
 
@@ -171,8 +172,131 @@ CalibrationItof::writeConfiguration(const std::string &configurationFile) {
 }
 
 Status CalibrationItof::writeCalibration(const std::string &calibrationFile) {
-    // TO DO: implement this
-    return Status::OK;
+    Status status = Status::OK;
+
+    // Load CCB File
+    void *ccbData = 0;
+    size_t size_ccb = 0;
+    FILE *f = NULL;
+
+    if (calibrationFile.empty())
+    {
+        //FIXME: Remove use of default settings and require a CCB file
+        LOG(ERROR) << "No Calibration file defined. Default calibration written by driver.\n";
+        //writeDefaultCalibration();
+        return status;
+    }
+
+    int err = fopen_s(&f, calibrationFile.c_str(), "rb");
+    if (f) {
+        if (0 == fseek(f, 0L, SEEK_END)) {
+            size_ccb = ftell(f);
+            rewind(f);
+            ccbData = malloc(size_ccb);
+            if (ccbData) {
+                if (1 != fread(ccbData, size_ccb, 1, f)) {
+                    LOG(WARNING) << "Failed to read data file.\n";
+                    free(ccbData);
+                    ccbData = 0;
+                    size_ccb = 0;
+                }
+            } else {
+                LOG(WARNING) << "Failed to allocate memory for CCB data.\n";
+            }
+        } else {
+            LOG(WARNING) << "Failed to seek in data file.\n";
+        }
+        fclose(f);
+    } else {
+        LOG(ERROR) << "Failed to open calibration data file: " << calibrationFile;
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    ccb_data_t ccb_data = {(const unsigned char *const)ccbData, size_ccb};
+
+    const struct CAL_ADDRVAL_REG_BLOCK_V1 *calregblock = ccb_get_cal_block_addrval_reglist(&ccb_data, 0);
+    const struct CAL_GAIN_CORRECTION_BLOCK *gaincorrection = ccb_get_cal_block_gaincorrection(&ccb_data, 0);
+    const struct CAL_LSDAC_BLOCK_V1 *lsdac = ccb_get_cal_block_lsdacs(&ccb_data, 0);
+    if (lsdac) {
+        // lsdac table
+        uint16_t startAddress = lsdac->StartAddress;
+        writeRegister(adsd3100::USEQ_RAM_LOAD_ADDR_REG_ADDR, 0x1d29); // lsdac checksum MSB
+        writeRegister(adsd3100::USEQ_RAM_LOAD_DATA_REG_ADDR, lsdac->ChecksumMSB);
+        writeRegister(adsd3100::USEQ_RAM_LOAD_ADDR_REG_ADDR, 0x1d25); // lsdac checksum LSB
+        writeRegister(adsd3100::USEQ_RAM_LOAD_DATA_REG_ADDR, lsdac->ChecksumLSB);
+        writeRegister(adsd3100::USEQ_RAM_LOAD_ADDR_REG_ADDR, startAddress);
+
+        uint16_t *buff = (uint16_t *)malloc(lsdac->nWrites * 2);
+        memcpy(buff, lsdac->Settings, lsdac->nWrites * 2);
+        for (uint32_t i = 0u; i < lsdac->nWrites; i++) {
+            buff[i] = (lsdac->Settings[i] >> 8) | (0xFF00 & (lsdac->Settings[i] << 8)); // endian byte swap
+        }
+        uint16_t regAddr = adsd3100::USEQ_RAM_LOAD_DATA_REG_ADDR;
+        m_sensor->writeRegisters(&regAddr, buff, lsdac->nWrites, true);
+        free(buff);
+    }
+
+    if (calregblock && gaincorrection) {
+        // pixel dac trim registers
+        for (int i = 0; i < calregblock->nTuples; ++i) {
+            writeRegister(calregblock->Tuples[i].Address, calregblock->Tuples[i].Value);
+        }
+
+        // global ADC settings
+        writeRegister(adsd3100::ADC_CTRL1_S1_REG_ADDR, gaincorrection->ADC.UpdnoOffset);
+        writeRegister(adsd3100::ADC_CTRL2_S1_REG_ADDR, gaincorrection->ADC.IRamp);
+
+        // gain comparator
+        uint16_t dacCtrlValue = gaincorrection->GainComparator.Vref2Dac;
+        dacCtrlValue = (dacCtrlValue << 8) | gaincorrection->GainComparator.Vref1Dac;
+        writeRegister(adsd3100::DAC_CTRL2_S1_REG_ADDR, dacCtrlValue);
+
+        dacCtrlValue = adsd3100::COMP_REF_DAC4_DEFAULT; // comp_ref_dac4 default
+        dacCtrlValue |= gaincorrection->GainComparator.Vref3Dac;
+        writeRegister(adsd3100::DAC_CTRL3_S1_REG_ADDR, dacCtrlValue);
+
+        // global gain scale registers
+        writeRegister(adsd3100::INV_ADC_GAIN_0_REG_ADDR, gaincorrection->InverseGlobalADCGain[0]);
+        writeRegister(adsd3100::INV_ADC_GAIN_1_REG_ADDR, gaincorrection->InverseGlobalADCGain[1]);
+        writeRegister(adsd3100::INV_ADC_GAIN_2_REG_ADDR, gaincorrection->InverseGlobalADCGain[2]);
+        writeRegister(adsd3100::INV_ADC_GAIN_3_REG_ADDR, gaincorrection->InverseGlobalADCGain[3]);
+
+        const COLUMN_GAIN_CORRECTION *gaintable = &(gaincorrection->PerColGainAdjustment);
+        std::vector<uint16_t> gainbuffer(sizeof(gaincorrection->PerColGainAdjustment) / 2);
+        std::memcpy(gainbuffer.data(), (const uint16_t *)gaintable, sizeof(uint16_t) * (sizeof(gaincorrection->PerColGainAdjustment) / 2));
+
+        writeRegister(adsd3100::DIG_PWR_DOWN_REG_ADDR, adsd3100::DIG_PWR_DOWN_OPERATING_CMD);
+        writeRegister(adsd3100::IA_SELECT_REG_ADDR, 0x0008);
+        writeRegister(adsd3100::IA_ADDR_REG_REG_ADDR, 0x0000);
+
+        uint16_t regAddr = adsd3100::IA_WRDATA_REG_REG_ADDR;
+        m_sensor->writeRegisters(&regAddr, gainbuffer.data(), (sizeof(gaincorrection->PerColGainAdjustment) / 2), true);
+
+        // enable gain
+        writeRegister(adsd3100::TIE_PC_BYPASS_REG_ADDR, adsd3100::TIE_PC_BYPASS_ENBL_GAIN);
+
+        const COLUMN_GAIN_CORRECTION *offsettable = &(gaincorrection->PerColOffsetAdjustment);
+
+        std::vector<uint16_t> offsetbuffer(sizeof(gaincorrection->PerColOffsetAdjustment) / 2);
+        std::memcpy(offsetbuffer.data(), (const uint16_t *)offsettable, sizeof(uint16_t) * (sizeof(gaincorrection->PerColOffsetAdjustment) / 2));
+
+        writeRegister(adsd3100::DIG_PWR_DOWN_REG_ADDR, adsd3100::DIG_PWR_DOWN_OPERATING_CMD);
+
+        writeRegister(adsd3100::IA_SELECT_REG_ADDR, 0x0004);
+        writeRegister(adsd3100::IA_ADDR_REG_REG_ADDR, 0x0000);
+
+        regAddr = adsd3100::IA_WRDATA_REG_REG_ADDR;
+        m_sensor->writeRegisters(&regAddr, offsetbuffer.data(), (sizeof(gaincorrection->PerColOffsetAdjustment) / 2), true);
+
+        // enable offset
+        writeRegister(adsd3100::TIE_PC_BYPASS_REG_ADDR, adsd3100::TIE_PC_BYPASS_ENBL_GAINOFFSET);
+    } else {
+        LOG(WARNING) << "Calibration file error\n";
+        status = aditof::Status::GENERIC_ERROR;
+    }
+
+    free(ccbData);
+    return status;
 }
 
 Status CalibrationItof::writeSettings(
@@ -202,7 +326,84 @@ Status CalibrationItof::writeSettings(
 }
 
 Status CalibrationItof::writeDefaultCalibration() {
-    // TO DO: implement this
+    /* Write default analog registers */
+    const int lsdac_blocksize = 33 + 2;                 //(usecases*freqs) + 2_word_header)
+    uint16_t wav_ram_lsdac[lsdac_blocksize] = {0x0069,  // freq 3
+                                               0x0060,  // freq 2
+                                               0x0061,  // freq 1
+                                               0x0307,  // Mode 11 LSDAC Header (3 freq) - MP Mode
+                                               0x0069,  // freq 1
+                                               0x0105,  // Mode 10
+                                               0x0000,  // Mode 9
+                                               0x0069,  // freq 3
+                                               0x0060,  // freq 2
+                                               0x0061,  // freq 1
+                                               0x0307,  // Mode 8
+                                               0x0000,  // freq 3
+                                               0x0000,  // freq 2
+                                               0x0000,  // freq 1
+                                               0x0303,  // Mode 7 LSDAC Header (3 freq)
+                                               0x0069,  // freq 3
+                                               0x0060,  // freq 2
+                                               0x0061,  // freq 1
+                                               0x0307,  // Mode 6 LSDAC Header (3 freq) - MP Mode
+                                               0x0060,  // freq 3
+                                               0x0059,  // freq 2
+                                               0x0059,  // freq 1
+                                               0x0301,  // Mode 5 LSDAC Header (3 frea)
+                                               0x0000,  // Mode 4 LSDAC Header (0 freq)
+                                               0x006f,  // freq 1
+                                               0x0105,  // Mode 3 LSDAC Header (1 freq)
+                                               0x006e,  // freq 3
+                                               0x0067,  // freq 2
+                                               0x0063,  // freq 1
+                                               0x0301,  // Mode 2 LSDAC header (3 freq)
+                                               0x0068,  // freq 2
+                                               0x006e,  // freq 1
+                                               0x0205,  // Mode 1 LSDAC header (2 freq)
+                                               0x646b,  // structural checksum
+                                               0x0021}; // lsdac table size
+
+    // wave RAM, LSADC calibration settings
+    writeRegister(adsd3100::USEQ_RAM_LOAD_ADDR_REG_ADDR, 0x1d29); // lsdac checksum MSB
+    writeRegister(adsd3100::USEQ_RAM_LOAD_DATA_REG_ADDR, 0x43D1);
+    writeRegister(adsd3100::USEQ_RAM_LOAD_ADDR_REG_ADDR, 0x1d25); // lsdac checksum LSB
+    writeRegister(adsd3100::USEQ_RAM_LOAD_DATA_REG_ADDR, 0x0000);
+    writeRegister(adsd3100::USEQ_RAM_LOAD_ADDR_REG_ADDR, 0x1c99);
+
+    uint16_t startAddress = adsd3100::USEQ_RAM_LOAD_DATA_REG_ADDR;
+    //m_sensor->writeRegisters(&startAddress, wav_ram_lsdac, lsdac_blocksize, true);
+
+    // vlowreg
+    writeRegister(adsd3100::VLOW_REG, 0x0a0a);
+
+    // DAC data configuraiton
+    writeRegister(adsd3100::DAC_DATA_REG_ADDR, 0x0047);
+    writeRegister(adsd3100::DAC_CTRL1_REG_ADDR, 0x0020);
+    writeRegister(adsd3100::DAC_DATA_REG_ADDR, 0x0088);
+    writeRegister(adsd3100::DAC_CTRL1_REG_ADDR, 0x0001);
+    writeRegister(adsd3100::DAC_DATA_REG_ADDR, 0x001d);
+    writeRegister(adsd3100::DAC_CTRL1_REG_ADDR, 0x0008);
+    writeRegister(adsd3100::DAC_DATA_REG_ADDR, 0x008b);
+    writeRegister(adsd3100::DAC_CTRL1_REG_ADDR, 0x0010);
+    writeRegister(adsd3100::DAC_DATA_REG_ADDR, 0x0075);
+    writeRegister(adsd3100::DAC_CTRL1_REG_ADDR, 0x0040);
+
+    // REG_8b_PCM_GAIN_SEL_BLACK_ADJ (doen't seem to be used in uSeq)
+    writeRegister(adsd3100::REG_8b_PCM_GAIN_SEL_BLACK_ADJ, 0xc1fa);
+
+    // GLOBAL_ADC_SETTINGS
+    writeRegister(adsd3100::ADC_CTRL1_S1_REG_ADDR, 0x019e); // adc_ctrl1_s1
+    writeRegister(adsd3100::ADC_CTRL2_S1_REG_ADDR, 0x009a); // adc_ctrl2_s1
+
+    writeRegister(adsd3100::DAC_CTRL2_S1_REG_ADDR, 0x060a); // dac_ctrl2_s1
+    writeRegister(adsd3100::DAC_CTRL3_S1_REG_ADDR, 0x1f10); // dac_ctrl3_s1
+
+    // Write inv_adc_gain_x
+    writeRegister(adsd3100::INV_ADC_GAIN_0_REG_ADDR, 0x1a00); // inv_adc_gain_0
+    writeRegister(adsd3100::INV_ADC_GAIN_1_REG_ADDR, 0x1627); // inv_adc_gain_1
+    writeRegister(adsd3100::INV_ADC_GAIN_2_REG_ADDR, 0x1321); // inv_adc_gain_2
+    writeRegister(adsd3100::INV_ADC_GAIN_3_REG_ADDR, 0x0a8a); // inv_adc_gain_3
     return Status::OK;
 }
 
@@ -307,4 +508,8 @@ Status CalibrationItof::writeConfigBlock(FILE *fd) {
     }
 
     return status;
+}
+
+Status CalibrationItof::writeRegister(uint16_t reg_address, uint16_t reg_data) {
+    return CalibrationItof::m_sensor->writeRegisters(&reg_address, &reg_data, 1);
 }
