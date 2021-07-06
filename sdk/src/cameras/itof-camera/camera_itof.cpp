@@ -564,7 +564,6 @@ aditof::Status CameraItof::initComputeLibrary(void) {
     //freeComputeLibrary();
     uint8_t convertedMode;
 
-    aditof::Status configStatus;
     size_t calFileSize = m_calFileSize, jsonFileSize = m_jsonFileSize, iniFileSize = m_iniFileSize;
 
     status = convertCameraMode(m_details.mode, convertedMode);
