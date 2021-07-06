@@ -310,10 +310,7 @@ Status CalibrationItof::writeSettings(
             uint16_t ldmod1_config = settings[i].second;
             // invert SPI chip select polarity for Walden R1 modules
             if (ldmod1_config != adsd3100::LSCTRL0_S1_DEFAULT) {
-            
-            //Must be modified when writeRegisters wrapper function will be implemented.
-                uint16_t passedValue = adsd3100::LSCTRL0_S1_REG_ADDR;
-                status = m_sensor->writeRegisters(&passedValue, &ldmod1_config, 1);
+                writeRegister(adsd3100::LSCTRL0_S1_REG_ADDR, ldmod1_config);
                 LOG(INFO) << "Overridding LSMOD1 value in Light Source Controls register!";
                 if (status != Status::OK){
                     break;
