@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#include "ADSD3100_configuration.h"
+#include "adsd3100_configuration.h"
 
 #include <stdio.h>
 

@@ -261,7 +261,7 @@ Status CalibrationItof::writeCalibration(const std::string &calibrationFile) {
 
         const COLUMN_GAIN_CORRECTION *gaintable = &(gaincorrection->PerColGainAdjustment);
         std::vector<uint16_t> gainbuffer(sizeof(gaincorrection->PerColGainAdjustment) / 2);
-        std::memcpy(gainbuffer.data(), (const uint16_t *)gaintable, sizeof(uint16_t) * (sizeof(gaincorrection->PerColGainAdjustment) / 2));
+        memcpy(gainbuffer.data(), (const uint16_t *)gaintable, sizeof(uint16_t) * (sizeof(gaincorrection->PerColGainAdjustment) / 2));
 
         writeRegister(adsd3100::DIG_PWR_DOWN_REG_ADDR, adsd3100::DIG_PWR_DOWN_OPERATING_CMD);
         writeRegister(adsd3100::IA_SELECT_REG_ADDR, 0x0008);
@@ -276,7 +276,7 @@ Status CalibrationItof::writeCalibration(const std::string &calibrationFile) {
         const COLUMN_GAIN_CORRECTION *offsettable = &(gaincorrection->PerColOffsetAdjustment);
 
         std::vector<uint16_t> offsetbuffer(sizeof(gaincorrection->PerColOffsetAdjustment) / 2);
-        std::memcpy(offsetbuffer.data(), (const uint16_t *)offsettable, sizeof(uint16_t) * (sizeof(gaincorrection->PerColOffsetAdjustment) / 2));
+        memcpy(offsetbuffer.data(), (const uint16_t *)offsettable, sizeof(uint16_t) * (sizeof(gaincorrection->PerColOffsetAdjustment) / 2));
 
         writeRegister(adsd3100::DIG_PWR_DOWN_REG_ADDR, adsd3100::DIG_PWR_DOWN_OPERATING_CMD);
 
