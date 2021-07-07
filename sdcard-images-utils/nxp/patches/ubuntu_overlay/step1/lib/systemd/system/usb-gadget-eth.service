@@ -1,0 +1,11 @@
+[Unit]
+Description=Load USB gadget scheme
+Requires=sys-kernel-config.mount
+After=sys-kernel-config.mount
+
+[Service]
+ExecStart=/sbin/modprobe g_ether dev_addr=12:34:56:78:9a:bc host_addr=12:34:56:78:9a:bd
+Type=simple
+
+[Install]
+WantedBy=usb-gadget.target

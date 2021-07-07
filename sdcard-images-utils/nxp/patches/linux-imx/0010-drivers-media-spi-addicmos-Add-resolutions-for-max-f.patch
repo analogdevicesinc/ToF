@@ -1,0 +1,49 @@
+From 42586b808fd70d10f3ad08fd3655fbfb0b5103ec Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Fri, 21 May 2021 12:07:14 +0300
+Subject: [PATCH 10/15] drivers: media: spi: addicmos: Add resolutions for max
+ frames FW
+
+When firmware configured for setting frame-end only after all
+subframes were sent is used the resolutions must be 10 times larger.
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ drivers/media/spi/addicmos.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/drivers/media/spi/addicmos.c b/drivers/media/spi/addicmos.c
+index e6bbb45d8116..94a37e3bdd07 100644
+--- a/drivers/media/spi/addicmos.c
++++ b/drivers/media/spi/addicmos.c
+@@ -148,6 +148,8 @@ static const struct reg_sequence addicmos_standby_setting[] = {
+ };
+ 
+ static const s64 link_freq_tbl[] = {
++	732000000,
++	732000000,
+ 	732000000,
+ 	732000000,
+ 	732000000
+@@ -172,6 +174,18 @@ static const struct addicmos_mode_info addicmos_mode_info_data[] = {
+ 		.height = 256,
+ 		.pixel_rate = 488000000,
+ 		.link_freq_idx = 2 /* an index in link_freq_tbl[] */
++	},
++	{
++		.width = 4096,
++		.height = 640,
++		.pixel_rate = 488000000,
++		.link_freq_idx = 3 /* an index in link_freq_tbl[] */
++	},
++	{
++		.width = 4096,
++		.height = 2560,
++		.pixel_rate = 488000000,
++		.link_freq_idx = 4 /* an index in link_freq_tbl[] */
+ 	}
+ };
+ 
+-- 
+2.32.0
+

@@ -1,0 +1,146 @@
+From 2e91c74d3461a947d6a9d71b493c3662719bb40f Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Wed, 7 Jul 2021 12:08:46 +0300
+Subject: [PATCH 15/15] drivers: media: spi: addicmos: Add custom control for
+ config/claib writing
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ drivers/media/spi/addicmos.c | 63 +++++++++++++++++++++++++++++++++---
+ 1 file changed, 58 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/media/spi/addicmos.c b/drivers/media/spi/addicmos.c
+index 94a37e3bdd07..14faf522d39f 100644
+--- a/drivers/media/spi/addicmos.c
++++ b/drivers/media/spi/addicmos.c
+@@ -55,6 +55,7 @@ struct addicmos {
+ 	struct v4l2_ctrl *link_freq;
+ 	/* custom controls */
+ 	struct v4l2_ctrl *operating_mode;
++	struct v4l2_ctrl *set_chip_config;
+ 
+ 	struct mutex lock;
+ 	bool streaming;
+@@ -77,6 +78,7 @@ static inline struct addicmos *to_addicmos(struct v4l2_subdev *sd)
+ }
+ 
+ #define V4L2_CID_ADDICMOS_OPERATING_MODE  (V4L2_CID_USER_ADDICMOS_BASE + 0)
++#define V4L2_CID_ADDICMOS_CHIP_CONFIG (V4L2_CID_USER_ADDICMOS_BASE + 1)
+ 
+ static const struct reg_sequence addicmos_powerup_setting[] = {
+ 	{ 0x0000, 0x1d29 },
+@@ -203,11 +205,17 @@ static int addicmos_regmap_read(void *context,
+ {
+ 	struct device *dev = context;
+ 	struct spi_device *spi = to_spi_device(dev);
+-	u16 rx_buf[2];
++	u16 *rx_buf;
+ 
+-	spi_write_then_read(spi, reg, reg_size, rx_buf, 4);
+-	memcpy(val, &rx_buf[1], 2);
++	/* First response word should be ignored so allocate more & discard */
++	rx_buf = (u16*)kmalloc(val_size + sizeof(u16), GFP_KERNEL);
++	if (!rx_buf)
++		return -ENOMEM;
++
++	spi_write_then_read(spi, reg, reg_size, rx_buf, val_size + sizeof(u16));
++	memcpy(val, rx_buf + 1, val_size);
+ 
++	kfree(rx_buf);
+ 	return 0;
+ }
+ 
+@@ -268,7 +276,7 @@ static int addicmos_power_on(struct device *dev)
+ 
+ 	dev_err(addicmos->dev, "Power on timed out.\n");
+ 
+-	return 0;
++	return -ETIME;
+ }
+ 
+ static int addicmos_power_off(struct device *dev)
+@@ -322,6 +330,32 @@ static int addicmos_s_register(struct v4l2_subdev *sd,
+ }
+ #endif
+ 
++static int addicmos_chip_config(struct addicmos *addicmos,
++				    struct v4l2_ctrl *ctrl)
++{
++	u16 *val, reg, val_nr;
++	int ret;
++
++	reg = *(ctrl->p_new.p_u16);
++	val_nr = *(ctrl->p_new.p_u16 + 1);
++	val = ctrl->p_new.p_u16 + 2;
++
++	dev_dbg(addicmos->dev, "Entered addicmos_chip_config\n");
++	if (reg & 0x8000) {
++		ret = regmap_bulk_write(addicmos->regmap, reg, val, val_nr);
++		if (ret)
++			dev_warn(addicmos->dev,
++				"could not write to register %x\n", reg);
++	} else {
++		ret = regmap_bulk_read(addicmos->regmap, reg, val, val_nr);
++		if (ret)
++			dev_warn(addicmos->dev,
++				"could not read from register %x\n", reg);
++	}
++
++	return 0;
++}
++
+ static int addicmos_s_ctrl(struct v4l2_ctrl *ctrl)
+ {
+ 	struct addicmos *addicmos = container_of(ctrl->handler,
+@@ -332,6 +366,9 @@ static int addicmos_s_ctrl(struct v4l2_ctrl *ctrl)
+ 	case V4L2_CID_ADDICMOS_OPERATING_MODE:
+ 		addicmos->curr_operating_mode = ctrl->val;
+ 		break;
++	case V4L2_CID_ADDICMOS_CHIP_CONFIG:
++		ret = addicmos_chip_config(addicmos, ctrl);
++		break;
+ 	case V4L2_CID_PIXEL_RATE:
+ 	case V4L2_CID_LINK_FREQ:
+ 		break;
+@@ -349,6 +386,18 @@ static const struct v4l2_ctrl_ops addicmos_ctrl_ops = {
+ 	.s_ctrl = addicmos_s_ctrl,
+ };
+ 
++static const struct v4l2_ctrl_config addicmos_ctrl_chip_config = {
++	.ops		= &addicmos_ctrl_ops,
++	.id		= V4L2_CID_ADDICMOS_CHIP_CONFIG,
++	.name		= "Chip Config",
++	.type		= V4L2_CTRL_TYPE_U16,
++	.def		= 0xFF,
++	.min		= 0x00,
++	.max		= 0xFFFF,
++	.step		= 1,
++	.dims		= { 65537 },
++};
++
+ static const struct v4l2_ctrl_config addicmos_ctrl_operating_mode = {
+ 	.ops		= &addicmos_ctrl_ops,
+ 	.id		= V4L2_CID_ADDICMOS_OPERATING_MODE,
+@@ -749,7 +798,7 @@ static int addicmos_firmware_load(struct v4l2_subdev *sd)
+ 		return ret;
+ 	}
+ 
+-	//Writes for LASER turn on
++	//Writes for Default calibration
+ #if 1
+ 	regmap_multi_reg_write(addicmos->regmap,
+ 			addicmos_powerup_setting,
+@@ -846,6 +895,10 @@ static int addicmos_probe(struct spi_device *client)
+ 						&addicmos_ctrl_operating_mode,
+ 						NULL);
+ 
++	addicmos->set_chip_config = v4l2_ctrl_new_custom(&addicmos->ctrls,
++						&addicmos_ctrl_chip_config,
++						NULL);
++
+ 	ret = addicmos->ctrls.error;
+ 	if (ret) {
+ 		dev_err(dev, "%s: control initialization error %d\n",
+-- 
+2.32.0
+

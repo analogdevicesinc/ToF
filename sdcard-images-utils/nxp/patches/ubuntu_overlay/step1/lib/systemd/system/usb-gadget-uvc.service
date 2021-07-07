@@ -1,0 +1,13 @@
+[Unit]
+Description=Load USB gadget scheme
+Requires=sys-kernel-config.mount
+After=sys-kernel-config.mount
+
+[Service]
+ExecStart=/usr/share/systemd/uvc-gadget.sh start
+ExecStop=/usr/share/systemd/uvc-gadget.sh stop
+Type=simple
+RemainAfterExit=yes
+
+[Install]
+WantedBy=usb-gadget.target

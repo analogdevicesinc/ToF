@@ -1,0 +1,345 @@
+From 10cc055436456d34b752777134878e6bdf86acae Mon Sep 17 00:00:00 2001
+From: btogorean <bogdan.togorean@analog.com>
+Date: Wed, 7 Apr 2021 11:44:38 +0300
+Subject: [PATCH 04/15] drivers: staging: media: imx8: Convert to single planar
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ drivers/staging/media/imx/imx8-isi-cap.c  | 139 +++++++---------------
+ drivers/staging/media/imx/imx8-isi-core.h |   4 +-
+ drivers/staging/media/imx/imx8-isi-hw.c   |  15 +--
+ 3 files changed, 45 insertions(+), 113 deletions(-)
+
+diff --git a/drivers/staging/media/imx/imx8-isi-cap.c b/drivers/staging/media/imx/imx8-isi-cap.c
+index 85b7713b67e9..344d42dbbaa6 100644
+--- a/drivers/staging/media/imx/imx8-isi-cap.c
++++ b/drivers/staging/media/imx/imx8-isi-cap.c
+@@ -75,22 +75,6 @@ struct mxc_isi_fmt mxc_isi_out_formats[] = {
+ 		.memplanes	= 1,
+ 		.colplanes	= 1,
+ 		.mbus_code	= MEDIA_BUS_FMT_AYUV8_1X32,
+-	}, {
+-		.name		= "NV12 (YUYV)",
+-		.fourcc		= V4L2_PIX_FMT_NV12,
+-		.depth		= { 8, 8 },
+-		.color		= MXC_ISI_OUT_FMT_YUV420_2P8P,
+-		.memplanes	= 2,
+-		.colplanes	= 2,
+-		.mbus_code	= MEDIA_BUS_FMT_YUYV8_1X16,
+-	}, {
+-		.name		= "YUV444M (Y-U-V)",
+-		.fourcc		= V4L2_PIX_FMT_YUV444M,
+-		.depth		= { 8, 8, 8 },
+-		.color		= MXC_ISI_OUT_FMT_YUV444_3P8P,
+-		.memplanes	= 3,
+-		.colplanes	= 3,
+-		.mbus_code	= MEDIA_BUS_FMT_YUV8_1X24,
+ 	}, {
+ 		.name		= "xBGR32",
+ 		.fourcc		= V4L2_PIX_FMT_XBGR32,
+@@ -416,7 +400,6 @@ static int cap_vb2_start_streaming(struct vb2_queue *q, unsigned int count)
+ 	struct mxc_isi_buffer *buf;
+ 	struct vb2_buffer *vb2;
+ 	unsigned long flags;
+-	int i, j;
+ 
+ 	dev_dbg(&isi_cap->pdev->dev, "%s\n", __func__);
+ 
+@@ -426,32 +409,23 @@ static int cap_vb2_start_streaming(struct vb2_queue *q, unsigned int count)
+ 	if (!mxc_isi)
+ 		return -EINVAL;
+ 
+-	/* Create a buffer for discard operation */
+-	for (i = 0; i < isi_cap->pix.num_planes; i++) {
+-		isi_cap->discard_size[i] = isi_cap->dst_f.sizeimage[i];
+-		isi_cap->discard_buffer[i] =
++	isi_cap->discard_size[0] = isi_cap->dst_f.sizeimage[0];
++	isi_cap->discard_buffer[0] =
+ 			dma_alloc_coherent(&isi_cap->pdev->dev,
+-					   PAGE_ALIGN(isi_cap->discard_size[i]),
+-					   &isi_cap->discard_buffer_dma[i],
++					   PAGE_ALIGN(isi_cap->discard_size[0]),
++					   &isi_cap->discard_buffer_dma[0],
+ 					   GFP_DMA | GFP_KERNEL);
+-		if (!isi_cap->discard_buffer[i]) {
+-			for (j = 0; j < i; j++) {
+-				dma_free_coherent(&isi_cap->pdev->dev,
+-						  PAGE_ALIGN(isi_cap->discard_size[j]),
+-						  isi_cap->discard_buffer[j],
+-						  isi_cap->discard_buffer_dma[j]);
+-				dev_err(&isi_cap->pdev->dev,
+-					"alloc dma buffer(%d) fail\n", j);
+-			}
+-			return -ENOMEM;
+-		}
+-		dev_dbg(&isi_cap->pdev->dev,
+-			"%s: num_plane=%d discard_size=%d discard_buffer=%p\n"
+-			, __func__, i,
+-			PAGE_ALIGN((int)isi_cap->discard_size[i]),
+-			isi_cap->discard_buffer[i]);
++	if (!isi_cap->discard_buffer[0]) {
++		dev_err(&isi_cap->pdev->dev,
++			"alloc dma buffer(%d) fail\n", 0);
++		return -ENOMEM;
+ 	}
+ 
++	dev_dbg(&isi_cap->pdev->dev,
++		"%s: num_plane=%d discard_size=%d discard_buffer=%p\n",
++			__func__, 0, PAGE_ALIGN((int)isi_cap->discard_size[0]),
++			isi_cap->discard_buffer[0]);
++
+ 	spin_lock_irqsave(&isi_cap->slock, flags);
+ 
+ 	/* add two list member to out_discard list head */
+@@ -490,7 +464,6 @@ static void cap_vb2_stop_streaming(struct vb2_queue *q)
+ 	struct mxc_isi_dev *mxc_isi = mxc_isi_get_hostdata(isi_cap->pdev);
+ 	struct mxc_isi_buffer *buf;
+ 	unsigned long flags;
+-	int i;
+ 
+ 	dev_dbg(&isi_cap->pdev->dev, "%s\n", __func__);
+ 
+@@ -527,11 +500,10 @@ static void cap_vb2_stop_streaming(struct vb2_queue *q)
+ 
+ 	spin_unlock_irqrestore(&isi_cap->slock, flags);
+ 
+-	for (i = 0; i < isi_cap->pix.num_planes; i++)
+-		dma_free_coherent(&isi_cap->pdev->dev,
+-				  PAGE_ALIGN(isi_cap->discard_size[i]),
+-				  isi_cap->discard_buffer[i],
+-				  isi_cap->discard_buffer_dma[i]);
++	dma_free_coherent(&isi_cap->pdev->dev,
++			  PAGE_ALIGN(isi_cap->discard_size[0]),
++			  isi_cap->discard_buffer[0],
++			  isi_cap->discard_buffer_dma[0]);
+ }
+ 
+ static struct vb2_ops mxc_cap_vb2_qops = {
+@@ -824,7 +796,7 @@ static int mxc_isi_cap_querycap(struct file *file, void *priv,
+ 	snprintf(cap->bus_info, sizeof(cap->bus_info), "platform:%s.%d",
+ 		 dev_name(&isi_cap->pdev->dev), isi_cap->id);
+ 
+-	cap->device_caps = V4L2_CAP_STREAMING | V4L2_CAP_VIDEO_CAPTURE_MPLANE;
++	cap->device_caps = V4L2_CAP_STREAMING | V4L2_CAP_VIDEO_CAPTURE;
+ 	cap->capabilities = cap->device_caps | V4L2_CAP_DEVICE_CAPS;
+ 
+ 	return 0;
+@@ -849,13 +821,11 @@ static int mxc_isi_cap_enum_fmt(struct file *file, void *priv,
+ 	return 0;
+ }
+ 
+-static int mxc_isi_cap_g_fmt_mplane(struct file *file, void *fh,
+-				    struct v4l2_format *f)
++static int mxc_isi_cap_g_fmt(struct file *file, void *fh, struct v4l2_format *f)
+ {
+ 	struct mxc_isi_cap_dev *isi_cap = video_drvdata(file);
+-	struct v4l2_pix_format_mplane *pix = &f->fmt.pix_mp;
++	struct v4l2_pix_format *pix = &f->fmt.pix;
+ 	struct mxc_isi_frame *dst_f = &isi_cap->dst_f;
+-	int i;
+ 
+ 	dev_dbg(&isi_cap->pdev->dev, "%s\n", __func__);
+ 
+@@ -863,22 +833,18 @@ static int mxc_isi_cap_g_fmt_mplane(struct file *file, void *fh,
+ 	pix->height = dst_f->o_height;
+ 	pix->field = V4L2_FIELD_NONE;
+ 	pix->pixelformat = dst_f->fmt->fourcc;
+-	pix->colorspace = V4L2_COLORSPACE_JPEG;
+-	pix->num_planes = dst_f->fmt->memplanes;
+-
+-	for (i = 0; i < pix->num_planes; ++i) {
+-		pix->plane_fmt[i].bytesperline = dst_f->bytesperline[i];
+-		pix->plane_fmt[i].sizeimage = dst_f->sizeimage[i];
+-	}
++	pix->colorspace = V4L2_COLORSPACE_SRGB;
++	pix->bytesperline = dst_f->bytesperline[0];
++	pix->sizeimage = dst_f->sizeimage[0];
+ 
+ 	return 0;
+ }
+ 
+-static int mxc_isi_cap_try_fmt_mplane(struct file *file, void *fh,
++static int mxc_isi_cap_try_fmt(struct file *file, void *fh,
+ 				      struct v4l2_format *f)
+ {
+ 	struct mxc_isi_cap_dev *isi_cap = video_drvdata(file);
+-	struct v4l2_pix_format_mplane *pix = &f->fmt.pix_mp;
++	struct v4l2_pix_format *pix = &f->fmt.pix;
+ 	struct mxc_isi_fmt *fmt;
+ 	int i;
+ 
+@@ -963,11 +929,10 @@ static int mxc_isi_source_fmt_init(struct mxc_isi_cap_dev *isi_cap)
+ 	return 0;
+ }
+ 
+-static int mxc_isi_cap_s_fmt_mplane(struct file *file, void *priv,
+-				    struct v4l2_format *f)
++static int mxc_isi_cap_s_fmt(struct file *file, void *priv, struct v4l2_format *f)
+ {
+ 	struct mxc_isi_cap_dev *isi_cap = video_drvdata(file);
+-	struct v4l2_pix_format_mplane *pix = &f->fmt.pix_mp;
++	struct v4l2_pix_format *pix = &f->fmt.pix;
+ 	struct mxc_isi_frame *dst_f = &isi_cap->dst_f;
+ 	struct mxc_isi_fmt *fmt;
+ 	int bpl;
+@@ -1007,34 +972,16 @@ static int mxc_isi_cap_s_fmt_mplane(struct file *file, void *priv,
+ 	dst_f->height = pix->height;
+ 	dst_f->width = pix->width;
+ 
+-	pix->num_planes = fmt->memplanes;
+-
+-	for (i = 0; i < pix->num_planes; i++) {
+-		bpl = pix->plane_fmt[i].bytesperline;
++	bpl = pix->bytesperline;
+ 
+-		if ((bpl == 0) || (bpl / (fmt->depth[i] >> 3)) < pix->width)
+-			pix->plane_fmt[i].bytesperline =
+-					(pix->width * fmt->depth[i]) >> 3;
++	if ((bpl == 0) || (bpl / (fmt->depth[0] >> 3)) < pix->width)
++		pix->bytesperline = (pix->width * fmt->depth[0]) >> 3;
+ 
+-		if (pix->plane_fmt[i].sizeimage == 0) {
+-			if ((i == 1) && (pix->pixelformat == V4L2_PIX_FMT_NV12))
+-				pix->plane_fmt[i].sizeimage =
+-				  (pix->width * (pix->height >> 1) * fmt->depth[i] >> 3);
+-			else
+-				pix->plane_fmt[i].sizeimage =
+-					(pix->width * pix->height * fmt->depth[i] >> 3);
+-		}
+-	}
++	if (pix->sizeimage == 0)
++		pix->sizeimage = (pix->width * pix->height * fmt->depth[0] >> 3);
+ 
+-	if (pix->num_planes > 1) {
+-		for (i = 0; i < pix->num_planes; i++) {
+-			dst_f->bytesperline[i] = pix->plane_fmt[i].bytesperline;
+-			dst_f->sizeimage[i]    = pix->plane_fmt[i].sizeimage;
+-		}
+-	} else {
+-		dst_f->bytesperline[0] = dst_f->width * dst_f->fmt->depth[0] / 8;
+-		dst_f->sizeimage[0]    = dst_f->height * dst_f->bytesperline[0];
+-	}
++	dst_f->bytesperline[0] = dst_f->width * dst_f->fmt->depth[0] / 8;
++	dst_f->sizeimage[0]    = dst_f->height * dst_f->bytesperline[0];
+ 
+ 	memcpy(&isi_cap->pix, pix, sizeof(*pix));
+ 	set_frame_bounds(dst_f, pix->width, pix->height);
+@@ -1136,8 +1083,7 @@ static int mxc_isi_cap_g_selection(struct file *file, void *fh,
+ 
+ 	dev_dbg(&isi_cap->pdev->dev, "%s\n", __func__);
+ 
+-	if (s->type != V4L2_BUF_TYPE_VIDEO_OUTPUT &&
+-	    s->type != V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE)
++	if (s->type != V4L2_BUF_TYPE_VIDEO_CAPTURE)
+ 		return -EINVAL;
+ 
+ 	switch (s->target) {
+@@ -1183,8 +1129,7 @@ static int mxc_isi_cap_s_selection(struct file *file, void *fh,
+ 	unsigned long flags;
+ 
+ 	dev_dbg(&isi_cap->pdev->dev, "%s\n", __func__);
+-	if (s->type != V4L2_BUF_TYPE_VIDEO_OUTPUT &&
+-	    s->type != V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE)
++	if (s->type != V4L2_BUF_TYPE_VIDEO_CAPTURE)
+ 		return -EINVAL;
+ 
+ 	if (s->target == V4L2_SEL_TGT_COMPOSE)
+@@ -1312,9 +1257,9 @@ static const struct v4l2_ioctl_ops mxc_isi_capture_ioctl_ops = {
+ 	.vidioc_querycap		= mxc_isi_cap_querycap,
+ 
+ 	.vidioc_enum_fmt_vid_cap	= mxc_isi_cap_enum_fmt,
+-	.vidioc_try_fmt_vid_cap_mplane	= mxc_isi_cap_try_fmt_mplane,
+-	.vidioc_s_fmt_vid_cap_mplane	= mxc_isi_cap_s_fmt_mplane,
+-	.vidioc_g_fmt_vid_cap_mplane	= mxc_isi_cap_g_fmt_mplane,
++	.vidioc_try_fmt_vid_cap		= mxc_isi_cap_try_fmt,
++	.vidioc_s_fmt_vid_cap		= mxc_isi_cap_s_fmt,
++	.vidioc_g_fmt_vid_cap		= mxc_isi_cap_g_fmt,
+ 
+ 	.vidioc_reqbufs			= vb2_ioctl_reqbufs,
+ 	.vidioc_querybuf		= vb2_ioctl_querybuf,
+@@ -1443,7 +1388,7 @@ static int mxc_isi_subdev_get_fmt(struct v4l2_subdev *sd,
+ 	/* Source/Sink pads crop rectangle size */
+ 	mf->width = f->width;
+ 	mf->height = f->height;
+-	mf->colorspace = V4L2_COLORSPACE_JPEG;
++	mf->colorspace = V4L2_COLORSPACE_SRGB;
+ 
+ 	mutex_unlock(&isi_cap->lock);
+ 
+@@ -1618,7 +1563,7 @@ static int mxc_isi_register_cap_device(struct mxc_isi_cap_dev *isi_cap,
+ 	vdev->queue	= q;
+ 	vdev->lock	= &isi_cap->lock;
+ 
+-	vdev->device_caps = V4L2_CAP_STREAMING | V4L2_CAP_VIDEO_CAPTURE_MPLANE;
++	vdev->device_caps = V4L2_CAP_STREAMING | V4L2_CAP_VIDEO_CAPTURE;
+ 	video_set_drvdata(vdev, isi_cap);
+ 
+ 	INIT_LIST_HEAD(&isi_cap->out_pending);
+@@ -1626,7 +1571,7 @@ static int mxc_isi_register_cap_device(struct mxc_isi_cap_dev *isi_cap,
+ 	INIT_LIST_HEAD(&isi_cap->out_discard);
+ 
+ 	memset(q, 0, sizeof(*q));
+-	q->type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
++	q->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+ 	q->io_modes = VB2_MMAP | VB2_USERPTR | VB2_DMABUF;
+ 	q->drv_priv = isi_cap;
+ 	q->ops = &mxc_cap_vb2_qops;
+diff --git a/drivers/staging/media/imx/imx8-isi-core.h b/drivers/staging/media/imx/imx8-isi-core.h
+index 0aa6f22833cd..0fcbe6215741 100644
+--- a/drivers/staging/media/imx/imx8-isi-core.h
++++ b/drivers/staging/media/imx/imx8-isi-core.h
+@@ -42,7 +42,7 @@
+ #define MXC_ISI_DRIVER_NAME	"mxc-isi"
+ #define MXC_ISI_CAPTURE		"mxc-isi-cap"
+ #define MXC_ISI_M2M		"mxc-isi-m2m"
+-#define MXC_MAX_PLANES		3
++#define MXC_MAX_PLANES		1
+ 
+ struct mxc_isi_dev;
+ 
+@@ -305,7 +305,7 @@ struct mxc_isi_cap_dev {
+ 	struct video_device vdev;
+ 	struct v4l2_fh      fh;
+ 	struct vb2_queue    vb2_q;
+-	struct v4l2_pix_format_mplane pix;
++	struct v4l2_pix_format pix;
+ 
+ 	struct mxc_isi_dev     *mxc_isi;
+ 	struct platform_device *pdev;
+diff --git a/drivers/staging/media/imx/imx8-isi-hw.c b/drivers/staging/media/imx/imx8-isi-hw.c
+index 9adb71d69ffc..29199b38cc85 100644
+--- a/drivers/staging/media/imx/imx8-isi-hw.c
++++ b/drivers/staging/media/imx/imx8-isi-hw.c
+@@ -208,28 +208,15 @@ void mxc_isi_channel_set_outbuf(struct mxc_isi_dev *mxc_isi,
+ 	u32 framecount = buf->v4l2_buf.sequence;
+ 	struct frame_addr *paddr = &buf->paddr;
+ 	struct mxc_isi_cap_dev *isi_cap;
+-	struct v4l2_pix_format_mplane *pix;
++	struct v4l2_pix_format *pix;
+ 	int val = 0;
+ 
+ 	if (buf->discard) {
+ 		isi_cap = mxc_isi->isi_cap;
+ 		pix = &isi_cap->pix;
+ 		paddr->y = isi_cap->discard_buffer_dma[0];
+-		if (pix->num_planes == 2)
+-			paddr->cb = isi_cap->discard_buffer_dma[1];
+-		if (pix->num_planes == 3) {
+-			paddr->cb = isi_cap->discard_buffer_dma[1];
+-			paddr->cr = isi_cap->discard_buffer_dma[2];
+-		}
+ 	} else {
+ 		paddr->y = vb2_dma_contig_plane_dma_addr(vb2_buf, 0);
+-
+-		if (vb2_buf->num_planes == 2)
+-			paddr->cb = vb2_dma_contig_plane_dma_addr(vb2_buf, 1);
+-		if (vb2_buf->num_planes == 3) {
+-			paddr->cb = vb2_dma_contig_plane_dma_addr(vb2_buf, 1);
+-			paddr->cr = vb2_dma_contig_plane_dma_addr(vb2_buf, 2);
+-		}
+ 	}
+ 
+ 	val = readl(mxc_isi->regs + CHNL_OUT_BUF_CTRL);
+-- 
+2.32.0
+

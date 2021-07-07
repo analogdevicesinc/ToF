@@ -1,0 +1,185 @@
+From 930033be469aa64030eb63612cd0163d6a5098b5 Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Fri, 21 May 2021 12:10:33 +0300
+Subject: [PATCH 11/15] arch: arm64: dts: imx8mp-aditof-noreg: Allow PD up to
+ 20V and add SPI flash
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ .../dts/freescale/imx8mp-adi-tof-noreg.dts    | 91 ++++++++++++-------
+ 1 file changed, 58 insertions(+), 33 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
+index ae0e5bb9eeae..28924e4bc0f9 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
+@@ -215,7 +215,7 @@ usb3_data_ss: endpoint {
+ 
+ 	mpcie {
+ 		pinctrl-names = "default";
+-                pinctrl-0 = <&pinctrl_mpcie>;
++		pinctrl-0 = <&pinctrl_mpcie>;
+ 		gpio-0 = <&gpio1 1 GPIO_ACTIVE_HIGH>;
+ 		gpio-1 = <&gpio1 5 GPIO_ACTIVE_HIGH>;
+ 		status = "okay";
+@@ -239,23 +239,23 @@ &snvs_rtc{
+ 
+ /*eth0*/
+ &eqos {
+-        pinctrl-names = "default";
+-        pinctrl-0 = <&pinctrl_eqos>;
+-        phy-mode = "rgmii-id";
+-        phy-handle = <&ethphy0>;
+-        status = "okay";
+-
+-        mdio {
+-                compatible = "snps,dwmac-mdio";
+-                #address-cells = <1>;
+-                #size-cells = <0>;
+-
+-                ethphy0: ethernet-phy@0 {
+-                        compatible = "ethernet-phy-ieee802.3-c22";
+-                        reg = <0>;
+-                        eee-broken-1000t;
+-                };
+-        };
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_eqos>;
++	phy-mode = "rgmii-id";
++	phy-handle = <&ethphy0>;
++	status = "okay";
++
++	mdio {
++		compatible = "snps,dwmac-mdio";
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		ethphy0: ethernet-phy@0 {
++			compatible = "ethernet-phy-ieee802.3-c22";
++			reg = <0>;
++			eee-broken-1000t;
++		};
++	};
+ };
+ 
+ &i2c1 {
+@@ -265,10 +265,10 @@ &i2c1 {
+ 	status = "okay";
+ 
+ 	eeprom: eeprom@50{
+-                compatible = "st,24c02", "atmel,24c02";
+-                reg = <0x50>;
+-                pagesize = <16>;
+-        };
++		compatible = "st,24c02", "atmel,24c02";
++		reg = <0x50>;
++		pagesize = <16>;
++	};
+ 
+ 	pmic: pca9450@25 {
+ 		reg = <0x25>;
+@@ -437,20 +437,21 @@ mipi_csi0_ep: endpoint {
+ };
+ 
+ &ecspi2 {
+-	cs-gpios = <&gpio5 13 GPIO_ACTIVE_LOW>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_ecspi2>;
++	cs-gpios = <&gpio5 13 GPIO_ACTIVE_LOW>, <&gpio3 9 GPIO_ACTIVE_LOW>;
+ 	status = "okay";
+-	spi-cpol;
+-	spi-cpha;
+ 
+ 	addicmos@0 {
+ 		compatible = "adi,addicmos";
+ 		reg = <0x0>;
++		spi-cpol;
++		spi-cpha;
+ 		spi-max-frequency = <16000000>;
+-
+ 		reset-gpios = <&gpio3 0 GPIO_ACTIVE_LOW>;
+ 		pinctrl-names = "spi", "gpio";
+-		pinctrl-0 = <&pinctrl_ecspi2>;
+-		pinctrl-1 = <&pinctrl_ecspi2_gpio>;
++		pinctrl-0 = <&pinctrl_addicmos_spi>;
++		pinctrl-1 = <&pinctrl_addicmos_gpio>;
+ 
+ 		port {
+ 			addicmos_ep: endpoint {
+@@ -461,6 +462,18 @@ addicmos_ep: endpoint {
+ 			};
+ 		};
+ 	};
++
++	flash@1 {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		reg = <0x1>;
++		spi-cpol;
++		spi-cpha;
++		spi-max-frequency = <20000000>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_nvram_gpio>;
++		compatible = "macronix,mx25u6435f", "jedec,spi-nor";
++	};
+ };
+ 
+ &isp_0 {
+@@ -499,9 +512,9 @@ usb_con: connector {
+ 			compatible = "usb-c-connector";
+ 			label = "USB-C";
+ 			power-role = "sink";
+-			data-role = "dual";
++			data-role = "device";
+ 			sink-pdos = <PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)
+-						 PDO_VAR(5000, 12000, 3000)>;
++						 PDO_VAR(5000, 20000, 3000)>;
+ 			op-sink-microwatt = <15000000>;
+ 
+ 			ports {
+@@ -712,7 +725,7 @@ &usdhc3 {
+ 	pinctrl-2 = <&pinctrl_usdhc3_200mhz>;
+ 	bus-width = <8>;
+ 	non-removable;
+-	status = "disabled";
++	status = "okay";
+ };
+ 
+ &wdog1 {
+@@ -1077,19 +1090,31 @@ MX8MP_IOMUXC_GPIO1_IO06__GPIO1_IO06		0x19
+ 
+ 	pinctrl_ecspi2: ecspi2grp {
+ 		fsl,pins = <
+-			MX8MP_IOMUXC_ECSPI2_SS0__GPIO5_IO13		0x140 /* CS: spi chip-select */
++			MX8MP_IOMUXC_ECSPI2_SS0__GPIO5_IO13		0x140 /* ADICMOS CS: spi chip-select */
++			MX8MP_IOMUXC_NAND_DATA03__GPIO3_IO09		0x140 /* ADICMOS NVRAM CS pin with pull-up */
+ 			MX8MP_IOMUXC_ECSPI2_SCLK__ECSPI2_SCLK		0x82 /* SCK: spi clock */
+ 			MX8MP_IOMUXC_ECSPI2_MISO__ECSPI2_MISO		0x82 /* MISO: spi master-in-slave-out */
++		>;
++	};
++
++	pinctrl_addicmos_spi: addicmos-spi-grp {
++		fsl,pins = <
+ 			MX8MP_IOMUXC_ECSPI2_MOSI__ECSPI2_MOSI		0x82 /* MOSI: spi master-out-slave-in */
+ 		>;
+ 	};
+ 
+-	pinctrl_ecspi2_gpio: ecspi2-gpio-grp {
++	pinctrl_addicmos_gpio: addicmos-gpio-grp {
+ 		fsl,pins = <
+ 			MX8MP_IOMUXC_ECSPI2_MOSI__GPIO5_IO11		0x100 /* MOSI pin as GPIO with pull-down */
+ 		>;
+ 	};
+ 
++	pinctrl_nvram_gpio: nvram-gpio-grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_NAND_CE0_B__GPIO3_IO01		0x140 /* NVRAM_WP_L pin with pull-up */
++		>;
++	};
++
+ 	pinctrl_ad5593r_rst: ad5593r-rst-grp {
+ 		fsl,pins = <
+ 			MX8MP_IOMUXC_SPDIF_RX__GPIO5_IO04		0x140
+-- 
+2.32.0
+
