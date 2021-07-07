@@ -148,9 +148,7 @@ CalibrationItof::writeConfiguration(const std::string &configurationFile) {
     writeConfigBlock(fd);
 
     // disabled all digital clock gating before writing to RAMs
-    unsigned short regAddr = adsd3100::DIG_PWR_DOWN_CLOCK_GATED_CMD;
-    uint16_t regdata = adsd3100::DIG_PWR_DOWN_OPERATING_CMD;
-    m_sensor->writeRegisters(&regAddr, &regdata, 1);
+    writeRegister(adsd3100::DIG_PWR_DOWN_OPERATING_CMD, adsd3100::DIG_PWR_DOWN_OPERATING_CMD);
 
     const int num_write_blocks = 9;
     offset_type_enum block_writes[num_write_blocks] = {
