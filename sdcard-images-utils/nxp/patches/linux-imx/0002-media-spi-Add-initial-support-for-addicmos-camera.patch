@@ -1,0 +1,1007 @@
+From 68136a92df0e4b3faa3f844ff1a6902bf688c364 Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Thu, 11 Mar 2021 11:26:52 +0200
+Subject: [PATCH 02/15] media: spi: Add initial support for addicmos camera
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ drivers/media/spi/Kconfig          |  15 +
+ drivers/media/spi/Makefile         |   1 +
+ drivers/media/spi/addicmos.c       | 931 +++++++++++++++++++++++++++++
+ include/uapi/linux/v4l2-controls.h |   6 +
+ 4 files changed, 953 insertions(+)
+ create mode 100644 drivers/media/spi/addicmos.c
+
+diff --git a/drivers/media/spi/Kconfig b/drivers/media/spi/Kconfig
+index 857ef4ace6e9..f54820bf92b4 100644
+--- a/drivers/media/spi/Kconfig
++++ b/drivers/media/spi/Kconfig
+@@ -15,6 +15,21 @@ config VIDEO_GS1662
+ 	help
+ 	  Enable the GS1662 driver which serializes video streams.
+ 
++config VIDEO_ADDICMOS
++	tristate "Analog Devices ADDICMOS ToF front-end support"
++	depends on SPI && VIDEO_V4L2
++	select MEDIA_CONTROLLER
++	select VIDEO_V4L2_SUBDEV_API
++	select V4L2_FWNODE
++	select REGMAP_SPI
++	help
++	  This is a Video4Linux2 driver for Analog Devices ADDICMOS
++	  Time of Flight front-end
++
++	  To compile this driver as a module, choose M here: the
++	  module will be called addicmos.
++
++
+ endmenu
+ 
+ endif
+diff --git a/drivers/media/spi/Makefile b/drivers/media/spi/Makefile
+index 9f45787d680d..b705d2bfa814 100644
+--- a/drivers/media/spi/Makefile
++++ b/drivers/media/spi/Makefile
+@@ -1,4 +1,5 @@
+ # SPDX-License-Identifier: GPL-2.0-only
++obj-$(CONFIG_VIDEO_ADDICMOS) += addicmos.o
+ obj-$(CONFIG_VIDEO_GS1662) += gs1662.o
+ obj-$(CONFIG_CXD2880_SPI_DRV) += cxd2880-spi.o
+ 
+diff --git a/drivers/media/spi/addicmos.c b/drivers/media/spi/addicmos.c
+new file mode 100644
+index 000000000000..e6bbb45d8116
+--- /dev/null
++++ b/drivers/media/spi/addicmos.c
+@@ -0,0 +1,931 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Driver for the Analog Devices ADDICMOS ToF camera sensor.
++ *
++ * Copyright (C) 2019-2020 Analog Devices, All Rights Reserved.
++ *
++ */
++
++#include <linux/gpio/consumer.h>
++#include <linux/pinctrl/consumer.h>
++#include <linux/firmware.h>
++#include <linux/spi/spi.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/pm_runtime.h>
++#include <linux/regmap.h>
++#include <media/v4l2-ctrls.h>
++#include <media/v4l2-fwnode.h>
++#include <media/v4l2-subdev.h>
++
++#define FW_FILE_NAME	"adi/addicmos-fw.bin"
++#define ADDI_MAGIC	"ADDICMOS"
++
++struct addicmos_mode_info {
++	u32 width;
++	u32 height;
++	u32 pixel_rate;
++	u32 link_freq_idx;
++};
++
++struct addicmos_mode_fw_block {
++	const struct reg_sequence *mode_regs;
++	ssize_t regs_count;
++};
++
++struct addicmos_fw_header {
++	unsigned char magic[8];
++	__le32 modes_nr;
++	__le32 data_size_bytes;
++	__le16 data[];
++} __packed;
++
++struct addicmos {
++	struct regmap *regmap;
++	struct device *dev;
++	struct v4l2_subdev sd;
++	struct media_pad pad;
++	struct v4l2_mbus_framefmt fmt;
++	struct v4l2_rect crop;
++
++	const struct addicmos_mode_info *current_mode;
++
++	struct v4l2_ctrl_handler ctrls;
++	struct v4l2_ctrl *pixel_rate;
++	struct v4l2_ctrl *link_freq;
++	/* custom controls */
++	struct v4l2_ctrl *operating_mode;
++
++	struct mutex lock;
++	bool streaming;
++
++	struct gpio_desc *rst_gpio;
++	struct pinctrl *pinctrl;
++	struct pinctrl_state *pins_spi, *pins_gpio;
++
++	/* FW related data */
++	int fw_regs_count;
++	struct reg_sequence *fw_regs;
++	u8 curr_operating_mode;
++
++	const struct firmware *fw;
++};
++
++static inline struct addicmos *to_addicmos(struct v4l2_subdev *sd)
++{
++	return container_of(sd, struct addicmos, sd);
++}
++
++#define V4L2_CID_ADDICMOS_OPERATING_MODE  (V4L2_CID_USER_ADDICMOS_BASE + 0)
++
++static const struct reg_sequence addicmos_powerup_setting[] = {
++	{ 0x0000, 0x1d29 },
++	{ 0x0002, 0x43d1 },
++	{ 0x0000, 0x1d25 },
++	{ 0x0002, 0x0000 },
++	{ 0x0000, 0x1c99 },
++	{ 0x0002, 0x0069 },
++	{ 0x0002, 0x0060 },
++	{ 0x0002, 0x0061 },
++	{ 0x0002, 0x0307 },
++	{ 0x0002, 0x0069 },
++	{ 0x0002, 0x0105 },
++	{ 0x0002, 0x0000 },
++	{ 0x0002, 0x0069 },
++	{ 0x0002, 0x0060 },
++	{ 0x0002, 0x0061 },
++	{ 0x0002, 0x0307 },
++	{ 0x0002, 0x0000 },
++	{ 0x0002, 0x0000 },
++	{ 0x0002, 0x0000 },
++	{ 0x0002, 0x0303 },
++	{ 0x0002, 0x0069 },
++	{ 0x0002, 0x0060 },
++	{ 0x0002, 0x0061 },
++	{ 0x0002, 0x0307 },
++	{ 0x0002, 0x0060 },
++	{ 0x0002, 0x0059 },
++	{ 0x0002, 0x0059 },
++	{ 0x0002, 0x0301 },
++	{ 0x0002, 0x0000 },
++	{ 0x0002, 0x006f },
++	{ 0x0002, 0x0105 },
++	{ 0x0002, 0x006e },
++	{ 0x0002, 0x0067 },
++	{ 0x0002, 0x0063 },
++	{ 0x0002, 0x0301 },
++	{ 0x0002, 0x0068 },
++	{ 0x0002, 0x006e },
++	{ 0x0002, 0x0205 },
++	{ 0x0002, 0x646b },
++	{ 0x0002, 0x0021 },
++	{ 0x0172, 0x0a0a },
++	{ 0x0132, 0x0047 },
++	{ 0x0126, 0x0020 },
++	{ 0x0132, 0x0088 },
++	{ 0x0126, 0x0001 },
++	{ 0x0132, 0x001d },
++	{ 0x0126, 0x0008 },
++	{ 0x0132, 0x008b },
++	{ 0x0126, 0x0010 },
++	{ 0x0132, 0x0075 },
++	{ 0x0126, 0x0040 },
++	{ 0x0246, 0xc1fa },
++	{ 0x0102, 0x019e },
++	{ 0x0104, 0x009a },
++	{ 0x012e, 0x060a },
++	{ 0x0130, 0x1f10 },
++	{ 0x0520, 0x1a00 },
++	{ 0x0522, 0x1627 },
++	{ 0x0524, 0x1321 },
++	{ 0x0526, 0x0a8a },
++};
++
++static const struct reg_sequence addicmos_powerdown_setting[] = {
++};
++
++static const struct reg_sequence addicmos_standby_setting[] = {
++};
++
++static const s64 link_freq_tbl[] = {
++	732000000,
++	732000000,
++	732000000
++};
++
++/* Elements of the structure must be ordered ascending by width & height */
++static const struct addicmos_mode_info addicmos_mode_info_data[] = {
++	{
++		.width = 3840,
++		.height = 24,
++		.pixel_rate = 488000000,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{
++		.width = 4096,
++		.height = 64,
++		.pixel_rate = 488000000,
++		.link_freq_idx = 1 /* an index in link_freq_tbl[] */
++	},
++	{
++		.width = 4096,
++		.height = 256,
++		.pixel_rate = 488000000,
++		.link_freq_idx = 2 /* an index in link_freq_tbl[] */
++	}
++};
++
++static int addicmos_regmap_write(void *context, const void *data, size_t count)
++{
++	struct device *dev = context;
++	struct spi_device *spi = to_spi_device(dev);
++
++	return spi_write(spi, data, count);
++}
++
++static int addicmos_regmap_read(void *context,
++				const void *reg, size_t reg_size,
++				void *val, size_t val_size)
++{
++	struct device *dev = context;
++	struct spi_device *spi = to_spi_device(dev);
++	u16 rx_buf[2];
++
++	spi_write_then_read(spi, reg, reg_size, rx_buf, 4);
++	memcpy(val, &rx_buf[1], 2);
++
++	return 0;
++}
++
++static bool addicmos_regmap_accessible_reg(struct device *dev, unsigned int reg)
++{
++	if (reg % 2)
++		return 0;
++
++	if ((reg >= 0x000) && (reg <= 0x294))
++		return 1;
++	else if ((reg >= 0x300) && (reg <= 0x83e))
++		return 1;
++	else if ((reg >= 0x900) && (reg <= 0xefe))
++		return 1;
++	else
++		return 0;
++}
++
++static struct regmap_bus addicmos_spi_bus_config = {
++	.write = addicmos_regmap_write,
++	.read = addicmos_regmap_read,
++	.read_flag_mask = 0x00,
++	.reg_format_endian_default = REGMAP_ENDIAN_BIG,
++	.val_format_endian_default = REGMAP_ENDIAN_BIG,
++};
++
++static const struct regmap_config addicmos_spi_regmap_config = {
++	.reg_bits = 16,
++	.val_bits = 16,
++	.max_register = 0xefe,
++	.read_flag_mask = 0x00,
++	.write_flag_mask = 0x80,
++	.cache_type = REGCACHE_NONE,
++	.readable_reg = addicmos_regmap_accessible_reg,
++};
++
++static int addicmos_power_on(struct device *dev)
++{
++	struct spi_device *client = to_spi_device(dev);
++	struct v4l2_subdev *sd = spi_get_drvdata(client);
++	struct addicmos *addicmos = to_addicmos(sd);
++	unsigned int read_val;
++	int i, ret;
++
++	dev_dbg(addicmos->dev, "Entered addicmos_power_on\n");
++
++	ret = regmap_write(addicmos->regmap, 0xC, 0xC5);
++	if (ret)
++		dev_err(addicmos->dev, "Could not set power up register\n");
++
++	for (i = 0; i < 5; i ++) {
++		msleep_interruptible(15);
++		regmap_read(addicmos->regmap, 0x256, &read_val);
++		if (read_val == 0x2) {
++			return 0;
++		}
++	}
++
++	dev_err(addicmos->dev, "Power on timed out.\n");
++
++	return 0;
++}
++
++static int addicmos_power_off(struct device *dev)
++{
++	struct spi_device *client = to_spi_device(dev);
++	struct v4l2_subdev *sd = spi_get_drvdata(client);
++	struct addicmos *addicmos = to_addicmos(sd);
++	unsigned int read_val;
++	int i, ret;
++
++	dev_dbg(addicmos->dev, "Entered addicmos_power_off\n");
++
++	ret = regmap_write(addicmos->regmap, 0xC, 0x2);
++	if (ret)
++		dev_err(addicmos->dev, "Could not set power down register\n");
++
++	for (i = 0; i < 5; i ++) {
++		msleep_interruptible(100);
++		regmap_read(addicmos->regmap, 0xC, &read_val);
++		if (read_val == 0x0) {
++			return 0;
++		}
++	}
++
++	dev_err(addicmos->dev, "Power off timed out.\n");
++
++	return -ETIME;
++}
++
++#ifdef CONFIG_VIDEO_ADV_DEBUG
++static int addicmos_g_register(struct v4l2_subdev *sd,
++			       struct v4l2_dbg_register *reg)
++{
++	struct addicmos *addicmos = to_addicmos(sd);
++	unsigned int read_val;
++	int ret;
++
++	reg->size = 2;
++	ret = regmap_read(addicmos->regmap, reg->reg, &read_val);
++	reg->val = read_val;
++
++	return ret;
++}
++
++static int addicmos_s_register(struct v4l2_subdev *sd,
++			       const struct v4l2_dbg_register *reg)
++{
++	struct addicmos *addicmos = to_addicmos(sd);
++
++	return regmap_write(addicmos->regmap, reg->reg, reg->val);
++}
++#endif
++
++static int addicmos_s_ctrl(struct v4l2_ctrl *ctrl)
++{
++	struct addicmos *addicmos = container_of(ctrl->handler,
++						 struct addicmos, ctrls);
++	int ret = 0;
++
++	switch (ctrl->id) {
++	case V4L2_CID_ADDICMOS_OPERATING_MODE:
++		addicmos->curr_operating_mode = ctrl->val;
++		break;
++	case V4L2_CID_PIXEL_RATE:
++	case V4L2_CID_LINK_FREQ:
++		break;
++	default:
++		dev_err(addicmos->dev, "%s > Unhandled: %x  param=%x\n",
++			__func__, ctrl->id, ctrl->val);
++		ret = -EINVAL;
++		break;
++	}
++
++	return ret;
++}
++
++static const struct v4l2_ctrl_ops addicmos_ctrl_ops = {
++	.s_ctrl = addicmos_s_ctrl,
++};
++
++static const struct v4l2_ctrl_config addicmos_ctrl_operating_mode = {
++	.ops		= &addicmos_ctrl_ops,
++	.id		= V4L2_CID_ADDICMOS_OPERATING_MODE,
++	.name		= "Operating Mode",
++	.type		= V4L2_CTRL_TYPE_INTEGER,
++	.def		= 0,
++	.min		= 0,
++	.max		= 1,
++	.step		= 1,
++};
++
++static int addicmos_enum_mbus_code(struct v4l2_subdev *sd,
++				   struct v4l2_subdev_pad_config *cfg,
++				   struct v4l2_subdev_mbus_code_enum *code)
++{
++	if (code->index > 0)
++		return -EINVAL;
++
++	code->code = MEDIA_BUS_FMT_SBGGR12_1X12;
++
++	return 0;
++}
++
++static int addicmos_enum_frame_size(struct v4l2_subdev *subdev,
++				    struct v4l2_subdev_pad_config *cfg,
++				    struct v4l2_subdev_frame_size_enum *fse)
++{
++	if (fse->code != MEDIA_BUS_FMT_SBGGR12_1X12)
++		return -EINVAL;
++
++	if (fse->index >= ARRAY_SIZE(addicmos_mode_info_data))
++		return -EINVAL;
++
++	fse->min_width = addicmos_mode_info_data[fse->index].width;
++	fse->max_width = addicmos_mode_info_data[fse->index].width;
++	fse->min_height = addicmos_mode_info_data[fse->index].height;
++	fse->max_height = addicmos_mode_info_data[fse->index].height;
++
++	return 0;
++}
++
++static struct v4l2_mbus_framefmt *
++addicmos_get_pad_format(struct addicmos *addicmos,
++			struct v4l2_subdev_pad_config *cfg, unsigned int pad,
++			enum v4l2_subdev_format_whence which)
++{
++	switch (which) {
++	case V4L2_SUBDEV_FORMAT_TRY:
++		return v4l2_subdev_get_try_format(&addicmos->sd, cfg, pad);
++	case V4L2_SUBDEV_FORMAT_ACTIVE:
++		return &addicmos->fmt;
++	default:
++		return ERR_PTR(-EINVAL);
++	}
++}
++
++static int addicmos_get_format(struct v4l2_subdev *sd,
++			       struct v4l2_subdev_pad_config *cfg,
++			       struct v4l2_subdev_format *format)
++{
++	struct addicmos *addicmos = to_addicmos(sd);
++	struct v4l2_mbus_framefmt *pad_format;
++
++	pad_format = addicmos_get_pad_format(addicmos, cfg, format->pad,
++					     format->which);
++	if (IS_ERR(pad_format))
++		return PTR_ERR(pad_format);
++
++	format->format = *pad_format;
++
++	return 0;
++}
++
++static struct v4l2_rect *
++addicmos_get_pad_crop(struct addicmos *addicmos,
++		      struct v4l2_subdev_pad_config *cfg,
++		      unsigned int pad, enum v4l2_subdev_format_whence which)
++{
++	switch (which) {
++	case V4L2_SUBDEV_FORMAT_TRY:
++		return v4l2_subdev_get_try_crop(&addicmos->sd, cfg, pad);
++	case V4L2_SUBDEV_FORMAT_ACTIVE:
++		return &addicmos->crop;
++	default:
++		return ERR_PTR(-EINVAL);
++	}
++}
++
++static int addicmos_set_format(struct v4l2_subdev *sd,
++			       struct v4l2_subdev_pad_config *cfg,
++			       struct v4l2_subdev_format *format)
++{
++	struct addicmos *addicmos = to_addicmos(sd);
++	struct v4l2_mbus_framefmt *framefmt;
++	struct v4l2_rect *crop;
++	const struct addicmos_mode_info *new_mode;
++	int ret;
++
++	dev_dbg(addicmos->dev, "set_fmt: %x %dx%d %d\n",
++		format->format.code, format->format.width,
++		format->format.height, format->which);
++
++	mutex_lock(&addicmos->lock);
++
++	crop = addicmos_get_pad_crop(addicmos, cfg, format->pad,
++				     format->which);
++	if (IS_ERR(crop))
++		return PTR_ERR(crop);
++
++	new_mode = v4l2_find_nearest_size(addicmos_mode_info_data,
++					  ARRAY_SIZE(addicmos_mode_info_data),
++					  width, height, format->format.width,
++					  format->format.height);
++	crop->width = new_mode->width;
++	crop->height = new_mode->height;
++
++	if (format->which == V4L2_SUBDEV_FORMAT_ACTIVE) {
++		ret = v4l2_ctrl_s_ctrl_int64(addicmos->pixel_rate,
++					     new_mode->pixel_rate);
++		if (ret < 0)
++			return ret;
++
++		ret = v4l2_ctrl_s_ctrl(addicmos->link_freq,
++				       new_mode->link_freq_idx);
++		if (ret < 0)
++			return ret;
++
++		addicmos->current_mode = new_mode;
++	}
++
++	framefmt = addicmos_get_pad_format(addicmos, cfg, format->pad,
++					   format->which);
++	if (IS_ERR(framefmt))
++		return PTR_ERR(framefmt);
++
++	framefmt->width = crop->width;
++	framefmt->height = crop->height;
++	framefmt->code = MEDIA_BUS_FMT_SBGGR12_1X12;
++	framefmt->field = V4L2_FIELD_NONE;
++	framefmt->colorspace = V4L2_COLORSPACE_RAW;
++
++	format->format = *framefmt;
++
++	mutex_unlock(&addicmos->lock);
++
++	return 0;
++}
++
++static int addicmos_entity_init_cfg(struct v4l2_subdev *subdev,
++				    struct v4l2_subdev_pad_config *cfg)
++{
++	struct v4l2_subdev_format fmt = { 0 };
++
++	fmt.which = cfg ? V4L2_SUBDEV_FORMAT_TRY : V4L2_SUBDEV_FORMAT_ACTIVE;
++	fmt.format.width = addicmos_mode_info_data[0].width;
++	fmt.format.height = addicmos_mode_info_data[0].height;
++
++	addicmos_set_format(subdev, cfg, &fmt);
++
++	return 0;
++}
++
++static int addicmos_get_selection(struct v4l2_subdev *sd,
++				  struct v4l2_subdev_pad_config *cfg,
++				  struct v4l2_subdev_selection *sel)
++{
++	struct addicmos *addicmos = to_addicmos(sd);
++	struct v4l2_rect *crop;
++
++	if (sel->target != V4L2_SEL_TGT_CROP)
++		return -EINVAL;
++
++	crop = addicmos_get_pad_crop(addicmos, cfg, sel->pad, sel->which);
++	if (IS_ERR(crop))
++		return PTR_ERR(crop);
++
++	sel->r = *crop;
++
++	return 0;
++}
++
++static int addicmos_start_streaming(struct addicmos *addicmos)
++{
++	unsigned int read_val;
++	int ret;
++
++	regmap_read(addicmos->regmap, 0x210, &read_val);
++	if (read_val != addicmos->curr_operating_mode) {
++		ret = regmap_write(addicmos->regmap, 0x200,
++				   addicmos->curr_operating_mode);
++		if (ret)
++			dev_err(addicmos->dev, "Could not set mode register\n");
++	}
++	return 0;
++}
++
++static int addicmos_stop_streaming(struct addicmos *addicmos)
++{
++#if 0
++	return regmap_register_patch(addicmos->regmap,
++				     addicmos_standby_setting,
++				     ARRAY_SIZE(addicmos_standby_setting));
++#endif
++	return 0;
++}
++
++static int addicmos_s_stream(struct v4l2_subdev *subdev, int enable)
++{
++	struct addicmos *addicmos = to_addicmos(subdev);
++	int ret = 0;
++
++	dev_dbg(addicmos->dev, "s_stream: %d\n", enable);
++
++	mutex_lock(&addicmos->lock);
++	if (addicmos->streaming == enable) {
++		mutex_unlock(&addicmos->lock);
++		return 0;
++	}
++
++	if (enable) {
++		ret = pm_runtime_get_sync(addicmos->dev);
++		if (ret < 0) {
++			pm_runtime_put_noidle(addicmos->dev);
++			goto err_unlock;
++		}
++
++		ret = addicmos_start_streaming(addicmos);
++		if (ret)
++			goto err_rpm_put;
++	} else {
++		addicmos_stop_streaming(addicmos);
++		pm_runtime_put(addicmos->dev);
++	}
++
++	addicmos->streaming = enable;
++	mutex_unlock(&addicmos->lock);
++
++	return ret;
++
++err_rpm_put:
++	pm_runtime_put(addicmos->dev);
++err_unlock:
++	mutex_unlock(&addicmos->lock);
++
++	return ret;
++}
++
++static int addicmos_link_setup(struct media_entity *entity,
++			   const struct media_pad *local,
++			   const struct media_pad *remote, u32 flags)
++{
++	return 0;
++}
++
++static const struct v4l2_subdev_core_ops addicmos_core_ops = {
++#ifdef CONFIG_VIDEO_ADV_DEBUG
++	.g_register	= addicmos_g_register,
++	.s_register	= addicmos_s_register,
++#endif
++};
++
++static const struct dev_pm_ops addicmos_pm_ops = {
++	SET_RUNTIME_PM_OPS(addicmos_power_off, addicmos_power_on, NULL)
++};
++
++static const struct v4l2_subdev_video_ops addicmos_video_ops = {
++	.s_stream	= addicmos_s_stream,
++};
++
++static const struct v4l2_subdev_pad_ops addicmos_subdev_pad_ops = {
++	.init_cfg		= addicmos_entity_init_cfg,
++	.enum_mbus_code		= addicmos_enum_mbus_code,
++	.enum_frame_size	= addicmos_enum_frame_size,
++	.get_fmt		= addicmos_get_format,
++	.set_fmt		= addicmos_set_format,
++	.get_selection		= addicmos_get_selection,
++};
++
++static const struct v4l2_subdev_ops addicmos_subdev_ops = {
++#ifdef CONFIG_VIDEO_ADV_DEBUG
++	.core	= &addicmos_core_ops,
++#endif
++	.video	= &addicmos_video_ops,
++	.pad	= &addicmos_subdev_pad_ops,
++};
++
++static const struct media_entity_operations addicmos_subdev_entity_ops = {
++	.link_setup = addicmos_link_setup,
++};
++
++static int addicmos_spi_bus_init(struct v4l2_subdev *sd)
++{
++	struct addicmos *addicmos = to_addicmos(sd);
++	unsigned int read_val;
++	int ret;
++
++	/* Set SPI pins to GPIO mode */
++	ret = pinctrl_select_state(addicmos->pinctrl, addicmos->pins_gpio);
++	if (ret < 0)
++		return ret;
++
++	gpiod_set_value_cansleep(addicmos->rst_gpio, 1);
++
++	msleep(500);
++
++	gpiod_set_value_cansleep(addicmos->rst_gpio, 0);
++
++	/* Set SPI pins to SPI mode */
++	ret = pinctrl_select_state(addicmos->pinctrl, addicmos->pins_spi);
++	if (ret < 0)
++		return ret;
++
++	ret = regmap_read(addicmos->regmap, 0x112, &read_val);
++	if (ret < 0) {
++		dev_err(addicmos->dev, "Read of Chip ID register failed.\n");
++		return ret;
++	}
++
++	if (read_val != 0x5931) {
++		dev_err(addicmos->dev, "Chip ID: %.4X is wrong.\n", read_val);
++		return -ENXIO;
++	}
++	dev_dbg(addicmos->dev, "Read Chip ID: %.4X\n", read_val);
++
++	return 0;
++}
++
++static int addicmos_g_sensor_firmware(struct v4l2_subdev *sd)
++{
++	struct addicmos *addicmos = to_addicmos(sd);
++	const struct firmware *fw = addicmos->fw;
++	const struct addicmos_fw_header *fw_head;
++	unsigned int reg_nr, modes_nr, data_size_bytes, i, j;
++
++	if (fw->size < sizeof(struct addicmos_fw_header) ||
++	    fw->size >= 0x4000000)
++		goto err_size;
++
++	fw_head = (struct addicmos_fw_header *)fw->data;
++
++	if (memcmp(fw_head->magic, ADDI_MAGIC, ARRAY_SIZE(fw_head->magic))) {
++		dev_err(addicmos->dev, "FW loading failed: Invalid magic\n");
++		return -EINVAL;
++	}
++
++	modes_nr = le32_to_cpu(fw_head->modes_nr);
++	if (modes_nr == 0) {
++		dev_err(addicmos->dev, "FW should contain at least 1 mode.\n");
++		return -EINVAL;
++	}
++
++	__v4l2_ctrl_modify_range(addicmos->operating_mode,
++				 addicmos->operating_mode->minimum,
++				 modes_nr - 1, 1, 0);
++
++	data_size_bytes = le32_to_cpu(fw_head->data_size_bytes);
++	reg_nr = data_size_bytes / sizeof(uint16_t) / 2;
++	addicmos->fw_regs_count = reg_nr;
++
++	addicmos->fw_regs = devm_kcalloc(addicmos->dev, reg_nr,
++			       sizeof(struct reg_sequence), GFP_KERNEL);
++	if (!addicmos->fw_regs)
++		return -ENOMEM;
++
++	for (i = 0, j = 0; i < reg_nr * 2; i += 2, j++) {
++		addicmos->fw_regs[j].reg = le16_to_cpu(fw_head->data[i]);
++		addicmos->fw_regs[j].def = le16_to_cpu(fw_head->data[i + 1]);
++	}
++
++	return 0;
++
++err_size:
++	dev_err(addicmos->dev, "FW loading failed: Invalid size\n");
++	return -EINVAL;
++}
++
++static int addicmos_firmware_load(struct v4l2_subdev *sd)
++{
++	struct addicmos *addicmos = to_addicmos(sd);
++	int ret;
++
++	ret = request_firmware(&addicmos->fw, FW_FILE_NAME, addicmos->dev);
++	if (ret < 0) {
++		dev_err(addicmos->dev, "FW request failed\n");
++		return ret;
++	}
++
++	ret = addicmos_g_sensor_firmware(sd);
++
++	ret = regmap_multi_reg_write(addicmos->regmap, addicmos->fw_regs,
++				     addicmos->fw_regs_count);
++	if (ret)
++		dev_err(addicmos->dev, "Could not write firmware to camera\n");
++
++	release_firmware(addicmos->fw);
++	if (ret < 0) {
++		dev_err(addicmos->dev, "FW parsing failed\n");
++		return ret;
++	}
++
++	//Writes for LASER turn on
++#if 1
++	regmap_multi_reg_write(addicmos->regmap,
++			addicmos_powerup_setting,
++			ARRAY_SIZE(addicmos_powerup_setting));
++#endif
++	return 0;
++}
++
++static int addicmos_probe(struct spi_device *client)
++{
++	struct v4l2_fwnode_endpoint bus_cfg = {
++		.bus_type = V4L2_MBUS_CSI2_DPHY
++	};
++	struct device *dev = &client->dev;
++	struct fwnode_handle *endpoint;
++	struct addicmos *addicmos;
++	int ret;
++
++	addicmos = devm_kzalloc(dev, sizeof(struct addicmos), GFP_KERNEL);
++	if (!addicmos)
++		return -ENOMEM;
++
++	addicmos->dev = dev;
++
++	addicmos->regmap = devm_regmap_init(dev, &addicmos_spi_bus_config, dev,
++					    &addicmos_spi_regmap_config);
++	if (IS_ERR(addicmos->regmap)) {
++		dev_err(dev, "Error initializing spi regmap\n");
++		return PTR_ERR(addicmos->regmap);
++	}
++
++	mutex_init(&addicmos->lock);
++
++	endpoint = fwnode_graph_get_next_endpoint(dev_fwnode(dev), NULL);
++	if (!endpoint) {
++		dev_err(dev, "endpoint node not found\n");
++		return -EINVAL;
++	}
++
++	ret = v4l2_fwnode_endpoint_parse(endpoint, &bus_cfg);
++	fwnode_handle_put(endpoint);
++	if (ret < 0) {
++		dev_err(dev, "parsing endpoint node failed\n");
++		return ret;
++	}
++
++	addicmos->rst_gpio = gpiod_get(dev, "reset", GPIOD_OUT_LOW);
++	if (IS_ERR(addicmos->rst_gpio)) {
++		dev_info(dev, "Unable to get \"reset\" gpio\n");
++		return PTR_ERR(addicmos->rst_gpio);
++	}
++
++	addicmos->pinctrl = devm_pinctrl_get(dev);
++	if (IS_ERR(addicmos->pinctrl)) {
++		dev_info(dev, "Unable to get \"pinctrl\" block\n");
++		return PTR_ERR(addicmos->pinctrl);
++	}
++
++	addicmos->pins_spi = pinctrl_lookup_state(addicmos->pinctrl, "spi");
++	if (IS_ERR(addicmos->pins_spi)) {
++		dev_info(dev, "Unable to get \"spi-pinctrl\" block\n");
++		return PTR_ERR(addicmos->pins_spi);
++	}
++
++	addicmos->pins_gpio = pinctrl_lookup_state(addicmos->pinctrl, "gpio");
++	if (IS_ERR(addicmos->pins_gpio)) {
++		dev_info(dev, "Unable to get \"gpio-pinctrl\" block\n");
++		return PTR_ERR(addicmos->pins_gpio);
++	}
++
++	ret = addicmos_spi_bus_init(&addicmos->sd);
++	if (ret) {
++		dev_err(dev, "%s: SPI bus initialization failed %d\n",
++			__func__, ret);
++		goto release_gpio;
++	}
++
++	v4l2_ctrl_handler_init(&addicmos->ctrls, 3);
++
++	addicmos->pixel_rate = v4l2_ctrl_new_std(&addicmos->ctrls,
++						  &addicmos_ctrl_ops,
++						  V4L2_CID_PIXEL_RATE,
++						  1, INT_MAX, 1, 1);
++	addicmos->link_freq = v4l2_ctrl_new_int_menu(&addicmos->ctrls,
++						     &addicmos_ctrl_ops,
++						     V4L2_CID_LINK_FREQ,
++						     ARRAY_SIZE(
++							     link_freq_tbl) - 1,
++						     0, link_freq_tbl);
++	if (addicmos->link_freq)
++		addicmos->link_freq->flags |= V4L2_CTRL_FLAG_READ_ONLY;
++
++	addicmos->operating_mode = v4l2_ctrl_new_custom(&addicmos->ctrls,
++						&addicmos_ctrl_operating_mode,
++						NULL);
++
++	ret = addicmos->ctrls.error;
++	if (ret) {
++		dev_err(dev, "%s: control initialization error %d\n",
++			__func__, ret);
++		goto free_ctrl;
++	}
++	addicmos->sd.ctrl_handler = &addicmos->ctrls;
++
++	v4l2_spi_subdev_init(&addicmos->sd, client, &addicmos_subdev_ops);
++	addicmos->sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE;
++	addicmos->pad.flags = MEDIA_PAD_FL_SOURCE;
++	addicmos->sd.dev = &client->dev;
++	addicmos->sd.entity.ops = &addicmos_subdev_entity_ops;
++	addicmos->sd.entity.function = MEDIA_ENT_F_CAM_SENSOR;
++
++	ret = media_entity_pads_init(&addicmos->sd.entity, 1, &addicmos->pad);
++	if (ret < 0) {
++		dev_err(dev, "could not register media entity\n");
++		goto free_ctrl;
++	}
++
++	ret = addicmos_firmware_load(&addicmos->sd);
++	if (ret < 0)
++		return ret;
++
++	addicmos_entity_init_cfg(&addicmos->sd, NULL);
++
++	ret = v4l2_async_register_subdev(&addicmos->sd);
++	if (ret < 0) {
++		dev_err(dev, "could not register v4l2 device\n");
++		goto free_entity;
++	}
++
++	pm_runtime_set_active(dev);
++	pm_runtime_enable(dev);
++	pm_runtime_idle(dev);
++
++	return 0;
++
++free_entity:
++	media_entity_cleanup(&addicmos->sd.entity);
++free_ctrl:
++	v4l2_ctrl_handler_free(&addicmos->ctrls);
++	mutex_destroy(&addicmos->lock);
++release_gpio:
++	gpiod_put(addicmos->rst_gpio);
++
++	return ret;
++}
++
++static int addicmos_remove(struct spi_device *client)
++{
++	struct v4l2_subdev *sd = spi_get_drvdata(client);
++	struct addicmos *addicmos = to_addicmos(sd);
++
++	v4l2_async_unregister_subdev(&addicmos->sd);
++	media_entity_cleanup(&addicmos->sd.entity);
++	gpiod_put(addicmos->rst_gpio);
++	v4l2_ctrl_handler_free(&addicmos->ctrls);
++	mutex_destroy(&addicmos->lock);
++
++	pm_runtime_disable(addicmos->dev);
++	if (!pm_runtime_status_suspended(addicmos->dev))
++		addicmos_power_off(addicmos->dev);
++	pm_runtime_set_suspended(addicmos->dev);
++
++	return 0;
++}
++
++static const struct of_device_id addicmos_of_match[] = {
++	{ .compatible = "adi,addicmos" },
++	{ /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(of, addicmos_of_match);
++
++static const struct spi_device_id addicmos_ids[] = {
++	{ "addicmos", 0 },
++	{ /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(spi, addicmos_ids);
++
++static struct spi_driver addicmos_spi_driver = {
++	.driver			= {
++		.of_match_table = addicmos_of_match,
++		.name		= "addicmos",
++		.pm		= &addicmos_pm_ops,
++	},
++	.probe			= addicmos_probe,
++	.remove			= addicmos_remove,
++	.id_table		= addicmos_ids,
++};
++
++module_spi_driver(addicmos_spi_driver);
++
++MODULE_DESCRIPTION("Analog Devices ADDICMOS Camera Driver");
++MODULE_AUTHOR("Bogdan Togorean");
++MODULE_LICENSE("GPL v2");
+diff --git a/include/uapi/linux/v4l2-controls.h b/include/uapi/linux/v4l2-controls.h
+index a184c4939438..21e3b433856a 100644
+--- a/include/uapi/linux/v4l2-controls.h
++++ b/include/uapi/linux/v4l2-controls.h
+@@ -198,6 +198,12 @@ enum v4l2_colorfx {
+  */
+ #define V4L2_CID_USER_ATMEL_ISC_BASE		(V4L2_CID_USER_BASE + 0x10c0)
+ 
++/*
++* The base for the addicmos driver controls.
++* We reserve 16 controls for this driver.
++*/
++#define V4L2_CID_USER_ADDICMOS_BASE		(V4L2_CID_USER_BASE + 0x10e0)
++
+ /* MPEG-class control IDs */
+ /* The MPEG controls are applicable to all codec controls
+  * and the 'MPEG' part of the define is historical */
+-- 
+2.32.0
+

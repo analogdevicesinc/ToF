@@ -1,0 +1,39 @@
+From e2ffba349e58e0b589602642e5865ed621ca2f58 Mon Sep 17 00:00:00 2001
+From: Josua Mayer <josua.mayer@jm0.eu>
+Date: Sun, 1 Nov 2020 14:05:21 +0100
+Subject: [PATCH 1/2] fix name of dtb file for i.MX8MP HummingBoard Pulse
+
+---
+ configs/imx8mp_solidrun_defconfig | 2 +-
+ include/configs/imx8mp_solidrun.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/configs/imx8mp_solidrun_defconfig b/configs/imx8mp_solidrun_defconfig
+index 81d0ec39da..3d90115903 100644
+--- a/configs/imx8mp_solidrun_defconfig
++++ b/configs/imx8mp_solidrun_defconfig
+@@ -27,7 +27,7 @@ CONFIG_SPL_LOAD_FIT=y
+ CONFIG_SPL_FIT_GENERATOR="arch/arm/mach-imx/mkimage_fit_atf.sh"
+ CONFIG_OF_SYSTEM_SETUP=y
+ CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=arch/arm/mach-imx/imx8m/imximage-8mp-lpddr4.cfg"
+-CONFIG_DEFAULT_FDT_FILE="imx8mp-solidrun.dtb"
++CONFIG_DEFAULT_FDT_FILE="imx8mp-hummingboard-pulse.dtb"
+ CONFIG_BOARD_LATE_INIT=y
+ CONFIG_BOARD_EARLY_INIT_F=y
+ CONFIG_SPL_BOARD_INIT=y
+diff --git a/include/configs/imx8mp_solidrun.h b/include/configs/imx8mp_solidrun.h
+index e7206e56f7..a1e2c47dfe 100644
+--- a/include/configs/imx8mp_solidrun.h
++++ b/include/configs/imx8mp_solidrun.h
+@@ -95,7 +95,7 @@
+ 	CONFIG_MFG_ENV_SETTINGS \
+ 	JAILHOUSE_ENV \
+ 	BOOTENV	\
+-	"fdtfile=undefined\0" \
++	"fdtfile=" CONFIG_DEFAULT_FDT_FILE "\0" \
+ 	"ramdisk_addr_r=0x50000000\0"	\
+         "fdt_addr_r=0x43000000\0" \
+         "fdt_addr=0x43000000\0" \
+-- 
+2.29.2
+

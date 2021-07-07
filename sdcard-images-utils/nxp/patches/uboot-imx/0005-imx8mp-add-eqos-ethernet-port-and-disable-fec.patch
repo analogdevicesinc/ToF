@@ -1,0 +1,160 @@
+From 6858072066e641d860be2f3831e6597ce7743043 Mon Sep 17 00:00:00 2001
+From: Rabeeh Khoury <rabeeh@solid-run.com>
+Date: Mon, 23 Nov 2020 20:42:17 +0200
+Subject: [PATCH 5/5] imx8mp: add eqos ethernet port and disable fec
+
+eqos port is the main ethernet port connected from the SOM and exported
+on the HummingBoard mate/pulse and all it's variants.
+fec is the second phy that is available on the SOM but not connected to
+anything on the HummingBoard mate/pulse boards
+
+Signed-off-by: Rabeeh Khoury <rabeeh@solid-run.com>
+---
+ arch/arm/dts/imx8mp-solidrun.dts              | 56 ++++++++++++-------
+ .../imx8mp_solidrun/imx8mp_solidrun.c         |  4 +-
+ configs/imx8mp_solidrun_defconfig             |  1 +
+ include/configs/imx8mp_solidrun.h             |  2 +-
+ 4 files changed, 41 insertions(+), 22 deletions(-)
+
+diff --git a/arch/arm/dts/imx8mp-solidrun.dts b/arch/arm/dts/imx8mp-solidrun.dts
+index 44726378e4..1725cae6a7 100644
+--- a/arch/arm/dts/imx8mp-solidrun.dts
++++ b/arch/arm/dts/imx8mp-solidrun.dts
+@@ -71,14 +71,13 @@
+ 	};
+ };
+ 
+-/* ETH0 */
+ &fec {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_fec>;
+ 	phy-mode = "rgmii-id";
+ 	phy-handle = <&ethphy1>;
+ 	fsl,magic-packet;
+-	status = "okay";
++	status = "disabled";
+ 
+ 	mdio {
+ 		#address-cells = <1>;
+@@ -92,24 +91,29 @@
+ 	};
+ };
+ 
+-/* need to check*/
+-&flexspi {
++&eqos {
+ 	pinctrl-names = "default";
+-	pinctrl-0 = <&pinctrl_flexspi0>;
++	pinctrl-0 = <&pinctrl_eqos>;
++	phy-mode = "rgmii-id";
++	phy-handle = <&ethphy0>;
+ 	status = "okay";
++        compatible = "fsl,imx-eqos";
++        /delete-property/ assigned-clocks;
++        /delete-property/ assigned-clock-parents;
++        /delete-property/ assigned-clock-rates;
+ 
+-	flash0: mt25qu256aba@0 {
+-		reg = <0>;
++	mdio {
+ 		#address-cells = <1>;
+-		#size-cells = <1>;
+-		compatible = "jedec,spi-nor";
+-		spi-max-frequency = <80000000>;
+-		spi-tx-bus-width = <4>;
+-		spi-rx-bus-width = <4>;
++		#size-cells = <0>;
++
++		ethphy0: ethernet-phy@0 {
++			compatible = "ethernet-phy-ieee802.3-c22";
++			reg = <0>;
++			eee-broken-1000t;
++		};
+ 	};
+ };
+ 
+-
+ &i2c1 {
+ 	clock-frequency = <400000>;
+ 	pinctrl-names = "default", "gpio";
+@@ -347,6 +351,26 @@
+ &iomuxc {
+ 	pinctrl-names = "default";
+ 
++	pinctrl_eqos: eqosgrp {
++		fsl,pins = <
++			MX8MP_IOMUXC_ENET_MDC__ENET_QOS_MDC		0x3
++			MX8MP_IOMUXC_ENET_MDIO__ENET_QOS_MDIO		0x3
++			MX8MP_IOMUXC_ENET_RD0__ENET_QOS_RGMII_RD0	0x91
++			MX8MP_IOMUXC_ENET_RD1__ENET_QOS_RGMII_RD1	0x91
++			MX8MP_IOMUXC_ENET_RD2__ENET_QOS_RGMII_RD2	0x91
++			MX8MP_IOMUXC_ENET_RD3__ENET_QOS_RGMII_RD3	0x91
++			MX8MP_IOMUXC_ENET_RXC__CCM_ENET_QOS_CLOCK_GENERATE_RX_CLK	0x91
++			MX8MP_IOMUXC_ENET_RX_CTL__ENET_QOS_RGMII_RX_CTL	0x91
++			MX8MP_IOMUXC_ENET_TD0__ENET_QOS_RGMII_TD0	0x1f
++			MX8MP_IOMUXC_ENET_TD1__ENET_QOS_RGMII_TD1	0x1f
++			MX8MP_IOMUXC_ENET_TD2__ENET_QOS_RGMII_TD2	0x1f
++			MX8MP_IOMUXC_ENET_TD3__ENET_QOS_RGMII_TD3	0x1f
++			MX8MP_IOMUXC_ENET_TX_CTL__ENET_QOS_RGMII_TX_CTL	0x1f
++			MX8MP_IOMUXC_ENET_TXC__CCM_ENET_QOS_CLOCK_GENERATE_TX_CLK	0x1f
++			MX8MP_IOMUXC_SAI1_TXD7__GPIO4_IO19		0x19
++		>;
++	};
++
+ 	pinctrl_fec: fecgrp {
+ 		fsl,pins = <
+ 			MX8MP_IOMUXC_SAI1_RXD2__ENET1_MDC		0x3
+@@ -442,12 +466,6 @@
+ 		>;
+ 	};
+ 
+-	pinctrl_typec: typec1grp {
+-		fsl,pins = <
+-			MX8MP_IOMUXC_SAI1_TXD7__GPIO4_IO19	0x1c4
+-		>;
+-	};
+-
+ 	pinctrl_typec_mux: typec1muxgrp {
+ 		fsl,pins = <
+ 			MX8MP_IOMUXC_SAI1_MCLK__GPIO4_IO20	0x16
+diff --git a/board/solidrun/imx8mp_solidrun/imx8mp_solidrun.c b/board/solidrun/imx8mp_solidrun/imx8mp_solidrun.c
+index 4864c09b3b..dcfe6a2b37 100644
+--- a/board/solidrun/imx8mp_solidrun/imx8mp_solidrun.c
++++ b/board/solidrun/imx8mp_solidrun/imx8mp_solidrun.c
+@@ -133,9 +133,9 @@ static int setup_fec(void)
+ 
+ #ifdef CONFIG_DWC_ETH_QOS
+ 
+-#define EQOS_RST_PAD IMX_GPIO_NR(4, 22)
++#define EQOS_RST_PAD IMX_GPIO_NR(4, 19)
+ static iomux_v3_cfg_t const eqos_rst_pads[] = {
+-	MX8MP_PAD_SAI2_RXC__GPIO4_IO22 | MUX_PAD_CTRL(NO_PAD_CTRL),
++	MX8MP_PAD_SAI1_TXD7__GPIO4_IO19 | MUX_PAD_CTRL(NO_PAD_CTRL),
+ };
+ 
+ static void setup_iomux_eqos(void)
+diff --git a/configs/imx8mp_solidrun_defconfig b/configs/imx8mp_solidrun_defconfig
+index 3d90115903..d9502772fa 100644
+--- a/configs/imx8mp_solidrun_defconfig
++++ b/configs/imx8mp_solidrun_defconfig
+@@ -162,3 +162,4 @@ CONFIG_USE_BOOTCOMMAND=y
+ CONFIG_BOOTCOMMAND="run distro_bootcmd"
+ CONFIG_CMD_PXE=y
+ CONFIG_ENV_SIZE=0x2000
++CONFIG_NET_RANDOM_ETHADDR=y
+diff --git a/include/configs/imx8mp_solidrun.h b/include/configs/imx8mp_solidrun.h
+index a1e2c47dfe..b31310204c 100644
+--- a/include/configs/imx8mp_solidrun.h
++++ b/include/configs/imx8mp_solidrun.h
+@@ -65,7 +65,7 @@
+ #define CONFIG_FEC_MXC_PHYADDR          1
+ #define FEC_QUIRK_ENET_MAC
+ 
+-#define DWC_NET_PHYADDR			1
++#define DWC_NET_PHYADDR			0
+ #ifdef CONFIG_DWC_ETH_QOS
+ #define CONFIG_SYS_NONCACHED_MEMORY     (1 * SZ_1M)     /* 1M */
+ #endif
+-- 
+2.25.1
+

@@ -1,0 +1,54 @@
+From 6fe404c817b6ea8a874ff8b7cdbf984d32070895 Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Thu, 22 Apr 2021 09:36:10 +0300
+Subject: [PATCH 05/15] Convert pixel format to YUYV
+
+Signed-off-by: btogorean <bogdan.togorean@analog.com>
+---
+ drivers/staging/media/imx/imx8-isi-cap.c | 16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/staging/media/imx/imx8-isi-cap.c b/drivers/staging/media/imx/imx8-isi-cap.c
+index 344d42dbbaa6..5bfd73bf47da 100644
+--- a/drivers/staging/media/imx/imx8-isi-cap.c
++++ b/drivers/staging/media/imx/imx8-isi-cap.c
+@@ -59,14 +59,6 @@ struct mxc_isi_fmt mxc_isi_out_formats[] = {
+ 		.memplanes	= 1,
+ 		.colplanes	= 1,
+ 		.mbus_code  = MEDIA_BUS_FMT_BGR888_1X24,
+-	}, {
+-		.name		= "YUYV-16",
+-		.fourcc		= V4L2_PIX_FMT_YUYV,
+-		.depth		= { 16 },
+-		.color		= MXC_ISI_OUT_FMT_YUV422_1P8P,
+-		.memplanes	= 1,
+-		.colplanes	= 1,
+-		.mbus_code	= MEDIA_BUS_FMT_YUYV8_1X16,
+ 	}, {
+ 		.name		= "YUV32 (X-Y-U-V)",
+ 		.fourcc		= V4L2_PIX_FMT_YUV32,
+@@ -92,8 +84,8 @@ struct mxc_isi_fmt mxc_isi_out_formats[] = {
+ 		.colplanes	= 1,
+ 		.mbus_code	= MEDIA_BUS_FMT_RGB888_1X24,
+ 	}, {
+-		.name		= "RAW12",
+-		.fourcc		= V4L2_PIX_FMT_SBGGR12,
++		.name		= "YUYV-16 (CUSTOM)",
++		.fourcc		= V4L2_PIX_FMT_YUYV,
+ 		.depth		= { 16 },
+ 		.color		= MXC_ISI_OUT_FMT_RAW12,
+ 		.memplanes	= 1,
+@@ -119,8 +111,8 @@ struct mxc_isi_fmt mxc_isi_src_formats[] = {
+ 		.memplanes	= 1,
+ 		.colplanes	= 1,
+ 	}, {
+-		.name		= "BG12",
+-		.fourcc		= V4L2_PIX_FMT_SBGGR12,
++		.name		= "YUYV",
++		.fourcc		= V4L2_PIX_FMT_YUYV,
+ 		.depth		= { 16 },
+ 		.memplanes	= 1,
+ 		.colplanes	= 1,
+-- 
+2.32.0
+

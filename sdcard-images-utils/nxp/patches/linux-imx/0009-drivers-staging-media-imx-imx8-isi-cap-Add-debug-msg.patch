@@ -1,0 +1,26 @@
+From c29acf628bed8e4b4e4d38fb0a26b203fe383616 Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Fri, 21 May 2021 12:05:06 +0300
+Subject: [PATCH 09/15] drivers: staging: media: imx: imx8-isi-cap: Add debug
+ msg for dropped frames
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ drivers/staging/media/imx/imx8-isi-cap.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/staging/media/imx/imx8-isi-cap.c b/drivers/staging/media/imx/imx8-isi-cap.c
+index 8c16ffdcfeed..3d68e8c19085 100644
+--- a/drivers/staging/media/imx/imx8-isi-cap.c
++++ b/drivers/staging/media/imx/imx8-isi-cap.c
+@@ -292,6 +292,7 @@ void mxc_isi_cap_frame_write_done(struct mxc_isi_dev *mxc_isi)
+ 		buf = list_first_entry(&isi_cap->out_discard,
+ 				       struct mxc_isi_buffer, list);
+ 		buf->v4l2_buf.sequence = isi_cap->frame_count;
++		dev_dbg(dev, "Discard buffer sequence: %d\n", isi_cap->frame_count);
+ 		mxc_isi_channel_set_outbuf(mxc_isi, buf);
+ 		list_move_tail(isi_cap->out_discard.next, &isi_cap->out_active);
+ 		return;
+-- 
+2.32.0
+

@@ -1,0 +1,11 @@
+[Unit]
+Description=Analog Devices TOF sensor service
+After=usb-gadget.target
+
+[Service]
+Type=simple
+ExecStart=/usr/share/systemd/fsync_carr_adi.sh
+ExecStartPre=/usr/share/systemd/tof-power-en.sh
+
+[Install]
+WantedBy=multi-user.target
