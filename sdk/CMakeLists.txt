@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 2.8)
 project(aditof)
 
 add_subdirectory(common/adi/ccb)
+if(USE_DEPTH_COMPUTE_STUBS)
+    add_subdirectory(common/adi/depth-compute-stub)
+endif()
 
 add_definitions(-DSDK_EXPORTS)
 find_package(glog 0.3.5 REQUIRED)
@@ -197,12 +200,9 @@ endif()
 #LIBTOFI_LIBDIR_PATH - path to libtofi_config.so and libtofi_compute.so folder
 
 if (USE_ITOF)
-    if( USE_DEPTH_COMPUTE_STUBS )
-            find_path ( LIB_LOCATION NAMES tofi_compute.dll PATHS "${CMAKE_BINARY_DIR}/common/adi/depth-compute-stub/")
-    		set(LIBTOFI_LIBDIR_PATH ${LIB_LOCATION} CACHE STRING "" FORCE)
-    else()
-            set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs" CACHE STRING "" FORCE)
-    endif()
+
+    # TO DO: should get the path of stub libs in case we're using them
+    set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
 	
 	if ( UNIX )
     		add_library(libtofi_compute SHARED IMPORTED)
@@ -218,6 +218,7 @@ if (USE_ITOF)
 		)
 
 	elseif( WIN32 )
+        if (NOT USE_DEPTH_COMPUTE_STUBS)
     		add_library(libtofi_compute SHARED IMPORTED)
     		set_target_properties(libtofi_compute PROPERTIES
 	 		IMPORTED_IMPLIB "${LIBTOFI_LIBDIR_PATH}/tofi_compute.lib"
@@ -227,12 +228,18 @@ if (USE_ITOF)
     		set_target_properties(libtofi_config PROPERTIES
          		IMPORTED_IMPLIB "${LIBTOFI_LIBDIR_PATH}/tofi_config.lib"
          		IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/tofi_config.dll")
+        else()
+            target_link_libraries(${PROJECT_NAME} PRIVATE tofi_compute)
+	        target_link_libraries(${PROJECT_NAME} PRIVATE tofi_config)
+        endif()
 	else()
 		message( FATAL_ERROR "Unsupported platform for libtofi_compute and libtofi_config. CMake will exit." )
 	endif()	
 
-	target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_compute)
-	target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_config)
+	if (NOT USE_DEPTH_COMPUTE_STUBS)
+        target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_compute)
+        target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_config)
+    endif()
 
     target_link_libraries(${PROJECT_NAME} PRIVATE ccb)
 endif()
@@ -271,7 +278,7 @@ include(GNUInstallDirs)
 set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/aditof)
 
 # export targets for the config cmake to use
-install(TARGETS aditof
+install(TARGETS aditof tofi_compute tofi_config
     EXPORT aditof-targets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
