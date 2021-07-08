@@ -71,6 +71,7 @@ endif()
 
 if (USE_ITOF)
         add_definitions(-DITOF)
+        set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
 endif()
 
 set(CONFIG_DIR_NAME "config")

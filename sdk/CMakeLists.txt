@@ -200,9 +200,6 @@ endif()
 #LIBTOFI_LIBDIR_PATH - path to libtofi_config.so and libtofi_compute.so folder
 
 if (USE_ITOF)
-
-    # TO DO: should get the path of stub libs in case we're using them
-    set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
 	
 	if ( UNIX )
     		add_library(libtofi_compute SHARED IMPORTED)
@@ -278,11 +275,19 @@ include(GNUInstallDirs)
 set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/aditof)
 
 # export targets for the config cmake to use
-install(TARGETS aditof tofi_compute tofi_config
-    EXPORT aditof-targets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
+if (NOT USE_DEPTH_COMPUTE_STUBS)
+    install(TARGETS aditof
+        EXPORT aditof-targets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+else()
+    install(TARGETS aditof tofi_compute tofi_config
+        EXPORT aditof-targets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+endif()
 
 install(EXPORT aditof-targets
     FILE
