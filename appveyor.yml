@@ -2,9 +2,6 @@ version: '1.0.{build}'
 
 image:
     - Visual Studio 2019
-    - Visual Studio 2017
-    - Visual Studio 2015
-
 cache:
     - C:\projects\aditof-sdk-rework\deps\glog -> ci\appveyor\install_glog.bat
     - C:\projects\aditof-sdk-rework\deps\protobuf -> ci\appveyor\install_protobuf.bat
@@ -97,7 +94,7 @@ build_script:
 
 after_build:
     - cinst InnoSetup
-    - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" ( 
+    - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2019" (
         C:\projects\aditof-sdk-rework\ci\appveyor\make_installer.bat
       )
     - C:\projects\aditof-sdk-rework\ci\appveyor\make_zip.bat
