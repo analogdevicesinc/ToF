@@ -578,8 +578,12 @@ aditof::Status CameraItof::initComputeLibrary(void) {
         uint32_t status = ADI_TOFI_SUCCESS;
 
         if (!m_ini_depth.empty()) {
-            ConfigFileData depth_ini = {m_depthINIData, iniFileSize};
+            uint8_t *tempDataParser = new uint8_t[iniFileSize];
+            memcpy(tempDataParser, m_depthINIData, iniFileSize);
+            ConfigFileData depth_ini = {tempDataParser, iniFileSize};
             m_tofi_config = InitTofiConfig(&calData, NULL, &depth_ini, convertedMode, &status);
+            delete[] tempDataParser;
+
         } else {
             m_tofi_config = InitTofiConfig(&calData, NULL, NULL, convertedMode, &status);
         }
