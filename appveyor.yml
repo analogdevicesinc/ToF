@@ -17,6 +17,7 @@ install:
             set generator=Visual Studio 16 2019
         )
     #- set generator=%generator:"=%
+    - if not exist "C:\projects\libs" ( mkdir C:\projects\libs ) # an empty dir so that cmake doesn't complain when it copies the dir content to each example build dir. In non CI scenario, here is where depth compute libs would exist
     - if not exist "deps" ( mkdir deps )
     - C:\projects\aditof-sdk-rework\ci\appveyor\install_opencv.bat
     - cd %APPVEYOR_BUILD_FOLDER%
@@ -44,6 +45,8 @@ build_script:
       -DOpenCV_DIR="C:\tools\opencv\build\x64\vc15\lib" \
       -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk-rework\deps\protobuf\build_3_9_0x64\local_path\protobuf;C:\projects\aditof-sdk-rework\deps\libwebsockets\build_3_1_stablex64\local_path\websockets" \
       -DOPENSSL_INCLUDE_DIRS="C:\OpenSSL-Win64\include" \
+      -DUSE_ITOF=ON
+      -DUSE_DEPTH_COMPUTE_STUBS=ON
       ..
     - cmake --build . --config "Release"
     - ps: popd
@@ -55,6 +58,8 @@ build_script:
       -DOpenCV_DIR="C:\tools\opencv\build\x64\vc15\lib" \
       -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk-rework\deps\protobuf\build_3_9_0x64\local_path\protobuf;C:\projects\aditof-sdk-rework\deps\libwebsockets\build_3_1_stablex64\local_path\websockets" \
       -DOPENSSL_INCLUDE_DIRS="C:\OpenSSL-Win64\include" \
+      -DUSE_ITOF=ON
+      -DUSE_DEPTH_COMPUTE_STUBS=ON
       ..
     - cmake --build . --config "Debug"
     - ps: popd
@@ -78,6 +83,8 @@ build_script:
       -DWITH_PYTHON=on \
       -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk-rework\deps\protobuf\build_3_9_0Win32\local_path\protobuf;C:\projects\aditof-sdk-rework\deps\libwebsockets\build_3_1_stableWin32\local_path\websockets" \
       -DOPENSSL_INCLUDE_DIRS="C:\OpenSSL-Win32\include" \
+      -DUSE_ITOF=ON
+      -DUSE_DEPTH_COMPUTE_STUBS=ON
       ..
     - cmake --build . --config "Release"
     - ps: popd
@@ -88,6 +95,8 @@ build_script:
       -DWITH_PYTHON=on \
       -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk-rework\deps\protobuf\build_3_9_0Win32\local_path\protobuf;C:\projects\aditof-sdk-rework\deps\libwebsockets\build_3_1_stableWin32\local_path\websockets" \
       -DOPENSSL_INCLUDE_DIRS="C:\OpenSSL-Win32\include" \
+      -DUSE_ITOF=ON
+      -DUSE_DEPTH_COMPUTE_STUBS=ON
       ..
     - cmake --build . --config "Debug"
     - ps: popd
