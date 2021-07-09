@@ -313,6 +313,7 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
     m_details.frameType.width = ModeInfo::getInstance()->getModeInfo(frameType).width;
     m_details.frameType.height = ModeInfo::getInstance()->getModeInfo(frameType).height;
     m_details.frameType.totalCaptures = ModeInfo::getInstance()->getModeInfo(frameType).subframes;
+    m_details.frameType.dataDetails.clear();
     for (const auto item : (*frameTypeIt).content) {
         if (item.type == "xyz" && !m_xyzEnabled) {
             continue;
