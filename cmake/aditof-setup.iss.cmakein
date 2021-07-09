@@ -4,7 +4,7 @@
 #define AppExeName "ADI-ITOF-Setup.exe"
 #define AppName "ADI-ITOF-Setup"
 #define AppDev "Analog Devices"
-#define BinaryLocation "C:\aditof\aditof-sdk-rework\build"
+#define BinaryLocation "C:\projects\aditof-sdk-rework\build"
 
 [Setup]
 AppId={{D5F088C2-7EFC-4E04-B4F5-305F125AB360}
@@ -16,7 +16,7 @@ AppSupportURL="http://www.analog.com"
 AppUpdatesURL="http://www.analog.com"
 AppCopyright="Copyright 2019 Analog Devices, Inc."
 CreateAppDir=yes
-LicenseFile="C:\aditof\aditof-sdk-rework\LICENSE"
+LicenseFile="C:\projects\aditof-sdk-rework\LICENSE"
 OutputBaseFilename=aditof-gui-setup
 OutputDir="C:\"
 Compression=lzma
