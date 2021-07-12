@@ -55,8 +55,6 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "{#BinaryLocation}\sdk\Release\aditof.dll"; DestDir: "{app}"
-Source: "{#BinaryLocation}\examples\tof-viewer\Release\tofi_compute.dll"; DestDir: "{app}";
-Source: "{#BinaryLocation}\examples\tof-viewer\Release\tofi_config.dll"; DestDir: "{app}";
 Source: "{#BinaryLocation}\examples\tof-viewer\Release\tof-viewer_config.json"; DestDir: "{app}";
 Source: "{#BinaryLocation}\examples\tof-viewer\Release\config\*"; DestDir: "{app}\config";
 Source: "{#BinaryLocation}\examples\tof-viewer\Release\ADIToFGUI.exe"; DestDir: "{app}";
