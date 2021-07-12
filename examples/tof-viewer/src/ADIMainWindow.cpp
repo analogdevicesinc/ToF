@@ -1821,6 +1821,7 @@ void ADIMainWindow::initOpenGLPointCloudTexture()
 
 void ADIMainWindow::synchronizeDepthIRVideo()
 {
+	view->m_ctrl->requestFrame();
 	view->m_capturedFrame = view->m_ctrl->getFrame();	
 	
 	aditof::FrameDetails frameDetails;
@@ -1861,7 +1862,6 @@ void ADIMainWindow::synchronizeDepthIRVideo()
 
 	lock.unlock();
 	view->m_frameCapturedCv.notify_all();
-	view->m_ctrl->requestFrame();
 
 	/*********************************/
 	std::unique_lock<std::mutex> imshow_lock(view->m_imshowMutex);
