@@ -897,7 +897,7 @@ void ADIMainWindow::ShowPlaybackTree() {
             ImGui::Text("View Options:");
             ImGuiExtensions::ADIRadioButton("Active Brightness and Depth",
                                             &viewSelection, 0,
-                                            displayIR || displyaDepth);
+                                            displayIR || displayDepth);
             ImGui::NewLine();
             ImGuiExtensions::ADIRadioButton(
                 "Point Cloud and Depth", &viewSelection, 1, pointCloudEnable);
@@ -941,7 +941,7 @@ void ADIMainWindow::ShowPlaybackTree() {
 void ADIMainWindow::stopPlayback() {
     isPlaying = false;
     isPlayRecorded = false;
-    displyaDepth = true;
+    displayDepth = true;
     displayIR = true;
     cameraOptionsTreeEnabled = true;
     _isOpenDevice = true;
@@ -1077,7 +1077,7 @@ void ADIMainWindow::PlayRecorded() {
 
     if (_usingFSF) {
         displayIR = view->m_ctrl->m_recorder->_streamEnable.active_br;
-        displyaDepth = view->m_ctrl->m_recorder->_streamEnable.depth;
+        displayDepth = view->m_ctrl->m_recorder->_streamEnable.depth;
         displayPointCloud = view->m_ctrl->m_recorder->_streamEnable.x &&
                             view->m_ctrl->m_recorder->_streamEnable.y &&
                             view->m_ctrl->m_recorder->_streamEnable.depth;
@@ -1089,13 +1089,13 @@ void ADIMainWindow::PlayRecorded() {
             synchronizeDepthIRVideo();
         } else { //We're maybe displaying only Point Cloud
             displayIR = false;
-            displyaDepth = true;
+            displayDepth = true;
             synchronizePointCloudVideo();
             synchronizeDepthIRVideo();
         }
     } else {
         displayIR = true;
-        displyaDepth = true;
+        displayDepth = true;
         displayPointCloud = false;
         pointCloudEnable = false;
         synchronizeDepthIRVideo();
@@ -1103,7 +1103,7 @@ void ADIMainWindow::PlayRecorded() {
     if (displayIR) {
         displayActiveBrightnessWindow(overlayFlags);
     }
-    if (displyaDepth) {
+    if (displayDepth) {
         displayDepthWindow(overlayFlags);
     }
     if (displayPointCloud && viewSelection == 1) {
@@ -1378,13 +1378,13 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect) {
             /*displayIR = true;*/
         }
         displayIR = true;
-        displyaDepth = checkCameraSetToReceiveContent("depth");
+        displayDepth = checkCameraSetToReceiveContent("depth");
 
         synchronizeDepthIRVideo();
 
         displayActiveBrightnessWindow(overlayFlags);
 
-        if (displyaDepth)
+        if (displayDepth)
             displayDepthWindow(overlayFlags);
 
         break;
@@ -1430,8 +1430,8 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect) {
             initOpenGLIRTexture();
         }
 
-        displyaDepth = checkCameraSetToReceiveContent("depth");
-        if (displyaDepth) {
+        displayDepth = checkCameraSetToReceiveContent("depth");
+        if (displayDepth) {
 
             displayIR = false;
             synchronizePointCloudVideo();
@@ -1448,6 +1448,7 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect) {
             break;
         }
     }
+}
 
 void ADIMainWindow::displayActiveBrightnessWindow(
     ImGuiWindowFlags overlayFlags) {
@@ -1770,13 +1771,13 @@ void ADIMainWindow::synchronizeDepthIRVideo() {
         view->m_irFrameAvailable = false;
         view->ir_video_data_8bit = nullptr;
     }
-    if (displyaDepth) {
+    if (displayDepth) {
         view->m_depthFrameAvailable = true;
     } else {
         view->m_depthFrameAvailable = false;
         view->depth_video_data_8bit = nullptr;
     }
-    if (displayIR && displyaDepth) {
+    if (displayIR && displayDepth) {
         view->numOfThreads = 2;
     } else {
         view->numOfThreads = 1;
