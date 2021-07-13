@@ -529,7 +529,7 @@ namespace adiMainWindow
 		float customColorOpen = 0.2;
 		float customColorPause = 0.1;
 		bool displayIR = true;
-		bool displyaDepth = true;
+		bool displayDepth = true;
 		bool displayPointCloud = false;
 		int rawSeeker = 0;
 
