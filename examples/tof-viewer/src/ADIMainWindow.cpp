@@ -1358,6 +1358,7 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect) {
         }
         if (modeSelectChanged != modeSelect) {
             view->m_ctrl->StopCapture();
+            //TO DO: check if sleep is still needed.
             Sleep(500);
             prepareCamera(m_cameraModes[modeSelection].second);
             view->m_ctrl->StartCapture();
@@ -1403,9 +1404,12 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect) {
 
             initOpenGLPointCloudTexture();
             initOpenGLDepthTexture();
+            initOpenGLIRTexture();
         }
         if (modeSelectChanged != modeSelect) {
             view->m_ctrl->StopCapture();
+            //TO DO: check if sleep is still needed.
+            Sleep(500);
             prepareCamera(m_cameraModes[modeSelection].second);
             view->m_ctrl->StartCapture();
             view->m_ctrl->requestFrame();
@@ -1423,18 +1427,27 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect) {
             initOpenGLPointCloudTexture();
             /*displayIR = false;*/
             initOpenGLDepthTexture();
+            initOpenGLIRTexture();
         }
-        displayIR = false;
-        synchronizePointCloudVideo();
-        synchronizeDepthIRVideo();
-        displayPointCloudWindow(overlayFlags);
-        displayDepthWindow(overlayFlags);
 
-        break;
-    default:
-        break;
+        displyaDepth = checkCameraSetToReceiveContent("depth");
+        if (displyaDepth) {
+
+            displayIR = false;
+            synchronizePointCloudVideo();
+            synchronizeDepthIRVideo();
+            displayPointCloudWindow(overlayFlags);
+            displayDepthWindow(overlayFlags);
+        } else {
+            displayIR = true;
+            synchronizeDepthIRVideo();
+            displayActiveBrightnessWindow(overlayFlags);
+
+            break;
+        default:
+            break;
+        }
     }
-}
 
 void ADIMainWindow::displayActiveBrightnessWindow(
     ImGuiWindowFlags overlayFlags) {
