@@ -32,16 +32,7 @@
 #include "system_impl.h"
 #include "aditof/sensor_enumerator_factory.h"
 #include "aditof/sensor_enumerator_interface.h"
-#if defined(CHICONY_006)
-#include "camera_chicony_006.h"
-#elif defined(FXTOF1)
-#include "camera_fxtof1.h"
-#elif defined(ITOF)
 #include "camera_itof.h"
-#else
-#include "camera_96tof1.h"
-#endif
-
 #include <aditof/camera.h>
 #include <algorithm>
 #include <glog/logging.h>
@@ -61,19 +52,9 @@ buildCameras(std::unique_ptr<SensorEnumeratorInterface> enumerator) {
     enumerator->getTemperatureSensors(temperatureSensors);
 
     for (const auto &dSensor : depthSensors) {
-#if defined(CHICONY_006)
-        std::shared_ptr<Camera> camera = std::make_shared<CameraChicony>(
+
+        std::shared_ptr<Camera> camera = std::make_shared<CameraItof>(
             dSensor, storages, temperatureSensors);
-#elif defined(FXTOF1)
-        std::shared_ptr<Camera> camera = std::make_shared<CameraFxTof1>(
-            dSensor, storages, temperatureSensors);
-#elif defined(ITOF)
-std::shared_ptr<Camera> camera = std::make_shared<CameraItof>(
-            dSensor, storages, temperatureSensors);
-#else
-        std::shared_ptr<Camera> camera = std::make_shared<Camera96Tof1>(
-            dSensor, storages, temperatureSensors);
-#endif
         cameras.emplace_back(camera);
     }
 
