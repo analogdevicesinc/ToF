@@ -57,7 +57,7 @@ CameraItof::CameraItof(
     m_details.cameraId = "";
 
     // Define some of the controls of this camera
-    m_controls.emplace("initialization_config", std::string(CONFIG_DIR_NAME) + "/config_toro.json");
+    m_controls.emplace("initialization_config", "");
     m_controls.emplace("powerUp", "call");
     m_controls.emplace("powerDown", "call");
     m_controls.emplace("syncMode", "0, 0");
@@ -135,7 +135,7 @@ aditof::Status CameraItof::initialize() {
         if (cJSON_IsString(json_sensorFirmware_file) && (json_sensorFirmware_file->valuestring != NULL)) {
             if (m_sensorFirmwareFile.empty()) {
                 // save firmware file location
-                m_sensorFirmwareFile = std::string(CONFIG_DIR_NAME) + "/" + std::string(json_sensorFirmware_file->valuestring);
+                m_sensorFirmwareFile = std::string(json_sensorFirmware_file->valuestring);
             } else {
                 LOG(WARNING) << "Duplicate firmware file ignored: " << json_sensorFirmware_file->valuestring;
             }
@@ -146,7 +146,7 @@ aditof::Status CameraItof::initialize() {
         if (cJSON_IsString(json_ccb_calibration_file) && (json_ccb_calibration_file->valuestring != NULL)) {
             if (m_ccb_calibrationFile.empty()) {
                 // save calibration file location
-                m_ccb_calibrationFile = std::string(CONFIG_DIR_NAME) + "/" + std::string(json_ccb_calibration_file->valuestring);
+                m_ccb_calibrationFile = std::string(json_ccb_calibration_file->valuestring);
             } else {
                 LOG(WARNING) << "Duplicate calibration file ignored: " << json_ccb_calibration_file->valuestring;
             }
@@ -162,7 +162,7 @@ aditof::Status CameraItof::initialize() {
         const cJSON *json_depth_ini_file = cJSON_GetObjectItemCaseSensitive(config_json, "DEPTH_INI");
         if (cJSON_IsString(json_depth_ini_file) && (json_depth_ini_file->valuestring != NULL))
             // save depth ini file location
-            m_ini_depth = std::string(CONFIG_DIR_NAME) + "/" + std::string(json_depth_ini_file->valuestring);
+            m_ini_depth = std::string(json_depth_ini_file->valuestring);
 
         // Get optional power config
         const cJSON *json_vaux_pwr = cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_ENABLE");
@@ -652,15 +652,18 @@ aditof::Status CameraItof::loadConfigData(void) {
         }
     }
 
-    calFileSize = GetDataFileSize(m_ccb_calibrationFile.c_str());
-    m_calData = new uint8_t[calFileSize];
-    if (m_calData == NULL) {
-        return retErr;
-    }
-    status = LoadFileContents(m_ccb_calibrationFile.c_str(), m_calData, &calFileSize);
-    if (status == 0) {
-        LOG(INFO) << "Unable to load cfile contents\n";
-        return retErr;
+    if (!m_ccb_calibrationFile.empty()) {
+
+        calFileSize = GetDataFileSize(m_ccb_calibrationFile.c_str());
+        m_calData = new uint8_t[calFileSize];
+        if (m_calData == NULL) {
+            return retErr;
+        }
+        status = LoadFileContents(m_ccb_calibrationFile.c_str(), m_calData, &calFileSize);
+        if (status == 0) {
+	   LOG(INFO) << m_ccb_calibrationFile.c_str();
+           return retErr;
+        }
     }
 
     std::string depthData((char*)m_depthINIData, GetDataFileSize(m_ini_depth.c_str()));
