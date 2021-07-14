@@ -53,13 +53,11 @@ class TargetSensorEnumerator : public aditof::SensorEnumeratorInterface {
 
   private:
     enum class SensorType {
-        SENSOR_ADDI9036, //!< ADDI9036 DTOF sensor
         SENSOR_ADSD3100, //!< ADSD ITOF sensor
     };
 
     enum class TempSensorType {
-        SENSOR_ADT7410, //!< ADT7410 temperature sensor
-        SENSOR_TMP10X   //!< TMP101 / TMP102 temperature sensor
+        NO_TYPE
     };
 
     struct StorageInfo {
