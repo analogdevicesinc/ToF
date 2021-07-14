@@ -28,22 +28,11 @@ file(GLOB HEADERS
     ${CMAKE_SOURCE_DIR}/sdk/include/aditof/*.h
 )
 
-if (USE_CHICONY)
-    if (NOT RASPBERRYPI)
-        message( FATAL_ERROR "USE_CHICONY only works when on RaspberryPI. CMake will exit." )
-    endif()
-    set(CAMERA_DIR "cameras/chicony-006")
-    set(FRAME_DIR "cameras/dtof-frame")
-elseif(USE_FXTOF1)
-    set(CAMERA_DIR "cameras/ad-fxtof1-ebz")
-    set(FRAME_DIR "cameras/dtof-frame")
-elseif(USE_ITOF)
+
+if(USE_ITOF)
     set(CAMERA_DIR "cameras/itof-camera")
     set(FRAME_DIR "cameras/itof-frame")
     add_definitions(-DITOF)
-else ()
-    set(CAMERA_DIR "cameras/ad-96tof1-ebz")
-    set(FRAME_DIR "cameras/dtof-frame")
 endif()    
 
 if( WIN32 )
@@ -86,10 +75,6 @@ endif()
 
 if (NOT APPLE AND NOT WIN32)
     option(RUN_LDCONFIG "Run ldconfig after install." ON)
-endif()
-
-if ( USE_CHICONY AND USE_FXTOF1)
-    message( FATAL_ERROR "USE_CHICONY and USE_FXTOF1 are both selected. \nPlease select a single camera. CMake will exit." )
 endif()
 
 # Platform specific sources and headers
@@ -181,21 +166,6 @@ else()
             ${Protobuf_LIBRARIES}
     )
 endif()
-
-if (USE_CHICONY AND RASPBERRYPI)
-    if (NOT DEFINED CHICONY_EEPROM_SO)
-        set(CHICONY_EEPROM_SO "${CMAKE_SOURCE_DIR}/misc/chicony/libChicony_EEPROM.so")
-    endif()
-
-    add_library(chicony-eeprom SHARED IMPORTED)
-    set_target_properties(chicony-eeprom PROPERTIES
-        IMPORTED_LOCATION ${CHICONY_EEPROM_SO}
-        IMPORTED_NO_SONAME 1
-    )
-
-    target_link_libraries(${PROJECT_NAME} PRIVATE chicony-eeprom)
-endif()
-
 
 #LIBTOFI_LIBDIR_PATH - path to libtofi_config.so and libtofi_compute.so folder
 
