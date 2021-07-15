@@ -1,21 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(apps)
 
-if (DRAGONBOARD)
-        if (WITH_NETWORK)
-                add_subdirectory(server)
-        endif()
-        add_subdirectory(uvc-app)
-        add_subdirectory(daemon)
-endif()
-
-if (RASPBERRYPI)
-        if (WITH_NETWORK)
-                add_subdirectory(server)
-        endif()
-endif()
-
-
 if (NXP)
         if (WITH_NETWORK)
                 add_subdirectory(server)

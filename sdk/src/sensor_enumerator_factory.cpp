@@ -31,8 +31,7 @@
  */
 #include "aditof/sensor_enumerator_factory.h"
 
-#if defined(DRAGONBOARD) || defined(RASPBERRYPI) || defined(JETSON) ||         \
-    defined(XAVIER) || defined(XAVIERNX) || defined(TOYBRICK) || defined(NXP)
+#if defined(NXP)
 #define TARGET
 #endif
 
