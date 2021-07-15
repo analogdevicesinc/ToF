@@ -22,22 +22,6 @@ add_executable(${PROJECT_NAME} main.cpp ${SOURCES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11)
 
-if( WIN32 )
-        set(OS_SPECIFIC_DIR windows)
-elseif( APPLE )
-        set(OS_SPECIFIC_DIR macos)    
-elseif( NXP )
-        set(OS_SPECIFIC_DIR ${TARGET_STRING})
-        set(TARGET_SPECIFIC_DIR imx)
-elseif ( RASPBERRYPI )
-        set(OS_SPECIFIC_DIR ${TARGET_STRING})
-        set(TARGET_SPECIFIC_DIR raspberrypi)
-elseif ( UNIX )
-        set(OS_SPECIFIC_DIR linux)
-else()
-    message(FATAL_ERROR "Platform not supported")
-endif()
-
 # Copying config files and depth compute libraries from sdk/config, sdk/lib folders to build/examples/first-frame and build/first-frame/Debug or Release folders    
 add_custom_command( TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../../sdk/src/cameras/itof-camera/config $<TARGET_FILE_DIR:${PROJECT_NAME}>/${CONFIG_DIR_NAME}/.
