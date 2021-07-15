@@ -8,9 +8,7 @@ For more information about using the application on various platforms see the co
 
 | Platfrom | Documentation |
 | --------- | ----------- |
-| Windows PC | [User Guide](https://wiki.analog.com/resources/eval/user-guides/ad-96tof1-ebz/ug_windows) |
-| Linux PC | [User Guide](https://wiki.analog.com/resources/eval/user-guides/ad-96tof1-ebz/ug_linux) |
-| DragonBoard 410c | [User Guide](https://wiki.analog.com/resources/eval/user-guides/ad-96tof1-ebz/ug_db410c) |
+| Windows PC | [User Guide]() |
 
 ## Saving data to a file
 
