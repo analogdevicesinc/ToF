@@ -58,6 +58,8 @@ Source: "{#BinaryLocation}\sdk\Release\aditof.dll"; DestDir: "{app}"
 Source: "{#BinaryLocation}\examples\tof-viewer\Release\tof-viewer_config.json"; DestDir: "{app}";
 Source: "{#BinaryLocation}\examples\tof-viewer\Release\config\*"; DestDir: "{app}\config";
 Source: "{#BinaryLocation}\examples\tof-viewer\Release\ADIToFGUI.exe"; DestDir: "{app}";
+Source: "{#BinaryLocation}\examples\data_collect\Release\data_collect.exe"; DestDir: "{app}";
+Source: "{#BinaryLocation}\examples\first-frame\Release\first-frame.exe"; DestDir: "{app}";
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
