@@ -6,7 +6,6 @@ cache:
     - C:\projects\aditof-sdk-rework\deps\glog -> ci\appveyor\install_glog.bat
     - C:\projects\aditof-sdk-rework\deps\protobuf -> ci\appveyor\install_protobuf.bat
     - C:\projects\aditof-sdk-rework\deps\libwebsockets -> ci\appveyor\install_websockets.bat
-    - C:\tools\opencv -> ci\appveyor\install_opencv.bat
 
 install:
     - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" (
@@ -19,7 +18,6 @@ install:
     #- set generator=%generator:"=%
     - if not exist "C:\projects\libs" ( mkdir C:\projects\libs ) # an empty dir so that cmake doesn't complain when it copies the dir content to each example build dir. In non CI scenario, here is where depth compute libs would exist
     - if not exist "deps" ( mkdir deps )
-    - C:\projects\aditof-sdk-rework\ci\appveyor\install_opencv.bat
     - cd %APPVEYOR_BUILD_FOLDER%
 
 
@@ -41,8 +39,6 @@ build_script:
     - ps: pushd build
     - cmake -G "%generator%" -A "x64" \
       -DWITH_PYTHON=on \
-      -DWITH_OPENCV=on \
-      -DOpenCV_DIR="C:\tools\opencv\build\x64\vc15\lib" \
       -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk-rework\deps\protobuf\build_3_9_0x64\local_path\protobuf;C:\projects\aditof-sdk-rework\deps\libwebsockets\build_3_1_stablex64\local_path\websockets" \
       -DOPENSSL_INCLUDE_DIRS="C:\OpenSSL-Win64\include" \
       -DUSE_ITOF=ON
@@ -54,8 +50,6 @@ build_script:
     - ps: pushd build_debug
     - cmake -G "%generator%" -A "x64" \
       -DWITH_PYTHON=on \
-      -DWITH_OPENCV=on \
-      -DOpenCV_DIR="C:\tools\opencv\build\x64\vc15\lib" \
       -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk-rework\deps\protobuf\build_3_9_0x64\local_path\protobuf;C:\projects\aditof-sdk-rework\deps\libwebsockets\build_3_1_stablex64\local_path\websockets" \
       -DOPENSSL_INCLUDE_DIRS="C:\OpenSSL-Win64\include" \
       -DUSE_ITOF=ON
