@@ -41,7 +41,6 @@ build_script:
       -DWITH_PYTHON=on \
       -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk-rework\deps\protobuf\build_3_9_0x64\local_path\protobuf;C:\projects\aditof-sdk-rework\deps\libwebsockets\build_3_1_stablex64\local_path\websockets" \
       -DOPENSSL_INCLUDE_DIRS="C:\OpenSSL-Win64\include" \
-      -DUSE_ITOF=ON
       -DUSE_DEPTH_COMPUTE_STUBS=ON
       ..
     - cmake --build . --config "Release"
@@ -52,7 +51,6 @@ build_script:
       -DWITH_PYTHON=on \
       -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk-rework\deps\protobuf\build_3_9_0x64\local_path\protobuf;C:\projects\aditof-sdk-rework\deps\libwebsockets\build_3_1_stablex64\local_path\websockets" \
       -DOPENSSL_INCLUDE_DIRS="C:\OpenSSL-Win64\include" \
-      -DUSE_ITOF=ON
       -DUSE_DEPTH_COMPUTE_STUBS=ON
       ..
     - cmake --build . --config "Debug"
@@ -77,7 +75,6 @@ build_script:
       -DWITH_PYTHON=on \
       -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk-rework\deps\protobuf\build_3_9_0Win32\local_path\protobuf;C:\projects\aditof-sdk-rework\deps\libwebsockets\build_3_1_stableWin32\local_path\websockets" \
       -DOPENSSL_INCLUDE_DIRS="C:\OpenSSL-Win32\include" \
-      -DUSE_ITOF=ON
       -DUSE_DEPTH_COMPUTE_STUBS=ON
       ..
     - cmake --build . --config "Release"
@@ -89,7 +86,6 @@ build_script:
       -DWITH_PYTHON=on \
       -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk-rework\deps\protobuf\build_3_9_0Win32\local_path\protobuf;C:\projects\aditof-sdk-rework\deps\libwebsockets\build_3_1_stableWin32\local_path\websockets" \
       -DOPENSSL_INCLUDE_DIRS="C:\OpenSSL-Win32\include" \
-      -DUSE_ITOF=ON
       -DUSE_DEPTH_COMPUTE_STUBS=ON
       ..
     - cmake --build . --config "Debug"
