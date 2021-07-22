@@ -10,16 +10,9 @@
 
 // TODO: load this information from camera module EEPROM
 ModeInfo::modeInfo ModeInfo::g_modeInfoData[] = {
-    {0, 512, 512, 6, 1317, 896, 0},
-    {1, 320, 288, 9, 2162, 288, 0},
-    {2, 512, 512, 3, 1317, 448, 0},
     {3, 1024, 1024, 1, 12289, 64, 1},
-    {4, 640, 576, 10, 4321, 640, 1},
     {5, 1024, 1024, 10, 12289, 640, 1},
-    {6, 1024, 256, 10, 2240, 878, 0},
     {7, 512, 512, 10, 2195, 896, 1},
-    {8, 1024, 1024, 1, 12289, 64, 1},
-    {9, 512, 512, 3, 1317, 448, 0},
     {10, 1024, 1024, 9, 12289, 576, 0},
 };
 
@@ -34,8 +27,10 @@ ModeInfo *ModeInfo::getInstance() {
 }
 
 ModeInfo::modeInfo ModeInfo::getModeInfo(unsigned int mode) {
-    if (0 <= mode && mode < getNumModes()) {
-        return ModeInfo::g_modeInfoData[mode];
+    for (int m = 0; m < getNumModes(); ++m) {
+        modeInfo modeInfo = g_modeInfoData[m];
+        if (modeInfo.mode == mode)
+            return modeInfo;
     }
 
     return {0};
@@ -48,15 +43,19 @@ unsigned int ModeInfo::getNumModes() {
 
 
 aditof::Status convertCameraMode(const std::string &mode, uint8_t& convertedMode) {
-    aditof::Status status = aditof::Status::OK;
-
-    auto it = std::find(g_availableModes.begin(), g_availableModes.end(), mode);
-    if (it == g_availableModes.end()){
-        return aditof::Status::GENERIC_ERROR;
+    if (mode == "pcm") {
+        convertedMode = 3;
+    } else if (mode == "mp_pcm") {
+        convertedMode = 5;
+    } else if (mode == "qmp") {
+        convertedMode = 7;
+    } else if (mode == "mp") {
+        convertedMode = 10;
+    } else {
+        return aditof::Status::INVALID_ARGUMENT;
     }
 
-    convertedMode = (it - g_availableModes.begin());
-    return status;
+    return aditof::Status::OK;
 }
 
 ModeInfo::modeInfo ModeInfo::getModeInfo(const std::string& mode){
