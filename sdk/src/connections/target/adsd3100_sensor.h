@@ -104,45 +104,12 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
 
          const std::vector<aditof::DepthSensorFrameType> availableFrameTypes =
         {
-            //frame type
-            {"short_throw",  
-                {  //type, width, height
-                    {"depth", 512, 512}, 
-                    {"ir", 333, 333},
-                    {"embedded_header", 1, 128}
-                },
-                //width, height
-                4096, 64, 
-            },
-            {"long_throw",  
-                { 
-                    {"depth", 512, 512}, 
-                    {"ir", 333, 333},
-                    {"embedded_header", 1, 128}
-                },
-                4096, 130, 
-            },
-            {"aHat1",  
-                { 
-                    {"depth", 512, 512}, 
-                    {"ir", 333, 333},
-                    {"embedded_header", 1, 128}
-                },
-                4096, 64, 
-            },
             {"pcm",
                 {
                     {"ir", 1024, 1024},
                     {"embedded_header", 1, 128}
                 },
                 4096, 256, //TODO header size not counted here
-            },
-            {"long_throw_native", 
-                {
-                    {"ir", 4096, 256},
-                    {"embedded_header", 1, 128}
-                },
-                4096, 256,
             },
             {"mp_pcm", 
                 {
@@ -155,13 +122,6 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
                 },
                 4096, 2560, //TODO header size not counted here
             },
-            {"chip_char", 
-                {
-                    {"ir", 4096, 256},
-                    {"embedded_header", 1, 128}
-                },
-                4096, 256,
-            },
             {"qmp", 
                 {
                      {"raw", 512, 5120},
@@ -171,20 +131,6 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
                      {"embedded_header", 1, 128}
                 },
                 4096, 640,
-            },
-            {"pcm8", 
-                {
-                    {"ir", 1024, 1024},
-                    {"embedded_header", 1, 128}
-                },
-                4096, 256,
-            },
-            {"ahat2", 
-                {
-                    {"ir", 4096, 256},
-                    {"embedded_header", 1, 128}
-                },
-                4096, 192,
             },
             {"mp", 
                 {

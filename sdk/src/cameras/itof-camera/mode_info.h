@@ -14,16 +14,8 @@
 #include <ostream>
 
 const std::vector<std::string> g_availableModes = {
-    "short_throw",
-    "long_throw",
-    "aHat1", 
-    "pcm",
-    "long_throw_native",
     "mp_pcm",
-    "chip_char",
     "qmp",
-    "pcm8",
-    "ahat2",
     "mp"
 };
 
