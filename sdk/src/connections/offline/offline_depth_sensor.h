@@ -39,45 +39,12 @@ private:
 
           const std::vector<aditof::DepthSensorFrameType> availableFrameTypes =
         {
-            //frame type
-            {"short_throw",  
-                {  //type, width, height
-                    {"depth", 512, 512}, 
-                    {"ir", 333, 333},
-                    {"embedded_header", 1, 128}
-                },
-                //width, height
-                120, 130, 
-            },
-            {"long_throw",  
-                { 
-                    {"depth", 512, 512}, 
-                    {"ir", 333, 333},
-                    {"embedded_header", 1, 128}
-                },
-                120, 130, 
-            },
-            {"aHat1",  
-                { 
-                    {"depth", 512, 512}, 
-                    {"ir", 333, 333},
-                    {"embedded_header", 1, 128}
-                },
-                120, 130, 
-            },
             {"pcm",
                 {
                     {"ir", 4096, 256},
                     {"embedded_header", 1, 128}
                 },
                 4096, 256, //TODO header size not counted here
-            },
-            {"long_throw_native", 
-                {
-                    {"ir", 4096, 256},
-                    {"embedded_header", 1, 128}
-                },
-                4096, 256,
             },
             {"mp_pcm", 
                 {
@@ -89,28 +56,7 @@ private:
                 },
                 1024, (10240 + 1024 * 3), //TODO header size not counted here
             },
-            {"chip_char", 
-                {
-                    {"ir", 4096, 256},
-                    {"embedded_header", 1, 128}
-                },
-                4096, 256,
-            },
             {"qmp", 
-                {
-                    {"ir", 4096, 256},
-                    {"embedded_header", 1, 128}
-                },
-                4096, 256,
-            },
-            {"pcm8", 
-                {
-                    {"ir", 4096, 256},
-                    {"embedded_header", 1, 128}
-                },
-                4096, 256,
-            },
-            {"ahat2", 
                 {
                     {"ir", 4096, 256},
                     {"embedded_header", 1, 128}
