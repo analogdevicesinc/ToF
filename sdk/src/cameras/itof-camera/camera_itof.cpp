@@ -853,7 +853,7 @@ aditof::Status CameraItof::getCurrentModeInfo(ModeInfo::modeInfo &info) {
     }
 
     ModeInfo *pModeInfo = ModeInfo::getInstance();
-    if (pModeInfo && 0 <= convertedMode && convertedMode < pModeInfo->getNumModes()) {
+    if (pModeInfo) {
         info = pModeInfo->getModeInfo(convertedMode);
         return Status::OK;
     }
