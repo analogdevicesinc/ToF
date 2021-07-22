@@ -300,7 +300,7 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
         return status;
     }
 
-    if ((frameType == "pcm") || (frameType == "pcm8")) {
+    if ((frameType == "pcm")) {
         m_controls["enableDepthCompute"] = "off";
     }
     else {
@@ -399,7 +399,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     totalCaptures = std::atoi(totalCapturesStr.c_str());
 
     uint16_t *frameDataLocation = nullptr;
-    if ((m_details.frameType.type == "pcm") || (m_details.frameType.type == "pcm8")){
+    if ((m_details.frameType.type == "pcm")){
         frame->getData("ir", &frameDataLocation);
     }
     else {
