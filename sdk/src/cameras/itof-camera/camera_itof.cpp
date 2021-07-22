@@ -53,7 +53,7 @@ CameraItof::CameraItof(
     std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &tSensors)
     : m_depthSensor(depthSensor), m_devStarted(false), m_eepromInitialized(false),
       m_modechange_framedrop_count(0), m_xyzEnabled(false), m_loadedConfigData(false) {
-    m_details.mode = "short_throw";
+    m_details.mode = "mp_pcm";
     m_details.cameraId = "";
 
     // Define some of the controls of this camera
