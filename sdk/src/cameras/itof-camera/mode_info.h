@@ -14,6 +14,7 @@
 #include <ostream>
 
 const std::vector<std::string> g_availableModes = {
+    "pcm",  
     "mp_pcm",
     "qmp",
     "mp"
