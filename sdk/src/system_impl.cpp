@@ -70,26 +70,27 @@ Status SystemImpl::getCameraList(
 
     cameraList.clear();
     std::unique_ptr<SensorEnumeratorInterface> sensorEnumerator;
-    #ifdef HAS_OFFLINE
-    LOG(INFO) << "Creating offline sensor.";
+#ifdef HAS_OFFLINE
+    DLOG(INFO) << "Creating offline sensor.";
     sensorEnumerator = SensorEnumeratorFactory::buildOfflineSensorEnumerator();
-    #else
-    // At first, assume SDK is running on target
+    if (!sensorEnumerator) {
+        LOG(ERROR) << "Could not create OfflineSensorEnumerator";
+        return Status::GENERIC_ERROR;
+    }
+#elif defined(NXP)
     sensorEnumerator =
         SensorEnumeratorFactory::buildTargetSensorEnumerator();
     if (!sensorEnumerator) {
-        DLOG(INFO) << "Could not create TargetSensorEnumerator because SDK is "
-                      "not running on target.";
-        // Assume SDK is running on remote
-        sensorEnumerator = SensorEnumeratorFactory::buildUsbSensorEnumerator();
-        if (!sensorEnumerator) {
-            LOG(INFO) << "No USB Enumerator found.";
-
-            LOG(ERROR) << "Failed to create UsbSensorEnumerator";
-            return Status::GENERIC_ERROR;
-        }
+        LOG(ERROR) << "Could not create TargetSensorEnumerator";
+        return Status::GENERIC_ERROR;
     }
-    #endif
+#else
+    sensorEnumerator = SensorEnumeratorFactory::buildUsbSensorEnumerator();
+    if (!sensorEnumerator) {
+        LOG(ERROR) << "Could not create UsbSensorEnumerator";
+        return Status::GENERIC_ERROR;
+    }
+#endif
 
     sensorEnumerator->searchSensors();
     cameraList = buildCameras(std::move(sensorEnumerator));
