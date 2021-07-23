@@ -382,10 +382,6 @@ aditof::Status UsbDepthSensor::open() {
         return aditof::Status::INVALID_ARGUMENT;
     }
 
-    DLOG(INFO) << "Received the following message with "
-                    "available sensors from target: "
-                << responseMsg.DebugString();
-
     if (responseMsg.status() != usb_payload::Status::OK) {
         LOG(ERROR) << "Get available frame types operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
