@@ -875,16 +875,12 @@ aditof::Status CameraItof::cleanupTempFiles() {
 }
 
 aditof::Status CameraItof::powerUp() {
-    // TO DO
-    //defined in device_interface.h -> depth_sensor_interface.h
-    LOG(INFO) << "Not implemented yet";
+    // TO DO: decide if we need to keep this method
     return aditof::Status::OK;
 }
 
 aditof::Status CameraItof::powerDown() {
-    // TO DO
-    //defined in device_interface.h -> depth_sensor_interface.h
-    LOG(INFO) << "Not implemented yet";
+    // TO DO: decide if we need to keep this method
     return aditof::Status::OK;
 }
 
