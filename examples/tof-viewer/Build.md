@@ -39,12 +39,12 @@ cmake --build . --target ALL_BUILD --config Release
         * tofi_processor.obj
    * Paste to <*PATH*>\adi_tof_gui\build\Release AND <*PATH*>\adi_tof_gui\build\Debug folders
 
-* Finally we need to Copy and Paste the calibration files depending of the module used. For example, for our oro module
+* Finally we need to Copy and Paste the calibration files depending of the module used. For example, for our walden module
    * Copy from <*PATH*>\adi_tof_gui\external\aditof_cmos_sdk\src\sdk\config
      * camera_calibration.ccb
-        * camera_configuration_toro.cfg
+        * camera_configuration_walden.cfg
         * CCB_1909-0180039.ccb
-        * config_toro.json
+        * config_walden.json
         * RawToDepth
    * Paste to <*PATH*>\adi_tof_gui\build and <*PATH*>\adi_tof_gui\build\Release folders
 
