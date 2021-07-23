@@ -238,6 +238,8 @@ int main(int argc, char *argv[]) {
 
     Status status = Status::OK;
 
+    std::map<int, int> modeIndexMap = {{3, 0}, {5, 1}, {7, 2}, {10, 3}};
+
     std::map<std::string, docopt::value> args = docopt::docopt_private(kUsagePublic, kUsageInternal, {argv + 1, argv + argc}, true);
 
     // Parsing the arguments from command line
@@ -288,11 +290,13 @@ int main(int argc, char *argv[]) {
     }
     Fsfparams.n_frames = n_frames;
 
+    bool modeIsValid = false;
     // Parsing mode type
     if (args["--m"]) {
         mode = args["--m"].asLong();
-        if (mode > 10) {
-            LOG(ERROR) << "Invalid Mode.." << mode;
+        modeIsValid = (mode == 3 || mode == 5 || mode == 7 || mode == 10);
+        if (!modeIsValid) {
+            LOG(ERROR) << "Invalid Mode.." << mode << "The accepted values for mode are: 3, 5, 7, 10";
             return 0;
         }
     }
@@ -398,11 +402,11 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    if (mode < 0 || mode >= frameTypes.size()) {
-        LOG(ERROR) << "Camera mode: " << mode << "is out of range. The range for mode values is: 0 -" << frameTypes.size();
+    if (!modeIsValid) {
+        LOG(ERROR) << "Camera mode: " << mode << "is incorrect. The accepted values for mode are: 3, 5, 7, 10";
         return 0;
     }
-    status = camera->setFrameType(frameTypes[mode]);
+    status = camera->setFrameType(frameTypes[modeIndexMap[mode]]);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 0;
