@@ -1,7 +1,7 @@
 From 2e91c74d3461a947d6a9d71b493c3662719bb40f Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Wed, 7 Jul 2021 12:08:46 +0300
-Subject: [PATCH 15/15] drivers: media: spi: addicmos: Add custom control for
+Subject: [PATCH 15/16] drivers: media: spi: addicmos: Add custom control for
  config/claib writing
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>

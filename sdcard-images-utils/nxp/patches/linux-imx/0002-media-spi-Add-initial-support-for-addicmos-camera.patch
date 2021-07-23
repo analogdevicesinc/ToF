@@ -1,7 +1,7 @@
 From 68136a92df0e4b3faa3f844ff1a6902bf688c364 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Thu, 11 Mar 2021 11:26:52 +0200
-Subject: [PATCH 02/15] media: spi: Add initial support for addicmos camera
+Subject: [PATCH 02/16] media: spi: Add initial support for addicmos camera
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---

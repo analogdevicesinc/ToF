@@ -1,7 +1,7 @@
 From c29acf628bed8e4b4e4d38fb0a26b203fe383616 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Fri, 21 May 2021 12:05:06 +0300
-Subject: [PATCH 09/15] drivers: staging: media: imx: imx8-isi-cap: Add debug
+Subject: [PATCH 09/16] drivers: staging: media: imx: imx8-isi-cap: Add debug
  msg for dropped frames
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
