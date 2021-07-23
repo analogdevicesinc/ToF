@@ -405,8 +405,8 @@ aditof::Status UsbDepthSensor::open() {
         m_implData->handle.pVideoInputFilter, IID_IAMStreamConfig,
         (void **)&streamConfTest);
     if (FAILED(hr)) {
-        // TO DO: old IO library allowed this to fail. Investigate why.
-        LOG(WARNING) << "Failed FindInterface(PIN_CATEGORY_PREVIEW)";
+        // TO DO: old IO library allowed this to fail. Investigate why. Until then don't bother showing this error.
+        // LOG(WARNING) << "Failed FindInterface(PIN_CATEGORY_PREVIEW)";
     } else {
         CAPTURE_MODE = PIN_CATEGORY_PREVIEW;
         streamConfTest->Release();
