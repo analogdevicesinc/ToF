@@ -212,7 +212,6 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
     m_implData->m_dataLocations.emplace("frameData", m_implData->m_allData.get()); //frame data
     for (FrameDataDetails frameDetail : details.dataDetails){
         m_implData->m_dataLocations.emplace(frameDetail.type, m_implData->m_allData.get() + pos); //raw data
-        LOG(INFO) << frameDetail.type;
 
         pos  += getSubframeSize(frameDetail);
     }
