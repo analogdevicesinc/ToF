@@ -120,8 +120,10 @@ create_uvc() {
 	echo "	Creating UVC gadget functionality : $FUNCTION"
 	mkdir functions/$FUNCTION
 
+	create_frame $FUNCTION 4096 2560 uncompressed u
+	create_frame $FUNCTION 4096 2304 uncompressed u
+	create_frame $FUNCTION 4096 640 uncompressed u
 	create_frame $FUNCTION 4096 256 uncompressed u
-	create_frame $FUNCTION 4096 64 uncompressed u
 
 	mkdir functions/$FUNCTION/streaming/header/h
 	cd functions/$FUNCTION/streaming/header/h
