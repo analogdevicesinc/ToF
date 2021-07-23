@@ -134,7 +134,8 @@ aditof::Status FrameImpl::getData(const std::string &dataType,
         *dataPtr = m_implData->m_dataLocations[dataType];
     } else {
         dataPtr = nullptr;
-        LOG(ERROR) << dataType << " is not supported by this frame!";
+        if (dataType != "header") // TO DO: Silence this for now, handle it later
+            LOG(ERROR) << dataType << " is not supported by this frame!";
         return Status::INVALID_ARGUMENT;
     }
 
