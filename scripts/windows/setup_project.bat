@@ -189,9 +189,6 @@ if %answer_yes%==0 (
    call :yes_or_exit "Do you want to continue?"
    )
 
-set /P openSSLPath="Please enter OpenSSL root absolute path: "
-echo %openSSLPath%
-
 set /P openCVPath="Please enter opencv 3.4.1 root absolute path: "
 echo %openCVPath%
 
@@ -216,7 +213,7 @@ CALL :install_websockets %config_type% %generator%
 ::build the project with the selected options
 set CMAKE_OPTIONS=-DUSE_ITOF=1 -DWITH_PYTHON=off -DWITH_OPENCV=off
 pushd %build_dire%
-cmake -G %generator% -DUSE_ITOF=1 -DWITH_PYTHON=off -DWITH_OPENCV=off -DOpenCV_DIR="%openCVPath%\build\x64\%vs%\lib" -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" -DOPENSSL_INCLUDE_DIRS="%openSSLPath%\include" %source_dir%
+cmake -G %generator% -DUSE_ITOF=1 -DWITH_PYTHON=off -DWITH_OPENCV=off -DOpenCV_DIR="%openCVPath%\build\x64\%vs%\lib" -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir%
 cmake --build . --config %config_type%
 cmake --build . --config %config_type% --target copy-dll-opencv 
 cmake --build . --config %config_type% --target copy-dll-example
@@ -292,7 +289,7 @@ if not exist "libwebsockets" ( git clone --branch v3.1-stable --depth 1  https:/
 pushd libwebsockets
 if not exist "build_3_1_stable" ( mkdir build_3_1_stable )
 pushd build_3_1_stable
-cmake -DOPENSSL_ROOT_DIR="%openSSLPath%" -DCMAKE_INSTALL_PREFIX=%deps_install_dir%\libwebsockets -G %generator% ..
+cmake -DLWS_WITH_SSL=OFF -DCMAKE_INSTALL_PREFIX=%deps_install_dir%\libwebsockets -G %generator% ..
 cmake --build . --target install --config %configuration%
 popd
 popd
