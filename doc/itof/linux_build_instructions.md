@@ -7,7 +7,6 @@
 * CMake
 * Glog v0.3.5
 * Libwebsockets v3.1
-  * OpenSSL
 * Protocol Buffers v3.9.0
 
 ### Installing the dependencies
@@ -27,7 +26,6 @@ sudo cmake --build . --target install
 
 * Libwebsockets:
 ```console
-sudo apt-get install libssl-dev
 git clone --branch v3.1-stable --depth 1 https://github.com/warmcat/libwebsockets
 cd libwebsockets
 mkdir build_3_1 && cd build_3_1
