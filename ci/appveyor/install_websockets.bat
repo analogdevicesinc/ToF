@@ -26,7 +26,7 @@ pushd libwebsockets
 set build_dir="build_3_1_stable%folder_arch%"
 if not exist %build_dir% ( mkdir %build_dir% )
 pushd %build_dir%
-cmake  -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_TEST_SERVER=ON -DOPENSSL_ROOT_DIR="C:\OpenSSL-Win%arch_bits%" -DCMAKE_INSTALL_PREFIX="./local_path/websockets" -G "%generator%" -A "%arch%" ..
+cmake -DLWS_WITH_SSL=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_TEST_SERVER=ON -DCMAKE_INSTALL_PREFIX="./local_path/websockets" -G "%generator%" -A "%arch%" ..
 cmake --build . --target install --config %configuration%
 popd
 popd
