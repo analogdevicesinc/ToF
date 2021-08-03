@@ -29,7 +29,7 @@ sudo cmake --build . --target install
 git clone --branch v3.1-stable --depth 1 https://github.com/warmcat/libwebsockets
 cd libwebsockets
 mkdir build_3_1 && cd build_3_1
-cmake -DLWS_STATIC_PIC=ON -DCMAKE_INSTALL_PREFIX=/opt/websockets ..
+cmake -DLWS_WITH_SSL=OFF -DLWS_STATIC_PIC=ON -DCMAKE_INSTALL_PREFIX=/opt/websockets ..
 sudo cmake --build . --target install
 ```
 
