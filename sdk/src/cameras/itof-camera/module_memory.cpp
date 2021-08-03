@@ -223,7 +223,7 @@ std::string ModuleMemory::writeTempCFG(const uint8_t *const cfgFileData, const u
     return writeToTempFile(cfgFileData, length, "cfg");
 }
 
-Status ModuleMemory::readLegacyModuleCCB( std::string &tempJsonFile, std::vector<std::string> &tempFiles, std::string &ccbSerialNumber) {
+Status ModuleMemory::readLegacyModuleCCB( std::string &tempJsonFile, TOF_ModuleFiles_t &tempFiles, std::string &ccbSerialNumber) {
     // legacy module ccb data offset 1 sector
     uint32_t chunkDataAddr = 4096; 
 
@@ -259,9 +259,9 @@ Status ModuleMemory::readLegacyModuleCCB( std::string &tempJsonFile, std::vector
         if (!ccbFilename.empty()) {
             // Create temporary json configuration file
             tempJsonFile = writeTempJSON(ccbFilename, "");
-            tempFiles.clear();
-            tempFiles.push_back(tempJsonFile);
-            tempFiles.push_back(ccbFilename);    
+            tempFiles = {};
+            tempFiles.jsonFile = tempJsonFile;
+            tempFiles.ccbFile = ccbFilename;
         }
     }
 
@@ -279,7 +279,7 @@ Status ModuleMemory::readLegacyModuleCCB( std::string &tempJsonFile, std::vector
     return status;
 }
 
-Status ModuleMemory::readModuleData( std::string &tempJsonFile, std::vector<std::string> &tempFiles) {
+Status ModuleMemory::readModuleData( std::string &tempJsonFile, TOF_ModuleFiles_t &tempFiles) {
     // module data is always starts at address 0
     uint32_t chunkDataAddr = 0x0000;
 
@@ -365,13 +365,13 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, std::vector<std:
         return Status::GENERIC_ERROR;
     }
 
-    tempFiles.clear();
-    tempFiles.push_back(jsonFilename);
+    tempFiles = {};
+    tempFiles.jsonFile = jsonFilename;
     if (!ccbFilename.empty()) {
-        tempFiles.push_back(ccbFilename);
+        tempFiles.ccbFile = ccbFilename;
     }
     if (!cfgFilename.empty()) {
-        tempFiles.push_back(cfgFilename);
+        tempFiles.cfgFile = cfgFilename;
     }
 
     tempJsonFile = jsonFilename;

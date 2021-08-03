@@ -43,6 +43,7 @@
 // #include "aditof_internal.h"
 // #include "tofi_utils.h"
 #include "mode_info.h"
+#include "module_memory.h"
 
 /* Camera controls
  *
@@ -310,7 +311,7 @@ class CameraItof : public aditof::Camera {
     std::string m_ini_depth;
     bool m_xyzEnabled;
     uint16_t m_modechange_framedrop_count = 0;
-    std::vector<std::string> m_tempFiles;
+    aditof::TOF_ModuleFiles_t m_tempFiles;
     std::vector<aditof::DepthSensorFrameType> m_availableSensorFrameTypes;
     std::vector<std::pair<std::string, int32_t>> m_sensor_settings;
 };

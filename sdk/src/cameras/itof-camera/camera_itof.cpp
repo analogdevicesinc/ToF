@@ -52,7 +52,7 @@ CameraItof::CameraItof(
     std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms,
     std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &tSensors)
     : m_depthSensor(depthSensor), m_devStarted(false), m_eepromInitialized(false),
-      m_modechange_framedrop_count(0), m_xyzEnabled(false), m_loadedConfigData(false) {
+      m_modechange_framedrop_count(0), m_xyzEnabled(false), m_loadedConfigData(false), m_tempFiles{} {
     m_details.mode = "mp_pcm";
     m_details.cameraId = "";
 
@@ -866,14 +866,33 @@ aditof::Status CameraItof::getCurrentModeInfo(ModeInfo::modeInfo &info) {
 aditof::Status CameraItof::cleanupTempFiles() {
     using namespace aditof;
     Status status = Status::OK;
-    for (const std::string& filename : m_tempFiles) {
+
+    std::string filename = m_tempFiles.jsonFile;
+    if (!filename.empty()) {
         if( std::remove(filename.c_str()) != 0 ) {
             LOG(WARNING) << "Failed temp file delete: " << filename;
             status = Status::GENERIC_ERROR;
         }
     }
 
-    m_tempFiles.clear();
+    filename = m_tempFiles.ccbFile;
+    if (!filename.empty()) {
+        if( std::remove(filename.c_str()) != 0 ) {
+            LOG(WARNING) << "Failed temp file delete: " << filename;
+            status = Status::GENERIC_ERROR;
+        }
+    }
+
+    filename = m_tempFiles.cfgFile;
+    if (!filename.empty()) {
+        if( std::remove(filename.c_str()) != 0 ) {
+            LOG(WARNING) << "Failed temp file delete: " << filename;
+            status = Status::GENERIC_ERROR;
+        }
+    }
+
+    m_tempFiles = {};
+
     return status;
 }
 
@@ -923,7 +942,19 @@ aditof::Status CameraItof::applyCalibrationToFrame(uint16_t *frame, const unsign
 }
 
 aditof::Status CameraItof::saveCCBToFile(const std::string &filePath) const {
- // TO DO: implement this
-    LOG(INFO) << "saveCCBToFile";
+    if (filePath.empty()) {
+        LOG(ERROR) << "File path where CCB should be written is empty.";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    if (m_tempFiles.ccbFile.empty()) {
+        LOG(ERROR) << "CCB files is unavailable. Perhaps CCB content was not read from module.";
+        return aditof::Status::UNAVAILABLE;
+    }
+
+    std::ifstream source(m_tempFiles.ccbFile.c_str(), std::ios::binary);
+    std::ofstream destination(filePath, std::ios::binary);
+    destination << source.rdbuf();
+
     return aditof::Status::OK;
 }
