@@ -66,7 +66,7 @@ static const char kUsagePublic[] =
     R"(Data Collect.
     Usage:
       data_collect FILE
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--fsf <0|1>] [--wt <warmup>] [--ip <ip>] FILE
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--fsf <0|1>] [--wt <warmup>] [--ip <ip>] [--ccb FILE] FILE
       data_collect (-h | --help) 
 
     Arguments:
@@ -81,6 +81,7 @@ static const char kUsagePublic[] =
       --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
       --wt <warmup>      Warmup Time (in seconds) [default: 0]
       --ip <ip>          Camera IP
+      --ccb <FILE>       The path to store CCB content
 
     Valid mode (--m) options are:
         3: Passive IR
@@ -93,7 +94,7 @@ static const char kUsageInternal[] =
     R"(Data Collect.
     Usage:
       data_collect FILE
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--ft <frame_type>] [--fsf <0|1>] [--wt <warmup>] [--ip <ip>] FILE
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--ft <frame_type>] [--fsf <0|1>] [--wt <warmup>] [--ip <ip>] [--ccb FILE] FILE
       data_collect (-h | --help) 
 
     Arguments:
@@ -109,6 +110,7 @@ static const char kUsageInternal[] =
       --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
       --wt <warmup>      Warmup Time (in seconds) [default: 0]
       --ip <ip>          Camera IP
+      --ccb <FILE>       The path to store CCB content
 )";
 
 
@@ -341,6 +343,12 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    //Parsing CCB path
+    std::string ccbFilePath;
+    if (args["--ccb"]) {
+        ccbFilePath = args["--ccb"].asString();
+    }
+
     LOG(INFO) << "Output folder: " << folder_path;
     LOG(INFO) << "Mode: " << mode;
     LOG(INFO) << "Number of frames: " << n_frames;
@@ -350,6 +358,10 @@ int main(int argc, char *argv[]) {
 
     if (!ip.empty()) {
         LOG(INFO) << "Ip address is: " << ip;
+    }
+
+    if (!ccbFilePath.empty()) {
+        LOG(INFO) << "Path to store CCB content: " << ccbFilePath;
     }
 
     System system;
