@@ -62,6 +62,7 @@ CameraItof::CameraItof(
     m_controls.emplace("powerDown", "call");
     m_controls.emplace("syncMode", "0, 0");
     m_controls.emplace("loadModuleData", "call");
+    m_controls.emplace("saveModuleCCB", "");
 
     m_noArgCallables.emplace("powerUp", std::bind(&CameraItof::powerUp, this));
     m_noArgCallables.emplace("powerDown",
@@ -532,6 +533,8 @@ aditof::Status CameraItof::setControl(const std::string &control,
             uint8_t mode = 0;
             uint8_t level = 0;
             return setCameraSyncMode(mode, level);
+        } else if (control == "saveModuleCCB") {
+            return saveCCBToFile(value);
         } else {
             m_controls[control] = value;
         }
@@ -917,4 +920,10 @@ aditof::Status CameraItof::loadModuleData() {
 
 aditof::Status CameraItof::applyCalibrationToFrame(uint16_t *frame, const unsigned int mode) {
     return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status CameraItof::saveCCBToFile(const std::string &filePath) const {
+ // TO DO: implement this
+    LOG(INFO) << "saveCCBToFile";
+    return aditof::Status::OK;
 }
