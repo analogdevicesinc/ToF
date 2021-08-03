@@ -83,6 +83,12 @@ typedef struct tag_chunkHeader {
     uint32_t          chunkHeaderCRC;  ///< crc of the chunk header
 } TOF_ChunkHeader_t;
 
+typedef struct moduleFiles {
+    std::string jsonFile;
+    std::string ccbFile;
+    std::string cfgFile;
+} TOF_ModuleFiles_t;
+
 /**
  * @class ModuleMemory
  * @brief Helper class to read/write, generate and parse a camera module eeprom/flash image 
@@ -108,11 +114,11 @@ public:
      * The temporary files must be manually deleted before the application exits. 
      * @param[in] device - device interface connected to module memory flash/eeprom
      * @param[out] tempJsonFile - temporary filename for configuration json file.
-     * @param[out] tempFiles - list of all temporary file generated, these files should be deleted by the caller on close.
+     * @param[out] tempFiles - all temporary file generated, these files should be deleted by the caller on close.
      * @return aditof::Status no temporary files are created or returned on an error
      * @see aditof::Status
      */
-    Status readModuleData(std::string &tempJsonFile, std::vector<std::string> &tempFiles );
+    Status readModuleData(std::string &tempJsonFile, TOF_ModuleFiles_t &tempFiles );
 
     /**
      * @brief Write calibration (CCB file) and optionally configuration data (CFG file) to camera module Flash.
@@ -132,12 +138,12 @@ public:
      * The temporary files must be manually deleted before the application exits. 
      * @param[in] device - device interface connected to module memory flash/eeprom
      * @param[out] tempJsonFile - temporary filename for configuration json file.
-     * @param[out] tempFiles - list of all temporary file generated, these files should be deleted by the caller on close.
+     * @param[out] tempFiles - all temporary file generated, these files should be deleted by the caller on close.
      * @param[out] ccbSerialNumber - serial number from CCB header
      * @return aditof::Status no temporary files are created or returned on an error
      * @see aditof::Status
      */
-    Status readLegacyModuleCCB(std::string &tempJsonFile, std::vector<std::string> &tempFiles, std::string &ccbSerialNumber);
+    Status readLegacyModuleCCB(std::string &tempJsonFile, TOF_ModuleFiles_t &tempFiles, std::string &ccbSerialNumber);
 
 protected:
     bool verifyChunkHeader(const TOF_ChunkHeader_t *const pChunkHeader);
