@@ -429,8 +429,8 @@ int main(int argc, char *argv[]) {
         camera->setControl("enableDepthCompute", "off");
         Fsfparams.raw_frames = true;
     } else if ("depth" == frame_type) {
-        if ((frameTypes[mode] == "pcm") || (frameTypes[mode] == "pcm8")) {
-            LOG(ERROR) << frameTypes[mode] << " mode doesn't contain depth data, please set --ft (frameType) to raw.";
+        if (frameTypes[modeIndexMap[mode]] == "pcm") {
+            LOG(ERROR) << frameTypes[modeIndexMap[mode]] << " mode doesn't contain depth data, please set --ft (frameType) to raw.";
             return 0;
         }
         else {
