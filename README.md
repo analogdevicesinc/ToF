@@ -54,7 +54,9 @@ For more details about the SDK check the links below:
 | apps | Applications specific to various targets and hosts |
 | bindings | SDK bindings to other languages |
 | ci | Useful scripts for continuous integration |
+| cmake | Helper files for cmake |
 | doc | Documentation |
 | examples | Example code for the supported programming languages |
 | scripts | Useful development scripts |
+| sdcard-images-utils | Things required to build a SD card image for targets |
 | sdk | SDK source code |
