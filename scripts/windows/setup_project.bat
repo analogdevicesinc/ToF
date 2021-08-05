@@ -189,13 +189,6 @@ if %answer_yes%==0 (
    call :yes_or_exit "Do you want to continue?"
    )
 
-set /P openCVPath="Please enter opencv 3.4.1 root absolute path: "
-echo %openCVPath%
-
-::set the OpenCV variables
-set OPENCV_DIR=%openCVPath%\build
-set OPENCV_PATH=%openCVPath%\build\x64\%vs%\bin
-
 ::create the missing folders
 if not exist %build_dire% md %build_dire%
 if not exist %deps_dir% md %deps_dir%
@@ -213,10 +206,8 @@ CALL :install_websockets %config_type% %generator%
 ::build the project with the selected options
 set CMAKE_OPTIONS=-DUSE_ITOF=1 -DWITH_PYTHON=off -DWITH_OPENCV=off
 pushd %build_dire%
-cmake -G %generator% -DUSE_ITOF=1 -DWITH_PYTHON=off -DWITH_OPENCV=off -DOpenCV_DIR="%openCVPath%\build\x64\%vs%\lib" -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir%
+cmake -G %generator% -DWITH_PYTHON=off -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir%
 cmake --build . --config %config_type%
-cmake --build . --config %config_type% --target copy-dll-opencv 
-cmake --build . --config %config_type% --target copy-dll-example
 popd
 EXIT /B %ERRORLEVEL%
 
