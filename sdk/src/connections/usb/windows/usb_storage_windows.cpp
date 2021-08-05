@@ -93,8 +93,6 @@ Status UsbStorage::open(void *handle) {
         return aditof::Status::INVALID_ARGUMENT;
     }
 
-    DLOG(INFO) << "Received the following message: " << responseMsg.DebugString();
-
     if (responseMsg.status() != usb_payload::Status::OK) {
         LOG(ERROR) << "Open flash memory operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
@@ -149,8 +147,6 @@ Status UsbStorage::read(const uint32_t address, uint8_t *data,
         LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
         return aditof::Status::INVALID_ARGUMENT;
     }
-
-    DLOG(INFO) << "Received the following message: " << responseMsg.DebugString();
 
     if (responseMsg.status() != usb_payload::Status::OK) {
         LOG(ERROR) << "Read registers operation failed on UVC gadget";
@@ -209,8 +205,6 @@ Status UsbStorage::write(const uint32_t address, const uint8_t *data,
         return aditof::Status::INVALID_ARGUMENT;
     }
 
-    DLOG(INFO) << "Received the following message: " << responseMsg.DebugString();
-
     if (responseMsg.status() != usb_payload::Status::OK) {
         LOG(ERROR) << "Read registers operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
@@ -260,8 +254,6 @@ Status UsbStorage::getCapacity(size_t &nbBytes) const
         return aditof::Status::INVALID_ARGUMENT;
     }
 
-    DLOG(INFO) << "Received the following message: " << responseMsg.DebugString();
-
     if (responseMsg.status() != usb_payload::Status::OK) {
         LOG(ERROR) << "Read memory size operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
@@ -303,8 +295,6 @@ Status UsbStorage::close() {
         LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
         return aditof::Status::INVALID_ARGUMENT;
     }
-
-    DLOG(INFO) << "Received the following message: " << responseMsg.DebugString();
 
     if (responseMsg.status() != usb_payload::Status::OK) {
         LOG(ERROR) << "Close flash memory operation failed on UVC gadget";
