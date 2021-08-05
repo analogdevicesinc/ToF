@@ -53,30 +53,17 @@ git clone https://github.com/analogdevicesinc/aditof-sdk-rework
 cd aditof-sdk-rework
 mkdir build
 cd build
-cmake -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk\deps\glog\build_0_3_5\local_path\glog;C:\projects\aditof-sdk\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\aditof-sdk\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=off -DUSE_ITOF=1 ..
+cmake -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk\deps\glog\build_0_3_5\local_path\glog;C:\projects\aditof-sdk\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\aditof-sdk\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=off ..
 cmake --build . --config Release
 ```
 
 ## Building the SDK with examples
 
 ### Additional pre-requisites
-* OpenCV
+* None
 
 ### Installing the additional dependencies
-* OpenCV:
-1. Install the latest release of opencv from: https://opencv.org/releases/
-2. Then the following OpenCV environment variables need to be set:
-
-```
-OPENCV_DIR=path_to_opencv_installation_dir\build
-OPENCV_PATH=path_to_opencv_installation_dir\build\x64\vc15\bin
-```
-
-For instance, if OpenCV were to be installed at: C:\opencv, then the variable should look like this:
-```
-OPENCV_DIR=C:\opencv\build
-OPENCV_PATH=C:\opencv\build\x64\vc15\bin
-```
+* None
 
 ### Build SDK with examples and in Visual Studio
 - Generate the VisualStudio solution
@@ -84,7 +71,7 @@ OPENCV_PATH=C:\opencv\build\x64\vc15\bin
 cd aditof-sdk-rework
 mkdir build
 cd build
-cmake -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk\deps\glog\build_0_3_5\local_path\glog;C:\projects\aditof-sdk\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\aditof-sdk\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=on -DUSE_ITOF=1 ..
+cmake -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk\deps\glog\build_0_3_5\local_path\glog;C:\projects\aditof-sdk\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\aditof-sdk\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=on ..
 ```
 - Open 'adi_tof_project.sln' generated in 'aditof-sdk-rework\build' in MS Visual Studio 2019
 - Select 'Release' build
@@ -99,7 +86,7 @@ cmake -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk\deps\glog\build_0_3_5\local_pa
 ## Building the SDK in Visual Studio using the script
 
 ### Pre-requisites
-* OpenCV
+* None
 
 ### Steps to build the SDK
 - Run the script located in: 'aditof-sdk-rework\scripts\windows' with the suitable configuration parameters. <br>
