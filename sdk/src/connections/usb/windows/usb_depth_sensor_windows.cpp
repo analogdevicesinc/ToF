@@ -719,8 +719,6 @@ aditof::Status UsbDepthSensor::readRegisters(const uint16_t *address,
         return aditof::Status::INVALID_ARGUMENT;
     }
 
-    DLOG(INFO) << "Received the following message: " << responseMsg.DebugString();
-
     if (responseMsg.status() != usb_payload::Status::OK) {
         LOG(ERROR) << "Read registers operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
@@ -771,8 +769,6 @@ aditof::Status UsbDepthSensor::writeRegisters(const uint16_t *address,
         LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
         return aditof::Status::INVALID_ARGUMENT;
     }
-
-    DLOG(INFO) << "Received the following message: " << responseMsg.DebugString();
 
     if (responseMsg.status() != usb_payload::Status::OK) {
         LOG(ERROR) << "Read registers operation failed on UVC gadget";
