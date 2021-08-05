@@ -3,4 +3,4 @@
 ## Directory Structure
 | Directory | Description |
 | --------- | ----------- |
-| dragoboard410c | Utilities required to create SD card image for Dragonboard410c |
+| nxp | Utilities required to create SD card image for NXP platform |
