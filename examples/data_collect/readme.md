@@ -7,27 +7,29 @@
 
 ```
 Usage:
-    data_collect.exe FILE
-    data_collect.exe [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--fsf <0|1>] [--wt <warmup>] FILE
-    data_collect.exe (-h | --help) 
+      data_collect FILE
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--fsf <0|1>] [--wt <warmup>] [--ip <ip>] [--ccb FILE] FILE
+      data_collect (-h | --help)
 
-Arguments:
-      FILE                 Input config_default.json file (which has *.ccb and *.cfg)
+    Arguments:
+      FILE            Input config_default.json
 
-Options:
-      -h --help            Show this screen.
-      --f <folder>         Input folder to save data to. Max folder name size is 512. [default: .]
-      --n <ncapture>       Number of frames to capture. [default: 1]
-      --m <mode>           Mode to capture data in. [default: 10]
-      --ext_fsync <0|1>    External FSYNC [0: Internal 1: External] [default: 0]
-      --fsf <0|1>          FSF file type [0: Disable 1: Enable] [default: 0]
-      --wt <warmup>        Warmup Time (in seconds) before data capture [default: 0]
+    Options:
+      -h --help          Show this screen.
+      --f <folder>       Output folder (Max length: 512) [default: ./]
+      --n <ncapture>     Number of frames to capture. [default: 1]
+      --m <mode>         Mode to capture data in. [default: 10]
+      --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
+      --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
+      --wt <warmup>      Warmup Time (in seconds) [default: 0]
+      --ip <ip>          Camera IP
+      --ccb <FILE>       The path to store CCB content
 
     Valid mode (--m) options are:
-        3: Passive IR  
-        5: 1Mpixel (1024x1024) with PCM
-        7: QMpixel (512x512)
-       10: 1Mpixel (1024x1024)
+        3: Passive IR
+        5: 1Mpixel with PCM
+        7: QMpixel
+       10: 1Mpixel
  
 ``` 
 
