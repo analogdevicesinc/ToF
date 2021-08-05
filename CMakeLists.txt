@@ -100,9 +100,6 @@ if (WITH_ROS)
         add_subdirectory(bindings/ros)
 endif()
 
-############################### Install udev rules #######################################
-include (${CMAKE_SOURCE_DIR}/cmake/udev-rules-install.cmake)
-
 ############################### Installer #######################################
 configure_file(cmake/aditof-setup.iss.cmakein ${CMAKE_CURRENT_BINARY_DIR}/aditof-setup.iss @ONLY)
 
