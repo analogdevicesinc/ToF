@@ -304,9 +304,6 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
     if ((frameType == "pcm")) {
         m_controls["enableDepthCompute"] = "off";
     }
-    else {
-        m_controls["enableDepthCompute"] = "on";
-    }
 
     // Store the frame details in camera details
     m_details.frameType.type = (*frameTypeIt).type;
@@ -511,7 +508,7 @@ CameraItof::getAvailableControls(std::vector<std::string> &controls) const {
     using namespace aditof;
     Status status = Status::OK;
 
-    controls.empty();
+    controls.clear();
     controls.reserve(m_controls.size());
     for (const auto &item : m_controls) {
         controls.emplace_back(item.first);
@@ -615,11 +612,11 @@ aditof::Status CameraItof::initComputeLibrary(void) {
 }
 
 aditof::Status CameraItof::freeComputeLibrary(void) {
-    LOG(INFO) << "freeComputeLibrary";
 
     freeConfigData();
 
     if (NULL != m_tofi_compute_context) {
+        LOG(INFO) << "freeComputeLibrary";        
         FreeTofiCompute(m_tofi_compute_context);
         m_tofi_compute_context = NULL;
     }
@@ -670,7 +667,7 @@ aditof::Status CameraItof::loadConfigData(void) {
     }
 
     std::string depthData((char*)m_depthINIData, GetDataFileSize(m_ini_depth.c_str()));
-    int pos = depthData.find("xyzEnable", 0);
+    size_t pos = depthData.find("xyzEnable", 0);
 
     if (pos != std::string::npos) {
         if (depthData.at(pos + strlen("xyzEnable=")) == '1') {

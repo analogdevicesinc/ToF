@@ -27,7 +27,7 @@ ModeInfo *ModeInfo::getInstance() {
 }
 
 ModeInfo::modeInfo ModeInfo::getModeInfo(unsigned int mode) {
-    for (int m = 0; m < getNumModes(); ++m) {
+    for (unsigned int m = 0; m < getNumModes(); ++m) {
         modeInfo modeInfo = g_modeInfoData[m];
         if (modeInfo.mode == mode)
             return modeInfo;
