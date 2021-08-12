@@ -47,36 +47,36 @@ namespace aditof {
  * @class Frame
  * @brief Frame of a camera.
  */
-class SDK_API Frame {
+class Frame {
   public:
     /**
      * @brief Constructor
      */
-    Frame();
+    SDK_API Frame();
 
     /**
      * @brief Destructor
      */
-    ~Frame();
+    SDK_API ~Frame();
 
     /**
      * @brief Copy constructor
      */
-    Frame(const Frame &op);
+    SDK_API Frame(const Frame &op);
 
     /**
      * @brief Copy assignment
      */
-    Frame &operator=(const Frame &op);
+    SDK_API Frame &operator=(const Frame &op);
 
     /**
      * @brief Move constructor
      */
-    Frame(Frame &&) noexcept;
+    SDK_API Frame(Frame &&) noexcept;
     /**
      * @brief Move assignment
      */
-    Frame &operator=(Frame &&) noexcept;
+    SDK_API Frame &operator=(Frame &&) noexcept;
 
   public:
     /**
@@ -84,14 +84,14 @@ class SDK_API Frame {
      * @param details
      * @return Status
      */
-    Status setDetails(const FrameDetails &details);
+    SDK_API Status setDetails(const FrameDetails &details);
 
     /**
      * @brief Gets the current details of the frame
      * @param[out] details
      * @return Status
      */
-    Status getDetails(FrameDetails &details) const;
+    SDK_API Status getDetails(FrameDetails &details) const;
 
     /**
          * @brief Gets details of a type of data within the frame
@@ -99,7 +99,7 @@ class SDK_API Frame {
          * @param[out] details
          * @return Status
          */
-    Status getDataDetails(const std::string &dataType,
+    SDK_API Status getDataDetails(const std::string &dataType,
                           FrameDataDetails &details) const;
 
     /**
@@ -108,14 +108,14 @@ class SDK_API Frame {
      * @param[out] dataPtr
      * @return Status
      */
-    Status getData(const std::string &dataType, uint16_t **dataPtr);
+    SDK_API Status getData(const std::string &dataType, uint16_t **dataPtr);
 
     /**
      * @brief Gets the frames's list of attributes
      * @param[out] attributes
      * @return Status
      */
-    virtual Status
+    SDK_API virtual Status
     getAvailableAttributes(std::vector<std::string> &attributes) const;
 
     /**
@@ -124,7 +124,7 @@ class SDK_API Frame {
      * @param[in] value - Attribute value
      * @return Status
      */
-    virtual Status setAttribute(const std::string &attribute,
+    SDK_API virtual Status setAttribute(const std::string &attribute,
                                 const std::string &value);
 
     /**
@@ -133,7 +133,7 @@ class SDK_API Frame {
      * @param[out] value - Attribute value
      * @return Status
      */
-    virtual Status getAttribute(const std::string &attribute,
+    SDK_API virtual Status getAttribute(const std::string &attribute,
                                 std::string &value) const;
   private:
     std::unique_ptr<FrameImpl> m_impl;
