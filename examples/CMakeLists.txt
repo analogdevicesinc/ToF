@@ -3,7 +3,7 @@ project(examples)
 
 add_subdirectory(first-frame)
 add_subdirectory(data_collect)
-if (WIN32)
+if (NOT NXP)
     add_subdirectory(tof-viewer)
 endif()
 

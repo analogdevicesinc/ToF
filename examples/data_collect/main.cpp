@@ -18,15 +18,16 @@
 #include <vector>
 #include <ctime>
 #include <chrono>
+#include <thread>
 
 #ifdef _WIN32
-#include <thread>
 #include <windows.h>
 #else
 #include <sys/stat.h>
 #endif
 
-#define DATA_COLLECT_VERSION "1.2.0"
+#define MULTI_THREADED 1
+#define DATA_COLLECT_VERSION "1.3.0"
 #define EMBED_HDR_LENGTH 128
 
 enum : uint16_t {
@@ -38,8 +39,8 @@ using namespace aditof;
 
 #ifdef _WIN32
 int main(int argc, char *argv[]);
-DWORD WINAPI fileWriterThread(LPVOID lpParam);
 #endif
+
 typedef struct fsf_params {
     uint32_t n_frames;
     bool raw_frames;
@@ -66,53 +67,57 @@ static const char kUsagePublic[] =
     R"(Data Collect.
     Usage:
       data_collect FILE
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--fsf <0|1>] [--wt <warmup>] [--ip <ip>] [--ccb FILE] FILE
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--fsf <0|1>] [--wt <warmup>] [--ccb FILE] FILE
       data_collect (-h | --help) 
 
     Arguments:
-      FILE            Input config_default.json 
+      FILE            Input config_default.json file (which has *.ccb and *.cfg)
 
     Options:
       -h --help          Show this screen.
-      --f <folder>       Output folder (Max length: 512) [default: ./]
+      --f <folder>       Input folder to save data to. Max folder name size is 512. [default: ./]
       --n <ncapture>     Number of frames to capture. [default: 1]
       --m <mode>         Mode to capture data in. [default: 10]
       --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
       --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
-      --wt <warmup>      Warmup Time (in seconds) [default: 0]
-      --ip <ip>          Camera IP
+      --wt <warmup>      Warmup Time (in seconds) before data capture [default: 0]
       --ccb <FILE>       The path to store CCB content
 
     Valid mode (--m) options are:
-        3: Passive IR
-        5: 1Mpixel with PCM
-        7: QMpixel
-       10: 1Mpixel
+        0: QMpixel short range (512x512) 
+        3: Passive IR (1024x1024)
+        5: 1Mpixel with passive IR (1024x1024)
+        7: QMpixel (512x512)
+       10: 1Mpixel (1024x1024)
 )";
 // Hide 'ft' (frame_type) option from public doc string
 static const char kUsageInternal[] =
     R"(Data Collect.
     Usage:
       data_collect FILE
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--ft <frame_type>] [--fsf <0|1>] [--wt <warmup>] [--ip <ip>] [--ccb FILE] FILE
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--ft <frame_type>] [--fsf <0|1>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fps <setfps>] FILE
       data_collect (-h | --help) 
 
     Arguments:
-      FILE            Input config_default.json 
+      FILE            Input config_default.json file (which has *.ccb and *.cfg)
 
     Options:
       -h --help          Show this screen.
-      --f <folder>       Output folder [default: ./]
+      --f <folder>       Input folder to save data to. Max folder name size is 512. [default: ./]
       --n <ncapture>     Number of frames to capture. [default: 1]
       --m <mode>         Mode to capture data in. [default: 10]
       --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
-      --ft <frame_type>  Type of frame [default: raw]
+      --ft <frame_type>  Type of frame to be captured [default: raw]
       --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
-      --wt <warmup>      Warmup Time (in seconds) [default: 0]
-      --ip <ip>          Camera IP
-      --ccb <FILE>       The path to store CCB content
+      --wt <warmup>      Warmup Time (in seconds) before data capture [default: 0]
+      --ccb <FILE>       The path to store CCB content      
+      --ip <ip>          Camera IP      
+      --fps <setfps>     Set target FPS value [range: 50 to 200] 
 )";
 
+#ifdef MULTI_THREADED 
+void fileWriterTask( const thread_params * const pThreadParams );
+#endif
 
 /**
  * @brief The function which initializes the fsf parameters if the fsf flag is raised high for generating FSF files.
@@ -180,24 +185,24 @@ static aditof::FsfStatus fsf_setparameters(fsf_params *Fsfparams, FrameDetails *
 
 /**
  * @brief The function to set the fsf file stream and generating FSF files.
- * @param pThreadPrams: The thread parameters which stores all the required information of the respective frame
+ * @param pThreadParams: The thread parameters which stores all the required information of the respective frame
  * @return null
  */
-static void fsf_setstream(thread_params *pThreadPrams) {
+static void fsf_setstream( const thread_params * const pThreadParams) {
 
-    uint16_t *pData = pThreadPrams->pCaptureData;   // Pointer to depth/raw data returned by getData
-    uint8_t *pHeader = pThreadPrams->pHeaderData;  // Pointer to frame headers returned by getData
-    uint64_t loopcount = pThreadPrams->nFrameCount; // The for loop index for requesting number of frames
-    uint64_t frame_size = pThreadPrams->pFramesize;
+    uint16_t *pData = pThreadParams->pCaptureData;   // Pointer to depth/raw data returned by getData
+    uint8_t *pHeader = pThreadParams->pHeaderData;  // Pointer to frame headers returned by getData
+    uint64_t loopcount = pThreadParams->nFrameCount; // The for loop index for requesting number of frames
+    uint64_t frame_size = pThreadParams->pFramesize;
 
-    if (pThreadPrams->pFsfParams && pThreadPrams->pFsfParams->pFileHandle) {
-        for(std::size_t i = 0; i < pThreadPrams->pFsfParams->streams.size(); i++) {
+    if (pThreadParams->pFsfParams && pThreadParams->pFsfParams->pFileHandle) {
+        for(std::size_t i = 0; i < pThreadParams->pFsfParams->streams.size(); i++) {
             uint16_t *pdata = pData + (frame_size * i);
             uint16_t *pdataEnd = pdata + frame_size;
-            pThreadPrams->pFsfParams->streams[i].streamHeader.TimeStamp = static_cast<uint32_t>(loopcount);
-            pThreadPrams->pFsfParams->streams[i].streamData.assign((char *)pdata, (char *)pdataEnd);
-            pThreadPrams->pFsfParams->streams[i].optionalStreamHeader.assign((char *)pHeader + (EMBED_HDR_LENGTH * i), EMBED_HDR_LENGTH);                
-            pThreadPrams->pFsfParams->pFileHandle->SetStream(static_cast<uint32_t>(loopcount), static_cast<uint32_t>(i), pThreadPrams->pFsfParams->streams[i]);
+            pThreadParams->pFsfParams->streams[i].streamHeader.TimeStamp = static_cast<uint32_t>(loopcount);
+            pThreadParams->pFsfParams->streams[i].streamData.assign((char *)pdata, (char *)pdataEnd);
+            pThreadParams->pFsfParams->streams[i].optionalStreamHeader.assign((char *)pHeader + (EMBED_HDR_LENGTH * i), EMBED_HDR_LENGTH);                
+            pThreadParams->pFsfParams->pFileHandle->SetStream(static_cast<uint32_t>(loopcount), static_cast<uint32_t>(i), pThreadParams->pFsfParams->streams[i]);
         }
     }
 }
@@ -234,6 +239,8 @@ int main(int argc, char *argv[]) {
     uint32_t ext_frame_sync_en = 0;
     uint32_t warmup_time = 0;
     std::string ip;
+    uint32_t setfps = 0;
+    uint16_t fps_defaults[11] = {200, 105, 100, 200, 50, 50, 50, 105, 105, 50, 50};    
 
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
@@ -310,7 +317,19 @@ int main(int argc, char *argv[]) {
             LOG(ERROR) << "Invalid ip (--ip) from command line!";
             return 0;
         }
+    }    
+
+    //set FPS value
+    if (args["--fps"]) {
+        setfps = args["--fps"].asLong();
+        if (setfps > 200 || setfps < 50) {
+            LOG(ERROR) << "Invalid FPS value.." << setfps;
+            return 0;
+        }
     }
+    else {
+        setfps = fps_defaults[mode];
+    }    
 
     if (args["--ext_fsync"]) {
         ext_frame_sync_en = args["--ext_fsync"].asLong();
@@ -355,14 +374,14 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "Json file: " << json_file_path;
     LOG(INFO) << "Frame type is: " << frame_type;
     LOG(INFO) << "Warm Up Time is: " << warmup_time <<" seconds";
-
+    
     if (!ip.empty()) {
         LOG(INFO) << "Ip address is: " << ip;
     }
 
     if (!ccbFilePath.empty()) {
         LOG(INFO) << "Path to store CCB content: " << ccbFilePath;
-    }
+    }   
 
     System system;
     std::vector<std::shared_ptr<Camera>> cameras;
@@ -387,7 +406,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    status = camera->initialize();
+    status = camera->initialize();    
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
         return 0;
@@ -417,12 +436,7 @@ int main(int argc, char *argv[]) {
     if (!modeIsValid) {
         LOG(ERROR) << "Camera mode: " << mode << "is incorrect. The accepted values for mode are: 3, 5, 7, 10";
         return 0;
-    }
-    status = camera->setFrameType(frameTypes[modeIndexMap[mode]]);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not set camera frame type!";
-        return 0;
-    }    
+    }  
 
     // Set UVC format type and camera frame details
     if ("raw" == frame_type) {
@@ -436,20 +450,26 @@ int main(int argc, char *argv[]) {
         else {
             camera->setControl("enableDepthCompute", "on");
             Fsfparams.raw_frames = false;
-        }
+        }        
     }
     else {
         LOG(ERROR) << "unsupported frame type!";
         return 0;      
     }
 
+    status = camera->setFrameType(frameTypes[modeIndexMap[mode]]);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not set camera frame type!";
+        return 0;
+    }    
+
     char fsf_file[MAX_FILE_PATH_SIZE];  
     char time_buffer[128];
     time_t rawtime;
     time (&rawtime);
-    struct tm * timeinfo = localtime(&rawtime);        
-    strftime(time_buffer,sizeof(time_buffer),"%Y%m%d%H%M%S",timeinfo);
-
+    struct tm timeinfo;
+    localtime_s(&timeinfo, &rawtime);
+    strftime(time_buffer,sizeof(time_buffer),"%Y%m%d%H%M%S", &timeinfo);    
     if (fsf_flag) {
         err = snprintf(fsf_file, sizeof(fsf_file), "%s/%s_frames_%s.fsf", folder_path, frame_type.c_str(), time_buffer);
         if (err < 0) {
@@ -504,7 +524,16 @@ int main(int argc, char *argv[]) {
             return 0;
         }
     }
-    
+
+#if 0
+    camera->setControl("setFPS", std::to_string(setfps));
+    if (status != Status::OK) {
+        LOG(ERROR) << "Error setting camera FPS to " << setfps;
+        return 0;
+    }
+#endif    
+
+    // Program the camera with cfg passed, set the mode by writing to 0x200 and start the camera        
     status = camera->start();
     if (status != Status::OK) {
         LOG(ERROR) << "Could not start camera!";
@@ -586,7 +615,7 @@ int main(int argc, char *argv[]) {
 
         /* Since getData returns the pointer to the depth/raw data, which only main thread has access to,
             we need to copy depth frame to local memory and pass that to thread for file I/O, there is no drop in the throughput with this. */
-        frameBuffer = (uint16_t *)malloc(frame_size);
+        frameBuffer = new uint16_t[frame_size];
         if (frameBuffer == NULL) {
             LOG(ERROR) << "Can't allocate Memory for frame type data!";
             return 0;
@@ -605,32 +634,30 @@ int main(int argc, char *argv[]) {
         memcpy(frameBuffer, (uint8_t *)pData, frame_size);
         
         uint32_t header_data_size = EMBED_HDR_LENGTH * subFrames;
-        headerBuffer = (uint8_t *)malloc(header_data_size);
+        headerBuffer = new uint8_t[header_data_size];
         if (headerBuffer == NULL) {
             LOG(ERROR) << "Can't allocate Memory for frame header data!";
             return 0;
         }
 
-        // TO DO: uncomment this one the header becomes available
-        // uint16_t *pHeader = nullptr;
-        // status = frame.getData("embeded_header", &pHeader);
-        // if (status != Status::OK) {
-        //     LOG(WARNING) << "Could not get frame header data!";
-        //     return 0;
-        // }
-        // if (!pHeader) {
-        //     LOG(ERROR) << "no memory allocated in frame header";
-        //     return 0;
-        // }
-        // memcpy(headerBuffer, (uint8_t *)pHeader, header_data_size);
-
+#if 0   // TO DO: uncomment this one the header becomes available
+        uint16_t *pHeader = nullptr;
+        status = frame.getData("embeded_header", &pHeader);            
+        if (status != Status::OK) {
+            LOG(ERROR) << "Could not get frame header data!";
+            return 0;
+        }
+        if (!pHeader) {
+            LOG(ERROR) << "no memory allocated in frame header";
+            return 0;
+        }
+        memcpy(headerBuffer, (uint8_t *)pHeader, header_data_size);        
+#endif
+        
         // Create thread to handle the file I/O of copying raw/depth images to file
-#ifdef _WIN32
-
-        /* fileWriterThread handles the copying of raw/depth frames to a file */
-        DWORD threadID;
-        thread_params *pThreadParams = (thread_params *)malloc(sizeof(thread_params));
-        if (pThreadParams == NULL) {
+#ifdef MULTI_THREADED
+        thread_params * pThreadParams = new thread_params();
+        if (pThreadParams == nullptr) {
             LOG(ERROR) << "Thread param memory allocation failed";
             return 0;
         }
@@ -645,21 +672,20 @@ int main(int argc, char *argv[]) {
         pThreadParams->pFsfParams = (fsf_flag) ? &Fsfparams : NULL;
         pThreadParams->pFramesize = height * width;
 
-        HANDLE thandle = CreateThread(NULL, 0, fileWriterThread, pThreadParams, 0, &threadID);
-
-        if (thandle == NULL) {
-            LOG(ERROR) << "Thread creation failed - output file will not be created";
-            return 0;
-        }
-        else if (loopcount == n_frames -1) {
+        /* fileWriterThread handles the copying of raw/depth frames to a file */
+        std::thread fileWriterThread(fileWriterTask, const_cast<const thread_params * const>(pThreadParams));
+        if (loopcount == n_frames -1) {
             // wait for completion on final loop iteration
-            WaitForSingleObject(thandle, 2000);
+            fileWriterThread.join();
+        }
+        else {
+            fileWriterThread.detach();
         }
 #else
         char out_file[MAX_FILE_PATH_SIZE];
 
         if (!fsf_flag) {
-            snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%ld.bin", &folder_path[0], &frame_type[0], time_buffer, loopcount);
+            snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05u.bin", &folder_path[0], &frame_type[0], time_buffer, loopcount);
             std::ofstream rawFile(out_file, std::ios::out | std::ios::binary | std::ofstream::trunc);
             rawFile.write((const char *)&frameBuffer[0], frame_size);
             rawFile.close();
@@ -710,31 +736,31 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-#ifdef _WIN32
-DWORD WINAPI fileWriterThread(LPVOID lpParam) {
-    char out_file[MAX_FILE_PATH_SIZE];
-    thread_params *pThreadPrams = (thread_params *)lpParam;
+void fileWriterTask( const thread_params * const pThreadParams ) {
 
-    if (NULL == pThreadPrams->pFsfParams) {
-        snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%lld.bin", pThreadPrams->pFolderPath, pThreadPrams->pFrame_type, pThreadPrams->nFileTime,
-             pThreadPrams->nFrameCount);
+    if (nullptr == pThreadParams) {
+        return;
+    }
+
+    char out_file[MAX_FILE_PATH_SIZE] = {0};
+    if (nullptr == pThreadParams->pFsfParams) {
+        snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05lld.bin", pThreadParams->pFolderPath, pThreadParams->pFrame_type, pThreadParams->nFileTime,
+             pThreadParams->nFrameCount);
 
         std::ofstream rawFile(out_file, std::ios::out | std::ios::binary | std::ofstream::trunc );
-        rawFile.write((const char *)pThreadPrams->pCaptureData, pThreadPrams->nTotalCaptureSize);
+        rawFile.write((const char *)pThreadParams->pCaptureData, pThreadParams->nTotalCaptureSize);
         rawFile.close();
     }
     else {
-        fsf_setstream(pThreadPrams);
+        fsf_setstream(pThreadParams);
     }
 
-    if (pThreadPrams->pCaptureData != NULL) {
-        free((void *)pThreadPrams->pCaptureData);
+    if (pThreadParams->pCaptureData != nullptr) {
+        delete [] pThreadParams->pCaptureData;
     }
-    if (pThreadPrams->pHeaderData != NULL) {
-        free((void *)pThreadPrams->pHeaderData);
+    if (pThreadParams->pHeaderData != nullptr) {
+        delete [] pThreadParams->pHeaderData;
     }    
-    free(pThreadPrams);
-
-    return 0;
+    delete pThreadParams;
 }
-#endif
+

@@ -14,11 +14,12 @@ configure_file(ADIToFConfig.h.in ADIToFConfig.h)
 
 # adding submodules and subdirectories
 add_subdirectory(external/imgui)
-add_subdirectory(external/libusb)
-add_subdirectory(src/usbcommand/ADIUSBcmd)
 add_subdirectory(external/FSF)
 if( WIN32 )
     set(OS_SPECIFIC_DIR windows)
+elseif ( APPLE )
+    set(CMAKE_CXX_FLAGS "-x objective-c")
+    set(OS_SPECIFIC_SOURCES ${ADIToF_SOURCE_DIR}/fileDialog.mm) 	
 elseif ( UNIX )
     set(OS_SPECIFIC_DIR linux)
 else()
@@ -36,46 +37,50 @@ add_executable(ADIToFGUI
 			   ${ADIToF_SOURCE_DIR}/ADIImGUIExtensions.cpp
 			   ${ADIToF_SOURCE_DIR}/ADIController.cpp
 			   ${ADIToF_SOURCE_DIR}/ADIBinToFSF.cpp
+               ${ADIToF_SOURCE_DIR}/ADIOpenFile.cpp			   
+               ${OS_SPECIFIC_SOURCES}			   
 			   )
 
 # Link Libraries
-find_package(OpenGL REQUIRED)																		 
-target_link_libraries(ADIToFGUI PRIVATE "${PROJECT_SOURCE_DIR}/external/imgui/src/examples/libs/glfw/lib-vc2010-64/glfw3.lib")
+find_package(OpenGL REQUIRED)
+if( WIN32 )																	 
+	target_link_libraries(ADIToFGUI PRIVATE "${PROJECT_SOURCE_DIR}/external/imgui/src/examples/libs/glfw/lib-vc2010-64/glfw3.lib")
+elseif(APPLE)
+    target_link_libraries(ADIToFGUI PRIVATE "${PROJECT_SOURCE_DIR}/external/imgui/lib/macOS/glfw/lib-x86_64/libglfw3.a")
+elseif (UNIX)
+    message(FATAL_ERROR "Linux glfw3 library required, must be built or downloaded")
+endif()
+
 target_link_libraries(ADIToFGUI PRIVATE ${OPENGL_gl_LIBRARY})
 target_link_libraries(ADIToFGUI PRIVATE
-					  imgui::imgui					  
-					  ADIUSBcmd
-					  LibUSB::LibUSB
+					  imgui::imgui
 					  aditof
 					  fsf
 					  fsf_common
 					 )
-set_target_properties(ADIToFGUI PROPERTIES
-LINK_FLAGS /SUBSYSTEM:WINDOWS
-)
+
+					 if( WIN32 )					 
+	set_target_properties(ADIToFGUI PROPERTIES
+	LINK_FLAGS /SUBSYSTEM:WINDOWS
+	)
+	elseif(APPLE)
+    set(CMAKE_CXX_FLAGS "-framework Carbon -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo")
+endif()
 
 target_include_directories(ADIToFGUI PUBLIC
-				"${PROJECT_BINARY_DIR}"
-				"${PROJECT_SOURCE_DIR}/include"
-                                "${PROJECT_SOURCE_DIR}/external/imgui/src/examples/libs/gl3w"
-                                "${PROJECT_SOURCE_DIR}/external/imgui/src/examples/libs/glfw/include"
-                                "${PROJECT_SOURCE_DIR}/external/imgui/src/examples"
-                                "${PROJECT_SOURCE_DIR}/external/imgui/src"
-				"${PROJECT_SOURCE_DIR}/src/usbcommand/ADIUSBcmd"
-				"${PROJECT_SOURCE_DIR}/src"
-                                "${PROJECT_SOURCE_DIR}/external/libusb/src/libusb"
-                                "${PROJECT_SOURCE_DIR}/external/FSF/src/FSF/src"
-                                "${PROJECT_SOURCE_DIR}/external/FSF/src/FSF/include"
+						"${PROJECT_BINARY_DIR}"
+						"${PROJECT_SOURCE_DIR}/include"
+						"${PROJECT_SOURCE_DIR}/external/imgui/src/examples/libs/gl3w"
+						"${PROJECT_SOURCE_DIR}/external/imgui/src/examples/libs/glfw/include"
+						"${PROJECT_SOURCE_DIR}/external/imgui/src/examples"
+						"${PROJECT_SOURCE_DIR}/external/imgui/src"
+						"${PROJECT_SOURCE_DIR}/src"
+						"${PROJECT_SOURCE_DIR}/external/FSF/src/FSF/src"
+						"${PROJECT_SOURCE_DIR}/external/FSF/src/FSF/include"
 				)
-# Still needed?
+
 target_include_directories(ADIToFGUI PUBLIC
                         "${CMAKE_SOURCE_DIR}/sdk/src/cameras/itof-camera")
-
-#target_include_directories(ADIToFGUI PUBLIC
-#                        "${PROJECT_SOURCE_DIR}/external/aditof_sdk/src/sdk/include"
-#                        "${PROJECT_SOURCE_DIR}/external/aditof_sdk/src/sdk/include/aditof"
-#                        "${PROJECT_SOURCE_DIR}/external/aditof_sdk/src/examples/aditof-demo")
-#endif()
 
 # Copying necessary dlls from SDK and the necessary config files
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD

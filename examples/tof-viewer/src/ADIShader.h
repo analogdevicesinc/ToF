@@ -141,14 +141,16 @@ namespace adiviewer
 			{
 				// Reset the active shader if we're about to delete it
 				//
-				GLint currentProgramId;
-				glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgramId);
-				if (ID == static_cast<GLuint>(currentProgramId))
-				{
-					glUseProgram(0);
-				}
+                if (ID != 0) {
+                    GLint currentProgramId;
+                    glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgramId);
+                    if (ID == static_cast<GLuint>(currentProgramId))
+                    {
+                        glUseProgram(0);
+                    }
 
-				glDeleteProgram(ID);
+                    glDeleteProgram(ID);
+                }
 			}
 
 			Program(const Program&) = delete;

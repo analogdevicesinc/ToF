@@ -527,6 +527,11 @@ aditof::Status UsbDepthSensor::start() {
     using namespace aditof;
     Status status = Status::OK;
 
+    if (nullptr == m_implData->handle.pControl) {
+        LOG(WARNING) << "USB interface not active";
+        return Status::UNAVAILABLE;
+    }
+
     // RUN THE STREAM
     HRESULT hr = m_implData->handle.pControl->Run();
     if (FAILED(hr)) {
@@ -542,6 +547,11 @@ aditof::Status UsbDepthSensor::stop() {
     Status status = Status::OK;
 
     LOG(INFO) << "Stopping device";
+
+    if (nullptr == m_implData->handle.pControl) {
+        LOG(WARNING) << "USB interface not active";
+        return Status::UNAVAILABLE;
+    }
 
     HRESULT hr = m_implData->handle.pControl->Stop();
     if (FAILED(hr)) {

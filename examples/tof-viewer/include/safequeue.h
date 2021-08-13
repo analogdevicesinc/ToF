@@ -26,6 +26,14 @@ class SafeQueue {
         return element;
     }
 
+    bool erase() {
+        std::unique_lock<std::mutex> lock(m_mutex);
+        while (!m_queue.empty()) {
+            m_queue.pop();
+        }
+        return true;
+    }    
+
     bool empty() const { return m_queue.empty(); }
 
   private:

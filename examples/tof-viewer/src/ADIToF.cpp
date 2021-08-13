@@ -15,6 +15,27 @@
 
 #include "ADIMainWindow.h"
 
+
+#if defined(__APPLE__) && defined(__MACH__)
+class GOOGLE_GLOG_DLL_DECL glogLogSink : public google::LogSink {
+ public:
+    glogLogSink(AppLog *log) : applog(log) {} 
+    ~glogLogSink() = default;
+   virtual void send(google::LogSeverity severity, const char* full_filename,
+                    const char* base_filename, int line,
+                    const struct ::tm* tm_time,
+                    const char* message, size_t message_len)  {
+                        if (applog){
+                            std::string msg(message, message_len);
+                            msg += "\n";
+                            applog->AddLog( msg.c_str(), nullptr );
+                        }
+                    };
+private:
+AppLog *applog = nullptr;
+};
+#endif
+
 ADIViewerArgs ProcessArgs(int argc, char** argv);
 
 ADIViewerArgs ProcessArgs(int argc, char** argv)
@@ -47,8 +68,17 @@ ADIViewerArgs ProcessArgs(int argc, char** argv)
 
 int main(int argc, char **argv)
 {
+    google::InitGoogleLogging(argv[0]);
+	FLAGS_logtostderr = 0;
+		
 	auto view = std::make_shared<adiMainWindow::ADIMainWindow>();//Create a new instance
-	
+
+#if defined(__APPLE__) && defined(__MACH__)
+    //forward glog messages to GUI log windows
+    glogLogSink *sink = new glogLogSink(view->getLog());
+    google::AddLogSink(sink);
+#endif
+
 	if (view->startImGUI(ProcessArgs(argc, argv)))
 	{
 		view->render();

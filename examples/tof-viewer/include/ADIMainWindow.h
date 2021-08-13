@@ -17,6 +17,7 @@
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
 #include <linmath.h>
+#include <aditof/system.h>
 
 /**
 * @brief Manage monitor resolution
@@ -189,11 +190,6 @@ namespace adiMainWindow
 		void SetHighDpi();
 		bool _isHighDPI = false;
 
-		/**
-		* @brief Fetch Supported Devices
-		*/
-		std::vector<std::pair<size_t, std::vector<std::pair<uint16_t, uint16_t>>>> getInstalledDeviceCount(void);
-		std::shared_ptr<adiviewer::ADIView> view = nullptr;
 		std::thread initCameraWorker;
 		bool cameraWorkerDone = false;
 
@@ -266,7 +262,10 @@ namespace adiMainWindow
 			Translation
 		};
 
+        AppLog *getLog() { return &my_log; }
+
 	private:
+		std::shared_ptr<adiviewer::ADIView> view = nullptr;    
 		AppLog my_log;
 
 		/**
@@ -412,12 +411,12 @@ namespace adiMainWindow
 		*/
 		void GetHoveredImagePix(ImVec2 &hoveredImagePixel, ImVec2 imageStartPos, ImVec2 mousePos, ImVec2 displayDimensions);
 		int m_selectedDevice = -1;
-		std::vector<std::pair<int, std::string>> m_connectedDevices;
+		std::vector<std::pair<int, std::string> > m_connectedDevices;
 		
 		/**
 		* @brief Returns current application path
 		*/
-		char* getCurrentPath();
+		std::string getCurrentPath();
 
 		/**
 		* @brief			Prepares the camera with the selected mode
@@ -448,14 +447,19 @@ namespace adiMainWindow
 		void displayPointCloudWindow(ImGuiWindowFlags overlayFlags);
 
 		/**
-		* @brief Checks if the frame type set in camera has a certain
-		*        content. (e.g. 'depth', 'ir', 'xyz', etc.)
-		*/
+		 * @brief Checks if the frame type set in camera has a certain
+		 *        content. (e.g. 'depth', 'ir', 'xyz', etc.)
+		 */
 		bool checkCameraSetToReceiveContent(const std::string &contentType);
+
+        /**
+         * @brief Return the current selected camera object
+         */
+        std::shared_ptr<aditof::Camera> getActiveCamera();
 
 		bool m_skipNetworkCameras;
 		std::string m_cameraIp;
-		std::vector<std::pair<int, std::string>> m_configFiles;
+		std::vector<std::pair<int, std::string> > m_configFiles;
 		int configSelection = 0;
 
 		std::string modes[3] = { "near", "medium", "far" };
@@ -463,7 +467,7 @@ namespace adiMainWindow
 		bool captureBlendedEnabled = true;
 		const ImVec2 InvalidHoveredPixel = ImVec2(-1, -1);
 		std::vector<std::string> _cameraModes;
-		std::vector<std::pair<int, std::string>> m_cameraModes;
+		std::vector<std::pair<int, std::string> > m_cameraModes;
 
 		const ImVec2 depthWinSize = ImVec2(0, 0);
 		ImVec2 sourceDepthImageDimensions;
@@ -483,7 +487,7 @@ namespace adiMainWindow
 		bool showDepthWindow = false;
 		bool isADICCD = false;
 		bool isADIToF = false;				
-		int modeSelection = 10;//mp as default mode selection
+		int modeSelection = 0;
 		int modeSelectChanged = 0;//flag when changed
 		bool isPlaying = false;
 		bool isRecording = false;
@@ -523,11 +527,11 @@ namespace adiMainWindow
 		bool setLogWinPositionOnce = true;
 		bool setPointCloudPositionOnce = true;
 		bool _isOpenDevice;
-		float customColorPlay = 0.4;
-		float customColorStop = 0.0;
-		float customColorSave = 0.3;
-		float customColorOpen = 0.2;
-		float customColorPause = 0.1;
+		float customColorPlay = 0.4f;
+		float customColorStop = 0.0f;
+		float customColorSave = 0.3f;
+		float customColorOpen = 0.2f;
+		float customColorPause = 0.1f;
 		bool displayIR = true;
 		bool displayDepth = true;
 		bool displayPointCloud = false;

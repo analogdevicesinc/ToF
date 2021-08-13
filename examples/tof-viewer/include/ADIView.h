@@ -9,15 +9,15 @@
 #ifndef ADIVIEW_H
 #define ADIVIEW_H
 
-#include <aditof/frame.h>
 #include <fstream>
+#include <stdio.h>
 
+#include <aditof/frame.h>
+#include <ADIShader.h>
 #include "ADIController.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include <stdio.h>
-#include <ADIShader.h>
 
 
 namespace adiviewer
@@ -76,7 +76,7 @@ namespace adiviewer
 		*/
 		uint8_t* imageRender(uint16_t* image);
 		std::shared_ptr<adicontroller::ADIController> m_ctrl;
-		std::shared_ptr<aditof::Frame> m_capturedFrame;
+		std::shared_ptr<aditof::Frame> m_capturedFrame = nullptr;
 		std::condition_variable m_barrierCv;
 		std::mutex m_imshowMutex;
 		int frameHeight = 0;

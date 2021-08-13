@@ -95,6 +95,7 @@ int AditofDemoRecorder::startPlayback(const std::string &fileName, int &fps) {
                         sizeof(unsigned int));
 
     m_frameDataDetails.clear();
+    
     for (unsigned int i = 0; i < numDetails; ++i) {
         aditof::FrameDataDetails fDetails;
 
