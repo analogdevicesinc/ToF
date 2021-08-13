@@ -148,7 +148,7 @@ ADI_FSF_OPTIONS_H_FUNC void ShowFSFOptionsGUI(int mainWindowWidth, int mainWindo
 	{
 		if (OptionspFsfRead != nullptr)
 		{
-			for (int strCtr = 0; strCtr < optfileHeader.nStreams; strCtr++)
+			for (uint32_t strCtr = 0; strCtr < optfileHeader.nStreams; strCtr++)
 			{
 				OptionspFsfRead->GetStreamInfo(strCtr, optstreamInfo);
 

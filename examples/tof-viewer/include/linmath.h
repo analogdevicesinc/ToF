@@ -596,14 +596,14 @@ LINMATH_H_FUNC void mat4x4_arcball(mat4x4 R, mat4x4 M, vec2 _a, vec2 _b, float s
 	float z_a = 0.;
 	float z_b = 0.;
 
-	if(vec2_len(a) < 1.) {
+	if(vec2_len(a) < 1.f) {
 		z_a = sqrtf(1. - vec2_mul_inner(a, a));
 	} else {
 		vec2_norm(a, a);
 	}
 
-	if(vec2_len(b) < 1.) {
-		z_b = sqrtf(1. - vec2_mul_inner(b, b));
+	if(vec2_len(b) < 1.f) {
+		z_b = sqrtf(1.f - vec2_mul_inner(b, b));
 	} else {
 		vec2_norm(b, b);
 	}

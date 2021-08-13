@@ -4,10 +4,9 @@
 /* This software is proprietary to Analog Devices, Inc. and its licensors.      */
 /*                                                                              */
 /********************************************************************************/
-#include "ADIController.h"
+#include <ADIController.h>
 #include <glog/logging.h>
 #include <iostream>
-#include <windows.h>
 
 using namespace adicontroller;
 
@@ -22,7 +21,7 @@ ADIController::ADIController(const std::string &cameraIp) : m_cameraInUse(-1), m
 	{
         // Use the first camera that is found
         m_cameraInUse = 0;
-        auto camera = m_cameras[static_cast<unsigned int>(m_cameraInUse)];
+//auto camera = m_cameras[static_cast<unsigned int>(m_cameraInUse)];
         m_framePtr = std::make_shared<aditof::Frame>();
     }
 	else 
@@ -60,13 +59,16 @@ void ADIController::StopCapture()
 	}
 	std::unique_lock<std::mutex> lock(m_requestMutex);
 	m_stopFlag = true;
+    m_cameras[m_cameraInUse]->stop();
 	lock.unlock();
 	m_requestCv.notify_one();
 	if (m_workerThread.joinable()) 
 	{
 		m_workerThread.join();
-		Sleep(2);
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
 	}
+    m_queue.erase();
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));        
 }
 
 std::string ADIController::getMode() const 
@@ -75,7 +77,7 @@ std::string ADIController::getMode() const
 	return "";
 }
 
-void ADIController::setMode(const std::string& mode)
+void ADIController::setMode(const std::string &mode)
 {
 	if (m_cameraInUse == -1) 
 	{
@@ -83,6 +85,7 @@ void ADIController::setMode(const std::string& mode)
 	}
 	auto camera = m_cameras[static_cast<unsigned int>(m_cameraInUse)];
 	camera->setMode(mode);
+//camera->setFrameType(mode);
 }
 
 std::vector<std::string> ADIController::getAvailableModes(std::vector<std::string>& availableModes)
@@ -107,13 +110,11 @@ std::pair<float, float> ADIController::getTemperature()
 	
 	auto camera = m_cameras[static_cast<unsigned int>(m_cameraInUse)];
 	
-	//aditof::DeviceInterface* device = camera->getDevice();
-	//std::shared_ptr<aditof::DeviceInterface> device = camera->getDevice();//for CCD
-	// DeviceInterface* device = camera->getDevice();//for CMOS
-
-	// device->readAfeTemp(returnValue.first);
-	// device->readLaserTemp(returnValue.second);
-
+	
+	// TODO: Implement
+	//std::shared_ptr<aditof::DepthSensorInterface> device = camera->getSensor();
+	//device->readRegistersTemp(returnValue.first);
+	//device->readLaserTemp(returnValue.second);
 	return returnValue;
 }
 
@@ -131,7 +132,7 @@ aditof::Status ADIController::readAFEregister(uint16_t* address,
 	uint16_t noOfEntries) 
 {
 
-	auto depthSensor =
+	auto depthSensor = 
 		m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getSensor();
 	return depthSensor->readRegisters(address, data, noOfEntries);
 }
@@ -255,8 +256,7 @@ int ADIController::getRangeMax() const
 	aditof::CameraDetails cameraDetails;
 	m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getDetails(
 		cameraDetails);
-	return cameraDetails.maxDepth; //for CCD
-	//return cameraDetails.range;//for CMOS now
+	return cameraDetails.maxDepth;
 }
 
 int ADIController::getRangeMin() const
@@ -264,8 +264,7 @@ int ADIController::getRangeMin() const
 	aditof::CameraDetails cameraDetails;
 	m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getDetails(
 		cameraDetails);
-	return cameraDetails.minDepth; //for CCD
-	//return cameraDetails.range;//for CMOS now
+	return cameraDetails.minDepth;
 }
 
 int ADIController::getbitCount() const
@@ -273,6 +272,5 @@ int ADIController::getbitCount() const
 	aditof::CameraDetails cameraDetails;
 	m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getDetails(
 		cameraDetails);
-	return cameraDetails.bitCount; //for CCD
-	//return cameraDetails.range;//for CMOS now
+	return cameraDetails.bitCount;
 }

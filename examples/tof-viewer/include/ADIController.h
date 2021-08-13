@@ -7,15 +7,15 @@
 #ifndef ADICONTROLLER_H
 #define ADICONTROLLER_H
 
-#include <aditof/camera.h>
-#include <aditof/depth_sensor_interface.h>
-#include <aditof/frame.h>
-#include <aditof/system.h>
-
 #include <atomic>
 #include <functional>
 #include <memory>
 #include <thread>
+
+#include <aditof/depth_sensor_interface.h>
+#include <aditof/camera.h>
+#include <aditof/frame.h>
+#include <aditof/system.h>
 
 #include "ADIToFRecorder.h"
 #include "safequeue.h"
@@ -47,13 +47,23 @@ namespace adicontroller
 		void StopCapture();
 
 		/**
+		* @brief			  Set the camera index for active camera
+		* @param cameraIndex	Index of camera in SDK system camera list
+		*/
+		void setCamera(const int cameraIndex) { m_cameraInUse = cameraIndex; }
+
+		/**
 		* @brief	Deprecated. There is another getMode from SDK.
 		*			We may keep this in case needed for future
 		*			imagers.
 		*/
 		std::string getMode() const;
 
-		void setMode(const std::string& mode);
+		/**
+		* @brief			Set the camera mode, directly to SDK.
+		* @param	mode	Name of mode declared on SDK
+		*/
+		void setMode(const std::string &mode);
 
 		/**
 		* @brief	Fetch all supported modes. The information comes directly from SDK
@@ -174,12 +184,10 @@ namespace adicontroller
 		void captureFrames();
 
 	private:
-		//aditof::System m_system;		
-		//std::vector<std::shared_ptr<aditof::Camera>> m_cameras;//for CCD
 		int m_cameraInUse;
 		std::thread m_workerThread;
 		std::atomic<bool> m_stopFlag;
-		SafeQueue<std::shared_ptr<aditof::Frame>> m_queue;
+		SafeQueue<std::shared_ptr<aditof::Frame> > m_queue;
 		std::mutex m_mutex;
 		std::mutex m_requestMutex;
 		std::condition_variable m_requestCv;
