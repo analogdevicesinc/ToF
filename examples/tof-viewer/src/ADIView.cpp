@@ -46,6 +46,10 @@ ADIView::ADIView(std::shared_ptr<ADIController> &ctrl, const std::string &name)
 
 ADIView::~ADIView() 
 {
+    if (m_ctrl->hasCamera()) {
+        m_ctrl->StopCapture();
+    }
+
     std::unique_lock<std::mutex> lock(m_frameCapturedMutex);
     m_stopWorkersFlag = true;
     lock.unlock();
@@ -71,7 +75,7 @@ void ADIView::initVideo()
 
 uint8_t* ADIView::imageRender(uint16_t* image)
 {
-	uint8_t* processedImage;	
+	uint8_t* processedImage = nullptr;
 	return processedImage;
 }
 
@@ -149,9 +153,7 @@ void ADIView::render()
 					{						
 						// TODO: set camera mode here
 						int selectedMode = 0;
-						//m_ctrl->setMode(modes[selectedMode]);//for CCD
-						//m_ctrl->setMode(mode_name_enum::mode_name_short_throw);//for CMOS now
-						m_ctrl->setMode("mp");//Changed this to be compliant with Master branch on the sdk. 8/31/2020
+						m_ctrl->setMode("mp");
 
 						m_ctrl->StartCapture();
 						m_ctrl->requestFrame();
@@ -212,26 +214,23 @@ void ADIView::render()
 				
 				aditof::System system;
 				aditof::Status status;
-                std::vector<std::shared_ptr<aditof::Camera>> cameras;
+				std::vector<std::shared_ptr<aditof::Camera>> cameras;
 
-				// Initialize TOF system
+				// Initialize TOF system				
 				status = system.getCameraList(cameras);
 
 				// Initialize first TOF camera
-                std::shared_ptr<aditof::Camera> camera1 = cameras.front();
+				std::shared_ptr<aditof::Camera> camera1 = cameras.front();
 				status = camera1->initialize();
 
-
-
 				// Choose the frame type the camera should produce
-                std::vector<std::string> frameTypes;
+				std::vector<std::string> frameTypes;
 				camera1->getAvailableFrameTypes(frameTypes);
 				status = camera1->setFrameType(frameTypes.front());
+				
 				// Place the camera in a specific mode
 				std::vector<std::string> modes;
 				camera1->getAvailableModes(modes);
-				//status = camera1->setMode(modes.front());//for CCD
-				//status = camera1->setMode(modes.front());//for CMOS (not used)
 
 				// Create a TOF frame and request data from the TOF camera
 				aditof::Frame frame;
@@ -239,7 +238,7 @@ void ADIView::render()
 				status = camera1->start();
 				status = camera1->requestFrame(&frame);
 				uint16_t* data;
-                frame.getData("depth", &data);
+				frame.getData("depth", &data);
 
                 aditof::FrameDataDetails frameDepthDetails;
                 status = frame.getDataDetails("depth", frameDepthDetails);
@@ -305,8 +304,7 @@ void ADIView::_displayIrImage()
 		
 		lock.unlock(); // Lock is no longer needed
 
-        m_capturedFrame->getData("ir", &ir_video_data);
-		
+		m_capturedFrame->getData("ir", &ir_video_data);
 		
         aditof::FrameDataDetails frameIrDetails;
         frameIrDetails.height = 0;
@@ -327,9 +325,11 @@ void ADIView::_displayIrImage()
 		{
 			//ir Data is a "width size as 16 bit data. Need to normalize to an 8 bit data
 			//It is doing a width x height x 3: Resolution * 3bytes (BGR)
-			ir_video_data_8bit[bgrSize++] = (uint8_t)(ir_video_data[dummyCtr] * (255.0 / max_value_of_IR_pixel));
-			ir_video_data_8bit[bgrSize++] = (uint8_t)(ir_video_data[dummyCtr] * (255.0 / max_value_of_IR_pixel));
-			ir_video_data_8bit[bgrSize++] = (uint8_t)(ir_video_data[dummyCtr] * (255.0 / max_value_of_IR_pixel));
+			double pix = ir_video_data[dummyCtr] * (255.0 / max_value_of_IR_pixel);
+			pix = (pix >= 255.0) ? 255.0 : pix; //clip to 8bit range;
+			ir_video_data_8bit[bgrSize++] = (uint8_t)(pix);
+			ir_video_data_8bit[bgrSize++] = (uint8_t)(pix);
+			ir_video_data_8bit[bgrSize++] = (uint8_t)(pix);
 		}
 		
 
@@ -381,9 +381,9 @@ void ADIView::_displayDepthImage()
 		//CPU process power/cycles?
 		//Capture time
 		t1 = std::chrono::high_resolution_clock::now();
-		
-		uint16_t* data;
-        localFrame->getData("depth", &depth_video_data);
+
+		uint16_t* data;		
+		localFrame->getData("depth", &depth_video_data);
 		t2 = std::chrono::high_resolution_clock::now();
 
 		time_span = t2 - t1;//Delayed process time
@@ -391,7 +391,7 @@ void ADIView::_displayDepthImage()
 		millisecondsPast = time_span;
         aditof::FrameDataDetails frameDepthDetails;
         localFrame->getDataDetails("depth", frameDepthDetails);
-		
+
         frameHeight = static_cast<int>(frameDepthDetails.height);
         frameWidth = static_cast<int>(frameDepthDetails.width);
 
@@ -404,19 +404,18 @@ void ADIView::_displayDepthImage()
 		/*int max = m_ctrl->getRangeMax();
 		int min = m_ctrl->getRangeMin();*/
 
+		//TODO: Implement temp display
+#if 0
         std::string attrVal;
         m_capturedFrame->getAttribute("total_captures", attrVal);
         uint8_t totalcaptures = static_cast<uint8_t>(std::stoi(attrVal));
 
-		// Get a subframe to get temperature and time stamp
-        //uint16_t* subframeHeader = &headerData[0];
-		//TODO: Find the right equation
+
+		// TODO: get proper equation per module
 		//temperature_c = subframeHeader[aditof::TEMP_SENSOR_ADC];
 		//temperature_c = (temperature_c - 1493.55) * 5.45;
-		
+#endif
 
-		
-		
 		float fRed = 0.f;
 		float fGreen = 0.f;
 		float fBlue = 0.f;		
@@ -428,7 +427,7 @@ void ADIView::_displayDepthImage()
 		for (size_t dummyCtr = 0; dummyCtr < imageSize; dummyCtr++)
 		{
 			//It is doing a width x height x 3: Resolution * 3bytes (BGR)
-			if ((depth_video_data[dummyCtr] == 0))
+			if (depth_video_data[dummyCtr] == 0)
 			{//If pixel is actual zero, leave it as zero
 				depth_video_data_8bit[bgrSize++] = 0;
 				depth_video_data_8bit[bgrSize++] = 0;
@@ -463,7 +462,7 @@ void ADIView::_displayBlendedImage()
 	std::shared_ptr<aditof::Frame> localFrame = m_capturedFrame;
 
 	uint16_t* irData;
-    localFrame->getData("ir", &irData);
+	localFrame->getData("ir", &irData);
 }
 
 void ADIView::_displayPointCloudImage()
@@ -488,7 +487,7 @@ void ADIView::_displayPointCloudImage()
 		lock.unlock(); // Lock is no longer needed
 
 		//Get XYZ table
-        m_capturedFrame->getData("xyz", &pointCloud_video_data);
+		m_capturedFrame->getData("xyz", &pointCloud_video_data);
         aditof::FrameDataDetails frameXyzDetails;
         frameXyzDetails.height = 0;
         frameXyzDetails.width = 0;
@@ -602,7 +601,6 @@ void ADIView::startCamera()
 		1, 2, 3		// second triangle
 	};
 
-	texture;
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
 
