@@ -878,8 +878,10 @@ void ADIMainWindow::stopPlayback() {
 	displayIR = true;
 	cameraOptionsTreeEnabled = true;
 	_isOpenDevice = true;
-	view->m_ctrl->stopPlayback();
-	view->m_ctrl->pausePlayback(false);
+	if (view && view->m_ctrl) {
+		view->m_ctrl->stopPlayback();
+		view->m_ctrl->pausePlayback(false);
+	}
 	isPlayRecordPaused = false;
 	stopPlayCCD();	
 	LOG(INFO) << "Stream has been stopped.";
@@ -1053,20 +1055,22 @@ void ADIMainWindow::stopPlayCCD() {
 	setDepthWinPositionOnce = true;
 	setPointCloudPositionOnce = true;
 	dephtWinCtr = 0;
-	view->m_ctrl->StopCapture();
-	view->m_capturedFrame = nullptr;
-	view->ir_video_data = nullptr;
-	view->depth_video_data = nullptr;
-	view->pointCloud_video_data = nullptr;
-	view->m_ctrl->panicStop = false;
+	if (view) {
+		if (view->m_ctrl) {
+			view->m_ctrl->StopCapture();
+			view->m_ctrl->panicStop = false;
+		}
+		view->m_capturedFrame = nullptr;
+		view->ir_video_data = nullptr;
+		view->depth_video_data = nullptr;
+		view->pointCloud_video_data = nullptr;
+	}
 	openGLCleanUp();
 	isPlaying = false;
 	isPlayRecorded = false;
 
-    
-
-	// Program the camera with cfg passed, set the mode by writing to 0x200 and start the camera
-	if (aditof::Status::OK != getActiveCamera()->stop()) {
+	std::shared_ptr<aditof::Camera> camera = getActiveCamera();
+	if (!camera || aditof::Status::OK != camera->stop()) {
 		LOG(ERROR) << "Error, failed on stop camera!";
 	}
 }
@@ -1173,9 +1177,15 @@ void ADIMainWindow::InitCamera() {
 
 	camera->getAvailableFrameTypes(_cameraModes);
 
+	int modeIndex = 0;
 	for (int i = 0; i < _cameraModes.size(); ++i) {
-		modeSelection = i;
-		m_cameraModes.emplace_back(i, _cameraModes.at(i));
+#ifndef ENBABLE_PASSIVE_IR
+		if ("pcm" == _cameraModes.at(i)) {
+			continue;
+		}
+#endif
+		modeSelection = modeIndex;	
+		m_cameraModes.emplace_back(modeIndex++, _cameraModes.at(i));
 	}
 
 	cameraWorkerDone = true;
@@ -1184,6 +1194,11 @@ void ADIMainWindow::InitCamera() {
 void ADIMainWindow::prepareCamera(std::string mode) {
 	aditof::Status status = aditof::Status::OK;
 	std::vector<aditof::FrameDetails> frameTypes;
+
+	if (mode.empty()) {
+		my_log.AddLog("Error: Invalid camera mode!\n");
+		return;
+	}
 
 	status = getActiveCamera()->setFrameType(mode);
 	if (status != aditof::Status::OK) {
@@ -1257,13 +1272,10 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect) {
 
     if (view->m_ctrl->hasCamera()) {
 		// Mode switch or starup
-		if (modeSelectChanged != modeSelect || captureSeparateEnabled) {
+		if (modeSelectChanged != modeSelect || 
+			captureSeparateEnabled || !isPlaying) {
 			if (modeSelectChanged != modeSelect) {
 				view->m_ctrl->StopCapture();
-			}
-			else if (!waitForCameraReady()) {
-				stopPlayCCD();
-				return;
 			}
 
 			prepareCamera(m_cameraModes[modeSelection].second);
@@ -1277,15 +1289,12 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect) {
 			captureSeparateEnabled = false;
 			modeSelectChanged = modeSelect;
 
-			if (modeSelectChanged != modeSelect) {
-				if (!waitForCameraReady()) {
-					stopPlayCCD();
-					return;
-				}
+			if (!waitForCameraReady()) {
+				stopPlayCCD();
+				return;
 			}
         }
-
-		if (viewSelectionChanged != viewSelect) {
+		else if (viewSelectionChanged != viewSelect) {
 			viewSelectionChanged = viewSelect;
 			openGLCleanUp();
 			initOpenGLIRTexture();
@@ -2015,5 +2024,9 @@ bool ADIMainWindow::checkCameraSetToReceiveContent(
 }
 
 std::shared_ptr<aditof::Camera> ADIMainWindow::getActiveCamera() {
+	if (!view || !view->m_ctrl || view->m_ctrl->m_cameras.empty() || 
+		m_selectedDevice < 0 || m_selectedDevice >= view->m_ctrl->m_cameras.size()) {
+		return nullptr;
+	}
     return view->m_ctrl->m_cameras[m_selectedDevice];
 }

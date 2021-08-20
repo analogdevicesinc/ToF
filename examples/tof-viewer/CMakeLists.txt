@@ -6,6 +6,8 @@ cmake_minimum_required(VERSION 3.10)
 # set the project name
 project(ADIToFGUI)
 
+option(ENBABLE_PASSIVE_IR "Allow passive IR (PCM) mode" OFF)
+
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -81,6 +83,11 @@ target_include_directories(ADIToFGUI PUBLIC
 
 target_include_directories(ADIToFGUI PUBLIC
                         "${CMAKE_SOURCE_DIR}/sdk/src/cameras/itof-camera")
+
+if (ENBABLE_PASSIVE_IR)
+	message(STATUS "Building with Passive IR Mode enabled")
+	add_definitions(-DENBABLE_PASSIVE_IR)
+endif()
 
 # Copying necessary dlls from SDK and the necessary config files
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
