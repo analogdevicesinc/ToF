@@ -55,7 +55,7 @@ const std::vector<std::string> availableAttributes = {
 
 struct FrameImpl::ImplData {
     std::unordered_map<std::string, uint16_t *> m_dataLocations;
-    std::shared_ptr<uint16_t> m_allData;
+    std::shared_ptr<uint16_t[]> m_allData;
     size_t allDataNbBytes;
 };
 
