@@ -1,0 +1,63 @@
+From 434e495d4475d31524b261ecf268b52d23a55470 Mon Sep 17 00:00:00 2001
+From: Ye Li <ye.li@nxp.com>
+Date: Thu, 27 May 2021 03:13:14 -0700
+Subject: [PATCH 1/2] LFU-143 tcpc: Add i2c read/write return check
+
+Fix coverity Issue: 2970631/5409463 Unchecked return value.
+Add relevant return check for i2c read and write
+
+Signed-off-by: Ye Li <ye.li@nxp.com>
+Reviewed-by: Peng Fan <peng.fan@nxp.com>
+---
+ board/freescale/common/tcpc.c | 26 ++++++++++++++++++++++----
+ 1 file changed, 22 insertions(+), 4 deletions(-)
+
+diff --git a/board/freescale/common/tcpc.c b/board/freescale/common/tcpc.c
+index 55fc54336b..06f89622b6 100644
+--- a/board/freescale/common/tcpc.c
++++ b/board/freescale/common/tcpc.c
+@@ -832,9 +832,18 @@ static int tcpc_pd_sink_disable(struct tcpc_port *port)
+ 	}
+ 
+ 	if ((valb & TCPC_POWER_STATUS_VBUS_PRES) && (valb & TCPC_POWER_STATUS_SINKING_VBUS)) {
+-		dm_i2c_read(port->i2c_dev, TCPC_POWER_CTRL, (uint8_t *)&valb, 1);
++		err = dm_i2c_read(port->i2c_dev, TCPC_POWER_CTRL, (uint8_t *)&valb, 1);
++		if (err) {
++			tcpc_log(port, "%s dm_i2c_read failed, err %d\n", __func__, err);
++			return -EIO;
++		}
++
+ 		valb &= ~TCPC_POWER_CTRL_AUTO_DISCH_DISCO; /* disable AutoDischargeDisconnect */
+-		dm_i2c_write(port->i2c_dev, TCPC_POWER_CTRL, (const uint8_t *)&valb, 1);
++		err = dm_i2c_write(port->i2c_dev, TCPC_POWER_CTRL, (const uint8_t *)&valb, 1);
++		if (err) {
++			tcpc_log(port, "%s dm_i2c_write failed, err %d\n", __func__, err);
++			return -EIO;
++		}
+ 
+ 		tcpc_disable_sink_vbus(port);
+ 	}
+@@ -902,9 +911,18 @@ static int tcpc_pd_sink_init(struct tcpc_port *port)
+ 		port->pd_state = ATTACHED;
+ 	}
+ 
+-	dm_i2c_read(port->i2c_dev, TCPC_POWER_CTRL, (uint8_t *)&valb, 1);
++	err = dm_i2c_read(port->i2c_dev, TCPC_POWER_CTRL, (uint8_t *)&valb, 1);
++	if (err) {
++		tcpc_log(port, "%s dm_i2c_read failed, err %d\n", __func__, err);
++		return -EIO;
++	}
++
+ 	valb &= ~TCPC_POWER_CTRL_AUTO_DISCH_DISCO; /* disable AutoDischargeDisconnect */
+-	dm_i2c_write(port->i2c_dev, TCPC_POWER_CTRL, (const uint8_t *)&valb, 1);
++	err = dm_i2c_write(port->i2c_dev, TCPC_POWER_CTRL, (const uint8_t *)&valb, 1);
++	if (err) {
++		tcpc_log(port, "%s dm_i2c_write failed, err %d\n", __func__, err);
++		return -EIO;
++	}
+ 
+ 	if (port->cfg.switch_setup_func)
+ 		port->cfg.switch_setup_func(port);
+-- 
+2.17.1
+

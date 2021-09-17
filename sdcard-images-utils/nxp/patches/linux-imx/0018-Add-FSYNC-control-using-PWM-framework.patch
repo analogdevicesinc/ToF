@@ -1,0 +1,239 @@
+From a8609e458710d68cb10f81c9c3b3cc03456ca477 Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Fri, 17 Sep 2021 11:52:08 +0300
+Subject: [PATCH 18/18] Add FSYNC control using PWM framework
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ .../dts/freescale/imx8mp-adi-tof-noreg.dts    |  8 ++
+ drivers/media/spi/addicmos.c                  | 94 ++++++++++++++++---
+ 2 files changed, 89 insertions(+), 13 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
+index 06332e91004a..a7521545f245 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
+@@ -221,6 +221,12 @@ mpcie {
+ 		status = "okay";
+ 		enable-active-high;
+ 	};
++
++	pwm: pwm-gpio {
++		compatible = "pwm-gpio";
++		#pwm-cells = <2>;
++		pwm-gpios = <&gpio5 28 GPIO_ACTIVE_HIGH>;
++	};
+ };
+ 
+ &clk {
+@@ -452,6 +458,8 @@ addicmos@0 {
+ 		pinctrl-names = "spi", "gpio";
+ 		pinctrl-0 = <&pinctrl_addicmos_spi>;
+ 		pinctrl-1 = <&pinctrl_addicmos_gpio>;
++		pwms = <&pwm 0 50000000>;
++		pwm-names = "fsync";
+ 
+ 		port {
+ 			addicmos_ep: endpoint {
+diff --git a/drivers/media/spi/addicmos.c b/drivers/media/spi/addicmos.c
+index 24ce8e03988f..66a2bbf48cec 100644
+--- a/drivers/media/spi/addicmos.c
++++ b/drivers/media/spi/addicmos.c
+@@ -8,6 +8,7 @@
+ 
+ #include <linux/gpio/consumer.h>
+ #include <linux/pinctrl/consumer.h>
++#include <linux/pwm.h>
+ #include <linux/firmware.h>
+ #include <linux/spi/spi.h>
+ #include <linux/module.h>
+@@ -64,6 +65,8 @@ struct addicmos {
+ 	struct pinctrl *pinctrl;
+ 	struct pinctrl_state *pins_spi, *pins_gpio;
+ 
++	struct pwm_device *pwm_fsync;
++
+ 	/* FW related data */
+ 	int fw_regs_count;
+ 	struct reg_sequence *fw_regs;
+@@ -282,6 +285,8 @@ static int addicmos_power_on(struct device *dev)
+ 	}
+ 
+ 	dev_err(addicmos->dev, "Power on timed out.\n");
++	regmap_read(addicmos->regmap, 0x32, &read_val);
++	dev_dbg(addicmos->dev, "Status register 0x32 value: %x\n", read_val);
+ 
+ 	return -ETIME;
+ }
+@@ -304,11 +309,14 @@ static int addicmos_power_off(struct device *dev)
+ 		msleep_interruptible(100);
+ 		regmap_read(addicmos->regmap, 0xC, &read_val);
+ 		if (read_val == 0x0) {
++			pwm_disable(addicmos->pwm_fsync);
+ 			return 0;
+ 		}
+ 	}
+ 
+ 	dev_err(addicmos->dev, "Power off timed out.\n");
++	regmap_read(addicmos->regmap, 0x32, &read_val);
++	dev_dbg(addicmos->dev, "Status register 0x32 value: %x\n", read_val);
+ 
+ 	return -ETIME;
+ }
+@@ -347,7 +355,7 @@ static int addicmos_chip_config(struct addicmos *addicmos,
+ 	val_nr = *(ctrl->p_new.p_u16 + 1);
+ 	val = ctrl->p_new.p_u16 + 2;
+ 
+-	dev_dbg(addicmos->dev, "Entered addicmos_chip_config\n");
++	dev_dbg(addicmos->dev, "Entered addicmos_chip_config. ADDR: %x VAL_NR %d \n", reg, val_nr);
+ 	if (reg & 0x8000) {
+ 		ret = regmap_bulk_write(addicmos->regmap, reg, val, val_nr);
+ 		if (ret)
+@@ -598,17 +606,16 @@ static int addicmos_start_streaming(struct addicmos *addicmos)
+ 		if (ret)
+ 			dev_err(addicmos->dev, "Could not set mode register\n");
+ 	}
+-	return 0;
++
++	ret = pwm_enable(addicmos->pwm_fsync);
++
++	return ret;
+ }
+ 
+ static int addicmos_stop_streaming(struct addicmos *addicmos)
+ {
+-#if 0
+-	return regmap_register_patch(addicmos->regmap,
+-				     addicmos_standby_setting,
+-				     ARRAY_SIZE(addicmos_standby_setting));
+-#endif
+-	return 0;
++	int ret = 0;
++	return ret;
+ }
+ 
+ static int addicmos_s_stream(struct v4l2_subdev *subdev, int enable)
+@@ -652,6 +659,48 @@ static int addicmos_s_stream(struct v4l2_subdev *subdev, int enable)
+ 	return ret;
+ }
+ 
++static int addicmos_g_frame_interval(struct v4l2_subdev *subdev,
++				     struct v4l2_subdev_frame_interval *fi)
++{
++	struct addicmos *addicmos = to_addicmos(subdev);
++	struct pwm_state state;
++
++	/* Sync up PWM state. */
++	pwm_init_state(addicmos->pwm_fsync, &state);
++
++	fi->interval.numerator = 1;
++	fi->interval.denominator =
++		(u32)pwm_get_period(addicmos->pwm_fsync) / NSEC_PER_SEC;
++	dev_dbg(addicmos->dev, "%s frame rate = %u / %u\n", __func__,
++		fi->interval.numerator, fi->interval.denominator);
++
++	return 0;
++}
++
++static int addicmos_s_frame_interval(struct v4l2_subdev *subdev,
++				     struct v4l2_subdev_frame_interval *fi)
++{
++	struct addicmos *addicmos = to_addicmos(subdev);
++	struct pwm_state state;
++	int ret = 0;
++
++	mutex_lock(&addicmos->lock);
++
++	/* Get PWM state. */
++	pwm_init_state(addicmos->pwm_fsync, &state);
++	state.period = DIV_ROUND_UP(fi->interval.numerator * NSEC_PER_SEC,
++				    fi->interval.denominator);
++	pwm_set_relative_duty_cycle(&state, 50, 100);
++	ret = pwm_apply_state(addicmos->pwm_fsync, &state);
++
++	dev_dbg(addicmos->dev, "Set frame interval to %u / %u\n",
++		fi->interval.numerator, fi->interval.denominator);
++
++	mutex_unlock(&addicmos->lock);
++
++	return ret;
++}
++
+ static int addicmos_link_setup(struct media_entity *entity,
+ 			   const struct media_pad *local,
+ 			   const struct media_pad *remote, u32 flags)
+@@ -671,7 +720,9 @@ static const struct dev_pm_ops addicmos_pm_ops = {
+ };
+ 
+ static const struct v4l2_subdev_video_ops addicmos_video_ops = {
+-	.s_stream	= addicmos_s_stream,
++	.s_stream		= addicmos_s_stream,
++	.g_frame_interval	= addicmos_g_frame_interval,
++	.s_frame_interval	= addicmos_s_frame_interval,
+ };
+ 
+ static const struct v4l2_subdev_pad_ops addicmos_subdev_pad_ops = {
+@@ -822,6 +873,7 @@ static int addicmos_probe(struct spi_device *client)
+ 	struct device *dev = &client->dev;
+ 	struct fwnode_handle *endpoint;
+ 	struct addicmos *addicmos;
++	struct pwm_state state;
+ 	int ret;
+ 
+ 	addicmos = devm_kzalloc(dev, sizeof(struct addicmos), GFP_KERNEL);
+@@ -854,25 +906,25 @@ static int addicmos_probe(struct spi_device *client)
+ 
+ 	addicmos->rst_gpio = gpiod_get(dev, "reset", GPIOD_OUT_LOW);
+ 	if (IS_ERR(addicmos->rst_gpio)) {
+-		dev_info(dev, "Unable to get \"reset\" gpio\n");
++		dev_err(dev, "Unable to get \"reset\" gpio\n");
+ 		return PTR_ERR(addicmos->rst_gpio);
+ 	}
+ 
+ 	addicmos->pinctrl = devm_pinctrl_get(dev);
+ 	if (IS_ERR(addicmos->pinctrl)) {
+-		dev_info(dev, "Unable to get \"pinctrl\" block\n");
++		dev_err(dev, "Unable to get \"pinctrl\" block\n");
+ 		return PTR_ERR(addicmos->pinctrl);
+ 	}
+ 
+ 	addicmos->pins_spi = pinctrl_lookup_state(addicmos->pinctrl, "spi");
+ 	if (IS_ERR(addicmos->pins_spi)) {
+-		dev_info(dev, "Unable to get \"spi-pinctrl\" block\n");
++		dev_err(dev, "Unable to get \"spi-pinctrl\" block\n");
+ 		return PTR_ERR(addicmos->pins_spi);
+ 	}
+ 
+ 	addicmos->pins_gpio = pinctrl_lookup_state(addicmos->pinctrl, "gpio");
+ 	if (IS_ERR(addicmos->pins_gpio)) {
+-		dev_info(dev, "Unable to get \"gpio-pinctrl\" block\n");
++		dev_err(dev, "Unable to get \"gpio-pinctrl\" block\n");
+ 		return PTR_ERR(addicmos->pins_gpio);
+ 	}
+ 
+@@ -883,6 +935,22 @@ static int addicmos_probe(struct spi_device *client)
+ 		goto release_gpio;
+ 	}
+ 
++	addicmos->pwm_fsync = devm_pwm_get(dev, NULL);
++	if (IS_ERR(addicmos->pwm_fsync)) {
++		dev_err(dev, "Failed to get pwm device\n");
++		return PTR_ERR(addicmos->pwm_fsync);
++	}
++
++	/* Get PWM state. */
++	pwm_init_state(addicmos->pwm_fsync, &state);
++	pwm_set_relative_duty_cycle(&state, 50, 100);
++	ret = pwm_apply_state(addicmos->pwm_fsync, &state);
++	if (ret) {
++		dev_err(dev, "%s: PWM init failed %d\n",
++			__func__, ret);
++		goto release_gpio;
++	}
++
+ 	v4l2_ctrl_handler_init(&addicmos->ctrls, 3);
+ 
+ 	addicmos->pixel_rate = v4l2_ctrl_new_std(&addicmos->ctrls,
+-- 
+2.33.0
+
