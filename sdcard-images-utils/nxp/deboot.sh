@@ -232,13 +232,14 @@ systemctl enable uvc-gadget.service
 systemctl enable adi-tof.service
 
 #sdk install
-pushd /home/analog
+pushd /home/${USERNAME}
 mkdir Workspace
 pushd Workspace
 git clone https://github.com/analogdevicesinc/aditof-sdk-rework.git
 pushd aditof-sdk-rework/scripts/nxp/
 chmod +x setup.sh
 # ./setup.sh -y -b ../../build -d ../../deps -i /opt -j4
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace
 popd
 popd
 popd
