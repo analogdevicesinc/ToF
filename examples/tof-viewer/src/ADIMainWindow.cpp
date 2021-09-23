@@ -959,6 +959,30 @@ void ADIMainWindow::ShowRecordTree() {
 				} else {
 					//Decide what to do here:
 				}
+				// Save CFG and CCB next to the recording
+				auto camera = getActiveCamera();
+				if (camera) {
+					aditof::CameraDetails camDetails;
+					camera->getDetails(camDetails);
+
+					std::ofstream ccbFile;
+					std::string ccbFilePath(camDetails.cameraId + ".ccb");
+					std::ofstream cfgFile;
+					std::string cfgFilePath(camDetails.cameraId + ".cfg");
+
+
+					aditof::Status status = camera->setControl("saveModuleCCB", ccbFilePath);
+					if (status != aditof::Status::OK) {
+						LOG(INFO) << "Failed to store CCB to " << ccbFilePath;
+					}
+
+					status = camera->setControl("saveModuleCFG", cfgFilePath);
+					if (status != aditof::Status::OK) {
+						LOG(INFO) << "Failed to store CFG to " << cfgFilePath;
+					}
+				} else {
+					LOG(ERROR) << "No camera found. Can't save CCB & CFG files.";
+				}
 			}
 		}
 		

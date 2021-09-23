@@ -200,6 +200,8 @@ std::string ModuleMemory::writeTempCCB(const uint8_t *const ccbFileData, const u
     LOG(INFO) << "CCB chip ID: " << std::hex << header_block->ChipID;
     LOG(INFO) << "CCB serial number: " << std::hex << header_block->SerialNumber;
 
+    m_serialNumber = header_block->SerialNumber;
+
     return writeToTempFile(ccbFileData, length, "ccb");
 }
 
@@ -272,7 +274,7 @@ Status ModuleMemory::readLegacyModuleCCB( std::string &tempJsonFile, TOF_ModuleF
                     << header_block->BlockInfo.CalibrationDay;
         LOG(INFO) << "CCB chip ID: " << std::hex << header_block->ChipID;
         LOG(INFO) << "CCB serial number: " << std::hex << header_block->SerialNumber;
-        ccbSerialNumber = header_block->SerialNumber;  
+        ccbSerialNumber = header_block->SerialNumber;
     }
 
     free(pccbdata);
@@ -500,6 +502,13 @@ Status ModuleMemory::writeModuleData(const std::string &ccbFileName, const std::
     }
 
     return status;
+}
+
+Status ModuleMemory::getSerialNumber(std::string &serialNumber)
+{
+    serialNumber = m_serialNumber;
+
+    return aditof::Status::OK;
 }
 
 } // namespace aditof
