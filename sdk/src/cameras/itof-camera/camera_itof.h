@@ -32,14 +32,14 @@
 #ifndef CAMERA_ITOF_H
 #define CAMERA_ITOF_H
 
+#include "tofi/tofi_compute.h"
+#include "tofi/tofi_config.h"
 #include <aditof/camera.h>
 #include <aditof/depth_sensor_interface.h>
 #include <aditof/storage_interface.h>
 #include <aditof/temperature_sensor_interface.h>
 #include <map>
 #include <unordered_map>
- #include "tofi/tofi_compute.h"
- #include "tofi/tofi_config.h"
 // #include "aditof_internal.h"
 // #include "tofi_utils.h"
 #include "mode_info.h"
@@ -82,6 +82,11 @@
  *   Description:     Save the CCB content which is obtained from module memory to a given file path.
  *                    Must be called after loadModuleData which is responsible for reading the CCB content.
  *   Accepted values: A path to a file (including file name and extension) where CCB should be stored.
+ *
+ * saveModuleCFG
+ *   Description:     Save the CFG content which is obtained from module memory to a given file path.
+ *                    Must be called after loadModuleData which is responsible for reading the CFG content.
+ *   Accepted values: A path to a file (including file name and extension) where CFG should be stored.
  */
 
 class CameraItof : public aditof::Camera {
@@ -137,7 +142,6 @@ class CameraItof : public aditof::Camera {
     //aditof::Status writeModuleEeprom(const std::string &ccbFileName, const std::string &cfgFileName);
 
   private:
-
     /**
      * @brief Default ADI module flash memory is Macronix MX25U6435F.
      * Override by defining a MODULE_EEPROM_TYPE name in configuration JSON file.
@@ -268,7 +272,8 @@ class CameraItof : public aditof::Camera {
      * @return aditof::Status
      * @see aditof::Status
      */
-    aditof::Status applyCalibrationToFrame(uint16_t *frame, const unsigned int mode);
+    aditof::Status applyCalibrationToFrame(uint16_t *frame,
+                                           const unsigned int mode);
 
     /**
      * @brief Save the CCB content from module memory to file.
@@ -280,6 +285,17 @@ class CameraItof : public aditof::Camera {
      * @see Status
      */
     aditof::Status saveCCBToFile(const std::string &filePath) const;
+
+    /**
+     * @brief Save the CFG content from module memory to file.
+     *
+     * Must be called after loadModuleData().
+     * @param[in] filePath - Path to file where the CCB should be stored
+     *
+     * @return Status
+     * @see Status
+     */
+    aditof::Status saveCFGToFile(const std::string &filePath) const;
 
   private:
     using noArgCallable = std::function<aditof::Status()>;

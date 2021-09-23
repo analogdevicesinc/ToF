@@ -145,6 +145,14 @@ public:
      */
     Status readLegacyModuleCCB(std::string &tempJsonFile, TOF_ModuleFiles_t &tempFiles, std::string &ccbSerialNumber);
 
+    /**
+     * @brief Returns the serial number stored in the camera module memory.
+     * @param[out] ccbSerialNumber - serial number from CCB header
+     * @return aditof::Status whether the operation succeeded or an error has occurred
+     * @see aditof::Status
+     */
+    Status getSerialNumber(std::string &serialNumber);
+
 protected:
     bool verifyChunkHeader(const TOF_ChunkHeader_t *const pChunkHeader);
     Status readChunkHeader(uint8_t *const buffer, int32_t chunkDataAddr );
@@ -159,6 +167,7 @@ protected:
     std::string writeTempJSON(const std::string ccbFilename, const std::string cfgFilename);
 
     std::shared_ptr<StorageInterface> m_eeprom;
+    std::string m_serialNumber;
 };
 
 } // namespace aditof

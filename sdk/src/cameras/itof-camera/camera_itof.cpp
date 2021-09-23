@@ -63,6 +63,7 @@ CameraItof::CameraItof(
     m_controls.emplace("syncMode", "0, 0");
     m_controls.emplace("loadModuleData", "call");
     m_controls.emplace("saveModuleCCB", "");
+    m_controls.emplace("saveModuleCFG", "");
 
     m_noArgCallables.emplace("powerUp", std::bind(&CameraItof::powerUp, this));
     m_noArgCallables.emplace("powerDown",
@@ -530,8 +531,11 @@ aditof::Status CameraItof::setControl(const std::string &control,
             uint8_t mode = 0;
             uint8_t level = 0;
             return setCameraSyncMode(mode, level);
-        } else if (control == "saveModuleCCB") {
+        }
+        else if (control == "saveModuleCCB") {
             return saveCCBToFile(value);
+        }else if (control == "saveModuleCFG"){
+            return saveCFGToFile(value);
         } else {
             m_controls[control] = value;
         }
@@ -923,6 +927,12 @@ aditof::Status CameraItof::loadModuleData() {
     ModuleMemory flashLoader(m_eeprom);
     flashLoader.readModuleData(tempJsonFile, m_tempFiles);
 
+    std::string serialNumber;
+    flashLoader.getSerialNumber(serialNumber);
+    int prefixCount = 2;// I'm asuming the first 2 characters are "D:" which we don't need
+    std::string shortName = serialNumber.substr(prefixCount, serialNumber.find(" ") - prefixCount);
+    m_details.cameraId = shortName;
+
     // m_depthSensor->cameraReset(); TO DO: figure out if this is required or how to do the reset since there is currenlty no cameraReset() in DepthSensorInterface
 
     if (!tempJsonFile.empty()) {
@@ -950,6 +960,25 @@ aditof::Status CameraItof::saveCCBToFile(const std::string &filePath) const {
     }
 
     std::ifstream source(m_tempFiles.ccbFile.c_str(), std::ios::binary);
+    std::ofstream destination(filePath, std::ios::binary);
+    destination << source.rdbuf();
+
+    return aditof::Status::OK;
+}
+
+aditof::Status CameraItof::saveCFGToFile(const std::string &filePath) const {
+    if (filePath.empty()) {
+        LOG(ERROR) << "File path where CFG should be written is empty.";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    if (m_tempFiles.cfgFile.empty()) {
+        LOG(ERROR) << "CFG files is unavailable. Perhaps CFG content was not "
+                      "read from module.";
+        return aditof::Status::UNAVAILABLE;
+    }
+
+    std::ifstream source(m_tempFiles.cfgFile.c_str(), std::ios::binary);
     std::ofstream destination(filePath, std::ios::binary);
     destination << source.rdbuf();
 
