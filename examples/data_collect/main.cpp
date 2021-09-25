@@ -468,7 +468,11 @@ int main(int argc, char *argv[]) {
     time_t rawtime;
     time (&rawtime);
     struct tm timeinfo;
+#ifdef _WIN32
     localtime_s(&timeinfo, &rawtime);
+#else
+    localtime_r(&rawtime, &timeinfo);
+#endif
     strftime(time_buffer,sizeof(time_buffer),"%Y%m%d%H%M%S", &timeinfo);    
     if (fsf_flag) {
         err = snprintf(fsf_file, sizeof(fsf_file), "%s/%s_frames_%s.fsf", folder_path, frame_type.c_str(), time_buffer);

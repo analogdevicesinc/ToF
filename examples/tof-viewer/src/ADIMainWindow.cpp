@@ -922,7 +922,11 @@ void ADIMainWindow::ShowRecordTree() {
 			struct tm timeinfo;
 			time_t rawtime;
 			time (&rawtime);
+#ifdef _WIN32
 			localtime_s(&timeinfo, &rawtime);
+#else
+			localtime_r(&rawtime, &timeinfo);
+#endif
     		strftime(time_buffer,sizeof(time_buffer),"%Y%m%d%H%M", &timeinfo);   			
 			tempPath += "\\frames" + std::string(time_buffer);
 
