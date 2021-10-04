@@ -87,6 +87,13 @@
  *   Description:     Save the CFG content which is obtained from module memory to a given file path.
  *                    Must be called after loadModuleData which is responsible for reading the CFG content.
  *   Accepted values: A path to a file (including file name and extension) where CFG should be stored.
+ * 
+ * enableXYZframe
+ *   Description:     Enable the generation of a XYZ frame by the depth compute unit. 'enableDepthCompute'
+ *                    should be set to 'on' for this option to have any effect. The XYZ frame can be enabled
+ *                    or disabled through .ini configuration file but if this control is explicitly called
+ *                    then it will override the option in the .ini file. By default XYZ frame is disabled.
+ *   Accepted values: One of the following strings: 'on' or 'off'
  */
 
 class CameraItof : public aditof::Camera {
@@ -297,6 +304,16 @@ class CameraItof : public aditof::Camera {
      */
     aditof::Status saveCFGToFile(const std::string &filePath) const;
 
+    /**
+     * @brief Enable/disable the generation of the XYZ frame.
+     *
+     * @param[in] en - Whether to enable or disable
+     *
+     * @return Status
+     * @see Status
+     */
+    aditof::Status enableXYZframe(bool en);
+
   private:
     using noArgCallable = std::function<aditof::Status()>;
 
@@ -326,6 +343,7 @@ class CameraItof : public aditof::Camera {
     std::string m_ccb_calibrationFile;
     std::string m_ini_depth;
     bool m_xyzEnabled;
+    bool m_xyzSetViaControl;
     uint16_t m_modechange_framedrop_count = 0;
     aditof::TOF_ModuleFiles_t m_tempFiles;
     std::vector<aditof::DepthSensorFrameType> m_availableSensorFrameTypes;
