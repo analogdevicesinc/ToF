@@ -52,7 +52,7 @@ CameraItof::CameraItof(
     std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms,
     std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &tSensors)
     : m_depthSensor(depthSensor), m_devStarted(false), m_eepromInitialized(false),
-      m_modechange_framedrop_count(0), m_xyzEnabled(false), m_loadedConfigData(false), m_tempFiles{} {
+      m_modechange_framedrop_count(0), m_xyzEnabled(false), m_xyzSetViaControl(false), m_loadedConfigData(false), m_tempFiles{} {
     m_details.mode = "mp_pcm";
     m_details.cameraId = "";
 
@@ -71,6 +71,7 @@ CameraItof::CameraItof(
     m_noArgCallables.emplace("loadModuleData",
                              std::bind(&CameraItof::loadModuleData, this));
     m_controls.emplace("enableDepthCompute", "on");
+    m_controls.emplace("enableXYZframe", "off");
 
     // Check Depth Sensor
     if (!depthSensor) {
@@ -531,11 +532,17 @@ aditof::Status CameraItof::setControl(const std::string &control,
             uint8_t mode = 0;
             uint8_t level = 0;
             return setCameraSyncMode(mode, level);
-        }
-        else if (control == "saveModuleCCB") {
+        } else if (control == "saveModuleCCB") {
             return saveCCBToFile(value);
-        }else if (control == "saveModuleCFG"){
+        } else if (control == "saveModuleCFG"){
             return saveCFGToFile(value);
+        } else if (control == "enableXYZframe") {
+            if (value == "on")
+                return enableXYZframe(true);
+            else if (value == "off")
+                return enableXYZframe(false);
+            else
+                return Status::INVALID_ARGUMENT;
         } else {
             m_controls[control] = value;
         }
@@ -670,12 +677,16 @@ aditof::Status CameraItof::loadConfigData(void) {
         }
     }
 
-    std::string depthData((char*)m_depthINIData, GetDataFileSize(m_ini_depth.c_str()));
-    size_t pos = depthData.find("xyzEnable", 0);
+    // XYZ set through camera control takes precedence over the setting from .ini file
+    if (!m_xyzSetViaControl) {
+        std::string depthData((char *)m_depthINIData,
+                              GetDataFileSize(m_ini_depth.c_str()));
+        size_t pos = depthData.find("xyzEnable", 0);
 
-    if (pos != std::string::npos) {
-        if (depthData.at(pos + strlen("xyzEnable=")) == '1') {
-            m_xyzEnabled = true;
+        if (pos != std::string::npos) {
+            if (depthData.at(pos + strlen("xyzEnable=")) == '1') {
+                m_xyzEnabled = true;
+            }
         }
     }
 
@@ -981,6 +992,13 @@ aditof::Status CameraItof::saveCFGToFile(const std::string &filePath) const {
     std::ifstream source(m_tempFiles.cfgFile.c_str(), std::ios::binary);
     std::ofstream destination(filePath, std::ios::binary);
     destination << source.rdbuf();
+
+    return aditof::Status::OK;
+}
+
+aditof::Status CameraItof::enableXYZframe(bool en) {
+    m_xyzEnabled = en;
+    m_xyzSetViaControl = true;
 
     return aditof::Status::OK;
 }
