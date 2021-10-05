@@ -58,7 +58,9 @@ PYBIND11_MODULE(aditofpython, m) {
         .def(py::init<>())
         .def_readwrite("type", &aditof::FrameDataDetails::type)
         .def_readwrite("width", &aditof::FrameDataDetails::width)
-        .def_readwrite("height", &aditof::FrameDataDetails::height);
+        .def_readwrite("height", &aditof::FrameDataDetails::height)
+        .def_readwrite("subelementSize", &aditof::FrameDataDetails::subelementSize)
+        .def_readwrite("subelementsPerElement", &aditof::FrameDataDetails::subelementsPerElement);
 
     py::class_<aditof::FrameDetails>(m, "FrameDetails")
         .def(py::init<>())
@@ -117,18 +119,40 @@ PYBIND11_MODULE(aditofpython, m) {
     // Helpers
 
     struct frameData {
-        uint16_t *pData;
+        void *pData;
         aditof::FrameDataDetails details;
     };
 
     py::class_<frameData>(m, "frameData", py::buffer_protocol())
         .def(py::init<>())
         .def_buffer([](const frameData &f) -> py::buffer_info {
+            int nbDimensions = 2 + (f.details.subelementsPerElement > 1 ? 1 : 0);
+            // 2D configuration
+            std::vector<ssize_t> shape = {static_cast<py::ssize_t>(f.details.height),
+                static_cast<py::ssize_t>(f.details.width)};
+            std::vector<ssize_t> strides = {static_cast<py::ssize_t>(f.details.subelementSize * f.details.subelementsPerElement * f.details.width),
+                static_cast<py::ssize_t>(f.details.subelementSize * f.details.subelementsPerElement)};
+
+            // Additions for a 3D configuration
+            if (nbDimensions == 3) {
+                shape.emplace_back(static_cast<py::ssize_t>(f.details.subelementsPerElement));
+                strides.emplace_back(static_cast<py::ssize_t>(f.details.subelementSize));
+            }
+
+            std::string format;
+            if (f.details.subelementSize == 1) {
+                format = "B";
+            } else if (f.details.subelementSize == 2) {
+                format = "H";
+            }
+
             return py::buffer_info(
-                f.pData, sizeof(uint16_t),
-                py::format_descriptor<uint16_t>::format(), 2,
-                {f.details.height, f.details.width},
-                {sizeof(uint16_t) * f.details.width, sizeof(uint16_t)});
+                f.pData,
+                static_cast<py::ssize_t>(f.details.subelementSize),
+                format,
+                nbDimensions,
+                shape,
+                strides);
         });
 
     // ADI Time of Flight API
@@ -253,7 +277,7 @@ PYBIND11_MODULE(aditofpython, m) {
             [](aditof::Frame &frame, const std::string &dataType) -> frameData {
                 frameData f;
 
-                frame.getData(dataType, &f.pData);
+                frame.getData(dataType, reinterpret_cast<uint16_t **>(&f.pData));
                 frame.getDataDetails(dataType, f.details);
 
                 return f;

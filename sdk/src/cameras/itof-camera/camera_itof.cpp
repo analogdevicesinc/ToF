@@ -323,6 +323,13 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
         fDataDetails.type = item.type;
         fDataDetails.width = item.width;
         fDataDetails.height = item.height;
+        fDataDetails.subelementSize = sizeof(uint16_t);
+        fDataDetails.subelementsPerElement = 1;
+
+        if (item.type == "xyz"){
+            fDataDetails.subelementsPerElement = 3;
+        }
+
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
     }
 
