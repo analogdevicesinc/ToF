@@ -60,6 +60,21 @@ struct FrameDataDetails {
      * @brief The height of the frame data
      */
     unsigned int height;
+
+    /**
+     * @brief The size in bytes of a sub-element.
+     * A sub-element is a sub-component of an element. All sub-elements make up
+     * an element. For instance a 3D point (which is an element) has X, Y and Z
+     * coordinates which are sub-elements of the 3D point.
+     */
+    unsigned int subelementSize;
+
+    /**
+     * @brief The number of sub-elements that an element has.
+     * An element is the smallest part of the image (a.k.a. captured scene) that
+     * together with other elements make up the entire image.
+     */
+    unsigned int subelementsPerElement;
 };
 
 /**
