@@ -203,6 +203,8 @@ case "$1" in
 	echo "Creating Config"
 	mkdir configs/c.1
 	mkdir configs/c.1/strings/0x409
+	#set requested power to 900mA
+	echo 900 > configs/c.1/MaxPower
 
 	echo "Creating functions..."
 	#create_msd configs/c.1 mass_storage.0 $USBFILE
