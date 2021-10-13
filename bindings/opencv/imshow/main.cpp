@@ -53,6 +53,15 @@ int main(int argc, char *argv[]) {
 
     System system;
 
+    cv::Mat logo = cv::imread("config/logo.png"); 
+    if (logo.empty()) {
+        LOG(ERROR) << "Could not open or find the logo";
+        return 0;
+    }
+
+    //Change the logo to a format that opencv can use
+    logo.convertTo(logo, CV_8U,255.0);
+
     std::vector<std::shared_ptr<Camera>> cameras;
     system.getCameraList(cameras);
     if (cameras.empty()) {
@@ -67,6 +76,12 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+    status = camera->setControl("loadModuleData", "call");
+    if (status != Status::OK) {
+        LOG(INFO) << "No CCB/CFG data found in camera module,";
+        return 0;
+    }
+
     std::vector<std::string> frameTypes;
     camera->getAvailableFrameTypes(frameTypes);
     if (frameTypes.empty()) {
@@ -74,33 +89,21 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    status = camera->setFrameType(frameTypes.front());
+    status = camera->setFrameType("mp_pcm");
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 0;
     }
 
-    std::vector<std::string> modes;
-    camera->getAvailableModes(modes);
-    if (modes.empty()) {
-        LOG(ERROR) << "No camera modes available!";
-        return 0;
-    }
-
-    status = camera->setMode(modes[0]);
+    status = camera->start();
     if (status != Status::OK) {
-        LOG(ERROR) << "Could not set camera mode!";
+        LOG(ERROR) << "Could not start the camera!";
         return 0;
     }
 
     aditof::CameraDetails cameraDetails;
     camera->getDetails(cameraDetails);
-    int cameraRange = cameraDetails.maxDepth;
     aditof::Frame frame;
-
-    const int smallSignalThreshold = 50;
-    camera->setControl("noise_reduction_threshold",
-                       std::to_string(smallSignalThreshold));
 
     cv::namedWindow("Display Image", cv::WINDOW_AUTOSIZE);
 
@@ -122,15 +125,30 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
-        /* Distance factor */
-        double distance_scale = 255.0 / cameraRange;
+        //Read the center point distance value
+        cv::Point2d pointxy(512, 512);
+        int m_distanceVal = static_cast<int>(mat.at<ushort>(pointxy));
 
         /* Convert from raw values to values that opencv can understand */
-        mat.convertTo(mat, CV_8U, distance_scale);
+        mat.convertTo(mat, CV_8U,0.2,5);
 
         /* Apply a rainbow color map to the mat to better visualize the
          * depth data */
-        applyColorMap(mat, mat, cv::COLORMAP_RAINBOW);
+        applyColorMap(mat, mat, cv::COLORMAP_WINTER);
+
+        //Draw the center point
+        char text[20];
+        sprintf(text, "%dmm", m_distanceVal);
+        cv::drawMarker(mat, pointxy, cv::Scalar(255, 255, 255),
+                       cv::MARKER_CROSS);
+        cv::circle(mat, pointxy, 8, cv::Scalar(255, 255, 255));
+        cv::putText(mat, text, pointxy + cv::Point2d(10, 20),
+                    cv::FONT_HERSHEY_DUPLEX, 3,
+                    cv::Scalar(255, 255, 255),4);
+        
+        cv::Mat insertLogo(mat, cv::Rect(50, 900,200,79));
+        cv::addWeighted(insertLogo, 0.85 , logo,
+                        1.0F - 0.85, 0, insertLogo);
 
         /* Display the image */
         imshow("Display Image", mat);
