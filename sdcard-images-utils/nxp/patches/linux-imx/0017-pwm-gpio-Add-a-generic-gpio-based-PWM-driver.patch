@@ -1,7 +1,7 @@
-From 4efe0fc7589890bc9fda7e8b894f7ba60796c80d Mon Sep 17 00:00:00 2001
+From 8e2bae219a4d72c568cd0c51e2968fc538772cd1 Mon Sep 17 00:00:00 2001
 From: Olliver Schinagl <oliver@schinagl.nl>
 Date: Mon, 26 Oct 2015 22:32:38 +0100
-Subject: [PATCH 17/18] pwm: gpio: Add a generic gpio based PWM driver
+Subject: [PATCH 17/21] pwm: gpio: Add a generic gpio based PWM driver
 
 This patch adds a bit-banging gpio PWM driver. It makes use of hrtimers,
 to allow nano-second resolution, though it obviously strongly depends on
@@ -345,5 +345,5 @@ index 000000000000..7e9ffcc1c547
 +MODULE_DESCRIPTION("Generic GPIO bit-banged PWM driver");
 +MODULE_LICENSE("GPL");
 -- 
-2.33.0
+2.17.1
 

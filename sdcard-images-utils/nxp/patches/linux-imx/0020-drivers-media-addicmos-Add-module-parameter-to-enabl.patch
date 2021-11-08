@@ -1,0 +1,172 @@
+From ee6fe4556a3560941b0b9571816416a4c5bceff0 Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Mon, 8 Nov 2021 11:00:31 +0200
+Subject: [PATCH 20/21] drivers: media: addicmos: Add module parameter to
+ enable FW/Calib loading
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ drivers/media/spi/addicmos.c | 75 ++++++++++++++++++++++--------------
+ 1 file changed, 47 insertions(+), 28 deletions(-)
+
+diff --git a/drivers/media/spi/addicmos.c b/drivers/media/spi/addicmos.c
+index 66a2bbf48cec..76039eaa179d 100644
+--- a/drivers/media/spi/addicmos.c
++++ b/drivers/media/spi/addicmos.c
+@@ -22,6 +22,14 @@
+ #define FW_FILE_NAME	"adi/addicmos-fw.bin"
+ #define ADDI_MAGIC	"ADDICMOS"
+ 
++static bool fw_load = false;
++module_param(fw_load, bool, 0644);
++MODULE_PARM_DESC(fw_load, "Boolean enabling/disabling FW loading by driver");
++
++static bool calib_load = false;
++module_param(calib_load, bool, 0644);
++MODULE_PARM_DESC(calib_load, "Boolean enabling/disabling Calibration loading by driver");
++
+ struct addicmos_mode_info {
+ 	u32 width;
+ 	u32 height;
+@@ -276,7 +284,7 @@ static int addicmos_power_on(struct device *dev)
+ 	if (ret)
+ 		dev_err(addicmos->dev, "Could not set power up register\n");
+ 
+-	for (i = 0; i < 5; i ++) {
++	for (i = 0; i < 10; i ++) {
+ 		msleep_interruptible(15);
+ 		regmap_read(addicmos->regmap, 0x256, &read_val);
+ 		if (read_val == 0x2) {
+@@ -285,6 +293,7 @@ static int addicmos_power_on(struct device *dev)
+ 	}
+ 
+ 	dev_err(addicmos->dev, "Power on timed out.\n");
++	dev_dbg(addicmos->dev, "Status register 0x256 value: %x\n", read_val);
+ 	regmap_read(addicmos->regmap, 0x32, &read_val);
+ 	dev_dbg(addicmos->dev, "Status register 0x32 value: %x\n", read_val);
+ 
+@@ -299,6 +308,9 @@ static int addicmos_power_off(struct device *dev)
+ 	unsigned int read_val;
+ 	int i, ret;
+ 
++	if (!addicmos->streaming)
++		return 0;
++
+ 	dev_dbg(addicmos->dev, "Entered addicmos_power_off\n");
+ 
+ 	ret = regmap_write(addicmos->regmap, 0xC, 0x2);
+@@ -309,11 +321,11 @@ static int addicmos_power_off(struct device *dev)
+ 		msleep_interruptible(100);
+ 		regmap_read(addicmos->regmap, 0xC, &read_val);
+ 		if (read_val == 0x0) {
+-			pwm_disable(addicmos->pwm_fsync);
+ 			return 0;
+ 		}
+ 	}
+ 
++	pwm_disable(addicmos->pwm_fsync);
+ 	dev_err(addicmos->dev, "Power off timed out.\n");
+ 	regmap_read(addicmos->regmap, 0x32, &read_val);
+ 	dev_dbg(addicmos->dev, "Status register 0x32 value: %x\n", read_val);
+@@ -608,14 +620,20 @@ static int addicmos_start_streaming(struct addicmos *addicmos)
+ 	}
+ 
+ 	ret = pwm_enable(addicmos->pwm_fsync);
++	if (ret)
++		dev_err(addicmos->dev, "Could not enable FSYNC PWM\n");
++
++	addicmos->streaming = true;
+ 
+ 	return ret;
+ }
+ 
+ static int addicmos_stop_streaming(struct addicmos *addicmos)
+ {
+-	int ret = 0;
+-	return ret;
++	pwm_disable(addicmos->pwm_fsync);
++	addicmos->streaming = false;
++
++	return 0;
+ }
+ 
+ static int addicmos_s_stream(struct v4l2_subdev *subdev, int enable)
+@@ -646,7 +664,6 @@ static int addicmos_s_stream(struct v4l2_subdev *subdev, int enable)
+ 		pm_runtime_put(addicmos->dev);
+ 	}
+ 
+-	addicmos->streaming = enable;
+ 	mutex_unlock(&addicmos->lock);
+ 
+ 	return ret;
+@@ -670,7 +687,7 @@ static int addicmos_g_frame_interval(struct v4l2_subdev *subdev,
+ 
+ 	fi->interval.numerator = 1;
+ 	fi->interval.denominator =
+-		(u32)pwm_get_period(addicmos->pwm_fsync) / NSEC_PER_SEC;
++		(u32)(NSEC_PER_SEC / pwm_get_period(addicmos->pwm_fsync));
+ 	dev_dbg(addicmos->dev, "%s frame rate = %u / %u\n", __func__,
+ 		fi->interval.numerator, fi->interval.denominator);
+ 
+@@ -835,34 +852,36 @@ static int addicmos_g_sensor_firmware(struct v4l2_subdev *sd)
+ static int addicmos_firmware_load(struct v4l2_subdev *sd)
+ {
+ 	struct addicmos *addicmos = to_addicmos(sd);
+-	int ret;
++	int ret = 0;
+ 
+-	ret = request_firmware(&addicmos->fw, FW_FILE_NAME, addicmos->dev);
+-	if (ret < 0) {
+-		dev_err(addicmos->dev, "FW request failed\n");
+-		return ret;
+-	}
++	if (fw_load) {
++		ret = request_firmware(&addicmos->fw, FW_FILE_NAME, addicmos->dev);
++		if (ret < 0) {
++			dev_err(addicmos->dev, "FW request failed\n");
++			goto release_firmware;
++		}
+ 
+-	ret = addicmos_g_sensor_firmware(sd);
++		ret = addicmos_g_sensor_firmware(sd);
++		if (ret < 0) {
++			dev_err(addicmos->dev, "FW parsing failed\n");
++			goto release_firmware;
++		}
+ 
+-	ret = regmap_multi_reg_write(addicmos->regmap, addicmos->fw_regs,
+-				     addicmos->fw_regs_count);
+-	if (ret)
+-		dev_err(addicmos->dev, "Could not write firmware to camera\n");
++		/* Writes for Default firmware */
++		regmap_multi_reg_write(addicmos->regmap, addicmos->fw_regs,
++					     addicmos->fw_regs_count);
++	}
+ 
+-	release_firmware(addicmos->fw);
+-	if (ret < 0) {
+-		dev_err(addicmos->dev, "FW parsing failed\n");
+-		return ret;
++	if (calib_load) {
++		/* Writes for Default calibration */
++		regmap_multi_reg_write(addicmos->regmap,
++				       addicmos_powerup_setting,
++				       ARRAY_SIZE(addicmos_powerup_setting));
+ 	}
+ 
+-	//Writes for Default calibration - disabled
+-#if 0
+-	regmap_multi_reg_write(addicmos->regmap,
+-			addicmos_powerup_setting,
+-			ARRAY_SIZE(addicmos_powerup_setting));
+-#endif
+-	return 0;
++release_firmware:
++	release_firmware(addicmos->fw);
++	return ret;
+ }
+ 
+ static int addicmos_probe(struct spi_device *client)
+-- 
+2.17.1
+
