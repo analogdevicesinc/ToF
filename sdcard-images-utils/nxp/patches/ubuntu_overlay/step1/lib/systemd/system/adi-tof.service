@@ -3,8 +3,9 @@ Description=Analog Devices TOF sensor service
 After=usb-gadget.target
 
 [Service]
-Type=simple
+Type=oneshot
 ExecStart=/usr/share/systemd/tof-power-en.sh
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target

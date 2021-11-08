@@ -3,7 +3,7 @@ Description=UVC application service
 Wants=adi-tof.service usb-gadget-uvc.service
 
 [Service]
-Type=simple
+Type=exec
 ExecStart=/usr/share/systemd/uvc-gadget
 Restart=on-failure
 RestartSec=1

@@ -4,9 +4,9 @@ Requires=sys-kernel-config.mount
 After=sys-kernel-config.mount
 
 [Service]
+Type=oneshot
 ExecStart=/usr/share/systemd/uvc-gadget.sh start
 ExecStop=/usr/share/systemd/uvc-gadget.sh stop
-Type=simple
 RemainAfterExit=yes
 
 [Install]
