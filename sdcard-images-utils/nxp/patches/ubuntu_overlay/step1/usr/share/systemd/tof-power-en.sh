@@ -106,6 +106,6 @@ echo "V5V0 is $VALUE V"
 fi
 done # Reads back channel 0..7 and temperature (channel #8)
 
-modprobe addicmos
+modprobe addicmos fw_load=1 calib_load=0
 modprobe imx8_media_dev
 modprobe spi_nor
