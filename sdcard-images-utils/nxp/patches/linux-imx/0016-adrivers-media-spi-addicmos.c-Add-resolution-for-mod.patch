@@ -1,7 +1,7 @@
-From b37ee77e8391704320f7efafccae683ce6c4659a Mon Sep 17 00:00:00 2001
+From b5f7f7f8f7ee5bb104a0ca3262df0e02e176e219 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Fri, 23 Jul 2021 09:07:30 +0300
-Subject: [PATCH 16/16] adrivers: media: spi: addicmos.c: Add resolution for
+Subject: [PATCH 16/21] adrivers: media: spi: addicmos.c: Add resolution for
  mode 10
 
 Mode 10 require 4096x256x9 subframes so add corresponding resolution. Also disable default writing of calibration data.
@@ -15,14 +15,14 @@ diff --git a/drivers/media/spi/addicmos.c b/drivers/media/spi/addicmos.c
 index 14faf522d39f..24ce8e03988f 100644
 --- a/drivers/media/spi/addicmos.c
 +++ b/drivers/media/spi/addicmos.c
-@@ -154,6 +154,7 @@ static const s64 link_freq_tbl[] = {
- 	732000000,
- 	732000000,
- 	732000000,
-+	732000000,
- 	732000000
+@@ -150,6 +150,7 @@ static const struct reg_sequence addicmos_standby_setting[] = {
  };
  
+ static const s64 link_freq_tbl[] = {
++	732000000,
+ 	732000000,
+ 	732000000,
+ 	732000000,
 @@ -185,9 +186,15 @@ static const struct addicmos_mode_info addicmos_mode_info_data[] = {
  	},
  	{
@@ -52,5 +52,5 @@ index 14faf522d39f..24ce8e03988f 100644
  			addicmos_powerup_setting,
  			ARRAY_SIZE(addicmos_powerup_setting));
 -- 
-2.32.0
+2.17.1
 

@@ -1,7 +1,7 @@
-From 1bb0715ee5157777200dda650cbc9bc78963b47e Mon Sep 17 00:00:00 2001
+From b2ab0db974a0075a8682c0a75cea55ac9c4effca Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Wed, 7 Jul 2021 12:07:54 +0300
-Subject: [PATCH 14/16] arch: arm64: imx8mp-adi-tof-noreg: Activate pull-down
+Subject: [PATCH 14/21] arch: arm64: imx8mp-adi-tof-noreg: Activate pull-down
  on flash WP
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
@@ -13,7 +13,7 @@ diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts b/arch/arm64
 index 28924e4bc0f9..06332e91004a 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
-@@ -1111,7 +1111,7 @@ MX8MP_IOMUXC_ECSPI2_MOSI__GPIO5_IO11		0x100 /* MOSI pin as GPIO with pull-down *
+@@ -1111,7 +1111,7 @@
  
  	pinctrl_nvram_gpio: nvram-gpio-grp {
  		fsl,pins = <
@@ -23,5 +23,5 @@ index 28924e4bc0f9..06332e91004a 100644
  	};
  
 -- 
-2.32.0
+2.17.1
 

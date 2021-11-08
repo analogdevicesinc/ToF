@@ -1,7 +1,7 @@
-From 68136a92df0e4b3faa3f844ff1a6902bf688c364 Mon Sep 17 00:00:00 2001
+From 63bf78c9c1b13851f3eed773db650b39e0507ce7 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Thu, 11 Mar 2021 11:26:52 +0200
-Subject: [PATCH 02/16] media: spi: Add initial support for addicmos camera
+Subject: [PATCH 02/21] media: spi: Add initial support for addicmos camera
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
@@ -1003,5 +1003,5 @@ index a184c4939438..21e3b433856a 100644
  /* The MPEG controls are applicable to all codec controls
   * and the 'MPEG' part of the define is historical */
 -- 
-2.32.0
+2.17.1
 
