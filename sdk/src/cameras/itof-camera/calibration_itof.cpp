@@ -143,12 +143,13 @@ CalibrationItof::writeConfiguration(const std::string &configurationFile) {
     m_configuration.parseConfigFile((const char *)configurationFile.c_str());
 
     uint32_t offset;
+
     m_configuration.getConfigOffset(offset_type_register, &offset);
     fseek(fd, offset, SEEK_SET);
     writeConfigBlock(fd);
 
     // disabled all digital clock gating before writing to RAMs
-    writeRegister(adsd3100::DIG_PWR_DOWN_OPERATING_CMD, adsd3100::DIG_PWR_DOWN_OPERATING_CMD);
+    writeRegister(adsd3100::DIG_PWR_DOWN_REG_ADDR, adsd3100::DIG_PWR_DOWN_OPERATING_CMD);
 
     const int num_write_blocks = 9;
     offset_type_enum block_writes[num_write_blocks] = {
@@ -429,7 +430,7 @@ Status CalibrationItof::writeConfigBlock(FILE *fd) {
         }
 
         status = m_sensor->writeRegisters(burstAddr, burstData,
-                                          config_block.nBurstSetupWrites);
+                                          config_block.nBurstSetupWrites, false);
 
         if (status != Status::OK) {
             LOG(WARNING) << "Error writting setup registers to imager sensor";
@@ -446,30 +447,22 @@ Status CalibrationItof::writeConfigBlock(FILE *fd) {
     if (config_block.blsBurstLayout == 1) {
 
         /* Burst Write */
-        uint8_t *Data =
-            (uint8_t *)malloc(config_block.nValues * sizeof(uint16_t));
+        uint16_t *data =
+            (uint16_t *)malloc(config_block.nValues * sizeof(uint16_t));
 
-        for (uint32_t i = 0u; i < config_block.nValues; i++) {
-
-            uint16_t aux = 0;
-            if (fread(&aux, UINT_16_BYTES, 1, fd) != 1) {
-                LOG(WARNING) << "Error reading cfg file";
-            }
-            //byte swap for burst write
-            Data[2 * i] = aux >> 8;
-            Data[2 * i + 1] = aux & 0xFF;
-            aux = Data[2 * i] << 8 | Data[2 * i + 1];
+        if (fread(data, UINT_16_BYTES, config_block.nValues, fd) !=
+            config_block.nValues) {
+            LOG(WARNING) << "Error reading cfg file";
         }
 
         status =
-            m_sensor->writeRegisters(&config_block.startAddress,
-                                     reinterpret_cast<const uint16_t *>(Data),
+            m_sensor->writeRegisters(&config_block.startAddress, data,
                                      config_block.nValues, true);
         if (status != Status::OK) {
             LOG(WARNING)
                 << "Error writting indirect registers to imager sensor";
         }
-        free(Data);
+        free(data);
 
     } else {
 
@@ -493,7 +486,7 @@ Status CalibrationItof::writeConfigBlock(FILE *fd) {
             data[i] = nData;
         }
 
-        status = m_sensor->writeRegisters(addr, data, numDataPairs);
+        status = m_sensor->writeRegisters(addr, data, numDataPairs, false);
         if (status != Status::OK) {
             LOG(WARNING) << "Error writting registers to imager sensor";
         }
