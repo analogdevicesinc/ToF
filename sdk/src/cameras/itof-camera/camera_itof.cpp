@@ -225,9 +225,8 @@ aditof::Status CameraItof::start() {
     // only setmode and start the camera.
     if (!m_CameraProgrammed) {
         CalibrationItof calib(m_depthSensor);
-        
-        //TODO: For now disable writeConfiguration. Is performed by driver
-        //status = calib.writeConfiguration(m_sensorFirmwareFile);
+
+        status = calib.writeConfiguration(m_sensorFirmwareFile);
         if (Status::OK != status) {
             LOG(ERROR) << "Error writing camera firmware.";
             return status;
