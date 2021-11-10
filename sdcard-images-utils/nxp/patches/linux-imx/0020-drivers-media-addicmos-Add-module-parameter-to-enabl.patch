@@ -1,7 +1,7 @@
-From ee6fe4556a3560941b0b9571816416a4c5bceff0 Mon Sep 17 00:00:00 2001
+From 51f90c8c103d02261b2486806fe32df9e1a64d8f Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Mon, 8 Nov 2021 11:00:31 +0200
-Subject: [PATCH 20/21] drivers: media: addicmos: Add module parameter to
+Subject: [PATCH 20/22] drivers: media: addicmos: Add module parameter to
  enable FW/Calib loading
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>

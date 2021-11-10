@@ -740,41 +740,29 @@ aditof::Status Adsd3100Sensor::readRegisters(const uint16_t *address,
 
     /*
     Control structure:
-    uint16_t reg_addr
+    uint16_t burst
     uint16_t values_nr
-    uint16_t [65535] val
+    uint16_t [32762] val
+    uint16_t [32762] reg_addr
     */
+
     extCtrl.size = CTRL_PACKET_SIZE * sizeof(uint16_t);
     extCtrl.id = V4L2_CID_AD_DEV_CHIP_CONFIG;
     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
     extCtrls.controls = &extCtrl;
     extCtrls.count = 1;
 
-    if (burst) {
-        buf[0] = address[0];
-        buf[1] = (uint16_t)length;
-        extCtrl.p_u16 = buf;
+    buf[0] = burst;
+    buf[1] = (uint16_t)length;
+	memcpy(&buf[length + 2], address, burst ? sizeof(uint16_t) : length * sizeof(uint16_t));
+    extCtrl.p_u16 = buf;
 
-        if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-             LOG(WARNING) << "Reading ADSD3100 error "
+    if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+        LOG(WARNING) << "Reading ADSD3100 error "
                          << "errno: " << errno << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
         }
         memcpy(data, extCtrl.p_u16 + 2, length * sizeof(uint16_t));
-    } 
-    else 
-        for(size_t i = 0; i < length; i++){
-            buf[0] = address[i];
-            buf[1] = 1;
-            extCtrl.p_u16 = buf;
-
-            if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-                 LOG(WARNING) << "Reading ADSD3100 error "
-                             << "errno: " << errno << " error: " << strerror(errno);
-                return Status::GENERIC_ERROR;
-            }
-            data[i] = extCtrl.p_u16[2];
-    }
 
     return status;
 }
@@ -792,9 +780,10 @@ aditof::Status Adsd3100Sensor::writeRegisters(const uint16_t *address,
 
     /*
     Control structure:
-    uint16_t reg_addr must have write flag set (0x8000)
+    uint16_t burst
     uint16_t values_nr
-    uint16_t [65535] val
+    uint16_t [32768] val
+    uint16_t [32768] reg_addr must have write flag set (0x8000)
     */
 
     memset(&buf, 0, CTRL_PACKET_SIZE * sizeof(uint16_t));
@@ -804,30 +793,18 @@ aditof::Status Adsd3100Sensor::writeRegisters(const uint16_t *address,
     extCtrls.controls = &extCtrl;
     extCtrls.count = 1;
 
-    if (burst) {
-        buf[0] = address[0] | 0x8000;
-        buf[1] = (uint16_t)length;
-        memcpy(&buf[2], data, (length > 65535) ? (65535 * 2) : length * 2);
-        extCtrl.p_u16 = buf;
+    buf[0] = burst;
+    buf[1] = (uint16_t)length;
+    memcpy(&buf[2], data, (length > 32768) ? (32768 * sizeof(uint16_t)) : length * sizeof(uint16_t));
+    memcpy(&buf[length + 2], address, burst ? sizeof(uint16_t) : length * sizeof(uint16_t));
+    buf[length + 2] |= 0x8000;
+    extCtrl.p_u16 = buf;
 
-        if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-            LOG(WARNING) << "Writing ADSD3100 error "
-                         << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
-        }
-    } else 
-        for(size_t i = 0; i < length; i++) {
-            buf[0] = address[i] | 0x8000;
-            buf[1] = 1;
-            buf[2] = data[i];
-            extCtrl.p_u16 = buf;
-            
-            if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-                LOG(WARNING) << "Writing ADSD3100 error "
-                             << "errno: " << errno << " error: " << strerror(errno);
-                return Status::GENERIC_ERROR;
-            }
-        }
+    if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+        LOG(WARNING) << "Writing ADSD3100 error " 
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return Status::GENERIC_ERROR;
+    }
 
     return status;
 }

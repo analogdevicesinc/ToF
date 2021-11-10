@@ -1,7 +1,7 @@
-From b5f7f7f8f7ee5bb104a0ca3262df0e02e176e219 Mon Sep 17 00:00:00 2001
+From 85e2f1872ac817338b24b3cf0fd07e862b13de21 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Fri, 23 Jul 2021 09:07:30 +0300
-Subject: [PATCH 16/21] adrivers: media: spi: addicmos.c: Add resolution for
+Subject: [PATCH 16/22] adrivers: media: spi: addicmos.c: Add resolution for
  mode 10
 
 Mode 10 require 4096x256x9 subframes so add corresponding resolution. Also disable default writing of calibration data.

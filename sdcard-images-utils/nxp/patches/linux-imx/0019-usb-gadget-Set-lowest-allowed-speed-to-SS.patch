@@ -1,7 +1,7 @@
-From 317d44d7ae1cdae5631ead20fef0791afb091066 Mon Sep 17 00:00:00 2001
+From 6fe744e32d799a6c4a85b5f43e584ec7975648fe Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Thu, 7 Oct 2021 16:10:47 +0300
-Subject: [PATCH 19/21] usb: gadget: Set lowest allowed speed to SS
+Subject: [PATCH 19/22] usb: gadget: Set lowest allowed speed to SS
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
