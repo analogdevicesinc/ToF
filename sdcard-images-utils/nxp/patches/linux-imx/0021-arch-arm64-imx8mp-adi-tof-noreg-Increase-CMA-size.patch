@@ -1,7 +1,7 @@
-From 05916e5615ac11e8f58a3bf8cc67ba238b8a11cc Mon Sep 17 00:00:00 2001
+From 74ebecd4c2cab64485f547bfb811d0d8373d8bb7 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Mon, 8 Nov 2021 11:01:37 +0200
-Subject: [PATCH 21/21] arch: arm64: imx8mp-adi-tof-noreg: Increase CMA size
+Subject: [PATCH 21/22] arch: arm64: imx8mp-adi-tof-noreg: Increase CMA size
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---

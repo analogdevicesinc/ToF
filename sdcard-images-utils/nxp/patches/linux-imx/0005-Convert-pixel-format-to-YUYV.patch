@@ -1,7 +1,7 @@
-From 731e6701228cac85f2141240fa2977f856608005 Mon Sep 17 00:00:00 2001
+From 8e77854410c634dc2075ef02d85bb34a0d0d0bde Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Thu, 22 Apr 2021 09:36:10 +0300
-Subject: [PATCH 05/21] Convert pixel format to YUYV
+Subject: [PATCH 05/22] Convert pixel format to YUYV
 
 Signed-off-by: btogorean <bogdan.togorean@analog.com>
 ---

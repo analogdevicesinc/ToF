@@ -1,0 +1,76 @@
+From cf497d3a3c5601d56e2da42b5a4d4f400f17c1c0 Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Wed, 10 Nov 2021 15:03:13 +0200
+Subject: [PATCH 22/22] drivers: media: addicmos.c: Modify chip_config ctrl
+
+Modify chip_config ctrl to get through V4L a block of
+addr<->reg values and loop through in driver and not in SDK.
+This way the number of control calls is greatly reduced and
+FW flashing is speed up greatly.
+SDK should be updated too to support this
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ drivers/media/spi/addicmos.c | 29 ++++++++++++++++++++---------
+ 1 file changed, 20 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/media/spi/addicmos.c b/drivers/media/spi/addicmos.c
+index 76039eaa179d..cedcde9982e6 100644
+--- a/drivers/media/spi/addicmos.c
++++ b/drivers/media/spi/addicmos.c
+@@ -360,24 +360,35 @@ static int addicmos_s_register(struct v4l2_subdev *sd,
+ static int addicmos_chip_config(struct addicmos *addicmos,
+ 				    struct v4l2_ctrl *ctrl)
+ {
+-	u16 *val, reg, val_nr;
++	uint16_t *val, *reg, val_nr, i;
++	bool burst;
+ 	int ret;
+ 
+-	reg = *(ctrl->p_new.p_u16);
++	burst = *(ctrl->p_new.p_u16);
+ 	val_nr = *(ctrl->p_new.p_u16 + 1);
+ 	val = ctrl->p_new.p_u16 + 2;
++	reg = val + val_nr;
+ 
+-	dev_dbg(addicmos->dev, "Entered addicmos_chip_config. ADDR: %x VAL_NR %d \n", reg, val_nr);
+-	if (reg & 0x8000) {
+-		ret = regmap_bulk_write(addicmos->regmap, reg, val, val_nr);
++	dev_dbg(addicmos->dev, "Entered addicmos_chip_config. ADDR: %x VAL_NR %d \n", *reg, val_nr);
++
++	if (*reg & 0x8000) { /* 0x8000 - write mask */
++		if (burst)
++			ret = regmap_bulk_write(addicmos->regmap, *reg, val, val_nr);
++		else
++			for (i=0; i<val_nr; i++)
++				ret = regmap_bulk_write(addicmos->regmap, *(reg + i), val + i, 1);
+ 		if (ret)
+ 			dev_warn(addicmos->dev,
+-				"could not write to register %x\n", reg);
++				"could not write to register %x\n", *reg);
+ 	} else {
+-		ret = regmap_bulk_read(addicmos->regmap, reg, val, val_nr);
++		if (burst)
++			ret = regmap_bulk_read(addicmos->regmap, *reg, val, val_nr);
++		else
++			for (i=0; i<val_nr; i++)
++				ret = regmap_bulk_read(addicmos->regmap, *(reg + i), val + i, 1);
+ 		if (ret)
+ 			dev_warn(addicmos->dev,
+-				"could not read from register %x\n", reg);
++				"could not read from register %x\n", *reg);
+ 	}
+ 
+ 	return 0;
+@@ -432,7 +443,7 @@ static const struct v4l2_ctrl_config addicmos_ctrl_operating_mode = {
+ 	.type		= V4L2_CTRL_TYPE_INTEGER,
+ 	.def		= 0,
+ 	.min		= 0,
+-	.max		= 1,
++	.max		= 10,
+ 	.step		= 1,
+ };
+ 
+-- 
+2.17.1
+
