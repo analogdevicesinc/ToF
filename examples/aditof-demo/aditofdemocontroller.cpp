@@ -168,6 +168,7 @@ void AdiTofDemoController::stopCapture() {
     if (m_workerThread.joinable()) {
         m_workerThread.join();
     }
+    m_queue.clear();
 }
 
 std::string AdiTofDemoController::getMode() const {
