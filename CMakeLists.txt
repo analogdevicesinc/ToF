@@ -30,6 +30,38 @@ option(USE_ITOF "Use ITOF camera?" ON)
 option(WITH_TOOLS "Build tools?" OFF)
 option(USE_DEPTH_COMPUTE_STUBS "Use empty generated libs?" OFF)
 
+################################## Git ########################################
+include(FindGit OPTIONAL)
+if (GIT_FOUND)
+	execute_process(
+		COMMAND ${GIT_EXECUTABLE} rev-parse --show-toplevel
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		OUTPUT_VARIABLE ADITOFSDK_GIT_REPO
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+		ERROR_QUIET
+	)
+
+	if ("${ADITOFSDK_GIT_REPO}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
+		execute_process(
+			COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+			WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+			OUTPUT_VARIABLE ADITOFSDK_GIT_COMMIT
+			OUTPUT_STRIP_TRAILING_WHITESPACE
+		)
+		execute_process(
+			COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+			WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+			OUTPUT_VARIABLE ADITOFSDK_GIT_BRANCH
+			OUTPUT_STRIP_TRAILING_WHITESPACE
+		)
+	endif()
+endif()
+
+add_definitions(-DADITOFSDK_GIT_COMMIT="${ADITOFSDK_GIT_COMMIT}")
+add_definitions(-DADITOFSDK_GIT_BRANCH="${ADITOFSDK_GIT_BRANCH}")
+
+############################## Rest of cmake ##################################
+
 if (WITH_NETWORK)
         add_definitions(-DHAS_NETWORK)
 endif()

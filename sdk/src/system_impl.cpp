@@ -37,6 +37,8 @@
 #include <algorithm>
 #include <glog/logging.h>
 
+#include "aditof/version.h"
+
 using namespace aditof;
 
 static std::vector<std::shared_ptr<Camera>>
@@ -61,7 +63,15 @@ buildCameras(std::unique_ptr<SensorEnumeratorInterface> enumerator) {
     return cameras;
 }
 
-SystemImpl::SystemImpl() {}
+SystemImpl::SystemImpl() {
+    static bool sdkRevisionLogged = false;
+    if (!sdkRevisionLogged) {
+        LOG(INFO) << "SDK version: " << aditof::getApiVersion()
+                  << " | branch: " << ADITOFSDK_GIT_BRANCH
+                  << " | commit: " << ADITOFSDK_GIT_COMMIT;
+        sdkRevisionLogged = true;
+    }
+}
 
 SystemImpl::~SystemImpl() = default;
 
