@@ -208,6 +208,10 @@ if (CMAKE_COMPILER_IS_GNUCC)
     )
 endif()
 
+if ( NXP )
+    target_link_libraries(${PROJECT_NAME} PRIVATE gpiodcxx)
+endif()
+
 if( APPLE )
     find_library( LIBUVC_LIB libuvc.dylib /usr/local/lib/ )
     if( NOT LIBUVC_LIB)

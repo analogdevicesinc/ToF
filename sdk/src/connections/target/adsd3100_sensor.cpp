@@ -21,6 +21,7 @@
 #include <sys/stat.h>
 #include <unordered_map>
 #include "cameras/itof-camera/mode_info.h"
+#include <gpiod.hpp>
 
 #define MAX_SUBFRAMES_COUNT 10 // maximum number of subframes that are used to create a full frame (maximum total_captures of all modes)
 #define EXTRA_BUFFERS_COUNT 3  // how many extra buffers are sent to the driver in addition to the total_captures of a mode
@@ -79,6 +80,7 @@ struct Adsd3100Sensor::ImplData {
      uint8_t numVideoDevs;
     struct VideoDev *videoDevs;
     aditof::DepthSensorFrameType frameType;
+    ::gpiod::line fsync_line;
     ImplData() : numVideoDevs(1), videoDevs(nullptr), frameType{"", {}, 0, 0} {}
 };
 
@@ -245,6 +247,14 @@ using namespace aditof;
             return Status::GENERIC_ERROR;
         }
     }
+
+    /* GPIO open */
+    m_implData->fsync_line = ::gpiod::find_line("FSYNC_CONN");
+    if (!m_implData->fsync_line)
+        LOG(WARNING) << "FSYNC_CONN GPIO not available: FSYNC is controlled by PWM";
+    else
+        m_implData->fsync_line.request({"SDK_FSYNC",
+                                       ::gpiod::line_request ::DIRECTION_OUTPUT, 0 }, 0);
 
     return status;
 }
@@ -697,6 +707,8 @@ aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
     dev = &m_implData->videoDevs[0];
 
     for (int idx = 0; idx < m_capturesPerFrame; idx++) {
+        fsyncTogglePrivate();
+
         status = waitForBufferPrivate(dev);
         if (status != Status::OK) {
             return status;
@@ -958,6 +970,17 @@ Adsd3100Sensor::enqueueInternalBufferPrivate(struct v4l2_buffer &buf,
                      << "errno: " << errno << " error: " << strerror(errno);
         return aditof::Status::GENERIC_ERROR;
     }
+
+    return aditof::Status::OK;
+}
+
+aditof::Status Adsd3100Sensor::fsyncTogglePrivate() {
+    if (!m_implData->fsync_line)
+        return aditof::Status::UNAVAILABLE;
+
+    m_implData->fsync_line.set_value(1);
+    usleep(10);
+    m_implData->fsync_line.set_value(0);
 
     return aditof::Status::OK;
 }
