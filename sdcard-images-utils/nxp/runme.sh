@@ -80,13 +80,13 @@ if [[ $BUILD_TYPE == "buildroot" ]]; then
 	make
 
 	export CROSS_COMPILE=$ROOTDIR/build/buildroot/output/host/bin/aarch64-linux-
-	ROOTFS_IMAGE=$ROOTDIR/build/buildroot/output/images/rootfs.ext2
+	ROOTFS_IMAGE=$ROOTDIR/build/buildroot/output/images/rootfs.ext4
 elif [[ $BUILD_TYPE == "ubuntu" ]]; then
 	#Build ubuntu rootfs
 	echo "*** Building ubuntu rootFS"
 	mkdir -p $ROOTDIR/build/ubuntu
 	bash $ROOTDIR/deboot.sh
-	ROOTFS_IMAGE=$ROOTDIR/build/ubuntu/rootfs.ext2
+	ROOTFS_IMAGE=$ROOTDIR/build/ubuntu/rootfs.ext4
 fi
 
 # Build ATF

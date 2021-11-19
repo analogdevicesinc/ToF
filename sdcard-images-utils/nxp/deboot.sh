@@ -267,11 +267,11 @@ function main() {
   
   cd ${OUTPUT_DIR}
   
-  # create 1GB ext2 image
-  dd if=/dev/zero of=rootfs.ext2 bs=1M count=3000
+  # create 3GB ext4 image
+  dd if=/dev/zero of=rootfs.ext4 bs=1M count=3000
   mkdir -p ${ROOTFS_TMP}
-  mkfs.ext2 rootfs.ext2
-  sudo mount -o loop rootfs.ext2 ${ROOTFS_TMP}
+  mkfs.ext4 rootfs.ext4
+  sudo mount -o loop -o barrier=0 rootfs.ext4 ${ROOTFS_TMP}
 
   install_qemu
 
