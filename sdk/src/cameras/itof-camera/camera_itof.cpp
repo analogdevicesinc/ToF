@@ -223,6 +223,15 @@ aditof::Status CameraItof::start() {
 
     // Program the camera firmware only once, re-starting requires
     // only setmode and start the camera.
+    uint16_t reg_address = 0x256;
+    uint16_t reg_data;
+    m_depthSensor->readRegisters(&reg_address, &reg_data, 1);
+
+    if (reg_data) {
+        m_CameraProgrammed = true;
+        LOG(INFO) << "USEQ running. Skip CFG & CCB programming step\n";
+    }
+
     if (!m_CameraProgrammed) {
         CalibrationItof calib(m_depthSensor);
 
