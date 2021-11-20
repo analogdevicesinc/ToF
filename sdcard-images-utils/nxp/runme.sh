@@ -17,7 +17,7 @@ if [ "x$SHALLOW" == "xtrue" ]; then
 fi
 
 REPO_PREFIX=`git log -1 --pretty=format:%h`
-
+NXP_GIT_LOCATION=${NXP_GIT_LOCATION:=https://source.codeaurora.org/external/imx}
 export ARCH=arm64
 export CROSS_COMPILE=aarch64-linux-gnu-
 ROOTDIR=`pwd`
@@ -34,7 +34,7 @@ for i in $COMPONENTS; do
 		else
 			CHECKOUT=$NXP_REL
 		fi
-		git clone ${SHALLOW_FLAG} https://source.codeaurora.org/external/imx/$i -b $CHECKOUT
+		git clone ${SHALLOW_FLAG} ${NXP_GIT_LOCATION}/$i -b $CHECKOUT
 		cd $i
 		if [[ -d $ROOTDIR/patches/$i/ ]]; then
 			git am $ROOTDIR/patches/$i/*.patch

@@ -9,6 +9,13 @@ The buildsystem is capable to create two different targets:
 		1. Buildroot based initramfs (Intented for production)
 		2. Ubuntu based ROOTFS (Intented for development)
 
+Some BASH environment variables supported to change the building behavior.
+User can specify local mirror location to speed up the fetch of packages and git sources.
+
+* DISTRO_MIRROR is used to specify the mirror location of ports.ubuntu.com.
+* NXP_GIT_LOCATION is used to specify the root location of git repositories for NXP firmware, kernel, bootloader and tools.
+* TOF_GIT_LOCATION is used to specify the location of git repository of TOF SDK.
+
 ## Build with host tools
 Simply running ./runme.sh, it will check for required tools, clone and build images and place results in images/ directory.
 The selection of target is performed using "BUILD_TYPE" variable from runme.sh script. Valid options are: ubuntu | buildroot

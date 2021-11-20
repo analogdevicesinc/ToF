@@ -59,7 +59,7 @@ function setup_config() {
 
   # default configs
   TARGET_ARCH=arm64
-  DISTRO_MIRROR='http://ports.ubuntu.com/ubuntu-ports'
+  DISTRO_MIRROR=${DISTRO_MIRROR:='http://ports.ubuntu.com/ubuntu-ports'}
   DISTRO_CODE=bionic
   USERNAME=analog
   PASSWORD=analog
@@ -233,7 +233,9 @@ systemctl enable uvc-gadget.service
 pushd /home/${USERNAME}
 mkdir Workspace
 pushd Workspace
-git clone https://github.com/analogdevicesinc/aditof-sdk-rework.git
+TOF_GIT_LOCATION=${TOF_GIT_LOCATION:=https://github.com/analogdevicesinc/aditof-sdk-rework.git}
+echo "Clone ToF source code from: $TOF_GIT_LOCATION"
+git clone ${TOF_GIT_LOCATION}
 pushd aditof-sdk-rework/scripts/nxp/
 chmod +x setup.sh
 # ./setup.sh -y -b ../../build -d ../../deps -i /opt -j4
