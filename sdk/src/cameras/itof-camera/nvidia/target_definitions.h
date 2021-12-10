@@ -29,61 +29,12 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "aditof/sensor_enumerator_factory.h"
+#ifndef TARGET_DEFINITIONS_H
+#define TARGET_DEFINITIONS_H
 
-#if defined(NXP) || defined(NVIDIA)
-#define TARGET
-#endif
+static const char *CAPTURE_DEVICE_NAME = "tegra-video";
 
-/* On target SDK will know only about TargetSensorEnumerator, while
-// on remote, SDK will only know about UsbSensorEnumerator and
-// (optionally) about NetworkSensorEnumerator. */
-#ifdef TARGET
-#include "connections/target/target_sensor_enumerator.h"
-#else
-#include "connections/usb/usb_sensor_enumerator.h"
-#include "connections/offline/offline_sensor_enumerator.h"
-#ifdef HAS_NETWORK
-#include "connections/network/network_sensor_enumerator.h"
-#endif
-#endif
+static const char *EEPROM_DEV_PATH = "/dev/mtdblock0";
+static const char *EEPROM_NAME = "MX25U6435F";
 
-using namespace aditof;
-
-std::unique_ptr<SensorEnumeratorInterface>
-SensorEnumeratorFactory::buildTargetSensorEnumerator() {
-#ifdef TARGET
-    return std::unique_ptr<SensorEnumeratorInterface>(
-        new TargetSensorEnumerator());
-#endif
-    return nullptr;
-}
-
-std::unique_ptr<SensorEnumeratorInterface>
-SensorEnumeratorFactory::buildUsbSensorEnumerator() {
-#ifndef TARGET
-    return std::unique_ptr<SensorEnumeratorInterface>(
-        new UsbSensorEnumerator());
-#endif
-    return nullptr;
-}
-
-std::unique_ptr<SensorEnumeratorInterface>
-SensorEnumeratorFactory::buildNetworkSensorEnumerator(const std::string &ip) {
-#ifndef TARGET
-#ifdef HAS_NETWORK
-    return std::unique_ptr<SensorEnumeratorInterface>(
-        new NetworkSensorEnumerator(ip));
-#endif
-#endif
-    return nullptr;
-}
-
-std::unique_ptr<SensorEnumeratorInterface>
-SensorEnumeratorFactory::buildOfflineSensorEnumerator() {
-	#ifdef HAS_OFFLINE
-    	return std::unique_ptr<SensorEnumeratorInterface>(
-                new OfflineSensorEnumerator());
-	#endif
-	return nullptr;
-}
+#endif // TARGET_DEFINITIONS_H

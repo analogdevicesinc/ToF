@@ -221,12 +221,6 @@ aditof::Status Adsd3500Sensor::open() {
             return Status::GENERIC_ERROR;
         }
 
-        if (strcmp((char *)cap.card, cardName)) {
-            LOG(WARNING) << "CAPTURE Device " << cap.card;
-            LOG(WARNING) << "Read " << cardName;
-            return Status::GENERIC_ERROR;
-        }
-
         if (!(cap.capabilities &
               (V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE))) {
             LOG(WARNING) << devName << " is not a video capture device";
@@ -442,6 +436,65 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
 #if 1 // Don't request buffers & set fromat for UVC context. It is already done in uvc-app/lib/v4l2.c
     m_capturesPerFrame = 1;
+
+    dev = &m_implData->videoDevs[0];
+
+    static struct v4l2_control ctrl;
+
+    memset(&ctrl, 0, sizeof(ctrl));
+
+    ctrl.id = CTRL_AB_AVG;
+    ctrl.value = 1; //Enable AB averaging
+
+    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
+        LOG(WARNING) << "Setting Mode error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        status = Status::GENERIC_ERROR;
+    }
+
+    memset(&ctrl, 0, sizeof(ctrl));
+
+    ctrl.id = CTRL_DEPTH_EN;
+    ctrl.value = 1; //Enable Depth compute in ADSD3500
+
+    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
+        LOG(WARNING) << "Setting Mode error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        status = Status::GENERIC_ERROR;
+    }
+
+    memset(&ctrl, 0, sizeof(ctrl));
+
+    ctrl.id = CTRL_PHASE_DEPTH_BITS;
+    ctrl.value = 6; //Set number of bits per depth component 6 = 16 Bits
+
+    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
+        LOG(WARNING) << "Setting Mode error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        status = Status::GENERIC_ERROR;
+    }
+
+    memset(&ctrl, 0, sizeof(ctrl));
+
+    ctrl.id = CTRL_AB_BITS;
+    ctrl.value = 6; //Set number of bits per AB component 6 = 16 Bits
+
+    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
+        LOG(WARNING) << "Setting Mode error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        status = Status::GENERIC_ERROR;
+    }
+
+    memset(&ctrl, 0, sizeof(ctrl));
+
+    ctrl.id = CTRL_CONFIDENCE_BITS;
+    ctrl.value = 2; //Set number of bits per Confidence component 2 = 8 Bits
+
+    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
+        LOG(WARNING) << "Setting Mode error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        status = Status::GENERIC_ERROR;
+    }
 
     for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
         dev = &m_implData->videoDevs[i];
@@ -815,7 +868,7 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* 
     buf[0] = 0x01;
     buf[1] = 0x00;
     buf[2] = 0x10;
-
+    //Fixed field
     buf[3] = 0xAD;
     buf[6] = uint8_t(cmd & 0xFF);   
 
@@ -830,7 +883,7 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Reading Adsd3500 error "
                          << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
+            status = Status::GENERIC_ERROR;
         }
 
     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
@@ -846,12 +899,12 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Reading Adsd3500 error "
                          << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
+            status = Status::GENERIC_ERROR;
         }
 
     if (xioctl(dev->sfd, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1) {
 		LOG(WARNING) << "Failed to get ctrl with id " << extCtrl.id;
-			return Status::GENERIC_ERROR;
+			status = Status::GENERIC_ERROR;
 	}
 
     memcpy(readback_data, extCtrl.p_u8 + 3, payload_len);
@@ -869,7 +922,7 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Switch Adsd3500 to standard mode error "
                          << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
+            status = Status::GENERIC_ERROR;
         }
 
     return status;
