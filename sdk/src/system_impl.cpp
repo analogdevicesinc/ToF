@@ -95,7 +95,7 @@ Status SystemImpl::getCameraList(
         LOG(ERROR) << "Could not create OfflineSensorEnumerator";
         return Status::GENERIC_ERROR;
     }
-#elif defined(NXP)
+#elif defined(NXP) || defined(NVIDIA)
     sensorEnumerator =
         SensorEnumeratorFactory::buildTargetSensorEnumerator();
     if (!sensorEnumerator) {

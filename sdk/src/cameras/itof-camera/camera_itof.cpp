@@ -219,10 +219,13 @@ aditof::Status CameraItof::initialize() {
     //get intrinsics for adsd3500 TO DO: check endianess of intrinsics
     if(m_adsd3500Enabled){
         for (auto availableFrameTypes : m_availableSensorFrameTypes){
-            float intrinsics[14];
+            float intrinsics[14] = { };
             //the first element of readback_data for adsd3500_read_payload is used for the custom command
             //it will be overwritten by the returned data
-            intrinsics[0] = ModeInfo::getInstance()->getModeInfo(availableFrameTypes.type).mode << 24;
+            unsigned char modeIndex;
+            uint8_t* u8_ptr= reinterpret_cast<uint8_t*>(intrinsics);
+            convertCameraMode(availableFrameTypes.type, modeIndex);
+            *u8_ptr = modeIndex;
 
             //hardcoded function values to return intrinsics
             status = m_depthSensor->adsd3500_read_payload_cmd(0x01, (uint8_t*)intrinsics, 56);

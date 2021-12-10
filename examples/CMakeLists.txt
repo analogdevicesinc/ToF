@@ -3,7 +3,7 @@ project(examples)
 
 add_subdirectory(first-frame)
 add_subdirectory(data_collect)
-if (NOT NXP)
+if ((NOT NXP) AND (NOT NVIDIA))
     add_subdirectory(tof-viewer)
 endif()
 
@@ -13,7 +13,7 @@ endif()
 
 include(GNUInstallDirs)
 
-if (NXP)
+if ((NXP) OR (NVIDIA))
     install(PROGRAMS
         $<TARGET_FILE:first-frame>
         $<TARGET_FILE:data_collect>

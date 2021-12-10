@@ -251,7 +251,7 @@ int main(int argc, char *argv[]) {
 
     Status status = Status::OK;
 
-    std::map<int, int> modeIndexMap = {{1, 0}, {3, 1}, {5, 2}, {7, 3}, {10, 4}};
+    std::map<int, int> modeIndexMap = {{7, 0}, {10, 1}};
 
     std::map<std::string, docopt::value> args = docopt::docopt_private(kUsagePublic, kUsageInternal, {argv + 1, argv + argc}, true);
 

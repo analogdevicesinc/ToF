@@ -76,6 +76,7 @@ int main(int argc, char *argv[]) {
     }
 
     auto camera = cameras.front();
+    status = camera->setControl("initialization_config", "./config/config_walden_3500_nxp.json");
     status = camera->initialize();
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
@@ -83,13 +84,13 @@ int main(int argc, char *argv[]) {
     }
 
     //TO DO: Add call for initialization config in order to use this example
-
+#if 0
     status = camera->setControl("loadModuleData", "call");
     if (status != Status::OK) {
         LOG(INFO) << "No CCB/CFG data found in camera module,";
         return 0;
     }
-
+#endif
     std::vector<std::string> frameTypes;
     camera->getAvailableFrameTypes(frameTypes);
     if (frameTypes.empty()) {
@@ -123,6 +124,7 @@ int main(int argc, char *argv[]) {
     //static_cast<int>(frameDepthDetails.width);
 
     cv::namedWindow("Display Image", cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("Display Image 2", cv::WINDOW_AUTOSIZE);
 
     while (cv::waitKey(1) != 27 &&
            getWindowProperty("Display Image", cv::WND_PROP_AUTOSIZE) >= 0) {
@@ -135,8 +137,14 @@ int main(int argc, char *argv[]) {
         }
 
         /* Convert from frame to depth mat */
-        cv::Mat mat;
+        cv::Mat mat, mat2;
         status = fromFrameToDepthMat(frame, mat);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Could not convert from frame to mat!";
+            return 0;
+        }
+
+	status = fromFrameToIrMat(frame, mat2);
         if (status != Status::OK) {
             LOG(ERROR) << "Could not convert from frame to mat!";
             return 0;
@@ -149,9 +157,12 @@ int main(int argc, char *argv[]) {
         /* Convert from raw values to values that opencv can understand */
         mat.convertTo(mat, CV_8U,0.2,5);
 
+	/* Convert from raw values to values that opencv can understand */
+        mat2.convertTo(mat2, CV_8U);
+
         /* Apply a rainbow color map to the mat to better visualize the
          * depth data */
-        applyColorMap(mat, mat, cv::COLORMAP_WINTER);
+        applyColorMap(mat, mat, cv::COLORMAP_RAINBOW);
 
         //Draw the center point
         char text[20];
@@ -173,6 +184,9 @@ int main(int argc, char *argv[]) {
         }
         /* Display the image */
         imshow("Display Image", mat);
+
+	/* Display the image */
+        imshow("Display Image 2", mat2);
     }
 
     return 0;
