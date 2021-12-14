@@ -35,8 +35,8 @@
 #include <glog/logging.h>
 #include <linux/usb/video.h>
 #include <linux/uvcvideo.h>
-#include <sys/ioctl.h>
 #include <memory>
+#include <sys/ioctl.h>
 
 #ifdef DEBUG_USB
 #include <iostream>
@@ -231,8 +231,8 @@ int UsbLinuxUtils::uvcExUnitWriteBuffer(int fd, uint8_t selector, int16_t id,
     return ret;
 }
 
-
-aditof::Status UsbLinuxUtils::uvcExUnitGetString(int fd, int uvcControlId, std::string &outStr) {
+aditof::Status UsbLinuxUtils::uvcExUnitGetString(int fd, int uvcControlId,
+                                                 std::string &outStr) {
     uint16_t bufferLength;
 
     int ret = UsbLinuxUtils::uvcExUnitReadBuffer(
@@ -247,8 +247,8 @@ aditof::Status UsbLinuxUtils::uvcExUnitGetString(int fd, int uvcControlId, std::
     }
 
     std::unique_ptr<uint8_t[]> data(new uint8_t[bufferLength + 1]);
-    ret = UsbLinuxUtils::uvcExUnitReadBuffer(fd, uvcControlId, -1, sizeof(bufferLength),
-                                             data.get(), bufferLength);
+    ret = UsbLinuxUtils::uvcExUnitReadBuffer(
+        fd, uvcControlId, -1, sizeof(bufferLength), data.get(), bufferLength);
     if (ret < 0) {
         LOG(WARNING) << "Failed to read the content of buffer holding sensors "
                         "info. Error: "
@@ -258,6 +258,119 @@ aditof::Status UsbLinuxUtils::uvcExUnitGetString(int fd, int uvcControlId, std::
 
     data[bufferLength] = '\0';
     outStr = reinterpret_cast<char *>(data.get());
+
+    return aditof::Status::OK;
+}
+
+int UsbLinuxUtils::UvcExUnitSetProperty(int fd, uint8_t selector,
+                                        const uint8_t *data, size_t nbBytes) {
+    struct uvc_xu_control_query cq;
+    uint8_t *nonConstBuffer = const_cast<uint8_t *>(data);
+
+    CLEAR(cq);
+    cq.query = UVC_SET_CUR;
+    cq.data = static_cast<unsigned char *>(nonConstBuffer);
+    cq.size = nbBytes;
+    cq.unit = 0x03;
+    cq.selector = selector;
+
+    return UsbLinuxUtils::xioctl(fd, UVCIOC_CTRL_QUERY, &cq);
+}
+
+int UsbLinuxUtils::UvcExUnitGetProperty(int fd, uint8_t selector, uint8_t *data,
+                                        size_t nbBytes) {
+    struct uvc_xu_control_query cq;
+
+    CLEAR(cq);
+    cq.query = UVC_GET_CUR;
+    cq.data = static_cast<unsigned char *>(data);
+    cq.size = nbBytes;
+    cq.unit = 0x03;
+    cq.selector = selector;
+
+    return UsbLinuxUtils::xioctl(fd, UVCIOC_CTRL_QUERY, &cq);
+}
+
+aditof::Status
+UsbLinuxUtils::uvcExUnitSendRequest(int fd, const std::string &requestStr) {
+    const uint8_t uvcSendRequestControl = 1;
+
+    // Send the size of the string we're about to send so that UVC gadget knows how many bytes to expect
+    size_t stringLength = requestStr.size();
+    int ret = UvcExUnitSetProperty(fd, uvcSendRequestControl,
+                                   reinterpret_cast<uint8_t *>(&stringLength),
+                                   MAX_BUF_SIZE);
+    if (ret < 0) {
+        LOG(WARNING)
+            << "Failed to write the length of the request string. Error: "
+            << ret << "(" << strerror(ret) << ")";
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    // Send the entire string to the UVC-gadget
+    uint8_t packet[MAX_BUF_SIZE];
+    size_t writeLen = 0;
+    size_t writtenBytes = 0;
+    const char *data = requestStr.data();
+
+    while (writtenBytes < stringLength) {
+        writeLen = stringLength - writtenBytes > MAX_BUF_SIZE
+                       ? MAX_BUF_SIZE
+                       : stringLength - writtenBytes;
+        memcpy(&packet, data + writtenBytes, writeLen);
+
+        ret = UvcExUnitSetProperty(fd, uvcSendRequestControl, packet,
+                                   MAX_BUF_SIZE);
+        if (ret < 0) {
+            LOG(WARNING) << "Failed to write a packet of the send request "
+                            "string. Error: "
+                         << ret << "(" << strerror(ret) << ")";
+            return aditof::Status::GENERIC_ERROR;
+        }
+        writtenBytes += writeLen;
+    }
+
+    return aditof::Status::OK;
+}
+
+aditof::Status UsbLinuxUtils::uvcExUnitGetResponse(int fd,
+                                                   std::string &responseStr) {
+    const uint8_t uvcGetRequestControl = 2;
+
+    uint8_t packet[MAX_BUF_SIZE];
+
+    // Read the length of the string we're about to read next from the UVC gadget
+    int ret =
+        UvcExUnitGetProperty(fd, uvcGetRequestControl, packet, MAX_BUF_SIZE);
+    if (ret < 0) {
+        LOG(WARNING)
+            << "Failed to read the length of the response string. Error: "
+            << ret << "(" << strerror(ret) << ")";
+        return aditof::Status::GENERIC_ERROR;
+    }
+    size_t stringLength = reinterpret_cast<size_t *>(packet)[0];
+
+    responseStr.reserve(stringLength);
+
+    size_t readBytes = 0;
+    size_t readlength = 0;
+
+    while (readBytes < stringLength) {
+        readlength = stringLength - readBytes > MAX_BUF_SIZE
+                         ? MAX_BUF_SIZE
+                         : stringLength - readBytes;
+
+        ret = UvcExUnitGetProperty(fd, uvcGetRequestControl, packet,
+                                   MAX_BUF_SIZE);
+        if (ret < 0) {
+            LOG(WARNING)
+                << "Failed to read a packet of the response string. Error: "
+                << ret << "(" << strerror(ret) << ")";
+            return aditof::Status::GENERIC_ERROR;
+        }
+        responseStr.append(reinterpret_cast<const char *>(packet), readlength);
+        readBytes += readlength;
+    }
 
     return aditof::Status::OK;
 }
