@@ -32,9 +32,9 @@
 #ifndef USB_LINUX_UTILS_H
 #define USB_LINUX_UTILS_H
 
+#include <aditof/status_definitions.h>
 #include <cstdint>
 #include <string>
-#include <aditof/status_definitions.h>
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
@@ -98,7 +98,49 @@ class UsbLinuxUtils {
      * @param outStr - output string
      * @return aditof::Status - Return OK if operation is succesful or an error code otherwise
      */
-    static aditof::Status uvcExUnitGetString(int fd, int uvcControlId, std::string &outStr);
+    static aditof::Status uvcExUnitGetString(int fd, int uvcControlId,
+                                             std::string &outStr);
+
+    /**
+     * @brief Send bytes to one of the controls of the UVC extension unit
+     * @param fd - The file descriptor for the UVC communication channel
+     * @param selector - The id of the uvc control
+     * @param data - The location of data (bytes) to be sent
+     * @param nbBytes - The number of bytes to be sent
+     * @return int - Return 0 if operation is successful or an error code otherwise
+     */
+    static int UvcExUnitSetProperty(int fd, uint8_t selector,
+                                    const uint8_t *data, size_t nbBytes);
+
+    /**
+     * @brief Read bytes from one of the controls of the UVC extension unit
+     * @param fd - The file descriptor for the UVC communication channel
+     * @param selector - The id of the uvc control
+     * @param data - The location where the read bytes should be stored
+     * @param nbBytes - The number of bytes to be read
+     * @return int - Return 0 if operation is successful or an error code otherwise
+     */
+    static int UvcExUnitGetProperty(int fd, uint8_t selector, uint8_t *data,
+                                    size_t nbBytes);
+
+    /**
+     * @brief Send a request (which is encoded in a protobuf message) via the UVC extension unit
+     * @param fd - The file descriptor for the UVC communication channel
+     * @param requestStr - an encoded (protobuf) string containing the request
+     * @return aditof::Status - Return OK if operation is successful or an error code otherwise
+     */
+    static aditof::Status uvcExUnitSendRequest(int fd,
+                                               const std::string &requestStr);
+
+    /**
+     * @brief Get the response (which is encoded in a protobuf message) for the last request that
+     * was made. This is done via the UVC extension unit.
+    * @param fd - The file descriptor for the UVC communication channel
+     * @param responseStr - an encoded (protobuf) string containing the response
+     * @return aditof::Status - Return OK if operation is successful or an error code otherwise
+     */
+    static aditof::Status uvcExUnitGetResponse(int fd,
+                                               std::string &responseStr);
 };
 
 #endif // USB_LINUX_UTILS_H
