@@ -31,8 +31,8 @@
  */
 #include "connections/usb/usb_depth_sensor.h"
 #include "connections/usb/usb_utils.h"
+#include "usb_buffer.pb.h"
 #include "usb_linux_utils.h"
-#include "utils.h"
 
 #include "device_utils.h"
 
@@ -131,19 +131,44 @@ aditof::Status UsbDepthSensor::open() {
         return Status::GENERIC_ERROR;
     }
 
-    status = UsbLinuxUtils::uvcExUnitGetString(m_implData->fd, 8,
-                                               availableFrameTypesBlob);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Cannot get frame types from target";
+    // Query the target about the frame types that are supported by the depth sensor
+
+    // Send request
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(
+        usb_payload::FunctionName::GET_AVAILABLE_FRAME_TYPES);
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to get available frame types failed";
         return status;
     }
 
-    status = UsbUtils::convertDepthSensorTypes(m_depthSensorFrameTypes,
-                                               availableFrameTypesBlob);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Cannot deserialize frame types";
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Response for get available frame types request failed";
         return status;
     }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR)
+            << "Get available frame types operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
+
+    // If request and response went well, extract data from response
+    UsbUtils::protoMsgToDepthSensorFrameTypes(
+        m_depthSensorFrameTypes, responseMsg.available_frame_types());
 
     m_implData->opened = true;
 
@@ -194,19 +219,17 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     Status status = Status::OK;
 
     // Send the frame type and all its content all the way to target
-    std::string serializedData;
-
-    UsbUtils::convertDepthSensorFrameTypeToSerializedProtobuf(type,
-                                                              serializedData);
-    int ret = UsbLinuxUtils::uvcExUnitWriteBuffer(
-        m_implData->fd, 9, -1, 0,
-        reinterpret_cast<const uint8_t *>(serializedData.c_str()),
-        serializedData.size());
-    if (ret < 0) {
-        LOG(WARNING)
-            << "Failed to write frame type over UVC extension unit. Error: "
-            << ret;
-        return Status::GENERIC_ERROR;
+    usb_payload::ClientRequest requestMsg;
+    auto frameTypeMsg = requestMsg.mutable_frame_type();
+    UsbUtils::depthSensorFrameTypeToProtoMsg(type, frameTypeMsg);
+    // Send request
+    requestMsg.set_func_name(usb_payload::FunctionName::SET_FRAME_TYPE);
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Set frame type operation failed on UVC gadget";
+        return status;
     }
 
     // Buggy driver paranoia.
@@ -452,7 +475,7 @@ aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
     const char *pdata =
         static_cast<const char *>(m_implData->buffers[buf.index].start);
 
-    aditof::deinterleave(pdata, buffer, height * width * 3 / 2, width, height);
+    memcpy(buffer, pdata, height * width * sizeof(uint16_t));
 
     if (-1 == UsbLinuxUtils::xioctl(m_implData->fd, VIDIOC_QBUF, &buf)) {
         LOG(WARNING) << "VIDIOC_QBUF, error: " << errno << "("
@@ -464,84 +487,101 @@ aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
 }
 
 aditof::Status UsbDepthSensor::readRegisters(const uint16_t *address,
-                                                uint16_t *data, size_t length) {
+                                             uint16_t *data, size_t length,
+                                             bool burst) {
     using namespace aditof;
-    int ret;
+    Status status = Status::OK;
 
-    for (size_t i = 0; i < length; ++i) {
-        ret = UsbLinuxUtils::uvcExUnitReadOnePacket(
-            m_implData->fd, 2, reinterpret_cast<uint8_t *>(address[i]), 0,
-            reinterpret_cast<uint8_t *>(&data[i]), 2, 2);
-        if (ret < 0) {
-            LOG(WARNING)
-                << "Failed to read a packet via UVC extension unit. Error: "
-                << ret;
-            return Status::GENERIC_ERROR;
-        }
+    // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::READ_REGISTERS);
+    requestMsg.add_func_int32_param(static_cast<::google::int32>(length));
+    requestMsg.add_func_int32_param(static_cast<::google::int32>(burst));
+    requestMsg.add_func_bytes_param(address,
+                                    burst ? 2 : length * sizeof(uint16_t));
+
+    // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to read registers failed";
+        return status;
     }
+
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to get response of the request to read registers";
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Read registers operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
+
+    // If request and response went well, extract data from response
+    memcpy(data, responseMsg.bytes_payload(0).c_str(),
+           responseMsg.bytes_payload(0).length());
 
     return Status::OK;
 }
 
 aditof::Status UsbDepthSensor::writeRegisters(const uint16_t *address,
-                                                 const uint16_t *data,
-                                                 size_t length) {
+                                              const uint16_t *data,
+                                              size_t length, bool burst) {
     using namespace aditof;
     Status status = Status::OK;
 
-    struct uvc_xu_control_query cq;
-    unsigned char buf[MAX_BUF_SIZE];
+    // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::WRITE_REGISTERS);
+    requestMsg.add_func_int32_param(static_cast<::google::int32>(length));
+    requestMsg.add_func_int32_param(static_cast<::google::int32>(burst));
+    requestMsg.add_func_bytes_param(address,
+                                    burst ? 2 : length * sizeof(uint16_t));
+    requestMsg.add_func_bytes_param(data, length * sizeof(uint16_t));
 
-    CLEAR(cq);
-    cq.query = UVC_SET_CUR; // bRequest
-    cq.unit = 0x03;         // wIndex of Extension Unit
-    cq.selector = 1;        // WValue for AFE Programming
-    cq.data = buf;
-    cq.size = MAX_BUF_SIZE;
-
-    size_t elementCnt = 0;
-    const uint8_t regSize =
-        sizeof(address[0]); // Size (in bytes) of an AFE register
-
-    length *= 2 * sizeof(uint16_t);
-
-    const uint8_t *pAddr = reinterpret_cast<const uint8_t *>(address);
-    const uint8_t *pData = reinterpret_cast<const uint8_t *>(data);
-    const uint8_t *ptr = pAddr;
-    bool pointingAtAddr = true;
-
-    while (length) {
-        memset(buf, 0, MAX_BUF_SIZE);
-        buf[0] = length > MAX_PACKET_SIZE ? 0x01 : 0x02;
-        buf[1] = length > MAX_PACKET_SIZE ? MAX_PACKET_SIZE : length;
-
-        for (int i = 0; i < buf[1]; ++i) {
-            // once every two bytes (or more if reg size is bigger) the ptr is switch to point to the
-            // other array (data or addr) in order to interleave the values to be send */
-            if ((elementCnt / regSize) && (elementCnt % regSize == 0)) {
-                if (pointingAtAddr) {
-                    pAddr = ptr;
-                    ptr = pData;
-                } else {
-                    pData = ptr;
-                    ptr = pAddr;
-                }
-                pointingAtAddr = !pointingAtAddr;
-            }
-            buf[2 + i] = *ptr++;
-            ++elementCnt;
-        }
-
-        length -= buf[1];
-
-        if (-1 ==
-            UsbLinuxUtils::xioctl(m_implData->fd, UVCIOC_CTRL_QUERY, &cq)) {
-            LOG(WARNING) << "Programming AFE error "
-                         << "errno: " << errno << " error: " << strerror(errno);
-        }
+    // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to write registers failed";
+        return status;
     }
 
-    return status;
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR)
+            << "Failed to get response of the request to write registers";
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Read registers operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
+
+    return Status::OK;
 }
 
 aditof::Status
