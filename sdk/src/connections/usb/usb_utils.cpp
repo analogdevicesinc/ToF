@@ -37,45 +37,6 @@
 using namespace std;
 using namespace aditof;
 
-std::vector<std::pair<std::string, unsigned int>>
-UsbUtils::getStorageNamesAndIds(const std::vector<std::string> &tokens) {
-    std::vector<std::pair<std::string, unsigned int>> v;
-
-    for (const auto &t : tokens) {
-        vector<string> keyValueStr;
-        Utils::splitIntoTokens(t, '=', keyValueStr);
-        if (keyValueStr[0] == "STORAGE_NAME") {
-            std::pair<std::string, unsigned int> pair;
-            pair.first = keyValueStr[1];
-            v.emplace_back(pair);
-        } else if (keyValueStr[0] == "STORAGE_ID") {
-            v.back().second = std::stoi(keyValueStr[1]);
-        }
-    }
-
-    return v;
-}
-
-std::vector<std::pair<std::string, unsigned int>>
-UsbUtils::getTemperatureSensorNamesAndIds(
-    const std::vector<std::string> &tokens) {
-    std::vector<std::pair<std::string, unsigned int>> v;
-
-    for (const auto &t : tokens) {
-        vector<string> keyValueStr;
-        Utils::splitIntoTokens(t, '=', keyValueStr);
-        if (keyValueStr[0] == "TEMP_SENSOR_NAME") {
-            std::pair<std::string, unsigned int> pair;
-            pair.first = keyValueStr[1];
-            v.emplace_back(pair);
-        } else if (keyValueStr[0] == "TEMP_SENSOR_ID") {
-            v.back().second = std::stoi(keyValueStr[1]);
-        }
-    }
-
-    return v;
-}
-
 void UsbUtils::protoMsgToDepthSensorFrameTypes(
     std::vector<aditof::DepthSensorFrameType> &depthSensorFrameTypes,
     const usb_payload::DepthSensorFrameTypeVector &protoMsg) {
