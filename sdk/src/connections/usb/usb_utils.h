@@ -45,23 +45,6 @@ namespace usb_payload {
 
 class UsbUtils {
   public:
-    /**
-     * @brief Parses sensor tokens which are strings containing a key-value pair
-     * (e.g. "EEPROM_NAME=eeprom1") and returns the names and IDs of the storages.
-     * @param tokens - The tokens to be parsed.
-     * return std::vector<std::string>
-     */
-    static std::vector<std::pair<std::string, unsigned int>>
-    getStorageNamesAndIds(const std::vector<std::string> &tokens);
-
-    /**
-     * @brief Parses sensor tokens which are strings containing a key-value pair
-     * and returns the names and IDs of the temperature sensors.
-     * @param tokens - The tokens to be parsed.
-     * return std::vector<std::string>
-     */
-    static std::vector<std::pair<std::string, unsigned int>>
-    getTemperatureSensorNamesAndIds(const std::vector<std::string> &tokens);
 
     /**
      * @brief Converts from protobuf message to aditof type (vector of DepthSensorFrameType)
@@ -71,16 +54,6 @@ class UsbUtils {
     static void protoMsgToDepthSensorFrameTypes(
         std::vector<aditof::DepthSensorFrameType> &depthSensorFrameTypesVector,
         const usb_payload::DepthSensorFrameTypeVector &protoMsg);
-
-    /**
-     * @brief Parses a vector of FrameDetails from a protobuf.
-     * @param frameDetails - the parsed vector.
-     * @param availableFrameTypesBlob - the buffer cotaining the serialized data.
-     * return aditof::Status
-     */
-    static aditof::Status
-    convertFrameDetails(std::vector<aditof::FrameDetails> &frameDetails,
-                        const std::string &availableFrameTypesBlob);
 
     /**
      * @brief Converts a DepthSensorFrameType to a protobuf message.
