@@ -4,7 +4,9 @@ project(examples)
 add_subdirectory(first-frame)
 add_subdirectory(data_collect)
 if (NOT NXP)
-    add_subdirectory(tof-viewer)
+    if (WIN32)
+        add_subdirectory(tof-viewer)
+    endif()
 endif()
 
 if (WITH_NETWORK)
@@ -18,7 +20,7 @@ if (NXP)
         $<TARGET_FILE:first-frame>
         $<TARGET_FILE:data_collect>
         DESTINATION ${CMAKE_INSTALL_BINDIR} )
-else()
+elseif(WIN32)
     install(PROGRAMS
         $<TARGET_FILE:first-frame>
         $<TARGET_FILE:data_collect>
