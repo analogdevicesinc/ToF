@@ -115,7 +115,7 @@ Status UsbSensorEnumerator::searchSensors() {
         }
 
 #if defined(ITOF)
-        std::string devName("UVC Camera");
+        std::string devName("ADI CMOS TOF UVC Gadget");
 #else
         std::string devName("ADI TOF DEPTH SENSOR");
 #endif
