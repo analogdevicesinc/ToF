@@ -145,11 +145,15 @@ Status TargetSensorEnumerator::searchSensors() {
         sInfo.captureDev = CAPTURE_DEVICE_NAME;
         m_sensorsInfo.emplace_back(sInfo);
     }
-
-    StorageInfo eepromInfo;
-    eepromInfo.driverName = EEPROM_NAME;
-    eepromInfo.driverPath = EEPROM_DEV_PATH;
-    m_storagesInfo.emplace_back(eepromInfo);
+    
+    // Check if EEPROM is available
+    struct stat st;
+    if (stat(EEPROM_DEV_PATH, &st) == 0) {
+        StorageInfo eepromInfo;
+        eepromInfo.driverName = EEPROM_NAME;
+        eepromInfo.driverPath = EEPROM_DEV_PATH;
+        m_storagesInfo.emplace_back(eepromInfo);
+    }
 
     return status;
 }
