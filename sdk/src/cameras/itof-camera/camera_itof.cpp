@@ -207,9 +207,9 @@ aditof::Status CameraItof::initialize() {
             std::string name;
             m_eeprom->getName(name);
             LOG(ERROR) << "Failed to open EEPROM with name " << name;
-            return status;
+        } else {
+            m_eepromInitialized = true;
         }
-        m_eepromInitialized = true;
     }
 
     LOG(INFO) << "Camera initialized";
