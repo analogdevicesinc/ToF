@@ -99,7 +99,9 @@ Adsd3100Sensor::Adsd3100Sensor(const std::string &driverPath,
                                const std::string &captureDev)
     : m_driverPath(driverPath), m_driverSubPath(driverSubPath),
       m_captureDev(captureDev), m_implData(new Adsd3100Sensor::ImplData) {
+
     m_sensorDetails.connectionType = aditof::ConnectionType::ON_TARGET;
+    m_sensorName = "adsd3100";
 }
 
 Adsd3100Sensor::~Adsd3100Sensor() {
@@ -820,6 +822,11 @@ Adsd3100Sensor::getDetails(aditof::SensorDetails &details) const {
 
 aditof::Status Adsd3100Sensor::getHandle(void **handle) {
     *handle = nullptr;
+    return aditof::Status::OK;
+}
+
+aditof::Status Adsd3100Sensor::getName(std::string &name){
+    name = m_sensorName;
     return aditof::Status::OK;
 }
 

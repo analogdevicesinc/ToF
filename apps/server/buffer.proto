@@ -18,6 +18,11 @@ enum ServerStatus
   REQUEST_UNKNOWN = 1;
 }
 
+message ImagerInfo
+{
+  string name = 10;
+}
+
 message StorageInfo
 {
   string name = 10;
@@ -34,6 +39,7 @@ message SensorsInfo
 {
   repeated StorageInfo storages = 10;               // Information about available storages
   repeated TemperatureSensorInfo temp_sensors = 20; // Information about available temperature sensors
+  ImagerInfo image_sensors = 30;                  // Information abouth available depth sensors
 }
 
 // TO DO: move this to a common file to be shared with USB
