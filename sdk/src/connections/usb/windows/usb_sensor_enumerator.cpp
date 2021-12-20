@@ -153,6 +153,8 @@ Status UsbSensorEnumerator::searchSensors() {
                     // If request and response went well, extract data from response
                     m_sensorsInfo.emplace_back(sInfo);
 
+                    m_sensorName = responseMsg.sensors_info().image_sensors().name();
+
                     m_storagesInfo.clear();
                     for (int i = 0; i < responseMsg.sensors_info().storages_size(); ++i) {
                         auto storage = responseMsg.sensors_info().storages(i);
@@ -187,7 +189,7 @@ Status UsbSensorEnumerator::getDepthSensors(
     depthSensors.clear();
 
     for (const auto &sInfo : m_sensorsInfo) {
-        auto sensor = std::make_shared<UsbDepthSensor>(sInfo.driverPath);
+        auto sensor = std::make_shared<UsbDepthSensor>(m_sensorName,sInfo.driverPath);
         depthSensors.emplace_back(sensor);
     }
 
