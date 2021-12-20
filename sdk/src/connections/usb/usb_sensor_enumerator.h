@@ -54,7 +54,7 @@ class UsbSensorEnumerator : public aditof::SensorEnumeratorInterface {
     struct SensorInfo {
         std::string driverPath;
     };
-
+    std::string m_sensorName;
     std::vector<SensorInfo> m_sensorsInfo;
     std::vector<std::pair<std::string, unsigned int>> m_storagesInfo;
     std::vector<std::pair<std::string, unsigned int>> m_temperatureSensorsInfo;
