@@ -99,7 +99,9 @@ PulsatrixSensor::PulsatrixSensor(const std::string &driverPath,
                                  const std::string &driverSubPath,
                                  const std::string &captureDev)
     : m_driverPath(driverPath), m_driverSubPath(driverSubPath),
-      m_captureDev(captureDev), m_implData(new PulsatrixSensor::ImplData) {}
+      m_captureDev(captureDev), m_implData(new PulsatrixSensor::ImplData) {
+          m_sensorName = "pulsatrix";
+      }
 
 PulsatrixSensor::~PulsatrixSensor() {}
 
@@ -163,6 +165,12 @@ PulsatrixSensor::getDetails(aditof::SensorDetails &details) const {
 
 aditof::Status PulsatrixSensor::getHandle(void **handle) {
 
+    return aditof::Status::OK;
+}
+
+aditof::Status PulsatrixSensor::getName(std::string &name){
+    name = m_sensorName;
+    
     return aditof::Status::OK;
 }
 
