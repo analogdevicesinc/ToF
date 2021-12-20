@@ -31,6 +31,7 @@
  */
 #include "connections/target/target_sensor_enumerator.h"
 #include "connections/target/adsd3100_sensor.h"
+#include "connections/target/pulsatrix_sensor.h"
 #include "connections/target/eeprom.h"
 
 using namespace aditof;
@@ -44,6 +45,12 @@ Status TargetSensorEnumerator::getDepthSensors(
         switch (sInfo.sensorType) {
         case SensorType::SENSOR_ADSD3100: {
             auto sensor = std::make_shared<Adsd3100Sensor>(
+                sInfo.driverPath, sInfo.subDevPath, sInfo.captureDev);
+            depthSensors.emplace_back(sensor);
+            break;
+        }
+        case SensorType::SENSOR_PULSATRIX: {
+            auto sensor = std::make_shared<PulsatrixSensor>(
                 sInfo.driverPath, sInfo.subDevPath, sInfo.captureDev);
             depthSensors.emplace_back(sensor);
             break;
