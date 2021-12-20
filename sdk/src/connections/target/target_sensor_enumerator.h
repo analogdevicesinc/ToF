@@ -54,11 +54,10 @@ class TargetSensorEnumerator : public aditof::SensorEnumeratorInterface {
   private:
     enum class SensorType {
         SENSOR_ADSD3100, //!< ADSD ITOF sensor
+        SENSOR_PULSATRIX  //!< PULSATRIX sensor
     };
 
-    enum class TempSensorType {
-        NO_TYPE
-    };
+    enum class TempSensorType { NO_TYPE };
 
     struct StorageInfo {
         std::string driverName;
