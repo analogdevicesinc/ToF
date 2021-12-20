@@ -336,6 +336,11 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
     camDepthSensor->getDetails(depthSensorDetails);
     auto pbSensorsInfo = response.mutable_sensors_info();
 
+    std::string name;
+    camDepthSensor->getName(name);
+    auto pbDepthSensorInfo = pbSensorsInfo->mutable_image_sensors();
+    pbDepthSensorInfo->set_name(name);
+
     // Storages
     int storage_id = 0;
     for (const auto &storage : storages) {
