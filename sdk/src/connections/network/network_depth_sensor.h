@@ -39,6 +39,7 @@
 class NetworkDepthSensor : public aditof::DepthSensorInterface {
   public:
     NetworkDepthSensor(const std::string &ip);
+    NetworkDepthSensor(const std::string &name, const std::string &ip);
     ~NetworkDepthSensor();
 
   public: // implements DepthSensorInterface
@@ -61,10 +62,11 @@ class NetworkDepthSensor : public aditof::DepthSensorInterface {
     virtual aditof::Status
     getDetails(aditof::SensorDetails &details) const override;
     virtual aditof::Status getHandle(void **handle) override;
+    virtual aditof::Status getName(std::string &name) override;
 
   private:
     struct ImplData;
-
+    std::string m_sensorName;
     aditof::SensorDetails m_sensorDetails;
     std::unique_ptr<ImplData> m_implData;
     int m_sensorIndex;
