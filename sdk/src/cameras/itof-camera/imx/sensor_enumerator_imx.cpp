@@ -78,21 +78,23 @@ aditof::Status findDevicePathsAtVideo(const std::string &video,
     string str(buf);
     free(buf);
 
+    // TO DO : add option for pulsatrix device
+
     size_t pos = str.find("mxc_isi.0.capture");
     if (pos != string::npos) {
-        dev_name = str.substr(pos + strlen("mxc_isi.0.capture") + 2, strlen("/dev/mediaX"));
-    }
-    else {
+        dev_name = str.substr(pos + strlen("mxc_isi.0.capture") + 2,
+                              strlen("/dev/mediaX"));
+    } else {
         return Status::GENERIC_ERROR;
-    } 
+    }
 
     pos = str.find("addicmos spi0.0");
     if (pos != string::npos) {
-        subdev_name = str.substr(pos + strlen("addicmos spi0.0") + 2, strlen("/dev/v4l-subdevX"));
-    }
-    else {
+        subdev_name = str.substr(pos + strlen("addicmos spi0.0") + 2,
+                                 strlen("/dev/v4l-subdevX"));
+    } else {
         return Status::GENERIC_ERROR;
-    } 
+    }
 
     return Status::OK;
 }
@@ -144,8 +146,16 @@ Status TargetSensorEnumerator::searchSensors() {
         sInfo.subDevPath = subdevPath;
         sInfo.captureDev = CAPTURE_DEVICE_NAME;
         m_sensorsInfo.emplace_back(sInfo);
+
+        // TO DO : choose which sensor to use
+
+        sInfo.sensorType = SensorType::SENSOR_PULSATRIX;
+        sInfo.driverPath = devPath;
+        sInfo.subDevPath = subdevPath;
+        sInfo.captureDev = CAPTURE_DEVICE_NAME;
+        m_sensorsInfo.emplace_back(sInfo);
     }
-    
+
     // Check if EEPROM is available
     struct stat st;
     if (stat(EEPROM_DEV_PATH, &st) == 0) {
@@ -157,4 +167,3 @@ Status TargetSensorEnumerator::searchSensors() {
 
     return status;
 }
-
