@@ -319,6 +319,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             buff_send.set_status(::payload::Status::UNREACHABLE);
             break;
         }
+        
         camDepthSensor = depthSensors.front();
         aditof::SensorDetails depthSensorDetails;
         camDepthSensor->getDetails(depthSensorDetails);
@@ -326,6 +327,11 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         sensorV4lBufAccess =
             std::dynamic_pointer_cast<aditof::V4lBufferAccessInterface>(
                 camDepthSensor);
+        
+        std::string name;
+        camDepthSensor->getName(name);
+        auto pbDepthSensorInfo = pbSensorsInfo->mutable_image_sensors();
+        pbDepthSensorInfo->set_name(name);
 
         // Storages
         int storage_id = 0;

@@ -149,6 +149,13 @@ class DepthSensorInterface {
      * @return Status
      */
     virtual aditof::Status getHandle(void **handle) = 0;
+
+    /**
+     * @brief Get the name of the sensor
+     * @param[out] name - the string in which the name is stored
+     * @return Status
+     */
+    virtual aditof::Status getName(std::string &name) = 0;
 };
 
 } // namespace aditof

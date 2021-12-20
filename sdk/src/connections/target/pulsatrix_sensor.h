@@ -31,40 +31,41 @@
  */
 
 #include "aditof/depth_sensor_interface.h"
-#include "connections/target/v4l_buffer_access_interface.h"
 #include "cameras/itof-camera/mode_info.h"
+#include "connections/target/v4l_buffer_access_interface.h"
 #include <memory>
 
 class PulsatrixSensor : public aditof::DepthSensorInterface,
-                       public aditof::V4lBufferAccessInterface {
-    public:
-        PulsatrixSensor(const std::string &driverPath,
-                            const std::string &driverSubPath,
-                            const std::string &captureDev);
-        ~PulsatrixSensor();
+                        public aditof::V4lBufferAccessInterface {
+  public:
+    PulsatrixSensor(const std::string &driverPath,
+                    const std::string &driverSubPath,
+                    const std::string &captureDev);
+    ~PulsatrixSensor();
 
-    public:
-        virtual aditof::Status open() override;
-        virtual aditof::Status start() override;
-        virtual aditof::Status stop() override;
-        virtual aditof::Status
-        getAvailableFrameTypes(std::vector<aditof::DepthSensorFrameType> &types) override;
-        virtual aditof::Status
-        setFrameType(const aditof::DepthSensorFrameType &type) override;
-        virtual aditof::Status program(const uint8_t *firmware,
+  public:
+    virtual aditof::Status open() override;
+    virtual aditof::Status start() override;
+    virtual aditof::Status stop() override;
+    virtual aditof::Status getAvailableFrameTypes(
+        std::vector<aditof::DepthSensorFrameType> &types) override;
+    virtual aditof::Status
+    setFrameType(const aditof::DepthSensorFrameType &type) override;
+    virtual aditof::Status program(const uint8_t *firmware,
                                    size_t size) override;
-        virtual aditof::Status getFrame(uint16_t *buffer) override;
-        virtual aditof::Status readRegisters(const uint16_t *address,
-                                            uint16_t *data,
-                                            size_t length, bool burst = true) override;
-        virtual aditof::Status writeRegisters(const uint16_t *address,
-                                             const uint16_t *data,
-                                             size_t length, bool burst = true) override;
-        virtual aditof::Status
-        getDetails(aditof::SensorDetails &details) const override;
-        virtual aditof::Status getHandle(void **handle) override;
+    virtual aditof::Status getFrame(uint16_t *buffer) override;
+    virtual aditof::Status readRegisters(const uint16_t *address,
+                                         uint16_t *data, size_t length,
+                                         bool burst = true) override;
+    virtual aditof::Status writeRegisters(const uint16_t *address,
+                                          const uint16_t *data, size_t length,
+                                          bool burst = true) override;
+    virtual aditof::Status
+    getDetails(aditof::SensorDetails &details) const override;
+    virtual aditof::Status getHandle(void **handle) override;
+    virtual aditof::Status getName(std::string &name) override;
 
-    public: // implements V4lBufferAccessInterface
+  public: // implements V4lBufferAccessInterface
     // Methods that give a finer control than getFrame()
     // And worksif there is only one v4lbuffer (if many, then I don't know, maybe restructure this interface)
     virtual aditof::Status waitForBuffer() override;
@@ -78,27 +79,28 @@ class PulsatrixSensor : public aditof::DepthSensorInterface,
     virtual aditof::Status
     getDeviceFileDescriptor(int &fileDescriptor) override;
 
-    private:
-        aditof::Status writeConfigBlock(const uint32_t offset);
-        aditof::Status waitForBufferPrivate(struct VideoDev *dev = nullptr);
-        aditof::Status dequeueInternalBufferPrivate(struct v4l2_buffer &buf,
-                                                    struct VideoDev *dev = nullptr);
-        aditof::Status getInternalBufferPrivate(uint8_t **buffer,
-                                                uint32_t &buf_data_len,
-                                                const struct v4l2_buffer &buf,
+  private:
+    aditof::Status writeConfigBlock(const uint32_t offset);
+    aditof::Status waitForBufferPrivate(struct VideoDev *dev = nullptr);
+    aditof::Status dequeueInternalBufferPrivate(struct v4l2_buffer &buf,
                                                 struct VideoDev *dev = nullptr);
-        aditof::Status enqueueInternalBufferPrivate(struct v4l2_buffer &buf,
-                                                    struct VideoDev *dev = nullptr);
+    aditof::Status getInternalBufferPrivate(uint8_t **buffer,
+                                            uint32_t &buf_data_len,
+                                            const struct v4l2_buffer &buf,
+                                            struct VideoDev *dev = nullptr);
+    aditof::Status enqueueInternalBufferPrivate(struct v4l2_buffer &buf,
+                                                struct VideoDev *dev = nullptr);
 
-        aditof::Status setModeByIndex(uint8_t modeIndex);
-        aditof::Status setMode(const std::string& mode);
+    aditof::Status setModeByIndex(uint8_t modeIndex);
+    aditof::Status setMode(const std::string &mode);
 
-    private:
-        struct ImplData;
-        aditof::SensorDetails m_sensorDetails;
-        std::string m_driverPath;
-        std::string m_driverSubPath;
-        std::string m_captureDev;
-        std::unique_ptr<ImplData> m_implData;
-        uint8_t m_capturesPerFrame;
+  private:
+    struct ImplData;
+    std::string m_sensorName;
+    aditof::SensorDetails m_sensorDetails;
+    std::string m_driverPath;
+    std::string m_driverSubPath;
+    std::string m_captureDev;
+    std::unique_ptr<ImplData> m_implData;
+    uint8_t m_capturesPerFrame;
 };
