@@ -230,6 +230,15 @@ UsbDepthSensor::UsbDepthSensor(const std::string &driverPath)
     m_sensorDetails.connectionType = aditof::ConnectionType::USB;
 }
 
+UsbDepthSensor::UsbDepthSensor(const std::string &name, const std::string &driverPath)
+    : m_driverPath(driverPath), m_implData(new UsbDepthSensor::ImplData) {
+    m_implData->handle.pMediaEvent = nullptr;
+    m_implData->opened = false;
+
+    m_sensorDetails.connectionType = aditof::ConnectionType::USB;
+    m_sensorName = name;
+}
+
 UsbDepthSensor::~UsbDepthSensor() {
     HRESULT HR = NOERROR;
 
@@ -803,4 +812,9 @@ aditof::Status UsbDepthSensor::getHandle(void **handle) {
         LOG(ERROR) << "Won't return the handle. Device hasn't been opened yet.";
         return aditof::Status::UNAVAILABLE;
     }
+}
+
+aditof::Status UsbDepthSensor::getName(std::string &name){
+    name = m_sensorName;
+    return aditof::Status::OK;
 }
