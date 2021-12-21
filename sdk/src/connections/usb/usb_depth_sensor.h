@@ -44,7 +44,6 @@ static const unsigned int USB_FRAME_HEIGHT = 480;
 
 class UsbDepthSensor : public aditof::DepthSensorInterface {
   public:
-    UsbDepthSensor(const std::string &driverPath);
     UsbDepthSensor(const std::string &name, const std::string &driverPath);
     ~UsbDepthSensor();
 
@@ -68,7 +67,7 @@ class UsbDepthSensor : public aditof::DepthSensorInterface {
     virtual aditof::Status
     getDetails(aditof::SensorDetails &details) const override;
     virtual aditof::Status getHandle(void **handle) override;
-    virtual aditof::Status getName(std::string &name) override;
+    virtual aditof::Status getName(std::string &name) const override;
 
   private:
     struct ImplData;
