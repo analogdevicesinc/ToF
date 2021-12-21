@@ -825,7 +825,7 @@ aditof::Status Adsd3100Sensor::getHandle(void **handle) {
     return aditof::Status::OK;
 }
 
-aditof::Status Adsd3100Sensor::getName(std::string &name){
+aditof::Status Adsd3100Sensor::getName(std::string &name) const {
     name = m_sensorName;
     return aditof::Status::OK;
 }
