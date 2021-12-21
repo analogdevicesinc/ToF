@@ -50,7 +50,7 @@ struct NetworkDepthSensor::ImplData {
     bool opened;
 };
 
-NetworkDepthSensor::NetworkDepthSensor(const std::string &ip)
+NetworkDepthSensor::NetworkDepthSensor(const std::string &name, const std::string &ip)
     : m_implData(new NetworkDepthSensor::ImplData) {
 
     static int m_sensorCounter = 0;
@@ -61,17 +61,7 @@ NetworkDepthSensor::NetworkDepthSensor(const std::string &ip)
     m_implData->handle.net = net;
     m_implData->ip = ip;
     m_implData->opened = false;
-
     m_sensorDetails.connectionType = aditof::ConnectionType::NETWORK;
-}
-
-NetworkDepthSensor::NetworkDepthSensor(const std::string &name, const std::string &ip)
-    : m_implData(new NetworkDepthSensor::ImplData) {
-
-    Network *net = new Network();
-    m_implData->handle.net = net;
-    m_implData->ip = ip;
-    m_implData->opened = false;
     m_sensorName = name;
 }
 
@@ -517,7 +507,7 @@ aditof::Status NetworkDepthSensor::getHandle(void **handle) {
     return aditof::Status::OK;
 }
 
-aditof::Status NetworkDepthSensor::getName(std::string &name){
+aditof::Status NetworkDepthSensor::getName(std::string &name) const {
     name = m_sensorName;
     return aditof::Status::OK;
 }

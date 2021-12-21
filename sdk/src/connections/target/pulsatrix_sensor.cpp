@@ -168,7 +168,7 @@ aditof::Status PulsatrixSensor::getHandle(void **handle) {
     return aditof::Status::OK;
 }
 
-aditof::Status PulsatrixSensor::getName(std::string &name){
+aditof::Status PulsatrixSensor::getName(std::string &name) const {
     name = m_sensorName;
     
     return aditof::Status::OK;
