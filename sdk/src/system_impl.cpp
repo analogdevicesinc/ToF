@@ -39,6 +39,10 @@
 
 #include "aditof/version.h"
 
+#ifdef HAS_NETWORK
+#include <lws_config.h>
+#endif
+
 using namespace aditof;
 
 static std::vector<std::shared_ptr<Camera>>
@@ -70,6 +74,10 @@ SystemImpl::SystemImpl() {
                   << " | branch: " << ADITOFSDK_GIT_BRANCH
                   << " | commit: " << ADITOFSDK_GIT_COMMIT;
         sdkRevisionLogged = true;
+#if HAS_NETWORK
+        LOG(INFO) << "SDK built with websockets version:"
+                  << LWS_LIBRARY_VERSION;
+#endif
     }
 }
 
