@@ -49,7 +49,8 @@ namespace local {
 
 aditof::Status findDevicePathsAtVideo(const std::string &video,
                                       std::string &dev_name,
-                                      std::string &subdev_name) {
+                                      std::string &subdev_name,
+                                      std::string &deviceName) {
     using namespace aditof;
     using namespace std;
 
@@ -78,8 +79,6 @@ aditof::Status findDevicePathsAtVideo(const std::string &video,
     string str(buf);
     free(buf);
 
-    // TO DO : add option for pulsatrix device
-
     size_t pos = str.find("mxc_isi.0.capture");
     if (pos != string::npos) {
         dev_name = str.substr(pos + strlen("mxc_isi.0.capture") + 2,
@@ -88,14 +87,20 @@ aditof::Status findDevicePathsAtVideo(const std::string &video,
         return Status::GENERIC_ERROR;
     }
 
-    pos = str.find("addicmos spi0.0");
-    if (pos != string::npos) {
+    if (str.find("pulsatrix") != string::npos) {
+        deviceName = "pulsatrix";
+        pos = str.find("pulsatrix 1-002a");
+        subdev_name = str.substr(pos + strlen("pulsatrix 1-002a") + 2,
+                                 strlen("/dev/v4l-subdevX"));
+
+    } else if (str.find("addicmos") != string::npos) {
+        deviceName = "addicmos";
+        pos = str.find("addicmos spi0.0");
         subdev_name = str.substr(pos + strlen("addicmos spi0.0") + 2,
                                  strlen("/dev/v4l-subdevX"));
     } else {
         return Status::GENERIC_ERROR;
     }
-
     return Status::OK;
 }
 
@@ -110,6 +115,7 @@ Status TargetSensorEnumerator::searchSensors() {
     std::vector<std::string> videoPaths;
     const std::string videoDirPath("/dev/");
     const std::string videoBaseName("media");
+    std::string deviceName;
 
     DIR *dirp = opendir(videoDirPath.c_str());
     struct dirent *dp;
@@ -129,7 +135,8 @@ Status TargetSensorEnumerator::searchSensors() {
         std::string devPath;
         std::string subdevPath;
 
-        status = local::findDevicePathsAtVideo(video, devPath, subdevPath);
+        status = local::findDevicePathsAtVideo(video, devPath, subdevPath,
+                                               deviceName);
         if (status != Status::OK) {
             LOG(WARNING) << "failed to find device paths at video: " << video;
             return status;
@@ -138,18 +145,17 @@ Status TargetSensorEnumerator::searchSensors() {
         if (devPath.empty() || subdevPath.empty()) {
             continue;
         }
+
         DLOG(INFO) << "Considering: " << video << " an eligible TOF camera";
 
         SensorInfo sInfo;
-        sInfo.sensorType = SensorType::SENSOR_ADSD3100;
-        sInfo.driverPath = devPath;
-        sInfo.subDevPath = subdevPath;
-        sInfo.captureDev = CAPTURE_DEVICE_NAME;
-        m_sensorsInfo.emplace_back(sInfo);
 
-        // TO DO : choose which sensor to use
+        if (deviceName == "pulsatrix") {
+            sInfo.sensorType = SensorType::SENSOR_PULSATRIX;
+        } else if (deviceName == "addicmos") {
+            sInfo.sensorType = SensorType::SENSOR_ADSD3100;
+        }
 
-        sInfo.sensorType = SensorType::SENSOR_PULSATRIX;
         sInfo.driverPath = devPath;
         sInfo.subDevPath = subdevPath;
         sInfo.captureDev = CAPTURE_DEVICE_NAME;
