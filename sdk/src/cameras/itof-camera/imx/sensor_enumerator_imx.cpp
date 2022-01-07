@@ -48,9 +48,9 @@ using namespace aditof;
 namespace local {
 
 aditof::Status findDevicePathsAtVideo(const std::string &video,
-                                      std::string &dev_name,
-                                      std::string &subdev_name,
-                                      std::string &deviceName) {
+                                      std::string &dev_path,
+                                      std::string &subdev_path,
+                                      std::string &device_name) {
     using namespace aditof;
     using namespace std;
 
@@ -81,22 +81,22 @@ aditof::Status findDevicePathsAtVideo(const std::string &video,
 
     size_t pos = str.find("mxc_isi.0.capture");
     if (pos != string::npos) {
-        dev_name = str.substr(pos + strlen("mxc_isi.0.capture") + 2,
+        dev_path = str.substr(pos + strlen("mxc_isi.0.capture") + 2,
                               strlen("/dev/mediaX"));
     } else {
         return Status::GENERIC_ERROR;
     }
 
     if (str.find("pulsatrix") != string::npos) {
-        deviceName = "pulsatrix";
+        device_name = "pulsatrix";
         pos = str.find("pulsatrix 1-002a");
-        subdev_name = str.substr(pos + strlen("pulsatrix 1-002a") + 2,
+        subdev_path = str.substr(pos + strlen("pulsatrix 1-002a") + 2,
                                  strlen("/dev/v4l-subdevX"));
 
     } else if (str.find("addicmos") != string::npos) {
-        deviceName = "addicmos";
+        device_name = "addicmos";
         pos = str.find("addicmos spi0.0");
-        subdev_name = str.substr(pos + strlen("addicmos spi0.0") + 2,
+        subdev_path = str.substr(pos + strlen("addicmos spi0.0") + 2,
                                  strlen("/dev/v4l-subdevX"));
     } else {
         return Status::GENERIC_ERROR;
