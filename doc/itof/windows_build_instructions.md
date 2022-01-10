@@ -10,6 +10,7 @@
 * Glog v0.3.5
 * Libwebsockets v3.1
 * Protocol Buffers v3.9.0
+* Depth Compute
 
 ### Installing the dependencies
 * CMake
@@ -46,6 +47,19 @@ cmake --build . --target install --config Debug
 cmake --build . --target install --config Release
 ```
 
+* Depth Compute:
+
+The Depth Compute library is required to build the SDK and run any application based on the SDK.
+Based on the following scenarios you will be able to do the following:
+
+1. You have the **development package** (tofi_compute.dll, tof_compute.lib, tofi_config.dll, tofi_config.lib) for the Depth Compute library. With it you will be able to build the SDK. You just need to put the files mentioned above in a directory called 'libs' which should be placed at the same level as the repository directory.
+
+    If you prefer to keep the files somewhere else, you can tell cmake where to find them using the cmake variable: LIBTOFI_LIBDIR_PATH
+
+2. You have the **distribution package** (tofi_compute.dll, tofi_config.dll) for the Depth Compute library. With it you won't be able to build the SDK unless you turn on the  USE_DEPTH_COMPUTE_STUBS cmake option. This will create an empty Depth Compute library allowing the build of SDK to complete. To use the real Depth Compute, just replace the stubs generated during build (tofi_compute.dll, tofi_config.dll) with the ones from the distribution package.
+
+3. You have no Depth Compute packages. In this case you can still build the SDK by enabling the USE_DEPTH_COMPUTE_STUBS option but you won't have access to the functionality that Depth Compute provides.
+
 ### Download and build SDK only
 * Follow below steps to download the SDK, generate MS Visual Studio project and build it directly from command line
 ```console
@@ -55,6 +69,11 @@ mkdir build
 cd build
 cmake -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk\deps\glog\build_0_3_5\local_path\glog;C:\projects\aditof-sdk\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\aditof-sdk\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=off ..
 cmake --build . --config Release
+```
+
+* Or if you will be building the Depth Compute stubs the cmake command should be:
+```console
+cmake -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk\deps\glog\build_0_3_5\local_path\glog;C:\projects\aditof-sdk\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\aditof-sdk\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=off -DUSE_DEPTH_COMPUTE_STUBS=on ..
 ```
 
 ## Building the SDK with examples
