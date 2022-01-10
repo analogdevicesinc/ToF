@@ -6,8 +6,7 @@ This folder contains the user guides, helper documents, doxygen documents, etc. 
 #### Directory Structure
 | Directory/File | Description |
 | --------- | ----------- |
-| linux | Instructions to build and use all necessary software on a Linux host |
-| windows | Instructions to build and use all necessary software on a Windows host |
+| itof | Dcoumentation related to ITOF (Indirect Time Of Flight) cameras |
 | img | Images used in various documentation files |
 | CMakeLists.txt | Rules for generating the doxygen documentation on request |
 | sdcard_burn.md | Instructions to write the SD card image onto a SD card |
