@@ -39,62 +39,24 @@
 
 using namespace aditof;
 
-void callback(aditof_roscpp::Aditof_roscppConfig &config, uint32_t level,
-              std::shared_ptr<Camera> &camera) {
-
-    config.groups.camera_tof.noise_reduction.state = true;
-
-    switch (config.mode) {
-    case 0:
-        setMode(camera, "near");
-        applyNoiseReduction(camera, config.threshold);
-        break;
-    case 1:
-        setMode(camera, "medium");
-        applyNoiseReduction(camera, config.threshold);
-        break;
-    case 2:
-        disableNoiseReduction(camera);
-        setMode(camera, "far");
-        config.threshold = 0;
-
-        //disable the noise reduction, as it is not supported for this mode
-        config.groups.camera_tof.noise_reduction.state = false;
-        break;
-    }
-
-    switch (config.revision) {
-    case 0:
-        setCameraRevision(camera, "RevB");
-        break;
-    case 1:
-        setCameraRevision(camera, "RevC");
-        break;
-    }
-    setIrGammaCorrection(camera, config.ir_gamma);
-}
-
 int main(int argc, char **argv) {
 
     std::shared_ptr<Camera> camera = initCamera(argc, argv);
     ROS_ASSERT_MSG(camera, "initCamera call failed");
 
-    setFrameType(camera, "depth_ir");
-    setMode(camera, "near");
+    setFrameType(camera, "mp_pcm");
+    startCamera(camera);
 
     ros::init(argc, argv, "aditof_camera_node");
     dynamic_reconfigure::Server<aditof_roscpp::Aditof_roscppConfig> server;
     dynamic_reconfigure::Server<
         aditof_roscpp::Aditof_roscppConfig>::CallbackType f;
 
-    f = boost::bind(&callback, _1, _2, camera);
-    server.setCallback(f);
-
     //create publishers
     ros::NodeHandle nHandle("aditof_roscpp");
-    ros::Publisher pcl_pubisher =
+    /*ros::Publisher pcl_pubisher =
         nHandle.advertise<sensor_msgs::PointCloud2>("aditof_pcloud", 5);
-    ROS_ASSERT_MSG(pcl_pubisher, "creating pcl_pubisher failed");
+    ROS_ASSERT_MSG(pcl_pubisher, "creating pcl_pubisher failed");*/
 
     ros::Publisher depth_img_pubisher =
         nHandle.advertise<sensor_msgs::Image>("aditof_depth", 5);
@@ -103,23 +65,24 @@ int main(int argc, char **argv) {
     ros::Publisher ir_img_pubisher =
         nHandle.advertise<sensor_msgs::Image>("aditof_ir", 5);
     ROS_ASSERT_MSG(ir_img_pubisher, "creating ir_img_pubisher failed");
-
+/*
     ros::Publisher camera_info_pubisher =
         nHandle.advertise<sensor_msgs::CameraInfo>("aditof_camera_info", 5);
     ROS_ASSERT_MSG(camera_info_pubisher,
                    "creating camera_info_pubisher failed");
-
+*/
     Frame frame;
     getNewFrame(camera, &frame);
 
     //create messages
     ros::Time timeStamp = ros::Time::now();
-    AditofSensorMsg *pcl_msg = MessageFactory::create(
+    
+    /*AditofSensorMsg *pcl_msg = MessageFactory::create(
         camera, &frame, MessageType::sensor_msgs_PointCloud2, timeStamp);
     ROS_ASSERT_MSG(pcl_msg, "pointcloud message creation failed");
     PointCloud2Msg *pclMsg = dynamic_cast<PointCloud2Msg *>(pcl_msg);
     ROS_ASSERT_MSG(pclMsg,
-                   "downcast from AditofSensorMsg to PointCloud2Msg failed");
+                   "downcast from AditofSensorMsg to PointCloud2Msg failed");*/
 
     AditofSensorMsg *depth_img_msg = MessageFactory::create(
         camera, &frame, MessageType::sensor_msgs_DepthImage, timeStamp);
@@ -135,20 +98,20 @@ int main(int argc, char **argv) {
     ROS_ASSERT_MSG(irImgMsg,
                    "downcast from AditofSensorMsg to IRImageMsg failed");
 
-    AditofSensorMsg *camera_info_msg = MessageFactory::create(
+  /*  AditofSensorMsg *camera_info_msg = MessageFactory::create(
         camera, &frame, MessageType::sensor_msgs_CameraInfo, timeStamp);
     ROS_ASSERT_MSG(camera_info_msg, "camera_info_msg message creation failed");
     CameraInfoMsg *cameraInfoMsg =
         dynamic_cast<CameraInfoMsg *>(camera_info_msg);
     ROS_ASSERT_MSG(cameraInfoMsg,
                    "downcast from AditofSensorMsg to CameraInfoMsg failed");
-
+*/
     while (ros::ok()) {
         ros::Time tStamp = ros::Time::now();
         getNewFrame(camera, &frame);
 
-        pclMsg->FrameDataToMsg(camera, &frame, tStamp);
-        pclMsg->publishMsg(pcl_pubisher);
+        //pclMsg->FrameDataToMsg(camera, &frame, tStamp);
+        //pclMsg->publishMsg(pcl_pubisher);
 
         depthImgMsg->FrameDataToMsg(camera, &frame, tStamp);
         depthImgMsg->publishMsg(depth_img_pubisher);
@@ -156,15 +119,15 @@ int main(int argc, char **argv) {
         irImgMsg->FrameDataToMsg(camera, &frame, tStamp);
         irImgMsg->publishMsg(ir_img_pubisher);
 
-        cameraInfoMsg->FrameDataToMsg(camera, &frame, tStamp);
-        cameraInfoMsg->publishMsg(camera_info_pubisher);
+        //cameraInfoMsg->FrameDataToMsg(camera, &frame, tStamp);
+        //cameraInfoMsg->publishMsg(camera_info_pubisher);
 
         ros::spinOnce();
     }
 
-    delete pcl_msg;
+    //delete pcl_msg;
     delete depth_img_msg;
     delete ir_img_msg;
-    delete camera_info_msg;
+    //delete camera_info_msg;
     return 0;
 }
