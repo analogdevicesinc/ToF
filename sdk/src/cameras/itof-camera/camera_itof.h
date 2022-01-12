@@ -327,6 +327,7 @@ class CameraItof : public aditof::Camera {
     bool m_devStarted;
     bool m_eepromInitialized;
     bool m_tempSensorInitialized;
+    bool m_pulsatrixEnabled;
 
     uint8_t *m_calData = NULL;
     uint8_t *m_depthINIData = NULL;
