@@ -193,14 +193,13 @@ aditof::Status CameraItof::initialize() {
 
     m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
 
-    void *handle;
-    aditof::Status status = m_depthSensor->getHandle(&handle);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Failed to obtain the handle";
-        return status;
-    }
-
     if (m_eeprom) {
+        void *handle;
+        aditof::Status status = m_depthSensor->getHandle(&handle);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to obtain the handle";
+            return status;
+        }
         // Open communication with EEPROM
         status = m_eeprom->open(handle);
         if (status != Status::OK) {
