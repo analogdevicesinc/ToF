@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
     
     
     }
-    status = camera->setFrameType("mp_pcm");
+    status = camera->setFrameType("qmp");
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 0;
