@@ -103,4 +103,14 @@ class PulsatrixSensor : public aditof::DepthSensorInterface,
     std::string m_captureDev;
     std::unique_ptr<ImplData> m_implData;
     uint8_t m_capturesPerFrame;
+        const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {{
+        "qmp",
+        {{"raw", 512, 512},
+         {"ir", 512, 512},
+         {"xyz", 512, 512},
+         {"depth", 512, 512},
+         {"embedded_header", 1, 128}},
+        512,
+        512,
+    }};
 };
