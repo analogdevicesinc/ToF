@@ -46,6 +46,7 @@ For more details about the SDK check the links below:
 | first-frame | <a href="https://github.com/analogdevicesinc/aditof-sdk-rework/tree/master/examples/first-frame"> C++ </a> <br> <a href="https://github.com/analogdevicesinc/aditof-sdk-rework/tree/master/bindings/python/examples/first_frame"> Python </a> | An example code that shows the steps required to get to the point where camera frames can be captured. |
 | first-frame-network | <a href="https://github.com/analogdevicesinc/aditof-sdk-rework/tree/master/examples/first-frame-network"> C++ </a> | An application that shows how to use the aditof sdk to talk to a remote ToF camera over the network. |
 | low_level_example | <a href="https://github.com/analogdevicesinc/aditof-sdk-rework/tree/master/bindings/python/examples/low_level_example"> Python</a> | A simple example of how to get access to the low-level API of the camera. |
+| ROS over network | <a href="https://github.com/analogdevicesinc/aditof-sdk-rework/tree/master/bindings/ros/"> C++</a> | ROS binding that publishes topics over network |
 
 ## Directory Structure
 | Directory | Description |

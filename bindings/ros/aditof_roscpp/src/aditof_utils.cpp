@@ -33,8 +33,10 @@
 
 #include <aditof/frame.h>
 #include <aditof/system.h>
-
+#include <ros/package.h>
 #include <ros/ros.h>
+#include <string.h>
+#include <unistd.h>
 
 using namespace aditof;
 
@@ -52,6 +54,7 @@ std::string parseArgs(int argc, char **argv) {
         << "No ip provided, attempting to connect to the camera through USB";
     return std::string();
 }
+
 
 std::shared_ptr<Camera> initCamera(int argc, char **argv) {
 
@@ -73,12 +76,57 @@ std::shared_ptr<Camera> initCamera(int argc, char **argv) {
     }
 
     std::shared_ptr<Camera> camera = cameras.front();
+
+    /*std::string package_path = ros::package::getPath("aditof_roscpp");
+    package_path = package_path + "/../../config/config_walden_nxp.json";
+    LOG(INFO) << "Json config file location: "<< package_path;*/
+
+    // user can pass any config.json stored anywhere in HW
+    status =
+        camera->setControl("initialization_config",
+                           "/home/analog/.ros/config/config_walden_nxp.json");
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not set the initialization config file!";
+        return 0;
+    }
+
     status = camera->initialize();
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
-        return nullptr;
+        return 0;
     }
+
+    status = camera->setControl("powerUp", "call");
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not PowerUp camera!";
+        return 0;
+    }
+
+    // optionally load configuration data from module memory
+    status = camera->setControl("loadModuleData", "call");
+    if (status != Status::OK) {
+        LOG(INFO) << "No CCB/CFG data found in camera module,";
+        LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data "
+                     "from JSON config file...";
+    }
+
+    status = camera->setControl("enableDepthCompute", "off");
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not set depthCompute to off!";
+        return 0;
+    }
+
     return camera;
+}
+void startCamera(const std::shared_ptr<aditof::Camera> &camera) {
+    Status status = Status::OK;
+
+    status = camera->start();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not start camera!";
+        return;
+    }
+    return;
 }
 
 void setFrameType(const std::shared_ptr<aditof::Camera> &camera,
