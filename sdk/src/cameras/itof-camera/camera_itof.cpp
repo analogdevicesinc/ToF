@@ -52,8 +52,9 @@ CameraItof::CameraItof(
     std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms,
     std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &tSensors)
     : m_depthSensor(depthSensor), m_devStarted(false), m_eepromInitialized(false),
-      m_modechange_framedrop_count(0), m_xyzEnabled(false), m_xyzSetViaControl(false), m_loadedConfigData(false), m_tempFiles{} {
-    m_details.mode = "mp_pcm";
+      m_modechange_framedrop_count(0), m_xyzEnabled(false), m_xyzSetViaControl(false), m_loadedConfigData(false), m_tempFiles{},
+      m_pulsatrixEnabled(false) {
+    m_details.mode = "qmp";
     m_details.cameraId = "";
 
     // Define some of the controls of this camera
@@ -83,21 +84,30 @@ CameraItof::CameraItof(
     m_depthSensor->getDetails(sDetails);
     m_details.connection = sDetails.connectionType;
 
+    std::string sensorName;
+    m_depthSensor->getName(sensorName);
+    if (sensorName == "pulsatrix") {
+        m_pulsatrixEnabled = true;
+    }
 
     // Look for EEPROM
-    auto eeprom_iter =
-        std::find_if(eeproms.begin(), eeproms.end(),
-                [this](std::shared_ptr<aditof::StorageInterface> e) {
-                        std::string name;
-                        e->getName(name);
-                        return name == m_eepromDeviceName;
-                 });
-    if (eeprom_iter == eeproms.end()) {
-        LOG(WARNING) << "Could not find " << m_eepromDeviceName
-                     << " while looking for storage";
-        m_eeprom = NULL;
+    if(!m_pulsatrixEnabled){
+        auto eeprom_iter =
+            std::find_if(eeproms.begin(), eeproms.end(),
+                    [this](std::shared_ptr<aditof::StorageInterface> e) {
+                            std::string name;
+                            e->getName(name);
+                            return name == m_eepromDeviceName;
+                     });
+        if (eeprom_iter == eeproms.end()) {
+            LOG(WARNING) << "Could not find " << m_eepromDeviceName
+                         << " while looking for storage";
+            m_eeprom = NULL;
+        } else {
+            m_eeprom = *eeprom_iter;
+        }
     } else {
-        m_eeprom = *eeprom_iter;
+        m_eeprom = NULL;
     }
 }
 
@@ -124,6 +134,13 @@ aditof::Status CameraItof::initialize() {
             return status;
         }
         m_devStarted = true;
+    }
+
+    m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
+
+    if (m_pulsatrixEnabled) {
+        LOG(INFO) << "Camera initialized";
+        return Status::OK;
     }
 
     // Parse config.json
@@ -225,6 +242,16 @@ aditof::Status CameraItof::start() {
     using namespace aditof;
     Status status = Status::OK;
 
+    if (m_pulsatrixEnabled) {
+        m_CameraProgrammed = true;
+        status = m_depthSensor->start();
+        if (Status::OK != status) {
+            LOG(ERROR) << "Error starting pulsatrix.";
+            return Status::GENERIC_ERROR;
+        }
+        return aditof::Status::OK;
+    }
+
     // Program the camera firmware only once, re-starting requires
     // only setmode and start the camera.
     uint16_t reg_address = 0x256;
@@ -315,7 +342,7 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
         return status;
     }
 
-    if ((frameType == "pcm")) {
+    if ((frameType == "pcm") || m_pulsatrixEnabled) {
         m_controls["enableDepthCompute"] = "off";
     }
 
@@ -324,7 +351,11 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
     // TO DO: m_details.frameType.cameraMode =
     m_details.frameType.width = ModeInfo::getInstance()->getModeInfo(frameType).width;
     m_details.frameType.height = ModeInfo::getInstance()->getModeInfo(frameType).height;
-    m_details.frameType.totalCaptures = ModeInfo::getInstance()->getModeInfo(frameType).subframes;
+    if(!m_pulsatrixEnabled){
+        m_details.frameType.totalCaptures = ModeInfo::getInstance()->getModeInfo(frameType).subframes;
+    } else {
+        m_details.frameType.totalCaptures = 1;
+    }
     m_details.frameType.dataDetails.clear();
     for (const auto item : (*frameTypeIt).content) {
         if (item.type == "xyz" && !m_xyzEnabled) {
@@ -414,8 +445,12 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         frame->setDetails(m_details.frameType);
     }
 
-    frame->getAttribute("total_captures", totalCapturesStr);
-    totalCaptures = std::atoi(totalCapturesStr.c_str());
+    if(!m_pulsatrixEnabled){
+        frame->getAttribute("total_captures", totalCapturesStr);
+        totalCaptures = std::atoi(totalCapturesStr.c_str());
+    } else {
+        totalCaptures = 1;
+    }
 
     uint16_t *frameDataLocation = nullptr;
     if ((m_details.frameType.type == "pcm")){
@@ -428,19 +463,29 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         frame->getData("raw", &frameDataLocation);
     }
 
-    uint16_t *embedFrame = nullptr;
-    frame->getData("frameData", &embedFrame);
+    if(!m_pulsatrixEnabled){
+        uint16_t *embedFrame = nullptr;
+        frame->getData("frameData", &embedFrame);
 
-    status = m_depthSensor->getFrame(embedFrame);
+        status = m_depthSensor->getFrame(embedFrame);
 
-    if (status != Status::OK) {
-        LOG(WARNING) << "Failed to get embedded frame from device";
-        return status;
+        if (status != Status::OK) {
+            LOG(WARNING) << "Failed to get embedded frame from device";
+            return status;
+        }
+    } else {
+        uint16_t *depthData = nullptr;
+        frame->getData("depth", &depthData);
+        status = m_depthSensor->getFrame(depthData);
+        if (status != Status::OK) {
+            LOG(WARNING) << "Failed to get frame from pulsatrix";
+            return status;
+        }
     }
     // TO DO: use control 'enableDepthCompute' to enable or bypass the depth compute (instead of checking if frame type is "depth_ir"
 
-    uint16_t *header = nullptr;
-    frame->getData("header", &header);
+    //uint16_t *header = nullptr;
+    //frame->getData("header", &header);
 
     if (!frameDataLocation /*&& !header*/) {
         LOG(WARNING) << "getframe failed to allocated valid frame";
@@ -953,6 +998,11 @@ aditof::Status CameraItof::loadModuleData() {
     if (m_details.connection == aditof::ConnectionType::OFFLINE) {
         return status;
     }
+
+    if(m_pulsatrixEnabled) {
+        return status;
+    }
+
     cleanupTempFiles();
     if (!m_eepromInitialized) {
         LOG(ERROR) << "Memory interface can't be accessed";
