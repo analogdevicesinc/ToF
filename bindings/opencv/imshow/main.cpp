@@ -45,6 +45,9 @@
 
 using namespace aditof;
 
+bool m_centerPointEnabled = false; //Enable to display center point and distance at point
+bool m_logoEnabled = false; //Enable to display logo
+
 int main(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
@@ -53,14 +56,17 @@ int main(int argc, char *argv[]) {
 
     System system;
 
-    //cv::Mat logo = cv::imread("config/logo.png"); 
-    //if (logo.empty()) {
-    //    LOG(ERROR) << "Could not open or find the logo";
-    //    return 0;
-    //}
-
-    //Change the logo to a format that opencv can use
-    //logo.convertTo(logo, CV_8U,255.0);
+    cv::Mat logo;
+    if(m_logoEnabled){
+        logo = cv::imread("config/logo.png"); 
+        if (logo.empty()) {
+            LOG(ERROR) << "Could not open or find the logo";
+            return 0;
+        }
+    
+        //Change the logo to a format that opencv can use
+        logo.convertTo(logo, CV_8U,255.0);
+    }
 
     std::vector<std::shared_ptr<Camera>> cameras;
     system.getCameraList(cameras);
@@ -105,6 +111,12 @@ int main(int argc, char *argv[]) {
     camera->getDetails(cameraDetails);
     aditof::Frame frame;
 
+    aditof::FrameDataDetails frameDepthDetails;
+    frame.getDataDetails("depth", frameDepthDetails);
+
+    const int frameHeight = static_cast<int>(frameDepthDetails.height);
+    const int frameWidth = static_cast<int>(frameDepthDetails.width);
+
     cv::namedWindow("Display Image", cv::WINDOW_AUTOSIZE);
 
     while (cv::waitKey(1) != 27 &&
@@ -124,32 +136,36 @@ int main(int argc, char *argv[]) {
             LOG(ERROR) << "Could not convert from frame to mat!";
             return 0;
         }
-
+        
         //Read the center point distance value
-        cv::Point2d pointxy(512, 512);
+        cv::Point2d pointxy(frameHeight / 2, frameWidth / 2);
         int m_distanceVal = static_cast<int>(mat.at<ushort>(pointxy));
 
         /* Convert from raw values to values that opencv can understand */
-        //mat.convertTo(mat, CV_8U,0.2,5);
+        mat.convertTo(mat, CV_8U,0.2,5);
 
         /* Apply a rainbow color map to the mat to better visualize the
          * depth data */
         applyColorMap(mat, mat, cv::COLORMAP_WINTER);
 
         //Draw the center point
-        //char text[20];
-        //sprintf(text, "%dmm", m_distanceVal);
-        //cv::drawMarker(mat, pointxy, cv::Scalar(255, 255, 255),
-        //               cv::MARKER_CROSS);
-        //cv::circle(mat, pointxy, 8, cv::Scalar(255, 255, 255));
-        //cv::putText(mat, text, pointxy + cv::Point2d(10, 20),
-        //            cv::FONT_HERSHEY_DUPLEX, 3,
-        //            cv::Scalar(255, 255, 255),4);
-        //
-        //cv::Mat insertLogo(mat, cv::Rect(50, 900,200,79));
-        //cv::addWeighted(insertLogo, 0.85 , logo,
-        //                1.0F - 0.85, 0, insertLogo);
+        char text[20];
+        sprintf(text, "%dmm", m_distanceVal);
 
+        if(m_centerPointEnabled){
+            cv::drawMarker(mat, pointxy, cv::Scalar(255, 255, 255),
+                           cv::MARKER_CROSS);
+            cv::circle(mat, pointxy, 8, cv::Scalar(255, 255, 255));
+            cv::putText(mat, text, pointxy + cv::Point2d(10, 20),
+                        cv::FONT_HERSHEY_DUPLEX, 3,
+                        cv::Scalar(255, 255, 255),4);
+        }
+        
+        if(m_logoEnabled){
+            cv::Mat insertLogo(mat, cv::Rect(50, 900,200,79));
+            cv::addWeighted(insertLogo, 0.85 , logo,
+                        1.0F - 0.85, 0, insertLogo);
+        }
         /* Display the image */
         imshow("Display Image", mat);
     }
