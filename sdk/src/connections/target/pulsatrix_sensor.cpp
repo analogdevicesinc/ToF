@@ -526,9 +526,6 @@ aditof::Status PulsatrixSensor::getFrame(uint16_t *buffer) {
             return status;
         }
 
-#ifdef SAVE_RAW_FRAMES
-        saveFrame(std::to_string(idx), (char *)pdata, buf[idx].bytesused);
-#endif
         memcpy(buffer, pdata, buf_data_len);
 
         status = enqueueInternalBufferPrivate(buf[idx], dev);
@@ -536,9 +533,6 @@ aditof::Status PulsatrixSensor::getFrame(uint16_t *buffer) {
             return status;
         }
     }
-#ifdef SAVE_RAW_FRAMES
-    saveFrame("_full_raw", (char *)buffer, buf_data_len * m_capturesPerFrame);
-#endif
 
     return status;
 }
