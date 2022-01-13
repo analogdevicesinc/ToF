@@ -91,23 +91,21 @@ CameraItof::CameraItof(
     }
 
     // Look for EEPROM
-    if(!m_pulsatrixEnabled){
-        auto eeprom_iter =
-            std::find_if(eeproms.begin(), eeproms.end(),
-                    [this](std::shared_ptr<aditof::StorageInterface> e) {
-                            std::string name;
-                            e->getName(name);
-                            return name == m_eepromDeviceName;
-                     });
-        if (eeprom_iter == eeproms.end()) {
+    auto eeprom_iter =
+        std::find_if(eeproms.begin(), eeproms.end(),
+                [this](std::shared_ptr<aditof::StorageInterface> e) {
+                        std::string name;
+                        e->getName(name);
+                        return name == m_eepromDeviceName;
+                 });
+    if (eeprom_iter == eeproms.end()) {
+        if(!m_pulsatrixEnabled){
             LOG(WARNING) << "Could not find " << m_eepromDeviceName
                          << " while looking for storage";
-            m_eeprom = NULL;
-        } else {
-            m_eeprom = *eeprom_iter;
         }
-    } else {
         m_eeprom = NULL;
+    } else {
+        m_eeprom = *eeprom_iter;
     }
 }
 
@@ -483,10 +481,12 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         }
     }
     // TO DO: use control 'enableDepthCompute' to enable or bypass the depth compute (instead of checking if frame type is "depth_ir"
-
-    //uint16_t *header = nullptr;
-    //frame->getData("header", &header);
-
+    
+    uint16_t *header = nullptr;
+    if(!m_pulsatrixEnabled){
+        frame->getData("header", &header);
+    }
+    
     if (!frameDataLocation /*&& !header*/) {
         LOG(WARNING) << "getframe failed to allocated valid frame";
         return status;
