@@ -942,6 +942,9 @@ aditof::Status CameraItof::loadModuleData() {
     using namespace aditof;
     Status status = Status::OK;
 
+    if (m_details.connection == aditof::ConnectionType::OFFLINE) {
+        return status;
+    }
     cleanupTempFiles();
     if (!m_eepromInitialized) {
         LOG(ERROR) << "Memory interface can't be accessed";
