@@ -6,7 +6,6 @@
 /********************************************************************************/
 
 #include <aditof/camera.h>
-#include <aditof/floatTolin.h>
 #include <aditof/frame.h>
 #include <aditof/system.h>
 #include <docopt.h>
