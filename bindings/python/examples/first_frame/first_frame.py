@@ -43,6 +43,8 @@ camera1 = cameras[0]
 status = camera1.initialize()
 print("camera1.initialize()", status)
 
+camera1.setControl("loadModuleData", "call");
+
 types = []
 status = camera1.getAvailableFrameTypes(types)
 print("camera1.getAvailableFrameTypes()", status)
