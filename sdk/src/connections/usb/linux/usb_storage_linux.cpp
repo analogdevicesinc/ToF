@@ -167,8 +167,6 @@ Status UsbStorage::write(const uint32_t address, const uint8_t *data,
 
     Status status = Status::OK;
 
-    // TO DO: is it required to call UvcFindNodeAndGetControl here?
-
     // Construct request message
     usb_payload::ClientRequest requestMsg;
     requestMsg.set_func_name(usb_payload::FunctionName::STORAGE_WRITE);
@@ -217,8 +215,6 @@ Status UsbStorage::getCapacity(size_t &nbBytes) const
     using namespace aditof;
 
     Status status = Status::OK;
-
-    // TO DO: is it required to call UvcFindNodeAndGetControl here?
 
     // Construct request message
     usb_payload::ClientRequest requestMsg;
