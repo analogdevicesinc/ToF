@@ -3,7 +3,9 @@
 #include <iostream>
 #include <cstring>
 
-OfflineDepthSensor::OfflineDepthSensor(std::string path) : m_path(path) {}
+OfflineDepthSensor::OfflineDepthSensor(std::string path) : m_path(path) {
+    m_sensorDetails.connectionType = aditof::ConnectionType::OFFLINE;
+}
 
 OfflineDepthSensor::~OfflineDepthSensor() = default;
 
@@ -59,7 +61,8 @@ aditof::Status OfflineDepthSensor::writeRegisters(const uint16_t *address,
 
 aditof::Status
 OfflineDepthSensor::getDetails(aditof::SensorDetails &details) const {
-    return aditof::Status::UNAVAILABLE;
+    details = m_sensorDetails;
+    return aditof::Status::OK;
 }
 
 aditof::Status OfflineDepthSensor::getHandle(void **handle) {

@@ -57,6 +57,8 @@ NetworkDepthSensor::NetworkDepthSensor(const std::string &ip)
     m_implData->handle.net = net;
     m_implData->ip = ip;
     m_implData->opened = false;
+
+    m_sensorDetails.connectionType = aditof::ConnectionType::NETWORK;
 }
 
 NetworkDepthSensor::~NetworkDepthSensor() {
@@ -496,7 +498,6 @@ aditof::Status NetworkDepthSensor::writeRegisters(const uint16_t *address,
 aditof::Status
 NetworkDepthSensor::getDetails(aditof::SensorDetails &details) const {
     details = m_sensorDetails;
-
     return aditof::Status::OK;
 }
 
