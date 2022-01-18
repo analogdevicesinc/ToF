@@ -1663,9 +1663,7 @@ static void usage(const char *argv0) {
   fprintf(stderr, " -o <IO method> Select UVC IO method:\n\t"
                   "0 = MMAP\n\t"
                   "1 = USER_PTR\n");
-  fprintf(stderr, " -r <resolution> Select frame resolution:\n\t"
-                  "0 = 4096x2560,\n\t"
-                  "1 = 4096x640,\n\t");
+  fprintf(stderr, " -m Select mode (b/w 0 and 10)\n");
   fprintf(stderr, " -u device	UVC Video Output device\n");
   fprintf(stderr, " -v device	V4L2 Video Capture device\n");
   fprintf(stderr, " -a Indicate that this is TOF hw\n");
@@ -1687,14 +1685,13 @@ int main(int argc, char *argv[]) {
 
   struct uvc_device *udev = nullptr;
   struct timeval tv;
-  struct v4l2_format fmt;
   const char *uvc_devname = "/dev/video0";
 
   fd_set fdsv, fdsu;
   int ret, opt, nfds;
   /* Frame format/resolution related params. */
-  int default_resolution = 0; /* 4096x256 */
   int nbufs = 4;              /* Ping-Pong buffers */
+  int mode = 0;               /* Camera operating mode */
   enum io_method uvc_io_method = IO_METHOD_USERPTR;
 
   DLOG(INFO) << "This UVC instance is using aditof sdk version: "
@@ -1774,20 +1771,21 @@ int main(int argc, char *argv[]) {
              (uvc_io_method == IO_METHOD_MMAP) ? "MMAP" : "USER_PTR");
       break;
 
-    case 'r':
-      if (atoi(optarg) < 0 || atoi(optarg) > 3) {
-        usage(argv[0]);
-        return 1;
-      }
-
-      default_resolution = atoi(optarg);
-      break;
-
     case 'u':
       uvc_devname = optarg;
       break;
 
     case 'v':
+      break;
+
+    case 'm':
+      if (atoi(optarg) < 0 || atoi(optarg) > 10) {
+        usage(argv[0]);
+        return 1;
+      }
+
+      mode = atoi(optarg);
+      printf("Requested camera operating mode = %d\n", mode);
       break;
 
     default:
@@ -1796,17 +1794,6 @@ int main(int argc, char *argv[]) {
       return 1;
     }
   }
-
-  CLEAR(fmt);
-  fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-  /* Seperating v4l2 resolution from UVC resolution, depending on HW,
-   * this can be set to - TOF: 640x960 or D3: 1280x720 */
-  fmt.fmt.pix.width = default_resolution == 0 ? 4096 : 4096;
-  fmt.fmt.pix.height = default_resolution == 0 ? 2560 : 640;
-
-  fmt.fmt.pix.sizeimage = fmt.fmt.pix.width * fmt.fmt.pix.height * 2;
-  fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
-  fmt.fmt.pix.field = V4L2_FIELD_ANY;
 
   // Open communication with depth sensor
   camDepthSensor->open();
@@ -1832,27 +1819,6 @@ int main(int argc, char *argv[]) {
 
   udev->uvc_devname = uvc_devname;
 
-  printf("Set parameters by user\n");
-
-  /* Set parameters as passed by user. */
-  if (default_resolution == 0) {
-    udev->width = 4096;
-    udev->height = 2560;
-  } else {
-    udev->width = 4096;
-    udev->height = 64;
-  }
-
-  udev->imgsize = udev->width * udev->height * 2;
-  udev->fcc = V4L2_PIX_FMT_YUYV;
-  udev->io = uvc_io_method;
-  udev->nbufs = nbufs;
-
-  ret = uvc_video_set_format(udev);
-  if (ret < 0) {
-    printf("Failed to set format for UVC\n");
-  }
-
   std::string depthSensorFrameTypesBlob;
   std::vector<aditof::DepthSensorFrameType> depthSensorFrameTypes;
   uvc_payload::DepthSensorFrameTypeVector depthSensorFrameTypesPayload;
@@ -1862,6 +1828,25 @@ int main(int argc, char *argv[]) {
                                          depthSensorFrameTypesPayload);
   depthSensorFrameTypesPayload.SerializeToString(&depthSensorFrameTypesBlob);
   marshallString(frameTypesBuffer, depthSensorFrameTypesBlob);
+
+  printf("Set parameters by user\n");
+
+  udev->width = depthSensorFrameTypes[mode].width;
+  udev->height = depthSensorFrameTypes[mode].height;
+  udev->fcc = V4L2_PIX_FMT_YUYV;
+  udev->io = uvc_io_method;
+  udev->nbufs = nbufs;
+
+  ret = uvc_video_set_format(udev);
+  if (ret < 0) {
+    printf("Failed to set format for UVC\n");
+  }
+
+  /* Set default frame type */
+  aditof::Status status = camDepthSensor->setFrameType(depthSensorFrameTypes[mode]);
+  if (status != aditof::Status::OK) {
+    printf("Failed to set frame type\n");
+  }
 
   /* Init UVC events. */
   uvc_events_init(udev);
