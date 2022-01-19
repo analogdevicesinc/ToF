@@ -485,12 +485,10 @@ aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
         return Status::INVALID_ARGUMENT;
     }
 
-    unsigned int width = m_implData->fmt.fmt.pix.width;
-    unsigned int height = m_implData->fmt.fmt.pix.height;
     const char *pdata =
         static_cast<const char *>(m_implData->buffers[buf.index].start);
 
-    memcpy(buffer, pdata, height * width * sizeof(uint16_t));
+    memcpy(buffer, pdata, m_implData->buffers[buf.index].length);
 
     if (-1 == UsbLinuxUtils::xioctl(m_implData->fd, VIDIOC_QBUF, &buf)) {
         LOG(WARNING) << "VIDIOC_QBUF, error: " << errno << "("
