@@ -116,7 +116,8 @@ std::string ModuleMemory::writeTempJSON(const std::string ccbFilename, const std
     }
     ss << std::endl << "}" << std::endl;
 
-    LOG(INFO) << "Writing temporary file: " << tempFileName;
+    LOG(INFO) << "Writing temporary JSON file: " << tempFileName << "\n"
+              << ss.str().c_str();
     fputs(ss.str().c_str(), file);
     fclose(file);
     return tempFileName;
@@ -133,7 +134,7 @@ std::string ModuleMemory::writeToTempFile(const uint8_t *const dataBuffer, const
         return std::string();
     }
 
-    LOG(INFO) << "Writing temporary file: " << tempFileName;
+    LOG(INFO) << "Writing temporary " << fileTag << " file : " << tempFileName;
     fwrite(reinterpret_cast<const void *>(dataBuffer), sizeof(char), length, file);
     fclose(file);
     return tempFileName;
