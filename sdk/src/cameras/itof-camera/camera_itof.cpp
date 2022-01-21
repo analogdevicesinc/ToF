@@ -139,6 +139,8 @@ aditof::Status CameraItof::initialize() {
             if (m_sensorFirmwareFile.empty()) {
                 // save firmware file location
                 m_sensorFirmwareFile = std::string(json_sensorFirmware_file->valuestring);
+                LOG(INFO) << "Current sensor firmware is: "
+                          << m_sensorFirmwareFile;
             } else {
                 LOG(WARNING) << "Duplicate firmware file ignored: " << json_sensorFirmware_file->valuestring;
             }
@@ -150,6 +152,8 @@ aditof::Status CameraItof::initialize() {
             if (m_ccb_calibrationFile.empty()) {
                 // save calibration file location
                 m_ccb_calibrationFile = std::string(json_ccb_calibration_file->valuestring);
+                LOG(INFO) << "Current calibration file is: "
+                          << m_ccb_calibrationFile;
             } else {
                 LOG(WARNING) << "Duplicate calibration file ignored: " << json_ccb_calibration_file->valuestring;
             }
@@ -166,6 +170,7 @@ aditof::Status CameraItof::initialize() {
         if (cJSON_IsString(json_depth_ini_file) && (json_depth_ini_file->valuestring != NULL))
             // save depth ini file location
             m_ini_depth = std::string(json_depth_ini_file->valuestring);
+        LOG(INFO) << "Current Depth ini file is: " << m_ini_depth;
 
         // Get optional power config
         const cJSON *json_vaux_pwr = cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_ENABLE");
@@ -187,8 +192,8 @@ aditof::Status CameraItof::initialize() {
     if (configStatus == aditof::Status::OK) {
         m_loadedConfigData = true;
     } else {
-        LOG(INFO) << "loadConfigData failed";
-        return aditof::Status::GENERIC_ERROR;
+        LOG(ERROR) << "loadConfigData failed";
+        return Status::GENERIC_ERROR;
     }
 
     m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
@@ -465,7 +470,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         uint32_t ret = TofiCompute(frameDataLocation, m_tofi_compute_context, NULL);
 
         if (ret != ADI_TOFI_SUCCESS) {
-            LOG(INFO) << "TofiCompute failed";
+            LOG(ERROR) << "TofiCompute failed";
             return Status::GENERIC_ERROR;
         }
 
@@ -615,18 +620,18 @@ aditof::Status CameraItof::initComputeLibrary(void) {
         }
 
         if ((m_tofi_config == NULL) || (m_tofi_config->p_tofi_cal_config == NULL) || (status != ADI_TOFI_SUCCESS)) {
-            LOG(INFO) << "InitTofiConfig failed";
+            LOG(ERROR) << "InitTofiConfig failed";
             return aditof::Status::GENERIC_ERROR;
 
         } else {
             m_tofi_compute_context = InitTofiCompute(m_tofi_config->p_tofi_cal_config, &status);
             if (m_tofi_compute_context == NULL || status != ADI_TOFI_SUCCESS) {
-                LOG(INFO) << "InitTofiCompute failed";
+                LOG(ERROR) << "InitTofiCompute failed";
                 return aditof::Status::GENERIC_ERROR;
             }
         }
     } else {
-        LOG(INFO) << "Could not initialize compute library because config data hasn't been loaded";
+        LOG(ERROR) << "Could not initialize compute library because config data hasn't been loaded";
         return aditof::Status::GENERIC_ERROR;
     }
 
@@ -672,7 +677,7 @@ aditof::Status CameraItof::loadConfigData(void) {
 
         status = LoadFileContents(m_ini_depth.c_str(), m_depthINIData, &iniFileSize);
         if (status == 0) {
-            LOG(WARNING) << "Unable to load depth ini contents\n";
+            LOG(ERROR) << "Unable to load depth ini contents\n";
             return retErr;
         }
     }
@@ -686,7 +691,7 @@ aditof::Status CameraItof::loadConfigData(void) {
         }
         status = LoadFileContents(m_ccb_calibrationFile.c_str(), m_calData, &calFileSize);
         if (status == 0) {
-	   LOG(INFO) << m_ccb_calibrationFile.c_str();
+            LOG(ERROR) << "Could not load " << m_ccb_calibrationFile.c_str();
            return retErr;
         }
     }

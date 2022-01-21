@@ -1122,7 +1122,8 @@ void ADIMainWindow::showLogWindow(bool *p_open) {
 	my_log.Draw("Camera: Log", p_open);
 
 	while (fgets(buffer, 512, input)) {
-		my_log.AddLog(buffer, nullptr);
+            //ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), buffer);
+            my_log.AddLog(buffer, nullptr);
 	}
 }
 
