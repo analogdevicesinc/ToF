@@ -40,14 +40,21 @@
 
 using namespace aditof;
 
-std::string parseArgs(int argc, char **argv) {
+bool isValidIPv4(const char *IPAddress)
+{
+   unsigned char a,b,c,d;
+   return sscanf(IPAddress,"%d.%d.%d.%d", &a, &b, &c, &d) == 4;
+}
+
+std::string parseArgsForIp(int argc, char **argv) {
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
-
+    
     if (argc > 1) {
-        std::string ip = argv[1];
-        if (!ip.empty()) {
-            return ip;
+        for (int i = 1; i < argc; i++) {
+            std::string ip = argv[i];
+            if (isValidIPv4(ip.c_str()))
+                return ip;
         }
     }
     LOG(INFO)
@@ -55,11 +62,24 @@ std::string parseArgs(int argc, char **argv) {
     return std::string();
 }
 
+bool parseArgsForDepthLibarary(int argc, char **argv) {
+
+    if (argc > 1) {
+        for (int i = 1; i < argc; i++) {
+            std::string var = argv[i];
+            if (std::strcmp(var.c_str(),"true")==0)
+                return true;
+        }
+    }
+    LOG(INFO) << "No depth_compute option provided, default value: FALSE";
+    return false;
+}
 
 std::shared_ptr<Camera> initCamera(int argc, char **argv) {
 
     Status status = Status::OK;
-    std::string ip = parseArgs(argc, argv);
+    std::string ip = parseArgsForIp(argc, argv);
+    bool useDepthLibrary = parseArgsForDepthLibarary(argc, argv);
 
     System system;
 
@@ -82,12 +102,21 @@ std::shared_ptr<Camera> initCamera(int argc, char **argv) {
     LOG(INFO) << "Json config file location: "<< package_path;*/
 
     // user can pass any config.json stored anywhere in HW
-    status =
-        camera->setControl("initialization_config",
-                           "/home/analog/.ros/config/config_walden_nxp.json");
+
+    status = camera->setControl(
+        "initialization_config",
+        "/home/analog/.ros/config/config_walden_nxp.json");
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set the initialization config file!";
         return 0;
+    }
+        
+    if (!useDepthLibrary){
+        status = camera->setControl("enableDepthCompute", "off");
+        if (status != Status::OK) {
+            LOG(ERROR) << "Could not set the initialization config file!";
+            return 0;
+        }
     }
 
     status = camera->initialize();
