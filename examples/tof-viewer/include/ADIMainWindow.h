@@ -142,7 +142,19 @@ struct AppLog
 				{
 					const char* line_start = buf + LineOffsets[line_no];
 					const char* line_end = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
+                    if (line_start[0] == 'W' ||
+                        line_start[0] == 'w') {// If line[0] starts with a W, that means it is a Warning. Display it as Yellow
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.0f, 1.0f)); // R, G, B, Y
 					ImGui::TextUnformatted(line_start, line_end);
+					ImGui::PopStyleColor();
+                    } else if (line_start[0] == 'E' ||
+                               line_start[0] == 'e') {// If line[0] starts with an E, this is an Error. Display it as Red
+                            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+                            ImGui::TextUnformatted(line_start, line_end);
+                            ImGui::PopStyleColor();
+                            }else { // Display as regular white text. This should be Information type.
+						     ImGui::TextUnformatted(line_start, line_end);
+					         }
 				}
 			}
 			clipper.End();
