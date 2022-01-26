@@ -91,9 +91,35 @@ ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
 #else
 #endif	
 	/********************/
-	stream = freopen("log.txt", "w", stderr); // Added missing pointer
-    setvbuf(stream, 0, _IONBF, 0);            // No Buffering
-	input = fopen("log.txt", "r");
+    struct stat info;
+    char *folderName = "log";
+    if (stat(folderName, &info) != 0) { // If no folder named log is found
+        if (_mkdir(
+                "log")) // Create local folder where all logs will be filed
+        {
+            LOG(ERROR) << "Could not create folder " << folderName;
+        }
+    }
+    char wholeLogPath[30];
+    char timebuff[20];
+    time_t timeNow = time(0);
+    struct tm *timeinfo;
+    time(&timeNow);
+    timeinfo = localtime(&timeNow);
+    strftime(timebuff, sizeof(timebuff), "%Y%m%d_%H%M%S", timeinfo);
+    // Concatenate the whole path
+    strcpy(wholeLogPath, folderName);
+    strcat(wholeLogPath, "\\");
+    strcat(wholeLogPath, "log_");
+    strcat(wholeLogPath, timebuff);
+    strcat(wholeLogPath, ".txt");
+	/********************/
+	//stream = freopen("log.txt", "w", stderr); // Added missing pointer
+ //   setvbuf(stream, 0, _IONBF, 0);            // No Buffering
+	//input = fopen("log.txt", "r");
+    stream = freopen(wholeLogPath, "w", stderr); // Added missing pointer
+    setvbuf(stream, 0, _IONBF, 0);               // No Buffering
+    input = fopen(wholeLogPath, "r");
 
 	// Parse config file for this application
     //Parse config.json
