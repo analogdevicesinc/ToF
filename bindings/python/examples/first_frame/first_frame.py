@@ -55,9 +55,9 @@ status = camera1.getDetails(camDetails)
 print("camera1.getDetails()", status)
 print("camera1 details:", "id:", camDetails.cameraId, "connection:", camDetails.connection)
 
-status = camera1.setFrameType("mp_pcm")
+status = camera1.setFrameType("qmp")
 print("camera1.setFrameType()", status)
-print("mp_pcm")
+print("qmp")
 
 status = camera1.start()
 print("camera1.start()", status)
