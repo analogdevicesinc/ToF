@@ -4,9 +4,7 @@ With the help of this server, a remote client can have access over the network t
 
 Limitations:
 - Only one client can be connected to the server at a time.
-- DragonBoard410c
-  - For now, the aditof-sdk-rework/examples/aditof-demo/config_pipe.sh needs to be ran before running the server (no need to run each time you re-run the server, unless you have rebooted the system).
-  - Server can't work properly if at the same time the uvc-gadget is started and engaged with a client over USB.
+- Server can't work properly if at the same time the uvc-gadget is started and engaged with a client over USB.
 
 ## How to use
 
