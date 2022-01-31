@@ -87,7 +87,6 @@ static const char kUsagePublic[] =
         0: QMpixel short range (512x512)
         1: QVGA LT (320x288)
         3: Passive IR (1024x1024)
-        5: 1Mpixel with passive IR (1024x1024)
         7: QMpixel (512x512)
        10: 1Mpixel (1024x1024)
 )";

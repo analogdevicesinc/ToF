@@ -2,7 +2,6 @@
 #include "offline_depth_sensor.h"
 
 OfflineSensorEnumerator::OfflineSensorEnumerator() {
- //   m_sensorsInfo.emplace_back(std::string(std::string(RESOURCES) + "/offline/mode5_raw.bin"));
     m_sensorsInfo.emplace_back(std::string(std::string(RESOURCES) + "/offline/mode3_raw.bin"));
 }
 

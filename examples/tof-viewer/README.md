@@ -35,7 +35,7 @@ Push "Open Device" button, and a menu of supported options will appear as depict
 ![Figure 2](Images/OpenDeviceCMOS.png "Figure 2: Open Device" )
 **Figure 2**
 
-Currently, the Viewer offers 1 Mega Pixel  (mp), PCM (mp_pcm), and Quarter Mega Pixel (qmp) options. Observe that Active Brightness (AB) and Depth views are in separate windows, and Point Cloud and Depth view is an alternative option.
+Currently, the Viewer offers 1 Mega Pixel  (mp)  and Quarter Mega Pixel (qmp) options. Observe that Active Brightness (AB) and Depth views are in separate windows, and Point Cloud and Depth view is an alternative option.
 Press the "Play" button to run the camera in Active Brightness and Depth mode as shown in Figure 3.
 
 ![Figure 3](Images/PlayCameraWPC2.png "Figure 3: Play" )
