@@ -75,18 +75,12 @@ if (WITH_OFFLINE)
         make_directory(${RESOURCES_OFFLINE_DIR})
         
         set(MODE3_FILE "mode3_raw.bin")
-        set(MODE5_FILE "mode5_raw.bin")
         set(MODE3_URL "swdownloads.analog.com/cse/aditof/resources/itof/frames/${MODE3_FILE}")
-        set(MODE5_URL "swdownloads.analog.com/cse/aditof/resources/itof/frames/${MODE5_FILE}")
         set(MODE3_PATH "${RESOURCES_OFFLINE_DIR}/${MODE3_FILE}")
-        set(MODE5_PATH "${RESOURCES_OFFLINE_DIR}/${MODE5_FILE}")
 
         message("Downloading raw frames into ${RESOURCES_OFFLINE_DIR}")
         if (NOT EXISTS ${MODE3_PATH})
                 file(DOWNLOAD "${MODE3_URL}" "${MODE3_PATH}")
-        endif()
-        if (NOT EXISTS ${MODE5_PATH})
-                file(DOWNLOAD "${MODE5_URL}" "${MODE5_PATH}")
         endif()
 endif()
 

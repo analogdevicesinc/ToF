@@ -12,7 +12,6 @@
 ModeInfo::modeInfo ModeInfo::g_modeInfoData[] = {
     {1, 320, 288, 9, 2162, 288, 0},
     {3, 1024, 1024, 1, 12289, 64, 1},
-    {5, 1024, 1024, 10, 12289, 640, 1},
     {7, 512, 512, 10, 2195, 896, 1},
     {10, 1024, 1024, 9, 12289, 576, 0},
 };
@@ -48,8 +47,6 @@ aditof::Status convertCameraMode(const std::string &mode, uint8_t& convertedMode
         convertedMode = 1;
     } else if (mode == "pcm") {
         convertedMode = 3;
-    } else if (mode == "mp_pcm") {
-        convertedMode = 5;
     } else if (mode == "qmp") {
         convertedMode = 7;
     } else if (mode == "mp") {
