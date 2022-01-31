@@ -27,7 +27,6 @@ Usage:
 
     Valid mode (--m) options are:
         3: Passive IR
-        5: 1Mpixel with PCM
         7: QMpixel
        10: 1Mpixel
  

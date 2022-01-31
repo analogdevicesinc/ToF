@@ -47,16 +47,6 @@ private:
                 },
                 4096, 256, //TODO header size not counted here
             },
-            {"mp_pcm", 
-                {
-                    {"raw", 1024, 10240},                    
-                    {"ir", 1024, 1024},
-                    {"xyz", 1024, 1024},
-                    {"depth", 1024, 1024},
-                    {"embedded_header", 1, 128},
-                },
-                1024, (10240 + 1024 * 3), //TODO header size not counted here
-            },
             {"qmp", 
                 {
                     {"ir", 4096, 256},
