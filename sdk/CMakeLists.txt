@@ -197,15 +197,6 @@ if (CMAKE_COMPILER_IS_GNUCC)
     )
 endif()
 
-if ( RASPBERRYPI )
-    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -mfpu=neon -latomic")
-    include (${CMAKE_SOURCE_DIR}/cmake/raspberrypi-revision-config.cmake)
-endif()
-
-if ( JETSON )
-    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -latomic")
-endif()
-
 if( APPLE )
     find_library( LIBUVC_LIB libuvc.dylib /usr/local/lib/ )
     if( NOT LIBUVC_LIB)
