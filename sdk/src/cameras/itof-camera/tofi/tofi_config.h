@@ -26,7 +26,6 @@ extern "C" {  // only need to export C interface if
 #include "tofi_camera_intrinsics.h"
 #include "tofi_error.h"
 
-#define MAX_CHAR_SIZE 12
 typedef struct ConfigFileData {
   unsigned char *p_data;  ///< Pointer to the data
   size_t size;            ///< Size of the data
@@ -52,10 +51,6 @@ typedef struct TofiConfig {
       *p_cal_reg_block;           ///< Pointer to the register writes block
   const void *p_tofi_cal_config;  ///< Pointer to the calibration config block
   const char *p_tofi_config_str;  ///< Pointer to a string of ini config data
-  char raw_format[MAX_CHAR_SIZE];
-  uint32_t hdr_size;
-  uint32_t phases;
-  uint32_t freqs;
 } TofiConfig;
 
 ///
