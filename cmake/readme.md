@@ -18,7 +18,6 @@ which will generate all the necessary recipes for building and installing. Usefu
 | WITH_DOC | on/off | off | Build the doxygen documentation |
 | WITH_PYTHON | on/off | off | Build the python bindings |
 | WITH_OPENCV | on/off | off | Build the opencv bindings |
-| WITH_MATLAB | on/off | off | Build the matlab bindings |
 | WITH_OPEN3D | on/off | off | Build the open3D bindings |
 | WITH_ROS | on/off | off | Build the ROS bindings |
 | WITH_NETWORK | on/off | off | Build the network interface |
