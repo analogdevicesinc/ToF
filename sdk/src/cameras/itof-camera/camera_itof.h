@@ -41,7 +41,7 @@
 #include <map>
 #include <unordered_map>
 // #include "aditof_internal.h"
-// #include "tofi_utils.h"
+#include "tofi_util.h"
 #include "mode_info.h"
 #include "module_memory.h"
 

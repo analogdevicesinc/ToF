@@ -9,6 +9,8 @@ extern "C" {  // only need to export C interface if
               // used by C++ source code
 #endif
 
+#define MAX_N_FREQS 3
+#define MAX_N_MODES 10
 // Structure for the camera intrinsic data
 typedef struct {
   float fx;
@@ -26,6 +28,23 @@ typedef struct {
   float p2;
   float p1;
 } CameraIntrinsics;
+
+
+// Structure for the CCB data
+typedef struct {
+  int n_rows;
+  int n_cols;
+  uint8_t n_freqs;
+  uint8_t row_bin_factor;
+  uint8_t col_bin_factor;
+  uint16_t n_offset_rows;
+  uint16_t n_offset_cols;
+  uint16_t n_sensor_rows;
+  uint16_t n_sensor_cols;
+  uint8_t FreqIndex[MAX_N_FREQS];
+  uint16_t Freq[MAX_N_FREQS];
+  CameraIntrinsics camera_intrinsics;
+} TofiXYZDealiasData;
 
 #ifdef __cplusplus
 }
