@@ -42,7 +42,6 @@
 #include "cJSON/cJSON.h"
 #include "cJSON/cJSON.c"
 #include "tofi/floatTolin.h"
-#include "tofi/tofi_utils.h"
 #include "tofi/tofi_config.h"
 #include <iostream>
 

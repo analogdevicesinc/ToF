@@ -26,6 +26,7 @@ extern "C" {  // only need to export C interface if
 #include "tofi_camera_intrinsics.h"
 #include "tofi_error.h"
 
+#define MAX_CHAR_SIZE 12
 typedef struct ConfigFileData {
   unsigned char *p_data;  ///< Pointer to the data
   size_t size;            ///< Size of the data
@@ -51,6 +52,10 @@ typedef struct TofiConfig {
       *p_cal_reg_block;           ///< Pointer to the register writes block
   const void *p_tofi_cal_config;  ///< Pointer to the calibration config block
   const char *p_tofi_config_str;  ///< Pointer to a string of ini config data
+  char raw_format[MAX_CHAR_SIZE];
+  uint32_t hdr_size;
+  uint32_t phases;
+  uint32_t freqs;
 } TofiConfig;
 
 ///
@@ -72,11 +77,23 @@ TOFI_CONFIG_API TofiConfig *InitTofiConfig(ConfigFileData *p_cal_file_data,
                                            ConfigFileData *p_ini_file_data,
                                            uint16_t mode, uint32_t *p_status);
 
+//
+TOFI_CONFIG_API TofiConfig *InitTofiConfig_isp(
+    ConfigFileData *p_ini_file_data, uint16_t mode, uint32_t *p_status,
+    TofiXYZDealiasData *p_xyz_dealias_data);
+
+
 /// Function to release memory for configuration structure and
 /// Depth/AB/Confidence memory buffers
 /// @param[in, out] TofiConfig *p_tofi_cal_config: pointer to the TOFI
 /// calibration configuration parameter structure to be freed
 TOFI_CONFIG_API void FreeTofiConfig(TofiConfig *p_tofi_cal_config);
+
+
+TOFI_CONFIG_API uint32_t GetXYZ_DealiasData(ConfigFileData *ccb_data,
+                            TofiXYZDealiasData *p_xyz_data);
+
+
 
 #ifdef __cplusplus
 }
