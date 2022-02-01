@@ -43,9 +43,10 @@
 class FrameImpl {
   public:
     FrameImpl();
-    ~FrameImpl();
+    //~FrameImpl();
     FrameImpl(const FrameImpl &op);
     FrameImpl &operator=(const FrameImpl &op);
+    ~FrameImpl();
 
   public: // from TofFrame
     aditof::Status setDetails(const aditof::FrameDetails &details);

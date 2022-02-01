@@ -374,7 +374,7 @@ void ADIView::_displayDepthImage()
 			continue;
 		}
 
-		std::shared_ptr<aditof::Frame> &localFrame = m_capturedFrame;
+		//std::shared_ptr<aditof::Frame> &localFrame = m_capturedFrame;
 		lock.unlock(); // Lock is no longer needed
 		
 		//number of frames
@@ -383,14 +383,16 @@ void ADIView::_displayDepthImage()
 		t1 = std::chrono::high_resolution_clock::now();
 
 		uint16_t* data;		
-		localFrame->getData("depth", &depth_video_data);
+		//localFrame->getData("depth", &depth_video_data);
+        m_capturedFrame->getData("depth", &depth_video_data);
 		t2 = std::chrono::high_resolution_clock::now();
 
 		time_span = t2 - t1;//Delayed process time
 		averagemilliSecs = (time_span + millisecondsPast) / 2;//average time to get Depth data
 		millisecondsPast = time_span;
         aditof::FrameDataDetails frameDepthDetails;
-        localFrame->getDataDetails("depth", frameDepthDetails);
+        //localFrame->getDataDetails("depth", frameDepthDetails);
+        m_capturedFrame->getDataDetails("depth", frameDepthDetails);
 
         frameHeight = static_cast<int>(frameDepthDetails.height);
         frameWidth = static_cast<int>(frameDepthDetails.width);

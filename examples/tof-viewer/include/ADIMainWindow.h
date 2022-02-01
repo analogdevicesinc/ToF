@@ -527,7 +527,7 @@ namespace adiMainWindow
 		int modeSelectChanged = 0;//flag when changed
 		bool isPlaying = false;
 		bool isRecording = false;
-		bool isPlayRecorded = false;
+		bool isPlayRecorded = false; 
 		bool isPlayRecordPaused = false;
 		int viewSelection = 0;
 		int viewSelectionChanged = 0;//flag when changed
