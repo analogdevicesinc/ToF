@@ -363,6 +363,26 @@ struct CAL_RELATIVE_ILLUM_BLOCK
   // (if number of samples are odd)
 };
 
+/*
+ * @brief Column gain correction structure for ADSD3030
+ */
+struct COLUMN_GAIN_CORRECTION_ADSD3030 {
+    uint16_t A1D1[4096];
+};
+
+/*
+* @brief Calibration gain correction block structure for ADSD3030
+*/
+struct CAL_ADSD3030_GAIN_CORRECTION_BLOCK {
+    struct CAL_BLOCK_INFO_V1 BlockInfo;
+    uint16_t GainCalConfigVersion;
+    uint16_t SubsamplingDataPresent;
+    struct GLOBAL_ADC_SETTINGS ADC;
+    struct GAIN_COMPARATOR GainComparator;
+    uint16_t InverseGlobalADCGain[4];
+    struct COLUMN_GAIN_CORRECTION_ADSD3030 PerColGainOffsetAdjustment;
+};
+
 #ifdef _WIN32
 #pragma warning( pop )
 #endif
