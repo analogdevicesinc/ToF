@@ -714,7 +714,7 @@ void ADIMainWindow::showOpenDeviceWindow() {
 		ImGui::TreePop();
 	}
 
-	ShowPlaybackTree();
+	//ShowPlaybackTree(); // DISABLED due to memory leakage on stream buffers. Need to dispose those buffers to avoid massive memory consumption
 	//Logo Window
 	setWindowPosition(0.0, 628);
 	setWindowSize(300.0, 90.0);
@@ -1148,7 +1148,6 @@ void ADIMainWindow::showLogWindow(bool *p_open) {
 	my_log.Draw("Camera: Log", p_open);
 
 	while (fgets(buffer, 512, input)) {
-            //ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), buffer);
             my_log.AddLog(buffer, nullptr);
 	}
 }

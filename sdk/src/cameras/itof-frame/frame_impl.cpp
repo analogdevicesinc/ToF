@@ -54,7 +54,7 @@ const std::vector<std::string> availableAttributes = {
 };
 
 struct FrameImpl::ImplData {
-    std::unordered_map<std::string, uint16_t *> m_dataLocations;
+    std::unordered_map < std::string, uint16_t *> m_dataLocations;
     std::shared_ptr<uint16_t[]> m_allData;
     size_t allDataNbBytes;
 };
@@ -68,7 +68,37 @@ FrameImpl::FrameImpl() : m_implData(new FrameImpl::ImplData) {
     }
 }
 
-FrameImpl::~FrameImpl() = default;
+//FrameImpl::~FrameImpl() = default;
+FrameImpl::~FrameImpl() {
+    
+    //if (m_rawSensorData) {
+    //delete[] m_rawSensorData;
+    //m_rawSensorData = nullptr;
+//}
+//if (m_implData->m_dataLocations["ir"]) {
+//    delete m_implData->m_dataLocations["ir"];
+//}
+//m_implData->m_dataLocations.erase("ir");
+//m_implData->m_dataLocations.erase("depth");
+//m_implData->m_dataLocations.erase("xyz");
+//m_implData->m_dataLocations.clear();
+//auto f = m_implData->m_dataLocations.find("ir");
+    //uint16_t* ffff = m_implData->m_dataLocations["ir"];
+    //uint16_t *myPtr;
+// myPtr = m_implData->m_dataLocations["ir"];
+//delete[] m_implData->m_dataLocations["ir"];
+   // 
+//test.erase_and_dispose(test.begin(), [](Entity *entity) { delete entity; });
+   // if (f != m_implData->m_dataLocations.end()) {
+    
+    //delete[] f->second;
+        //delete[] ffff;
+    //m_implData->m_dataLocations.clear();
+   //delete[] myPtr;
+    
+  //  }
+    //std::unordered_map<std::string, uint16_t *> iterator =  m_implData->m_dataLocations.find("ir");
+}
 
 FrameImpl::FrameImpl(const FrameImpl &op) {
     allocFrameData(op.m_details);
@@ -129,9 +159,8 @@ aditof::Status FrameImpl::getDataDetails(const std::string &dataType,
 aditof::Status FrameImpl::getData(const std::string &dataType,
                                   uint16_t **dataPtr) {
     using namespace aditof;
-
     if (m_implData->m_dataLocations.count(dataType) > 0) {
-        *dataPtr = m_implData->m_dataLocations[dataType];
+        *dataPtr =  m_implData->m_dataLocations[dataType];
     } else {
         dataPtr = nullptr;
         if (dataType != "header") // TO DO: Silence this for now, handle it later

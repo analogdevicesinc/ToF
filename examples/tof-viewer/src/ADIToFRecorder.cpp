@@ -914,6 +914,8 @@ void ADIToFRecorder::clearVariables()
 	streamTable.clear();
 }
 
+// Thread currently DISABLED. Need to fix memory leakage and
+// find a way to clear buffers
 void ADIToFRecorder::playbackFSFThread()
 {
 	currentPBPos = 0;//Current Playback position
@@ -929,9 +931,9 @@ void ADIToFRecorder::playbackFSFThread()
 		std::unique_lock<std::mutex> lock(m_playbackMutex);
 		m_playbackCv.wait(lock, [&]() { return m_shouldReadNewFrame; });
 		m_shouldReadNewFrame = false;
-
+                    
 		auto frame = std::make_shared<aditof::Frame>();
-
+        
 		if (m_playbackThreadStop)
 		{
 			clearVariables();
@@ -954,12 +956,12 @@ void ADIToFRecorder::playbackFSFThread()
 			fDetails.height = streamInfo.nRowsPerStream;			
 			m_frameDetails.dataDetails.emplace_back(fDetails);
 		}
-
+                
 		frame->setDetails(m_frameDetails);
 		frame->getData("ir", &frameDataLocationIR);
 		frame->getData("depth", &frameDataLocationDEPTH);
 		frame->getData("xyz", &frameDataLocationXYZ);
-
+                
 		//Verify that the buffers are loaded and match the required size
 		if ((frameDataLocationIR != nullptr && frameDataLocationDEPTH != nullptr)
 			&& (_prevWidth == streamInfo.nColsPerStream && _prevHeight == streamInfo.nRowsPerStream))
@@ -981,14 +983,14 @@ void ADIToFRecorder::playbackFSFThread()
 				{
 					pFsfRead->GetStream(currentPBPos, streamTable.find((uint32_t)aditof::StreamType::STREAM_TYPE_ACTIVE_BR)->second, stream);
 					memcpy(reinterpret_cast<char*>(frameDataLocationIR), stream.streamData.data(), stream.streamData.size());
-					stream.streamData.clear();
+					//stream.streamData.clear();
 				}
 				//Get DEPTH Stream Info
 				if (_streamEnable.radial)
 				{
 					pFsfRead->GetStream(currentPBPos, streamTable.find((uint32_t)aditof::StreamType::STREAM_TYPE_RADIAL)->second, stream);
 					memcpy(reinterpret_cast<char*>(frameDataLocationDEPTH), stream.streamData.data(), stream.streamData.size());
-					stream.streamData.clear();
+					//stream.streamData.clear();
 				}
 				if (_streamEnable.x && _streamEnable.y)//This must be a Point Cloud
 				{
@@ -1041,19 +1043,19 @@ void ADIToFRecorder::processXYZData()
 	int xIndex = streamTable.find((uint32_t)aditof::StreamType::STREAM_TYPE_X)->second;
 	pFsfRead->GetStream(currentPBPos, xIndex, stream);
 	memcpy(reinterpret_cast<char*>(xData), stream.streamData.data(), stream.streamData.size());
-	stream.streamData.clear();
+	//stream.streamData.clear();
 	
 	//Get Y
 	int yIndex = streamTable.find((uint32_t)aditof::StreamType::STREAM_TYPE_Y)->second;
 	pFsfRead->GetStream(currentPBPos, yIndex, stream);
 	memcpy(reinterpret_cast<char*>(yData), stream.streamData.data(), stream.streamData.size());
-	stream.streamData.clear();
+	//stream.streamData.clear();
 	
 	//Get Z
 	int zIndex = streamTable.find((uint32_t)aditof::StreamType::STREAM_TYPE_DEPTH)->second;
 	pFsfRead->GetStream(currentPBPos, zIndex, stream);
 	memcpy(reinterpret_cast<char*>(zData), stream.streamData.data(), stream.streamData.size());
-	stream.streamData.clear();
+	//stream.streamData.clear();
 
 	//Now that we have X, Y, and Z streams, we need to put all data together to form XYZ stream
 	size_t pcSize = m_frameDetails.width * m_frameDetails.height * sizeof(aditof::Point3I);
