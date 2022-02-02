@@ -10,7 +10,6 @@
 #include "ADIImGUIExtensions.h"
 #include "ADIOpenFile.h"
 #include "aditof/version.h"
-#include "guicon.h"
 #include <glog/logging.h>
 #include <stdio.h>
 #include <fcntl.h>
