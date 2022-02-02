@@ -299,6 +299,9 @@ namespace adiMainWindow
 		};
 
         AppLog *getLog() { return &my_log; }
+                const std::string INIT_LOG_WARNING =
+                    "WARNING: Logging before InitGoogleLogging() is written to "
+                    "STDERR\n";
 
 	private:
 		std::shared_ptr<adiviewer::ADIView> view = nullptr;    
