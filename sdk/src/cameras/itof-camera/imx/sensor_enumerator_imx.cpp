@@ -89,8 +89,8 @@ aditof::Status findDevicePathsAtVideo(const std::string &video,
 
     if (str.find("pulsatrix") != string::npos) {
         device_name = "pulsatrix";
-        pos = str.find("pulsatrix 1-002a");
-        subdev_path = str.substr(pos + strlen("pulsatrix 1-002a") + 2,
+        pos = str.find("pulsatrix");
+        subdev_path = str.substr(pos + strlen("pulsatrix") + 9,
                                  strlen("/dev/v4l-subdevX"));
 
     } else if (str.find("addicmos") != string::npos) {
