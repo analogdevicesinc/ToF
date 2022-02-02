@@ -112,10 +112,8 @@ ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
     strcat(wholeLogPath, "log_");
     strcat(wholeLogPath, timebuff);
     strcat(wholeLogPath, ".txt");
-	/********************/
-	//stream = freopen("log.txt", "w", stderr); // Added missing pointer
- //   setvbuf(stream, 0, _IONBF, 0);            // No Buffering
-	//input = fopen("log.txt", "r");
+
+	/********************/	
     stream = freopen(wholeLogPath, "w", stderr); // Added missing pointer
     setvbuf(stream, 0, _IONBF, 0);               // No Buffering
     input = fopen(wholeLogPath, "r");
@@ -1147,7 +1145,8 @@ void ADIMainWindow::showLogWindow(bool *p_open) {
 	my_log.Draw("Camera: Log", p_open);
 
 	while (fgets(buffer, 512, input)) {
-            my_log.AddLog(buffer, nullptr);
+            if (buffer != INIT_LOG_WARNING)
+				my_log.AddLog(buffer, nullptr);
 	}
 }
 
@@ -1159,7 +1158,8 @@ void ADIMainWindow::InitCamera() {
 	}
 
 	std::string version = aditof::getApiVersion();
-	my_log.AddLog("Preparing camera. Please wait...\n");
+	//my_log.AddLog("Preparing camera. Please wait...\n");
+    LOG(INFO) << "Preparing camera. Please wait...\n";
 	auto controller = std::make_shared<adicontroller::ADIController>(
 		m_skipNetworkCameras ? "" : m_cameraIp);
 
