@@ -339,7 +339,7 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
         return status;
     }
 
-    if ((frameType == "pcm") || m_pulsatrixEnabled) {
+    if ((frameType == "pcm")) {
         m_controls["enableDepthCompute"] = "off";
     }
 
@@ -513,7 +513,26 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         frameDataLocation[i] = Convert11bitFloat2LinearVal(frameDataLocation[i]);
     }
 
-    if ((totalCaptures > 1) && (m_controls["enableDepthCompute"] == "on")) {
+    if ((m_controls["enableDepthCompute"] == "on") && m_pulsatrixEnabled) {
+
+        if (NULL == m_tofi_compute_context) {
+            LOG(ERROR) << "Depth compute libray not initialized";
+            return Status::GENERIC_ERROR;
+        }
+
+        uint16_t *depthFrameLocation = nullptr;
+        frame->getData("depth", &depthFrameLocation);
+        uint32_t ret = TofiCompute(depthFrameLocation, m_tofi_compute_context, NULL);
+
+        if (ret != ADI_TOFI_SUCCESS) {
+            LOG(INFO) << "TofiCompute failed";
+            return Status::GENERIC_ERROR;
+        }
+
+         memcpy(depthFrameLocation, (uint8_t *)m_tofi_compute_context->p_depth_frame,
+            (m_details.frameType.height * m_details.frameType.width * sizeof(uint16_t)));
+
+    } else if((totalCaptures > 1) && (m_controls["enableDepthCompute"] == "on")) {
 
         if (NULL == m_tofi_compute_context) {
             LOG(ERROR) << "Depth compute libray not initialized";
@@ -647,7 +666,7 @@ aditof::Status CameraItof::initComputeLibrary(void) {
     //freeComputeLibrary();
     uint8_t convertedMode;
 
-    size_t calFileSize = m_calFileSize, jsonFileSize = m_jsonFileSize, iniFileSize = m_iniFileSize;
+    size_t jsonFileSize = m_jsonFileSize;
 
     status = convertCameraMode(m_details.mode, convertedMode);
 
@@ -657,14 +676,25 @@ aditof::Status CameraItof::initComputeLibrary(void) {
     }
 
     if (m_loadedConfigData) {
-        ConfigFileData calData = {m_calData, calFileSize};
+        ConfigFileData calData = {m_calData.p_data, m_calData.size};
         uint32_t status = ADI_TOFI_SUCCESS;
 
         if (!m_ini_depth.empty()) {
-            uint8_t *tempDataParser = new uint8_t[iniFileSize];
-            memcpy(tempDataParser, m_depthINIData, iniFileSize);
-            ConfigFileData depth_ini = {tempDataParser, iniFileSize};
-            m_tofi_config = InitTofiConfig(&calData, NULL, &depth_ini, convertedMode, &status);
+            uint8_t *tempDataParser = new uint8_t[m_depthINIData.size];
+            memcpy(tempDataParser, m_depthINIData.p_data, m_depthINIData.size);
+            ConfigFileData depth_ini = {tempDataParser, m_depthINIData.size};
+
+            if(m_pulsatrixEnabled){
+                status = GetXYZ_DealiasData(&calData, m_xyz_dealias_data);
+                if (status != ADI_TOFI_SUCCESS) {
+                    LOG(ERROR) << "Failed to GetCalibrationData";
+                    return aditof::Status::INVALID_ARGUMENT;
+                }
+                m_tofi_config = InitTofiConfig_isp(&depth_ini, convertedMode, &status, m_xyz_dealias_data);
+            } else {
+                m_tofi_config = InitTofiConfig(&calData, NULL, &depth_ini, convertedMode, &status);
+            }
+
             delete[] tempDataParser;
 
         } else {
@@ -720,38 +750,17 @@ aditof::Status CameraItof::loadConfigData(void) {
     aditof::Status retErr = aditof::Status::GENERIC_ERROR;
 
     if (!m_ini_depth.empty()) {
-
-        iniFileSize = GetDataFileSize(m_ini_depth.c_str());
-        m_depthINIData = new uint8_t[iniFileSize];
-        if (m_depthINIData == NULL) {
-            return retErr;
-        }
-
-        status = LoadFileContents(m_ini_depth.c_str(), m_depthINIData, &iniFileSize);
-        if (status == 0) {
-            LOG(ERROR) << "Unable to load depth ini contents\n";
-            return retErr;
-        }
+        m_depthINIData = LoadFileContents(const_cast<char *>(m_ini_depth.c_str()));
     }
 
     if (!m_ccb_calibrationFile.empty()) {
-
-        calFileSize = GetDataFileSize(m_ccb_calibrationFile.c_str());
-        m_calData = new uint8_t[calFileSize];
-        if (m_calData == NULL) {
-            return retErr;
-        }
-        status = LoadFileContents(m_ccb_calibrationFile.c_str(), m_calData, &calFileSize);
-        if (status == 0) {
-            LOG(ERROR) << "Could not load " << m_ccb_calibrationFile.c_str();
-           return retErr;
-        }
+        m_calData = LoadFileContents(const_cast<char*>(m_ccb_calibrationFile.c_str()));
     }
 
     // XYZ set through camera control takes precedence over the setting from .ini file
     if (!m_xyzSetViaControl) {
-        std::string depthData((char *)m_depthINIData,
-                              GetDataFileSize(m_ini_depth.c_str()));
+        std::string depthData((char *)m_depthINIData.p_data,
+                              GetDataFileSize(const_cast<char *>(m_ini_depth.c_str())));
         size_t pos = depthData.find("xyzEnable", 0);
 
         if (pos != std::string::npos) {
@@ -761,9 +770,7 @@ aditof::Status CameraItof::loadConfigData(void) {
         }
     }
 
-    m_calFileSize = calFileSize;
     m_jsonFileSize = jsonFileSize;
-    m_iniFileSize = iniFileSize;
 
     return aditof::Status::OK;
 }
