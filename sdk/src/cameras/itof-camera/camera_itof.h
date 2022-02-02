@@ -34,6 +34,7 @@
 
 #include "tofi/tofi_compute.h"
 #include "tofi/tofi_config.h"
+#include "tofi/tofi_util.h"
 #include <aditof/camera.h>
 #include <aditof/depth_sensor_interface.h>
 #include <aditof/storage_interface.h>
@@ -41,7 +42,6 @@
 #include <map>
 #include <unordered_map>
 // #include "aditof_internal.h"
-#include "tofi_util.h"
 #include "mode_info.h"
 #include "module_memory.h"
 
@@ -329,14 +329,13 @@ class CameraItof : public aditof::Camera {
     bool m_tempSensorInitialized;
     bool m_pulsatrixEnabled;
 
-    uint8_t *m_calData = NULL;
-    uint8_t *m_depthINIData = NULL;
+    FileData m_calData;
+    FileData m_depthINIData;
     uint8_t *m_jconfigData = NULL;
     TofiConfig *m_tofi_config = NULL;
     TofiComputeContext *m_tofi_compute_context = NULL;
-    int m_calFileSize;
+    TofiXYZDealiasData m_xyz_dealias_data[MAX_N_MODES];
     int m_jsonFileSize;
-    int m_iniFileSize;
     bool m_loadedConfigData;
 
     bool m_CameraProgrammed = false;
