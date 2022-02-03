@@ -82,6 +82,8 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+    //TO DO: Add call for initialization config in order to use this example
+
     status = camera->setControl("loadModuleData", "call");
     if (status != Status::OK) {
         LOG(INFO) << "No CCB/CFG data found in camera module,";
@@ -114,8 +116,11 @@ int main(int argc, char *argv[]) {
     aditof::FrameDataDetails frameDepthDetails;
     frame.getDataDetails("depth", frameDepthDetails);
 
-    const int frameHeight = static_cast<int>(frameDepthDetails.height);
-    const int frameWidth = static_cast<int>(frameDepthDetails.width);
+    //TO DO: hardcoded for now (pulsatrix qmp usecase)
+    const int frameHeight = 512;
+    //static_cast<int>(frameDepthDetails.height);
+    const int frameWidth = 512;
+    //static_cast<int>(frameDepthDetails.width);
 
     cv::namedWindow("Display Image", cv::WINDOW_AUTOSIZE);
 
