@@ -135,11 +135,6 @@ aditof::Status CameraItof::initialize() {
 
     m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
 
-    if (m_pulsatrixEnabled) {
-        LOG(INFO) << "Camera initialized";
-        return Status::OK;
-    }
-
     // Parse config.json
     std::string config = m_controls["initialization_config"];
     std::ifstream ifs(config.c_str());
@@ -373,7 +368,7 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
     }
 
-    if (m_controls["enableDepthCompute"] == "on" && m_details.frameType.totalCaptures > 1) {
+    if (m_controls["enableDepthCompute"] == "on" && ((m_details.frameType.totalCaptures > 1) || m_pulsatrixEnabled)){
         status = initComputeLibrary();
         if (Status::OK != status) {
             LOG(ERROR) << "Initializing compute libraries failed.";
@@ -470,6 +465,12 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
             LOG(WARNING) << "Failed to get embedded frame from device";
             return status;
         }
+
+        for (unsigned int i = 0; i < (m_details.frameType.height * m_details.frameType.width * totalCaptures); ++i) {
+            frameDataLocation[i] = frameDataLocation[i] >> 4;
+            frameDataLocation[i] = Convert11bitFloat2LinearVal(frameDataLocation[i]);
+        }
+
     } else {
         uint16_t *depthData = nullptr;
         frame->getData("depth", &depthData);
@@ -478,13 +479,29 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
             LOG(WARNING) << "Failed to get frame from pulsatrix";
             return status;
         }
-        // TO DO: change the frame type from pulsatrix.h so we can use the other for located bellow 
-        for (unsigned int i = 0; i < (m_details.frameType.height * m_details.frameType.width * totalCaptures); ++i) {
+        for (unsigned int i = 0; i < (m_details.frameType.height * m_details.frameType.width); ++i) {
             depthData[i] = depthData[i] >> 4;
-            depthData[i] = Convert11bitFloat2LinearVal(depthData[i]);
+            // TO DO: check if we need this conversion for pulsatrix
+            //depthData[i] = Convert11bitFloat2LinearVal(depthData[i]);
+        }
+
+        uint32_t ret = TofiCompute(depthData, m_tofi_compute_context, NULL);
+
+        if (ret != ADI_TOFI_SUCCESS) {
+            LOG(INFO) << "TofiCompute failed for pulsatrix";
+            return Status::GENERIC_ERROR;
+        }
+
+        memcpy(depthData, (uint8_t *)m_tofi_compute_context->p_depth_frame, 
+            (m_details.frameType.height * m_details.frameType.width * sizeof(uint16_t)));
+
+        if (m_xyzEnabled) {
+            uint16_t *xyzData = nullptr;
+            frame->getData("xyz", &depthData);
+            memcpy(xyzData, m_tofi_compute_context->p_xyz_frame, 
+                (m_details.frameType.height * m_details.frameType.width * sizeof(aditof::Point3I)));
         }
     }
-    // TO DO: use control 'enableDepthCompute' to enable or bypass the depth compute (instead of checking if frame type is "depth_ir"
     
     uint16_t *header = nullptr;
     if(!m_pulsatrixEnabled){
@@ -502,38 +519,8 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     embed_height = aModeInfo.embed_height;
     embed_width = aModeInfo.embed_width;
 
-    //status = processFrame((uint8_t *)embedFrame, frameDataLocation, (uint8_t *)header, embed_height, embed_width, frame);
-    if (status != Status::OK) {
-        LOG(WARNING) << "Failed to process the frame";
-        return status;
-    }
-
-    for (unsigned int i = 0; i < (m_details.frameType.height * m_details.frameType.width * totalCaptures); ++i) {
-        frameDataLocation[i] = frameDataLocation[i] >> 4;
-        frameDataLocation[i] = Convert11bitFloat2LinearVal(frameDataLocation[i]);
-    }
-
-    if ((m_controls["enableDepthCompute"] == "on") && m_pulsatrixEnabled) {
-
-        if (NULL == m_tofi_compute_context) {
-            LOG(ERROR) << "Depth compute libray not initialized";
-            return Status::GENERIC_ERROR;
-        }
-
-        uint16_t *depthFrameLocation = nullptr;
-        frame->getData("depth", &depthFrameLocation);
-        uint32_t ret = TofiCompute(depthFrameLocation, m_tofi_compute_context, NULL);
-
-        if (ret != ADI_TOFI_SUCCESS) {
-            LOG(INFO) << "TofiCompute failed";
-            return Status::GENERIC_ERROR;
-        }
-
-         memcpy(depthFrameLocation, (uint8_t *)m_tofi_compute_context->p_depth_frame,
-            (m_details.frameType.height * m_details.frameType.width * sizeof(uint16_t)));
-
-    } else if((totalCaptures > 1) && (m_controls["enableDepthCompute"] == "on")) {
-
+    if((totalCaptures > 1) && (m_controls["enableDepthCompute"] == "on") && !m_pulsatrixEnabled) {
+ 
         if (NULL == m_tofi_compute_context) {
             LOG(ERROR) << "Depth compute libray not initialized";
             return Status::GENERIC_ERROR;
@@ -685,12 +672,16 @@ aditof::Status CameraItof::initComputeLibrary(void) {
             ConfigFileData depth_ini = {tempDataParser, m_depthINIData.size};
 
             if(m_pulsatrixEnabled){
-                status = GetXYZ_DealiasData(&calData, m_xyz_dealias_data);
+                status = GetXYZ_DealiasData((ConfigFileData *)&m_calData, m_xyz_dealias_data);
                 if (status != ADI_TOFI_SUCCESS) {
                     LOG(ERROR) << "Failed to GetCalibrationData";
                     return aditof::Status::INVALID_ARGUMENT;
                 }
-                m_tofi_config = InitTofiConfig_isp(&depth_ini, convertedMode, &status, m_xyz_dealias_data);
+
+                m_tofi_config = InitTofiConfig_isp((ConfigFileData *)&depth_ini,
+                                                   convertedMode, &status,
+                                                   m_xyz_dealias_data);
+
             } else {
                 m_tofi_config = InitTofiConfig(&calData, NULL, &depth_ini, convertedMode, &status);
             }
@@ -1011,9 +1002,9 @@ aditof::Status CameraItof::loadModuleData() {
     }
 
     if(m_pulsatrixEnabled) {
-        return status;
+        return initialize();
     }
-
+    
     cleanupTempFiles();
     if (!m_eepromInitialized) {
         LOG(ERROR) << "Memory interface can't be accessed";
