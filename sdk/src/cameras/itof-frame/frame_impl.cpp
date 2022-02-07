@@ -68,37 +68,7 @@ FrameImpl::FrameImpl() : m_implData(new FrameImpl::ImplData) {
     }
 }
 
-//FrameImpl::~FrameImpl() = default;
-FrameImpl::~FrameImpl() {
-    
-    //if (m_rawSensorData) {
-    //delete[] m_rawSensorData;
-    //m_rawSensorData = nullptr;
-//}
-//if (m_implData->m_dataLocations["ir"]) {
-//    delete m_implData->m_dataLocations["ir"];
-//}
-//m_implData->m_dataLocations.erase("ir");
-//m_implData->m_dataLocations.erase("depth");
-//m_implData->m_dataLocations.erase("xyz");
-//m_implData->m_dataLocations.clear();
-//auto f = m_implData->m_dataLocations.find("ir");
-    //uint16_t* ffff = m_implData->m_dataLocations["ir"];
-    //uint16_t *myPtr;
-// myPtr = m_implData->m_dataLocations["ir"];
-//delete[] m_implData->m_dataLocations["ir"];
-   // 
-//test.erase_and_dispose(test.begin(), [](Entity *entity) { delete entity; });
-   // if (f != m_implData->m_dataLocations.end()) {
-    
-    //delete[] f->second;
-        //delete[] ffff;
-    //m_implData->m_dataLocations.clear();
-   //delete[] myPtr;
-    
-  //  }
-    //std::unordered_map<std::string, uint16_t *> iterator =  m_implData->m_dataLocations.find("ir");
-}
+FrameImpl::~FrameImpl() = default;
 
 FrameImpl::FrameImpl(const FrameImpl &op) {
     allocFrameData(op.m_details);
