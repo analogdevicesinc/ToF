@@ -374,7 +374,6 @@ void ADIView::_displayDepthImage()
 			continue;
 		}
 
-		//std::shared_ptr<aditof::Frame> &localFrame = m_capturedFrame;
 		lock.unlock(); // Lock is no longer needed
 		
 		//number of frames
@@ -383,7 +382,6 @@ void ADIView::_displayDepthImage()
 		t1 = std::chrono::high_resolution_clock::now();
 
 		uint16_t* data;		
-		//localFrame->getData("depth", &depth_video_data);
         m_capturedFrame->getData("depth", &depth_video_data);
 		t2 = std::chrono::high_resolution_clock::now();
 
@@ -391,7 +389,6 @@ void ADIView::_displayDepthImage()
 		averagemilliSecs = (time_span + millisecondsPast) / 2;//average time to get Depth data
 		millisecondsPast = time_span;
         aditof::FrameDataDetails frameDepthDetails;
-        //localFrame->getDataDetails("depth", frameDepthDetails);
         m_capturedFrame->getDataDetails("depth", frameDepthDetails);
 
         frameHeight = static_cast<int>(frameDepthDetails.height);
@@ -574,7 +571,7 @@ void ADIView::hsvColorMap(uint16_t video_data, int max, int min, float& fRed, fl
 	// We want blue to be close and red to be far, so we need to reflect the
 	// hue across the middle of the range.
 	//
-	hue = range - hue;
+	//hue = range - hue; // Disable HSV format. With this line commented blue is far and red is close.
 
 	fRed = 0.f;
 	fGreen = 0.f;
