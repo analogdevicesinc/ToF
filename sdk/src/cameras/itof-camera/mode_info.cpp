@@ -10,6 +10,7 @@
 
 // TODO: load this information from camera module EEPROM
 ModeInfo::modeInfo ModeInfo::g_modeInfoData[] = {
+    {1, 320, 288, 9, 2162, 288, 0},
     {3, 1024, 1024, 1, 12289, 64, 1},
     {5, 1024, 1024, 10, 12289, 640, 1},
     {7, 512, 512, 10, 2195, 896, 1},

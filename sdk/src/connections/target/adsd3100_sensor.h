@@ -104,6 +104,16 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
 
          const std::vector<aditof::DepthSensorFrameType> availableFrameTypes =
         {
+            {"lt_bin",
+                {
+                    {"raw", 320, 2592},
+                    {"ir", 320, 288},
+                    {"xyz", 320, 288},
+                    {"depth", 320, 288},
+                    {"embedded_header", 1, 128},
+                },
+                3840, 216, //TODO header size not counted here
+            }, 
             {"pcm",
                 {
                     {"ir", 1024, 1024},
