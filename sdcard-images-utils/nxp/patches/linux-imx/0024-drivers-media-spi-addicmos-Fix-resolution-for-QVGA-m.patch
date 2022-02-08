@@ -1,0 +1,26 @@
+From 72f6c0e7dee60ac77a8b80835e0ff88b853351c1 Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Tue, 8 Feb 2022 11:51:27 +0200
+Subject: [PATCH] drivers: media: spi: addicmos: Fix resolution for QVGA mode
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ drivers/media/spi/addicmos.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/spi/addicmos.c b/drivers/media/spi/addicmos.c
+index cedcde9982e6..1b22f075b845 100644
+--- a/drivers/media/spi/addicmos.c
++++ b/drivers/media/spi/addicmos.c
+@@ -173,7 +173,7 @@ static const s64 link_freq_tbl[] = {
+ static const struct addicmos_mode_info addicmos_mode_info_data[] = {
+ 	{
+ 		.width = 3840,
+-		.height = 24,
++		.height = 216,
+ 		.pixel_rate = 488000000,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-- 
+2.17.1
+

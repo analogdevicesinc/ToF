@@ -1,0 +1,29 @@
+From a1be873a7a92fc54bc78cff2d78658c3313ac087 Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Tue, 8 Feb 2022 14:46:37 +0200
+Subject: [PATCH] drivers: media: addicmos: Reduce line width for QVGA mode
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ drivers/media/spi/addicmos.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/media/spi/addicmos.c b/drivers/media/spi/addicmos.c
+index 1b22f075b845..f93c97e9ee07 100644
+--- a/drivers/media/spi/addicmos.c
++++ b/drivers/media/spi/addicmos.c
+@@ -628,6 +628,11 @@ static int addicmos_start_streaming(struct addicmos *addicmos)
+ 				   addicmos->curr_operating_mode);
+ 		if (ret)
+ 			dev_err(addicmos->dev, "Could not set mode register\n");
++		/* Reduce line width only for mode 1 */
++		if (addicmos->curr_operating_mode == 1)
++			ret = regmap_write(addicmos->regmap, 0x27e,0x8006);
++		else
++			ret = regmap_write(addicmos->regmap, 0x27e,0x0);
+ 	}
+ 
+ 	ret = pwm_enable(addicmos->pwm_fsync);
+-- 
+2.17.1
+
