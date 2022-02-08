@@ -539,10 +539,11 @@ void ADIToFRecorder::stopPlayback()
 	std::unique_lock<std::mutex> lock(m_playbackMutex);
 	m_shouldReadNewFrame = true;
 	lock.unlock();
-	m_playbackCv.notify_one();
+	m_playbackCv.notify_one();	
 	if (m_playbackThread.joinable()) {
 		m_playbackThread.join();
 	}
+	clearVariables();
 	m_playbackFile.close();
 	if (pFsfRead != NULL)
 	{
@@ -900,6 +901,7 @@ void ADIToFRecorder::playbackThread()
 
 void ADIToFRecorder::clearVariables()
 {
+    //delete[] frameDataLocationIR;
 	frameDataLocationIR = nullptr;
 	frameDataLocationDEPTH = nullptr;
 	frameDataLocationXYZ = nullptr;
@@ -911,6 +913,7 @@ void ADIToFRecorder::clearVariables()
 	m_frameDetails.totalCaptures = 0;
 	m_frameDetails.type = "";
 	m_frameDetails.width = 0;
+    m_frameDetails.dataDetails.clear();
 	streamTable.clear();
 }
 
@@ -947,7 +950,7 @@ void ADIToFRecorder::playbackFSFThread()
 		m_frameDetails.height = streamInfo.nRowsPerStream;
 		m_frameDetails.type = "";
 		m_frameDetails.totalCaptures = 1;
-
+		m_frameDetails.dataDetails.clear();
 		const std::vector<std::string> recordedTypes = {"ir", "depth", "xyz"};
 		for (unsigned int i = 0; i < recordedTypes.size(); i++) {
 			aditof::FrameDataDetails fDetails;
