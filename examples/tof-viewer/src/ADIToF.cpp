@@ -10,6 +10,7 @@
 //
 #include <cctype>
 #include <iostream>
+#include <algorithm>
 #include <aditof/system.h>
 #include <glog/logging.h>
 

@@ -50,25 +50,27 @@ if( WIN32 )
 elseif(APPLE)
     target_link_libraries(ADIToFGUI PRIVATE "${PROJECT_SOURCE_DIR}/external/imgui/lib/macOS/glfw/lib-x86_64/libglfw3.a")
 elseif (UNIX)
-    message(FATAL_ERROR "Linux glfw3 library required, must be built or downloaded")
+	find_package(glfw3 REQUIRED)
+	target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
 endif()
 
-target_link_libraries(ADIToFGUI PRIVATE ${OPENGL_gl_LIBRARY})
 target_link_libraries(ADIToFGUI PRIVATE
-					  imgui::imgui
 					  aditof
-					  fsf
+					  imgui::imgui
+					  ${OPENGL_gl_LIBRARY}
+					  ${CMAKE_DL_LIBS}
 					  fsf_common
+					  fsf
 					 )
 
-					 if( WIN32 )					 
+if( WIN32 )					 
 	set_target_properties(ADIToFGUI PROPERTIES
 	LINK_FLAGS /SUBSYSTEM:WINDOWS
 	)
-	elseif(APPLE)
+elseif(APPLE)
     set(CMAKE_CXX_FLAGS "-framework Carbon -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo")
 endif()
-
+	
 target_include_directories(ADIToFGUI PUBLIC
 						"${PROJECT_BINARY_DIR}"
 						"${PROJECT_SOURCE_DIR}/include"
