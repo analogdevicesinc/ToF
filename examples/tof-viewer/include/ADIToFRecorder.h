@@ -253,7 +253,6 @@ private:
 	size_t frameCtr = 0;
 	const int _ir = 1;
 	const int _depth = 2;
-	uint16_t irBuffer[sizeof(uint16_t)*1024*1024];
 
 	//FSF Read:
 	FILE* m_playbackFSFFile;

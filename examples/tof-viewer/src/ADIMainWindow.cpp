@@ -51,6 +51,8 @@ namespace fs = ghc::filesystem;
 
 // Include glfw3.h after our OpenGL definitions
 #include <GLFW/glfw3.h>
+#include <CompanyLogo.png.h>
+#include <CompanyIcon.png.h>
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to
 // maximize ease of testing and compatibility with old VS compilers. To link
@@ -175,6 +177,7 @@ ADIMainWindow::~ADIMainWindow() {
     }
 	
 	// imGUI disposing
+    ImGui::GetIO().IniFilename = NULL;
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
@@ -240,26 +243,8 @@ bool ADIMainWindow::startImGUI(const ADIViewerArgs &args) {
 	// only glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // 3.0+ only
 #endif
 
-	//fetch for Manufacturer.txt file and read its content
-    fs::path _currPath = fs::current_path();
-	std::vector<std::string> files;
-	getFilesList(_currPath.string(), "*.txt", files, false);
-	std::string _title = "Analog Devices, Inc. Time of Flight Main Window";//Default name
-	if (!files.empty()) {
-		//Make a match
-		for (size_t count = 0; count < files.size(); count++) {
-			if (files[count] == "MainWindowTitle.txt") {
-				//Create a custome window title.
-				std::ifstream _titleStream;
-				_titleStream.open(_currPath.string() + PATH_SEPARATOR + files[count]);
-				if (_titleStream.is_open()) {
-					std::getline(_titleStream, _title);
-					_titleStream.close();
-				}
-				break;
-			}
-		}
-	}
+    std::string version = aditof::getApiVersion();
+	std::string _title = "Analog Devices, Inc. Time of Flight Main Window v" + version;//Default name
 	
 	// Create window with graphics context
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
@@ -269,24 +254,18 @@ bool ADIMainWindow::startImGUI(const ADIViewerArgs &args) {
 		return false;
 	}
 	
-	//Look for PNG files, that will make it for our main window icon and
-	//Main window logo
-	files.clear(); //Clear this vector to re use it
-	getFilesList(_currPath.string(), "*.png", files, false);
-	std::string _iconName = "CompanyIcon.png";
-	if (!files.empty()) { //Look for icons
-		for (size_t count = 0; count < files.size(); count++) {
-			if (files[count] == _iconName) {
-				// Load from file	
-				std::string iconPath = _currPath.string() + PATH_SEPARATOR + _iconName;//Logo Icon	
-				icons[0].pixels = stbi_load(iconPath.c_str(), &icons[0].width, 
-											&icons[0].height, NULL, 4);
-				glfwSetWindowIcon(window, 1, icons); //Set the found Icon				
-				stbi_image_free(icons[0].pixels);    //free up the memory
-				break;
-			}
-		}		
-	}
+	
+	//Load from Memory
+	//Company Icon Logo
+    int components;
+	size_t logo_size = sizeof(CompanyLogo_png);
+    size_t icon_size = sizeof(CompanyIcon_png);
+    stbi_uc const *company_logo_buffer = CompanyLogo_png;    
+	stbi_uc const *company_icon_buffer = CompanyIcon_png;
+    icons[0].pixels = stbi_load_from_memory(company_icon_buffer, icon_size, &icons[0].width, &icons[0].height,
+            &components, 0);
+	glfwSetWindowIcon(window, 1, icons); //Set the found Icon				
+	stbi_image_free(icons[0].pixels);    //free up the memory
 	
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(1); // Enable vsync
@@ -339,27 +318,21 @@ bool ADIMainWindow::startImGUI(const ADIViewerArgs &args) {
 	//Look for Company Logo
 	// Create a OpenGL texture identifier	
 	logo_texture = -1;
-	std::string iconPath = _currPath.string() + PATH_SEPARATOR + "CompanyLogo.png";//Logo Icon	
-	for (size_t count = 0; count < files.size(); count++) {
-		if (files[count] == "CompanyLogo.png") {
-			logos[0].pixels = stbi_load(iconPath.c_str(), &logos[0].width, 
-										&logos[0].height, NULL, 4);
-			glGenTextures(1, &logo_texture);
-			glBindTexture(GL_TEXTURE_2D, logo_texture);
+	logos[0].pixels = stbi_load_from_memory(company_logo_buffer, logo_size, &logos[0].width, &logos[0].height, &components, 0);
+	glGenTextures(1, &logo_texture);
+	glBindTexture(GL_TEXTURE_2D, logo_texture);
 
-			// Setup filtering parameters for display
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	// Setup filtering parameters for display
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-			// Upload pixels into texture
-			glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, logos[0].width, 
-						logos[0].height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 
-						logos[0].pixels);
-			stbi_image_free(logos[0].pixels); //free up the memory
-			break;
-		}
-	}
+	// Upload pixels into texture
+	glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, logos[0].width, 
+				logos[0].height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 
+				logos[0].pixels);
+	stbi_image_free(logos[0].pixels); //free up the memory
+	
 	/**************/
 
 	return true;
@@ -711,7 +684,7 @@ void ADIMainWindow::showOpenDeviceWindow() {
 		ImGui::TreePop();
 	}
 
-	//ShowPlaybackTree(); // DISABLED due to memory leakage on stream buffers. Need to dispose those buffers to avoid massive memory consumption
+	ShowPlaybackTree();
 	//Logo Window
 	setWindowPosition(0.0, 628);
 	setWindowSize(300.0, 90.0);
@@ -1121,9 +1094,14 @@ void ADIMainWindow::stopPlayCCD() {
 	isPlayRecorded = false;
 
 	std::shared_ptr<aditof::Camera> camera = getActiveCamera();
-	if (!camera || aditof::Status::OK != camera->stop()) {
-		LOG(ERROR) << "Error, failed on stop camera!";
+	if (!camera) {
+		LOG(WARNING) << "No camera found";
+            return;
 	}
+
+    if (aditof::Status::GENERIC_ERROR == camera->stop()) {
+        LOG(ERROR) << "Error, failed on stop camera!";
+    }
 }
 
 void ADIMainWindow::openGLCleanUp() {
