@@ -37,7 +37,7 @@ namespace fs = std::experimental::filesystem;
 #else
 #include "filesystem.hpp"
 namespace fs = ghc::filesystem;
-#include <sys/syslimits.h>
+#include <limits.h>
 #define MAX_PATH PATH_MAX
 #define PATH_SEPARATOR "/"
 #endif
