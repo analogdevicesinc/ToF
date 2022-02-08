@@ -44,7 +44,9 @@ unsigned int ModeInfo::getNumModes() {
 
 
 aditof::Status convertCameraMode(const std::string &mode, uint8_t& convertedMode) {
-    if (mode == "pcm") {
+    if (mode == "lt_bin") {
+        convertedMode = 1;
+    } else if (mode == "pcm") {
         convertedMode = 3;
     } else if (mode == "mp_pcm") {
         convertedMode = 5;
