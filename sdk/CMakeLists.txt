@@ -15,6 +15,7 @@ get_filename_component(GENERATED_PROTO_FILES_DIR ${PROTO_HDRS} DIRECTORY)
 
 if ( WITH_NETWORK )
     find_package(Libwebsockets REQUIRED)
+    set(LWS_CMAKE_DIR ${LWS_CMAKE_DIR} PARENT_SCOPE)
 
     protobuf_generate_cpp(NET_PROTO_SRCS NET_PROTO_HRDS src/connections/network/buffer.proto)
     get_filename_component(GENERATED_NET_PROTO_FILES_DIR ${NET_PROTO_HRDS} DIRECTORY)
