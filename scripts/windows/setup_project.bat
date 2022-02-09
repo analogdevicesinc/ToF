@@ -279,7 +279,7 @@ if not exist "libwebsockets" ( git clone --branch v3.1-stable --depth 1  https:/
 pushd libwebsockets
 if not exist "build_3_1_stable" ( mkdir build_3_1_stable )
 pushd build_3_1_stable
-cmake -DLWS_WITH_SSL=OFF -DCMAKE_INSTALL_PREFIX=%deps_install_dir%\libwebsockets -G %generator% ..
+cmake -DLWS_WITH_SSL=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_TEST_SERVER=ON -DLWS_WITH_SHARED=ON -DLWS_WITH_STATIC=OFF -DCMAKE_INSTALL_PREFIX=%deps_install_dir%\libwebsockets -G %generator% ..
 cmake --build . --target install --config %configuration%
 popd
 popd
