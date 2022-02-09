@@ -124,6 +124,7 @@ create_uvc() {
 	create_frame $FUNCTION 4096 2304 uncompressed u
 	create_frame $FUNCTION 4096 640 uncompressed u
 	create_frame $FUNCTION 4096 256 uncompressed u
+	create_frame $FUNCTION 3840 216 uncompressed u
 
 	mkdir functions/$FUNCTION/streaming/header/h
 	cd functions/$FUNCTION/streaming/header/h
