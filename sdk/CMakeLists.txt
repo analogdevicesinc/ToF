@@ -132,7 +132,7 @@ if ( WITH_NETWORK )
             glog::glog
         PRIVATE
             ${Protobuf_LIBRARIES}
-            ${LIBWEBSOCKETS_LIBRARIES}
+            websockets_shared
     )
 else()
     target_link_libraries( ${PROJECT_NAME}
