@@ -70,7 +70,7 @@ ADIViewerArgs ProcessArgs(int argc, char** argv)
 int main(int argc, char **argv)
 {
     google::InitGoogleLogging(argv[0]);
-	FLAGS_logtostderr = 0;
+	FLAGS_logtostderr = 1;
 		
 	auto view = std::make_shared<adiMainWindow::ADIMainWindow>();//Create a new instance
 
