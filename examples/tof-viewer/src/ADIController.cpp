@@ -223,13 +223,15 @@ void ADIController::captureFrames()
 		aditof::Status status = camera->requestFrame(frame.get());
 		if (status != aditof::Status::OK) 
 		{
-			if (panicCount >= 10)
+			if (panicCount >= 7)
 			{
 				panicStop = true;
 			}
+                        
 			m_queue.enqueue(frame);
 			m_frameRequested = false;			
 			panicCount++;
+            LOG(INFO) << "Trying to request frame... ";
 			continue;
 		}
 

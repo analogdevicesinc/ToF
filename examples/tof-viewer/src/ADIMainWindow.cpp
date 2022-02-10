@@ -879,7 +879,8 @@ void ADIMainWindow::stopPlayback() {
 		view->m_ctrl->pausePlayback(false);
 	}
 	isPlayRecordPaused = false;
-	stopPlayCCD();	
+	stopPlayCCD();
+	//view.reset();
 	LOG(INFO) << "Stream has been stopped.";
 }
 
@@ -1089,7 +1090,7 @@ void ADIMainWindow::stopPlayCCD() {
 		view->depth_video_data = nullptr;
 		view->pointCloud_video_data = nullptr;
 	}
-	openGLCleanUp();
+	openGLCleanUp();	
 	isPlaying = false;
 	isPlayRecorded = false;
 
@@ -1111,7 +1112,7 @@ void ADIMainWindow::openGLCleanUp() {
 	glDeleteVertexArrays(1, &view->vertexArrayObject);
 	glDeleteBuffers(1, &view->vertexBufferObject);
 	glDeleteProgram(view->pcShader.Id());
-	view->pcShader.RemoveShaders();
+	view->pcShader.RemoveShaders();	
 }
 
 void ADIMainWindow::showLogWindow(bool *p_open) {
@@ -1146,6 +1147,11 @@ void ADIMainWindow::InitCamera() {
 
 	aditof::Status status = aditof::Status::OK;
 	auto camera = getActiveCamera();//already initialized on constructor
+
+	if (!camera) {
+            LOG(ERROR) << "No cameras found!";
+            return;
+	}
 
     // user can pass any config.json stored anywhere in HW
     status = camera->setControl("initialization_config",
@@ -1186,6 +1192,30 @@ void ADIMainWindow::InitCamera() {
 			// Set AB Max range
 			view->maxABPixelValue = std::stoi(json_min_max_range->valuestring);
 		}
+		//Get available modes
+		json_min_max_range = cJSON_GetObjectItemCaseSensitive(config_json, "modes");
+		if (cJSON_IsString(json_min_max_range) && (json_min_max_range->valuestring != NULL)) {
+			// Add to _cameraModes the available modes
+            std::string cameraElements = static_cast<std::string>(json_min_max_range->valuestring);
+            std::string delimiter = ",";
+            size_t position = 0;
+            std::string token = "";
+			cameraElements.erase(std::remove(cameraElements.begin(),
+                                               cameraElements.end(), ' '),
+                                   cameraElements.end());//Cleanup the string to eliminate blank spaces.
+            while ((position = cameraElements.find(delimiter)) != std::string::npos) {
+                _cameraModes.emplace_back(cameraElements.substr(0, position));
+                std::cout << token << std::endl;
+                cameraElements.erase(0, position + delimiter.length());
+            }
+			//Last element should go here:
+            _cameraModes.emplace_back(cameraElements.substr(0, position));
+            _usesExternalModeDefinition = true;
+
+		} else {
+					_usesExternalModeDefinition = false;
+                }
+
 		cJSON_Delete(config_json);
 	}
 	if (!ifs.fail()) {
@@ -1206,12 +1236,13 @@ void ADIMainWindow::InitCamera() {
                      "from JSON config file...";
     }
 
-	camera->getAvailableFrameTypes(_cameraModes);
+	if (!_usesExternalModeDefinition)
+		camera->getAvailableFrameTypes(_cameraModes);
 
 	int modeIndex = 0;
 	for (int i = 0; i < _cameraModes.size(); ++i) {
 #ifndef ENBABLE_PASSIVE_IR
-		if ("pcm" == _cameraModes.at(i)) {
+            if ("pcm" == _cameraModes.at(i)) {
 			continue;
 		}
 #endif

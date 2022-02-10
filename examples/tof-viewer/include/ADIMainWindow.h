@@ -502,6 +502,7 @@ namespace adiMainWindow
 		int configSelection = 0;
 
 		std::string modes[3] = { "near", "medium", "far" };
+		bool _usesExternalModeDefinition = false;
 		bool captureSeparateEnabled = true;
 		bool captureBlendedEnabled = true;
 		const ImVec2 InvalidHoveredPixel = ImVec2(-1, -1);

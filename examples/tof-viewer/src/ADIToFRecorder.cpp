@@ -827,6 +827,7 @@ void ADIToFRecorder::recordFSFThread()
 
 		frameCtr++;
 	}
+        m_frameDetails.dataDetails.clear();
 }
 
 void ADIToFRecorder::recordFSFThreadFail()
@@ -1031,6 +1032,7 @@ void ADIToFRecorder::playbackFSFThread()
 
 		m_playbackQueue.enqueue(frame);
 	}
+        m_frameDetails.dataDetails.clear();
 }
 
 void ADIToFRecorder::processXYZData()

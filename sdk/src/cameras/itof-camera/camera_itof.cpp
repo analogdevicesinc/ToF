@@ -420,6 +420,9 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     uint16_t *frameDataLocation = nullptr;
     if ((m_details.frameType.type == "pcm")){
         frame->getData("ir", &frameDataLocation);
+    } else if (m_details.frameType.type == "") {
+        LOG(ERROR) << "Frame type not found!";
+            return Status::INVALID_ARGUMENT;
     }
     else {
         frame->getData("raw", &frameDataLocation);
