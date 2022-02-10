@@ -479,6 +479,11 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
             LOG(WARNING) << "Failed to get frame from pulsatrix";
             return status;
         }
+        // TO DO: change the frame type from pulsatrix.h so we can use the other for located bellow 
+        for (unsigned int i = 0; i < (m_details.frameType.height * m_details.frameType.width * totalCaptures); ++i) {
+            depthData[i] = depthData[i] >> 4;
+            depthData[i] = Convert11bitFloat2LinearVal(depthData[i]);
+        }
     }
     // TO DO: use control 'enableDepthCompute' to enable or bypass the depth compute (instead of checking if frame type is "depth_ir"
     
