@@ -497,7 +497,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
 
         if (m_xyzEnabled) {
             uint16_t *xyzData = nullptr;
-            frame->getData("xyz", &depthData);
+            frame->getData("xyz", &xyzData);
             memcpy(xyzData, m_tofi_compute_context->p_xyz_frame, 
                 (m_details.frameType.height * m_details.frameType.width * sizeof(aditof::Point3I)));
         }
