@@ -422,7 +422,7 @@ PulsatrixSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         /* Set the frame format in the driver */
         CLEAR(fmt);
         fmt.type = dev->videoBuffersType;
-        fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+        fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_SBGGR8;
         fmt.fmt.pix.width = type.width;
         fmt.fmt.pix.height = type.height;
 
