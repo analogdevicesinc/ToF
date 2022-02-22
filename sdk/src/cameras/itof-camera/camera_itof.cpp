@@ -416,7 +416,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     Status status = Status::OK;
     std::string totalCapturesStr;
     uint8_t totalCaptures;
-     ModeInfo::modeInfo aModeInfo;
+    ModeInfo::modeInfo aModeInfo;
 
     if (frame == nullptr){
         return Status::INVALID_ARGUMENT;
@@ -455,57 +455,16 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         frame->getData("raw", &frameDataLocation);
     }
 
+    status = m_depthSensor->getFrame(frameDataLocation);
+    if(status != Status::OK){
+        LOG(WARNING) << "Failed to get frame from device";
+    }
+
     if(!m_pulsatrixEnabled){
-        uint16_t *embedFrame = nullptr;
-        frame->getData("frameData", &embedFrame);
-
-        status = m_depthSensor->getFrame(embedFrame);
-
-        if (status != Status::OK) {
-            LOG(WARNING) << "Failed to get embedded frame from device";
-            return status;
-        }
-
         for (unsigned int i = 0; i < (m_details.frameType.height * m_details.frameType.width * totalCaptures); ++i) {
             frameDataLocation[i] = frameDataLocation[i] >> 4;
             frameDataLocation[i] = Convert11bitFloat2LinearVal(frameDataLocation[i]);
         }
-
-    } else {
-        uint16_t *depthData = nullptr;
-        frame->getData("depth", &depthData);
-        status = m_depthSensor->getFrame(depthData);
-        if (status != Status::OK) {
-            LOG(WARNING) << "Failed to get frame from pulsatrix";
-            return status;
-        }
-        for (unsigned int i = 0; i < (m_details.frameType.height * m_details.frameType.width); ++i) {
-            depthData[i] = depthData[i] >> 4;
-            // TO DO: check if we need this conversion for pulsatrix
-            //depthData[i] = Convert11bitFloat2LinearVal(depthData[i]);
-        }
-
-        uint32_t ret = TofiCompute(depthData, m_tofi_compute_context, NULL);
-
-        if (ret != ADI_TOFI_SUCCESS) {
-            LOG(INFO) << "TofiCompute failed for pulsatrix";
-            return Status::GENERIC_ERROR;
-        }
-
-        memcpy(depthData, (uint8_t *)m_tofi_compute_context->p_depth_frame, 
-            (m_details.frameType.height * m_details.frameType.width * sizeof(uint16_t)));
-
-        if (m_xyzEnabled) {
-            uint16_t *xyzData = nullptr;
-            frame->getData("xyz", &xyzData);
-            memcpy(xyzData, m_tofi_compute_context->p_xyz_frame, 
-                (m_details.frameType.height * m_details.frameType.width * sizeof(aditof::Point3I)));
-        }
-    }
-    
-    uint16_t *header = nullptr;
-    if(!m_pulsatrixEnabled){
-        frame->getData("header", &header);
     }
     
     if (!frameDataLocation /*&& !header*/) {
@@ -513,13 +472,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         return status;
     }
 
-    uint16_t embed_width = 0;
-    uint16_t embed_height = 0;
-
-    embed_height = aModeInfo.embed_height;
-    embed_width = aModeInfo.embed_width;
-
-    if((totalCaptures > 1) && (m_controls["enableDepthCompute"] == "on") && !m_pulsatrixEnabled) {
+    if((m_controls["enableDepthCompute"] == "on") && ((totalCaptures > 1) || m_pulsatrixEnabled)) {
  
         if (NULL == m_tofi_compute_context) {
             LOG(ERROR) << "Depth compute libray not initialized";
