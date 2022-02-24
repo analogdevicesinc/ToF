@@ -5,10 +5,14 @@
 // expressed or implied by its publication or distribution.
 // https://barrgroup.com/downloads/code-crc-c
 //
-// Portions Copyright (c) 2020 Analog Devices, Inc.
+// Portions Copyright (c) 2022 Analog Devices, Inc.
 
 #include "crc.h"
+#include "bit_manipulation.h"
 
+/**
+* @brief Legacy crc Table
+*/
 const uint32_t crcTable[256] = 
 {
     0x00000000, 0x04C11DB7, 0x09823B6E, 0x0D4326D9, 0x130476DC, 0x17C56B6B, 0x1A864DB2, 0x1E475005, 
@@ -52,20 +56,28 @@ const uint32_t crcTable[256] =
 #define TOPBIT BIT31
 #define POLYNOMIAL 0x04C11DB7
 
-uint32_t crcFast(uint8_t const message[], int nBytes)
-{
+uint32_t crcFast(uint8_t const message[], int nBytes, bool isMirrored) {
     uint8_t data;
     uint32_t remainder = 0xFFFFFFFF;
     int byte;
     
-    /*
+   
+     /*
      * Divide the message by the polynomial, a byte at a time.
      */
-    for (byte = 0; byte < nBytes; ++byte)
-    {
-        data = message[byte] ^ (remainder >> (WIDTH - 8));
-        remainder = crcTable[data] ^ (remainder << 8);
+    if (!isMirrored) {
+
+        for (byte = 0; byte < nBytes; ++byte) {
+            data = message[byte] ^ (remainder >> (WIDTH - 8));
+            remainder = crcTable[data] ^ (remainder << 8);
+        }
+    } else {
+        for (byte = 0; byte < nBytes; ++byte) {
+            data = reflect8(message[byte]) ^ (remainder >> (WIDTH - 8));
+            remainder = crcTable[data] ^ (remainder << 8);
+        }
     }
+    
     
     /*
      * The final remainder is the CRC.
