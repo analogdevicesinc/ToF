@@ -50,6 +50,7 @@ class TargetSensorEnumerator : public aditof::SensorEnumeratorInterface {
     virtual aditof::Status getTemperatureSensors(
         std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
             &temperatureSensors) override;
+    virtual aditof::Status getCardImageVersion(std::string &cardImageVersion) const override;
 
   private:
     enum class SensorType {
@@ -81,6 +82,7 @@ class TargetSensorEnumerator : public aditof::SensorEnumeratorInterface {
     std::vector<SensorInfo> m_sensorsInfo;
     std::vector<StorageInfo> m_storagesInfo;
     std::vector<TemperatureSensorInfo> m_temperatureSensorsInfo;
+    std::string m_cardImageVersion;
 };
 
 #endif // TARGET_SENSOR_ENUMERATOR_H

@@ -49,6 +49,7 @@ class UsbSensorEnumerator : public aditof::SensorEnumeratorInterface {
     virtual aditof::Status getTemperatureSensors(
         std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
             &temperatureSensors) override;
+    virtual aditof::Status getCardImageVersion(std::string &cardImageVersion) const override;
 
   private:
     struct SensorInfo {
@@ -58,6 +59,7 @@ class UsbSensorEnumerator : public aditof::SensorEnumeratorInterface {
     std::vector<SensorInfo> m_sensorsInfo;
     std::vector<std::pair<std::string, unsigned int>> m_storagesInfo;
     std::vector<std::pair<std::string, unsigned int>> m_temperatureSensorsInfo;
+    std::string m_cardImageVersion;
 };
 
 #endif // USB_SENSOR_ENUMERATOR_H
