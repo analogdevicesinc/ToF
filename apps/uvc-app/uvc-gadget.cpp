@@ -422,6 +422,74 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
     break;
   }
 
+    case uvc_payload::FunctionName::PULSATRIX_READ_CMD: {
+    uint16_t cmd = static_cast<uint16_t>(clientRequestMsg.func_int32_param(0));
+    uint16_t *data = nullptr;
+
+    aditof::Status status = camDepthSensor->pulsatrix_read_cmd(cmd, data);
+    if (status == aditof::Status::OK) {
+      response.add_int32_payload(*data);
+    }
+    delete data;
+    response.set_status(static_cast<::uvc_payload::Status>(status));
+
+    break;
+  }
+
+    case uvc_payload::FunctionName::PULSATRIX_WRITE_CMD: {
+    uint16_t cmd = static_cast<uint16_t>(clientRequestMsg.func_int32_param(0));
+    uint16_t data = static_cast<uint16_t>(clientRequestMsg.func_int32_param(1));
+
+    bool burst = static_cast<bool>(clientRequestMsg.func_int32_param(1));
+
+    aditof::Status status = camDepthSensor->pulsatrix_write_cmd(cmd, data);
+    response.set_status(static_cast<::uvc_payload::Status>(status));
+
+    break;
+  }
+
+  case uvc_payload::FunctionName::PULSATRIX_READ_PAYLOAD_CMD: {
+    uint32_t cmd = static_cast<size_t>(clientRequestMsg.func_int32_param(0));
+    uint16_t payload_len = static_cast<uint16_t>(clientRequestMsg.func_int32_param(1));
+    uint8_t *data = new uint8_t[payload_len];
+
+    aditof::Status status = camDepthSensor->pulsatrix_read_payload_cmd(cmd, data, payload_len);
+    if (status == aditof::Status::OK) {
+      response.add_bytes_payload(data, payload_len);
+    }
+    delete[] data;
+    response.set_status(static_cast<::uvc_payload::Status>(status));
+
+    break;
+  }
+
+  case uvc_payload::FunctionName::PULSATRIX_WRITE_PAYLOAD_CMD: {
+    uint32_t cmd = static_cast<uint32_t>(clientRequestMsg.func_int32_param(0));
+    uint16_t payload_len = static_cast<uint16_t>(clientRequestMsg.func_int32_param(1));
+    const uint8_t *data = new uint8_t[payload_len];
+    memcpy(data, clientRequestMsg.func_bytes_param(0).c_str(), payload_len);
+
+    aditof::Status status = camDepthSensor->pulsatrix_write_payload_cmd(cmd, data, payload_len);
+
+    delete[] data;
+    response.set_status(static_cast<::uvc_payload::Status>(status));
+
+    break;
+  }
+
+  case uvc_payload::FunctionName::PULSATRIX_WRITE_PAYLOAD: {
+    uint16_t payload_len = static_cast<uint16_t>(clientRequestMsg.func_int32_param(0));
+    const uint8_t *data = new uint8_t[payload_len];
+    memcpy(data, clientRequestMsg.func_bytes_param(0).c_str(), payload_len);
+
+    aditof::Status status = camDepthSensor->pulsatrix_write_payload(data, payload_len);
+
+    delete[] data;
+    response.set_status(static_cast<::uvc_payload::Status>(status));
+
+    break;
+  }
+
   case uvc_payload::FunctionName::STORAGE_OPEN: {
 
     aditof::Status status = aditof::Status::OK;
