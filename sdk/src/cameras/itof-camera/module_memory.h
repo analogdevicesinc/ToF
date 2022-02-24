@@ -55,8 +55,17 @@ typedef enum {
  * @brief Defines chunk ID types
  */
 typedef enum {
-    CHUNK_TYPE_CCB = 1, ///< chunk is CCB (calibration) format 
+    CHUNK_TYPE_CCB = 1, ///< chunk is CCB (calibration) format
     CHUNK_TYPE_CFG = 2, ///< chunk is CFG (configuration) format
+    CHUNK_TYPE_CAP_STRUCTURE_HEADER = 0x50, ///< Flash Capabilities Structure Header
+    CHUNK_TYPE_DEBUG_INFO_HEADER = 0x51, ///< Debug/Diagnostic logging area header
+    CHUNK_TYPE_INIT_FIRMWARE_HEADER = 0x52, ///< Init firmware (boot rom extension)
+    CHUNK_TYPE_PULSATRIX_FIRMWARE_FACTORY_HEADER = 0x53, ///< Pulsatrix firmware factory default header
+    CHUNK_TYPE_PULSATRIX_FIRMWARE_CURRENT_HEADER = 0x54, ///< Pulsatrix firmware current header
+    CHUNK_TYPE_PULSATRIX_FIRMWARE_UPGRADE_HEADER = 0x55, ///< Pulsatrix upgrade firmware header
+    CHUNK_TYPE_IMAGER_FIRMWARE_FACTORY_HEADER = 0x56, ///< Imager firmware factory default header
+    CHUNK_TYPE_IMAGER_FIRMWARE_CURRENT_HEADER = 0x57, ///< Imager firmware current header
+    CHUNK_TYPE_IMAGER_FIRMWARE_UPGRADE_HEADER = 0x58, ///< Imager upgrade firmware header
     CHUNK_TYPE_FILE_HEADER = 0x3D ///< file header chunk
 } TOF_ChunkType_t;
 
@@ -153,7 +162,22 @@ public:
      */
     Status getSerialNumber(std::string &serialNumber);
 
-protected:
+    /**
+     * @brief Process NVM firmware based on header chunk type.
+     * @param[in] chunkType - NVM header chunk type
+     * @param[in] pChunkData - NVM chunk data to be written in temp file
+     * @param[in] payloadSize - Data size - CRC in bytes
+     * @return aditof::Status whether the operation succeeded or an error has occurred
+     * @see aditof::Status
+     */
+    Status processNVMFirmware(uint8_t chunkType, uint8_t *pChunkData, int payloadSize);
+
+private:
+    std::string ccbFilename;
+    std::string cfgFilename;
+    std::string jsonFilename;
+
+  protected:
     bool verifyChunkHeader(const TOF_ChunkHeader_t *const pChunkHeader);
     Status readChunkHeader(uint8_t *const buffer, int32_t chunkDataAddr );
     Status writeData(uint32_t address, const uint8_t *const data, uint32_t length);
