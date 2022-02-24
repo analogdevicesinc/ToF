@@ -23,6 +23,11 @@ message ImagerInfo
   string name = 10;
 }
 
+message CardImageVersion
+{
+  string name = 10;
+}
+
 message StorageInfo
 {
   string name = 10;

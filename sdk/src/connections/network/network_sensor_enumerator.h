@@ -52,6 +52,7 @@ class NetworkSensorEnumerator : public aditof::SensorEnumeratorInterface {
     virtual aditof::Status getTemperatureSensors(
         std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
             &temperatureSensors) override;
+    virtual aditof::Status getCardImageVersion(std::string &cardImageVersion) const override;
 
   private:
     std::string m_ip;
@@ -60,6 +61,7 @@ class NetworkSensorEnumerator : public aditof::SensorEnumeratorInterface {
     std::vector<std::pair<std::string, unsigned int>> m_temperatureSensorsInfo;
 
     static int sensorCount;
+    std::string m_cardImageVersion;
 };
 
 #endif // NETWORK_SENSOR_ENUMERATOR_H

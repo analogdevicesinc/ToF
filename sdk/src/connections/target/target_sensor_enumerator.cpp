@@ -91,3 +91,9 @@ Status TargetSensorEnumerator::getTemperatureSensors(
 
     return Status::OK;
 }
+
+aditof::Status TargetSensorEnumerator::getCardImageVersion(
+    std::string &cardImageVersion) const {
+    cardImageVersion = m_cardImageVersion;
+    return aditof::Status::OK;
+}
