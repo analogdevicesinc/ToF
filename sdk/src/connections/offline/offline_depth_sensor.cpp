@@ -68,3 +68,27 @@ OfflineDepthSensor::getDetails(aditof::SensorDetails &details) const {
 aditof::Status OfflineDepthSensor::getHandle(void **handle) {
     return aditof::Status::UNAVAILABLE;
 }
+
+aditof::Status OfflineDepthSensor::getName(std::string &name) const {
+    return aditof::Status::OK;
+}
+
+aditof::Status OfflineDepthSensor::pulsatrix_read_cmd(uint16_t cmd, uint16_t *data){
+    return aditof::Status::OK;
+}
+
+aditof::Status OfflineDepthSensor::pulsatrix_write_cmd(uint16_t cmd, uint16_t data) {
+    return aditof::Status::OK;
+}
+
+aditof::Status OfflineDepthSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) {
+    return aditof::Status::OK;
+}
+
+aditof::Status OfflineDepthSensor::pulsatrix_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
+    return aditof::Status::OK;
+}
+
+aditof::Status OfflineDepthSensor::pulsatrix_write_payload(uint8_t* payload, uint16_t payload_len) {
+    return aditof::Status::OK;
+}

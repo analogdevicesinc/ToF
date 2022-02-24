@@ -810,3 +810,23 @@ aditof::Status UsbDepthSensor::getName(std::string &name) const {
     name = m_sensorName;
     return aditof::Status::OK;
 }
+
+aditof::Status UsbDepthSensor::pulsatrix_read_cmd(uint16_t cmd, uint16_t *data){
+    return aditof::Status::OK;
+}
+
+aditof::Status UsbDepthSensor::pulsatrix_write_cmd(uint16_t cmd, uint16_t data) {
+    return aditof::Status::OK;
+}
+
+aditof::Status UsbDepthSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) {
+    return aditof::Status::OK;
+}
+
+aditof::Status UsbDepthSensor::pulsatrix_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
+    return aditof::Status::OK;
+}
+
+aditof::Status UsbDepthSensor::pulsatrix_write_payload(uint8_t* payload, uint16_t payload_len) {
+    return aditof::Status::OK;
+}
