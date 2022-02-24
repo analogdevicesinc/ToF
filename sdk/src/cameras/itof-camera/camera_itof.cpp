@@ -971,7 +971,11 @@ aditof::Status CameraItof::loadModuleData() {
     std::string serialNumber;
     flashLoader.getSerialNumber(serialNumber);
     int prefixCount = 2;// I'm asuming the first 2 characters are "D:" which we don't need
-    std::string shortName = serialNumber.substr(prefixCount, serialNumber.find(" ") - prefixCount);
+    std::string shortName = "";
+    if (serialNumber != "")
+        shortName = serialNumber.substr(prefixCount,serialNumber.find(" ") - prefixCount);
+    else
+        shortName = "default";//This name is given when there has been an error on CRC
     m_details.cameraId = shortName;
 
     // m_depthSensor->cameraReset(); TO DO: figure out if this is required or how to do the reset since there is currenlty no cameraReset() in DepthSensorInterface
