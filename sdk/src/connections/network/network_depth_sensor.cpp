@@ -513,21 +513,194 @@ aditof::Status NetworkDepthSensor::getName(std::string &name) const {
 }
 
 aditof::Status NetworkDepthSensor::pulsatrix_read_cmd(uint16_t cmd, uint16_t *data){
-    return aditof::Status::OK;
+    using namespace aditof;
+
+    Network *net = m_implData->handle.net;
+    std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
+
+    if (!net->isServer_Connected()) {
+        LOG(WARNING) << "Not connected to server";
+        return Status::UNREACHABLE;
+    }
+
+    net->send_buff.set_func_name("PulsatrixReadCmd");
+    net->send_buff.add_func_int32_param(static_cast<::google::int32>(cmd));
+    net->send_buff.set_expect_reply(true);
+
+    if (net->SendCommand() != 0) {
+        LOG(WARNING) << "Send Command Failed";
+        return Status::INVALID_ARGUMENT;
+    }
+
+    if (net->recv_server_data() != 0) {
+        LOG(WARNING) << "Receive Data Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    if (net->recv_buff.server_status() !=
+        payload::ServerStatus::REQUEST_ACCEPTED) {
+        LOG(WARNING) << "API execution on Target Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    Status status = static_cast<Status>(net->recv_buff.status());
+
+    if(status == Status::OK) {
+        *data = static_cast<uint16_t>(net->recv_buff.int32_payload(0));
+    }
+
+    return status;
 }
 
 aditof::Status NetworkDepthSensor::pulsatrix_write_cmd(uint16_t cmd, uint16_t data) {
-    return aditof::Status::OK;
+    using namespace aditof;
+
+    Network *net = m_implData->handle.net;
+    std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
+
+    if (!net->isServer_Connected()) {
+        LOG(WARNING) << "Not connected to server";
+        return Status::UNREACHABLE;
+    }
+
+    net->send_buff.set_func_name("PulsatrixWriteCmd");
+    net->send_buff.add_func_int32_param(static_cast<::google::int32>(cmd));
+    net->send_buff.add_func_int32_param(static_cast<::google::int32>(data));
+    net->send_buff.set_expect_reply(true);
+
+    if (net->SendCommand() != 0) {
+        LOG(WARNING) << "Send Command Failed";
+        return Status::INVALID_ARGUMENT;
+    }
+
+    if (net->recv_server_data() != 0) {
+        LOG(WARNING) << "Receive Data Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    if (net->recv_buff.server_status() !=
+        payload::ServerStatus::REQUEST_ACCEPTED) {
+        LOG(WARNING) << "API execution on Target Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    Status status = static_cast<Status>(net->recv_buff.status());
+
+    return status;
 }
 
 aditof::Status NetworkDepthSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) {
-    return aditof::Status::OK;
+    using namespace aditof;
+
+    Network *net = m_implData->handle.net;
+    std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
+
+    if (!net->isServer_Connected()) {
+        LOG(WARNING) << "Not connected to server";
+        return Status::UNREACHABLE;
+    }
+
+    net->send_buff.set_func_name("PulsatrixReadPayloadCmd");
+    net->send_buff.add_func_int32_param(static_cast<::google::int32>(cmd));
+    net->send_buff.add_func_int32_param(static_cast<::google::int32>(payload_len));
+    net->send_buff.set_expect_reply(true);
+
+    if (net->SendCommand() != 0) {
+        LOG(WARNING) << "Send Command Failed";
+        return Status::INVALID_ARGUMENT;
+    }
+
+    if (net->recv_server_data() != 0) {
+        LOG(WARNING) << "Receive Data Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    if (net->recv_buff.server_status() !=
+        payload::ServerStatus::REQUEST_ACCEPTED) {
+        LOG(WARNING) << "API execution on Target Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    Status status = static_cast<Status>(net->recv_buff.status());
+
+    if(status == Status::OK) {     
+        memcpy(readback_data, net->recv_buff.bytes_payload(0).c_str(), net->recv_buff.bytes_payload(0).length());
+    }
+    
+    return status;
 }
 
 aditof::Status NetworkDepthSensor::pulsatrix_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
-    return aditof::Status::OK;
+    using namespace aditof;
+
+    Network *net = m_implData->handle.net;
+    std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
+
+    if (!net->isServer_Connected()) {
+        LOG(WARNING) << "Not connected to server";
+        return Status::UNREACHABLE;
+    }
+
+    net->send_buff.set_func_name("PulsatrixWritePayloadCmd");
+    net->send_buff.add_func_int32_param(static_cast<::google::int32>(cmd));
+    net->send_buff.add_func_int32_param(static_cast<::google::int32>(payload_len));
+    net->send_buff.add_func_bytes_param(payload, payload_len);
+    net->send_buff.set_expect_reply(true);
+
+    if (net->SendCommand() != 0) {
+        LOG(WARNING) << "Send Command Failed";
+        return Status::INVALID_ARGUMENT;
+    }
+
+    if (net->recv_server_data() != 0) {
+        LOG(WARNING) << "Receive Data Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    if (net->recv_buff.server_status() !=
+        payload::ServerStatus::REQUEST_ACCEPTED) {
+        LOG(WARNING) << "API execution on Target Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    Status status = static_cast<Status>(net->recv_buff.status());
+
+    return status;
 }
 
 aditof::Status NetworkDepthSensor::pulsatrix_write_payload(uint8_t* payload, uint16_t payload_len) {
-    return aditof::Status::OK;
+    using namespace aditof;
+
+    Network *net = m_implData->handle.net;
+    std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
+
+    if (!net->isServer_Connected()) {
+        LOG(WARNING) << "Not connected to server";
+        return Status::UNREACHABLE;
+    }
+
+    net->send_buff.set_func_name("PulsatrixWritePayload");
+    net->send_buff.add_func_int32_param(static_cast<::google::int32>(payload_len));
+    net->send_buff.add_func_bytes_param(payload, payload_len);
+    net->send_buff.set_expect_reply(true);
+
+    if (net->SendCommand() != 0) {
+        LOG(WARNING) << "Send Command Failed";
+        return Status::INVALID_ARGUMENT;
+    }
+
+    if (net->recv_server_data() != 0) {
+        LOG(WARNING) << "Receive Data Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    if (net->recv_buff.server_status() !=
+        payload::ServerStatus::REQUEST_ACCEPTED) {
+        LOG(WARNING) << "API execution on Target Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    Status status = static_cast<Status>(net->recv_buff.status());
+
+    return status;
 }
