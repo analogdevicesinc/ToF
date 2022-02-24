@@ -61,11 +61,17 @@ bool ModuleMemory::verifyChunkHeader(const TOF_ChunkHeader_t *const pChunkHeader
             LOG(WARNING) << "Module data header invalid size";
             return (false);
         }
-        // Check chunk header CRC
-        if (crcFast(reinterpret_cast<const uint8_t *>(pChunkHeader), (pChunkHeader->headerSizeBytes - sizeof(uint32_t))) != // Hdr size - CRC in bytes
+        // Check chunk header CRC by mirroring bytes
+        if (crcFast(reinterpret_cast<const uint8_t *>(pChunkHeader), (pChunkHeader->headerSizeBytes - sizeof(uint32_t)), true) != // Hdr size - CRC in bytes
             pChunkHeader->chunkHeaderCRC) {
-            LOG(WARNING) << "Module data header corrupted";
-            return (false);
+            //Use non pulsatrix CRC calculation
+            if (crcFast(reinterpret_cast<const uint8_t *>(pChunkHeader),
+                        (pChunkHeader->headerSizeBytes - sizeof(uint32_t)),
+                        false) != // Hdr size - CRC in bytes
+                pChunkHeader->chunkHeaderCRC) {
+                LOG(WARNING) << "Module data header corrupted";
+                return (false);
+            }
         }
     } else {
         LOG(WARNING) << "Unexpected module data version";
@@ -296,9 +302,9 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, TOF_ModuleFiles_
     }
 
     bool isBadChunk = false;
-    std::string ccbFilename;
+    /*std::string ccbFilename;
     std::string cfgFilename;
-    std::string jsonFilename;
+    std::string jsonFilename;*/
 
     // Read and parse data chunks
     while (!isBadChunk && pChunkHeader->nextChunkAddress != 0) {
@@ -325,9 +331,57 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, TOF_ModuleFiles_
         if (Status::OK == m_eeprom->read(chunkDataAddr, pChunkData, pChunkHeader->chunkSizeBytes)) {
             int payloadSize = pChunkHeader->chunkSizeBytes - sizeof(uint32_t); // data size - CRC in bytes
             uint32_t blockCRC = *((uint32_t *)(pChunkData + payloadSize));
-            if (crcFast(pChunkData, payloadSize) == blockCRC) {
+            //Use mirrored CRC first, if it fails, try non mirrored
+            if (crcFast(pChunkData, payloadSize, true) == blockCRC) {
 
-                if (pChunkHeader->revision.chunktype == CHUNK_TYPE_CCB) {
+                if (processNVMFirmware(pChunkHeader->revision.chunktype,
+                                       pChunkData, payloadSize) !=
+                    Status::OK) {
+                    isBadChunk = true;
+                }
+
+                //switch (pChunkHeader->revision.chunktype) {
+                //case CHUNK_TYPE_CCB:
+                //    LOG(INFO) << "Found module memory CCB chunk, parsing...";
+                //    ccbFilename = writeTempCCB(pChunkData, payloadSize);
+                //    if (ccbFilename.empty()) {
+                //        LOG(WARNING) << "Invalid module memory CCB chunk";
+                //        isBadChunk = true;
+                //    }
+                //    break;
+                //case CHUNK_TYPE_CFG:
+                //case CHUNK_TYPE_IMAGER_FIRMWARE_FACTORY_HEADER:
+                //    LOG(INFO) << "Found module memory CFG chunk, parsing...";
+                //    cfgFilename = writeTempCFG(pChunkData, payloadSize);
+                //    if (cfgFilename.empty()) {
+                //        LOG(WARNING) << "Invalid module memory CFG chunk";
+                //        isBadChunk = true;
+                //    }
+                //    break;
+                //case CHUNK_TYPE_CAP_STRUCTURE_HEADER:
+                //    break;
+                //case CHUNK_TYPE_DEBUG_INFO_HEADER:
+                //    break;
+                //case CHUNK_TYPE_INIT_FIRMWARE_HEADER:
+                //    break;
+                //case CHUNK_TYPE_PULSATRIX_FIRMWARE_FACTORY_HEADER:
+                //    break;
+                //case CHUNK_TYPE_PULSATRIX_FIRMWARE_CURRENT_HEADER:
+                //    break;
+                //case CHUNK_TYPE_PULSATRIX_FIRMWARE_UPGRADE_HEADER:
+                //    break;
+                //case CHUNK_TYPE_IMAGER_FIRMWARE_CURRENT_HEADER:
+                //    break;
+                //case CHUNK_TYPE_IMAGER_FIRMWARE_UPGRADE_HEADER:
+                //    break;
+                //case CHUNK_TYPE_FILE_HEADER:
+                //    break;
+                //default://No header type found, hence will be considered as bad chunk.
+                //    LOG(WARNING) << "Unsupported module data chunk type";
+                //    isBadChunk = true;
+                //    break;
+                //}
+                /*if (pChunkHeader->revision.chunktype == CHUNK_TYPE_CCB) {
                     LOG(INFO) << "Found module memory CCB chunk, parsing...";
                     ccbFilename = writeTempCCB(pChunkData, payloadSize);
                     if (ccbFilename.empty()) {
@@ -343,6 +397,11 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, TOF_ModuleFiles_
                     }
                 } else {
                     LOG(WARNING) << "Unsupported module data chunk type";
+                    isBadChunk = true;
+                }*/
+            } else if (crcFast(pChunkData, payloadSize, false) == blockCRC) {//Try using non mirrored CRC
+                if (processNVMFirmware(pChunkHeader->revision.chunktype,
+                                       pChunkData, payloadSize) != Status::OK) {
                     isBadChunk = true;
                 }
             } else {
@@ -381,6 +440,49 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, TOF_ModuleFiles_
     return Status::OK;
 }
 
+Status ModuleMemory::processNVMFirmware(uint8_t chunkType, uint8_t *pChunkData, int payloadSize) {
+    switch (chunkType) {
+    case CHUNK_TYPE_CCB:
+        LOG(INFO) << "Found module memory CCB chunk, parsing...";
+        ccbFilename = writeTempCCB(pChunkData, payloadSize);
+        if (ccbFilename.empty()) {
+            LOG(WARNING) << "Invalid module memory CCB chunk";
+            return Status::GENERIC_ERROR;
+        }
+        return Status::OK;
+    case CHUNK_TYPE_CFG:
+    case CHUNK_TYPE_IMAGER_FIRMWARE_FACTORY_HEADER:
+        LOG(INFO) << "Found module memory CFG chunk, parsing...";
+        cfgFilename = writeTempCFG(pChunkData, payloadSize);
+        if (cfgFilename.empty()) {
+            LOG(WARNING) << "Invalid module memory CFG chunk";
+            return Status::GENERIC_ERROR;
+        }
+        return Status::OK;
+    case CHUNK_TYPE_CAP_STRUCTURE_HEADER:
+        return Status::OK;
+    case CHUNK_TYPE_DEBUG_INFO_HEADER:
+        return Status::OK;
+    case CHUNK_TYPE_INIT_FIRMWARE_HEADER:
+        return Status::OK;
+    case CHUNK_TYPE_PULSATRIX_FIRMWARE_FACTORY_HEADER:
+        return Status::OK;
+    case CHUNK_TYPE_PULSATRIX_FIRMWARE_CURRENT_HEADER:
+        return Status::OK;
+    case CHUNK_TYPE_PULSATRIX_FIRMWARE_UPGRADE_HEADER:
+        return Status::OK;
+    case CHUNK_TYPE_IMAGER_FIRMWARE_CURRENT_HEADER:
+        return Status::OK;
+    case CHUNK_TYPE_IMAGER_FIRMWARE_UPGRADE_HEADER:
+        return Status::OK;
+    case CHUNK_TYPE_FILE_HEADER:
+        return Status::OK;
+    default: //No header type found, hence will be considered as bad chunk.
+        LOG(WARNING) << "Unsupported module data chunk type";
+        return Status::GENERIC_ERROR;
+    }
+}
+
 TOF_ChunkHeader_t ModuleMemory::initChunckHeader(TOF_ChunkType_t type, uint32_t address, uint32_t dataSize, bool isLastChunk) {
 
     TOF_ChunkVesion_t fileVersion = {};
@@ -398,7 +500,11 @@ TOF_ChunkHeader_t ModuleMemory::initChunckHeader(TOF_ChunkType_t type, uint32_t 
     } else {
         header.nextChunkAddress = address + header.headerSizeBytes + header.chunkSizeBytes;
     }
-    header.chunkHeaderCRC = crcFast(reinterpret_cast<const uint8_t *>(&header), sizeof(TOF_ChunkHeader_t) - sizeof(header.chunkHeaderCRC));
+    //header.chunkHeaderCRC = crcFast(reinterpret_cast<const uint8_t *>(&header), sizeof(TOF_ChunkHeader_t) - sizeof(header.chunkHeaderCRC));
+    //TODO: Define when mirrored CRC is being used
+    header.chunkHeaderCRC =
+        crcFast(reinterpret_cast<const uint8_t *>(&header),
+                sizeof(TOF_ChunkHeader_t) - sizeof(header.chunkHeaderCRC), true);// Using Mirrored CRC (default)
     return header;
 }
 
@@ -420,7 +526,9 @@ Status ModuleMemory::createModuleImage(const uint8_t *ccbData, uint32_t ccbSize,
     if (ccbData && 0 != ccbSize) {
         ccbHeader = initChunckHeader(CHUNK_TYPE_CCB, nextAddress, ccbSize, cfgData == NULL);
         nextAddress = ccbHeader.nextChunkAddress;
-        ccbCRC = crcFast(ccbData, ccbSize);
+        //ccbCRC = crcFast(ccbData, ccbSize);
+        //TODO: Define when mirrored CRC is being used
+        ccbCRC = crcFast(ccbData, ccbSize, true);// Using Mirrored CRC (default)
         imageSize += ccbHeader.headerSizeBytes + ccbHeader.chunkSizeBytes;
     }
 
@@ -429,7 +537,9 @@ Status ModuleMemory::createModuleImage(const uint8_t *ccbData, uint32_t ccbSize,
     uint32_t cfgCRC = 0;
     if (cfgData && 0 != cfgSize) {
         cfgHeader = initChunckHeader(CHUNK_TYPE_CFG, nextAddress, cfgSize, true);
-        cfgCRC = crcFast(cfgData, cfgSize);
+        //cfgCRC = crcFast(cfgData, cfgSize);
+        //TODO: Define when mirrored CRC is being used
+        cfgCRC = crcFast(cfgData, cfgSize, true);// Using Mirrored CRC (default)
         imageSize += cfgHeader.headerSizeBytes + cfgHeader.chunkSizeBytes;
     }
 

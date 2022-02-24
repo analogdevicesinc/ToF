@@ -14,9 +14,10 @@ extern "C" {
 #endif /* __cplusplus */
 
 #include <stdint.h>
+#include <stdbool.h>
 
 //Calculates a CRC of a block of memory using same algorithm as in the fuse table.
-uint32_t crcFast(uint8_t const message[], int nBytes);
+uint32_t crcFast(uint8_t const message[], int nBytes, bool isMirrored);
 
 #ifdef __cplusplus
 }
