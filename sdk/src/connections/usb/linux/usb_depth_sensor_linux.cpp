@@ -67,7 +67,7 @@ struct UsbDepthSensor::ImplData {
     std::unordered_map<std::string, CalibrationData> calibration_cache;
 };
 
-UsbDepthSensor::UsbDepthSensor(const std::string &driverPath)
+UsbDepthSensor::UsbDepthSensor(const std::string &name, const std::string &driverPath)
     : m_driverPath(driverPath), m_implData(new UsbDepthSensor::ImplData) {
     m_implData->fd = 0;
     m_implData->opened = false;
@@ -75,6 +75,7 @@ UsbDepthSensor::UsbDepthSensor(const std::string &driverPath)
     m_implData->buffers = nullptr;
     m_implData->buffersCount = 0;
     m_sensorDetails.connectionType = aditof::ConnectionType::USB;
+    m_sensorName = name;
 }
 
 UsbDepthSensor::~UsbDepthSensor() {
@@ -621,4 +622,29 @@ aditof::Status UsbDepthSensor::getHandle(void **handle) {
         LOG(ERROR) << "Won't return the handle. Device hasn't been opened yet.";
         return aditof::Status::UNAVAILABLE;
     }
+}
+
+aditof::Status UsbDepthSensor::getName(std::string &name) const {
+    name = m_sensorName;
+    return aditof::Status::OK;
+}
+
+aditof::Status UsbDepthSensor::pulsatrix_read_cmd(uint16_t cmd, uint16_t *data){
+    return aditof::Status::OK;
+}
+
+aditof::Status UsbDepthSensor::pulsatrix_write_cmd(uint16_t cmd, uint16_t data) {
+    return aditof::Status::OK;
+}
+
+aditof::Status UsbDepthSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) {
+    return aditof::Status::OK;
+}
+
+aditof::Status UsbDepthSensor::pulsatrix_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
+    return aditof::Status::OK;
+}
+
+aditof::Status UsbDepthSensor::pulsatrix_write_payload(uint8_t* payload, uint16_t payload_len) {
+    return aditof::Status::OK;
 }
