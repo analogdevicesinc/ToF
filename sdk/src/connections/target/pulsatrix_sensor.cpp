@@ -641,15 +641,105 @@ aditof::Status PulsatrixSensor::pulsatrix_write_cmd(uint16_t cmd, uint16_t data)
 }
 
 aditof::Status PulsatrixSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) {
-    return aditof::Status::OK;
+    using namespace aditof;
+    struct VideoDev *dev = &m_implData->videoDevs[0];
+    Status status = Status::OK;
+
+    static struct v4l2_ext_control extCtrl;
+    static struct v4l2_ext_controls extCtrls;
+    static uint8_t buf[PULSATRIX_CTRL_PACKET_SIZE];
+
+    extCtrl.size = PULSATRIX_CTRL_PACKET_SIZE;
+    extCtrl.id = V4L2_CID_AD_DEV_CHIP_CONFIG;
+    memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
+    extCtrls.controls = &extCtrl;
+    extCtrls.count = 1;
+
+    buf[0] = 0;
+    buf[1] = 0;
+    buf[2] = 2;
+    buf[3] = uint8_t(cmd >> 8);
+    buf[4] = uint8_t(cmd & 0xFF);
+    extCtrl.p_u8 = buf;
+
+    if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+        LOG(WARNING) << "Reading Pulsatrix error "
+                         << "errno: " << errno << " error: " << strerror(errno);
+            return Status::GENERIC_ERROR;
+        }
+
+    if (xioctl(fd, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1) {
+		std::cout << "Failed to get ctrl with id " << id;
+			return false;
+	}
+
+    memcpy(readback_data, extCtrl.p_u8 + 3, payload_len);
+
+    return status;
 }
 
 aditof::Status PulsatrixSensor::pulsatrix_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
-    return aditof::Status::OK;
+    using namespace aditof;
+    struct VideoDev *dev = &m_implData->videoDevs[0];
+    Status status = Status::OK;
+
+    static struct v4l2_ext_control extCtrl;
+    static struct v4l2_ext_controls extCtrls;
+    static uint8_t buf[PULSATRIX_CTRL_PACKET_SIZE];
+
+    extCtrl.size = PULSATRIX_CTRL_PACKET_SIZE;
+    extCtrl.id = V4L2_CID_AD_DEV_CHIP_CONFIG;
+    memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
+    extCtrls.controls = &extCtrl;
+    extCtrls.count = 1;
+
+    buf[0] = 1;
+    buf[1] = uint8_t(payload_len >> 8);
+    buf[2] = uint8_t(payload_len & 0xFF);
+
+    //TO DO: check how to send payload with cmd
+    buf[3] = cmd;
+    buf[4] = cmd;
+    extCtrl.p_u8 = buf;
+
+    if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+        LOG(WARNING) << "Reading Pulsatrix error "
+                         << "errno: " << errno << " error: " << strerror(errno);
+            return Status::GENERIC_ERROR;
+        }
+
+    return status;
 }
 
 aditof::Status PulsatrixSensor::pulsatrix_write_payload(uint8_t* payload, uint16_t payload_len) {
-    return aditof::Status::OK;
+    using namespace aditof;
+    struct VideoDev *dev = &m_implData->videoDevs[0];
+    Status status = Status::OK;
+
+    static struct v4l2_ext_control extCtrl;
+    static struct v4l2_ext_controls extCtrls;
+    static uint8_t buf[PULSATRIX_CTRL_PACKET_SIZE];
+
+    extCtrl.size = PULSATRIX_CTRL_PACKET_SIZE;
+    extCtrl.id = V4L2_CID_AD_DEV_CHIP_CONFIG;
+    memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
+    extCtrls.controls = &extCtrl;
+    extCtrls.count = 1;
+
+    buf[0] = 1;
+    buf[1] = uint8_t(payload_len >> 8);
+    buf[2] = uint8_t(payload_len & 0xFF);
+
+    memcpy(data + 3, payload, payload_len);
+    extCtrl.p_u8 = buf;
+
+    if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+        LOG(WARNING) << "Reading Pulsatrix error "
+                         << "errno: " << errno << " error: " << strerror(errno);
+            return Status::GENERIC_ERROR;
+        }
+
+    return status;
 }
 
 aditof::Status PulsatrixSensor::waitForBufferPrivate(struct VideoDev *dev) {
