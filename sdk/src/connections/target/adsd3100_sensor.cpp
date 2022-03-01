@@ -831,27 +831,27 @@ aditof::Status Adsd3100Sensor::getName(std::string &name) const {
 }
 
 aditof::Status Adsd3100Sensor::pulsatrix_read_cmd(uint16_t cmd, uint16_t *data){
-    LOG(INFO) << "Pulsatrix is not connected to this sensor type!"
+    LOG(INFO) << "Pulsatrix is not connected to this sensor type!";
     return aditof::Status::UNAVAILABLE;
 }
 
 aditof::Status Adsd3100Sensor::pulsatrix_write_cmd(uint16_t cmd, uint16_t data) {
-    LOG(INFO) << "Pulsatrix is not connected to this sensor type!"
+    LOG(INFO) << "Pulsatrix is not connected to this sensor type!";
     return aditof::Status::UNAVAILABLE;
 }
 
 aditof::Status Adsd3100Sensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) {
-    LOG(INFO) << "Pulsatrix is not connected to this sensor type!"
+    LOG(INFO) << "Pulsatrix is not connected to this sensor type!";
     return aditof::Status::UNAVAILABLE;
 }
 
 aditof::Status Adsd3100Sensor::pulsatrix_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
-    LOG(INFO) << "Pulsatrix is not connected to this sensor type!"
+    LOG(INFO) << "Pulsatrix is not connected to this sensor type!";
     return aditof::Status::UNAVAILABLE;
 }
 
 aditof::Status Adsd3100Sensor::pulsatrix_write_payload(uint8_t* payload, uint16_t payload_len) {
-    LOG(INFO) << "Pulsatrix is not connected to this sensor type!"
+    LOG(INFO) << "Pulsatrix is not connected to this sensor type!";
     return aditof::Status::UNAVAILABLE;
 }
 
