@@ -31,6 +31,7 @@
  */
 #include "aditof_roscpp/Aditof_roscppConfig.h"
 #include "message_factory.h"
+#include "publisher_factory.h"
 #include <aditof_utils.h>
 #include <dynamic_reconfigure/server.h>
 #include <ros/ros.h>
@@ -78,28 +79,24 @@ int main(int argc, char **argv) {
 
     //create publishers
     ros::NodeHandle nHandle("aditof_roscpp");
-    ros::Publisher ir_img_pubisher =
-        nHandle.advertise<sensor_msgs::Image>("aditof_ir", 5);
-    ROS_ASSERT_MSG(ir_img_pubisher, "creating ir_img_pubisher failed");
 
-    Frame frame;
+    aditof::Frame frame;
     getNewFrame(camera, &frame);
 
-    //create messages
-    ros::Time timeStamp = ros::Time::now();
-    AditofSensorMsg *ir_img_msg = MessageFactory::create(
-        camera, &frame, MessageType::sensor_msgs_IRImage, timeStamp);
-    ROS_ASSERT_MSG(ir_img_msg, "ir_image message creation failed");
-    IRImageMsg *irImgMsg = dynamic_cast<IRImageMsg *>(ir_img_msg);
-    ROS_ASSERT_MSG(irImgMsg,
-                   "downcast from AditofSensorMsg to IRImageMsg failed");
+    PublisherFactory publishers;
+    publishers.create(ModeTypes::mode7, nHandle, camera, &frame);
+
     while (ros::ok()) {
         ros::Time tStamp = ros::Time::now();
         getNewFrame(camera, &frame);
-        irImgMsg->FrameDataToMsg(camera, &frame, tStamp);
-        irImgMsg->publishMsg(ir_img_pubisher);
+
+        publishers.update_publishers(camera, &frame);
+
         ros::spinOnce();
     }
+
+    publishers.delete_publishers();
+
     /*
 
     ros::Publisher pcl_pubisher =
@@ -119,12 +116,6 @@ int main(int argc, char **argv) {
     ROS_ASSERT_MSG(camera_info_pubisher,
                    "creating camera_info_pubisher failed");
 */
-    Frame frame;
-    getNewFrame(camera, &frame);
-
-    //create messages
-    ros::Time timeStamp = ros::Time::now();
-    
     /*AditofSensorMsg *pcl_msg = MessageFactory::create(
         camera, &frame, MessageType::sensor_msgs_PointCloud2, timeStamp);
     ROS_ASSERT_MSG(pcl_msg, "pointcloud message creation failed");
