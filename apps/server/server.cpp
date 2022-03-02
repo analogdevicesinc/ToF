@@ -507,7 +507,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         aditof::Status status =
             camDepthSensor->pulsatrix_read_cmd(cmd, data);
         if (status == aditof::Status::OK) {
-            buff_send.add_int32_param(static_cast<::google::int32>(data))
+            buff_send.add_int32_payload(static_cast<::google::int32>(*data));
         }
         delete[] data;
         buff_send.set_status(static_cast<::payload::Status>(status));
@@ -532,7 +532,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         aditof::Status status =
             camDepthSensor->pulsatrix_read_payload_cmd(cmd, data, payload_len);
         if (status == aditof::Status::OK) {
-            buff_send.add_byte_param(data, payload_len)
+            buff_send.add_bytes_payload(data, payload_len);
         }
 
         delete[] data;
@@ -541,13 +541,13 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
 
     case PULSATRIX_WRITE_PAYLOAD_CMD: {
-        uint32_t cmd = static_cast<uint_t>(buff_recv.func_int32_param(0));
+        uint32_t cmd = static_cast<uint32_t>(buff_recv.func_int32_param(0));
         uint16_t payload_len = static_cast<uint16_t>(buff_recv.func_int32_param(1));
         uint8_t *data = new uint8_t[payload_len];
 
         memcpy(data, buff_recv.func_bytes_param(0).c_str(), payload_len);
         aditof::Status status =
-            camDepthSensor->pulsatrix_write_cmd(cmd, data, payload_len);
+            camDepthSensor->pulsatrix_write_payload_cmd(cmd, data, payload_len);
 
         delete[] data;
         buff_send.set_status(static_cast<::payload::Status>(status));
