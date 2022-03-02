@@ -21,5 +21,6 @@ if(UNIX)
     TARGET aditof_ros_package
     COMMAND ${CMAKE_BINARY_DIR}/ros_setup.bash "${OLD_CMAKE_INSTALL_PREFIX}"
             "${OLD_CMAKE_PREFIX_PATH}" ${VERSION} DEPENDS aditof)
- 
+  
 endif()
+

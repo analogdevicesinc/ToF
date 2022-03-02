@@ -29,43 +29,22 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "cameraInfo_msg.h"
+#ifndef ROS_FACTORY
+#define ROS_FACTORY
 
-using namespace aditof;
+#include <aditof/camera.h>
+#include <glog/logging.h>
 
-CameraInfoMsg::CameraInfoMsg() {}
+class AbstractPublisherFactory{
+    public:
+        ros::Publisher publisher;
+        virtual AditofSensorMsg *msg = MessageFactory::create() const = 0;
+        virtual publish_local() const = 0;
+};
 
-CameraInfoMsg::CameraInfoMsg(const std::shared_ptr<aditof::Camera> &camera,
-                             aditof::Frame *frame, ros::Time tStamp) {
-    FrameDataToMsg(camera, frame, tStamp);
+class pclPublisherFactory : public AbstractPublisherFactory{
+    public:
+        publisher = nHandle.advertise<sensor_msgs::PointCloud2>("aditof_pcloud", 5);
 }
 
-void CameraInfoMsg::FrameDataToMsg(const std::shared_ptr<Camera> &camera,
-                                   aditof::Frame *frame, ros::Time tStamp) {
-    FrameDetails fDetails;
-    frame->getDetails(fDetails);
-
-    setMembers(camera, fDetails.width, fDetails.height, tStamp);
-}
-
-void CameraInfoMsg::setMembers(const std::shared_ptr<Camera> &camera, int width,
-                               int height, ros::Time tStamp) {
-    msg.header.stamp = tStamp;
-    msg.header.frame_id = "aditof_camera_info";
-
-    msg.width = width;
-    msg.height = height;
-    msg.distortion_model = "plumb_bob";
-
-    IntrinsicParameters intr = getIntrinsics(camera);
-
-    msg.D = std::vector<double>(intr.distCoeffs.begin(), intr.distCoeffs.end());
-    float *ptr = intr.cameraMatrix.data();
-    msg.K = {ptr[0], ptr[1], ptr[2], ptr[3], ptr[4],
-             ptr[5], ptr[6], ptr[7], ptr[8]};
-    msg.R = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
-    msg.P = {msg.K[0], msg.K[1], msg.K[2], 0.0f,     msg.K[3], msg.K[4],
-             msg.K[5], 0.0f,     msg.K[6], msg.K[7], msg.K[8], 0.0f};
-}
-
-void CameraInfoMsg::publishMsg(const ros::Publisher &pub) { pub.publish(msg); }
+#endif
