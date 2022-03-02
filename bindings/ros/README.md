@@ -2,69 +2,73 @@
 # ROS Wrapper for the ADI ToF library
 
 ## Overview
-This ROS package facilitates DEPTH and IR data acquisition and processing for the Analog Devices depth cameras.
+This ROS package facilitates depth and IR data acquisition and processing for the Analog Devices depth cameras.
 
-## On Target
-  
-1.1 **Install the recommended [ROS distribution](http://wiki.ros.org/Distributions) for your operating system**
+## Installation
+
+- **Install the recommended [ROS distribution](http://wiki.ros.org/Distributions) for your operating system**
   - [ROS Install page](http://wiki.ros.org/ROS/Installation)
-  - On target choose: [ROS Melodic Distro](http://wiki.ros.org/melodic/Installation/Ubuntu) and install the ROS-Base (Bare Bones) package
-**Install the ADI ToF SDK library**
-  - [Install SDK dependencies](https://github.com/analogdevicesinc/ToF/blob/6c7fb376aeec73a21ab177adf297c5781bcbd544/doc/linux/build_instructions.md#installing-the-dependencies)
-
-  1.2 Download the SDK from the repository \
-  1.3 Copy the following files to the specific location after installing the ROS package:
-  
+- **Make sure you have these ROS packages installed before building and running the examples**
+  - [rviz](http://wiki.ros.org/rviz)\
+    Run the command below for each package, replacing ROSDISTRO with the name of the ROS distribution you are using and PACKAGE with the name of the needed package.
   ```console
-  sudo cp <libs folder direcory>/libtofi_config.so $ROS_ROOT/../../lib/.
-  sudo cp <libs folder direcory>/libtofi_compute.so $ROS_ROOT/../../lib/.
-  sudo cp -r <config folder directory> $HOME/.ros/
+  sudo apt install ros-ROSDISTRO-PACKAGE
   ```
-  where "libs folder direcory" is the location of the folder where the depth_compute files are stored and the "config folder directory" is the directory where the neccessary config files are strored for the camera. \
-
-
-  1.4 After this, build the SDK, as well as enable ROS package building 
-
+- **Install the ADI ToF SDK library**
+  - [Install SDK dependencies](https://github.com/analogdevicesinc/aditof_sdk/blob/6c7fb376aeec73a21ab177adf297c5781bcbd544/doc/linux/build_instructions.md#installing-the-dependencies)
+  - Download and build the SDK, as well as enable ROS package building
 ```console
 git clone https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
-cmake -DNXP=1 -DWITH_ROS=1 -DWITH_EXAMPLES=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" .. 
+cmake -DWITH_EXAMPLES=off -DWITH_ROS=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
 sudo cmake --build . --target install
-sudo cmake --build . --target aditof_ros_package
 ```
-1.5 In order to start the camera node, please use the following example:
+ - **Build the aditof_roscpp package**
+  ```console
+  cmake --build . --target aditof_ros_package
+```
+
+
+## Usage
+- Camera node
+    ```console
+    cd catkin_ws
+    source devel/setup.bash
+    roslaunch aditof_roscpp camera_node.launch
+    ```
+    The last command should be run for cameras using an USB connection. For Ethernet\Wi-Fi connections, you should specify the camera's IP address, using the ip parameter, as shown below
+    ```console
+    roslaunch aditof_roscpp camera_node.launch ip:="127.0.0.1"
+    ```
+- Examples
+  - Visualize point cloud in rviz
+    ```console
+    cd catkin_ws
+    source devel/setup.bash
+    roslaunch aditof_roscpp rviz_publisher.launch
+    ```
+
+ ### ***Note:***
+ *In case you wish to launch nodes using the rosrun command instead of roslaunch, you should run each node specified in the launchfile in a different terminal. For example, this line*
 ```console
-cd catkin_ws
-source devel/setup.bash
-export ROS_MASTER_URI=http://<TARGET_IP>:11311
-export ROS_IP=<TARGET_IP>
-roslaunch aditof_roscpp camera_node.launch
+roslaunch aditof_roscpp camera_node.launch ip:="127.0.0.1"
 ```
-where the TARGET_IP is the IP address of target device.\
+*will be replaced with these lines*
 
-In order to enable the DEPHT_COMPUTE library use the following command line to start the ROS node (by default, without specified argument the depth_compute library is disabled):
 ```console
-roslaunch aditof_roscpp camera_node.launch use_depth_library:="true"
-
+roscore
+rosrun aditof_roscpp aditof_camera_node 127.0.0.1
+rosrun rqt_reconfigure rqt_reconfigure
 ```
-
-## On Host
- 2.1 **Install the recommended [ROS distribution](http://wiki.ros.org/Distributions) for your operating system**
-  - [ROS Install page](http://wiki.ros.org/ROS/Installation)
-
- 2.2 After installing run the following commands:
- ```console
-cd catkin_ws
-source devel/setup.bash
-export ROS_MASTER_URI=http://<TARGET_IP>:11311
-export ROS_IP=<HOST_IP>
-```
-where the TARGET_IP is the IP address of the device on which is running the camera node and the HOST_IP is the IP address of the users computer where you want to access the topics.
-
-
 ## Published Topics
 The aditof_camera_node publishes messages defined by the [sensor_msgs](http://wiki.ros.org/sensor_msgs) package on the following topics
-- /aditof_roscpp/aditof_depth 
+- /aditof_roscpp/aditof_camera_info
+- /aditof_roscpp/aditof_depth
 - /aditof_roscpp/aditof_ir
+- /aditof_roscpp/aditof_pcloud
 
+## Update parameters at runtime using
+Using the [dynamic_reconfigure](http://wiki.ros.org/dynamic_reconfigure) package, the aditof_ros_package offers the users the possibility to update the camera parameters
+
+<p align="center"><img src="../../doc/img/ros_rqt_reconfigure.png" /></p>

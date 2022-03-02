@@ -38,23 +38,17 @@
 #include <string.h>
 #include <unistd.h>
 
+std::mutex mtx_dynamic_rec;
 using namespace aditof;
 
-bool isValidIPv4(const char *IPAddress)
-{
-   unsigned char a,b,c,d;
-   return sscanf(IPAddress,"%d.%d.%d.%d", &a, &b, &c, &d) == 4;
-}
-
-std::string parseArgsForIp(int argc, char **argv) {
+std::string parseArgs(int argc, char **argv) {
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
-    
+
     if (argc > 1) {
-        for (int i = 1; i < argc; i++) {
-            std::string ip = argv[i];
-            if (isValidIPv4(ip.c_str()))
-                return ip;
+        std::string ip = argv[1];
+        if (!ip.empty()) {
+            return ip;
         }
     }
     LOG(INFO)
@@ -62,24 +56,70 @@ std::string parseArgsForIp(int argc, char **argv) {
     return std::string();
 }
 
-bool parseArgsForDepthLibarary(int argc, char **argv) {
+/*std::void rewritePathsInConfigJson(std:string jsonPath, std::string newPath)
+{
+    / Parse config.json
+    std::string config = jsonPath;
+    std::ifstream ifs(config.c_str());
+    std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
 
-    if (argc > 1) {
-        for (int i = 1; i < argc; i++) {
-            std::string var = argv[i];
-            if (std::strcmp(var.c_str(),"true")==0)
-                return true;
+    cJSON *config_json = cJSON_Parse(content.c_str());
+    if (config_json != NULL) {
+        // Get sensorfirmware file location
+        const cJSON *json_sensorFirmware_file = cJSON_GetObjectItemCaseSensitive(config_json, "sensorFirmware");
+        if (cJSON_IsString(json_sensorFirmware_file) && (json_sensorFirmware_file->valuestring != NULL)) {
+            if (m_sensorFirmwareFile.empty()) {
+                // save firmware file location
+                m_sensorFirmwareFile = std::string(json_sensorFirmware_file->valuestring);
+            } else {
+                LOG(WARNING) << "Duplicate firmware file ignored: " << json_sensorFirmware_file->valuestring;
+            }
         }
+
+        // Get calibration file location
+        const cJSON *json_ccb_calibration_file = cJSON_GetObjectItemCaseSensitive(config_json, "CCB_Calibration");
+        if (cJSON_IsString(json_ccb_calibration_file) && (json_ccb_calibration_file->valuestring != NULL)) {
+            if (m_ccb_calibrationFile.empty()) {
+                // save calibration file location
+                m_ccb_calibrationFile = std::string(json_ccb_calibration_file->valuestring);
+            } else {
+                LOG(WARNING) << "Duplicate calibration file ignored: " << json_ccb_calibration_file->valuestring;
+            }
+        }
+
+        // Get optional eeprom type name
+        const cJSON *eeprom_type_name = cJSON_GetObjectItemCaseSensitive(config_json, "MODULE_EEPROM_TYPE");
+        if (cJSON_IsString(eeprom_type_name) && (eeprom_type_name->valuestring != NULL)) {
+            m_eepromDeviceName = eeprom_type_name->valuestring;
+        }
+
+        // Get depth ini file location
+        const cJSON *json_depth_ini_file = cJSON_GetObjectItemCaseSensitive(config_json, "DEPTH_INI");
+        if (cJSON_IsString(json_depth_ini_file) && (json_depth_ini_file->valuestring != NULL))
+            // save depth ini file location
+            m_ini_depth = std::string(json_depth_ini_file->valuestring);
+
+        // Get optional power config
+        const cJSON *json_vaux_pwr = cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_ENABLE");
+        if (cJSON_IsString(json_vaux_pwr) && (json_vaux_pwr->valuestring != NULL)) {
+            m_sensor_settings.push_back(std::make_pair(json_vaux_pwr->string, atoi(json_vaux_pwr->valuestring)));
+        }
+
+        // Get optional power config
+        const cJSON *json_vaux_voltage = cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_VOLTAGE");
+        if (cJSON_IsString(json_vaux_voltage) && (json_vaux_voltage->valuestring != NULL)) {
+            m_sensor_settings.push_back(std::make_pair(json_vaux_voltage->string, atoi(json_vaux_voltage->valuestring)));
+        }
+    } else if (!config.empty()) {
+        LOG(ERROR) << "Couldn't parse config file: " << config.c_str();
+        return Status::GENERIC_ERROR;
     }
-    LOG(INFO) << "No depth_compute option provided, default value: FALSE";
-    return false;
-}
+}*/
 
 std::shared_ptr<Camera> initCamera(int argc, char **argv) {
 
     Status status = Status::OK;
-    std::string ip = parseArgsForIp(argc, argv);
-    bool useDepthLibrary = parseArgsForDepthLibarary(argc, argv);
+    std::string ip = parseArgs(argc, argv);
 
     System system;
 
@@ -95,28 +135,14 @@ std::shared_ptr<Camera> initCamera(int argc, char **argv) {
         return nullptr;
     }
 
+
     std::shared_ptr<Camera> camera = cameras.front();
 
-    /*std::string package_path = ros::package::getPath("aditof_roscpp");
-    package_path = package_path + "/../../config/config_walden_nxp.json";
-    LOG(INFO) << "Json config file location: "<< package_path;*/
-
     // user can pass any config.json stored anywhere in HW
-
-    status = camera->setControl(
-        "initialization_config",
-        "/home/analog/.ros/config/config_walden_nxp.json");
+    status = camera->setControl("initialization_config", "config/config_walden_nxp.json");
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set the initialization config file!";
         return 0;
-    }
-        
-    if (!useDepthLibrary){
-        status = camera->setControl("enableDepthCompute", "off");
-        if (status != Status::OK) {
-            LOG(ERROR) << "Could not set the initialization config file!";
-            return 0;
-        }
     }
 
     status = camera->initialize();
@@ -135,15 +161,29 @@ std::shared_ptr<Camera> initCamera(int argc, char **argv) {
     status = camera->setControl("loadModuleData", "call");
     if (status != Status::OK) {
         LOG(INFO) << "No CCB/CFG data found in camera module,";
-        LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data "
-                     "from JSON config file...";
+        LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data from JSON config file...";
     }
 
-    status = camera->setControl("enableDepthCompute", "off");
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not set depthCompute to off!";
+    //set depthCompute to on or off
+    status = camera->setControl("enableDepthCompute", "on");
+    if (status != Status::OK){
+        LOG(ERROR) << "Couldn't set depth compute option";
         return 0;
     }
+
+
+    status = camera->setFrameType("pcm");
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not set camera frame type!";
+        return 0;
+    }
+
+    status = camera->start();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not start the camera!";
+        return 0;
+    }
+    aditof::Frame frame;
 
     return camera;
 }
@@ -178,6 +218,15 @@ void setFrameType(const std::shared_ptr<aditof::Camera> &camera,
     status = camera->setFrameType(type);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
+        return;
+    }
+}
+
+void getAvailableFrameType(const std::shared_ptr<aditof::Camera> &camera,
+                           std::vector<std::string> &availableFrameTypes) {
+    camera->getAvailableFrameTypes(availableFrameTypes);
+    if (availableFrameTypes.empty()) {
+        LOG(ERROR) << "No frame type available!";
         return;
     }
 }
@@ -249,9 +298,14 @@ void disableNoiseReduction(const std::shared_ptr<Camera> &camera) {
 
 void getNewFrame(const std::shared_ptr<Camera> &camera, aditof::Frame *frame) {
     Status status = Status::OK;
-    status = camera->requestFrame(frame);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not request frame!";
+
+    try {
+        std::lock_guard<std::mutex> lck(mtx_dynamic_rec);
+        status = camera->requestFrame(frame);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Could not request frame!";
+        }
+    } catch (std::exception &e) {
     }
 }
 
@@ -310,3 +364,4 @@ void irTo16bitGrayscale(uint16_t *frameData, int width, int height) {
         frameData[i] = static_cast<uint16_t>(grayscale_val);
     }
 }
+
