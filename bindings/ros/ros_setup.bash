@@ -10,6 +10,10 @@ then
 elif [ $DISTRO_CODENAME = "focal" ]
 then
         ROS_DISTRO="noetic"
+        
+elif [ $DISTRO_CODENAME = "buster" ]
+then
+        ROS_DISTRO="melodic"
 fi
 
 
@@ -20,9 +24,6 @@ ln -sf ${ROS_SRC_DIR}/aditof_roscpp/ .
 cd ${CATKIN_WS}
 source /opt/ros/$ROS_DISTRO/setup.sh
 
-
-
 #we have to save the old value of CMAKE_INSTALL_PREFIX in another variable
 #because after running the setup.sh script, the variable will be reassigned
 catkin_make -DADITOF_CMAKE_INSTALL_PREFIX=$1 -DADITOF_CMAKE_PREFIX_PATH=$2
-
