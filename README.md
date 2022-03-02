@@ -15,6 +15,7 @@ For more details on building the SDK on a host platform please check the **User 
 | Operating System | Documentation | GitHub master status | Downloads |
 | --------- | ----------- | ----------- | ----------- |
 | Windows | [Build Instructions](doc/itof/windows_build_instructions.md) | [![Build status](https://ci.appveyor.com/api/projects/status/46t36hmy77ejrf88/branch/master?svg=true)](https://ci.appveyor.com/project/analogdevicesinc/aditof-sdk-rework/branch/master) | [![aditof-demo installer](https://img.shields.io/badge/release-aditof_demo_installer-blue.svg)](https://github.com/analogdevicesinc/aditof-sdk-rework/releases/latest) |
+| Linux | [Build Instructions](doc/itof/linux_build_instructions.md) | [![Build status](https://ci.appveyor.com/api/projects/status/46t36hmy77ejrf88/branch/master?svg=true)](https://ci.appveyor.com/project/analogdevicesinc/aditof-sdk-rework/branch/master) | [![aditof-demo installer](https://img.shields.io/badge/release-aditof_demo_installer-blue.svg)](https://github.com/analogdevicesinc/aditof-sdk-rework/releases/latest) |
 
 ## Supported embedded platforms
 
