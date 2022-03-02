@@ -172,10 +172,19 @@ public:
      */
     Status processNVMFirmware(uint8_t chunkType, uint8_t *pChunkData, int payloadSize);
 
+     /**
+     * @brief Displays CRC error according to chunk type
+     * @param[in] chunkType - NVM header chunk type
+     */
+    void displayCRCError(uint8_t chunkType);
+
 private:
     std::string ccbFilename;
     std::string cfgFilename;
     std::string jsonFilename;
+    bool _badCFG = false;
+    bool _badCCB = false;
+    bool isBadChunk = false;
 
   protected:
     bool verifyChunkHeader(const TOF_ChunkHeader_t *const pChunkHeader);
