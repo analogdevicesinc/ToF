@@ -687,8 +687,8 @@ aditof::Status PulsatrixSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t
         }
 
     if (xioctl(dev->sfd, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1) {
-		std::cout << "Failed to get ctrl with id " << id;
-			return false;
+		LOG(WARNING) << "Failed to get ctrl with id " << extCtrl.id;
+			return Status::GENERIC_ERROR;
 	}
 
     memcpy(readback_data, extCtrl.p_u8 + 16, payload_len);
