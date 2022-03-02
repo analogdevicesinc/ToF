@@ -43,8 +43,8 @@ IRImageMsg::IRImageMsg(const std::shared_ptr<aditof::Camera> &camera,
 
 void IRImageMsg::FrameDataToMsg(const std::shared_ptr<Camera> &camera,
                                 aditof::Frame *frame, ros::Time tStamp) {
-    FrameDataDetails fDetails;
-    frame->getDataDetails("ir",fDetails);
+    FrameDetails fDetails;
+    frame->getDetails(fDetails);
 
     setMetadataMembers(fDetails.width, fDetails.height, tStamp);
 

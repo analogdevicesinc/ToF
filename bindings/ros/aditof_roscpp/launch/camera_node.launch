@@ -1,5 +1,4 @@
 <launch>
   <arg name="ip" default='""'/>
-  <arg name="use_depth_library" default='"false"'/>
-  <node pkg="aditof_roscpp" type="aditof_camera_node" name="aditof_camera_node" args="$(arg ip) $(arg use_depth_library)" output="screen"/>
+  <node pkg="aditof_roscpp" type="aditof_camera_node" name="aditof_camera_node" args="$(arg ip)" output="screen"/>
 </launch>
