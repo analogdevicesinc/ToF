@@ -110,17 +110,32 @@ std::string ModuleMemory::writeTempJSON(const std::string ccbFilename, const std
     }
 
     std::stringstream ss;
-    ss << "{" << std::endl;
-    if (!ccbFilename.empty()) {
-        ss << "\"sensorFirmware\": \"" << escapePathBackslash(cfgFilename) << "\"";
+    ss << "{" << std::endl;  
+    /***************************************************/
+    // Create JSON file when both CFG and CCB exist
+    if (!ccbFilename.empty() && !cfgFilename.empty()) {
+        ss << "\"sensorFirmware\": \"" << escapePathBackslash(cfgFilename)
+           << "\"";
+        ss << "," << std::endl;
+        ss << "\"CCB_Calibration\": \"" << escapePathBackslash(ccbFilename)
+           << "\"";
+        ss << std::endl << "}" << std::endl;
     }
-    if (!cfgFilename.empty()) {
-        if (!ccbFilename.empty()) {
-            ss << "," << std::endl;
-        }
-        ss << "\"CCB_Calibration\": \"" << escapePathBackslash(ccbFilename) << "\"";
+
+    // Create JSON file when CFG is missing but CCB is not
+    else if (!ccbFilename.empty() && cfgFilename.empty()) {
+        ss << "\"CCB_Calibration\": \"" << escapePathBackslash(ccbFilename)
+           << "\"";
+        ss << std::endl << "}" << std::endl;
     }
-    ss << std::endl << "}" << std::endl;
+
+    // Create JSON file when CCB is missing but CFG is not
+    else if (ccbFilename.empty() && !cfgFilename.empty()) {
+        ss << "\"sensorFirmware\": \"" << escapePathBackslash(cfgFilename)
+           << "\"";
+        ss << std::endl << "}" << std::endl;
+    }
+    /***************************************************/
 
     LOG(INFO) << "Writing temporary JSON file: " << tempFileName << "\n"
               << ss.str().c_str();
@@ -301,11 +316,6 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, TOF_ModuleFiles_
         return Status::GENERIC_ERROR;
     }
 
-    bool isBadChunk = false;
-    /*std::string ccbFilename;
-    std::string cfgFilename;
-    std::string jsonFilename;*/
-
     // Read and parse data chunks
     while (!isBadChunk && pChunkHeader->nextChunkAddress != 0) {
 
@@ -328,6 +338,15 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, TOF_ModuleFiles_
             break;
         }
 
+        //Skip CRC check for Pulsatrix and Init firmware current headers. They don't have CRC information
+        if (pChunkHeader->revision.chunktype ==
+                CHUNK_TYPE_PULSATRIX_FIRMWARE_CURRENT_HEADER ||
+            pChunkHeader->revision.chunktype ==
+                CHUNK_TYPE_INIT_FIRMWARE_HEADER) {
+            free(pChunkData);
+            continue;
+        }
+
         if (Status::OK == m_eeprom->read(chunkDataAddr, pChunkData, pChunkHeader->chunkSizeBytes)) {
             int payloadSize = pChunkHeader->chunkSizeBytes - sizeof(uint32_t); // data size - CRC in bytes
             uint32_t blockCRC = *((uint32_t *)(pChunkData + payloadSize));
@@ -336,76 +355,17 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, TOF_ModuleFiles_
 
                 if (processNVMFirmware(pChunkHeader->revision.chunktype,
                                        pChunkData, payloadSize) !=
-                    Status::OK) {
+                    Status::OK) {                    
                     isBadChunk = true;
                 }
-
-                //switch (pChunkHeader->revision.chunktype) {
-                //case CHUNK_TYPE_CCB:
-                //    LOG(INFO) << "Found module memory CCB chunk, parsing...";
-                //    ccbFilename = writeTempCCB(pChunkData, payloadSize);
-                //    if (ccbFilename.empty()) {
-                //        LOG(WARNING) << "Invalid module memory CCB chunk";
-                //        isBadChunk = true;
-                //    }
-                //    break;
-                //case CHUNK_TYPE_CFG:
-                //case CHUNK_TYPE_IMAGER_FIRMWARE_FACTORY_HEADER:
-                //    LOG(INFO) << "Found module memory CFG chunk, parsing...";
-                //    cfgFilename = writeTempCFG(pChunkData, payloadSize);
-                //    if (cfgFilename.empty()) {
-                //        LOG(WARNING) << "Invalid module memory CFG chunk";
-                //        isBadChunk = true;
-                //    }
-                //    break;
-                //case CHUNK_TYPE_CAP_STRUCTURE_HEADER:
-                //    break;
-                //case CHUNK_TYPE_DEBUG_INFO_HEADER:
-                //    break;
-                //case CHUNK_TYPE_INIT_FIRMWARE_HEADER:
-                //    break;
-                //case CHUNK_TYPE_PULSATRIX_FIRMWARE_FACTORY_HEADER:
-                //    break;
-                //case CHUNK_TYPE_PULSATRIX_FIRMWARE_CURRENT_HEADER:
-                //    break;
-                //case CHUNK_TYPE_PULSATRIX_FIRMWARE_UPGRADE_HEADER:
-                //    break;
-                //case CHUNK_TYPE_IMAGER_FIRMWARE_CURRENT_HEADER:
-                //    break;
-                //case CHUNK_TYPE_IMAGER_FIRMWARE_UPGRADE_HEADER:
-                //    break;
-                //case CHUNK_TYPE_FILE_HEADER:
-                //    break;
-                //default://No header type found, hence will be considered as bad chunk.
-                //    LOG(WARNING) << "Unsupported module data chunk type";
-                //    isBadChunk = true;
-                //    break;
-                //}
-                /*if (pChunkHeader->revision.chunktype == CHUNK_TYPE_CCB) {
-                    LOG(INFO) << "Found module memory CCB chunk, parsing...";
-                    ccbFilename = writeTempCCB(pChunkData, payloadSize);
-                    if (ccbFilename.empty()) {
-                        LOG(WARNING) << "Invalid module memory CCB chunk";
-                        isBadChunk = true;
-                    }
-                } else if (pChunkHeader->revision.chunktype == CHUNK_TYPE_CFG) {
-                    LOG(INFO) << "Found module memory CFG chunk, parsing...";
-                    cfgFilename = writeTempCFG(pChunkData, payloadSize);
-                    if (cfgFilename.empty()) {
-                        LOG(WARNING) << "Invalid module memory CFG chunk";
-                        isBadChunk = true;
-                    }
-                } else {
-                    LOG(WARNING) << "Unsupported module data chunk type";
-                    isBadChunk = true;
-                }*/
+                
             } else if (crcFast(pChunkData, payloadSize, false) == blockCRC) {//Try using non mirrored CRC
                 if (processNVMFirmware(pChunkHeader->revision.chunktype,
                                        pChunkData, payloadSize) != Status::OK) {
                     isBadChunk = true;
                 }
             } else {
-                LOG(WARNING) << "Corrupted module memory data block type " << std::hex << pChunkHeader->revision.chunktype;
+                displayCRCError(pChunkHeader->revision.chunktype);
                 isBadChunk = true;
             }
         } else {
@@ -415,16 +375,30 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, TOF_ModuleFiles_
         free(pChunkData);
     }
 
-    if (!isBadChunk) {
+    if (!_badCCB || !_badCFG) {
         // Create temporary json configuration file
         jsonFilename = writeTempJSON(ccbFilename, cfgFilename);
     }
 
     if (isBadChunk || jsonFilename.empty()) {
-        LOG(WARNING) << "Failed to load module data!";
-        std::remove(ccbFilename.c_str());
-        std::remove(cfgFilename.c_str());
-        return Status::GENERIC_ERROR;
+        if (_badCCB && _badCFG) {
+            LOG(WARNING) << "Failed to load CCB data from module!";
+            std::remove(ccbFilename.c_str());
+            LOG(WARNING) << "Failed to load CFG data from module!";
+            std::remove(cfgFilename.c_str());
+            return Status::GENERIC_ERROR;
+        } else if (_badCFG) {
+            LOG(WARNING) << "Failed to load CFG data from module!";
+            std::remove(cfgFilename.c_str());
+        } else if (_badCCB) {
+            LOG(WARNING) << "Failed to load CCB data from module!";
+            std::remove(ccbFilename.c_str());
+        }else {
+            LOG(WARNING) << "Failed to load module data!";
+            std::remove(ccbFilename.c_str());
+            std::remove(cfgFilename.c_str());
+            return Status::GENERIC_ERROR;
+        }        
     }
 
     tempFiles = {};
@@ -447,7 +421,7 @@ Status ModuleMemory::processNVMFirmware(uint8_t chunkType, uint8_t *pChunkData, 
         ccbFilename = writeTempCCB(pChunkData, payloadSize);
         if (ccbFilename.empty()) {
             LOG(WARNING) << "Invalid module memory CCB chunk";
-            return Status::GENERIC_ERROR;
+            _badCCB = true;
         }
         return Status::OK;
     case CHUNK_TYPE_CFG:
@@ -456,7 +430,7 @@ Status ModuleMemory::processNVMFirmware(uint8_t chunkType, uint8_t *pChunkData, 
         cfgFilename = writeTempCFG(pChunkData, payloadSize);
         if (cfgFilename.empty()) {
             LOG(WARNING) << "Invalid module memory CFG chunk";
-            return Status::GENERIC_ERROR;
+            _badCFG = true;
         }
         return Status::OK;
     case CHUNK_TYPE_CAP_STRUCTURE_HEADER:
@@ -480,6 +454,48 @@ Status ModuleMemory::processNVMFirmware(uint8_t chunkType, uint8_t *pChunkData, 
     default: //No header type found, hence will be considered as bad chunk.
         LOG(WARNING) << "Unsupported module data chunk type";
         return Status::GENERIC_ERROR;
+    }
+}
+
+void ModuleMemory::displayCRCError(uint8_t chunkType) {
+    switch (chunkType) {
+    case CHUNK_TYPE_CCB:
+        LOG(WARNING) << "Calibration (CCB) CRC failure.";
+        break;
+    case CHUNK_TYPE_CFG:
+    case CHUNK_TYPE_IMAGER_FIRMWARE_FACTORY_HEADER:
+        LOG(WARNING) << "Imager Firmware (CFG) CRC failure.";
+        break;
+    case CHUNK_TYPE_CAP_STRUCTURE_HEADER:
+        LOG(WARNING) << "CAP structure header CRC failure.";
+        break;
+    case CHUNK_TYPE_DEBUG_INFO_HEADER:
+        LOG(WARNING) << "Debug information header CRC failure.";
+        break;
+    case CHUNK_TYPE_INIT_FIRMWARE_HEADER:
+        LOG(WARNING) << "Init firmware CRC failure.";
+        break;
+    case CHUNK_TYPE_PULSATRIX_FIRMWARE_FACTORY_HEADER:
+        LOG(WARNING) << "Pulsatrix firmware factory CRC failure.";
+        break;
+    case CHUNK_TYPE_PULSATRIX_FIRMWARE_CURRENT_HEADER:
+        LOG(WARNING) << "Pulsatrix firmware current CRC failure.";
+        break;
+    case CHUNK_TYPE_PULSATRIX_FIRMWARE_UPGRADE_HEADER:
+        LOG(WARNING) << "Pulsatrix firmware upgrade CRC failure.";
+        break;
+    case CHUNK_TYPE_IMAGER_FIRMWARE_CURRENT_HEADER:
+        LOG(WARNING) << "Imager firmware current CRC failure.";
+        break;
+    case CHUNK_TYPE_IMAGER_FIRMWARE_UPGRADE_HEADER:
+        LOG(WARNING) << "Imager firmware upgrade CRC failure.";
+        break;
+    case CHUNK_TYPE_FILE_HEADER:
+        LOG(WARNING) << "Chunk type file header CRC failure.";
+        break;
+    default:
+        LOG(WARNING) << "Generic CRC failure.";
+        break;
     }
 }
 
