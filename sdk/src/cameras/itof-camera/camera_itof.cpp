@@ -636,7 +636,14 @@ aditof::Status CameraItof::initComputeLibrary(void) {
                                                    m_xyz_dealias_data);
 
             } else {
-                m_tofi_config = InitTofiConfig(&calData, NULL, &depth_ini, convertedMode, &status);
+                if (calData.p_data != NULL) {
+                    m_tofi_config = InitTofiConfig(&calData, NULL, &depth_ini,
+                                                   convertedMode, &status);
+                }
+                else {
+                    LOG(ERROR) << "Failed to get calibration data";
+                }
+                   
             }
 
             delete[] tempDataParser;
@@ -699,6 +706,9 @@ aditof::Status CameraItof::loadConfigData(void) {
 
     if (!m_ccb_calibrationFile.empty()) {
         m_calData = LoadFileContents(const_cast<char*>(m_ccb_calibrationFile.c_str()));
+    } else {
+        m_calData.p_data = NULL;
+        m_calData.size = 0;
     }
 
     // XYZ set through camera control takes precedence over the setting from .ini file
