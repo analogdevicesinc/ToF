@@ -70,12 +70,6 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    status = camera->setControl("powerUp", "call");
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not PowerUp camera!";
-        return 0;
-    }
-
     // optionally load configuration data from module memory
     status = camera->setControl("loadModuleData", "call");
     if (status != Status::OK) {
@@ -88,13 +82,6 @@ int main(int argc, char *argv[]) {
     camera->getAvailableFrameTypes(frameTypes);
     if (frameTypes.empty()) {
         std::cout << "no frame type available!";
-        return 0;
-    }
-
-    //set depthCompute to on or off
-    status = camera->setControl("enableDepthCompute", "on");
-    if (status != Status::OK) {
-        LOG(ERROR) << "Couldn't set depth compute option";
         return 0;
     }
 
