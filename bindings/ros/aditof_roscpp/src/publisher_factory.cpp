@@ -38,24 +38,51 @@ void PublisherFactory::create(ModeTypes mode, ros::NodeHandle nHandle,
     ros::Time timeStamp = ros::Time::now();
     switch (mode) {
     case ModeTypes::mode7:
-
+        //ir
         img_publishers.emplace_back(
             nHandle.advertise<sensor_msgs::Image>("aditof_ir", 5));
         imgMsgs.emplace_back(new IRImageMsg(
             camera, frame, sensor_msgs::image_encodings::MONO16, timeStamp));
 
-        //add DEPTH, PCL and CAMERA_INFO
+        //depth
+        img_publishers.emplace_back();
+        imgMsgs.emplace_back();
+
+        //pointcloud
+        img_publishers.emplace_back();
+        imgMsgs.emplace_back();
+
+        //camera info
+        img_publishers.emplace_back();
+        imgMsgs.emplace_back();
+
         break;
     case ModeTypes::mode10:
-        //implement mode10
-        //add IR, DEPTH, PCL and CAMERA_INFO
+        //ir
+        img_publishers.emplace_back(
+            nHandle.advertise<sensor_msgs::Image>("aditof_ir", 5));
+        imgMsgs.emplace_back(new IRImageMsg(
+            camera, frame, sensor_msgs::image_encodings::MONO16, timeStamp));
+
+        //depth
+        img_publishers.emplace_back();
+        imgMsgs.emplace_back();
+
+        //pointcloud
+        img_publishers.emplace_back();
+        imgMsgs.emplace_back();
+
+        //camera info
+        img_publishers.emplace_back();
+        imgMsgs.emplace_back();
+        
         break;
     default:
         break;
     }
 }
-void PublisherFactory::update_publishers(const std::shared_ptr<aditof::Camera> &camera,
-                                         aditof::Frame *frame) {
+void PublisherFactory::update_publishers(
+    const std::shared_ptr<aditof::Camera> &camera, aditof::Frame *frame) {
     ros::Time timeStamp = ros::Time::now();
     for (unsigned int i = 0; i < imgMsgs.size(); ++i) {
         imgMsgs.at(i)->FrameDataToMsg(camera, frame, timeStamp);
