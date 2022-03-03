@@ -45,7 +45,7 @@ enum class ModeTypes { mode7, mode10 };
 
 class PublisherFactory {
   public:
-    void create(ModeTypes modem, ros::NodeHandle nHandle,
+    void create(ModeTypes mode, ros::NodeHandle nHandle,
                 const std::shared_ptr<aditof::Camera> &camera,
                 aditof::Frame *frame);
     void update_publishers(const std::shared_ptr<aditof::Camera> &camera,
