@@ -615,7 +615,8 @@ aditof::Status PulsatrixSensor::pulsatrix_read_cmd(uint16_t cmd, uint16_t *data)
         return Status::GENERIC_ERROR;
     }
 
-    memcpy(data, extCtrl.p_u8 + 3, sizeof(uint16_t));
+    //Registers read from pulsatrix are in little endian
+    *data = (uint16_t)(extCtrl.p_u8[3]) + ((uint16_t)(extCtrl.p_u8[4]) << 8);
 
     return status;
 }
