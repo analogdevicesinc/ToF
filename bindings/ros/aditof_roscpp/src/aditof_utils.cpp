@@ -287,7 +287,6 @@ void getNewFrame(const std::shared_ptr<Camera> &camera, aditof::Frame *frame) {
     Status status = Status::OK;
 
     try {
-        std::lock_guard<std::mutex> lck(mtx_dynamic_rec);
         status = camera->requestFrame(frame);
         if (status != Status::OK) {
             LOG(ERROR) << "Could not request frame!";
