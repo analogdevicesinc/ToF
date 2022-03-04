@@ -151,12 +151,6 @@ std::shared_ptr<Camera> initCamera(int argc, char **argv) {
         return 0;
     }
 
-    status = camera->setControl("powerUp", "call");
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not PowerUp camera!";
-        return 0;
-    }
-
     // optionally load configuration data from module memory
     status = camera->setControl("loadModuleData", "call");
     if (status != Status::OK) {
@@ -300,7 +294,6 @@ void getNewFrame(const std::shared_ptr<Camera> &camera, aditof::Frame *frame) {
     Status status = Status::OK;
 
     try {
-        std::lock_guard<std::mutex> lck(mtx_dynamic_rec);
         status = camera->requestFrame(frame);
         if (status != Status::OK) {
             LOG(ERROR) << "Could not request frame!";

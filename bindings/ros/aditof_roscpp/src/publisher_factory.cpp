@@ -43,10 +43,10 @@ void PublisherFactory::create(ModeTypes mode, ros::NodeHandle nHandle,
             nHandle.advertise<sensor_msgs::Image>("aditof_ir", 5));
         imgMsgs.emplace_back(new IRImageMsg(
             camera, frame, sensor_msgs::image_encodings::MONO16, timeStamp));
-
+        LOG(INFO)<<"Added new ir publisher";
         //depth
-        img_publishers.emplace_back();
-        imgMsgs.emplace_back();
+        /*img_publishers.emplace_back(nHandle.advertise<sensor_msgs::Image>("aditof_depth", 5));
+        imgMsgs.emplace_back( new DepthImageMsg(camera, frame, sen));
 
         //pointcloud
         img_publishers.emplace_back();
@@ -55,11 +55,11 @@ void PublisherFactory::create(ModeTypes mode, ros::NodeHandle nHandle,
         //camera info
         img_publishers.emplace_back();
         imgMsgs.emplace_back();
-
+*/
         break;
     case ModeTypes::mode10:
         //ir
-        img_publishers.emplace_back(
+        /*img_publishers.emplace_back(
             nHandle.advertise<sensor_msgs::Image>("aditof_ir", 5));
         imgMsgs.emplace_back(new IRImageMsg(
             camera, frame, sensor_msgs::image_encodings::MONO16, timeStamp));
@@ -75,7 +75,7 @@ void PublisherFactory::create(ModeTypes mode, ros::NodeHandle nHandle,
         //camera info
         img_publishers.emplace_back();
         imgMsgs.emplace_back();
-        
+        */
         break;
     default:
         break;
