@@ -67,7 +67,7 @@ function setup_config() {
   TZ_CITY=UTC
   LOCALE_LANG=en_US.UTF-8
   ADD_LIST='git build-essential gcc autoconf nano vim'
-  ADD_LIST_ST_3='i2c-tools v4l-utils rfkill wpasupplicant libtool libconfig-dev avahi-daemon'
+  ADD_LIST_ST_3='i2c-tools v4l-utils rfkill wpasupplicant libtool libconfig-dev avahi-daemon htpdate openssh-server bc'
 
   # output example of the config file
 #  cat <<EOF>config-example
