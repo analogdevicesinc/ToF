@@ -25,21 +25,15 @@ echo out > /sys/class/gpio/gpio132/direction
 echo 0 > /sys/class/gpio/gpio132/value
 sleep 0.5
 echo 1 > /sys/class/gpio/gpio132/value
-i2cset -y 1 0x10 0x05 0x0700 w # Enable DAC bits 2..0
-i2cset -y 1 0x10 0x0b 0x0002 w #
+i2cset -y 2 0x10 0x05 0x0700 w # Enable DAC bits 2..0
+i2cset -y 2 0x10 0x0b 0x0002 w #
 
 # Set DAC values -
-#i2cset -y 1 0x10 0x10 0xcc88 w # Vsys = 4.3v - calculated
-i2cset -y 1 0x10 0x10 0x008a w # Vsys = 4.3v - actual
-i2cset -y 1 0x10 0x11 0x1397 w # Vaux = 18v - calculated
-i2cset -y 1 0x10 0x11 0x6097 w # Vaux = 18v - actual
-#i2cset -y 1 0x10 0x11 0x0091 w # Vaux = 27V - actual
-i2cset -y 1 0x10 0x12 0x82a3 w # V5v0 = 4.7v - calculated
-i2cset -y 1 0x10 0x12 0x00a3 w # V5v0 = 4.7v - actual
-
-
-#i2cset -y 1 0x10 0x04 0xff00 w; i2cset -y 1 0x10 0x02 0xff03 w; for i in {0..8}; do i2cget -y 1 0x10 0x40 w; done # Reads back channel 0..7 and temperature (channel #8)
-
+i2cset -y 2 0x10 0x10 0x008a w # Vsys = 4.3V
+#i2cset -y 2 0x10 0x11 0x6097 w # Vaux = 18V
+#i2cset -y 2 0x10 0x11 0x0091 w # Vaux = 27V
+i2cset -y 2 0x10 0x11 0x0594 w # Vaux = 22V
+i2cset -y 2 0x10 0x12 0x00a3 w # V5v0 = 4.7V
 
 # VMAIN
 echo 128 > /sys/class/gpio/export
@@ -68,9 +62,9 @@ echo 1 > /sys/class/gpio/gpio129/value
 echo 1 > /sys/class/gpio/gpio130/value
 echo 1 > /sys/class/gpio/gpio127/value
 
-i2cset -y 1 0x10 0x04 0xff00 w; i2cset -y 1 0x10 0x02 0xff03 w
+i2cset -y 2 0x10 0x04 0xff00 w; i2cset -y 2 0x10 0x02 0xff03 w
 for i in {0..8}; do 
-VAL=`i2cget -y 1 0x10 0x40 w`
+VAL=`i2cget -y 2 0x10 0x40 w`
 CH=$(($VAL & 0x00f0))
 CH=$(($CH >> 4))
 VOL1=$(($VAL & 0xf))
