@@ -40,31 +40,39 @@
 
 using namespace aditof;
 
-void callback(PublisherFactory publisher, ModeTypes mode,
-              ros::NodeHandle nHandle,
+std::mutex m_mtxDynamicRec;
+std::mutex m_mtxDynamicRec2;
+
+void callback(aditof_roscpp::Aditof_roscppConfig &config,
+              PublisherFactory *publisher,
+              ros::NodeHandle *nHandle,
               const std::shared_ptr<aditof::Camera> &camera,
               aditof::Frame *frame) {
 
-    try {
+        //aquire two mutexes
+        while(m_mtxDynamicRec.try_lock());
+        while(m_mtxDynamicRec2.try_lock());
+
+
         switch (config.camera_mode) {
-        case 0: 
+        case 0:
             //clear current publishers
-            publisher.delete_publishers();
+            publisher->delete_publishers();
             //create new publishers
-            publisher.create(ModeTypes::mode7, nHandle, camera, &frame);
+            publisher->create(ModeTypes::mode7, *nHandle, camera, frame);
             LOG(INFO) << "Mode 7 selected";
             break;
         case 1: //mode 10
             //clear current publishers
-            publisher.delete_publishers();
+            publisher->delete_publishers();
             //create new publishers
-            publisher.create(ModeTypes::mode10, nHandle, camera, &frame);
+            publisher->create(ModeTypes::mode10, *nHandle, camera, frame);
             LOG(INFO) << "Mode 10 selected";
             break;
         }
-        camera->start();
-    } catch (std::exception &e) {
-    }
+        m_mtxDynamicRec.unlock();
+        m_mtxDynamicRec2.unlock();
+        //camera->start();
 }
 
 int main(int argc, char **argv) {
@@ -91,17 +99,23 @@ int main(int argc, char **argv) {
     PublisherFactory publishers;
 
     publishers.create(ModeTypes::mode7, nHandle, camera, &frame);
+    
+    f = boost::bind(&callback, _1, &publishers, &nHandle, camera, &frame);
+    server.setCallback(f);
 
-    while (ros::ok()) {
+    while ( ros::ok()) {
+        while(m_mtxDynamicRec.try_lock());
+        while(m_mtxDynamicRec2.try_lock());
+
+        m_mtxDynamicRec.unlock();
+
         ros::Time tStamp = ros::Time::now();
         getNewFrame(camera, &frame);
-
         publishers.update_publishers(camera, &frame);
-
         ros::spinOnce();
+        
+        m_mtxDynamicRec2.unlock();
     }
-
     publishers.delete_publishers();
-
     return 0;
 }
