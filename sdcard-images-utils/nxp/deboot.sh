@@ -233,10 +233,10 @@ systemctl enable uvc-gadget.service
 pushd /home/${USERNAME}
 mkdir Workspace
 pushd Workspace
-TOF_GIT_LOCATION=${TOF_GIT_LOCATION:=https://github.com/analogdevicesinc/aditof-sdk-rework.git}
+TOF_GIT_LOCATION=${TOF_GIT_LOCATION:=https://github.com/analogdevicesinc/ToF.git}
 echo "Clone ToF source code from: $TOF_GIT_LOCATION"
 git clone ${TOF_GIT_LOCATION}
-pushd aditof-sdk-rework/scripts/nxp/
+pushd ToF/scripts/nxp/
 chmod +x setup.sh
 # ./setup.sh -y -b ../../build -d ../../deps -i /opt -j4
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace
