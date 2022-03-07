@@ -63,8 +63,8 @@ int pulsa_fw_upgrade(std::string filepath)
     uint8_t* fw_content = buffer.data();
     cmd_header_t fw_upgrade_header;
     fw_upgrade_header.id8 = 0xAD;
-    fw_upgrade_header.chunk_size16 = 0x0100;
-    fw_upgrade_header.cmd8 = 0x04;
+    fw_upgrade_header.chunk_size16 = 0x0100;    // 256=0x100
+    fw_upgrade_header.cmd8 = 0x04;              // FW Upgrade CMD = 0x04
     fw_upgrade_header.total_size_fw32 = fw_len;
     fw_upgrade_header.header_checksum32 = (0x0100 + 0x4 + fw_len);
 
