@@ -33,6 +33,7 @@
 
 #include <aditof/frame.h>
 #include <aditof/system.h>
+#include <regex>
 #include <ros/package.h>
 #include <ros/ros.h>
 #include <string.h>
@@ -41,93 +42,55 @@
 std::mutex mtx_dynamic_rec;
 using namespace aditof;
 
-std::string parseArgs(int argc, char **argv) {
+std::string *parseArgs(int argc, char **argv) {
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
 
-    if (argc > 1) {
-        std::string ip = argv[1];
-        if (!ip.empty()) {
-            return ip;
-        }
+    std::string ip = "";
+    std::string config_path = "";
+
+    for (int i = 1; i < argc; i++) {
+        std::string left;
+        std::string right;
+        std::string argnew(argv[i]);
+
+        left = argnew.substr(0, argnew.find("=", 0));
+        right = argnew.substr(argnew.find("=", 0) + 1, argnew.size());
+
+        if (std::strcmp(left.c_str(), "ip") == 0)
+            ip = right;
+        else if (std::strcmp(left.c_str(), "config_file") == 0)
+            config_path = right;
     }
-    LOG(INFO)
-        << "No ip provided, attempting to connect to the camera through USB";
-    return std::string();
+
+    if (ip.empty()) {
+        LOG(INFO) << "No ip provided, attempting to connect to the camera "
+                     "through USB";
+    }
+    if (config_path.empty()) {
+        LOG(INFO) << "Config file not provided!";
+    }
+
+    std::string *result = new std::string[2];
+    result[0] = ip;
+    result[1] = config_path;
+    return result;
 }
-
-/*std::void rewritePathsInConfigJson(std:string jsonPath, std::string newPath)
-{
-    / Parse config.json
-    std::string config = jsonPath;
-    std::ifstream ifs(config.c_str());
-    std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
-
-    cJSON *config_json = cJSON_Parse(content.c_str());
-    if (config_json != NULL) {
-        // Get sensorfirmware file location
-        const cJSON *json_sensorFirmware_file = cJSON_GetObjectItemCaseSensitive(config_json, "sensorFirmware");
-        if (cJSON_IsString(json_sensorFirmware_file) && (json_sensorFirmware_file->valuestring != NULL)) {
-            if (m_sensorFirmwareFile.empty()) {
-                // save firmware file location
-                m_sensorFirmwareFile = std::string(json_sensorFirmware_file->valuestring);
-            } else {
-                LOG(WARNING) << "Duplicate firmware file ignored: " << json_sensorFirmware_file->valuestring;
-            }
-        }
-
-        // Get calibration file location
-        const cJSON *json_ccb_calibration_file = cJSON_GetObjectItemCaseSensitive(config_json, "CCB_Calibration");
-        if (cJSON_IsString(json_ccb_calibration_file) && (json_ccb_calibration_file->valuestring != NULL)) {
-            if (m_ccb_calibrationFile.empty()) {
-                // save calibration file location
-                m_ccb_calibrationFile = std::string(json_ccb_calibration_file->valuestring);
-            } else {
-                LOG(WARNING) << "Duplicate calibration file ignored: " << json_ccb_calibration_file->valuestring;
-            }
-        }
-
-        // Get optional eeprom type name
-        const cJSON *eeprom_type_name = cJSON_GetObjectItemCaseSensitive(config_json, "MODULE_EEPROM_TYPE");
-        if (cJSON_IsString(eeprom_type_name) && (eeprom_type_name->valuestring != NULL)) {
-            m_eepromDeviceName = eeprom_type_name->valuestring;
-        }
-
-        // Get depth ini file location
-        const cJSON *json_depth_ini_file = cJSON_GetObjectItemCaseSensitive(config_json, "DEPTH_INI");
-        if (cJSON_IsString(json_depth_ini_file) && (json_depth_ini_file->valuestring != NULL))
-            // save depth ini file location
-            m_ini_depth = std::string(json_depth_ini_file->valuestring);
-
-        // Get optional power config
-        const cJSON *json_vaux_pwr = cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_ENABLE");
-        if (cJSON_IsString(json_vaux_pwr) && (json_vaux_pwr->valuestring != NULL)) {
-            m_sensor_settings.push_back(std::make_pair(json_vaux_pwr->string, atoi(json_vaux_pwr->valuestring)));
-        }
-
-        // Get optional power config
-        const cJSON *json_vaux_voltage = cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_VOLTAGE");
-        if (cJSON_IsString(json_vaux_voltage) && (json_vaux_voltage->valuestring != NULL)) {
-            m_sensor_settings.push_back(std::make_pair(json_vaux_voltage->string, atoi(json_vaux_voltage->valuestring)));
-        }
-    } else if (!config.empty()) {
-        LOG(ERROR) << "Couldn't parse config file: " << config.c_str();
-        return Status::GENERIC_ERROR;
-    }
-}*/
 
 std::shared_ptr<Camera> initCamera(int argc, char **argv) {
 
     Status status = Status::OK;
-    std::string ip = parseArgs(argc, argv);
+    LOG(INFO) << "Started camera intialization";
+    std::string *arguments =
+        parseArgs(argc, argv); //pos 0 - ip, pos 1 - config_path
 
     System system;
 
     std::vector<std::shared_ptr<Camera>> cameras;
-    if (ip.empty()) {
+    if (arguments[0].empty()) {
         system.getCameraList(cameras);
     } else {
-        system.getCameraListAtIp(cameras, ip);
+        system.getCameraListAtIp(cameras, arguments[0]);
     }
 
     if (cameras.empty()) {
@@ -135,11 +98,11 @@ std::shared_ptr<Camera> initCamera(int argc, char **argv) {
         return nullptr;
     }
 
-
     std::shared_ptr<Camera> camera = cameras.front();
 
     // user can pass any config.json stored anywhere in HW
-    status = camera->setControl("initialization_config", "config/config_walden_nxp.json");
+    status = camera->setControl("initialization_config",
+                                arguments[1]);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set the initialization config file!";
         return 0;
@@ -155,38 +118,36 @@ std::shared_ptr<Camera> initCamera(int argc, char **argv) {
     status = camera->setControl("loadModuleData", "call");
     if (status != Status::OK) {
         LOG(INFO) << "No CCB/CFG data found in camera module,";
-        LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data from JSON config file...";
+        LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data "
+                     "from JSON config file...";
     }
 
     //set depthCompute to on or off
     status = camera->setControl("enableDepthCompute", "on");
-    if (status != Status::OK){
+    if (status != Status::OK) {
         LOG(ERROR) << "Couldn't set depth compute option";
         return 0;
     }
-
-
-    status = camera->setFrameType("pcm");
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not set camera frame type!";
-        return 0;
-    }
-
-    status = camera->start();
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not start the camera!";
-        return 0;
-    }
-    aditof::Frame frame;
-
     return camera;
 }
+
 void startCamera(const std::shared_ptr<aditof::Camera> &camera) {
     Status status = Status::OK;
 
     status = camera->start();
     if (status != Status::OK) {
         LOG(ERROR) << "Could not start camera!";
+        return;
+    }
+    return;
+}
+
+void stopCamera(const std::shared_ptr<aditof::Camera> &camera) {
+    Status status = Status::OK;
+
+    status = camera->stop();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not stop camera!";
         return;
     }
     return;
@@ -357,4 +318,3 @@ void irTo16bitGrayscale(uint16_t *frameData, int width, int height) {
         frameData[i] = static_cast<uint16_t>(grayscale_val);
     }
 }
-

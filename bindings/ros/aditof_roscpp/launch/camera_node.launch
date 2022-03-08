@@ -1,4 +1,6 @@
 <launch>
   <arg name="ip" default='""'/>
-  <node pkg="aditof_roscpp" type="aditof_camera_node" name="aditof_camera_node" args="$(arg ip)" output="screen"/>
+  <arg name="config_file" default="config/config_walden_nxp.json"/>
+  <node pkg="aditof_roscpp" type="aditof_camera_node" name="aditof_camera_node" args="ip=$(arg ip) config_file=$(arg config_file)" output="screen"/>
+  <node pkg="rqt_reconfigure" type="rqt_reconfigure" name="reconfigParams"/>
 </launch>

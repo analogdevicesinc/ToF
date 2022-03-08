@@ -32,18 +32,23 @@
 
 #include "publisher_factory.h"
 
-void PublisherFactory::create(ModeTypes mode, ros::NodeHandle nHandle,
+PublisherFactory::PublisherFactory() { m_currentMode = ModeTypes::NONE; };
+
+void PublisherFactory::createNew(ModeTypes mode, ros::NodeHandle nHandle,
                               const std::shared_ptr<aditof::Camera> &camera,
                               aditof::Frame *frame) {
     ros::Time timeStamp = ros::Time::now();
     switch (mode) {
     case ModeTypes::mode7:
+
+        deletePublishers(camera);
+        setFrameType(camera, "mp");
         //ir
         img_publishers.emplace_back(
             nHandle.advertise<sensor_msgs::Image>("aditof_ir", 5));
         imgMsgs.emplace_back(new IRImageMsg(
             camera, frame, sensor_msgs::image_encodings::MONO16, timeStamp));
-        LOG(INFO)<<"Added new ir publisher";
+        LOG(INFO) << "Added new ir publisher";
         //depth
         /*img_publishers.emplace_back(nHandle.advertise<sensor_msgs::Image>("aditof_depth", 5));
         imgMsgs.emplace_back( new DepthImageMsg(camera, frame, sen));
@@ -56,8 +61,13 @@ void PublisherFactory::create(ModeTypes mode, ros::NodeHandle nHandle,
         img_publishers.emplace_back();
         imgMsgs.emplace_back();
 */
+        startCamera(camera);
+        m_currentMode = mode;
         break;
     case ModeTypes::mode10:
+
+        deletePublishers(camera);
+        setFrameType(camera, "qmp");
         //ir
         /*img_publishers.emplace_back(
             nHandle.advertise<sensor_msgs::Image>("aditof_ir", 5));
@@ -76,12 +86,14 @@ void PublisherFactory::create(ModeTypes mode, ros::NodeHandle nHandle,
         img_publishers.emplace_back();
         imgMsgs.emplace_back();
         */
+        startCamera(camera);
+        m_currentMode = mode;
         break;
     default:
         break;
     }
 }
-void PublisherFactory::update_publishers(
+void PublisherFactory::updatePublishers(
     const std::shared_ptr<aditof::Camera> &camera, aditof::Frame *frame) {
     ros::Time timeStamp = ros::Time::now();
     for (unsigned int i = 0; i < imgMsgs.size(); ++i) {
@@ -89,7 +101,11 @@ void PublisherFactory::update_publishers(
         imgMsgs.at(i)->publishMsg(img_publishers[i]);
     }
 }
-void PublisherFactory::delete_publishers() {
+void PublisherFactory::deletePublishers(
+    const std::shared_ptr<aditof::Camera> &camera) {
+    stopCamera(camera);
     img_publishers.clear();
     imgMsgs.clear();
 }
+
+void PublisherFactory::getNewFrameFromCamera() { getNewFrame(camera, &frame); }

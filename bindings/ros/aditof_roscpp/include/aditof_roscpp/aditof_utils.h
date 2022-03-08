@@ -36,9 +36,10 @@
 #include <glog/logging.h>
 #include <mutex>
 
-std::string parseArgs(int argc, char **argv);
+std::string* parseArgs(int argc, char **argv);
 std::shared_ptr<aditof::Camera> initCamera(int argc, char **argv);
 void startCamera(const std::shared_ptr<aditof::Camera> &camera);
+void stopCamera(const std::shared_ptr<aditof::Camera> &camera);
 void setFrameType(const std::shared_ptr<aditof::Camera> &camera,
                   const std::string &type);
 void getAvailableFrameType(const std::shared_ptr<aditof::Camera> &camera,

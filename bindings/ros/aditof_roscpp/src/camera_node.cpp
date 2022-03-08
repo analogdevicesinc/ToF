@@ -44,35 +44,44 @@ std::mutex m_mtxDynamicRec;
 std::mutex m_mtxDynamicRec2;
 
 void callback(aditof_roscpp::Aditof_roscppConfig &config,
-              PublisherFactory *publisher,
-              ros::NodeHandle *nHandle,
+              PublisherFactory *publisher, ros::NodeHandle *nHandle,
               const std::shared_ptr<aditof::Camera> &camera,
               aditof::Frame *frame) {
 
-        //aquire two mutexes
-        while(m_mtxDynamicRec.try_lock());
-        while(m_mtxDynamicRec2.try_lock());
-
-
-        switch (config.camera_mode) {
+    //aquire two mutexes
+    while (m_mtxDynamicRec.try_lock())
+        ;
+    while (m_mtxDynamicRec2.try_lock())
+        ;
+    ModeTypes newMode;
+    switch(config.camera_mode){
         case 0:
-            //clear current publishers
-            publisher->delete_publishers();
+            newMode = ModeTypes::mode7;
+            break;
+        case 1:
+            newMode = ModeTypes::mode10;
+            break;
+    }
+
+    if (publisher->m_currentMode != ModeTypes::NONE &&
+        publisher->m_currentMode != newMode) {
+        switch (newMode) {
+        case ModeTypes::mode7:
             //create new publishers
-            publisher->create(ModeTypes::mode7, *nHandle, camera, frame);
+            publisher->createNew(ModeTypes::mode7, *nHandle, camera, frame);
             LOG(INFO) << "Mode 7 selected";
             break;
-        case 1: //mode 10
-            //clear current publishers
-            publisher->delete_publishers();
+        case ModeTypes::mode10: //mode 10
             //create new publishers
-            publisher->create(ModeTypes::mode10, *nHandle, camera, frame);
+            publisher->createNew(ModeTypes::mode10, *nHandle, camera, frame);
             LOG(INFO) << "Mode 10 selected";
             break;
         }
-        m_mtxDynamicRec.unlock();
-        m_mtxDynamicRec2.unlock();
-        //camera->start();
+    }
+
+    m_mtxDynamicRec.unlock();
+    m_mtxDynamicRec2.unlock();
+    //camera->start();
 }
 
 int main(int argc, char **argv) {
@@ -89,7 +98,7 @@ int main(int argc, char **argv) {
     dynamic_reconfigure::Server<
         aditof_roscpp::Aditof_roscppConfig>::CallbackType f;
 
-    //create publishers
+    //create handle
     ros::NodeHandle nHandle("aditof_roscpp");
     //create frame for general access
     aditof::Frame frame;
@@ -97,25 +106,27 @@ int main(int argc, char **argv) {
     getNewFrame(camera, &frame);
     //generate publisherFactory
     PublisherFactory publishers;
-
-    publishers.create(ModeTypes::mode7, nHandle, camera, &frame);
-    
+    //by default first chosen option is mode7
+    publishers.createNew(ModeTypes::mode7, nHandle, camera, &frame);
     f = boost::bind(&callback, _1, &publishers, &nHandle, camera, &frame);
     server.setCallback(f);
 
-    while ( ros::ok()) {
-        while(m_mtxDynamicRec.try_lock());
-        while(m_mtxDynamicRec2.try_lock());
+    while (ros::ok()) {
+        while (m_mtxDynamicRec.try_lock())
+            ;
+        while (m_mtxDynamicRec2.try_lock())
+            ;
 
         m_mtxDynamicRec.unlock();
 
         ros::Time tStamp = ros::Time::now();
         getNewFrame(camera, &frame);
-        publishers.update_publishers(camera, &frame);
+        publishers.updatePublishers(camera, &frame);
         ros::spinOnce();
-        
+
         m_mtxDynamicRec2.unlock();
     }
-    publishers.delete_publishers();
+    publishers.deletePublishers(camera);
+
     return 0;
 }
