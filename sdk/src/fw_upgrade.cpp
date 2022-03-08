@@ -58,7 +58,6 @@ int pulsa_fw_upgrade(std::string filepath)
     // copy all data into buffer
     std::vector<uint8_t> buffer(std::istreambuf_iterator<char>(fw_file), {});
 
-    uint32_t fw_upgrade_cmd = 0x00160100;
     uint32_t fw_len = buffer.size();
     uint8_t* fw_content = buffer.data();
     cmd_header_t fw_upgrade_header;
