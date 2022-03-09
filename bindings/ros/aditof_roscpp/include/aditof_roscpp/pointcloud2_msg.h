@@ -41,7 +41,7 @@
 class PointCloud2Msg : public AditofSensorMsg {
   public:
     PointCloud2Msg(const std::shared_ptr<aditof::Camera> &camera,
-                   aditof::Frame *frame, ros::Time tStamp);
+                   aditof::Frame **frame, ros::Time tStamp);
 
     /**
      * @brief Each message corresponds to one frame
@@ -52,7 +52,7 @@ class PointCloud2Msg : public AditofSensorMsg {
      * @brief Converts the frame data to a message
      */
     void FrameDataToMsg(const std::shared_ptr<aditof::Camera> &camera,
-                        aditof::Frame *frame, ros::Time tStamp);
+                        aditof::Frame **frame, ros::Time tStamp);
     /**
      * @brief Assigns values to the message fields concerning metadata
      */
@@ -62,7 +62,7 @@ class PointCloud2Msg : public AditofSensorMsg {
      * @brief Assigns values to the message fields concerning the point data
      */
     void setDataMembers(const std::shared_ptr<aditof::Camera> &camera,
-                        aditof::Frame *frame);
+                        aditof::Frame **frame);
 
     /**
      * @brief Publishes a message

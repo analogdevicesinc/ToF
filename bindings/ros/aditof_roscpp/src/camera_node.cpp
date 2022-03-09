@@ -46,26 +46,27 @@ std::mutex m_mtxDynamicRec2;
 void callback(aditof_roscpp::Aditof_roscppConfig &config,
               PublisherFactory *publisher, ros::NodeHandle *nHandle,
               const std::shared_ptr<aditof::Camera> &camera,
-              aditof::Frame *frame) {
+              aditof::Frame **frame) {
 
-    //aquire two mutexes
+    //aquire two mutexes and blocking publisher message updates
     while (m_mtxDynamicRec.try_lock())
         ;
     while (m_mtxDynamicRec2.try_lock())
         ;
-    ModeTypes newMode;
-    switch(config.camera_mode){
-        case 0:
-            newMode = ModeTypes::mode7;
-            break;
-        case 1:
-            newMode = ModeTypes::mode10;
-            break;
+    ModeTypes newMode = ModeTypes::NONE;
+    switch (config.camera_mode) {
+    case 0:
+        newMode = ModeTypes::mode7;
+        break;
+    case 1:
+        newMode = ModeTypes::mode10;
+        break;
     }
 
-    if (publisher->m_currentMode != ModeTypes::NONE &&
-        publisher->m_currentMode != newMode) {
+    if (publisher->m_currentMode != newMode) {
         switch (newMode) {
+        case ModeTypes::NONE:
+            break;
         case ModeTypes::mode7:
             //create new publishers
             publisher->createNew(ModeTypes::mode7, *nHandle, camera, frame);
@@ -79,6 +80,7 @@ void callback(aditof_roscpp::Aditof_roscppConfig &config,
         }
     }
 
+    //release mutexes and let ros spin work
     m_mtxDynamicRec.unlock();
     m_mtxDynamicRec2.unlock();
     //camera->start();
@@ -87,28 +89,24 @@ void callback(aditof_roscpp::Aditof_roscppConfig &config,
 int main(int argc, char **argv) {
 
     std::shared_ptr<Camera> camera = initCamera(argc, argv);
+
+    auto tmp = new Frame;
+    aditof::Frame **frame = &tmp;
+    
     ROS_ASSERT_MSG(camera, "initCamera call failed");
-
-
-    setFrameType(camera, "pcm");
-    startCamera(camera);
 
     ros::init(argc, argv, "aditof_camera_node");
     dynamic_reconfigure::Server<aditof_roscpp::Aditof_roscppConfig> server;
     dynamic_reconfigure::Server<
         aditof_roscpp::Aditof_roscppConfig>::CallbackType f;
 
+
+
     //create handle
     ros::NodeHandle nHandle("aditof_roscpp");
-    //create frame for general access
-    aditof::Frame frame;
-    //request new frame
-    getNewFrame(camera, &frame);
-    //generate publisherFactory
     PublisherFactory publishers;
-    //by default first chosen option is mode7
-    publishers.createNew(ModeTypes::mode7, nHandle, camera, &frame);
-    f = boost::bind(&callback, _1, &publishers, &nHandle, camera, &frame);
+    publishers.createNew(ModeTypes::mode7, nHandle, camera, frame);
+    f = boost::bind(&callback, _1, &publishers, &nHandle, camera, frame);
     server.setCallback(f);
 
     while (ros::ok()) {
@@ -118,12 +116,9 @@ int main(int argc, char **argv) {
             ;
 
         m_mtxDynamicRec.unlock();
-
-        ros::Time tStamp = ros::Time::now();
-        getNewFrame(camera, &frame);
-        publishers.updatePublishers(camera, &frame);
+        getNewFrame(camera, frame);
+        publishers.updatePublishers(camera, frame);
         ros::spinOnce();
-
         m_mtxDynamicRec2.unlock();
     }
     publishers.deletePublishers(camera);

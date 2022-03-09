@@ -46,7 +46,7 @@
 class CameraInfoMsg : public AditofSensorMsg {
   public:
     CameraInfoMsg(const std::shared_ptr<aditof::Camera> &camera,
-                  aditof::Frame *frame, ros::Time tStamp);
+                  aditof::Frame **frame, ros::Time tStamp);
     /**
      * @brief Each message corresponds to one frame
      */
@@ -56,7 +56,7 @@ class CameraInfoMsg : public AditofSensorMsg {
      * @brief Converts the frame data to a message
      */
     void FrameDataToMsg(const std::shared_ptr<aditof::Camera> &camera,
-                        aditof::Frame *frame, ros::Time tStamp);
+                        aditof::Frame **frame, ros::Time tStamp);
     /**
      * @brief Assigns values to the message fields
      */

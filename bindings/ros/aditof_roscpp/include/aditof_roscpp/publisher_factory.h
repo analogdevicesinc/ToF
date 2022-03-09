@@ -45,23 +45,20 @@ enum class ModeTypes { NONE, mode7, mode10 };
 
 class PublisherFactory {
   public:
-  PublisherFactory();
+    PublisherFactory();
     void createNew(ModeTypes mode, ros::NodeHandle nHandle,
-                const std::shared_ptr<aditof::Camera> &camera,
-                aditof::Frame *frame);
+                   const std::shared_ptr<aditof::Camera> &camera,
+                   aditof::Frame **frame);
     void updatePublishers(const std::shared_ptr<aditof::Camera> &camera,
-                                         aditof::Frame *frame);
+                          aditof::Frame **frame);
     void deletePublishers(const std::shared_ptr<aditof::Camera> &camera);
-    void getNewFrameFromCamera();
 
   private:
-    std::shared_ptr<aditof::Camera> camera;
-    aditof::Frame frame;
     std::vector<ros::Publisher> img_publishers;
     std::vector<std::shared_ptr<AditofSensorMsg>> imgMsgs;
-  public:
-    ModeTypes m_currentMode;
 
+  public:
+    ModeTypes m_currentMode = ModeTypes::NONE;
 };
 
 #endif // PUBLISHER_FACTORY_H

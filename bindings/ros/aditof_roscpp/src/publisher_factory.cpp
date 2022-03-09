@@ -35,26 +35,36 @@
 PublisherFactory::PublisherFactory() { m_currentMode = ModeTypes::NONE; };
 
 void PublisherFactory::createNew(ModeTypes mode, ros::NodeHandle nHandle,
-                              const std::shared_ptr<aditof::Camera> &camera,
-                              aditof::Frame *frame) {
+                                 const std::shared_ptr<aditof::Camera> &camera,
+                                 aditof::Frame **frame) {
+
     ros::Time timeStamp = ros::Time::now();
     switch (mode) {
     case ModeTypes::mode7:
 
+        if (*frame != nullptr)
+            (*frame)->~Frame();
+
         deletePublishers(camera);
-        setFrameType(camera, "mp");
+        setFrameType(camera, "qmp");
+
+        *frame = new aditof::Frame();
+
         //ir
         img_publishers.emplace_back(
             nHandle.advertise<sensor_msgs::Image>("aditof_ir", 5));
         imgMsgs.emplace_back(new IRImageMsg(
             camera, frame, sensor_msgs::image_encodings::MONO16, timeStamp));
-        LOG(INFO) << "Added new ir publisher";
+        LOG(INFO) << "Added ir publisher";
         //depth
-        /*img_publishers.emplace_back(nHandle.advertise<sensor_msgs::Image>("aditof_depth", 5));
-        imgMsgs.emplace_back( new DepthImageMsg(camera, frame, sen));
+        img_publishers.emplace_back(
+            nHandle.advertise<sensor_msgs::Image>("aditof_depth", 5));
+        imgMsgs.emplace_back(new DepthImageMsg(
+            camera, frame, sensor_msgs::image_encodings::RGBA8, timeStamp));
+        LOG(INFO) << "Added depth publisher";
 
         //pointcloud
-        img_publishers.emplace_back();
+        /*img_publishers.emplace_back();
         imgMsgs.emplace_back();
 
         //camera info
@@ -66,18 +76,28 @@ void PublisherFactory::createNew(ModeTypes mode, ros::NodeHandle nHandle,
         break;
     case ModeTypes::mode10:
 
+        if (*frame != nullptr)
+            (*frame)->~Frame();
+
         deletePublishers(camera);
-        setFrameType(camera, "qmp");
+        setFrameType(camera, "mp");
+
+        *frame = new aditof::Frame();
+
         //ir
-        /*img_publishers.emplace_back(
+        img_publishers.emplace_back(
             nHandle.advertise<sensor_msgs::Image>("aditof_ir", 5));
         imgMsgs.emplace_back(new IRImageMsg(
             camera, frame, sensor_msgs::image_encodings::MONO16, timeStamp));
+        LOG(INFO) << "Added ir publisher";
 
         //depth
-        img_publishers.emplace_back();
-        imgMsgs.emplace_back();
-
+        img_publishers.emplace_back(
+            nHandle.advertise<sensor_msgs::Image>("aditof_depth", 5));
+        imgMsgs.emplace_back(new DepthImageMsg(
+            camera, frame, sensor_msgs::image_encodings::RGBA8, timeStamp));
+        LOG(INFO) << "Added depth publisher";
+/*
         //pointcloud
         img_publishers.emplace_back();
         imgMsgs.emplace_back();
@@ -94,7 +114,7 @@ void PublisherFactory::createNew(ModeTypes mode, ros::NodeHandle nHandle,
     }
 }
 void PublisherFactory::updatePublishers(
-    const std::shared_ptr<aditof::Camera> &camera, aditof::Frame *frame) {
+    const std::shared_ptr<aditof::Camera> &camera, aditof::Frame **frame) {
     ros::Time timeStamp = ros::Time::now();
     for (unsigned int i = 0; i < imgMsgs.size(); ++i) {
         imgMsgs.at(i)->FrameDataToMsg(camera, frame, timeStamp);
@@ -107,5 +127,3 @@ void PublisherFactory::deletePublishers(
     img_publishers.clear();
     imgMsgs.clear();
 }
-
-void PublisherFactory::getNewFrameFromCamera() { getNewFrame(camera, &frame); }
