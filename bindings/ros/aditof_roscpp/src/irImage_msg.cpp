@@ -35,16 +35,16 @@ using namespace aditof;
 IRImageMsg::IRImageMsg() {}
 
 IRImageMsg::IRImageMsg(const std::shared_ptr<aditof::Camera> &camera,
-                       aditof::Frame *frame, std::string encoding,
+                       aditof::Frame **frame, std::string encoding,
                        ros::Time tStamp) {
     imgEncoding = encoding;
     FrameDataToMsg(camera, frame, tStamp);
 }
 
 void IRImageMsg::FrameDataToMsg(const std::shared_ptr<Camera> &camera,
-                                aditof::Frame *frame, ros::Time tStamp) {
+                                aditof::Frame **frame, ros::Time tStamp) {
     FrameDetails fDetails;
-    frame->getDetails(fDetails);
+    (*frame)->getDetails(fDetails);
 
     setMetadataMembers(fDetails.width, fDetails.height, tStamp);
 
