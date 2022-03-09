@@ -247,11 +247,11 @@ void disableNoiseReduction(const std::shared_ptr<Camera> &camera) {
     }
 }
 
-void getNewFrame(const std::shared_ptr<Camera> &camera, aditof::Frame *frame) {
+void getNewFrame(const std::shared_ptr<Camera> &camera, aditof::Frame **frame) {
     Status status = Status::OK;
 
     try {
-        status = camera->requestFrame(frame);
+        status = camera->requestFrame(*frame);
         if (status != Status::OK) {
             LOG(ERROR) << "Could not request frame!";
         }
@@ -259,10 +259,13 @@ void getNewFrame(const std::shared_ptr<Camera> &camera, aditof::Frame *frame) {
     }
 }
 
-uint16_t *getFrameData(aditof::Frame *frame, const std::string &dataType) {
+uint16_t *getFrameData(aditof::Frame **frame, const std::string &dataType) {
     uint16_t *frameData;
     Status status = Status::OK;
-    status = frame->getData(dataType, &frameData);
+    aditof::Frame *test;
+    test = new Frame;
+
+    status = (*frame)->getData(dataType, &frameData);
 
     if (status != Status::OK) {
         LOG(ERROR) << "Could not get frame data!";
