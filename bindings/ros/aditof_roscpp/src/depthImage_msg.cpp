@@ -35,7 +35,7 @@ using namespace aditof;
 DepthImageMsg::DepthImageMsg() {}
 
 DepthImageMsg::DepthImageMsg(const std::shared_ptr<aditof::Camera> &camera,
-                             aditof::Frame *frame, std::string encoding,
+                             aditof::Frame **frame, std::string encoding,
                              ros::Time tStamp) {
     imgEncoding = encoding;
     FrameDataToMsg(camera, frame, tStamp);
@@ -43,9 +43,9 @@ DepthImageMsg::DepthImageMsg(const std::shared_ptr<aditof::Camera> &camera,
 }
 
 void DepthImageMsg::FrameDataToMsg(const std::shared_ptr<Camera> &camera,
-                                   aditof::Frame *frame, ros::Time tStamp) {
+                                   aditof::Frame **frame, ros::Time tStamp) {
     FrameDetails fDetails;
-    frame->getDetails(fDetails);
+    (*frame)->getDetails(fDetails);
 
     setMetadataMembers(fDetails.width, fDetails.height, tStamp);
 
@@ -77,29 +77,18 @@ void DepthImageMsg::setMetadataMembers(int width, int height,
 
 void DepthImageMsg::setDataMembers(const std::shared_ptr<Camera> &camera,
                                    uint16_t *frameData) {
-    if (m_depthDataFormat == 1) //RGBA8
-    {
-        if (msg.encoding.compare(sensor_msgs::image_encodings::RGBA8) == 0) {
-            std::vector<uint16_t> depthData(frameData,
-                                            frameData + msg.width * msg.height);
-            auto min_range =
-                std::min_element(depthData.begin(), depthData.end());
 
-            dataToRGBA8(*min_range, getRangeMax(camera), frameData);
-        } else
-            ROS_ERROR("Image encoding invalid or not available");
-    } else if (m_depthDataFormat == 0) //MONO16
-    {
-        if (msg.encoding.compare(sensor_msgs::image_encodings::MONO16) == 0) {
-            std::vector<uint16_t> depthData(frameData,
-                                            frameData + msg.width * msg.height);
-            auto min_range =
-                std::min_element(depthData.begin(), depthData.end());
+           
+    if (msg.encoding.compare(sensor_msgs::image_encodings::RGBA8) == 0) {
+        std::vector<uint16_t> depthData(frameData,
+                                        frameData + msg.width * msg.height);
+        auto min_range = std::min_element(depthData.begin(), depthData.end());
+        //auto max_range = std::max_element(depthData.begin(), depthData.end());
+        //dataToRGBA8(*min_range, getRangeMax(camera), frameData);
+        dataToRGBA8(0, 0x0fff, frameData);
+    } else
+        ROS_ERROR("Image encoding invalid or not available");
 
-            memcpy(msg.data.data(), frameData, 2 * msg.width * msg.height);
-        } else
-            ROS_ERROR("Image encoding invalid or not available");
-    }
 }
 
 void DepthImageMsg::dataToRGBA8(uint16_t min_range, uint16_t max_range,

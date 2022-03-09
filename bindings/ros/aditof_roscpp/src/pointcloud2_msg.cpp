@@ -35,14 +35,14 @@ using namespace aditof;
 PointCloud2Msg::PointCloud2Msg() {}
 
 PointCloud2Msg::PointCloud2Msg(const std::shared_ptr<aditof::Camera> &camera,
-                               aditof::Frame *frame, ros::Time tStamp) {
+                               aditof::Frame **frame, ros::Time tStamp) {
     FrameDataToMsg(camera, frame, tStamp);
 }
 
 void PointCloud2Msg::FrameDataToMsg(const std::shared_ptr<Camera> &camera,
-                                    aditof::Frame *frame, ros::Time tStamp) {
+                                    aditof::Frame **frame, ros::Time tStamp) {
     FrameDetails fDetails;
-    frame->getDetails(fDetails);
+    (*frame)->getDetails(fDetails);
 
     setMetadataMembers(fDetails.width, fDetails.height, tStamp);
     setDataMembers(camera, frame);
@@ -72,7 +72,7 @@ void PointCloud2Msg::setMetadataMembers(int width, int height,
 }
 
 void PointCloud2Msg::setDataMembers(const std::shared_ptr<Camera> &camera,
-                                    aditof::Frame *frame) {
+                                    aditof::Frame **frame) {
     IntrinsicParameters intr = getIntrinsics(camera);
 
     float fx = intr.cameraMatrix[0];
