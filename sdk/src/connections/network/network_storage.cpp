@@ -46,6 +46,10 @@ NetworkStorage::NetworkStorage(const std::string &name, unsigned int id)
     : m_implData(new NetworkStorage::ImplData) {
     m_implData->name = name;
     m_implData->id = id;
+
+    int m_storageCount = 0;
+    m_storageIndex = m_storageCount;
+    m_storageCount++;
 }
 
 NetworkStorage::~NetworkStorage() = default;
@@ -65,9 +69,9 @@ Status NetworkStorage::open(void *handle) {
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("StorageOpen");
-    net->send_buff.add_func_int32_param(m_implData->id);
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_storageIndex].set_func_name("StorageOpen");
+    net->send_buff[m_storageIndex].add_func_int32_param(m_implData->id);
+    net->send_buff[m_storageIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -79,13 +83,13 @@ Status NetworkStorage::open(void *handle) {
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_storageIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_storageIndex].status());
 
     return status;
 }
@@ -100,12 +104,12 @@ Status NetworkStorage::read(const uint32_t address, uint8_t *data,
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("StorageRead");
-    net->send_buff.add_func_int32_param(m_implData->id);
-    net->send_buff.add_func_int32_param(static_cast<::google::int32>(address));
-    net->send_buff.add_func_int32_param(
+    net->send_buff[m_storageIndex].set_func_name("StorageRead");
+    net->send_buff[m_storageIndex].add_func_int32_param(m_implData->id);
+    net->send_buff[m_storageIndex].add_func_int32_param(static_cast<::google::int32>(address));
+    net->send_buff[m_storageIndex].add_func_int32_param(
         static_cast<::google::int32>(bytesCount));
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_storageIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -117,17 +121,17 @@ Status NetworkStorage::read(const uint32_t address, uint8_t *data,
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_storageIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_storageIndex].status());
 
     if (status == Status::OK) {
-        memcpy(data, net->recv_buff.bytes_payload(0).c_str(),
-               net->recv_buff.bytes_payload(0).length());
+        memcpy(data, net->recv_buff[m_storageIndex].bytes_payload(0).c_str(),
+               net->recv_buff[m_storageIndex].bytes_payload(0).length());
     }
 
     return status;
@@ -143,13 +147,13 @@ Status NetworkStorage::write(const uint32_t address, const uint8_t *data,
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("StorageWrite");
-    net->send_buff.add_func_int32_param(m_implData->id);
-    net->send_buff.add_func_int32_param(static_cast<::google::int32>(address));
-    net->send_buff.add_func_int32_param(
+    net->send_buff[m_storageIndex].set_func_name("StorageWrite");
+    net->send_buff[m_storageIndex].add_func_int32_param(m_implData->id);
+    net->send_buff[m_storageIndex].add_func_int32_param(static_cast<::google::int32>(address));
+    net->send_buff[m_storageIndex].add_func_int32_param(
         static_cast<::google::int32>(bytesCount));
-    net->send_buff.add_func_bytes_param(data, bytesCount);
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_storageIndex].add_func_bytes_param(data, bytesCount);
+    net->send_buff[m_storageIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -161,13 +165,13 @@ Status NetworkStorage::write(const uint32_t address, const uint8_t *data,
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_storageIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_storageIndex].status());
 
     return status;
 }
@@ -187,9 +191,9 @@ Status NetworkStorage::close() {
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("StorageClose");
-    net->send_buff.add_func_int32_param(m_implData->id);
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_storageIndex].set_func_name("StorageClose");
+    net->send_buff[m_storageIndex].add_func_int32_param(m_implData->id);
+    net->send_buff[m_storageIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -201,13 +205,13 @@ Status NetworkStorage::close() {
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_storageIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_storageIndex].status());
 
     if (status == Status::OK) {
         m_implData->handle = nullptr;
