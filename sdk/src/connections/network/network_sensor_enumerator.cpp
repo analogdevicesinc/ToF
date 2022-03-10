@@ -45,19 +45,20 @@ NetworkSensorEnumerator::NetworkSensorEnumerator(const std::string &ip)
 NetworkSensorEnumerator::~NetworkSensorEnumerator() = default;
 
 Status NetworkSensorEnumerator::searchSensors() {
+    static int sensorIndex = 0;
     Status status = Status::OK;
 
     LOG(INFO) << "Looking for sensors over network";
 
-    std::unique_ptr<Network> net(new Network());
+    std::unique_ptr<Network> net(new Network(sensorIndex));
 
     if (net->ServerConnect(m_ip) != 0) {
         LOG(WARNING) << "Server Connect Failed";
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("FindSensors");
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[sensorIndex].set_func_name("FindSensors");
+    net->send_buff[sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -69,13 +70,13 @@ Status NetworkSensorEnumerator::searchSensors() {
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[sensorIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    const payload::ServerResponse &msg = net->recv_buff;
+    const payload::ServerResponse &msg = net->recv_buff[sensorIndex];
     const payload::SensorsInfo &pbSensorsInfo = msg.sensors_info();
 
     for (int i = 0; i < pbSensorsInfo.storages().size(); ++i) {
@@ -92,8 +93,9 @@ Status NetworkSensorEnumerator::searchSensors() {
             std::pair<std::string, unsigned int>(name, id));
     }
 
-    status = static_cast<Status>(net->recv_buff.status());
+    status = static_cast<Status>(net->recv_buff[sensorIndex].status());
 
+    sensorIndex++;
     return status;
 }
 
