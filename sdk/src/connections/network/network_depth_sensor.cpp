@@ -53,7 +53,11 @@ struct NetworkDepthSensor::ImplData {
 NetworkDepthSensor::NetworkDepthSensor(const std::string &ip)
     : m_implData(new NetworkDepthSensor::ImplData) {
 
-    Network *net = new Network();
+    int m_sensorCounter = 0;
+    m_sensorIndex = 0;
+    m_sensorCounter++;
+
+    Network *net = new Network(m_sensorIndex);
     m_implData->handle.net = net;
     m_implData->ip = ip;
     m_implData->opened = false;
@@ -70,8 +74,8 @@ NetworkDepthSensor::~NetworkDepthSensor() {
             LOG(WARNING) << "Not connected to server";
         }
 
-        m_implData->handle.net->send_buff.set_func_name("HangUp");
-        m_implData->handle.net->send_buff.set_expect_reply(false);
+        m_implData->handle.net->send_buff[m_sensorIndex].set_func_name("HangUp");
+        m_implData->handle.net->send_buff[m_sensorIndex].set_expect_reply(false);
 
         if (m_implData->handle.net->SendCommand() != 0) {
             LOG(WARNING) << "Send Command Failed";
@@ -103,8 +107,8 @@ aditof::Status NetworkDepthSensor::open() {
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("Open");
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_sensorIndex].set_func_name("Open");
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -116,13 +120,13 @@ aditof::Status NetworkDepthSensor::open() {
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_sensorIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
     if (status == Status::OK) {
         m_implData->opened = true;
@@ -142,8 +146,8 @@ aditof::Status NetworkDepthSensor::start() {
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("Start");
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_sensorIndex].set_func_name("Start");
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -155,13 +159,13 @@ aditof::Status NetworkDepthSensor::start() {
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_sensorIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
     return status;
 }
@@ -179,8 +183,8 @@ aditof::Status NetworkDepthSensor::stop() {
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("Stop");
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_sensorIndex].set_func_name("Stop");
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -192,13 +196,13 @@ aditof::Status NetworkDepthSensor::stop() {
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_sensorIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
     return status;
 }
@@ -215,8 +219,8 @@ aditof::Status NetworkDepthSensor::getAvailableFrameTypes(
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("GetAvailableFrameTypes");
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_sensorIndex].set_func_name("GetAvailableFrameTypes");
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -228,7 +232,7 @@ aditof::Status NetworkDepthSensor::getAvailableFrameTypes(
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_sensorIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
@@ -239,9 +243,9 @@ aditof::Status NetworkDepthSensor::getAvailableFrameTypes(
         types.clear();
     }
 
-    for (int i = 0; i < net->recv_buff.available_frame_types_size(); i++) {
+    for (int i = 0; i < net->recv_buff[m_sensorIndex].available_frame_types_size(); i++) {
         payload::DepthSensorFrameType protoFrameType =
-            net->recv_buff.available_frame_types(i);
+            net->recv_buff[m_sensorIndex].available_frame_types(i);
         aditof::DepthSensorFrameType aditofFrameType;
 
         aditofFrameType.type = protoFrameType.type();
@@ -262,7 +266,7 @@ aditof::Status NetworkDepthSensor::getAvailableFrameTypes(
         types.push_back(aditofFrameType);
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
     return status;
 }
@@ -279,19 +283,19 @@ NetworkDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("SetFrameType");
-    net->send_buff.mutable_frame_type()->set_width(type.width);
-    net->send_buff.mutable_frame_type()->set_height(type.height);
-    net->send_buff.mutable_frame_type()->set_type(type.type);
+    net->send_buff[m_sensorIndex].set_func_name("SetFrameType");
+    net->send_buff[m_sensorIndex].mutable_frame_type()->set_width(type.width);
+    net->send_buff[m_sensorIndex].mutable_frame_type()->set_height(type.height);
+    net->send_buff[m_sensorIndex].mutable_frame_type()->set_type(type.type);
     for (const auto &content : type.content) {
         auto protoFameContent =
-            net->send_buff.mutable_frame_type()->add_depthsensorframecontent();
+            net->send_buff[m_sensorIndex].mutable_frame_type()->add_depthsensorframecontent();
 
         protoFameContent->set_type(content.type);
         protoFameContent->set_width(content.width);
         protoFameContent->set_height(content.height);
     }
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -303,13 +307,13 @@ NetworkDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_sensorIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
     if (status == Status::OK) {
         m_implData->frameTypeCache = type;
@@ -330,10 +334,10 @@ aditof::Status NetworkDepthSensor::program(const uint8_t *firmware,
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("Program");
-    net->send_buff.add_func_int32_param(static_cast<::google::int32>(size));
-    net->send_buff.add_func_bytes_param(firmware, size);
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_sensorIndex].set_func_name("Program");
+    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(size));
+    net->send_buff[m_sensorIndex].add_func_bytes_param(firmware, size);
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -345,13 +349,13 @@ aditof::Status NetworkDepthSensor::program(const uint8_t *firmware,
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_sensorIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
     return status;
 }
@@ -367,8 +371,8 @@ aditof::Status NetworkDepthSensor::getFrame(uint16_t *buffer) {
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("GetFrame");
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_sensorIndex].set_func_name("GetFrame");
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -380,31 +384,21 @@ aditof::Status NetworkDepthSensor::getFrame(uint16_t *buffer) {
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_sensorIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
     if (status != Status::OK) {
         LOG(WARNING) << "getFrame() failed on target";
         return status;
     }
     
 //when using ITOF camera the data is already deinterleaved, so a simple copy is enough
-#ifdef ITOF
-    memcpy(buffer, net->recv_buff.bytes_payload(0).c_str(), net->recv_buff.bytes_payload(0).length());
-#else
-    // Deinterleave data. The server sends raw data (uninterleaved) for better
-    // throughput (raw data chunck is smaller, deinterleaving is usually slower
-    // on target).
-    //TO DO: move this outside of this class (Maybe in camera) since is camera specific
-    aditof::deinterleave(net->recv_buff.bytes_payload(0).c_str(), buffer,
-                         net->recv_buff.bytes_payload(0).length(),
-                         m_implData->frameTypeCache.width,
-                         m_implData->frameTypeCache.height);
-#endif
+    memcpy(buffer, net->recv_buff[m_sensorIndex].bytes_payload(0).c_str(), net->recv_buff[m_sensorIndex].bytes_payload(0).length());
+
     return status;
 }
 
@@ -421,12 +415,12 @@ aditof::Status NetworkDepthSensor::readRegisters(const uint16_t *address,
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("ReadRegisters");
-    net->send_buff.add_func_int32_param(static_cast<::google::int32>(length));
-    net->send_buff.add_func_int32_param(static_cast<::google::int32>(burst));
-    net->send_buff.add_func_bytes_param(address, burst ? 2 : length * sizeof(uint16_t));
-    net->send_buff.add_func_bytes_param(data, length * sizeof(uint16_t));
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_sensorIndex].set_func_name("ReadRegisters");
+    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(length));
+    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(burst));
+    net->send_buff[m_sensorIndex].add_func_bytes_param(address, burst ? 2 : length * sizeof(uint16_t));
+    net->send_buff[m_sensorIndex].add_func_bytes_param(data, length * sizeof(uint16_t));
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -438,17 +432,17 @@ aditof::Status NetworkDepthSensor::readRegisters(const uint16_t *address,
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_sensorIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
     if (status == Status::OK) {
-        memcpy(data, net->recv_buff.bytes_payload(0).c_str(),
-               net->recv_buff.bytes_payload(0).length());
+        memcpy(data, net->recv_buff[m_sensorIndex].bytes_payload(0).c_str(),
+               net->recv_buff[m_sensorIndex].bytes_payload(0).length());
     }
 
     return status;
@@ -467,12 +461,12 @@ aditof::Status NetworkDepthSensor::writeRegisters(const uint16_t *address,
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("WriteRegisters");
-    net->send_buff.add_func_int32_param(static_cast<::google::int32>(length));
-    net->send_buff.add_func_int32_param(static_cast<::google::int32>(burst));
-    net->send_buff.add_func_bytes_param(address, burst ? 2 : length * sizeof(uint16_t));
-    net->send_buff.add_func_bytes_param(data, length * sizeof(uint16_t));
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_sensorIndex].set_func_name("WriteRegisters");
+    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(length));
+    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(burst));
+    net->send_buff[m_sensorIndex].add_func_bytes_param(address, burst ? 2 : length * sizeof(uint16_t));
+    net->send_buff[m_sensorIndex].add_func_bytes_param(data, length * sizeof(uint16_t));
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -484,13 +478,13 @@ aditof::Status NetworkDepthSensor::writeRegisters(const uint16_t *address,
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_sensorIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
     return status;
 }
