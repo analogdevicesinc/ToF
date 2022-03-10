@@ -35,6 +35,8 @@
 #include <libwebsockets.h>
 #include <thread>
 
+#define MAX_CAMERA_NUM 10
+
 class Network;
 
 struct NetworkHandle {
@@ -44,29 +46,31 @@ struct NetworkHandle {
 
 class Network {
 
-    static struct lws *web_socket;
+    static struct lws *web_socket;// = {nullptr};
     static struct lws_context *context;
 
-    std::thread threadObj;
-    static std::recursive_mutex m_mutex;
-    static std::mutex mutex_recv;
-    std::mutex thread_mutex;
-    static std::condition_variable_any Cond_Var;
-    static std::condition_variable thread_Cond_Var;
+    std::thread threadObj[MAX_CAMERA_NUM];
+    static std::recursive_mutex m_mutex[MAX_CAMERA_NUM];
+    static std::mutex mutex_recv[MAX_CAMERA_NUM];
+    std::mutex thread_mutex[MAX_CAMERA_NUM];
+    static std::condition_variable_any Cond_Var[MAX_CAMERA_NUM];
+    static std::condition_variable thread_Cond_Var[MAX_CAMERA_NUM];
 
-    static bool Send_Successful;
-    static bool Data_Received;
-    static bool Server_Connected;
+    static bool Send_Successful[MAX_CAMERA_NUM];
+    static bool Data_Received[MAX_CAMERA_NUM];
+    static bool Server_Connected[MAX_CAMERA_NUM];
 
-    int Thread_Running;
+    int Thread_Running[MAX_CAMERA_NUM];
 
     //! call_lws_service - calls lws_service api to service any websocket
     //! activity
     void call_lws_service();
 
   public:
-    static payload::ClientRequest send_buff;
-    static payload::ServerResponse recv_buff;
+    int m_connectionId;
+
+    static payload::ClientRequest send_buff[MAX_CAMERA_NUM];
+    static payload::ServerResponse recv_buff[MAX_CAMERA_NUM];
 
     //! ServerConnect() - APi to initialize the websocket and connect to
     //! websocket server
@@ -84,7 +88,7 @@ class Network {
                                  void *in, size_t len);
 
     //! Network() - APi to initialize network parameters
-    Network();
+    Network(int connectionId);
 
     //! ~Network() - destructor for network
     ~Network();
