@@ -54,6 +54,8 @@ class NetworkStorage : public aditof::StorageInterface {
   private:
     struct ImplData;
     std::unique_ptr<ImplData> m_implData;
+    int m_storageIndex;
+    static int m_storageCount;
 };
 
 #endif // NETWORK_STORAGE_H
