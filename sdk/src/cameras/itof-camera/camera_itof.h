@@ -94,6 +94,11 @@
  *                    or disabled through .ini configuration file but if this control is explicitly called
  *                    then it will override the option in the .ini file. By default XYZ frame is disabled.
  *   Accepted values: One of the following strings: 'on' or 'off'
+ *
+ * * updatePulsatrixFirmware
+ *   Description:     Update the firmware of Pulsatrix with the content found in the specified file.
+ *   Accepted values: A path to a file (including file name and extension) where the firmware for
+ *                    pulsatrix is stored.
  */
 
 class CameraItof : public aditof::Camera {
@@ -313,6 +318,16 @@ class CameraItof : public aditof::Camera {
      * @see Status
      */
     aditof::Status enableXYZframe(bool en);
+
+    /**
+     * @brief Update the pulsatrix with the firmware in the specified file.
+     *
+     * @param[in] filePath - Path to file where the Pulsatrix firmware should be stored
+     *
+     * @return Status
+     * @see Status
+     */
+    aditof::Status updatePulsatrixFirmware(const std::string &filePath) const;
 
   private:
     using noArgCallable = std::function<aditof::Status()>;
