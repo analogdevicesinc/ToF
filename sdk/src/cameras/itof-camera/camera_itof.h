@@ -319,6 +319,8 @@ class CameraItof : public aditof::Camera {
      */
     aditof::Status enableXYZframe(bool en);
 
+    // Methods available only when Pulsatrix is detected as part of the entire setup
+
     /**
      * @brief Update the pulsatrix with the firmware in the specified file.
      *
@@ -327,7 +329,7 @@ class CameraItof : public aditof::Camera {
      * @return Status
      * @see Status
      */
-    aditof::Status updatePulsatrixFirmware(const std::string &filePath) const;
+    aditof::Status updatePulsatrixFirmware(const std::string &filePath);
 
   private:
     using noArgCallable = std::function<aditof::Status()>;
