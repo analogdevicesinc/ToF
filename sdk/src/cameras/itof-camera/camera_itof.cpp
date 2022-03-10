@@ -106,6 +106,11 @@ CameraItof::CameraItof(
     } else {
         m_eeprom = *eeprom_iter;
     }
+
+    // Additional controls
+    if (m_pulsatrixEnabled) {
+        m_controls.emplace("updatePulsatrixFirmware", "");
+    }
 }
 
 CameraItof::~CameraItof() {
@@ -573,6 +578,8 @@ aditof::Status CameraItof::setControl(const std::string &control,
                 return enableXYZframe(false);
             else
                 return Status::INVALID_ARGUMENT;
+        } else if (control == "updatePulsatrixFirmware") {
+            return updatePulsatrixFirmware(value);
         } else {
             m_controls[control] = value;
         }
@@ -1045,4 +1052,9 @@ aditof::Status CameraItof::enableXYZframe(bool en) {
     m_xyzSetViaControl = true;
 
     return aditof::Status::OK;
+}
+
+aditof::Status CameraItof::updatePulsatrixFirmware(const std::string &filePath)
+{
+
 }
