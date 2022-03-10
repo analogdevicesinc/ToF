@@ -52,6 +52,9 @@ class NetworkTemperatureSensor : public aditof::TemperatureSensorInterface {
   private:
     struct ImplData;
     std::unique_ptr<ImplData> m_implData;
+
+    int m_tempIndex;
+    static int m_tempCount;
 };
 
 } // namespace aditof
