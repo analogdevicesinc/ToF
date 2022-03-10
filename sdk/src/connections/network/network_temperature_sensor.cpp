@@ -47,6 +47,10 @@ NetworkTemperatureSensor::NetworkTemperatureSensor(const std::string &name,
     : m_implData(new ImplData) {
     m_implData->name = name;
     m_implData->id = id;
+
+    int m_tempCount = 0;
+    m_tempIndex = m_tempCount;
+    m_tempCount++;
 }
 
 NetworkTemperatureSensor::~NetworkTemperatureSensor() = default;
@@ -67,9 +71,9 @@ Status NetworkTemperatureSensor::open(void *handle) {
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("TemperatureSensorOpen");
-    net->send_buff.add_func_int32_param(m_implData->id);
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_tempIndex].set_func_name("TemperatureSensorOpen");
+    net->send_buff[m_tempIndex].add_func_int32_param(m_implData->id);
+    net->send_buff[m_tempIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -81,13 +85,13 @@ Status NetworkTemperatureSensor::open(void *handle) {
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_tempIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_tempIndex].status());
 
     return status;
 }
@@ -101,9 +105,9 @@ Status NetworkTemperatureSensor::read(float &temperature) {
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("TemperatureSensorRead");
-    net->send_buff.add_func_int32_param(m_implData->id);
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_tempIndex].set_func_name("TemperatureSensorRead");
+    net->send_buff[m_tempIndex].add_func_int32_param(m_implData->id);
+    net->send_buff[m_tempIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -115,16 +119,16 @@ Status NetworkTemperatureSensor::read(float &temperature) {
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_tempIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_tempIndex].status());
 
     if (status == Status::OK) {
-        temperature = net->recv_buff.float_payload(0);
+        temperature = net->recv_buff[m_tempIndex].float_payload(0);
     }
 
     return status;
@@ -139,9 +143,9 @@ Status NetworkTemperatureSensor::close() {
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("TemperatureSensorClose");
-    net->send_buff.add_func_int32_param(m_implData->id);
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_tempIndex].set_func_name("TemperatureSensorClose");
+    net->send_buff[m_tempIndex].add_func_int32_param(m_implData->id);
+    net->send_buff[m_tempIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -153,13 +157,13 @@ Status NetworkTemperatureSensor::close() {
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_tempIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_tempIndex].status());
 
     if (status == Status::OK) {
         m_implData->handle = nullptr;
