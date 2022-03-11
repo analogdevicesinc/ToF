@@ -45,7 +45,9 @@ NetworkSensorEnumerator::NetworkSensorEnumerator(const std::string &ip)
 NetworkSensorEnumerator::~NetworkSensorEnumerator() = default;
 
 Status NetworkSensorEnumerator::searchSensors() {
-    static int sensorIndex = 0;
+    static int sensorCount = 0;
+    int sensorIndex = sensorCount;
+    sensorCount++;
     Status status = Status::OK;
 
     LOG(INFO) << "Looking for sensors over network";
@@ -95,7 +97,6 @@ Status NetworkSensorEnumerator::searchSensors() {
 
     status = static_cast<Status>(net->recv_buff[sensorIndex].status());
 
-    sensorIndex++;
     return status;
 }
 

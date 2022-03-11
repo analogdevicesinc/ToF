@@ -53,7 +53,7 @@ struct NetworkDepthSensor::ImplData {
 NetworkDepthSensor::NetworkDepthSensor(const std::string &ip)
     : m_implData(new NetworkDepthSensor::ImplData) {
 
-    int m_sensorCounter = 0;
+    static int m_sensorCounter = 0;
     m_sensorIndex = 0;
     m_sensorCounter++;
 
