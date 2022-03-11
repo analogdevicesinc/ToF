@@ -9,7 +9,7 @@ include_directories(${CMAKE_BINARY_DIR}/generated)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/config.h.in
 	       ${CMAKE_BINARY_DIR}/generated/config.h)
 
-add_executable(uvc-app uvc-app.cpp)
+add_executable(${PROJECT_NAME} uvc-app.cpp)
 
-target_include_directories(uvc-app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${Protobuf_INCLUDE_DIRS} ${GENERATED_PROTO_FILES_DIR} )
-target_link_libraries(uvc-app PRIVATE uvcgadget aditof)
+target_include_directories(${PROJECT_NAME} PRIVATE ${Protobuf_INCLUDE_DIRS} ${GENERATED_PROTO_FILES_DIR} )
+target_link_libraries(${PROJECT_NAME} PRIVATE uvcgadget aditof)
