@@ -80,6 +80,9 @@ void callback(aditof_roscpp::Aditof_roscppConfig &config,
         }
     }
 
+    //set depth data format
+    publisher->setDepthFormat(config.depth_data_format);
+
     //release mutexes and let ros spin work
     m_mtxDynamicRec.unlock();
     m_mtxDynamicRec2.unlock();
@@ -99,8 +102,6 @@ int main(int argc, char **argv) {
     dynamic_reconfigure::Server<aditof_roscpp::Aditof_roscppConfig> server;
     dynamic_reconfigure::Server<
         aditof_roscpp::Aditof_roscppConfig>::CallbackType f;
-
-
 
     //create handle
     ros::NodeHandle nHandle("aditof_roscpp");
