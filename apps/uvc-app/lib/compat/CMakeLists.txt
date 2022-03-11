@@ -7,6 +7,6 @@ check_function_exists(glob HAVE_GLOB)
 if(NOT HAVE_GLOB)
 	set(SOURCES "${SOURCES}"
 	    "${CMAKE_CURRENT_SOURCE_DIR}/glob.c"
-	    "${CMAKE_SOURCE_DIR}/include/compat/glob.h"
+	    "${CMAKE_SOURCE_DIR}/apps/uvc-app/include/compat/glob.h"
 	    PARENT_SCOPE)
 endif()
