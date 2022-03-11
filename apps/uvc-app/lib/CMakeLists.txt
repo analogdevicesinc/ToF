@@ -3,16 +3,11 @@ file(GLOB HEADERS "../include/uvcgadget/*.h")
 
 add_subdirectory(compat)
 
-add_library(uvcgadget ${SOURCES})
+add_library(uvcgadget STATIC ${SOURCES})
 
 set_target_properties(uvcgadget PROPERTIES PUBLIC_HEADER "${HEADERS}")
+message(STATUS "foo include dir: ${CMAKE_CURRENT_SOURCE_DIR}")
 target_include_directories(uvcgadget
 	PUBLIC
-	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include/uvcgadget>
-	$<INSTALL_INTERFACE:include>)
-
-install(TARGETS uvcgadget
-	LIBRARY DESTINATION lib
-	ARCHIVE DESTINATION lib
-	PUBLIC_HEADER DESTINATION include/uvcgadget)
+		${CMAKE_CURRENT_SOURCE_DIR}../include>
+		${CMAKE_CURRENT_SOURCE_DIR}../include/uvcgadget>)
