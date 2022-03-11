@@ -112,7 +112,6 @@ class DepthImageMsg : public AditofSensorMsg {
 
   private:
     DepthImageMsg();
-    int m_depthDataFormat; //MONO16 - 0, RGBA8 - 1
 };
 
 #endif // DEPTHIMAGE_MSG_H

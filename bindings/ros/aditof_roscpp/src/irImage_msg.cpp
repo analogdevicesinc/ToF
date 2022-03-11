@@ -63,6 +63,7 @@ void IRImageMsg::setMetadataMembers(int width, int height, ros::Time tStamp) {
 
     msg.width = width;
     msg.height = height;
+
     msg.encoding = imgEncoding;
     msg.is_bigendian = false;
 
