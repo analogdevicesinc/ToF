@@ -47,7 +47,7 @@ NetworkStorage::NetworkStorage(const std::string &name, unsigned int id)
     m_implData->name = name;
     m_implData->id = id;
 
-    int m_storageCount = 0;
+    static int m_storageCount = 0;
     m_storageIndex = m_storageCount;
     m_storageCount++;
 }
