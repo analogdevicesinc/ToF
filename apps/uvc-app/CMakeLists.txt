@@ -1,19 +1,17 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 project(uvc-gadget)
+set(CMAKE_BUILD_TYPE Release)
 
-find_package(Protobuf 3.9.0 REQUIRED)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter -Werror")
 
-protobuf_generate_cpp(PROTO_SRCS PROTO_HRDS buffer.proto)
+include_directories(${CMAKE_BINARY_DIR}/generated)
 
-get_filename_component(GENERATED_PROTO_FILES_DIR ${PROTO_HRDS} DIRECTORY)
+add_subdirectory(lib)
 
-add_executable(${PROJECT_NAME} uvc-gadget.cpp ${PROTO_SRCS} ${PROTO_HDRS})
+# Generate config.h
+configure_file(${CMAKE_SOURCE_DIR}/include/config.h.in
+	       ${CMAKE_BINARY_DIR}/generated/config.h)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE aditof  ${Protobuf_LIBRARIES} )
-
-target_include_directories(${PROJECT_NAME} PRIVATE ${Protobuf_INCLUDE_DIRS} ${GENERATED_PROTO_FILES_DIR} )
-
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config_pipe.sh
-               ${CMAKE_CURRENT_BINARY_DIR}/config_pipe.sh
-               COPYONLY)
+add_executable(uvc-gadget main.c)
+target_link_libraries(uvc-gadget uvcgadget)
+install(TARGETS uvc-gadget DESTINATION bin)
