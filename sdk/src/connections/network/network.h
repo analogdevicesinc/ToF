@@ -46,8 +46,11 @@ struct NetworkHandle {
 
 class Network {
 
-    static struct lws *web_socket;// = {nullptr};
-    static struct lws_context *context;
+    //struct lws *web_socket;
+    //static struct lws_context *context;
+
+    static std::vector<lws_context*> context;
+    static std::vector<lws*> web_socket;
 
     std::thread threadObj[MAX_CAMERA_NUM];
     static std::recursive_mutex m_mutex[MAX_CAMERA_NUM];

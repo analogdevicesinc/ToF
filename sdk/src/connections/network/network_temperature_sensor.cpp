@@ -48,7 +48,7 @@ NetworkTemperatureSensor::NetworkTemperatureSensor(const std::string &name,
     m_implData->name = name;
     m_implData->id = id;
 
-    int m_tempCount = 0;
+    static int m_tempCount = 0;
     m_tempIndex = m_tempCount;
     m_tempCount++;
 }
