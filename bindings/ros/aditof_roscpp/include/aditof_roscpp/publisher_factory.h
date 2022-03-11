@@ -38,10 +38,11 @@
 #include <memory>
 #include <ros/ros.h>
 #include <vector>
+#include <typeinfo>
 
 #include "../../../../sdk/include/aditof/camera.h"
 
-enum class ModeTypes { NONE, mode7, mode10 };
+enum class ModeTypes { NONE, mode3, mode7, mode10 };
 
 class PublisherFactory {
   public:
@@ -52,6 +53,7 @@ class PublisherFactory {
     void updatePublishers(const std::shared_ptr<aditof::Camera> &camera,
                           aditof::Frame **frame);
     void deletePublishers(const std::shared_ptr<aditof::Camera> &camera);
+    void setDepthFormat(const int val);
 
   private:
     std::vector<ros::Publisher> img_publishers;

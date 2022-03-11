@@ -39,79 +39,50 @@ void PublisherFactory::createNew(ModeTypes mode, ros::NodeHandle nHandle,
                                  aditof::Frame **frame) {
 
     ros::Time timeStamp = ros::Time::now();
+
+    if (*frame != nullptr)
+        (*frame)->~Frame();
+
+    deletePublishers(camera);
     switch (mode) {
-    case ModeTypes::mode7:
-
-        if (*frame != nullptr)
-            (*frame)->~Frame();
-
-        deletePublishers(camera);
+    case ModeTypes::mode7: {
         setFrameType(camera, "qmp");
-
-        *frame = new aditof::Frame();
-
-        //ir
-        img_publishers.emplace_back(
-            nHandle.advertise<sensor_msgs::Image>("aditof_ir", 5));
-        imgMsgs.emplace_back(new IRImageMsg(
-            camera, frame, sensor_msgs::image_encodings::MONO16, timeStamp));
-        LOG(INFO) << "Added ir publisher";
-        //depth
-        img_publishers.emplace_back(
-            nHandle.advertise<sensor_msgs::Image>("aditof_depth", 5));
-        imgMsgs.emplace_back(new DepthImageMsg(
-            camera, frame, sensor_msgs::image_encodings::RGBA8, timeStamp));
-        LOG(INFO) << "Added depth publisher";
-
-        //pointcloud
-        /*img_publishers.emplace_back();
-        imgMsgs.emplace_back();
-
-        //camera info
-        img_publishers.emplace_back();
-        imgMsgs.emplace_back();
-*/
-        startCamera(camera);
-        m_currentMode = mode;
         break;
-    case ModeTypes::mode10:
-
-        if (*frame != nullptr)
-            (*frame)->~Frame();
-
-        deletePublishers(camera);
+    }
+    case ModeTypes::mode10: {
         setFrameType(camera, "mp");
-
-        *frame = new aditof::Frame();
-
-        //ir
-        img_publishers.emplace_back(
-            nHandle.advertise<sensor_msgs::Image>("aditof_ir", 5));
-        imgMsgs.emplace_back(new IRImageMsg(
-            camera, frame, sensor_msgs::image_encodings::MONO16, timeStamp));
-        LOG(INFO) << "Added ir publisher";
-
-        //depth
-        img_publishers.emplace_back(
-            nHandle.advertise<sensor_msgs::Image>("aditof_depth", 5));
-        imgMsgs.emplace_back(new DepthImageMsg(
-            camera, frame, sensor_msgs::image_encodings::RGBA8, timeStamp));
-        LOG(INFO) << "Added depth publisher";
-/*
-        //pointcloud
-        img_publishers.emplace_back();
-        imgMsgs.emplace_back();
-
-        //camera info
-        img_publishers.emplace_back();
-        imgMsgs.emplace_back();
-        */
-        startCamera(camera);
-        m_currentMode = mode;
         break;
+    }
     default:
         break;
     }
+    *frame = new aditof::Frame();
+
+    // Get frame types
+    aditof::CameraDetails *details_tmp = new aditof::CameraDetails;
+    getCameraDataDetails(camera, *details_tmp);
+
+    for (auto iter : (*details_tmp).frameType.dataDetails) {
+        if (!std::strcmp(iter.type.c_str(), "ir")) {
+            img_publishers.emplace_back(
+                nHandle.advertise<sensor_msgs::Image>("aditof_ir", 5));
+            imgMsgs.emplace_back(new IRImageMsg(
+                camera, frame, sensor_msgs::image_encodings::MONO16,
+                timeStamp));
+            LOG(INFO) << "Added ir publisher";
+        } else if (!std::strcmp(iter.type.c_str(), "depth")) {
+            img_publishers.emplace_back(
+                nHandle.advertise<sensor_msgs::Image>("aditof_depth", 5));
+            imgMsgs.emplace_back(new DepthImageMsg(
+                camera, frame, sensor_msgs::image_encodings::RGBA8, timeStamp));
+            LOG(INFO) << "Added depth publisher";
+
+        } else if (!std::strcmp(iter.type.c_str(), "xyz")) {
+        }
+    }
+
+    startCamera(camera);
+    m_currentMode = mode;
 }
 void PublisherFactory::updatePublishers(
     const std::shared_ptr<aditof::Camera> &camera, aditof::Frame **frame) {
@@ -126,4 +97,13 @@ void PublisherFactory::deletePublishers(
     stopCamera(camera);
     img_publishers.clear();
     imgMsgs.clear();
+}
+void PublisherFactory::setDepthFormat(const int val) {
+    for (unsigned int i = 0; i < imgMsgs.size(); ++i) {
+        if (std::dynamic_pointer_cast<DepthImageMsg>(imgMsgs[i])) {
+            std::dynamic_pointer_cast<DepthImageMsg>(imgMsgs[i])
+                .get()
+                ->setDepthDataFormat(val);
+        }
+    }
 }

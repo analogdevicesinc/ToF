@@ -36,7 +36,7 @@
 #include <glog/logging.h>
 #include <mutex>
 
-std::string* parseArgs(int argc, char **argv);
+std::string *parseArgs(int argc, char **argv);
 std::shared_ptr<aditof::Camera> initCamera(int argc, char **argv);
 void startCamera(const std::shared_ptr<aditof::Camera> &camera);
 void stopCamera(const std::shared_ptr<aditof::Camera> &camera);
@@ -44,6 +44,8 @@ void setFrameType(const std::shared_ptr<aditof::Camera> &camera,
                   const std::string &type);
 void getAvailableFrameType(const std::shared_ptr<aditof::Camera> &camera,
                            std::vector<std::string> &availableFrameTypes);
+void getCameraDataDetails(const std::shared_ptr<aditof::Camera> &camera,
+                          aditof::CameraDetails &details);
 void setMode(const std::shared_ptr<aditof::Camera> &camera,
              const std::string &mode);
 void setCameraRevision(const std::shared_ptr<aditof::Camera> &camera,
@@ -61,6 +63,5 @@ getIntrinsics(const std::shared_ptr<aditof::Camera> &camera);
 int getRangeMax(const std::shared_ptr<aditof::Camera> &camera);
 int getRangeMin(const std::shared_ptr<aditof::Camera> &camera);
 void irTo16bitGrayscale(uint16_t *frameData, int width, int height);
-
 
 #endif // ADITOF_UTILS_H

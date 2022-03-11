@@ -101,8 +101,7 @@ std::shared_ptr<Camera> initCamera(int argc, char **argv) {
     std::shared_ptr<Camera> camera = cameras.front();
 
     // user can pass any config.json stored anywhere in HW
-    status = camera->setControl("initialization_config",
-                                arguments[1]);
+    status = camera->setControl("initialization_config", arguments[1]);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set the initialization config file!";
         return 0;
@@ -182,6 +181,15 @@ void getAvailableFrameType(const std::shared_ptr<aditof::Camera> &camera,
     camera->getAvailableFrameTypes(availableFrameTypes);
     if (availableFrameTypes.empty()) {
         LOG(ERROR) << "No frame type available!";
+        return;
+    }
+}
+
+void getCameraDataDetails(const std::shared_ptr<aditof::Camera> &camera,
+                          aditof::CameraDetails &details) {
+    Status status = camera->getDetails(details);
+    if (status != Status::OK) {
+        LOG(ERROR)<<"Couldn't get camera details!";
         return;
     }
 }
