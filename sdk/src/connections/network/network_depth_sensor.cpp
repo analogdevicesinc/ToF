@@ -54,7 +54,7 @@ NetworkDepthSensor::NetworkDepthSensor(const std::string &ip)
     : m_implData(new NetworkDepthSensor::ImplData) {
 
     static int m_sensorCounter = 0;
-    m_sensorIndex = 0;
+    m_sensorIndex = m_sensorCounter;
     m_sensorCounter++;
 
     Network *net = new Network(m_sensorIndex);
