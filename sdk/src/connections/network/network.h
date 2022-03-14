@@ -46,9 +46,6 @@ struct NetworkHandle {
 
 class Network {
 
-    //struct lws *web_socket;
-    //static struct lws_context *context;
-
     static std::vector<lws_context*> context;
     static std::vector<lws*> web_socket;
 
