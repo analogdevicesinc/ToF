@@ -86,7 +86,7 @@ bool Network::Server_Connected[MAX_CAMERA_NUM];
 * Desription:   This function checks if server is connected and returns
 Server_Connected flag value.
 */
-bool Network::isServer_Connected() { return Network::Server_Connected; }
+bool Network::isServer_Connected() { return Network::Server_Connected[m_connectionId]; }
 
 /*
 * isThread_Running(): check if thread created is running
@@ -144,18 +144,43 @@ int Network::ServerConnect(const std::string &ip) {
     info.pt_serv_buf_size = 4096;
 
     /*Create a websocket for client*/
-    context.push_back(lws_create_context(&info));
+    if(!m_connectionId){
+        context.front() = lws_create_context(&info);
+    } else {
+        for(int i = 0; i < context.size(); i++){ 
+            if(context.at(i) == nullptr){
+                context.erase(context.begin() + i);
+                i--;
+            }
+        }
+        context.push_back(lws_create_context(&info));
+    }
 
     struct lws_client_connect_info ccinfo = {0};
-    ccinfo.context = context.front();
+    ccinfo.context = context.at(m_connectionId);
     ccinfo.address = ip.c_str();
     ccinfo.port = 5000;
     ccinfo.path = "/";
-    ccinfo.host = lws_canonical_hostname(context.front());
+    ccinfo.host = lws_canonical_hostname(context.at(m_connectionId));
     ccinfo.origin = "origin";
     ccinfo.protocol = protocols[PROTOCOL_0].name;
 
-    web_socket.push_back(lws_client_connect_via_info(&ccinfo));
+    if(!m_connectionId){
+        lws *webSocket = lws_client_connect_via_info(&ccinfo);
+
+        web_socket.clear();
+        web_socket.emplace_back(webSocket);
+    } else {
+        
+       for(int i = 0; i < web_socket.size(); i++){ 
+            if(web_socket.at(i) == nullptr){
+                web_socket.erase(web_socket.begin() + i);
+                i--;
+            }
+        }
+
+        web_socket.push_back(lws_client_connect_via_info(&ccinfo));
+    }
     
     /*Start a new thread to service any pending event on web socket*/
 
@@ -335,7 +360,7 @@ void Network::call_lws_service() {
             cout << "Thread exited" << endl;
 #endif
             Thread_Running[ m_connectionId] = 2;
-            thread_Cond_Var[ m_connectionId].notify_one();
+            thread_Cond_Var[ m_connectionId].notify_all();
             break;
         }
     }
@@ -478,7 +503,6 @@ int Network::callback_function(struct lws *wsi,
  * Desription:   This function initializes the network parameters
  */
 Network::Network(int connectionId) {
-    //this->context = NULL;
 
     /*Initialize the static flags*/
     Network::Send_Successful[connectionId] = false;
@@ -487,6 +511,11 @@ Network::Network(int connectionId) {
     Network::Server_Connected[connectionId] = false;
 
      m_connectionId = connectionId;
+   // if(!m_connectionId){
+   //     context.front() = nullptr;
+   // } else {
+        context.emplace_back(nullptr);
+    //}
 }
 
 /*
