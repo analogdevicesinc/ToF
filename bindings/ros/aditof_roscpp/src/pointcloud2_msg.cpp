@@ -73,12 +73,6 @@ void PointCloud2Msg::setMetadataMembers(int width, int height,
 
 void PointCloud2Msg::setDataMembers(const std::shared_ptr<Camera> &camera,
                                     aditof::Frame **frame) {
-    IntrinsicParameters intr = getIntrinsics(camera);
-
-    float fx = intr.cameraMatrix[0];
-    float fy = intr.cameraMatrix[4];
-    float x0 = intr.cameraMatrix[2];
-    float y0 = intr.cameraMatrix[5];
 
     sensor_msgs::PointCloud2Iterator<float> iter_x(msg, "x");
     sensor_msgs::PointCloud2Iterator<float> iter_y(msg, "y");
@@ -88,8 +82,7 @@ void PointCloud2Msg::setDataMembers(const std::shared_ptr<Camera> &camera,
     const int frameHeight = static_cast<int>(msg.height);
     const int frameWidth = static_cast<int>(msg.width);
 
-    uint16_t *frameDataDepth =
-        getFrameData(frame, "depth");
+    uint16_t *frameDataXYZ = getFrameData(frame, "xyz");
     uint16_t *frameDataIR = getFrameData(frame, "ir");
 
     irTo16bitGrayscale(frameDataIR, frameWidth, frameHeight);
@@ -98,11 +91,10 @@ void PointCloud2Msg::setDataMembers(const std::shared_ptr<Camera> &camera,
         for (int j = 0; j < frameWidth;
              j++, ++iter_x, ++iter_y, ++iter_z, ++iter_intensity) {
             int index = i * msg.width + j;
-            float z = static_cast<float>(frameDataDepth[index]) / 1000.0f;
 
-            *iter_x = z * (j - x0) / fx;
-            *iter_y = z * (i - y0) / fy;
-            *iter_z = z;
+            *iter_x = frameDataXYZ[3 * index];
+            *iter_y = frameDataXYZ[3 * index + 1];
+            *iter_z = frameDataXYZ[3 * index + 2];
 
             *iter_intensity = frameDataIR[index];
         }
