@@ -121,11 +121,14 @@ Status UsbSensorEnumerator::searchSensors() {
 #endif
 
         if (strncmp(reinterpret_cast<const char *>(cap.card), devName.c_str(),
-                    devName.length()) != 0) {
+                    devName.length()) == 0) {
+                    LOG(INFO)<<"Fond usb device with name: 'ADI CMOS TOF UVC Gadget'";
+        } else if (fmt.fmt.pix.height == 2560 && fmt.fmt.pix.width == 4096) {
+                    LOG(INFO)<<"Found usb device with format: 4096/2560";
+        } else {
             close(fd);
             continue;
         }
-
         if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
             LOG(WARNING) << driverPath << " is no video capture device";
             close(fd);
