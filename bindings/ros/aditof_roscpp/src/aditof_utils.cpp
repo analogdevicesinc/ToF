@@ -189,7 +189,7 @@ void getCameraDataDetails(const std::shared_ptr<aditof::Camera> &camera,
                           aditof::CameraDetails &details) {
     Status status = camera->getDetails(details);
     if (status != Status::OK) {
-        LOG(ERROR)<<"Couldn't get camera details!";
+        LOG(ERROR) << "Couldn't get camera details!";
         return;
     }
 }
@@ -312,9 +312,9 @@ int getRangeMin(const std::shared_ptr<Camera> &camera) {
 void irTo16bitGrayscale(uint16_t *frameData, int width, int height) {
     std::vector<uint16_t> data(frameData, frameData + width * height);
 
-    auto min_val = std::min_element(data.begin(), data.end());
-    auto max_val = std::max_element(data.begin(), data.end());
-    uint16_t delta = *max_val - *min_val;
+    auto min_val = 0;      //std::min_element(data.begin(), data.end());
+    auto max_val = 0x0fff; //std::max_element(data.begin(), data.end());
+    uint16_t delta = max_val - min_val;
     int minColorValue = 0;
 
     if (delta == 0) {
@@ -322,7 +322,7 @@ void irTo16bitGrayscale(uint16_t *frameData, int width, int height) {
     }
 
     for (int i = 0; i < width * height; i++) {
-        float norm_val = static_cast<float>(data[i] - *min_val) / delta;
+        float norm_val = static_cast<float>(data[i] - min_val) / delta;
         float grayscale_val =
             norm_val * std::numeric_limits<unsigned short int>::max() +
             (1.0f - norm_val) * minColorValue;

@@ -78,6 +78,13 @@ void PublisherFactory::createNew(ModeTypes mode, ros::NodeHandle nHandle,
             LOG(INFO) << "Added depth publisher";
 
         } else if (!std::strcmp(iter.type.c_str(), "xyz")) {
+            img_publishers.emplace_back(
+                nHandle.advertise<sensor_msgs::PointCloud2>("aditof_pcloud",
+                                                            5));
+            imgMsgs.emplace_back(new PointCloud2Msg(camera, frame, timeStamp));
+            LOG(INFO) << "Added point_cloud publisher";
+        } else if (!std::strcmp(iter.type.c_str(), "embedded_header")) {
+            //add embedded header publisher
         }
     }
 

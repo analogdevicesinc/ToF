@@ -30,6 +30,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "message_factory.h"
+#include "publisher_factory.h"
 #include <aditof_utils.h>
 #include <ros/ros.h>
 
@@ -38,50 +39,30 @@ using namespace aditof;
 int main(int argc, char **argv) {
 
     std::shared_ptr<Camera> camera = initCamera(argc, argv);
-    if (!camera) {
-        ROS_ERROR("initCamera call failed");
-        return -1;
-    }
 
-    std::vector<std::string> availableFrameTypes;
-    getAvailableFrameType(camera, availableFrameTypes);
-    if (availableFrameTypes.front().find("rgb") != std::string::npos) {
-        setFrameType(camera, "depth_ir_rgb");
-    } else {
-        setFrameType(camera, "depth_ir");
-    }
-    setMode(camera, "medium");
+    ros::init(argc, argv, "aditof_camera_node");
+    ROS_ASSERT_MSG(camera, "initCamera call failed");
+    setFrameType(camera, "qmp");
+    ROS_ASSERT_MSG(camera, "camera frametype set failed");
+    startCamera(camera);
+    ROS_ASSERT_MSG(camera, "start camera failed");
+    ros::NodeHandle nHandle("aditof_roscpp");
+    ROS_ASSERT_MSG(camera, "handle error");
 
-    ros::init(argc, argv, "aditof_rviz_node");
-
-    ros::NodeHandle nHandle;
     ros::Publisher frame_pubisher =
-        nHandle.advertise<sensor_msgs::PointCloud2>("aditof_pcloud", 100);
+        nHandle.advertise<sensor_msgs::PointCloud2>("aditof_pcloud", 5);
 
-    applyNoiseReduction(camera, 0);
+    auto tmp = new Frame;
+    aditof::Frame **frame = &tmp;
 
-    Frame** frame = nullptr;
-    (*frame) = new Frame();
     getNewFrame(camera, frame);
-
-    AditofSensorMsg *msg = MessageFactory::create(
-        camera, frame, MessageType::sensor_msgs_PointCloud2, ros::Time::now());
-
-    if (!msg) {
-        ROS_ERROR("pointcloud message creation failed");
-        return -1;
-    }
+    PointCloud2Msg *msg = new PointCloud2Msg(camera, frame, ros::Time::now());
 
     while (ros::ok()) {
         getNewFrame(camera, frame);
-        PointCloud2Msg *pclMsg = dynamic_cast<PointCloud2Msg *>(msg);
-
-        if (!pclMsg) {
-            ROS_ERROR("downcast from AditofSensorMsg to PointCloud2Msg failed");
-            return -1;
-        }
-        pclMsg->FrameDataToMsg(camera, frame, ros::Time::now());
-        pclMsg->publishMsg(frame_pubisher);
+        msg->FrameDataToMsg(camera, frame, ros::Time::now());
+        msg->publishMsg(frame_pubisher);
+        //ros::spinOnce();
     }
 
     delete msg;
