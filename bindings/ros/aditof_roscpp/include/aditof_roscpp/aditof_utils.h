@@ -46,6 +46,7 @@ void getAvailableFrameType(const std::shared_ptr<aditof::Camera> &camera,
                            std::vector<std::string> &availableFrameTypes);
 void getCameraDataDetails(const std::shared_ptr<aditof::Camera> &camera,
                           aditof::CameraDetails &details);
+void enableCameraDepthCompute(const std::shared_ptr<aditof::Camera> &camera, const bool value);
 void setMode(const std::shared_ptr<aditof::Camera> &camera,
              const std::string &mode);
 void setCameraRevision(const std::shared_ptr<aditof::Camera> &camera,

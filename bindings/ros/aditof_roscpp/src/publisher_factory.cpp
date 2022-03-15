@@ -43,19 +43,30 @@ void PublisherFactory::createNew(ModeTypes mode, ros::NodeHandle nHandle,
     if (*frame != nullptr)
         (*frame)->~Frame();
 
+    stopCamera(camera);
     deletePublishers(camera);
+
     switch (mode) {
+    case ModeTypes::mode3: {
+        enableCameraDepthCompute(camera, false);
+        setFrameType(camera, "pcm");
+        break;
+    }
     case ModeTypes::mode7: {
+        enableCameraDepthCompute(camera, m_enableDepthCompute);
         setFrameType(camera, "qmp");
         break;
     }
     case ModeTypes::mode10: {
+        enableCameraDepthCompute(camera, m_enableDepthCompute);
         setFrameType(camera, "mp");
         break;
     }
     default:
         break;
     }
+
+    LOG(INFO) << "Changed enable depth compute type";
     *frame = new aditof::Frame();
 
     // Get frame types
@@ -63,28 +74,33 @@ void PublisherFactory::createNew(ModeTypes mode, ros::NodeHandle nHandle,
     getCameraDataDetails(camera, *details_tmp);
 
     for (auto iter : (*details_tmp).frameType.dataDetails) {
-        if (!std::strcmp(iter.type.c_str(), "ir")) {
+        if (!std::strcmp(iter.type.c_str(), "ir") && m_enableDepthCompute) {
             img_publishers.emplace_back(
                 nHandle.advertise<sensor_msgs::Image>("aditof_ir", 5));
             imgMsgs.emplace_back(new IRImageMsg(
                 camera, frame, sensor_msgs::image_encodings::MONO16,
                 timeStamp));
             LOG(INFO) << "Added ir publisher";
-        } else if (!std::strcmp(iter.type.c_str(), "depth")) {
+        } else if (!std::strcmp(iter.type.c_str(), "depth") &&
+                   m_enableDepthCompute) {
             img_publishers.emplace_back(
                 nHandle.advertise<sensor_msgs::Image>("aditof_depth", 5));
             imgMsgs.emplace_back(new DepthImageMsg(
                 camera, frame, sensor_msgs::image_encodings::RGBA8, timeStamp));
             LOG(INFO) << "Added depth publisher";
 
-        } else if (!std::strcmp(iter.type.c_str(), "xyz")) {
+        } else if (!std::strcmp(iter.type.c_str(), "xyz") &&
+                   m_enableDepthCompute) {
             img_publishers.emplace_back(
                 nHandle.advertise<sensor_msgs::PointCloud2>("aditof_pcloud",
                                                             5));
             imgMsgs.emplace_back(new PointCloud2Msg(camera, frame, timeStamp));
             LOG(INFO) << "Added point_cloud publisher";
-        } else if (!std::strcmp(iter.type.c_str(), "embedded_header")) {
+        } else if (!std::strcmp(iter.type.c_str(), "embedded_header") &&
+                   m_enableDepthCompute) {
             //add embedded header publisher
+        } else if (!std::strcmp(iter.type.c_str(), "raw") &&
+                   !m_enableDepthCompute) {
         }
     }
 
