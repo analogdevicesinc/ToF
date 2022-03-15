@@ -47,7 +47,7 @@
 #include <iterator>
 #include <vector>
 #include <cstdint>
-#include "CRC/include/compute_crc.h"
+#include "pulsatrix/crc/include/compute_crc.h"
 
 
 CameraItof::CameraItof(
