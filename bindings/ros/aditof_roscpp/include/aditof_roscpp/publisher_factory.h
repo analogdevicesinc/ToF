@@ -37,8 +37,8 @@
 #include <dynamic_reconfigure/server.h>
 #include <memory>
 #include <ros/ros.h>
-#include <vector>
 #include <typeinfo>
+#include <vector>
 
 #include "../../../../sdk/include/aditof/camera.h"
 
@@ -61,6 +61,7 @@ class PublisherFactory {
 
   public:
     ModeTypes m_currentMode = ModeTypes::NONE;
+    bool m_enableDepthCompute = 1;
 };
 
 #endif // PUBLISHER_FACTORY_H
