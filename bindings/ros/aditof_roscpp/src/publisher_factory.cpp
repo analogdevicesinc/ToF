@@ -65,6 +65,7 @@ void PublisherFactory::createNew(ModeTypes mode, ros::NodeHandle nHandle,
     default:
         break;
     }
+    m_currentMode = mode;
 
     LOG(INFO) << "Changed enable depth compute type";
     *frame = new aditof::Frame();
@@ -74,7 +75,8 @@ void PublisherFactory::createNew(ModeTypes mode, ros::NodeHandle nHandle,
     getCameraDataDetails(camera, *details_tmp);
 
     for (auto iter : (*details_tmp).frameType.dataDetails) {
-        if (!std::strcmp(iter.type.c_str(), "ir") && m_enableDepthCompute) {
+        if (!std::strcmp(iter.type.c_str(), "ir") &&
+            (m_enableDepthCompute || mode == ModeTypes::mode3)) {
             img_publishers.emplace_back(
                 nHandle.advertise<sensor_msgs::Image>("aditof_ir", 5));
             imgMsgs.emplace_back(new IRImageMsg(
@@ -100,12 +102,17 @@ void PublisherFactory::createNew(ModeTypes mode, ros::NodeHandle nHandle,
                    m_enableDepthCompute) {
             //add embedded header publisher
         } else if (!std::strcmp(iter.type.c_str(), "raw") &&
-                   !m_enableDepthCompute) {
+                   !m_enableDepthCompute && mode != ModeTypes::mode3) {
+            img_publishers.emplace_back(
+                nHandle.advertise<sensor_msgs::Image>("aditof_raw", 5));
+            imgMsgs.emplace_back(new RAWImageMsg(
+                camera, frame, sensor_msgs::image_encodings::MONO16,
+                timeStamp));
+            LOG(INFO) << "Added raw data publisher";
         }
     }
 
     startCamera(camera);
-    m_currentMode = mode;
 }
 void PublisherFactory::updatePublishers(
     const std::shared_ptr<aditof::Camera> &camera, aditof::Frame **frame) {

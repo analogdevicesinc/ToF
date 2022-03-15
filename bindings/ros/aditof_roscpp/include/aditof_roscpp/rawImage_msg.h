@@ -22,33 +22,56 @@
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * FOR ANY DRAWECT, INDRAWECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "message_factory.h"
+#ifndef RAWIMAGE_MSG_H
+#define RAWIMAGE_MSG_H
 
-AditofSensorMsg *
-MessageFactory::create(const std::shared_ptr<aditof::Camera> &camera,
-                       aditof::Frame **frame, MessageType type,
-                       ros::Time tStamp) {
-    switch (type) {
-    case MessageType::sensor_msgs_PointCloud2:
-        return new PointCloud2Msg(camera, frame, tStamp);
-    case MessageType::sensor_msgs_DepthImage:
-        return new DepthImageMsg(camera, frame,
-                                 sensor_msgs::image_encodings::RGBA8, tStamp);
-    case MessageType::sensor_msgs_IRImage:
-        return new IRImageMsg(camera, frame,
-                              sensor_msgs::image_encodings::MONO16, tStamp);
-    case MessageType::sensor_msgs_CameraInfo:
-        return new CameraInfoMsg(camera, frame, tStamp);
-    case MessageType::sensor_msgs_RAWImage:
-        return new RAWImageMsg(camera, frame,
-                               sensor_msgs::image_encodings::MONO16, tStamp);
-    }
-    return nullptr;
-}
+#include <aditof/frame.h>
+
+#include "aditof_sensor_msg.h"
+#include "aditof_utils.h"
+
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/image_encodings.h>
+
+class RAWImageMsg : public AditofSensorMsg {
+  public:
+    RAWImageMsg(const std::shared_ptr<aditof::Camera> &camera,
+               aditof::Frame **frame, std::string encoding, ros::Time tStamp);
+    /**
+     * @brief Each message corresponds to one frame
+     */
+    sensor_msgs::Image msg;
+
+    /**
+     * @brief Converts the frame data to a message
+     */
+    void FrameDataToMsg(const std::shared_ptr<aditof::Camera> &camera,
+                        aditof::Frame **frame, ros::Time tStamp);
+    /**
+     * @brief Assigns values to the message fields concerning metadata
+     */
+    void setMetadataMembers(int width, int height, ros::Time tStamp);
+
+    /**
+     * @brief Assigns values to the message fields concerning the point data
+     */
+    void setDataMembers(const std::shared_ptr<aditof::Camera> &camera,
+                        uint16_t *frameData);
+
+    /**
+     * @brief Publishes a message
+     */
+    void publishMsg(const ros::Publisher &pub);
+
+  private:
+    RAWImageMsg();
+};
+
+#endif // RAWIMAGE_MSG_H
