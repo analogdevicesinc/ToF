@@ -144,18 +144,7 @@ int Network::ServerConnect(const std::string &ip) {
     info.pt_serv_buf_size = 4096;
 
     /*Create a websocket for client*/
-    if(!m_connectionId){
-        context.front() = lws_create_context(&info);
-    } else {
-        for(int i = 0; i < context.size(); i++){ 
-            if(context.at(i) == nullptr){
-                context.erase(context.begin() + i);
-                i--;
-            }
-        }
-
-        context.push_back(lws_create_context(&info));
-    }
+    context.at(m_connectionId) = lws_create_context(&info);
 
     struct lws_client_connect_info ccinfo = {0};
     ccinfo.context = context.at(m_connectionId);
@@ -173,13 +162,12 @@ int Network::ServerConnect(const std::string &ip) {
         web_socket.emplace_back(webSocket);
     } else {
         
-       for(int i = 0; i < web_socket.size(); i++){ 
+       for(size_t i = 0; i < web_socket.size(); i++){ 
             if(web_socket.at(i) == nullptr){
                 web_socket.erase(web_socket.begin() + i);
                 i--;
             }
         }
-
         web_socket.push_back(lws_client_connect_via_info(&ccinfo));
     }
     
@@ -384,11 +372,7 @@ int Network::callback_function(struct lws *wsi,
     auto status = std::find(web_socket.begin(),web_socket.end(),wsi);
     if(status != web_socket.end()){
         connectionId = std::distance(web_socket.begin(),status);
-    } else {
-        std::cout << "Web socket not found!";
-        return 0;
     }
-
     
     switch (reason) {
     case LWS_CALLBACK_CLIENT_ESTABLISHED: {
