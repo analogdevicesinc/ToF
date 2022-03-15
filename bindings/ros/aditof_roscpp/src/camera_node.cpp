@@ -56,28 +56,23 @@ void callback(aditof_roscpp::Aditof_roscppConfig &config,
     ModeTypes newMode = ModeTypes::NONE;
     switch (config.camera_mode) {
     case 0:
-        newMode = ModeTypes::mode7;
+        newMode = ModeTypes::mode3;
         break;
     case 1:
+        newMode = ModeTypes::mode7;
+        break;
+    case 2:
         newMode = ModeTypes::mode10;
         break;
     }
 
-    if (publisher->m_currentMode != newMode) {
-        switch (newMode) {
-        case ModeTypes::NONE:
-            break;
-        case ModeTypes::mode7:
-            //create new publishers
-            publisher->createNew(ModeTypes::mode7, *nHandle, camera, frame);
-            LOG(INFO) << "Mode 7 selected";
-            break;
-        case ModeTypes::mode10: //mode 10
-            //create new publishers
-            publisher->createNew(ModeTypes::mode10, *nHandle, camera, frame);
-            LOG(INFO) << "Mode 10 selected";
-            break;
-        }
+    if (publisher->m_currentMode != newMode ||
+        publisher->m_enableDepthCompute != config.depth_compute) {
+
+        publisher->m_enableDepthCompute = (bool)(config.depth_compute);
+
+        publisher->createNew(newMode, *nHandle, camera, frame);
+        LOG(INFO) << "New mode selected";
     }
 
     //set depth data format
@@ -95,7 +90,7 @@ int main(int argc, char **argv) {
 
     auto tmp = new Frame;
     aditof::Frame **frame = &tmp;
-    
+
     ROS_ASSERT_MSG(camera, "initCamera call failed");
 
     ros::init(argc, argv, "aditof_camera_node");

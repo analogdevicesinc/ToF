@@ -121,13 +121,30 @@ std::shared_ptr<Camera> initCamera(int argc, char **argv) {
                      "from JSON config file...";
     }
 
-    //set depthCompute to on or off
-    status = camera->setControl("enableDepthCompute", "on");
+    status = camera->setControl("initialization_config", arguments[1]);
     if (status != Status::OK) {
-        LOG(ERROR) << "Couldn't set depth compute option";
+        LOG(ERROR) << "Could not set the initialization config file!";
         return 0;
     }
     return camera;
+}
+
+void enableCameraDepthCompute(const std::shared_ptr<aditof::Camera> &camera,
+                              const bool value) {
+    //set depthCompute to on or off
+    aditof::Status status = aditof::Status::OK;
+
+    status = camera->initialize();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not initialize camera!";
+        return;
+    }
+
+    status = camera->setControl("enableDepthCompute", (value) ? "on" : "off");
+    if (status != Status::OK) {
+        LOG(ERROR) << "Couldn't set depth compute option";
+        return;
+    }
 }
 
 void startCamera(const std::shared_ptr<aditof::Camera> &camera) {
