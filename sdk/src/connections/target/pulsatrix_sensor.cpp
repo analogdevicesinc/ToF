@@ -660,24 +660,51 @@ aditof::Status PulsatrixSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t
     struct VideoDev *dev = &m_implData->videoDevs[0];
     Status status = Status::OK;
 
+    //switch to burst mode
+    uint32_t cmd = 0x0019;
+    uint8_t payload[] = {0x00, 0x00};
+
+    status = pulsatrix_write_cmd(cmd, payload);
+    if(status != Status::OK){
+        LOG(INFO) << "Failed to switch to burst mode!";
+        return status;
+    }
+
     static struct v4l2_ext_control extCtrl;
     static struct v4l2_ext_controls extCtrls;
     static uint8_t buf[PULSATRIX_CTRL_PACKET_SIZE];
+    memset(buf, 0, PULSATRIX_CTRL_PACKET_SIZE * sizeof(uint8_t));
 
     extCtrl.size = PULSATRIX_CTRL_PACKET_SIZE;
     extCtrl.id = V4L2_CID_AD_DEV_CHIP_CONFIG;
+
     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
     extCtrls.controls = &extCtrl;
     extCtrls.count = 1;
 
-    buf[0] = 0xAD;
+    buf[0] = 0x01;
+    buf[1] = 0x00;
+    buf[2] = 0x10;
+
+    buf[3] = 0xAD;
+    buf[6] = uint8_t(cmd & 0xFF);   
+
+    memcpy(buf + 12, readback_data, 8);
+    extCtrl.p_u8 = buf;
+
+    if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+        LOG(WARNING) << "Reading Pulsatrix error "
+                         << "errno: " << errno << " error: " << strerror(errno);
+            return Status::GENERIC_ERROR;
+        }
+
+    memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
+    extCtrls.controls = &extCtrl;
+    extCtrls.count = 1;
+
+    buf[0] = 0x00;
     buf[1] = uint8_t(payload_len >> 8);
     buf[2] = uint8_t(payload_len & 0xFF);
-    buf[3] = 0;
-    buf[4] = uint8_t(cmd >> 24);
-    buf[5] = uint8_t((cmd >> 16) & 0xFF);
-    buf[6] = uint8_t((cmd >> 8) & 0xFF);
-    buf[7] = uint8_t(cmd & 0xFF);
 
     extCtrl.p_u8 = buf;
 
@@ -692,7 +719,23 @@ aditof::Status PulsatrixSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t
 			return Status::GENERIC_ERROR;
 	}
 
-    memcpy(readback_data, extCtrl.p_u8 + 16, payload_len);
+    memcpy(readback_data, extCtrl.p_u8, payload_len);
+
+    //switch to standard mode
+    memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
+    extCtrls.controls = &extCtrl;
+    extCtrls.count = 1;
+
+    uint8_t switchBuf[] = {0x01, 0x00, 0x10, 0xAD, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
+                           0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+    extCtrl.p_u8 = switchBuf;
+
+    if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+        LOG(WARNING) << "Switch Pulsatrix to standard mode error "
+                         << "errno: " << errno << " error: " << strerror(errno);
+            return Status::GENERIC_ERROR;
+        }
 
     return status;
 }
@@ -701,6 +744,15 @@ aditof::Status PulsatrixSensor::pulsatrix_write_payload_cmd(uint32_t cmd, uint8_
     using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
     Status status = Status::OK;
+
+    //switch to burst mode
+    uint32_t cmd = 0x0019;
+    uint8_t payload[] = {0x00, 0x00};
+
+    status = pulsatrix_write_cmd(cmd, payload);
+    if(status != Status::OK){
+        LOG(INFO) << "Failed to switch to burst mode!";
+    }
 
     static struct v4l2_ext_control extCtrl;
     static struct v4l2_ext_controls extCtrls;
@@ -712,18 +764,43 @@ aditof::Status PulsatrixSensor::pulsatrix_write_payload_cmd(uint32_t cmd, uint8_
     extCtrls.controls = &extCtrl;
     extCtrls.count = 1;
 
-    buf[0] = 0xAD;
+    payload_len += 16;
+    buf[0] = 0x01;
     buf[1] = uint8_t(payload_len >> 8);
     buf[2] = uint8_t(payload_len & 0xFF);
-    buf[3] = 0;
-    buf[4] = uint8_t(cmd >> 24);
-    buf[5] = uint8_t((cmd >> 16) & 0xFF);
-    buf[6] = uint8_t((cmd >> 8) & 0xFF);
-    buf[7] = uint8_t(cmd & 0xFF);
-    memcpy(buf + 8, payload, payload_len);
+
+    payload_len -=16;
+    buf[3] = 0xAD;
+    buf[4] = uint8_t(payload_len >> 8);
+    buf[5] = uint8_t(payload_len & 0xFF);
+    buf[6] = uint8_t(cmd & 0xFF);
+
+    uint32_t checksum = 0;
+    for (int i = 0; i < 7; i++){
+        checksum += buf[i+4];
+    }
+    memcpy(buf + 11, &checksum, 4);
+    memcpy(buf + 15, payload, payload_len);
+    extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Pulsatrix error "
+        LOG(WARNING) << "Writing Pulsatrix error "
+                         << "errno: " << errno << " error: " << strerror(errno);
+            return Status::GENERIC_ERROR;
+        }
+
+    //switch to standard mode
+    memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
+    extCtrls.controls = &extCtrl;
+    extCtrls.count = 1;
+
+    uint8_t switchBuf[] = {0x01, 0x00, 0x10, 0xAD, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
+                           0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+    extCtrl.p_u8 = switchBuf;
+
+    if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+        LOG(WARNING) << "Switch Pulsatrix to standard mode error "
                          << "errno: " << errno << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
         }
