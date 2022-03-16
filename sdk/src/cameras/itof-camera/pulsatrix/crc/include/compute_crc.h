@@ -47,6 +47,10 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef __COMPUTE_CRC_H__
 #define __COMPUTE_CRC_H__
 
+#if __cplusplus
+extern "C" {
+#endif
+
 #define IS_CRC_MIRROR      (1 << 0)
 
 typedef enum 
@@ -83,5 +87,8 @@ extern uint32_t const crc32_table[256];
 
 crc_output_t compute_crc(crc_parameters_t *crc_parameters, uint8_t *data, uint32_t data_len);
 
+#if __cplusplus
+}
+#endif
 
 #endif
