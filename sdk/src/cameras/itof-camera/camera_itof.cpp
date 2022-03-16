@@ -1167,6 +1167,15 @@ aditof::Status CameraItof::updatePulsatrixFirmware(const std::string &filePath)
         }
     }
 
+    //Commands to switch back to standard mode
+    uint8_t switchBuf[] = {0x01, 0x00, 0x10, 0xAD, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
+                           0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    status = m_depthSensor->pulsatrix_write_payload(switchBuf, sizeof(switchBuf)/sizeof(switchBuf[0]));
+    if(status != Status::OK){
+        LOG(ERROR) << "Failed to switch pulsatrix to standard mode!";
+        return status;
+    }
+    
     LOG(INFO) << "Pulsatrix firmware updated succesfully!";
 
     return aditof::Status::OK;
