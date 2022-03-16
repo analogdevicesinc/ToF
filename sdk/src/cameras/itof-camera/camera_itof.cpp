@@ -1107,7 +1107,6 @@ aditof::Status CameraItof::updatePulsatrixFirmware(const std::string &filePath)
     int packetEnd = flashPageSize;
 
     // Read the firmware binary file
-    // filepath = "../fw_bin/pulsatrix_application_v3.0.0_Without_Imager.stream_3_3_3.bin";
     std::ifstream fw_file(filePath, std::ios::binary);
     // copy all data into buffer
     std::vector<uint8_t> buffer(std::istreambuf_iterator<char>(fw_file), {});
@@ -1163,10 +1162,12 @@ aditof::Status CameraItof::updatePulsatrixFirmware(const std::string &filePath)
         }
         status = m_depthSensor->pulsatrix_write_payload(data_out, flashPageSize);
         if(status != Status::OK){
-            LOG(ERROR) << "Failed to send packet " << i << " out of " << packetsToSend << " packets!";
+            LOG(ERROR) << "Failed to send packet number" << i << " out of " << packetsToSend << " packets!";
             return status;
         }
     }
+
+    LOG(INFO) << "Pulsatrix firmware updated succesfully!";
 
     return aditof::Status::OK;
 }

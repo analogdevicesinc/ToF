@@ -48,7 +48,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <assert.h>
 
-#include "compute_crc.h"
+#include "../include/compute_crc.h"
 
 
 //extern uint32_t const crc32_table;
