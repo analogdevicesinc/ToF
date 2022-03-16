@@ -1064,17 +1064,6 @@ aditof::Status CameraItof::enableXYZframe(bool en) {
 /* CRC32 Polynomial to be used for CRC computation */
 #define ADI_ROM_CFG_CRC_POLYNOMIAL                      (0x04C11DB7u)
 
-// standard read
-uint16_t pulsatrix_read_cmd(uint16_t cmd);
-// standard write
-void pulsatrix_write_cmd(uint16_t cmd, uint16_t data);
-// burst write, used to send out command
-void pulsatrix_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len);
-// burst write, used to send out payload and send fw upgrade cmd header
-void pulsatrix_write_payload(uint8_t* payload, uint16_t payload_len);
-// burst read 'payload_len' bytes data
-void pulsatrix_read_payload_cmd(uint32_t cmd, uint16_t payload_len, uint8_t* readback_data);
-
 typedef union
 {
     uint8_t cmd_header_byte[16];
@@ -1092,12 +1081,25 @@ uint32_t nResidualCRC = ADI_ROM_CFG_CRC_SEED_VALUE;
 
 aditof::Status CameraItof::updatePulsatrixFirmware(const std::string &filePath)
 {
+    using namespace aditof;
+    Status status;
+
     // Read Chip ID in STANDARD mode
-    uint16_t chip_id = pulsatrix_read_cmd(0x0112);
-    std::cout << "The readback chip ID is: " << std::hex << chip_id << std::endl;
+    uint16_t chip_id;
+    status = m_depthSensor->pulsatrix_read_cmd(0x0112, &chip_id);
+    if(status != Status::OK) {
+        LOG(ERROR) << "Failed to read pulsatrix chip id!";
+        return status;
+    }
+
+    LOG(INFO) << "The readback chip ID is: " << chip_id;
 
     // Switch to BURST mode.
-    pulsatrix_write_cmd(0x0019, 0x0000);
+    status = m_depthSensor->pulsatrix_write_cmd(0x0019, 0x0000);
+    if(status != Status::OK){
+        LOG(ERROR) << "Failed to switch to burst mode!";
+        return status;
+    }
 
     // Send FW content, each chunk is 256 bytes
     const int flashPageSize = 256;
@@ -1130,7 +1132,11 @@ aditof::Status CameraItof::updatePulsatrixFirmware(const std::string &filePath)
 
     fw_upgrade_header.crc_of_fw32 = nResidualCRC;
 
-    pulsatrix_write_payload(fw_upgrade_header.cmd_header_byte, fw_len);
+    status = m_depthSensor->pulsatrix_write_payload(fw_upgrade_header.cmd_header_byte, fw_len);
+    if(status != Status::OK){
+        LOG(ERROR) << "Failed to send fw upgrade header";
+        return status;
+    }
 
     int packetsToSend;
     if ((fw_len % flashPageSize) != 0) {
@@ -1155,7 +1161,11 @@ aditof::Status CameraItof::updatePulsatrixFirmware(const std::string &filePath)
                 data_out[j-start] = 0x00;
             }
         }
-        pulsatrix_write_payload(data_out, flashPageSize);
+        status = m_depthSensor->pulsatrix_write_payload(data_out, flashPageSize);
+        if(status != Status::OK){
+            LOG(ERROR) << "Failed to send packet " << i << " out of " << packetsToSend << " packets!";
+            return status;
+        }
     }
 
     return aditof::Status::OK;
