@@ -95,10 +95,14 @@ ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
     struct stat info;
     char *folderName = "log";
     if (stat(folderName, &info) != 0) { // If no folder named log is found
-        if (_mkdir(
-                "log")) // Create local folder where all logs will be filed
-        {
+#ifdef _WIN32
+        if (_mkdir("log")) { // Create local folder where all logs will be filed
+#elif __linux__
+        if (mkdir("log",0777)) { // Create local folder where all logs will be filed
+#endif
             LOG(ERROR) << "Could not create folder " << folderName;
+        } else {
+            LOG(INFO) << "Log folder created with name: " << folderName;
         }
     }
     char wholeLogPath[30];
@@ -110,7 +114,11 @@ ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
     strftime(timebuff, sizeof(timebuff), "%Y%m%d_%H%M%S", timeinfo);
     // Concatenate the whole path
     strcpy(wholeLogPath, folderName);
+#ifdef _WIN32
     strcat(wholeLogPath, "\\");
+#elif __linux__
+    strcat(wholeLogPath, "/");
+#endif
     strcat(wholeLogPath, "log_");
     strcat(wholeLogPath, timebuff);
     strcat(wholeLogPath, ".txt");
