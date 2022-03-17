@@ -67,7 +67,7 @@ static const char kUsagePublic[] =
     R"(Data Collect.
     Usage:
       data_collect FILE
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--fsf <0|1>] [--wt <warmup>] [--ccb FILE] FILE
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--fsf <0|1>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] FILE
       data_collect (-h | --help) 
 
     Arguments:
@@ -75,13 +75,15 @@ static const char kUsagePublic[] =
 
     Options:
       -h --help          Show this screen.
-      --f <folder>       Input folder to save data to. Max folder name size is 512. [default: ./]
-      --n <ncapture>     Number of frames to capture. [default: 1]
+      --f <folder>       Output folder (max name 512) [default: ./]
+      --n <ncapture>     Capture frame num. [default: 1]
       --m <mode>         Mode to capture data in. [default: 10]
       --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
       --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
-      --wt <warmup>      Warmup Time (in seconds) before data capture [default: 0]
+      --wt <warmup>      Warmup Time (sec) [default: 0]
       --ccb <FILE>       The path to store CCB content
+      --ip <ip>          Camera IP  
+      --fw <firmware>    Pulsatrix fw file
 
     Valid mode (--m) options are:
         0: QMpixel short range (512x512)
@@ -95,7 +97,7 @@ static const char kUsageInternal[] =
     R"(Data Collect.
     Usage:
       data_collect FILE
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--ft <frame_type>] [--fsf <0|1>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fps <setfps>] FILE
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--ft <frame_type>] [--fsf <0|1>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [--fps <setfps>] FILE
       data_collect (-h | --help) 
 
     Arguments:
@@ -111,7 +113,8 @@ static const char kUsageInternal[] =
       --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
       --wt <warmup>      Warmup Time (in seconds) before data capture [default: 0]
       --ccb <FILE>       The path to store CCB content      
-      --ip <ip>          Camera IP      
+      --ip <ip>          Camera IP
+      --fw <firmware>    Pulsatrix fw file      
       --fps <setfps>     Set target FPS value [range: 50 to 200] 
 )";
 
@@ -239,6 +242,7 @@ int main(int argc, char *argv[]) {
     uint32_t ext_frame_sync_en = 0;
     uint32_t warmup_time = 0;
     std::string ip;
+    std::string firmware;
     uint32_t setfps = 0;
     uint16_t fps_defaults[11] = {200, 105, 100, 200, 50, 50, 50, 105, 105, 50, 50};    
 
@@ -317,7 +321,16 @@ int main(int argc, char *argv[]) {
             LOG(ERROR) << "Invalid ip (--ip) from command line!";
             return 0;
         }
-    }    
+    }
+
+    // Parsing firmware
+    if (args["--fw"]) {
+        firmware = args["--fw"].asString();
+        if (firmware.empty()) {
+            LOG(ERROR) << "Invalid firmware (--fw) from command line!";
+            return 0;
+        }
+    }        
 
     //set FPS value
     if (args["--fps"]) {
@@ -379,6 +392,10 @@ int main(int argc, char *argv[]) {
         LOG(INFO) << "Ip address is: " << ip;
     }
 
+    if (!firmware.empty()) {
+        LOG(INFO) << "Firmware file is is: " << firmware;
+    }
+
     if (!ccbFilePath.empty()) {
         LOG(INFO) << "Path to store CCB content: " << ccbFilePath;
     }   
@@ -410,6 +427,14 @@ int main(int argc, char *argv[]) {
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
         return 0;
+    }
+
+    if(!firmware.empty()){
+        status = camera->setControl("updatePulsatrixFirmware", firmware);
+        if(status != Status::OK){
+            LOG(ERROR) << "Could not update the pulsatrix firmware";
+            return 0;
+        }
     }
 
     status = camera->setControl("powerUp", "call");
