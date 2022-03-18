@@ -1348,3 +1348,8 @@ aditof::Status Adsd3100Sensor::writeConfigBlock(const uint32_t offset){
 #endif
     return aditof::Status::OK;   
 }
+
+
+std::string Adsd3100Sensor::getDriverPath(){
+    return m_driverPath;
+}

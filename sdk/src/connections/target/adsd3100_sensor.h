@@ -31,8 +31,8 @@
  */
 
 #include "aditof/depth_sensor_interface.h"
-#include "connections/target/v4l_buffer_access_interface.h"
-#include "cameras/itof-camera/mode_info.h"
+#include "v4l_buffer_access_interface.h"
+#include "../../cameras/itof-camera/mode_info.h"
 #include <memory>
 
 class Adsd3100Sensor : public aditof::DepthSensorInterface,
@@ -84,7 +84,7 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
     enqueueInternalBuffer(struct v4l2_buffer &buf) override;
     virtual aditof::Status
     getDeviceFileDescriptor(int &fileDescriptor) override;
-
+    std::string getDriverPath();
     private:
         aditof::Status writeConfigBlock(const uint32_t offset);
         aditof::Status waitForBufferPrivate(struct VideoDev *dev = nullptr);
