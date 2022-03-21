@@ -65,6 +65,6 @@ For more details about the SDK check the links below:
 ---
 **Known issues**
 
-The sensor enumerator faces issues on Linux with kernel version 5.13, hence it does not set the name of the v4l device and it is not able to list as Analog Product. In older or newer kernel versions this issue is not present.
+On a PC where Linux kernel version 5.13 is installed, a USB connected camera cannot be detected. The v4l device name that we expect is not being set properly. However it works for older and newer versions. 
 
 ---
