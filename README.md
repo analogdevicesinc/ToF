@@ -61,3 +61,10 @@ For more details about the SDK check the links below:
 | scripts | Useful development scripts |
 | sdcard-images-utils | Things required to build a SD card image for targets |
 | sdk | SDK source code |
+
+---
+**NOTE**
+
+The sensor enumerator faces issues on Linux with kernel version 5.13, hence it does not set the name of the v4l device and it is not able to list as Analog Product. In older or newer kernel versions this issue is not present.
+
+---
