@@ -502,14 +502,14 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
     case PULSATRIX_READ_CMD: {
         uint16_t cmd = static_cast<uint16_t>(buff_recv.func_int32_param(0));
-        uint16_t *data = nullptr;
+        uint16_t data;
 
         aditof::Status status =
-            camDepthSensor->pulsatrix_read_cmd(cmd, data);
+            camDepthSensor->pulsatrix_read_cmd(cmd, &data);
         if (status == aditof::Status::OK) {
-            buff_send.add_int32_payload(static_cast<::google::int32>(*data));
+            buff_send.add_int32_payload(static_cast<::google::int32>(data));
         }
-        delete[] data;
+
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
@@ -745,11 +745,11 @@ void Initialize() {
     s_map_api_Values["GetFrame"] = GET_FRAME;
     s_map_api_Values["ReadRegisters"] = READ_REGISTERS;
     s_map_api_Values["WriteRegisters"] = WRITE_REGISTERS;
-    s_map_api_Values["pulsatrix_read_cmd"] = PULSATRIX_READ_CMD;
-    s_map_api_Values["pulsatrix_write_cmd"] = PULSATRIX_WRITE_CMD;
-    s_map_api_Values["pulsatrix_read_payload_cmd"] = PULSATRIX_READ_PAYLOAD_CMD;
-    s_map_api_Values["pulsatrix_write_payload_cmd"] = PULSATRIX_WRITE_PAYLOAD_CMD;
-    s_map_api_Values["pulsatrix_write_payload"] = PULSATRIX_WRITE_PAYLOAD;
+    s_map_api_Values["PulsatrixReadCmd"] = PULSATRIX_READ_CMD;
+    s_map_api_Values["PulsatrixWriteCmd"] = PULSATRIX_WRITE_CMD;
+    s_map_api_Values["PulsatrixReadPayloadCmd"] = PULSATRIX_READ_PAYLOAD_CMD;
+    s_map_api_Values["PulsatrixWritePayloadCmd"] = PULSATRIX_WRITE_PAYLOAD_CMD;
+    s_map_api_Values["PulsatrixWritePayload"] = PULSATRIX_WRITE_PAYLOAD;
     s_map_api_Values["StorageOpen"] = STORAGE_OPEN;
     s_map_api_Values["StorageRead"] = STORAGE_READ;
     s_map_api_Values["StorageWrite"] = STORAGE_WRITE;
