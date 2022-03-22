@@ -661,10 +661,10 @@ aditof::Status PulsatrixSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t
     Status status = Status::OK;
 
     //switch to burst mode
-    uint32_t cmd = 0x0019;
-    uint8_t payload[] = {0x00, 0x00};
+    uint32_t switchCmd = 0x0019;
+    uint16_t switchPayload = 0x0000;
 
-    status = pulsatrix_write_cmd(cmd, payload);
+    status = pulsatrix_write_cmd(switchCmd, switchPayload);
     if(status != Status::OK){
         LOG(INFO) << "Failed to switch to burst mode!";
         return status;
@@ -746,10 +746,10 @@ aditof::Status PulsatrixSensor::pulsatrix_write_payload_cmd(uint32_t cmd, uint8_
     Status status = Status::OK;
 
     //switch to burst mode
-    uint32_t cmd = 0x0019;
-    uint8_t payload[] = {0x00, 0x00};
+    uint32_t switchCmd = 0x0019;
+    uint16_t switchPayload = 0x0000;
 
-    status = pulsatrix_write_cmd(cmd, payload);
+    status = pulsatrix_write_cmd(switchCmd, switchPayload);
     if(status != Status::OK){
         LOG(INFO) << "Failed to switch to burst mode!";
     }
