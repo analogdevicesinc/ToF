@@ -47,7 +47,9 @@
 #include <iterator>
 #include <vector>
 #include <cstdint>
+#include <intrin.h>
 #include "pulsatrix/crc/include/compute_crc.h"
+#include <windows.h>
 
 
 CameraItof::CameraItof(
@@ -1063,7 +1065,7 @@ aditof::Status CameraItof::enableXYZframe(bool en) {
 
 /* CRC32 Polynomial to be used for CRC computation */
 #define ADI_ROM_CFG_CRC_POLYNOMIAL                      (0x04C11DB7u)
-
+#pragma pack(push,1)
 typedef union
 {
     uint8_t cmd_header_byte[16];
@@ -1076,7 +1078,7 @@ typedef union
         uint32_t crc_of_fw32;       // 4 bytes CRC of the Firmware Binary
     };
 } cmd_header_t;
-
+#pragma pack(pop)
 uint32_t nResidualCRC = ADI_ROM_CFG_CRC_SEED_VALUE;
 
 aditof::Status CameraItof::updatePulsatrixFirmware(const std::string &filePath)
@@ -1118,7 +1120,11 @@ aditof::Status CameraItof::updatePulsatrixFirmware(const std::string &filePath)
     fw_upgrade_header.chunk_size16 = 0x0100;    // 256=0x100
     fw_upgrade_header.cmd8 = 0x04;              // FW Upgrade CMD = 0x04
     fw_upgrade_header.total_size_fw32 = fw_len;
-    fw_upgrade_header.header_checksum32 = (0x0100 + 0x4 + fw_len);
+    fw_upgrade_header.header_checksum32 = 0x0000001C;
+    //for(int i = 1;i < 8;i ++){
+      //  fw_upgrade_header.header_checksum32 += fw_upgrade_header.cmd_header_byte[i];
+    //}
+    //fw_upgrade_header.header_checksum32 = (uint32_t)0x0100 + (uint32_t)0x4 + (uint32_t)fw_len;
 
     crc_parameters_t crc_params;
     crc_params.type = CRC_32bit;
@@ -1131,7 +1137,7 @@ aditof::Status CameraItof::updatePulsatrixFirmware(const std::string &filePath)
 
     fw_upgrade_header.crc_of_fw32 = nResidualCRC;
 
-    status = m_depthSensor->pulsatrix_write_payload(fw_upgrade_header.cmd_header_byte, fw_len);
+    status = m_depthSensor->pulsatrix_write_payload(fw_upgrade_header.cmd_header_byte, 16); //?????fw_len);
     if(status != Status::OK){
         LOG(ERROR) << "Failed to send fw upgrade header";
         return status;
@@ -1165,6 +1171,7 @@ aditof::Status CameraItof::updatePulsatrixFirmware(const std::string &filePath)
             LOG(ERROR) << "Failed to send packet number" << i << " out of " << packetsToSend << " packets!";
             return status;
         }
+       // Sleep(3);
     }
 
     //Commands to switch back to standard mode
