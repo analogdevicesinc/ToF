@@ -63,17 +63,17 @@ Based on the following scenarios you will be able to do the following:
 ### Download and build SDK only
 * Follow below steps to download the SDK, generate MS Visual Studio project and build it directly from command line
 ```console
-git clone https://github.com/analogdevicesinc/aditof-sdk-rework
-cd aditof-sdk-rework
+git clone https://github.com/analogdevicesinc/ToF
+cd ToF
 mkdir build
 cd build
-cmake -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk\deps\glog\build_0_3_5\local_path\glog;C:\projects\aditof-sdk\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\aditof-sdk\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=off ..
+cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_3_5\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=off ..
 cmake --build . --config Release
 ```
 
 * Or if you will be building the Depth Compute stubs the cmake command should be:
 ```console
-cmake -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk\deps\glog\build_0_3_5\local_path\glog;C:\projects\aditof-sdk\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\aditof-sdk\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=off -DUSE_DEPTH_COMPUTE_STUBS=on ..
+cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_3_5\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=off -DUSE_DEPTH_COMPUTE_STUBS=on ..
 ```
 
 ## Building the SDK with examples
@@ -87,14 +87,14 @@ cmake -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk\deps\glog\build_0_3_5\local_pa
 ### Build SDK with examples and in Visual Studio
 - Generate the VisualStudio solution
 ```console
-cd aditof-sdk-rework
+cd ToF
 mkdir build
 cd build
-cmake -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk\deps\glog\build_0_3_5\local_path\glog;C:\projects\aditof-sdk\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\aditof-sdk\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=on ..
+cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_3_5\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=on ..
 ```
-- Open 'adi_tof_project.sln' generated in 'aditof-sdk-rework\build' in MS Visual Studio 2019
+- Open 'adi_tof_project.sln' generated in 'ToF\build' in MS Visual Studio 2019
 - Select 'Release' build
-- Application binaries are created in 'aditof-sdk-rework\build\example\aditof-demo\Release' directory
+- Application binaries are created in 'ToF\build\example\aditof-demo\Release' directory
 
 
 ## SDK with bindings
@@ -108,7 +108,7 @@ cmake -DCMAKE_PREFIX_PATH="C:\projects\aditof-sdk\deps\glog\build_0_3_5\local_pa
 * None
 
 ### Steps to build the SDK
-- Run the script located in: 'aditof-sdk-rework\scripts\windows' with the suitable configuration parameters. <br>
+- Run the script located in: 'ToF\scripts\windows' with the suitable configuration parameters. <br>
 The following example runs the script with generator **Visual Studio 16 2019** and configuration **Release**. The sdk will be built in folder: **current_script_path\build** and the dependencies will be installed in folder: **current_script_path\deps\installed**.
 Use parameter *-h* or *--help* for more information regarding the parameters. 
 ```

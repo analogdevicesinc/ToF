@@ -10,7 +10,7 @@ This ROS package facilitates DEPTH and IR data acquisition and processing for th
   - [ROS Install page](http://wiki.ros.org/ROS/Installation)
   - On target choose: [ROS Melodic Distro](http://wiki.ros.org/melodic/Installation/Ubuntu) and install the ROS-Base (Bare Bones) package
 **Install the ADI ToF SDK library**
-  - [Install SDK dependencies](https://github.com/analogdevicesinc/aditof-sdk-rework/blob/6c7fb376aeec73a21ab177adf297c5781bcbd544/doc/linux/build_instructions.md#installing-the-dependencies)
+  - [Install SDK dependencies](https://github.com/analogdevicesinc/ToF/blob/6c7fb376aeec73a21ab177adf297c5781bcbd544/doc/linux/build_instructions.md#installing-the-dependencies)
 
   1.2 Download the SDK from the repository \
   1.3 Copy the following files to the specific location after installing the ROS package:
@@ -26,8 +26,8 @@ This ROS package facilitates DEPTH and IR data acquisition and processing for th
   1.4 After this, build the SDK, as well as enable ROS package building 
 
 ```console
-git clone https://github.com/analogdevicesinc/aditof-sdk-rework
-cd aditof-sdk-rework
+git clone https://github.com/analogdevicesinc/ToF
+cd ToF
 mkdir build && cd build
 cmake -DNXP=1 -DWITH_ROS=1 -DUSE_ITOF=1 -DWITH_EXAMPLES=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" .. 
 sudo cmake --build . --target install

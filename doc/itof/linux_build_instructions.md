@@ -45,8 +45,8 @@ sudo cmake --build . --target install
 
 ### Download and build SDK only
 ```console
-git clone https://github.com/analogdevicesinc/aditof-sdk-rework
-cd aditof-sdk-rework
+git clone https://github.com/analogdevicesinc/ToF
+cd ToF
 mkdir build && cd build
 cmake -DUSE_ITOF=1 -DWITH_EXAMPLES=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
 make
@@ -66,7 +66,7 @@ sudo apt install libopencv-dev
 
 ### Build SDK with examples
 ```console
-cd aditof-sdk-rework
+cd ToF
 mkdir build && cd build
 cmake -DUSE_ITOF=1 -DWITH_EXAMPLES=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
 make
