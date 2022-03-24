@@ -4,11 +4,11 @@
 This folder contains helper cmake.in files for the project and also config files for other cmake projects to use in order to find the SDK.
 
 #### Using the CMake build system
-In order to build the SDK with cmake, we first need to have all the dependencies installed: glog, protobuf, libwebsockets ( [Check instructions for your system](https://github.com/analogdevicesinc/aditof-sdk-rework/tree/master/doc) ).
+In order to build the SDK with cmake, we first need to have all the dependencies installed: glog, protobuf, libwebsockets ( [Check instructions for your system](https://github.com/analogdevicesinc/ToF/tree/master/doc) ).
 
 After creating a build folder and moving into it `mkdir -p build && cd build`, we can run cmake.
 
-`cmake -D<option> <path_to_aditof-sdk-rework>`
+`cmake -D<option> <path_to_ToF>`
 
 which will generate all the necessary recipes for building and installing. Useful cmake options are:
 
@@ -42,7 +42,7 @@ Where `<config>` is the build type: `Debug, Release ...` and target is one of th
 
 Example: Consider a user that has the dependencies for the project installed in specific folders in `/opt`: `/opt/glog`, `/opt/protobuf`, `/opt/websockets`, and that wants to install the SDK in `/opt/aditof`, with examples on and all the possible bindings enabled. The following set of commands will do:
 ```
-cd aditof-sdk-rework
+cd ToF
 mkdir build && cd build
 cmake -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" -DCMAKE_INSTALL_PREFIX="/opt/aditof" ..
 sudo cmake --build . --target install
