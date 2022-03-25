@@ -35,13 +35,13 @@
 #include "connections/target/v4l_buffer_access_interface.h"
 #include <memory>
 
-class PulsatrixSensor : public aditof::DepthSensorInterface,
+class Adsd3500Sensor : public aditof::DepthSensorInterface,
                         public aditof::V4lBufferAccessInterface {
   public:
-    PulsatrixSensor(const std::string &driverPath,
+    Adsd3500Sensor(const std::string &driverPath,
                     const std::string &driverSubPath,
                     const std::string &captureDev);
-    ~PulsatrixSensor();
+    ~Adsd3500Sensor();
 
   public:
     virtual aditof::Status open() override;
@@ -65,11 +65,11 @@ class PulsatrixSensor : public aditof::DepthSensorInterface,
     virtual aditof::Status getHandle(void **handle) override;
     virtual aditof::Status getName(std::string &name) const override;
 
-    virtual aditof::Status pulsatrix_read_cmd(uint16_t cmd, uint16_t *data) override;
-    virtual aditof::Status pulsatrix_write_cmd(uint16_t cmd, uint16_t data) override;
-    virtual aditof::Status pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) override;
-    virtual aditof::Status pulsatrix_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) override;
-    virtual aditof::Status pulsatrix_write_payload(uint8_t* payload, uint16_t payload_len) override;
+    virtual aditof::Status adsd3500_read_cmd(uint16_t cmd, uint16_t *data) override;
+    virtual aditof::Status adsd3500_write_cmd(uint16_t cmd, uint16_t data) override;
+    virtual aditof::Status adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) override;
+    virtual aditof::Status adsd3500_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) override;
+    virtual aditof::Status adsd3500_write_payload(uint8_t* payload, uint16_t payload_len) override;
 
   public: // implements V4lBufferAccessInterface
     // Methods that give a finer control than getFrame()
