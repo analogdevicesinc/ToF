@@ -615,7 +615,7 @@ aditof::Status Adsd3500Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data){
         return Status::GENERIC_ERROR;
     }
 
-    *data = (uint16_t)(extCtrl.p_u8[3]) << 8) + (uint16_t)(extCtrl.p_u8[4]);
+    *data = (uint16_t)(extCtrl.p_u8[3] << 8) + (uint16_t)(extCtrl.p_u8[4]);
 
     return status;
 }
