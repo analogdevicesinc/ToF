@@ -512,7 +512,7 @@ aditof::Status NetworkDepthSensor::getName(std::string &name) const {
     return aditof::Status::OK;
 }
 
-aditof::Status NetworkDepthSensor::pulsatrix_read_cmd(uint16_t cmd, uint16_t *data){
+aditof::Status NetworkDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data){
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -523,7 +523,7 @@ aditof::Status NetworkDepthSensor::pulsatrix_read_cmd(uint16_t cmd, uint16_t *da
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("PulsatrixReadCmd");
+    net->send_buff.set_func_name("Adsd3500ReadCmd");
     net->send_buff.add_func_int32_param(static_cast<::google::int32>(cmd));
     net->send_buff.set_expect_reply(true);
 
@@ -552,7 +552,7 @@ aditof::Status NetworkDepthSensor::pulsatrix_read_cmd(uint16_t cmd, uint16_t *da
     return status;
 }
 
-aditof::Status NetworkDepthSensor::pulsatrix_write_cmd(uint16_t cmd, uint16_t data) {
+aditof::Status NetworkDepthSensor::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -563,7 +563,7 @@ aditof::Status NetworkDepthSensor::pulsatrix_write_cmd(uint16_t cmd, uint16_t da
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("PulsatrixWriteCmd");
+    net->send_buff.set_func_name("Adsd3500WriteCmd");
     net->send_buff.add_func_int32_param(static_cast<::google::int32>(cmd));
     net->send_buff.add_func_int32_param(static_cast<::google::int32>(data));
     net->send_buff.set_expect_reply(true);
@@ -589,7 +589,7 @@ aditof::Status NetworkDepthSensor::pulsatrix_write_cmd(uint16_t cmd, uint16_t da
     return status;
 }
 
-aditof::Status NetworkDepthSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) {
+aditof::Status NetworkDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -600,7 +600,7 @@ aditof::Status NetworkDepthSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("PulsatrixReadPayloadCmd");
+    net->send_buff.set_func_name("Adsd3500ReadPayloadCmd");
     net->send_buff.add_func_int32_param(static_cast<::google::int32>(cmd));
     net->send_buff.add_func_int32_param(static_cast<::google::int32>(payload_len));
     net->send_buff.set_expect_reply(true);
@@ -630,7 +630,7 @@ aditof::Status NetworkDepthSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint
     return status;
 }
 
-aditof::Status NetworkDepthSensor::pulsatrix_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
+aditof::Status NetworkDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -641,7 +641,7 @@ aditof::Status NetworkDepthSensor::pulsatrix_write_payload_cmd(uint32_t cmd, uin
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("PulsatrixWritePayloadCmd");
+    net->send_buff.set_func_name("Adsd3500WritePayloadCmd");
     net->send_buff.add_func_int32_param(static_cast<::google::int32>(cmd));
     net->send_buff.add_func_int32_param(static_cast<::google::int32>(payload_len));
     net->send_buff.add_func_bytes_param(payload, payload_len);
@@ -668,7 +668,7 @@ aditof::Status NetworkDepthSensor::pulsatrix_write_payload_cmd(uint32_t cmd, uin
     return status;
 }
 
-aditof::Status NetworkDepthSensor::pulsatrix_write_payload(uint8_t* payload, uint16_t payload_len) {
+aditof::Status NetworkDepthSensor::adsd3500_write_payload(uint8_t* payload, uint16_t payload_len) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -679,7 +679,7 @@ aditof::Status NetworkDepthSensor::pulsatrix_write_payload(uint8_t* payload, uin
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("PulsatrixWritePayload");
+    net->send_buff.set_func_name("Adsd3500WritePayload");
     net->send_buff.add_func_int32_param(static_cast<::google::int32>(payload_len));
     net->send_buff.add_func_bytes_param(payload, payload_len);
     net->send_buff.set_expect_reply(true);

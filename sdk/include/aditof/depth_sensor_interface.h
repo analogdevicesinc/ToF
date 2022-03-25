@@ -133,49 +133,49 @@ class DepthSensorInterface {
                                              size_t length, bool burst = true) = 0;
 
     /**
-     * @brief Send a read command to pulsatrix.
+     * @brief Send a read command to adsd3500.
      * @param cmd - the command to be sent
      * @param[out] data - the variable where the read data will be stored
      * @return Status
      */
-    virtual aditof::Status pulsatrix_read_cmd(uint16_t cmd, uint16_t *data) = 0;
+    virtual aditof::Status adsd3500_read_cmd(uint16_t cmd, uint16_t *data) = 0;
 
     /**
-     * @brief Send a write command to pulsatrix.
+     * @brief Send a write command to adsd3500.
      * @param cmd - the command to be sent
      * @param data - the data to be written
      * @return Status
      */
-    virtual aditof::Status pulsatrix_write_cmd(uint16_t cmd, uint16_t data) = 0;
+    virtual aditof::Status adsd3500_write_cmd(uint16_t cmd, uint16_t data) = 0;
 
     /**
-     * @brief Send a read command to pulsatrix. This will perform a burst read making it
+     * @brief Send a read command to adsd3500. This will perform a burst read making it
      *        useful for reading chunks of data.
      * @param cmd - the command to be sent
      * @param[out] readback_data - the location where the read data chunk will be stored
      * @param payload_len - the number of bytes to read
      * @return Status
      */
-    virtual aditof::Status pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) = 0;
+    virtual aditof::Status adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) = 0;
 
     /**
-     * @brief Send a write command to pulsatrix. This will perform a burst write making it
+     * @brief Send a write command to adsd3500. This will perform a burst write making it
      *        useful for writing chunks of data.
      * @param cmd - the command to be sent
      * @param payload - the location from where to take the data chunk and write it
      * @param payload_len - the number of bytes to write
      * @return Status
      */
-    virtual aditof::Status pulsatrix_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) = 0;
+    virtual aditof::Status adsd3500_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) = 0;
 
     /**
-     * @brief Send a chunk of data (payload) to pulsatrix. This will perform a burst write making it
+     * @brief Send a chunk of data (payload) to adsd3500. This will perform a burst write making it
      *        useful for writing chunks of data.
      * @param payload - the location from where to take the data chunk and write it
      * @param payload_len - the number of bytes to write
      * @return Status
      */
-    virtual aditof::Status pulsatrix_write_payload(uint8_t* payload, uint16_t payload_len) = 0;
+    virtual aditof::Status adsd3500_write_payload(uint8_t* payload, uint16_t payload_len) = 0;
 
     /**
      * @brief Get a structure that contains information about the instance of

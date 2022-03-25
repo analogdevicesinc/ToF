@@ -811,14 +811,14 @@ aditof::Status UsbDepthSensor::getName(std::string &name) const {
     return aditof::Status::OK;
 }
 
-aditof::Status UsbDepthSensor::pulsatrix_read_cmd(uint16_t cmd, uint16_t *data){
+aditof::Status UsbDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data){
     using namespace aditof;
 
     Status status = Status::OK;
 
     // Construct request message
     usb_payload::ClientRequest requestMsg;
-    requestMsg.set_func_name(usb_payload::FunctionName::PULSATRIX_READ_CMD);
+    requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_READ_CMD);
     requestMsg.add_func_int32_param(static_cast<::google::int32>(cmd));
 
     // Send request
@@ -855,14 +855,14 @@ aditof::Status UsbDepthSensor::pulsatrix_read_cmd(uint16_t cmd, uint16_t *data){
     return Status::OK;
 }
 
-aditof::Status UsbDepthSensor::pulsatrix_write_cmd(uint16_t cmd, uint16_t data) {
+aditof::Status UsbDepthSensor::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
     using namespace aditof;
 
     Status status = Status::OK;
 
     // Construct request message
     usb_payload::ClientRequest requestMsg;
-    requestMsg.set_func_name(usb_payload::FunctionName::PULSATRIX_WRITE_CMD);
+    requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_WRITE_CMD);
     requestMsg.add_func_int32_param(static_cast<::google::int32>(cmd));
     requestMsg.add_func_int32_param(static_cast<::google::int32>(data));
 
@@ -897,14 +897,14 @@ aditof::Status UsbDepthSensor::pulsatrix_write_cmd(uint16_t cmd, uint16_t data) 
     return Status::OK;
 }
 
-aditof::Status UsbDepthSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) {
+aditof::Status UsbDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) {
         using namespace aditof;
 
     Status status = Status::OK;
 
     // Construct request message
     usb_payload::ClientRequest requestMsg;
-    requestMsg.set_func_name(usb_payload::FunctionName::PULSATRIX_READ_PAYLOAD_CMD);
+    requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_READ_PAYLOAD_CMD);
     requestMsg.add_func_int32_param(static_cast<::google::int32>(cmd));
     requestMsg.add_func_int32_param(static_cast<::google::int32>(payload_len));
 
@@ -942,14 +942,14 @@ aditof::Status UsbDepthSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t*
     return Status::OK;
 }
 
-aditof::Status UsbDepthSensor::pulsatrix_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
+aditof::Status UsbDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
     using namespace aditof;
 
     Status status = Status::OK;
 
     // Construct request message
     usb_payload::ClientRequest requestMsg;
-    requestMsg.set_func_name(usb_payload::FunctionName::PULSATRIX_WRITE_PAYLOAD_CMD);
+    requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_WRITE_PAYLOAD_CMD);
     requestMsg.add_func_int32_param(static_cast<::google::int32>(cmd));
     requestMsg.add_func_int32_param(static_cast<::google::int32>(payload_len));
     requestMsg.add_func_bytes_param(payload, payload_len);
@@ -985,14 +985,14 @@ aditof::Status UsbDepthSensor::pulsatrix_write_payload_cmd(uint32_t cmd, uint8_t
     return Status::OK;
 }
 
-aditof::Status UsbDepthSensor::pulsatrix_write_payload(uint8_t* payload, uint16_t payload_len) {
+aditof::Status UsbDepthSensor::adsd3500_write_payload(uint8_t* payload, uint16_t payload_len) {
     using namespace aditof;
 
     Status status = Status::OK;
 
     // Construct request message
     usb_payload::ClientRequest requestMsg;
-    requestMsg.set_func_name(usb_payload::FunctionName::PULSATRIX_WRITE_PAYLOAD_CMD);
+    requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_WRITE_PAYLOAD_CMD);
     requestMsg.add_func_int32_param(static_cast<::google::int32>(payload_len));
     requestMsg.add_func_bytes_param(payload, payload_len);
 
