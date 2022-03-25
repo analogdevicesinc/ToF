@@ -500,12 +500,12 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
-    case PULSATRIX_READ_CMD: {
+    case ADSD3500_READ_CMD: {
         uint16_t cmd = static_cast<uint16_t>(buff_recv.func_int32_param(0));
         uint16_t data;
 
         aditof::Status status =
-            camDepthSensor->pulsatrix_read_cmd(cmd, &data);
+            camDepthSensor->adsd3500_read_cmd(cmd, &data);
         if (status == aditof::Status::OK) {
             buff_send.add_int32_payload(static_cast<::google::int32>(data));
         }
@@ -514,23 +514,23 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
-    case PULSATRIX_WRITE_CMD: {
+    case ADSD3500_WRITE_CMD: {
         uint16_t cmd = static_cast<uint16_t>(buff_recv.func_int32_param(0));
         uint16_t data = static_cast<uint16_t>(buff_recv.func_int32_param(1));
 
         aditof::Status status =
-            camDepthSensor->pulsatrix_write_cmd(cmd, data);
+            camDepthSensor->adsd3500_write_cmd(cmd, data);
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
 
-    case PULSATRIX_READ_PAYLOAD_CMD: {
+    case ADSD3500_READ_PAYLOAD_CMD: {
         uint32_t cmd = static_cast<uint32_t>(buff_recv.func_int32_param(0));
         uint16_t payload_len = static_cast<uint16_t>(buff_recv.func_int32_param(1));
         uint8_t *data = new uint8_t[payload_len];
 
         aditof::Status status =
-            camDepthSensor->pulsatrix_read_payload_cmd(cmd, data, payload_len);
+            camDepthSensor->adsd3500_read_payload_cmd(cmd, data, payload_len);
         if (status == aditof::Status::OK) {
             buff_send.add_bytes_payload(data, payload_len);
         }
@@ -540,27 +540,27 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
-    case PULSATRIX_WRITE_PAYLOAD_CMD: {
+    case ADSD3500_WRITE_PAYLOAD_CMD: {
         uint32_t cmd = static_cast<uint32_t>(buff_recv.func_int32_param(0));
         uint16_t payload_len = static_cast<uint16_t>(buff_recv.func_int32_param(1));
         uint8_t *data = new uint8_t[payload_len];
 
         memcpy(data, buff_recv.func_bytes_param(0).c_str(), payload_len);
         aditof::Status status =
-            camDepthSensor->pulsatrix_write_payload_cmd(cmd, data, payload_len);
+            camDepthSensor->adsd3500_write_payload_cmd(cmd, data, payload_len);
 
         delete[] data;
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
 
-    case PULSATRIX_WRITE_PAYLOAD: {
+    case ADSD3500_WRITE_PAYLOAD: {
         uint16_t payload_len = static_cast<uint16_t>(buff_recv.func_int32_param(0));
         uint8_t *data = new uint8_t[payload_len];
 
         memcpy(data, buff_recv.func_bytes_param(0).c_str(), payload_len);
         aditof::Status status =
-            camDepthSensor->pulsatrix_write_payload(data, payload_len);
+            camDepthSensor->adsd3500_write_payload(data, payload_len);
 
         delete[] data;
         buff_send.set_status(static_cast<::payload::Status>(status));
@@ -745,11 +745,11 @@ void Initialize() {
     s_map_api_Values["GetFrame"] = GET_FRAME;
     s_map_api_Values["ReadRegisters"] = READ_REGISTERS;
     s_map_api_Values["WriteRegisters"] = WRITE_REGISTERS;
-    s_map_api_Values["PulsatrixReadCmd"] = PULSATRIX_READ_CMD;
-    s_map_api_Values["PulsatrixWriteCmd"] = PULSATRIX_WRITE_CMD;
-    s_map_api_Values["PulsatrixReadPayloadCmd"] = PULSATRIX_READ_PAYLOAD_CMD;
-    s_map_api_Values["PulsatrixWritePayloadCmd"] = PULSATRIX_WRITE_PAYLOAD_CMD;
-    s_map_api_Values["PulsatrixWritePayload"] = PULSATRIX_WRITE_PAYLOAD;
+    s_map_api_Values["Adsd3500ReadCmd"] = ADSD3500_READ_CMD;
+    s_map_api_Values["Adsd3500WriteCmd"] = ADSD3500_WRITE_CMD;
+    s_map_api_Values["Adsd3500ReadPayloadCmd"] = ADSD3500_READ_PAYLOAD_CMD;
+    s_map_api_Values["Adsd3500WritePayloadCmd"] = ADSD3500_WRITE_PAYLOAD_CMD;
+    s_map_api_Values["Adsd3500WritePayload"] = ADSD3500_WRITE_PAYLOAD;
     s_map_api_Values["StorageOpen"] = STORAGE_OPEN;
     s_map_api_Values["StorageRead"] = STORAGE_READ;
     s_map_api_Values["StorageWrite"] = STORAGE_WRITE;

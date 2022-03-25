@@ -4,7 +4,7 @@
 /* This software is proprietary to Analog Devices, Inc. and its licensors.      */
 /*                                                                              */
 /********************************************************************************/
-#include "pulsatrix_sensor.h"
+#include "adsd3500_sensor.h"
 #include "aditof/frame_operations.h"
 #include "utils.h"
 
@@ -32,7 +32,7 @@
 #define V4L2_CID_AD_DEV_CHIP_CONFIG (0x9819e1)
 #define CTRL_PACKET_SIZE 65537
 #define CTRL_SET_MODE (0x9819e0)
-#define PULSATRIX_CTRL_PACKET_SIZE 4115
+#define ADSD3500_CTRL_PACKET_SIZE 4115
 // Can be moved to target_definitions in "camera"/"platform"
 #define TEMP_SENSOR_DEV_PATH "/dev/i2c-1"
 #define LASER_TEMP_SENSOR_I2C_ADDR 0x49
@@ -77,7 +77,7 @@ struct VideoDev {
         : fd(-1), sfd(-1), videoBuffers(nullptr), nVideoBuffers(0),
           started(false) {}
 };
-struct PulsatrixSensor::ImplData {
+struct Adsd3500Sensor::ImplData {
     uint8_t numVideoDevs;
     struct VideoDev *videoDevs;
     aditof::DepthSensorFrameType frameType;
@@ -96,15 +96,15 @@ static int xioctl(int fh, unsigned int request, void *arg) {
     return r;
 }
 
-PulsatrixSensor::PulsatrixSensor(const std::string &driverPath,
+Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
                                  const std::string &driverSubPath,
                                  const std::string &captureDev)
     : m_driverPath(driverPath), m_driverSubPath(driverSubPath),
-      m_captureDev(captureDev), m_implData(new PulsatrixSensor::ImplData) {
-          m_sensorName = "pulsatrix";
+      m_captureDev(captureDev), m_implData(new Adsd3500Sensor::ImplData) {
+          m_sensorName = "adsd3500";
       }
 
-PulsatrixSensor::~PulsatrixSensor() {
+Adsd3500Sensor::~Adsd3500Sensor() {
     struct VideoDev *dev;
 
     for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
@@ -139,7 +139,7 @@ PulsatrixSensor::~PulsatrixSensor() {
     }
 }
 
-aditof::Status PulsatrixSensor::open() { 
+aditof::Status Adsd3500Sensor::open() { 
     using namespace aditof;
     Status status = Status::OK;
 
@@ -248,7 +248,7 @@ aditof::Status PulsatrixSensor::open() {
     return status;
  }
 
-aditof::Status PulsatrixSensor::start() { 
+aditof::Status Adsd3500Sensor::start() { 
     using namespace aditof;
     Status status = Status::OK;
     struct VideoDev *dev;
@@ -290,7 +290,7 @@ aditof::Status PulsatrixSensor::start() {
     return status;
  }
 
-aditof::Status PulsatrixSensor::stop() { 
+aditof::Status Adsd3500Sensor::stop() { 
     using namespace aditof;
     Status status = Status::OK;
     struct VideoDev *dev;
@@ -315,7 +315,7 @@ aditof::Status PulsatrixSensor::stop() {
     return status;
  }
 
-aditof::Status PulsatrixSensor::getAvailableFrameTypes(
+aditof::Status Adsd3500Sensor::getAvailableFrameTypes(
     std::vector<aditof::DepthSensorFrameType> &types) {
 
     types =
@@ -323,7 +323,7 @@ aditof::Status PulsatrixSensor::getAvailableFrameTypes(
     return aditof::Status::OK;
 }
 
-aditof::Status PulsatrixSensor::setModeByIndex(uint8_t modeIndex) {
+aditof::Status Adsd3500Sensor::setModeByIndex(uint8_t modeIndex) {
     using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
     Status status = Status::OK;
@@ -344,7 +344,7 @@ aditof::Status PulsatrixSensor::setModeByIndex(uint8_t modeIndex) {
     return status;
 }
 
-aditof::Status PulsatrixSensor::setMode(const std::string &mode) {
+aditof::Status Adsd3500Sensor::setMode(const std::string &mode) {
     uint8_t modeIndex;
     aditof::Status status = aditof::Status::OK;
     LOG(INFO) << "Setting camera mode to " << mode;
@@ -363,7 +363,7 @@ aditof::Status PulsatrixSensor::setMode(const std::string &mode) {
 }
 
 aditof::Status
-PulsatrixSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
+Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
     using namespace aditof;
     Status status = Status::OK;
@@ -496,12 +496,12 @@ PulsatrixSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     return status;
 }
 
-aditof::Status PulsatrixSensor::program(const uint8_t *firmware, size_t size) {
+aditof::Status Adsd3500Sensor::program(const uint8_t *firmware, size_t size) {
 
     return aditof::Status::OK;
 }
 
-aditof::Status PulsatrixSensor::getFrame(uint16_t *buffer) {
+aditof::Status Adsd3500Sensor::getFrame(uint16_t *buffer) {
 
     using namespace aditof;
     struct v4l2_buffer buf[MAX_SUBFRAMES_COUNT];
@@ -538,14 +538,14 @@ aditof::Status PulsatrixSensor::getFrame(uint16_t *buffer) {
     return status;
 }
 
-aditof::Status PulsatrixSensor::readRegisters(const uint16_t *address,
+aditof::Status Adsd3500Sensor::readRegisters(const uint16_t *address,
                                               uint16_t *data, size_t length,
                                               bool burst /*= true*/) {
 
     return aditof::Status::OK;
 }
 
-aditof::Status PulsatrixSensor::writeRegisters(const uint16_t *address,
+aditof::Status Adsd3500Sensor::writeRegisters(const uint16_t *address,
                                                const uint16_t *data,
                                                size_t length,
                                                bool burst /*= true*/) {
@@ -553,32 +553,32 @@ aditof::Status PulsatrixSensor::writeRegisters(const uint16_t *address,
 }
 
 aditof::Status
-PulsatrixSensor::getDetails(aditof::SensorDetails &details) const {
+Adsd3500Sensor::getDetails(aditof::SensorDetails &details) const {
 
     return aditof::Status::OK;
 }
 
-aditof::Status PulsatrixSensor::getHandle(void **handle) {
+aditof::Status Adsd3500Sensor::getHandle(void **handle) {
 
     return aditof::Status::OK;
 }
 
-aditof::Status PulsatrixSensor::getName(std::string &name) const {
+aditof::Status Adsd3500Sensor::getName(std::string &name) const {
     name = m_sensorName;
     
     return aditof::Status::OK;
 }
 
-aditof::Status PulsatrixSensor::pulsatrix_read_cmd(uint16_t cmd, uint16_t *data){
+aditof::Status Adsd3500Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data){
     using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
     Status status = Status::OK;
 
     static struct v4l2_ext_control extCtrl;
     static struct v4l2_ext_controls extCtrls;
-    static uint8_t buf[PULSATRIX_CTRL_PACKET_SIZE];
+    static uint8_t buf[ADSD3500_CTRL_PACKET_SIZE];
 
-    extCtrl.size = PULSATRIX_CTRL_PACKET_SIZE;
+    extCtrl.size = ADSD3500_CTRL_PACKET_SIZE;
     extCtrl.id = V4L2_CID_AD_DEV_CHIP_CONFIG;
     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
     extCtrls.controls = &extCtrl;
@@ -592,7 +592,7 @@ aditof::Status PulsatrixSensor::pulsatrix_read_cmd(uint16_t cmd, uint16_t *data)
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Pulsatrix error "
+        LOG(WARNING) << "Reading Adsd3500 error "
                          << "errno: " << errno << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
         }
@@ -604,13 +604,13 @@ aditof::Status PulsatrixSensor::pulsatrix_read_cmd(uint16_t cmd, uint16_t *data)
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1){ 
-        LOG(WARNING) << "Reading Pulsatrix error "
+        LOG(WARNING) << "Reading Adsd3500 error "
                          << "errno: " << errno << " error: " << strerror(errno);
         return Status::GENERIC_ERROR;
     }
 
     if (xioctl(dev->sfd, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1){ 
-        LOG(WARNING) << "Reading Pulsatrix error "
+        LOG(WARNING) << "Reading Adsd3500 error "
                          << "errno: " << errno << " error: " << strerror(errno);
         return Status::GENERIC_ERROR;
     }
@@ -620,16 +620,16 @@ aditof::Status PulsatrixSensor::pulsatrix_read_cmd(uint16_t cmd, uint16_t *data)
     return status;
 }
 
-aditof::Status PulsatrixSensor::pulsatrix_write_cmd(uint16_t cmd, uint16_t data) {
+aditof::Status Adsd3500Sensor::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
         using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
     Status status = Status::OK;
 
     static struct v4l2_ext_control extCtrl;
     static struct v4l2_ext_controls extCtrls;
-    static uint8_t buf[PULSATRIX_CTRL_PACKET_SIZE];
+    static uint8_t buf[ADSD3500_CTRL_PACKET_SIZE];
 
-    extCtrl.size = PULSATRIX_CTRL_PACKET_SIZE;
+    extCtrl.size = ADSD3500_CTRL_PACKET_SIZE;
     extCtrl.id = V4L2_CID_AD_DEV_CHIP_CONFIG;
     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
     extCtrls.controls = &extCtrl;
@@ -645,7 +645,7 @@ aditof::Status PulsatrixSensor::pulsatrix_write_cmd(uint16_t cmd, uint16_t data)
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Pulsatrix error "
+        LOG(WARNING) << "Reading Adsd3500 error "
                          << "errno: " << errno << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
         }
@@ -654,7 +654,7 @@ aditof::Status PulsatrixSensor::pulsatrix_write_cmd(uint16_t cmd, uint16_t data)
 
 // TO DO: Verify mechanism for read/write burst
 
-aditof::Status PulsatrixSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) {
+aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) {
     using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
     Status status = Status::OK;
@@ -663,7 +663,7 @@ aditof::Status PulsatrixSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t
     uint32_t switchCmd = 0x0019;
     uint16_t switchPayload = 0x0000;
 
-    status = pulsatrix_write_cmd(switchCmd, switchPayload);
+    status = adsd3500_write_cmd(switchCmd, switchPayload);
     if(status != Status::OK){
         LOG(INFO) << "Failed to switch to burst mode!";
         return status;
@@ -671,10 +671,10 @@ aditof::Status PulsatrixSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t
 
     static struct v4l2_ext_control extCtrl;
     static struct v4l2_ext_controls extCtrls;
-    static uint8_t buf[PULSATRIX_CTRL_PACKET_SIZE];
-    memset(buf, 0, PULSATRIX_CTRL_PACKET_SIZE * sizeof(uint8_t));
+    static uint8_t buf[ADSD3500_CTRL_PACKET_SIZE];
+    memset(buf, 0, ADSD3500_CTRL_PACKET_SIZE * sizeof(uint8_t));
 
-    extCtrl.size = PULSATRIX_CTRL_PACKET_SIZE;
+    extCtrl.size = ADSD3500_CTRL_PACKET_SIZE;
     extCtrl.id = V4L2_CID_AD_DEV_CHIP_CONFIG;
 
     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
@@ -692,7 +692,7 @@ aditof::Status PulsatrixSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Pulsatrix error "
+        LOG(WARNING) << "Reading Adsd3500 error "
                          << "errno: " << errno << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
         }
@@ -708,7 +708,7 @@ aditof::Status PulsatrixSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Pulsatrix error "
+        LOG(WARNING) << "Reading Adsd3500 error "
                          << "errno: " << errno << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
         }
@@ -731,7 +731,7 @@ aditof::Status PulsatrixSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t
     extCtrl.p_u8 = switchBuf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Switch Pulsatrix to standard mode error "
+        LOG(WARNING) << "Switch Adsd3500 to standard mode error "
                          << "errno: " << errno << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
         }
@@ -739,7 +739,7 @@ aditof::Status PulsatrixSensor::pulsatrix_read_payload_cmd(uint32_t cmd, uint8_t
     return status;
 }
 
-aditof::Status PulsatrixSensor::pulsatrix_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
+aditof::Status Adsd3500Sensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
     using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
     Status status = Status::OK;
@@ -748,16 +748,16 @@ aditof::Status PulsatrixSensor::pulsatrix_write_payload_cmd(uint32_t cmd, uint8_
     uint32_t switchCmd = 0x0019;
     uint16_t switchPayload = 0x0000;
 
-    status = pulsatrix_write_cmd(switchCmd, switchPayload);
+    status = adsd3500_write_cmd(switchCmd, switchPayload);
     if(status != Status::OK){
         LOG(INFO) << "Failed to switch to burst mode!";
     }
 
     static struct v4l2_ext_control extCtrl;
     static struct v4l2_ext_controls extCtrls;
-    static uint8_t buf[PULSATRIX_CTRL_PACKET_SIZE];
+    static uint8_t buf[ADSD3500_CTRL_PACKET_SIZE];
 
-    extCtrl.size = PULSATRIX_CTRL_PACKET_SIZE;
+    extCtrl.size = ADSD3500_CTRL_PACKET_SIZE;
     extCtrl.id = V4L2_CID_AD_DEV_CHIP_CONFIG;
     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
     extCtrls.controls = &extCtrl;
@@ -783,7 +783,7 @@ aditof::Status PulsatrixSensor::pulsatrix_write_payload_cmd(uint32_t cmd, uint8_
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Writing Pulsatrix error "
+        LOG(WARNING) << "Writing Adsd3500 error "
                          << "errno: " << errno << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
         }
@@ -799,7 +799,7 @@ aditof::Status PulsatrixSensor::pulsatrix_write_payload_cmd(uint32_t cmd, uint8_
     extCtrl.p_u8 = switchBuf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Switch Pulsatrix to standard mode error "
+        LOG(WARNING) << "Switch Adsd3500 to standard mode error "
                          << "errno: " << errno << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
         }
@@ -807,16 +807,16 @@ aditof::Status PulsatrixSensor::pulsatrix_write_payload_cmd(uint32_t cmd, uint8_
     return status;
 }
 
-aditof::Status PulsatrixSensor::pulsatrix_write_payload(uint8_t* payload, uint16_t payload_len) {
+aditof::Status Adsd3500Sensor::adsd3500_write_payload(uint8_t* payload, uint16_t payload_len) {
     using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
     Status status = Status::OK;
 
     static struct v4l2_ext_control extCtrl;
     static struct v4l2_ext_controls extCtrls;
-    static uint8_t buf[PULSATRIX_CTRL_PACKET_SIZE];
+    static uint8_t buf[ADSD3500_CTRL_PACKET_SIZE];
 
-    extCtrl.size = PULSATRIX_CTRL_PACKET_SIZE;
+    extCtrl.size = ADSD3500_CTRL_PACKET_SIZE;
     extCtrl.id = V4L2_CID_AD_DEV_CHIP_CONFIG;
     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
     extCtrls.controls = &extCtrl;
@@ -830,7 +830,7 @@ aditof::Status PulsatrixSensor::pulsatrix_write_payload(uint8_t* payload, uint16
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Pulsatrix error "
+        LOG(WARNING) << "Reading Adsd3500 error "
                          << "errno: " << errno << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
         }
@@ -838,7 +838,7 @@ aditof::Status PulsatrixSensor::pulsatrix_write_payload(uint8_t* payload, uint16
     return status;
 }
 
-aditof::Status PulsatrixSensor::waitForBufferPrivate(struct VideoDev *dev) {
+aditof::Status Adsd3500Sensor::waitForBufferPrivate(struct VideoDev *dev) {
     fd_set fds;
     struct timeval tv;
     int r;
@@ -866,7 +866,7 @@ aditof::Status PulsatrixSensor::waitForBufferPrivate(struct VideoDev *dev) {
 }
 
 aditof::Status
-PulsatrixSensor::dequeueInternalBufferPrivate(struct v4l2_buffer &buf,
+Adsd3500Sensor::dequeueInternalBufferPrivate(struct v4l2_buffer &buf,
                                               struct VideoDev *dev) {
     using namespace aditof;
     Status status = Status::OK;
@@ -900,7 +900,7 @@ PulsatrixSensor::dequeueInternalBufferPrivate(struct v4l2_buffer &buf,
     return status;
 }
 
-aditof::Status PulsatrixSensor::getInternalBufferPrivate(
+aditof::Status Adsd3500Sensor::getInternalBufferPrivate(
     uint8_t **buffer, uint32_t &buf_data_len, const struct v4l2_buffer &buf,
     struct VideoDev *dev) {
     if (dev == nullptr)
@@ -913,7 +913,7 @@ aditof::Status PulsatrixSensor::getInternalBufferPrivate(
 }
 
 aditof::Status
-PulsatrixSensor::enqueueInternalBufferPrivate(struct v4l2_buffer &buf,
+Adsd3500Sensor::enqueueInternalBufferPrivate(struct v4l2_buffer &buf,
                                               struct VideoDev *dev) {
                                                    if (dev == nullptr)
     dev = &m_implData->videoDevs[0];
@@ -927,7 +927,7 @@ PulsatrixSensor::enqueueInternalBufferPrivate(struct v4l2_buffer &buf,
     return aditof::Status::OK;
 }
 
-aditof::Status PulsatrixSensor::getDeviceFileDescriptor(int &fileDescriptor) {
+aditof::Status Adsd3500Sensor::getDeviceFileDescriptor(int &fileDescriptor) {
     using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
 
@@ -939,29 +939,29 @@ aditof::Status PulsatrixSensor::getDeviceFileDescriptor(int &fileDescriptor) {
     return Status::INVALID_ARGUMENT;
 }
 
-aditof::Status PulsatrixSensor::waitForBuffer() {
+aditof::Status Adsd3500Sensor::waitForBuffer() {
 
     return waitForBufferPrivate();
 }
 
-aditof::Status PulsatrixSensor::dequeueInternalBuffer(struct v4l2_buffer &buf) {
+aditof::Status Adsd3500Sensor::dequeueInternalBuffer(struct v4l2_buffer &buf) {
 
     return dequeueInternalBufferPrivate(buf);
 }
 
 aditof::Status
-PulsatrixSensor::getInternalBuffer(uint8_t **buffer, uint32_t &buf_data_len,
+Adsd3500Sensor::getInternalBuffer(uint8_t **buffer, uint32_t &buf_data_len,
                                    const struct v4l2_buffer &buf) {
 
     return getInternalBufferPrivate(buffer, buf_data_len, buf);
 }
 
-aditof::Status PulsatrixSensor::enqueueInternalBuffer(struct v4l2_buffer &buf) {
+aditof::Status Adsd3500Sensor::enqueueInternalBuffer(struct v4l2_buffer &buf) {
 
     return enqueueInternalBufferPrivate(buf);
 }
 
-aditof::Status PulsatrixSensor::writeConfigBlock(const uint32_t offset) {
+aditof::Status Adsd3500Sensor::writeConfigBlock(const uint32_t offset) {
 
     return aditof::Status::OK;
 }
