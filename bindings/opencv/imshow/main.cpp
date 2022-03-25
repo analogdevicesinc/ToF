@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
     aditof::FrameDataDetails frameDepthDetails;
     frame.getDataDetails("depth", frameDepthDetails);
 
-    //TO DO: hardcoded for now (pulsatrix qmp usecase)
+    //TO DO: hardcoded for now (adsd3500 qmp usecase)
     const int frameHeight = 512;
     //static_cast<int>(frameDepthDetails.height);
     const int frameWidth = 512;

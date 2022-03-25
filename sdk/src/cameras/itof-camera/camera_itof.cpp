@@ -48,7 +48,7 @@
 #include <vector>
 #include <cstdint>
 #include <intrin.h>
-#include "pulsatrix/crc/include/compute_crc.h"
+#include "adsd3500/crc/include/compute_crc.h"
 #include <windows.h>
 
 
@@ -58,7 +58,7 @@ CameraItof::CameraItof(
     std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &tSensors)
     : m_depthSensor(depthSensor), m_devStarted(false), m_eepromInitialized(false),
       m_modechange_framedrop_count(0), m_xyzEnabled(false), m_xyzSetViaControl(false), m_loadedConfigData(false), m_tempFiles{},
-      m_pulsatrixEnabled(false) {
+      m_adsd3500Enabled(false) {
     m_details.mode = "qmp";
     m_details.cameraId = "";
 
@@ -91,8 +91,8 @@ CameraItof::CameraItof(
 
     std::string sensorName;
     m_depthSensor->getName(sensorName);
-    if (sensorName == "pulsatrix") {
-        m_pulsatrixEnabled = true;
+    if (sensorName == "adsd3500") {
+        m_adsd3500Enabled = true;
     }
 
     // Look for EEPROM
@@ -104,7 +104,7 @@ CameraItof::CameraItof(
                         return name == m_eepromDeviceName;
                  });
     if (eeprom_iter == eeproms.end()) {
-        if(!m_pulsatrixEnabled){
+        if(!m_adsd3500Enabled){
             LOG(WARNING) << "Could not find " << m_eepromDeviceName
                          << " while looking for storage";
         }
@@ -114,8 +114,8 @@ CameraItof::CameraItof(
     }
 
     // Additional controls
-    if (m_pulsatrixEnabled) {
-        m_controls.emplace("updatePulsatrixFirmware", "");
+    if (m_adsd3500Enabled) {
+        m_controls.emplace("updateAdsd3500Firmware", "");
     }
 }
 
@@ -245,11 +245,11 @@ aditof::Status CameraItof::start() {
     using namespace aditof;
     Status status = Status::OK;
 
-    if (m_pulsatrixEnabled) {
+    if (m_adsd3500Enabled) {
         m_CameraProgrammed = true;
         status = m_depthSensor->start();
         if (Status::OK != status) {
-            LOG(ERROR) << "Error starting pulsatrix.";
+            LOG(ERROR) << "Error starting adsd3500.";
             return Status::GENERIC_ERROR;
         }
         return aditof::Status::OK;
@@ -354,7 +354,7 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
     // TO DO: m_details.frameType.cameraMode =
     m_details.frameType.width = ModeInfo::getInstance()->getModeInfo(frameType).width;
     m_details.frameType.height = ModeInfo::getInstance()->getModeInfo(frameType).height;
-    if(!m_pulsatrixEnabled){
+    if(!m_adsd3500Enabled){
         m_details.frameType.totalCaptures = ModeInfo::getInstance()->getModeInfo(frameType).subframes;
     } else {
         m_details.frameType.totalCaptures = 1;
@@ -379,7 +379,7 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
     }
 
-    if (m_controls["enableDepthCompute"] == "on" && ((m_details.frameType.totalCaptures > 1) || m_pulsatrixEnabled)){
+    if (m_controls["enableDepthCompute"] == "on" && ((m_details.frameType.totalCaptures > 1) || m_adsd3500Enabled)){
         status = initComputeLibrary();
         if (Status::OK != status) {
             LOG(ERROR) << "Initializing compute libraries failed.";
@@ -448,7 +448,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         frame->setDetails(m_details.frameType);
     }
 
-    if(!m_pulsatrixEnabled){
+    if(!m_adsd3500Enabled){
         frame->getAttribute("total_captures", totalCapturesStr);
         totalCaptures = std::atoi(totalCapturesStr.c_str());
     } else {
@@ -471,7 +471,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         LOG(WARNING) << "Failed to get frame from device";
     }
 
-    if(!m_pulsatrixEnabled){
+    if(!m_adsd3500Enabled){
         for (unsigned int i = 0; i < (m_details.frameType.height * m_details.frameType.width * totalCaptures); ++i) {
             frameDataLocation[i] = frameDataLocation[i] >> 4;
             frameDataLocation[i] = Convert11bitFloat2LinearVal(frameDataLocation[i]);
@@ -483,7 +483,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         return status;
     }
 
-    if((m_controls["enableDepthCompute"] == "on") && ((totalCaptures > 1) || m_pulsatrixEnabled)) {
+    if((m_controls["enableDepthCompute"] == "on") && ((totalCaptures > 1) || m_adsd3500Enabled)) {
  
         if (NULL == m_tofi_compute_context) {
             LOG(ERROR) << "Depth compute libray not initialized";
@@ -584,8 +584,8 @@ aditof::Status CameraItof::setControl(const std::string &control,
                 return enableXYZframe(false);
             else
                 return Status::INVALID_ARGUMENT;
-        } else if (control == "updatePulsatrixFirmware") {
-            return updatePulsatrixFirmware(value);
+        } else if (control == "updateAdsd3500Firmware") {
+            return updateAdsd3500Firmware(value);
         } else {
             m_controls[control] = value;
         }
@@ -637,7 +637,7 @@ aditof::Status CameraItof::initComputeLibrary(void) {
             memcpy(tempDataParser, m_depthINIData.p_data, m_depthINIData.size);
             ConfigFileData depth_ini = {tempDataParser, m_depthINIData.size};
 
-            if(m_pulsatrixEnabled){
+            if(m_adsd3500Enabled){
                 status = GetXYZ_DealiasData((ConfigFileData *)&m_calData, m_xyz_dealias_data);
                 if (status != ADI_TOFI_SUCCESS) {
                     LOG(ERROR) << "Failed to GetCalibrationData";
@@ -977,7 +977,7 @@ aditof::Status CameraItof::loadModuleData() {
         return status;
     }
 
-    if(m_pulsatrixEnabled) {
+    if(m_adsd3500Enabled) {
         return initialize();
     }
     
@@ -1081,23 +1081,23 @@ typedef union
 #pragma pack(pop)
 uint32_t nResidualCRC = ADI_ROM_CFG_CRC_SEED_VALUE;
 
-aditof::Status CameraItof::updatePulsatrixFirmware(const std::string &filePath)
+aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath)
 {
     using namespace aditof;
     Status status = Status::OK;
 
     // Read Chip ID in STANDARD mode
     uint16_t chip_id;
-    status = m_depthSensor->pulsatrix_read_cmd(0x0112, &chip_id);
+    status = m_depthSensor->adsd3500_read_cmd(0x0112, &chip_id);
     if(status != Status::OK) {
-        LOG(ERROR) << "Failed to read pulsatrix chip id!";
+        LOG(ERROR) << "Failed to read adsd3500 chip id!";
         return status;
     }
 
     LOG(INFO) << "The readback chip ID is: " << chip_id;
 
     // Switch to BURST mode.
-    status = m_depthSensor->pulsatrix_write_cmd(0x0019, 0x0000);
+    status = m_depthSensor->adsd3500_write_cmd(0x0019, 0x0000);
     if(status != Status::OK){
         LOG(ERROR) << "Failed to switch to burst mode!";
         return status;
@@ -1137,7 +1137,7 @@ aditof::Status CameraItof::updatePulsatrixFirmware(const std::string &filePath)
 
     fw_upgrade_header.crc_of_fw32 = nResidualCRC;
 
-    status = m_depthSensor->pulsatrix_write_payload(fw_upgrade_header.cmd_header_byte, 16);
+    status = m_depthSensor->adsd3500_write_payload(fw_upgrade_header.cmd_header_byte, 16);
     if(status != Status::OK){
         LOG(ERROR) << "Failed to send fw upgrade header";
         return status;
@@ -1166,7 +1166,7 @@ aditof::Status CameraItof::updatePulsatrixFirmware(const std::string &filePath)
                 data_out[j-start] = 0x00;
             }
         }
-        status = m_depthSensor->pulsatrix_write_payload(data_out, flashPageSize);
+        status = m_depthSensor->adsd3500_write_payload(data_out, flashPageSize);
         if(status != Status::OK){
             LOG(ERROR) << "Failed to send packet number " << i << " out of " << packetsToSend << " packets!";
             return status;
@@ -1180,13 +1180,13 @@ aditof::Status CameraItof::updatePulsatrixFirmware(const std::string &filePath)
     //Commands to switch back to standard mode
     uint8_t switchBuf[] = {0x01, 0x00, 0x10, 0xAD, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
                            0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    status = m_depthSensor->pulsatrix_write_payload(switchBuf, sizeof(switchBuf)/sizeof(switchBuf[0]));
+    status = m_depthSensor->adsd3500_write_payload(switchBuf, sizeof(switchBuf)/sizeof(switchBuf[0]));
     if(status != Status::OK){
-        LOG(ERROR) << "Failed to switch pulsatrix to standard mode!";
+        LOG(ERROR) << "Failed to switch adsd3500 to standard mode!";
         return status;
     }
     
-    LOG(INFO) << "Pulsatrix firmware updated succesfully!";
+    LOG(INFO) << "Adsd3500 firmware updated succesfully!";
 
     return aditof::Status::OK;
 }
