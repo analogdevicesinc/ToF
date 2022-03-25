@@ -54,7 +54,7 @@ class TargetSensorEnumerator : public aditof::SensorEnumeratorInterface {
   private:
     enum class SensorType {
         SENSOR_ADSD3100, //!< ADSD ITOF sensor
-        SENSOR_PULSATRIX  //!< PULSATRIX sensor
+        SENSOR_ADSD3500  //!< ADSD3500 sensor
     };
 
     enum class TempSensorType { NO_TYPE };

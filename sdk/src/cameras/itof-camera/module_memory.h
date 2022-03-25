@@ -60,9 +60,9 @@ typedef enum {
     CHUNK_TYPE_CAP_STRUCTURE_HEADER = 0x50, ///< Flash Capabilities Structure Header
     CHUNK_TYPE_DEBUG_INFO_HEADER = 0x51, ///< Debug/Diagnostic logging area header
     CHUNK_TYPE_INIT_FIRMWARE_HEADER = 0x52, ///< Init firmware (boot rom extension)
-    CHUNK_TYPE_PULSATRIX_FIRMWARE_FACTORY_HEADER = 0x53, ///< Pulsatrix firmware factory default header
-    CHUNK_TYPE_PULSATRIX_FIRMWARE_CURRENT_HEADER = 0x54, ///< Pulsatrix firmware current header
-    CHUNK_TYPE_PULSATRIX_FIRMWARE_UPGRADE_HEADER = 0x55, ///< Pulsatrix upgrade firmware header
+    CHUNK_TYPE_ADSD3500_FIRMWARE_FACTORY_HEADER = 0x53, ///< Adsd3500 firmware factory default header
+    CHUNK_TYPE_ADSD3500_FIRMWARE_CURRENT_HEADER = 0x54, ///< Adsd3500 firmware current header
+    CHUNK_TYPE_ADSD3500_FIRMWARE_UPGRADE_HEADER = 0x55, ///< Adsd3500 upgrade firmware header
     CHUNK_TYPE_IMAGER_FIRMWARE_FACTORY_HEADER = 0x56, ///< Imager firmware factory default header
     CHUNK_TYPE_IMAGER_FIRMWARE_CURRENT_HEADER = 0x57, ///< Imager firmware current header
     CHUNK_TYPE_IMAGER_FIRMWARE_UPGRADE_HEADER = 0x58, ///< Imager upgrade firmware header

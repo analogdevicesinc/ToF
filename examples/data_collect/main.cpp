@@ -83,7 +83,7 @@ static const char kUsagePublic[] =
       --wt <warmup>      Warmup Time (sec) [default: 0]
       --ccb <FILE>       The path to store CCB content
       --ip <ip>          Camera IP  
-      --fw <firmware>    Pulsatrix fw file
+      --fw <firmware>    Adsd3500 fw file
 
     Valid mode (--m) options are:
         0: QMpixel short range (512x512)
@@ -114,7 +114,7 @@ static const char kUsageInternal[] =
       --wt <warmup>      Warmup Time (in seconds) before data capture [default: 0]
       --ccb <FILE>       The path to store CCB content      
       --ip <ip>          Camera IP
-      --fw <firmware>    Pulsatrix fw file      
+      --fw <firmware>    Adsd3500 fw file      
       --fps <setfps>     Set target FPS value [range: 50 to 200] 
 )";
 
@@ -430,9 +430,9 @@ int main(int argc, char *argv[]) {
     }
 
     if(!firmware.empty()){
-        status = camera->setControl("updatePulsatrixFirmware", firmware);
+        status = camera->setControl("updateAdsd3500Firmware", firmware);
         if(status != Status::OK){
-            LOG(ERROR) << "Could not update the pulsatrix firmware";
+            LOG(ERROR) << "Could not update the adsd3500 firmware";
             return 0;
         }
     }

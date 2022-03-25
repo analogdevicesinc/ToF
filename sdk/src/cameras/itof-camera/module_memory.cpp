@@ -64,7 +64,7 @@ bool ModuleMemory::verifyChunkHeader(const TOF_ChunkHeader_t *const pChunkHeader
         // Check chunk header CRC by mirroring bytes
         if (crcFast(reinterpret_cast<const uint8_t *>(pChunkHeader), (pChunkHeader->headerSizeBytes - sizeof(uint32_t)), true) != // Hdr size - CRC in bytes
             pChunkHeader->chunkHeaderCRC) {
-            //Use non pulsatrix CRC calculation
+            //Use non adsd3500 CRC calculation
             if (crcFast(reinterpret_cast<const uint8_t *>(pChunkHeader),
                         (pChunkHeader->headerSizeBytes - sizeof(uint32_t)),
                         false) != // Hdr size - CRC in bytes
@@ -338,9 +338,9 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, TOF_ModuleFiles_
             break;
         }
 
-        //Skip CRC check for Pulsatrix and Init firmware current headers. They don't have CRC information
+        //Skip CRC check for Adsd3500 and Init firmware current headers. They don't have CRC information
         if (pChunkHeader->revision.chunktype ==
-                CHUNK_TYPE_PULSATRIX_FIRMWARE_CURRENT_HEADER ||
+                CHUNK_TYPE_ADSD3500_FIRMWARE_CURRENT_HEADER ||
             pChunkHeader->revision.chunktype ==
                 CHUNK_TYPE_INIT_FIRMWARE_HEADER) {
             free(pChunkData);
@@ -439,11 +439,11 @@ Status ModuleMemory::processNVMFirmware(uint8_t chunkType, uint8_t *pChunkData, 
         return Status::OK;
     case CHUNK_TYPE_INIT_FIRMWARE_HEADER:
         return Status::OK;
-    case CHUNK_TYPE_PULSATRIX_FIRMWARE_FACTORY_HEADER:
+    case CHUNK_TYPE_ADSD3500_FIRMWARE_FACTORY_HEADER:
         return Status::OK;
-    case CHUNK_TYPE_PULSATRIX_FIRMWARE_CURRENT_HEADER:
+    case CHUNK_TYPE_ADSD3500_FIRMWARE_CURRENT_HEADER:
         return Status::OK;
-    case CHUNK_TYPE_PULSATRIX_FIRMWARE_UPGRADE_HEADER:
+    case CHUNK_TYPE_ADSD3500_FIRMWARE_UPGRADE_HEADER:
         return Status::OK;
     case CHUNK_TYPE_IMAGER_FIRMWARE_CURRENT_HEADER:
         return Status::OK;
@@ -475,14 +475,14 @@ void ModuleMemory::displayCRCError(uint8_t chunkType) {
     case CHUNK_TYPE_INIT_FIRMWARE_HEADER:
         LOG(WARNING) << "Init firmware CRC failure.";
         break;
-    case CHUNK_TYPE_PULSATRIX_FIRMWARE_FACTORY_HEADER:
-        LOG(WARNING) << "Pulsatrix firmware factory CRC failure.";
+    case CHUNK_TYPE_ADSD3500_FIRMWARE_FACTORY_HEADER:
+        LOG(WARNING) << "Adsd3500 firmware factory CRC failure.";
         break;
-    case CHUNK_TYPE_PULSATRIX_FIRMWARE_CURRENT_HEADER:
-        LOG(WARNING) << "Pulsatrix firmware current CRC failure.";
+    case CHUNK_TYPE_ADSD3500_FIRMWARE_CURRENT_HEADER:
+        LOG(WARNING) << "Adsd3500 firmware current CRC failure.";
         break;
-    case CHUNK_TYPE_PULSATRIX_FIRMWARE_UPGRADE_HEADER:
-        LOG(WARNING) << "Pulsatrix firmware upgrade CRC failure.";
+    case CHUNK_TYPE_ADSD3500_FIRMWARE_UPGRADE_HEADER:
+        LOG(WARNING) << "Adsd3500 firmware upgrade CRC failure.";
         break;
     case CHUNK_TYPE_IMAGER_FIRMWARE_CURRENT_HEADER:
         LOG(WARNING) << "Imager firmware current CRC failure.";
