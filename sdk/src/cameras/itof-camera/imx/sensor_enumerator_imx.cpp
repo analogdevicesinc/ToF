@@ -87,10 +87,10 @@ aditof::Status findDevicePathsAtVideo(const std::string &video,
         return Status::GENERIC_ERROR;
     }
 
-    if (str.find("adsd3500") != string::npos) {
+    if (str.find("pulsatrix") != string::npos) {
         device_name = "adsd3500";
-        pos = str.find("adsd3500");
-        subdev_path = str.substr(pos + strlen("adsd3500") + 9,
+        pos = str.find("pulsatrix");
+        subdev_path = str.substr(pos + strlen("pulsatrix") + 9,
                                  strlen("/dev/v4l-subdevX"));
 
     } else if (str.find("addicmos") != string::npos) {

@@ -47,10 +47,7 @@
 #include <iterator>
 #include <vector>
 #include <cstdint>
-#include <intrin.h>
 #include "adsd3500/crc/include/compute_crc.h"
-#include <windows.h>
-
 
 CameraItof::CameraItof(
     std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
