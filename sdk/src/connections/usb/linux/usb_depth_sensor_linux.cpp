@@ -246,6 +246,16 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         LOG(ERROR) << "Set frame type operation failed on UVC gadget";
         return status;
     }
+    struct v4l2_requestbuffers req;
+
+    req.count = 0;
+    req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    req.memory = V4L2_MEMORY_MMAP;
+    if (UsbLinuxUtils::xioctl(m_implData->fd, VIDIOC_REQBUFS, &req) == -1) {
+        LOG(WARNING) << "VIDIOC_REQBUFS error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return Status::GENERIC_ERROR;
+    }
 
     // Buggy driver paranoia.
     unsigned int min;
@@ -267,7 +277,6 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         return Status::GENERIC_ERROR;
     }
 
-    struct v4l2_requestbuffers req;
 
     CLEAR(req);
     req.count = 4;
