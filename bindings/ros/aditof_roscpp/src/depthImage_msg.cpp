@@ -38,7 +38,7 @@ DepthImageMsg::DepthImageMsg(const std::shared_ptr<aditof::Camera> &camera,
                              aditof::Frame **frame, std::string encoding,
                              ros::Time tStamp) {
     imgEncoding = encoding;
-    FrameDataToMsg(camera, frame, tStamp);
+    //FrameDataToMsg(camera, frame, tStamp);
 }
 
 void DepthImageMsg::FrameDataToMsg(const std::shared_ptr<Camera> &camera,

@@ -36,7 +36,7 @@ PointCloud2Msg::PointCloud2Msg() {}
 
 PointCloud2Msg::PointCloud2Msg(const std::shared_ptr<aditof::Camera> &camera,
                                aditof::Frame **frame, ros::Time tStamp) {
-    FrameDataToMsg(camera, frame, tStamp);
+    //FrameDataToMsg(camera, frame, tStamp);
 }
 
 void PointCloud2Msg::FrameDataToMsg(const std::shared_ptr<Camera> &camera,

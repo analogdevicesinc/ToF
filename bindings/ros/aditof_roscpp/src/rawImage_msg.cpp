@@ -39,7 +39,7 @@ RAWImageMsg::RAWImageMsg(const std::shared_ptr<aditof::Camera> &camera,
                          ros::Time tStamp) {
 
     msg.encoding = encoding;
-    FrameDataToMsg(camera, frame, tStamp);
+    //FrameDataToMsg(camera, frame, tStamp);
 }
 
 void RAWImageMsg::FrameDataToMsg(const std::shared_ptr<Camera> &camera,
