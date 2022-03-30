@@ -446,7 +446,7 @@ aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
 
     // Timeout : Ensure this compensates for max delays added for programming
     // cycle defined in 'Device::program'
-    tv.tv_sec = 2;
+    tv.tv_sec = 5;
     tv.tv_usec = 0;
 
     r = select(m_implData->fd + 1, &fds, nullptr, nullptr, &tv);
