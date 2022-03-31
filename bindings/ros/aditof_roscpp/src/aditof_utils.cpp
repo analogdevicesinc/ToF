@@ -113,19 +113,6 @@ std::shared_ptr<Camera> initCamera(int argc, char **argv) {
         return 0;
     }
 
-    // optionally load configuration data from module memory
-    status = camera->setControl("loadModuleData", "call");
-    if (status != Status::OK) {
-        LOG(INFO) << "No CCB/CFG data found in camera module,";
-        LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data "
-                     "from JSON config file...";
-    }
-
-    status = camera->setControl("initialization_config", arguments[1]);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not set the initialization config file!";
-        return 0;
-    }
     return camera;
 }
 
@@ -133,12 +120,6 @@ void enableCameraDepthCompute(const std::shared_ptr<aditof::Camera> &camera,
                               const bool value) {
     //set depthCompute to on or off
     aditof::Status status = aditof::Status::OK;
-
-    status = camera->initialize();
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not initialize camera!";
-        return;
-    }
 
     status = camera->setControl("enableDepthCompute", (value) ? "on" : "off");
     if (status != Status::OK) {
@@ -282,7 +263,7 @@ void getNewFrame(const std::shared_ptr<Camera> &camera, aditof::Frame **frame) {
     try {
         status = camera->requestFrame(*frame);
         if (status != Status::OK) {
-            LOG(ERROR) << "Could not request frame!";
+            //LOG(ERROR) << "Could not request frame!";
         }
     } catch (std::exception &e) {
     }
