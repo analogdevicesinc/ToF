@@ -36,8 +36,10 @@
 #include <glog/logging.h>
 #include <mutex>
 
+enum class ModeTypes { NONE, mode3, mode7, mode10 };
+
 std::string *parseArgs(int argc, char **argv);
-std::shared_ptr<aditof::Camera> initCamera(int argc, char **argv);
+std::shared_ptr<aditof::Camera> initCamera(std::string *arguments);
 void startCamera(const std::shared_ptr<aditof::Camera> &camera);
 void stopCamera(const std::shared_ptr<aditof::Camera> &camera);
 void setFrameType(const std::shared_ptr<aditof::Camera> &camera,
@@ -46,7 +48,8 @@ void getAvailableFrameType(const std::shared_ptr<aditof::Camera> &camera,
                            std::vector<std::string> &availableFrameTypes);
 void getCameraDataDetails(const std::shared_ptr<aditof::Camera> &camera,
                           aditof::CameraDetails &details);
-void enableCameraDepthCompute(const std::shared_ptr<aditof::Camera> &camera, const bool value);
+void enableCameraDepthCompute(const std::shared_ptr<aditof::Camera> &camera,
+                              const bool value);
 void setMode(const std::shared_ptr<aditof::Camera> &camera,
              const std::string &mode);
 void setCameraRevision(const std::shared_ptr<aditof::Camera> &camera,
@@ -64,5 +67,6 @@ getIntrinsics(const std::shared_ptr<aditof::Camera> &camera);
 int getRangeMax(const std::shared_ptr<aditof::Camera> &camera);
 int getRangeMin(const std::shared_ptr<aditof::Camera> &camera);
 void irTo16bitGrayscale(uint16_t *frameData, int width, int height);
+enum ModeTypes intToMode(int var);
 
 #endif // ADITOF_UTILS_H
