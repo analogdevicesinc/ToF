@@ -48,7 +48,7 @@ The path should point towards the appropriate config file for the cameras.
     roslaunch aditof_roscpp camera_node_gui.launch ip:="124.0.0.0" config_file:="<path>"
     ```
     
- <p align="center"><img src="../../doc/img/ros_dunamic_reconfigure.png" /></p>
+ <p align="center"><img src="../../doc/img/ros_dynamic_reconfigure.png" /></p>
  
 ### Without RQT Reconfigure
 * For <b>USB</b> type camera connections witouth RQT dynamic reconfigure GUI use the following commands:
