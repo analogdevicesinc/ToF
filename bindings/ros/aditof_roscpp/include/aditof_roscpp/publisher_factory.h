@@ -32,6 +32,7 @@
 #ifndef PUBLISHER_FACTORY_H
 #define PUBLISHER_FACTORY_H
 
+#include "../../../../sdk/include/aditof/camera.h"
 #include "message_factory.h"
 #include <aditof_utils.h>
 #include <dynamic_reconfigure/server.h>
@@ -39,10 +40,6 @@
 #include <ros/ros.h>
 #include <typeinfo>
 #include <vector>
-
-#include "../../../../sdk/include/aditof/camera.h"
-
-enum class ModeTypes { NONE, mode3, mode7, mode10 };
 
 class PublisherFactory {
   public:
