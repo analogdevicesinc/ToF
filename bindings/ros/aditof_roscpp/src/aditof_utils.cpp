@@ -48,6 +48,9 @@ std::string *parseArgs(int argc, char **argv) {
 
     std::string ip = "";
     std::string config_path = "";
+    std::string use_depthCompute = "";
+    std::string mode = "";
+    std::string rqt = "";
 
     for (int i = 1; i < argc; i++) {
         std::string left;
@@ -61,6 +64,12 @@ std::string *parseArgs(int argc, char **argv) {
             ip = right;
         else if (std::strcmp(left.c_str(), "config_file") == 0)
             config_path = right;
+        else if (std::strcmp(left.c_str(), "use_depthCompute") == 0)
+            use_depthCompute = right;
+        else if (std::strcmp(left.c_str(), "mode") == 0)
+            mode = right;
+        else if (std::strcmp(left.c_str(), "rqt") == 0)
+            rqt = right;
     }
 
     if (ip.empty()) {
@@ -70,19 +79,31 @@ std::string *parseArgs(int argc, char **argv) {
     if (config_path.empty()) {
         LOG(INFO) << "Config file not provided!";
     }
+    if (use_depthCompute.empty()) {
+        LOG(INFO) << "'use_depthCompute' option not provided!";
+    }
 
-    std::string *result = new std::string[2];
+    if (mode.empty()) {
+        LOG(INFO) << "Camera mode not provided!";
+    }
+
+    if (rqt.empty()) {
+        LOG(INFO) << "Dynamic RQT option not provided!";
+    }
+
+    std::string *result = new std::string[5];
     result[0] = ip;
     result[1] = config_path;
+    result[2] = use_depthCompute;
+    result[3] = mode;
+    result[4] = rqt;
     return result;
 }
 
-std::shared_ptr<Camera> initCamera(int argc, char **argv) {
+std::shared_ptr<Camera> initCamera(std::string *arguments) {
 
     Status status = Status::OK;
     LOG(INFO) << "Started camera intialization";
-    std::string *arguments =
-        parseArgs(argc, argv); //pos 0 - ip, pos 1 - config_path
 
     System system;
 
@@ -326,4 +347,20 @@ void irTo16bitGrayscale(uint16_t *frameData, int width, int height) {
             (1.0f - norm_val) * minColorValue;
         frameData[i] = static_cast<uint16_t>(grayscale_val);
     }
+}
+
+enum ModeTypes intToMode(int var) {
+    ModeTypes newMode;
+    switch (var) {
+    case 0:
+        newMode = ModeTypes::mode3;
+        break;
+    case 1:
+        newMode = ModeTypes::mode7;
+        break;
+    case 2:
+        newMode = ModeTypes::mode10;
+        break;
+    }
+    return (newMode);
 }

@@ -37,8 +37,9 @@
 using namespace aditof;
 
 int main(int argc, char **argv) {
+    std::string *arguments = parseArgs(argc, argv);
 
-    std::shared_ptr<Camera> camera = initCamera(argc, argv);
+    std::shared_ptr<Camera> camera = initCamera(arguments);
 
     ros::init(argc, argv, "aditof_camera_node");
     ROS_ASSERT_MSG(camera, "initCamera call failed");
