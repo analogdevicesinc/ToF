@@ -53,18 +53,7 @@ void callback(aditof_roscpp::Aditof_roscppConfig &config,
         ;
     while (m_mtxDynamicRec2.try_lock())
         ;
-    ModeTypes newMode = ModeTypes::NONE;
-    switch (config.camera_mode) {
-    case 0:
-        newMode = ModeTypes::mode3;
-        break;
-    case 1:
-        newMode = ModeTypes::mode7;
-        break;
-    case 2:
-        newMode = ModeTypes::mode10;
-        break;
-    }
+    ModeTypes newMode = intToMode(config.camera_mode);
 
     if (publisher->m_currentMode != newMode ||
         publisher->m_enableDepthCompute != config.depth_compute) {
@@ -86,24 +75,37 @@ void callback(aditof_roscpp::Aditof_roscppConfig &config,
 
 int main(int argc, char **argv) {
 
-    std::shared_ptr<Camera> camera = initCamera(argc, argv);
-
+    PublisherFactory publishers;
     auto tmp = new Frame;
-    aditof::Frame **frame = &tmp;
+    std::string *arguments = parseArgs(argc, argv);
+    /*
+    pos 0 - ip
+    pos 1 - config_path
+    pos 2 - use_depthCompute
+    pos 3 - mode
+    pos 4 - rqt 
+    */
 
+    std::shared_ptr<Camera> camera = initCamera(arguments);
     ROS_ASSERT_MSG(camera, "initCamera call failed");
-
     ros::init(argc, argv, "aditof_camera_node");
-    dynamic_reconfigure::Server<aditof_roscpp::Aditof_roscppConfig> server;
-    dynamic_reconfigure::Server<
-        aditof_roscpp::Aditof_roscppConfig>::CallbackType f;
-
+    //ROS_ASSERT_MSG(camera, "ros init failed");
     //create handle
     ros::NodeHandle nHandle("aditof_roscpp");
-    PublisherFactory publishers;
-    publishers.createNew(ModeTypes::mode7, nHandle, camera, frame);
-    f = boost::bind(&callback, _1, &publishers, &nHandle, camera, frame);
-    server.setCallback(f);
+    aditof::Frame **frame = &tmp;
+    publishers.m_enableDepthCompute =
+        (std::strcmp(arguments[2].c_str(), "true") ? false : true);
+    if (std::strcmp(arguments[4].c_str(), "true") != 0) {
+        publishers.createNew(intToMode(std::stoi(arguments[3])), nHandle,
+                             camera, frame);
+    }
+    dynamic_reconfigure::Server<aditof_roscpp::Aditof_roscppConfig> server;
+    if (std::strcmp(arguments[4].c_str(), "true") == 0) {
+        dynamic_reconfigure::Server<
+            aditof_roscpp::Aditof_roscppConfig>::CallbackType f;
+        f = boost::bind(&callback, _1, &publishers, &nHandle, camera, frame);
+        server.setCallback(f);
+    }
 
     while (ros::ok()) {
         while (m_mtxDynamicRec.try_lock())
