@@ -523,9 +523,9 @@ aditof::Status NetworkDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *dat
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("Adsd3500ReadCmd");
-    net->send_buff.add_func_int32_param(static_cast<::google::int32>(cmd));
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_sensorIndex].set_func_name("Adsd3500ReadCmd");
+    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(cmd));
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -537,16 +537,16 @@ aditof::Status NetworkDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *dat
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_sensorIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
     if(status == Status::OK) {
-        *data = static_cast<uint16_t>(net->recv_buff.int32_payload(0));
+        *data = static_cast<uint16_t>(net->recv_buff[m_sensorIndex].int32_payload(0));
     }
 
     return status;
@@ -563,10 +563,10 @@ aditof::Status NetworkDepthSensor::adsd3500_write_cmd(uint16_t cmd, uint16_t dat
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("Adsd3500WriteCmd");
-    net->send_buff.add_func_int32_param(static_cast<::google::int32>(cmd));
-    net->send_buff.add_func_int32_param(static_cast<::google::int32>(data));
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_sensorIndex].set_func_name("Adsd3500WriteCmd");
+    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(cmd));
+    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(data));
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -578,13 +578,13 @@ aditof::Status NetworkDepthSensor::adsd3500_write_cmd(uint16_t cmd, uint16_t dat
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_sensorIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
     return status;
 }
@@ -600,10 +600,10 @@ aditof::Status NetworkDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("Adsd3500ReadPayloadCmd");
-    net->send_buff.add_func_int32_param(static_cast<::google::int32>(cmd));
-    net->send_buff.add_func_int32_param(static_cast<::google::int32>(payload_len));
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_sensorIndex].set_func_name("Adsd3500ReadPayloadCmd");
+    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(cmd));
+    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(payload_len));
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -615,16 +615,16 @@ aditof::Status NetworkDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_sensorIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
     if(status == Status::OK) {     
-        memcpy(readback_data, net->recv_buff.bytes_payload(0).c_str(), net->recv_buff.bytes_payload(0).length());
+        memcpy(readback_data, net->recv_buff[m_sensorIndex].bytes_payload(0).c_str(), net->recv_buff[m_sensorIndex].bytes_payload(0).length());
     }
     
     return status;
@@ -641,11 +641,11 @@ aditof::Status NetworkDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("Adsd3500WritePayloadCmd");
-    net->send_buff.add_func_int32_param(static_cast<::google::int32>(cmd));
-    net->send_buff.add_func_int32_param(static_cast<::google::int32>(payload_len));
-    net->send_buff.add_func_bytes_param(payload, payload_len);
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_sensorIndex].set_func_name("Adsd3500WritePayloadCmd");
+    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(cmd));
+    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(payload_len));
+    net->send_buff[m_sensorIndex].add_func_bytes_param(payload, payload_len);
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -657,13 +657,13 @@ aditof::Status NetworkDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_sensorIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
     return status;
 }
@@ -679,10 +679,10 @@ aditof::Status NetworkDepthSensor::adsd3500_write_payload(uint8_t* payload, uint
         return Status::UNREACHABLE;
     }
 
-    net->send_buff.set_func_name("Adsd3500WritePayload");
-    net->send_buff.add_func_int32_param(static_cast<::google::int32>(payload_len));
-    net->send_buff.add_func_bytes_param(payload, payload_len);
-    net->send_buff.set_expect_reply(true);
+    net->send_buff[m_sensorIndex].set_func_name("Adsd3500WritePayload");
+    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(payload_len));
+    net->send_buff[m_sensorIndex].add_func_bytes_param(payload, payload_len);
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
@@ -694,13 +694,13 @@ aditof::Status NetworkDepthSensor::adsd3500_write_payload(uint8_t* payload, uint
         return Status::GENERIC_ERROR;
     }
 
-    if (net->recv_buff.server_status() !=
+    if (net->recv_buff[m_sensorIndex].server_status() !=
         payload::ServerStatus::REQUEST_ACCEPTED) {
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff.status());
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
     return status;
 }
