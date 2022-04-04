@@ -127,13 +127,14 @@ CameraItof::~CameraItof() {
 
 aditof::Status CameraItof::initialize() {
     using namespace aditof;
+    Status status = Status::OK;
 
     LOG(INFO) << "Initializing camera";
 
     // Setting up the UVC filters, samplegrabber interface, Video renderer and filters
     // Setting UVC mediaformat and Running the stream is done once mode is set
     if (!m_devStarted) {
-        Status status = m_depthSensor->open();
+        status = m_depthSensor->open();
         if (status != Status::OK) {
             LOG(WARNING) << "Failed to open device";
             return status;
@@ -215,9 +216,29 @@ aditof::Status CameraItof::initialize() {
 
     m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
 
+    //get intrinsics for adsd3500 TO DO: check endianess of intrinsics
+    if(m_adsd3500Enabled){
+        for (auto availableFrameTypes : m_availableSensorFrameTypes){
+            float intrinsics[14];
+            //the first element of readback_data for adsd3500_read_payload is used for the custom command
+            //it will be overwritten by the returned data
+            intrinsics[0] = ModeInfo::getInstance()->getModeInfo(availableFrameTypes.type).mode << 24;
+
+            //hardcoded function values to return intrinsics
+            status = m_depthSensor->adsd3500_read_payload_cmd(0x01, (uint8_t*)intrinsics, 56);
+            if(status != Status::OK){
+                LOG(ERROR) << "Failed to read intrinsics for adsd3500!";
+                return status;
+            }
+
+            m_cameraIntrinsicList.emplace_back(availableFrameTypes.type,
+                     std::vector<float>(intrinsics, intrinsics + sizeof(intrinsics)/sizeof(intrinsics[0])));
+        }
+    }
+    
     if (m_eeprom) {
         void *handle;
-        aditof::Status status = m_depthSensor->getHandle(&handle);
+        status = m_depthSensor->getHandle(&handle);
         if (status != Status::OK) {
             LOG(ERROR) << "Failed to obtain the handle";
             return status;
@@ -335,7 +356,7 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
     }
 
     setMode(frameType);
-
+    
     status = m_depthSensor->setFrameType(*frameTypeIt);
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to set frame type";
@@ -374,6 +395,23 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
         }
 
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
+    }
+
+    //populate camera intrinsics depending on frame type for adsd3500
+    if (m_adsd3500Enabled) {
+        for (auto cameraIntrinsics : m_cameraIntrinsicList){
+            if(cameraIntrinsics.first == frameType){
+                m_details.intrinsics.cameraMatrix.clear();
+                for (int i = 0; i < 6; i++) {
+                    m_details.intrinsics.cameraMatrix.emplace_back(cameraIntrinsics.second.at(i));
+                }
+
+                m_details.intrinsics.distCoeffs.clear();
+                for (int i = 6; i < 14; i++) {
+                    m_details.intrinsics.distCoeffs.emplace_back(cameraIntrinsics.second.at(i));
+                }
+            }
+        }
     }
 
     if (m_controls["enableDepthCompute"] == "on" && ((m_details.frameType.totalCaptures > 1) || m_adsd3500Enabled)){
