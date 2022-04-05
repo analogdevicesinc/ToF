@@ -32,6 +32,11 @@
 #define V4L2_CID_AD_DEV_CHIP_CONFIG (0x9819e1)
 #define CTRL_PACKET_SIZE 65537
 #define CTRL_SET_MODE (0x9819e0)
+#define CTRL_AB_AVG (0x9819e5)
+#define CTRL_DEPTH_EN (0x9819e6)
+#define CTRL_PHASE_DEPTH_BITS (0x9819e2)
+#define CTRL_AB_BITS (0x9819e3)
+#define CTRL_CONFIDENCE_BITS (0x9819e4)
 #define ADSD3500_CTRL_PACKET_SIZE 4115
 // Can be moved to target_definitions in "camera"/"platform"
 #define TEMP_SENSOR_DEV_PATH "/dev/i2c-1"
@@ -381,15 +386,66 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         return status;
     }
 
-    //We have two resolution domains. First is driver one which is defined in adsd3100_sensor.h
-    //The second is the depthcompute input domain defined in mode_info.cpp
-    //The total number of pixels between these two should be equal
-    //Here compute the number of frames that should be requested to the driver based on the required number of pixels from g_modeInfoData[]
-    pix_fallout = ModeInfo::getInstance()->getModeInfo(type.type).width *
-                  ModeInfo::getInstance()->getModeInfo(type.type).height *
-                  ModeInfo::getInstance()->getModeInfo(type.type).subframes;
-    pix_drv = type.width * type.height;
-    m_capturesPerFrame = pix_fallout / pix_drv;
+#if 1
+    static struct v4l2_control ctrl;
+
+    memset(&ctrl, 0, sizeof(ctrl));
+
+    ctrl.id = CTRL_AB_AVG;
+    ctrl.value = 1; //Enable AB averaging
+
+    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
+        LOG(WARNING) << "Setting Mode error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        status = Status::GENERIC_ERROR;
+    }
+
+    memset(&ctrl, 0, sizeof(ctrl));
+
+    ctrl.id = CTRL_DEPTH_EN;
+    ctrl.value = 1; //Enable Depth compute in ADSD3500
+
+    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
+        LOG(WARNING) << "Setting Mode error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        status = Status::GENERIC_ERROR;
+    }
+
+    memset(&ctrl, 0, sizeof(ctrl));
+
+    ctrl.id = CTRL_PHASE_DEPTH_BITS;
+    ctrl.value = 6; //Set number of bits per depth component 6 = 16 Bits
+
+    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
+        LOG(WARNING) << "Setting Mode error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        status = Status::GENERIC_ERROR;
+    }
+
+    memset(&ctrl, 0, sizeof(ctrl));
+
+    ctrl.id = CTRL_AB_BITS;
+    ctrl.value = 6; //Set number of bits per AB component 6 = 16 Bits
+
+    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
+        LOG(WARNING) << "Setting Mode error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        status = Status::GENERIC_ERROR;
+    }
+
+    memset(&ctrl, 0, sizeof(ctrl));
+
+    ctrl.id = CTRL_CONFIDENCE_BITS;
+    ctrl.value = 2; //Set number of bits per Confidence component 2 = 8 Bits
+
+    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
+        LOG(WARNING) << "Setting Mode error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        status = Status::GENERIC_ERROR;
+    }
+#endif
+
+    m_capturesPerFrame = 1;
 
     for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
         dev = &m_implData->videoDevs[i];
