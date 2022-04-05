@@ -181,6 +181,7 @@ Status UsbSensorEnumerator::searchSensors() {
 
         // If request and response went well, extract data from response
         m_sensorsInfo.emplace_back(sInfo);
+        m_sensorName = responseMsg.sensors_info().image_sensors().name();
 
         m_sensorName = responseMsg.sensors_info().image_sensors().name();
 
