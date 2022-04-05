@@ -123,3 +123,19 @@ Use parameter *-h* or *--help* for more information regarding the parameters.
 
 - Build the application.
 ![Display Image](/doc/img/build_VS.PNG)
+
+## Generate doxygen documentation
+
+Requirements:
+* Doxygen
+* Graphviz
+
+In order to generate the doxygen documentation you must compile the sdk in the following way:
+```console
+cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_3_5\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets;C:\projects\ToF\opencv\build" -G "Visual Studio 16 2019" -DOPENSSL_INCLUDE_DIRS="C:\OpenSSL-Win64\include" -DWITH_DOC=on ..
+cmake --build . --target doc -j 4
+```
+After compilation, the documentation can be found at this path:
+```console
+build\doc\doxygen_doc\html\index.html
+```
