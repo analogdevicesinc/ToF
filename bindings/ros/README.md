@@ -15,13 +15,13 @@ This ROS package facilitates depth and IR data acquisition and processing for th
   sudo apt install ros-ROSDISTRO-PACKAGE
   ```
 - **Install the ADI ToF SDK library**
-  - [Install SDK dependencies](https://github.com/analogdevicesinc/aditof_sdk/blob/6c7fb376aeec73a21ab177adf297c5781bcbd544/doc/linux/build_instructions.md#installing-the-dependencies)
-  - Download and build the SDK, as well as enable ROS package building
+  - [Install SDK dependencies](https://github.com/analogdevicesinc/ToF/blob/master/doc/itof/linux_build_instructions.md)
+  - Download and build the SDK, as well as enable ROS package building and specify the path towards the ROS HOME directory
 ```console
 git clone https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
-cmake -DWITH_NETWORK=1 -DWITH_ROS=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
+cmake -DWITH_NETWORK=1 -DWITH_ROS=on -DROS_HOME_DIR="/home/<user>/.ros" -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
 sudo cmake --build . --target install
 ```
  - **Build the aditof_roscpp package**
