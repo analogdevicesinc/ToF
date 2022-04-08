@@ -59,6 +59,23 @@ aditof::Status OfflineDepthSensor::writeRegisters(const uint16_t *address,
     return aditof::Status::UNAVAILABLE;
 }
 
+aditof::Status OfflineDepthSensor::getAvailableControls(std::vector<std::string> &controls) const
+{
+    return aditof::Status::OK;
+}
+
+aditof::Status OfflineDepthSensor::setControl(const std::string &control,
+                               const std::string &value)
+{
+    return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status OfflineDepthSensor::getControl(const std::string &control,
+                               std::string &value) const
+{
+    return aditof::Status::UNAVAILABLE;
+}
+
 aditof::Status
 OfflineDepthSensor::getDetails(aditof::SensorDetails &details) const {
     details = m_sensorDetails;
