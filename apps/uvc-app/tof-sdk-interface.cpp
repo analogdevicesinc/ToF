@@ -35,6 +35,7 @@ int init_tof_sdk(char* cap_dev_path) {
     }
 
     camDepthSensor = depthSensors[0];
+    camDepthSensor->open();
 
     return 0;
 }
@@ -88,13 +89,16 @@ void convertProtoMsgToDepthSensorFrameType(
     }
 }
 
-const char* handleClientRequest(const char *buf) {
+void handleClientRequest(const char *in_buf, const size_t in_len, char **out_buf, size_t *out_len) {
     uvc_payload::ClientRequest request;
     uvc_payload::ServerResponse response;
     std::string serverResponseBlob;
-    char *string_response;
 
-    request.ParseFromString(buf);
+    char str[in_len + 1];
+    memcpy(str, in_buf, in_len);
+    str[in_len] = '\0'; // Null termination.
+
+    request.ParseFromString(str);
 
     switch (request.func_name()) {
 
@@ -109,6 +113,11 @@ const char* handleClientRequest(const char *buf) {
         aditof::SensorDetails depthSensorDetails;
         camDepthSensor->getDetails(depthSensorDetails);
         auto pbSensorsInfo = response.mutable_sensors_info();
+
+        std::string name;
+        camDepthSensor->getName(name);
+        auto pbDepthSensorInfo = pbSensorsInfo->mutable_image_sensors();
+        pbDepthSensorInfo->set_name(name);
 
         // Storages
         int storage_id = 0;
@@ -274,9 +283,9 @@ const char* handleClientRequest(const char *buf) {
 
     response.SerializeToString(&serverResponseBlob);
 
-    string_response = (char *)malloc(serverResponseBlob.size()+1);
-    memcpy(string_response, serverResponseBlob.c_str(), serverResponseBlob.size());
-    string_response[serverResponseBlob.size()] = '\0';
+    *out_buf = (char *)malloc(serverResponseBlob.size());
+    memcpy(*out_buf, serverResponseBlob.c_str(), serverResponseBlob.size());
+    *out_len = serverResponseBlob.size();
 
-    return string_response;
+    return;
 }
