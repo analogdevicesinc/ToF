@@ -81,6 +81,7 @@ struct Adsd3500Sensor::ImplData {
     uint8_t numVideoDevs;
     struct VideoDev *videoDevs;
     aditof::DepthSensorFrameType frameType;
+    std::unordered_map<std::string, __u32> controlsCommands;
     ImplData() : numVideoDevs(1), videoDevs(nullptr), frameType{"", {}, 0, 0} {}
 };
 
@@ -102,7 +103,21 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     : m_driverPath(driverPath), m_driverSubPath(driverSubPath),
       m_captureDev(captureDev), m_implData(new Adsd3500Sensor::ImplData) {
           m_sensorName = "adsd3500";
-      }
+
+    // Define the controls that this sensor has available
+    m_controls.emplace("abAveraging", "0");
+    m_controls.emplace("depthEnable", "0");
+    m_controls.emplace("phaseDepthBits", "0");
+    m_controls.emplace("abBits", "0");
+    m_controls.emplace("confidenceBits", "0");
+
+    // Define the commands that correspond to the sensor controls
+    m_implData.controlsCommands["abAveraging"] = 0x9819e5;
+    m_implData.controlsCommands["depthEnable"] = 0x9819e6;
+    m_implData.controlsCommands["phaseDepthBits"] = 0x9819e2;
+    m_implData.controlsCommands["abBits"] = 0x9819e3;
+    m_implData.controlsCommands["confidenceBits"] = 0x9819e4;
+}
 
 Adsd3500Sensor::~Adsd3500Sensor() {
     struct VideoDev *dev;
@@ -549,6 +564,69 @@ aditof::Status Adsd3500Sensor::writeRegisters(const uint16_t *address,
                                                const uint16_t *data,
                                                size_t length,
                                                bool burst /*= true*/) {
+    return aditof::Status::OK;
+}
+
+aditof::Status Adsd3500Sensor::getAvailableControls(std::vector<std::string> &controls) const
+{
+    controls.clear();
+    controls.reserve(m_controls.size());
+    for (const auto &item : m_controls) {
+        controls.emplace_back(item.first);
+    }
+
+    return aditof::Status::OK;
+}
+
+aditof::Status Adsd3500Sensor::setControl(const std::string &control,
+                               const std::string &value)
+{
+    using namespace aditof;
+    Status status = Status::OK;
+
+    if (m_controls.count(control) == 0) {
+        LOG(WARNING) << "Unsupported control";
+        return Status::INVALID_ARGUMENT;
+    }
+
+    // Send the command that sets the control value
+    struct v4l2_control ctrl;
+    memset(&ctrl, 0, sizeof(ctrl));
+
+    ctrl.id = m_implData.controlsCommands[control];
+    ctrl.value = std::stoi(value);
+
+    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
+        LOG(WARNING) << "Failed to set control: " << control << " "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        status = Status::GENERIC_ERROR;
+    }
+
+    return status;
+}
+
+aditof::Status Adsd3500Sensor::getControl(const std::string &control,
+                               std::string &value) const
+{
+    if (m_controls.count(control) > 0) {
+        // Send the command that reads the control value
+        struct v4l2_control ctrl;
+        memset(&ctrl, 0, sizeof(ctrl));
+
+        ctrl.id = m_implData.controlsCommands[control];
+
+        if (xioctl(dev->sfd, VIDIOC_G_CTRL, &ctrl) == -1) {
+            LOG(WARNING) << "Failed to get control: " << control << " "
+                     << "errno: " << errno << " error: " << strerror(errno);
+            status = Status::GENERIC_ERROR;
+        }
+        value = std::to_string(ctrl.value);
+        m_controls.at(control) = value;
+    } else {
+        LOG(WARNING) << "Unsupported control";
+        return Status::INVALID_ARGUMENT;
+    }
+
     return aditof::Status::OK;
 }
 

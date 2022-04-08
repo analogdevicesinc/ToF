@@ -34,6 +34,7 @@
 #include "cameras/itof-camera/mode_info.h"
 #include "connections/target/v4l_buffer_access_interface.h"
 #include <memory>
+#include <unordered_map>
 
 class Adsd3500Sensor : public aditof::DepthSensorInterface,
                         public aditof::V4lBufferAccessInterface {
@@ -60,6 +61,12 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     virtual aditof::Status writeRegisters(const uint16_t *address,
                                           const uint16_t *data, size_t length,
                                           bool burst = true) override;
+    virtual Status
+    getAvailableControls(std::vector<std::string> &controls) const override;
+    virtual Status setControl(const std::string &control,
+                              const std::string &value) override;
+    virtual Status getControl(const std::string &control,
+                                 std::string &value) const override;
     virtual aditof::Status
     getDetails(aditof::SensorDetails &details) const override;
     virtual aditof::Status getHandle(void **handle) override;
@@ -107,6 +114,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     std::string m_driverPath;
     std::string m_driverSubPath;
     std::string m_captureDev;
+    std::unordered_map<std::string, std::string> m_controls;
     std::unique_ptr<ImplData> m_implData;
     uint8_t m_capturesPerFrame;
         const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {{
