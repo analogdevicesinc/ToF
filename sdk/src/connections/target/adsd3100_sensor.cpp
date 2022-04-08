@@ -813,6 +813,22 @@ aditof::Status Adsd3100Sensor::writeRegisters(const uint16_t *address,
     return status;
 }
 
+aditof::Status Adsd3100Sensor::getAvailableControls(std::vector<std::string> &controls) const
+{
+    return aditof::Status::OK;
+}
+
+aditof::Status Adsd3100Sensor::setControl(const std::string &control,
+                               const std::string &value)
+{
+    return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status Adsd3100Sensor::getControl(const std::string &control,
+                               std::string &value) const
+{
+    return aditof::Status::UNAVAILABLE;
+}
 
 aditof::Status
 Adsd3100Sensor::getDetails(aditof::SensorDetails &details) const {
