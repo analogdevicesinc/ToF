@@ -38,6 +38,7 @@
 
 #include <cstddef>
 #include <vector>
+#include <string>
 
 namespace aditof {
 
@@ -176,6 +177,32 @@ class DepthSensorInterface {
      * @return Status
      */
     virtual aditof::Status adsd3500_write_payload(uint8_t* payload, uint16_t payload_len) = 0;
+
+    /**
+     * @brief Gets the sensors's list of controls
+     * @param[out] controls
+     * @return Status
+     */
+    virtual Status
+    getAvailableControls(std::vector<std::string> &controls) const = 0;
+
+    /**
+     * @brief Sets a specific sensor control
+     * @param[in] control - Control name
+     * @param[in] value - Control value
+     * @return Status
+     */
+    virtual Status setControl(const std::string &control,
+                              const std::string &value) = 0;
+
+    /**
+     * @brief Gets the value of a specific sensor control
+     * @param[in] control - Control name
+     * @param[out] value - Control value
+     * @return Status
+     */
+    virtual Status getControl(const std::string &control,
+                              std::string &value) const = 0;
 
     /**
      * @brief Get a structure that contains information about the instance of
