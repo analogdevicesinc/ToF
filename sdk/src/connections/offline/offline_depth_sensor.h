@@ -28,6 +28,12 @@ public: // implements DepthSensorInterface
   virtual aditof::Status writeRegisters(const uint16_t *address,
                                            const uint16_t *data,
                                            size_t length, bool burst = true) override;
+  virtual Status
+    getAvailableControls(std::vector<std::string> &controls) const override;
+  virtual Status setControl(const std::string &control,
+                               const std::string &value) override;
+  virtual Status getControl(const std::string &control,
+                               std::string &value) const override;
   virtual aditof::Status
   getDetails(aditof::SensorDetails &details) const override;
   virtual aditof::Status getHandle(void **handle) override;
