@@ -100,8 +100,6 @@ Status UsbSensorEnumerator::searchSensors() {
                 LOG(WARNING) << driverPath << " is not V4L2 device";
                 close(fd);
                 continue;
-            } else {
-                LOG(WARNING) << "VIDIOC_QUERYCAP";
             }
         }
 
