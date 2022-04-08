@@ -25,7 +25,6 @@
 #include "v4l2.h"
 #include "../tof-sdk-interface.h"
 
-#define ENABLE_USB_REQUEST_DEBUG
 #define MAX_PACKET_SIZE 60
 
 #ifdef ENABLE_USB_REQUEST_DEBUG
@@ -38,10 +37,9 @@
 #define USB_REQ_DEBUG(X...)
 #endif
 
-struct uvc_data {
-    char *out_buf;
-
-    char *in_buf;
+struct buffer {
+    char *data;
+    size_t len;
 };
 
 struct uvc_device {
@@ -53,7 +51,8 @@ struct uvc_device {
     struct uvc_streaming_control probe;
     struct uvc_streaming_control commit;
 
-    struct uvc_data data;
+    struct buffer in_buf;
+    struct buffer out_buf;
 
     int control;
 
@@ -171,7 +170,6 @@ static void uvc_events_process_extension_unit(struct uvc_device *dev,
                                               uint16_t len,
                                               struct uvc_request_data *resp) {
     static int server_resp_bytes_sent;
-    static size_t out_buf_len;
     static bool resp_len_sent = false;
 
     USB_REQ_DEBUG("extension unit request (req %02x cs %02x)\n", req, cs);
@@ -220,29 +218,29 @@ static void uvc_events_process_extension_unit(struct uvc_device *dev,
         switch (req) {
         case UVC_GET_CUR:
             USB_REQ_DEBUG("Received GET_CUR on %d\n", cs);
-            if (dev->data.out_buf) {
+            if (dev->out_buf.len) {
                 if (resp_len_sent) {
                     size_t remaining_bytes_to_send =
-                        (out_buf_len - server_resp_bytes_sent >
+                        (dev->out_buf.len - server_resp_bytes_sent >
                          MAX_PACKET_SIZE)
                             ? MAX_PACKET_SIZE
-                            : out_buf_len - server_resp_bytes_sent;
+                            : dev->out_buf.len - server_resp_bytes_sent;
                     memcpy(resp->data,
-                           dev->data.out_buf + server_resp_bytes_sent,
+                           dev->out_buf.data + server_resp_bytes_sent,
                            remaining_bytes_to_send);
                     server_resp_bytes_sent += remaining_bytes_to_send;
-                    if (server_resp_bytes_sent == out_buf_len) {
+                    if (server_resp_bytes_sent == dev->out_buf.len) {
                         // We're sent the entire response, now reset things to default
-			free(dev->data.out_buf);
-                        dev->data.out_buf = NULL;
+                        free(dev->out_buf.data);
+                        dev->out_buf.data = NULL;
+                        dev->out_buf.len = 0;
                         resp_len_sent = false;
                     }
                     resp->length = remaining_bytes_to_send;
                 } else {
-		    USB_REQ_DEBUG("Out data len: %d\n", strlen(dev->data.out_buf));
-                    out_buf_len = strlen(dev->data.out_buf);
-                    memcpy(resp->data, (uint8_t *)&out_buf_len, sizeof(out_buf_len));
-                    resp->length = out_buf_len;
+                    USB_REQ_DEBUG("Out data len: %lu\n", dev->out_buf.len);
+                    memcpy(resp->data, (uint8_t *)&dev->out_buf.len, sizeof(dev->out_buf.len));
+                    resp->length = dev->out_buf.len;
                     resp_len_sent = true;
                     server_resp_bytes_sent = 0;
                 }
@@ -394,7 +392,7 @@ static void uvc_events_process_data(struct uvc_device *dev,
     const struct uvc_streaming_control *ctrl =
         (const struct uvc_streaming_control *)&data->data;
     struct uvc_streaming_control *target;
-    static size_t client_req_bytes_read, in_buf_len;
+    static size_t client_req_bytes_read;
     static bool blob_len_read = false;
 
     switch (dev->control) {
@@ -414,29 +412,27 @@ static void uvc_events_process_data(struct uvc_device *dev,
         if (blob_len_read) {
             // Read one packet and append
             size_t remaining_bytes_to_read =
-                in_buf_len - client_req_bytes_read;
+                dev->in_buf.len - client_req_bytes_read;
             size_t packet_size = (remaining_bytes_to_read > MAX_PACKET_SIZE)
                                      ? MAX_PACKET_SIZE
                                      : remaining_bytes_to_read;
-            memcpy(dev->data.in_buf + client_req_bytes_read, data->data,
+            memcpy(dev->in_buf.data + client_req_bytes_read, data->data,
                    packet_size);
             client_req_bytes_read += packet_size;
             remaining_bytes_to_read -= packet_size;
 
             if (remaining_bytes_to_read == 0) {
-                //TBD: process_data
-                dev->data.out_buf = handleClientRequest(dev->data.in_buf);
+                //process received data
+                handleClientRequest(dev->in_buf.data, dev->in_buf.len, &dev->out_buf.data, &dev->out_buf.len);
                 // reset to default
-                free(dev->data.in_buf);
-                in_buf_len = 0;
+                free(dev->in_buf.data);
+                dev->in_buf.len = 0;
                 client_req_bytes_read = 0;
                 blob_len_read = false;
             }
         } else {
-            in_buf_len = data->data[0];
-            // Extra char for null termination
-            dev->data.in_buf = (char *)malloc(in_buf_len + 1); 
-            dev->data.in_buf[in_buf_len] = '\0';
+            dev->in_buf.len = data->data[0];
+            dev->in_buf.data = (char *)malloc(dev->in_buf.len); 
             client_req_bytes_read = 0;
             blob_len_read = true;
         }

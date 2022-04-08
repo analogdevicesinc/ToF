@@ -258,18 +258,40 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         return Status::GENERIC_ERROR;
     }
 
-    // Buggy driver paranoia.
-    unsigned int min;
+    bool found = false;
+    struct v4l2_fmtdesc fmtdesc;
+    memset(&fmtdesc,0,sizeof(fmtdesc));
+    fmtdesc.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    while (UsbLinuxUtils::xioctl(m_implData->fd, VIDIOC_ENUM_FMT, &fmtdesc) == 0)
+    {
+        struct v4l2_frmsizeenum frmenum;
+        memset(&frmenum, 0, sizeof frmenum);
+        frmenum.pixel_format = fmtdesc.pixelformat;
+        while (UsbLinuxUtils::xioctl(m_implData->fd, VIDIOC_ENUM_FRAMESIZES, &frmenum) == 0)
+        {
+            if ((frmenum.discrete.width == type.width) &&
+                (frmenum.discrete.height == type.height)) {
+                    found = true;
+                    break;
+                }
+            frmenum.index++;
+        }
+        if (found)
+            break;
+        else
+            fmtdesc.index++;
+    }
+
+    if (!found) {
+        LOG(WARNING) << "UVC does not support the requested format "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return Status::GENERIC_ERROR;
+    }
 
     m_implData->fmt.fmt.pix.width = type.width;
     m_implData->fmt.fmt.pix.height = type.height;
-
-    min = m_implData->fmt.fmt.pix.width * 2;
-    if (m_implData->fmt.fmt.pix.bytesperline < min)
-        m_implData->fmt.fmt.pix.bytesperline = min;
-    min = m_implData->fmt.fmt.pix.bytesperline * m_implData->fmt.fmt.pix.height;
-    if (m_implData->fmt.fmt.pix.sizeimage < min)
-        m_implData->fmt.fmt.pix.sizeimage = min;
+    m_implData->fmt.fmt.pix.pixelformat = fmtdesc.pixelformat;
+    m_implData->fmt.fmt.pix.field = V4L2_FIELD_ANY;
 
     if (-1 ==
         UsbLinuxUtils::xioctl(m_implData->fd, VIDIOC_S_FMT, &m_implData->fmt)) {
