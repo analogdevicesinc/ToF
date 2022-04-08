@@ -7,7 +7,10 @@
 #define EXTERNC
 #endif
 
+#include <stdio.h>
+
 EXTERNC int init_tof_sdk(char* cap_dev_path);
-EXTERNC const char* handleClientRequest(const char *buf);
+EXTERNC void handleClientRequest(const char *in_buf, const size_t in_len, char **out_buf, size_t *out_len);
 
 #endif
+
