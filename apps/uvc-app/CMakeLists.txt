@@ -15,8 +15,6 @@ protobuf_generate_cpp(PROTO_SRCS PROTO_HRDS buffer.proto)
 
 get_filename_component(GENERATED_PROTO_FILES_DIR ${PROTO_HRDS} DIRECTORY)
 
-message(STATUS "foo include dir: ${GENERATED_PROTO_FILES_DIR}")
-
 add_executable(${PROJECT_NAME} uvc-app.cpp ${PROTO_SRCS} ${PROTO_HDRS})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${Protobuf_INCLUDE_DIRS} ${GENERATED_PROTO_FILES_DIR} )
