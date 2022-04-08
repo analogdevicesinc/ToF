@@ -196,7 +196,7 @@ aditof::Status Adsd3500Sensor::open() {
         dev = &m_implData->videoDevs[i];
 
         LOG(INFO) << "device: " << devName << "\tsubdevice: " << subDevName;
-
+#if 0 //Don't open the video device for UVC context. It is opened in uvc-app/lib/v4l2.c
         /* Open V4L2 device */
         if (stat(devName, &st) == -1) {
             LOG(WARNING) << "Cannot identify " << devName << "errno: " << errno
@@ -243,7 +243,7 @@ aditof::Status Adsd3500Sensor::open() {
             LOG(WARNING) << devName << " does not support streaming i/o";
             return Status::GENERIC_ERROR;
         }
-
+#endif
         /* Open V4L2 subdevice */
         if (stat(subDevName, &st) == -1) {
             LOG(WARNING) << "Cannot identify " << subDevName
@@ -401,7 +401,9 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         return status;
     }
 
-#if 1
+    dev = &m_implData->videoDevs[0];
+
+#if 1 // Set custom controls for ADSD3500 camera
     static struct v4l2_control ctrl;
 
     memset(&ctrl, 0, sizeof(ctrl));
@@ -460,6 +462,7 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     }
 #endif
 
+#if 0 // Don't request buffers & set fromat for UVC context. It is already done in uvc-app/lib/v4l2.c 
     m_capturesPerFrame = 1;
 
     for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
@@ -561,6 +564,7 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
             dev->videoBuffers[dev->nVideoBuffers].length = length;
         }
     }
+#endif
 
     m_implData->frameType = type;
 
