@@ -489,6 +489,132 @@ aditof::Status NetworkDepthSensor::writeRegisters(const uint16_t *address,
     return status;
 }
 
+aditof::Status NetworkDepthSensor::getAvailableControls(std::vector<std::string> &controls) const
+{
+    using namespace aditof;
+
+    Network *net = m_implData->handle.net;
+    std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
+
+    if (!net->isServer_Connected()) {
+        LOG(WARNING) << "Not connected to server";
+        return Status::UNREACHABLE;
+    }
+
+    net->send_buff[m_sensorIndex].set_func_name("GetAvailableControls");
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
+
+    if (net->SendCommand() != 0) {
+        LOG(WARNING) << "Send Command Failed";
+        return Status::INVALID_ARGUMENT;
+    }
+
+    if (net->recv_server_data() != 0) {
+        LOG(WARNING) << "Receive Data Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    if (net->recv_buff[m_sensorIndex].server_status() !=
+        payload::ServerStatus::REQUEST_ACCEPTED) {
+        LOG(WARNING) << "API execution on Target Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
+
+    if (status == Status::OK) {
+        controls.clear();
+
+        for (int i = 0; i < net->recv_buff[m_sensorIndex].strings_payload_size(); i++) {
+            std::string controlName = net->recv_buff[m_sensorIndex].strings_payload(i);
+            controls.push_back(controlName);
+        }
+    }
+
+    return status;
+}
+
+aditof::Status NetworkDepthSensor::setControl(const std::string &control,
+                               const std::string &value)
+{
+    using namespace aditof;
+
+    Network *net = m_implData->handle.net;
+    std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
+
+    if (!net->isServer_Connected()) {
+        LOG(WARNING) << "Not connected to server";
+        return Status::UNREACHABLE;
+    }
+
+    net->send_buff[m_sensorIndex].set_func_name("SetControl");
+    net->send_buff[m_sensorIndex].add_func_strings_param(control);
+    net->send_buff[m_sensorIndex].add_func_strings_param(value);
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
+
+    if (net->SendCommand() != 0) {
+        LOG(WARNING) << "Send Command Failed";
+        return Status::INVALID_ARGUMENT;
+    }
+
+    if (net->recv_server_data() != 0) {
+        LOG(WARNING) << "Receive Data Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    if (net->recv_buff[m_sensorIndex].server_status() !=
+        payload::ServerStatus::REQUEST_ACCEPTED) {
+        LOG(WARNING) << "API execution on Target Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
+
+    return status;
+}
+
+aditof::Status NetworkDepthSensor::getControl(const std::string &control,
+                               std::string &value) const
+{
+    using namespace aditof;
+
+    Network *net = m_implData->handle.net;
+    std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
+
+    if (!net->isServer_Connected()) {
+        LOG(WARNING) << "Not connected to server";
+        return Status::UNREACHABLE;
+    }
+
+    net->send_buff[m_sensorIndex].set_func_name("GetControl");
+    net->send_buff[m_sensorIndex].add_func_strings_param(control);
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
+
+    if (net->SendCommand() != 0) {
+        LOG(WARNING) << "Send Command Failed";
+        return Status::INVALID_ARGUMENT;
+    }
+
+    if (net->recv_server_data() != 0) {
+        LOG(WARNING) << "Receive Data Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    if (net->recv_buff[m_sensorIndex].server_status() !=
+        payload::ServerStatus::REQUEST_ACCEPTED) {
+        LOG(WARNING) << "API execution on Target Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
+
+    if (status == Status::OK) {
+        value = net->recv_buff[m_sensorIndex].strings_payload(0);
+    }
+
+    return status;
+}
+
 aditof::Status
 NetworkDepthSensor::getDetails(aditof::SensorDetails &details) const {
     details = m_sensorDetails;
