@@ -500,6 +500,37 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
+    case GET_AVAILABLE_CONTROLS: {
+        std::vector<std::string> aditofControls;
+
+        aditof::Status status =
+            camDepthSensor->getAvailableControls(aditofControls);
+        for (const auto &aditofControl : aditofControls) {
+            buff_send.add_strings_payload(aditofControl);
+        }
+        buff_send.set_status(static_cast<::payload::Status>(status));
+        break;
+    }
+
+    case SET_CONTROL: {
+        std::string controlName = buff_recv.add_func_strings_param(0);
+        std::string controlValue = buff_recv.add_func_strings_param(1);
+        aditof::Status status =
+            camDepthSensor->setControl(controlName, controlValue);
+        buff_send.set_status(static_cast<::payload::Status>(status));
+        break;
+    }
+
+    case GET_CONTROL: {
+        std::string controlName = buff_recv.add_func_strings_param(0);
+        std::string controlValue;
+        aditof::Status status =
+            camDepthSensor->getControl(controlName, controlValue);
+        buff_send.add_func_strings_param(controlValue);
+        buff_send.set_status(static_cast<::payload::Status>(status));
+        break;
+    }
+
     case ADSD3500_READ_CMD: {
         uint16_t cmd = static_cast<uint16_t>(buff_recv.func_int32_param(0));
         uint16_t data;
@@ -745,6 +776,9 @@ void Initialize() {
     s_map_api_Values["GetFrame"] = GET_FRAME;
     s_map_api_Values["ReadRegisters"] = READ_REGISTERS;
     s_map_api_Values["WriteRegisters"] = WRITE_REGISTERS;
+    s_map_api_Values["GetAvailableControls"] = GET_AVAILABLE_CONTROLS;
+    s_map_api_Values["SetControl"] = SET_CONTROL;
+    s_map_api_Values["GetControl"] = GET_CONTROL;
     s_map_api_Values["Adsd3500ReadCmd"] = ADSD3500_READ_CMD;
     s_map_api_Values["Adsd3500WriteCmd"] = ADSD3500_WRITE_CMD;
     s_map_api_Values["Adsd3500ReadPayloadCmd"] = ADSD3500_READ_PAYLOAD_CMD;
