@@ -521,8 +521,8 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
 
     case SET_CONTROL: {
-        std::string controlName = buff_recv.add_func_strings_param(0);
-        std::string controlValue = buff_recv.add_func_strings_param(1);
+        std::string controlName = buff_recv.func_strings_param(0);
+        std::string controlValue = buff_recv.func_strings_param(1);
         aditof::Status status =
             camDepthSensor->setControl(controlName, controlValue);
         buff_send.set_status(static_cast<::payload::Status>(status));
@@ -530,11 +530,11 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
 
     case GET_CONTROL: {
-        std::string controlName = buff_recv.add_func_strings_param(0);
+        std::string controlName = buff_recv.func_strings_param(0);
         std::string controlValue;
         aditof::Status status =
             camDepthSensor->getControl(controlName, controlValue);
-        buff_send.add_func_strings_param(controlValue);
+        buff_send.add_strings(controlValue);
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
