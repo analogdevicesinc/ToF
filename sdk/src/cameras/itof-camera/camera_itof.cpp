@@ -739,6 +739,24 @@ aditof::Status CameraItof::freeComputeLibrary(void) {
     return aditof::Status::OK;
 }
 
+std::string CameraItof::iniFileContentFindKeyAndGetValue(std::ifstream &iniContent, const std::string &key)
+{
+    iniContent.clear();
+    iniContent.seekg(0, std::ios::beg);
+
+    std::string line;
+    while (getline(iniContent, line)) {
+        if (line.compare(0, key.length(), key) == 0) {
+            size_t equalPos = line.find('=');
+            if (equalPos != std::string::npos) {
+                return line.substr(equalPos + 1);
+            }
+        }
+    }
+
+    return "";
+}
+
 aditof::Status CameraItof::loadConfigData(void) {
     uint32_t status = 0;
     uint32_t calFileSize = 0;
@@ -759,17 +777,35 @@ aditof::Status CameraItof::loadConfigData(void) {
         m_calData.size = 0;
     }
 
-    // XYZ set through camera control takes precedence over the setting from .ini file
-    if (!m_xyzSetViaControl) {
-        std::string depthData((char *)m_depthINIData.p_data,
-                              GetDataFileSize(const_cast<char *>(m_ini_depth.c_str())));
-        size_t pos = depthData.find("xyzEnable", 0);
+    std::ifstream depthIniStream(m_ini_depth);
+    if (depthIniStream.is_open()) {
+        std::string value;
 
-        if (pos != std::string::npos) {
-            if (depthData.at(pos + strlen("xyzEnable=")) == '1') {
-                m_xyzEnabled = true;
-            }
+        // TO DO: Do we need to read here whether depth is enabled or not and also the AB averaging?
+
+        value = iniFileContentFindKeyAndGetValue(depthIniStream, "bitsInPhaseOrDepth");
+        if (!value.empty()) {
+            m_depthSensor->setControl("phaseDepthBits", value);
         }
+
+        value = iniFileContentFindKeyAndGetValue(depthIniStream, "bitsInConf");
+        if (!value.empty()) {
+            m_depthSensor->setControl("confidenceBits", value);
+        }
+
+        value = iniFileContentFindKeyAndGetValue(depthIniStream, "bitsInAB");
+        if (!value.empty()) {
+            m_depthSensor->setControl("abBits", value);
+        }
+
+        // XYZ set through camera control takes precedence over the setting from .ini file
+        if (!m_xyzSetViaControl) {
+            m_xyzEnabled = iniFileContentFindKeyAndGetValue(depthIniStream, "xyzEnable") == "1";
+        }
+
+        depthIniStream.close();
+    } else {
+        LOG(ERROR) << "Unable to open file: " << m_ini_depth;
     }
 
     m_jsonFileSize = jsonFileSize;
