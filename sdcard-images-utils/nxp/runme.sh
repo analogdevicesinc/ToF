@@ -122,6 +122,10 @@ env PATH="$PATH:/sbin:/usr/sbin" mkdosfs tmp/part1.fat32
 
 IMG=microsd-${REPO_PREFIX}.img
 
+echo "sd_img_ver	$IMG" > $ROOTDIR/images/sw-versions
+echo "kernel		$KERNEL_NXP_REL" >> $ROOTDIR/images/sw-versions
+echo "u-boot		$UBOOT_NXP_REL" >> $ROOTDIR/images/sw-versions
+
 echo "label linux" > $ROOTDIR/images/extlinux.conf
 echo "        linux ../Image" >> $ROOTDIR/images/extlinux.conf
 echo "        fdt ../imx8mp-adi-tof-noreg.dtb" >> $ROOTDIR/images/extlinux.conf
@@ -131,6 +135,7 @@ else
 	echo "        append root=/dev/mmcblk1p2 rootwait rw" >> $ROOTDIR/images/extlinux.conf
 fi
 mmd -i tmp/part1.fat32 ::/extlinux
+mcopy -i tmp/part1.fat32 $ROOTDIR/images/sw-versions ::/sw-versions
 mcopy -i tmp/part1.fat32 $ROOTDIR/images/extlinux.conf ::/extlinux/extlinux.conf
 mcopy -i tmp/part1.fat32 $ROOTDIR/build/linux-imx/arch/arm64/boot/Image ::/Image
 mcopy -s -i tmp/part1.fat32 $ROOTDIR/build/linux-imx/arch/arm64/boot/dts/freescale/*imx8mp*.dtb ::/
