@@ -212,12 +212,12 @@ echo -e "${PASSWORD}\n${PASSWORD}\n" | passwd ${USERNAME}
 
 # overwrite apt source list
 rm -f /etc/apt/sources.list
-echo deb     ${DISTRO_MIRROR} ${DISTRO_CODE}          main restricted universe multiverse >> /etc/apt/sources.list
-echo deb-src ${DISTRO_MIRROR} ${DISTRO_CODE}          main restricted universe multiverse >> /etc/apt/sources.list
-echo deb     ${DISTRO_MIRROR} ${DISTRO_CODE}-updates  main restricted universe multiverse >> /etc/apt/sources.list
-echo deb-src ${DISTRO_MIRROR} ${DISTRO_CODE}-updates  main restricted universe multiverse >> /etc/apt/sources.list
-echo deb     ${DISTRO_MIRROR} ${DISTRO_CODE}-security main restricted universe multiverse >> /etc/apt/sources.list
-echo deb-src ${DISTRO_MIRROR} ${DISTRO_CODE}-security main restricted universe multiverse >> /etc/apt/sources.list
+echo deb     ${DISTRO_MIRROR} ${DISTRO_CODE}          main universe >> /etc/apt/sources.list
+echo deb-src ${DISTRO_MIRROR} ${DISTRO_CODE}          main universe >> /etc/apt/sources.list
+echo deb     ${DISTRO_MIRROR} ${DISTRO_CODE}-updates  main universe >> /etc/apt/sources.list
+echo deb-src ${DISTRO_MIRROR} ${DISTRO_CODE}-updates  main universe >> /etc/apt/sources.list
+echo deb     ${DISTRO_MIRROR} ${DISTRO_CODE}-security main universe >> /etc/apt/sources.list
+echo deb-src ${DISTRO_MIRROR} ${DISTRO_CODE}-security main universe >> /etc/apt/sources.list
 
 apt update -y
 apt upgrade -y
@@ -244,6 +244,8 @@ popd
 popd
 popd
 
+#generate licences file
+tail -n 10000 /usr/share/doc/*/copyright > /licenses.txt
 EOF
 
   # Apply step1 overlay
