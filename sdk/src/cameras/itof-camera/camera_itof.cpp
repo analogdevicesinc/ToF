@@ -225,7 +225,7 @@ aditof::Status CameraItof::initialize() {
             intrinsics[0] = ModeInfo::getInstance()->getModeInfo(availableFrameTypes.type).mode << 24;
 
             //hardcoded function values to return intrinsics
-            status = m_depthSensor->adsd3500_read_payload_cmd(0x01, (uint8_t*)intrinsics, 56);
+            //status = m_depthSensor->adsd3500_read_payload_cmd(0x01, (uint8_t*)intrinsics, 56);
             if(status != Status::OK){
                 LOG(ERROR) << "Failed to read intrinsics for adsd3500!";
                 return status;
