@@ -534,7 +534,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         std::string controlValue;
         aditof::Status status =
             camDepthSensor->getControl(controlName, controlValue);
-        buff_send.add_strings(controlValue);
+        buff_send.add_strings_payload(controlValue);
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
