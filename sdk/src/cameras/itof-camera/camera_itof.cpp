@@ -801,7 +801,7 @@ aditof::Status CameraItof::loadConfigData(void) {
         value = iniFileContentFindKeyAndGetValue(depthIniStream, "partialDepthEnable");
         if (!value.empty()) {
             std::string en = (value == "0") ? "1" : "0";
-            m_depthSensor->setControl("DEPTH_EN", en);
+            m_depthSensor->setControl("depthEnable", en);
         }
 
         // XYZ set through camera control takes precedence over the setting from .ini file
