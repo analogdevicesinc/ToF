@@ -785,16 +785,40 @@ aditof::Status CameraItof::loadConfigData(void) {
 
         value = iniFileContentFindKeyAndGetValue(depthIniStream, "bitsInPhaseOrDepth");
         if (!value.empty()) {
+            if (value == "16")
+                value = "6";
+            else if (value == "14")
+                value = "5";
+            else if (value == "12")
+                value = "4";
+            else if (value == "10")
+                value = "3";
+            else
+                value = "2";
             m_depthSensor->setControl("phaseDepthBits", value);
         }
 
         value = iniFileContentFindKeyAndGetValue(depthIniStream, "bitsInConf");
         if (!value.empty()) {
+            if (value == "8")
+                value = "2";
+            else
+                value = "1";
             m_depthSensor->setControl("confidenceBits", value);
         }
 
         value = iniFileContentFindKeyAndGetValue(depthIniStream, "bitsInAB");
         if (!value.empty()) {
+            if (value == "16")
+                value = "6";
+            else if (value == "14")
+                value = "5";
+            else if (value == "12")
+                value = "4";
+            else if (value == "10")
+                value = "3";
+            else
+                value = "2";
             m_depthSensor->setControl("abBits", value);
         }
 
