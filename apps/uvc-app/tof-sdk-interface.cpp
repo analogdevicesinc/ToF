@@ -204,6 +204,38 @@ void handleClientRequest(const char *in_buf, const size_t in_len, char **out_buf
 
         break;
     }
+    case uvc_payload::FunctionName::GET_AVAILABLE_CONTROLS: {
+        std::vector<std::string> controls;
+        aditof::Status status =
+            camDepthSensor->getAvailableControls(controls);
+        for (const auto &control : controls) {
+            response.add_strings_payload(control);
+        }
+        response.set_status(static_cast<::uvc_payload::Status>(status));
+
+        break;
+    }
+
+    case uvc_payload::FunctionName::SET_CONTROL: {
+        std::string controlName = request.func_strings_param(0);
+        std::string controlValue = request.func_strings_param(1);
+        aditof::Status status =
+            camDepthSensor->setControl(controlName, controlValue);
+        response.set_status(static_cast<::uvc_payload::Status>(status));
+
+        break;
+    }
+
+    case uvc_payload::FunctionName::GET_CONTROL: {
+        std::string controlName = request.func_strings_param(0);
+        std::string controlValue;
+        aditof::Status status =
+            camDepthSensor->getControl(controlName, controlValue);
+        response.add_strings_payload(controlValue);
+        response.set_status(static_cast<::uvc_payload::Status>(status));
+
+        break;
+    }
 
     case uvc_payload::FunctionName::STORAGE_OPEN: {
 
