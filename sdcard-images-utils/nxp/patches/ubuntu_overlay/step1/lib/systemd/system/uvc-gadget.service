@@ -1,6 +1,7 @@
 [Unit]
 Description=UVC application service
-Wants=adi-tof.service usb-gadget-uvc.service
+Wants=adi-tof.service usb-gadget.service
+ConditionPathExists=/sys/kernel/config/usb_gadget/g1/functions/uvc.0
 
 [Service]
 Type=exec

@@ -228,6 +228,7 @@ apt install -y ${ADD_LIST_ST_3}
 systemctl enable systemd-networkd.service
 systemctl enable avahi-daemon.service
 systemctl enable uvc-gadget.service
+systemctl enable network-gadget.service
 
 #sdk install
 pushd /home/${USERNAME}
