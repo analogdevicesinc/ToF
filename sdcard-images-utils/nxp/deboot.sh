@@ -60,7 +60,7 @@ function setup_config() {
   # default configs
   TARGET_ARCH=arm64
   DISTRO_MIRROR=${DISTRO_MIRROR:='http://ports.ubuntu.com/ubuntu-ports'}
-  DISTRO_CODE=bionic
+  DISTRO_CODE=focal
   USERNAME=analog
   PASSWORD=analog
   TZ_AREA=Etc
