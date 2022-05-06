@@ -351,7 +351,6 @@ class CameraItof : public aditof::Camera {
     std::shared_ptr<aditof::TemperatureSensorInterface> m_tempSensor;
     std::unordered_map<std::string, std::string> m_controls;
     std::map<std::string, noArgCallable> m_noArgCallables;
-    std::vector<std::pair<std::string, std::vector<float>>> m_cameraIntrinsicList;
 
     bool m_devStarted;
     bool m_eepromInitialized;
@@ -377,6 +376,8 @@ class CameraItof : public aditof::Camera {
     aditof::TOF_ModuleFiles_t m_tempFiles;
     std::vector<aditof::DepthSensorFrameType> m_availableSensorFrameTypes;
     std::vector<std::pair<std::string, int32_t>> m_sensor_settings;
+
+    std::vector<std::pair<std::string, TofiXYZDealiasData>> m_cameraDealiasDataList;
     
 };
 
