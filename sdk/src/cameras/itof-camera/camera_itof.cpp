@@ -219,20 +219,30 @@ aditof::Status CameraItof::initialize() {
     //get intrinsics for adsd3500 TO DO: check endianess of intrinsics
     if(m_adsd3500Enabled){
         for (auto availableFrameTypes : m_availableSensorFrameTypes){
-            float intrinsics[14];
+            float intrinsics[14] = {0};
+            uint8_t dealiasParams[52] = {0};
+            TofiXYZDealiasData dealiasStruct;
             //the first element of readback_data for adsd3500_read_payload is used for the custom command
             //it will be overwritten by the returned data
             intrinsics[0] = ModeInfo::getInstance()->getModeInfo(availableFrameTypes.type).mode << 24;
+            dealiasParams[0] = ModeInfo::getInstance()->getModeInfo(availableFrameTypes.type).mode << 24;
 
             //hardcoded function values to return intrinsics
-            //status = m_depthSensor->adsd3500_read_payload_cmd(0x01, (uint8_t*)intrinsics, 56);
-            if(status != Status::OK){
+            status = m_depthSensor->adsd3500_read_payload_cmd(0x01, (uint8_t*)intrinsics, 56);
+            if (status != Status::OK) {
                 LOG(ERROR) << "Failed to read intrinsics for adsd3500!";
                 return status;
             }
+            status = m_depthSensor->adsd3500_read_payload_cmd(0x02, dealiasParams, 52);
+            if(status != Status::OK){
+                LOG(ERROR) << "Failed to read dealias parameters for adsd3500!";
+                return status;
+            }
 
-            m_cameraIntrinsicList.emplace_back(availableFrameTypes.type,
-                     std::vector<float>(intrinsics, intrinsics + sizeof(intrinsics)/sizeof(intrinsics[0])));
+            memcpy(&dealiasStruct, dealiasParams, sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
+            memcpy(&dealiasStruct.camera_intrinsics, intrinsics, sizeof(CameraIntrinsics));
+
+            m_cameraDealiasDataList.emplace_back(availableFrameTypes.type, dealiasStruct);
         }
     }
     
@@ -395,23 +405,6 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
         }
 
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
-    }
-
-    //populate camera intrinsics depending on frame type for adsd3500
-    if (m_adsd3500Enabled) {
-        for (auto cameraIntrinsics : m_cameraIntrinsicList){
-            if(cameraIntrinsics.first == frameType){
-                m_details.intrinsics.cameraMatrix.clear();
-                for (int i = 0; i < 6; i++) {
-                    m_details.intrinsics.cameraMatrix.emplace_back(cameraIntrinsics.second.at(i));
-                }
-
-                m_details.intrinsics.distCoeffs.clear();
-                for (int i = 6; i < 14; i++) {
-                    m_details.intrinsics.distCoeffs.emplace_back(cameraIntrinsics.second.at(i));
-                }
-            }
-        }
     }
 
     if (m_controls["enableDepthCompute"] == "on" && ((m_details.frameType.totalCaptures > 1) || m_adsd3500Enabled)){
@@ -673,22 +666,20 @@ aditof::Status CameraItof::initComputeLibrary(void) {
             ConfigFileData depth_ini = {tempDataParser, m_depthINIData.size};
 
             if(m_adsd3500Enabled){
-                status = GetXYZ_DealiasData((ConfigFileData *)&m_calData, m_xyz_dealias_data);
-                if (status != ADI_TOFI_SUCCESS) {
-                    LOG(ERROR) << "Failed to GetCalibrationData";
-                    return aditof::Status::INVALID_ARGUMENT;
-                }
-
-                m_tofi_config = InitTofiConfig_isp((ConfigFileData *)&depth_ini,
-                                                   convertedMode, &status,
-                                                   m_xyz_dealias_data);
-
+                if (m_adsd3500Enabled) {
+                    for (auto dealiasParams : m_cameraDealiasDataList) {
+                        if (dealiasParams.first == m_details.mode) {
+                            m_tofi_config = InitTofiConfig_isp(
+                                (ConfigFileData *)&depth_ini, convertedMode,
+                                &status, &dealiasParams.second);
+                        }
+                    }
+                }   
             } else {
                 if (calData.p_data != NULL) {
                     m_tofi_config = InitTofiConfig(&calData, NULL, &depth_ini,
                                                    convertedMode, &status);
-                }
-                else {
+            } else {
                     LOG(ERROR) << "Failed to get calibration data";
                 }
                    
