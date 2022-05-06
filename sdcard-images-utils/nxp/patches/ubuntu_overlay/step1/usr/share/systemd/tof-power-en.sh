@@ -17,7 +17,64 @@
 
 #Vaux = 3.271v
 #Vsys = 3.3v
-#V5V0 = 
+
+BOARD=$(strings /proc/device-tree/model)
+
+if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier + ADSD3500" ]]; then
+	#ADSD3500 Reset Pin
+	echo 122 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio122/direction
+	echo 0 > /sys/class/gpio/gpio122/value
+
+	# Boot strap MAX7321
+	#OC0
+	echo 496 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio496/direction
+	echo 0 > /sys/class/gpio/gpio496/value
+
+	#OC1
+	echo 497 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio497/direction
+	echo 0 > /sys/class/gpio/gpio497/value
+
+	#OC2
+	echo 498 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio498/direction
+	echo 0 > /sys/class/gpio/gpio498/value
+
+	#OC3
+	echo 499 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio499/direction
+	echo 0 > /sys/class/gpio/gpio499/value
+
+	#OC4
+	echo 500 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio500/direction
+	echo 0 > /sys/class/gpio/gpio500/value
+
+	#OC5
+	echo 501 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio501/direction
+	echo 0 > /sys/class/gpio/gpio501/value
+
+	#OC6
+	echo 502 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio502/direction
+	echo 0 > /sys/class/gpio/gpio502/value
+
+	#FLASH_WP
+	echo 503 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio503/direction
+	echo 1 > /sys/class/gpio/gpio503/value
+
+	#U0
+	echo 507 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio507/direction
+	echo 0 > /sys/class/gpio/gpio507/value
+
+	# Pull reset high
+	echo 1 > /sys/class/gpio/gpio122/value
+fi
 
 # Deassert ADC reset - will pop on /dev/i2c1 address 0x10
 echo 132 > /sys/class/gpio/export
@@ -35,32 +92,10 @@ i2cset -y 2 0x10 0x10 0x008a w # Vsys = 4.3V
 i2cset -y 2 0x10 0x11 0x0594 w # Vaux = 22V
 i2cset -y 2 0x10 0x12 0x00a3 w # V5v0 = 4.7V
 
-# VMAIN
-echo 128 > /sys/class/gpio/export
-echo out > /sys/class/gpio/gpio128/direction
-
-# V5V0
-echo 126 > /sys/class/gpio/export
-echo out > /sys/class/gpio/gpio126/direction
-
-# VSYS
-echo 129 > /sys/class/gpio/export
-echo out > /sys/class/gpio/gpio129/direction
-
 # VDAC (3.3v / 1.8v IOs)
-
 echo 130 > /sys/class/gpio/export
 echo out > /sys/class/gpio/gpio130/direction
-
-# VAUX
-echo 127 > /sys/class/gpio/export
-echo out > /sys/class/gpio/gpio127/direction
-
-echo 1 > /sys/class/gpio/gpio128/value
-echo 1 > /sys/class/gpio/gpio126/value
-echo 1 > /sys/class/gpio/gpio129/value
 echo 1 > /sys/class/gpio/gpio130/value
-echo 1 > /sys/class/gpio/gpio127/value
 
 i2cset -y 2 0x10 0x04 0xff00 w; i2cset -y 2 0x10 0x02 0xff03 w
 for i in {0..8}; do 
@@ -100,6 +135,8 @@ echo "V5V0 is $VALUE V"
 fi
 done # Reads back channel 0..7 and temperature (channel #8)
 
-modprobe addicmos fw_load=0 calib_load=0
+if [[ $BOARD == "NXP i.MX8MPlus ADI TOF board" ]]; then
+		modprobe addicmos fw_load=0 calib_load=0
+		modprobe spi_nor
+fi
 modprobe imx8_media_dev
-modprobe spi_nor
