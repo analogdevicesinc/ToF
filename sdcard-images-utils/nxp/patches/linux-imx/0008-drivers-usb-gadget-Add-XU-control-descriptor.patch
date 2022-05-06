@@ -1,21 +1,21 @@
-From 1884a7a8c2a22234228cfc89b262d15ec2cc8f77 Mon Sep 17 00:00:00 2001
+From 1f121a9b8f4c26f2735bc2f0dd002c444f48d7ce Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Fri, 21 May 2021 11:49:25 +0300
-Subject: [PATCH 08/22] drivers: usb: gadget: Add XU control descriptor
+Subject: [PATCH 08/33] drivers: usb: gadget: Add XU control descriptor
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
- drivers/usb/gadget/function/f_uvc.c        | 34 ++++++++++++++++------
+ drivers/usb/gadget/function/f_uvc.c        | 33 ++++++++++++++++------
  drivers/usb/gadget/function/u_uvc.h        |  5 ++--
  drivers/usb/gadget/function/uvc_configfs.c |  2 +-
- include/uapi/linux/usb/video.h             |  5 ++--
- 4 files changed, 32 insertions(+), 14 deletions(-)
+ include/uapi/linux/usb/video.h             |  4 +--
+ 4 files changed, 30 insertions(+), 14 deletions(-)
 
 diff --git a/drivers/usb/gadget/function/f_uvc.c b/drivers/usb/gadget/function/f_uvc.c
-index 44b4352a2676..c972b2b0060b 100644
+index f48a00e49794..d6b50281fb5a 100644
 --- a/drivers/usb/gadget/function/f_uvc.c
 +++ b/drivers/usb/gadget/function/f_uvc.c
-@@ -779,6 +779,7 @@ static struct usb_function_instance *uvc_alloc_inst(void)
+@@ -784,6 +784,7 @@ static struct usb_function_instance *uvc_alloc_inst(void)
  	struct f_uvc_opts *opts;
  	struct uvc_camera_terminal_descriptor *cd;
  	struct uvc_processing_unit_descriptor *pd;
@@ -23,7 +23,7 @@ index 44b4352a2676..c972b2b0060b 100644
  	struct uvc_output_terminal_descriptor *od;
  	struct uvc_color_matching_descriptor *md;
  	struct uvc_descriptor_header **ctl_cls;
-@@ -802,30 +803,43 @@ static struct usb_function_instance *uvc_alloc_inst(void)
+@@ -807,31 +808,43 @@ static struct usb_function_instance *uvc_alloc_inst(void)
  	cd->wObjectiveFocalLengthMax	= cpu_to_le16(0);
  	cd->wOcularFocalLength		= cpu_to_le16(0);
  	cd->bControlSize		= 3;
@@ -45,8 +45,8 @@ index 44b4352a2676..c972b2b0060b 100644
 +	pd->bmControls[0]		= 0;
  	pd->bmControls[1]		= 0;
  	pd->iProcessing			= 0;
-+	pd->bmVideoStandards		= 0;
-+
+ 	pd->bmVideoStandards		= 0;
+ 
 +	ed = &opts->uvc_extension;
 +	ed->bLength			= UVC_DT_EXTENSION_UNIT_SIZE(1,1),
 +	ed->bDescriptorType		= USB_DT_CS_INTERFACE,
@@ -58,7 +58,7 @@ index 44b4352a2676..c972b2b0060b 100644
 +	ed->bControlSize		= 1,
 +	ed->bmControls[0]		= 0x0F,
 +	ed->iExtension			= 0x00,
- 
++
  	od = &opts->uvc_output_terminal;
  	od->bLength			= UVC_DT_OUTPUT_TERMINAL_SIZE;
  	od->bDescriptorType		= USB_DT_CS_INTERFACE;
@@ -72,7 +72,7 @@ index 44b4352a2676..c972b2b0060b 100644
  	od->iTerminal			= 0;
  
  	md = &opts->uvc_color_matching;
-@@ -841,8 +855,9 @@ static struct usb_function_instance *uvc_alloc_inst(void)
+@@ -847,8 +860,9 @@ static struct usb_function_instance *uvc_alloc_inst(void)
  	ctl_cls[0] = NULL;	/* assigned elsewhere by configfs */
  	ctl_cls[1] = (struct uvc_descriptor_header *)cd;
  	ctl_cls[2] = (struct uvc_descriptor_header *)pd;
@@ -84,7 +84,7 @@ index 44b4352a2676..c972b2b0060b 100644
  	opts->fs_control =
  		(const struct uvc_descriptor_header * const *)ctl_cls;
  
-@@ -851,8 +866,9 @@ static struct usb_function_instance *uvc_alloc_inst(void)
+@@ -857,8 +871,9 @@ static struct usb_function_instance *uvc_alloc_inst(void)
  	ctl_cls[0] = NULL;	/* assigned elsewhere by configfs */
  	ctl_cls[1] = (struct uvc_descriptor_header *)cd;
  	ctl_cls[2] = (struct uvc_descriptor_header *)pd;
@@ -133,18 +133,10 @@ index 00fb58e50a15..5dec2a126fd2 100644
  
  	config_item_init_type_name(&h->item, name, &uvcg_streaming_header_type);
 diff --git a/include/uapi/linux/usb/video.h b/include/uapi/linux/usb/video.h
-index d854cb19c42c..6687ebb7c312 100644
+index bfdae12cdacf..f82080a16345 100644
 --- a/include/uapi/linux/usb/video.h
 +++ b/include/uapi/linux/usb/video.h
-@@ -302,6 +302,7 @@ struct uvc_processing_unit_descriptor {
- 	__u8   bControlSize;
- 	__u8   bmControls[2];
- 	__u8   iProcessing;
-+	__u8   bmVideoStandards;
- } __attribute__((__packed__));
- 
- #define UVC_DT_PROCESSING_UNIT_SIZE(n)			(9+(n))
-@@ -315,9 +316,9 @@ struct uvc_extension_unit_descriptor {
+@@ -316,9 +316,9 @@ struct uvc_extension_unit_descriptor {
  	__u8  guidExtensionCode[16];
  	__u8  bNumControls;
  	__u8  bNrInPins;
@@ -157,5 +149,5 @@ index d854cb19c42c..6687ebb7c312 100644
  } __attribute__((__packed__));
  
 -- 
-2.17.1
+2.35.1
 

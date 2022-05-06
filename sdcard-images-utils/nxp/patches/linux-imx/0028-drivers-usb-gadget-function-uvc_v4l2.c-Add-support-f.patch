@@ -1,0 +1,27 @@
+From af8e0b6fda2c0877965b2be0bcd2514bfbc19f18 Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Mon, 28 Feb 2022 11:07:06 +0200
+Subject: [PATCH 28/33] drivers: usb: gadget: function: uvc_v4l2.c: Add support
+ for SBGGR8/16
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ drivers/usb/gadget/function/uvc_v4l2.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/usb/gadget/function/uvc_v4l2.c b/drivers/usb/gadget/function/uvc_v4l2.c
+index 4ca89eab6159..19952ef98685 100644
+--- a/drivers/usb/gadget/function/uvc_v4l2.c
++++ b/drivers/usb/gadget/function/uvc_v4l2.c
+@@ -58,6 +58,8 @@ struct uvc_format {
+ static struct uvc_format uvc_formats[] = {
+ 	{ 16, V4L2_PIX_FMT_YUYV  },
+ 	{ 0,  V4L2_PIX_FMT_MJPEG },
++	{ 8,  V4L2_PIX_FMT_SBGGR8 },
++	{ 16, V4L2_PIX_FMT_SBGGR16 },
+ };
+ 
+ static int
+-- 
+2.35.1
+
