@@ -257,7 +257,7 @@ EOF
   sudo chroot ${ROOTFS_TMP} /tmp/stage3.sh
   sudo rm -f ${ROOTFS_TMP}/tmp/stage3.sh
   
-  sudo tar -xvf ${SCRIPT_DIR}/build/linux-imx/modules.tar -C ${ROOTFS_TMP}/
+  sudo tar -xvf ${SCRIPT_DIR}/build/linux-imx/modules.tar -C ${ROOTFS_TMP}/usr/
 
   # I don't know who creates empty .cache which is owned by root, remove it.
   sudo rm -rf ${ROOTFS_TMP}/home/${USERNAME}/.cache
