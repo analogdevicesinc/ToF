@@ -3,7 +3,7 @@ set -e
 
 ### General setup
 NXP_REL=rel_imx_5.4.70_2.3.0
-KERNEL_NXP_REL=lf-5.10.y-1.0.0
+KERNEL_NXP_REL=lf-5.10.72-2.2.0
 #rel_imx_5.4.70_2.3.0
 UBOOT_NXP_REL=imx_v2020.04_5.4.70_2.3.0
 #rel_imx_5.4.24_2.1.0
