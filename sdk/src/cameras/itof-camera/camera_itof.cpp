@@ -224,8 +224,9 @@ aditof::Status CameraItof::initialize() {
             TofiXYZDealiasData dealiasStruct;
             //the first element of readback_data for adsd3500_read_payload is used for the custom command
             //it will be overwritten by the returned data
-            intrinsics[0] = ModeInfo::getInstance()->getModeInfo(availableFrameTypes.type).mode << 24;
-            dealiasParams[0] = ModeInfo::getInstance()->getModeInfo(availableFrameTypes.type).mode << 24;
+            uint8_t mode = ModeInfo::getInstance()->getModeInfo(availableFrameTypes.type).mode;
+            intrinsics[0] = mode << 24;
+            dealiasParams[0] = mode << 24;
 
             //hardcoded function values to return intrinsics
             status = m_depthSensor->adsd3500_read_payload_cmd(0x01, (uint8_t*)intrinsics, 56);
@@ -241,8 +242,8 @@ aditof::Status CameraItof::initialize() {
 
             memcpy(&dealiasStruct, dealiasParams, sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
             memcpy(&dealiasStruct.camera_intrinsics, intrinsics, sizeof(CameraIntrinsics));
-
-            m_cameraDealiasDataList.emplace_back(availableFrameTypes.type, dealiasStruct);
+            
+            m_xyz_dealias_data[mode - 1] = dealiasStruct;
         }
     }
     
@@ -667,13 +668,9 @@ aditof::Status CameraItof::initComputeLibrary(void) {
 
             if(m_adsd3500Enabled){
                 if (m_adsd3500Enabled) {
-                    for (auto dealiasParams : m_cameraDealiasDataList) {
-                        if (dealiasParams.first == m_details.mode) {
-                            m_tofi_config = InitTofiConfig_isp(
-                                (ConfigFileData *)&depth_ini, convertedMode,
-                                &status, &dealiasParams.second);
-                        }
-                    }
+                    m_tofi_config = InitTofiConfig_isp(
+                        (ConfigFileData *)&depth_ini, convertedMode,
+                            &status, m_xyz_dealias_data);
                 }   
             } else {
                 if (calData.p_data != NULL) {
