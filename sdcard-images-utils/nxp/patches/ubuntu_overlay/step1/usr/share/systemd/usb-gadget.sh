@@ -6,27 +6,18 @@ set -e
 
 CONFIGFS="/sys/kernel/config"
 GADGET="$CONFIGFS/usb_gadget"
-VID="0x064b"
+VID="0x0456"
 PID="0xa4a2"
-SERIAL="0123456789"
-MANUF="Analog Devices, Inc. Development Tools"
+MANUF="Analog Devices Inc."
 PRODUCT="ADI TOF USB Gadget"
+SERIAL="12345678"
 
 USBFILE=/dev/mmcblk1p1
 
-SERIAL="$(grep Serial /proc/cpuinfo | sed 's/Serial\s*: 0000\(\w*\)/\1/')"
-MAC="$(echo ${SERIAL} | sed 's/\(\w\w\)/:\1/g' | cut -b 2-)"
-MAC_HOST="12$(echo ${MAC} | cut -b 3-)"
-MAC_DEV="02$(echo ${MAC} | cut -b 3-)"
-
 BOARD=$(strings /proc/device-tree/model)
 
-case $BOARD in
-	*)
-		UDC=`ls /sys/class/udc` # will identify the 'first' UDC
-		UDC_ROLE=/dev/null # Not generic
-		;;
-esac
+UDC=`ls /sys/class/udc` # will identify the 'first' UDC
+UDC_ROLE=/dev/null # Not generic
 
 echo "Detecting platform:"
 echo "  board : $BOARD"
@@ -38,19 +29,21 @@ create_rndis() {
        	#	create_rndis configs/c.1 rndis.usb0
 	CONFIG=$1
 	FUNCTION=$2
-	
+
+	echo "Create $FUNCTION"
+
 	mkdir functions/$FUNCTION
-	echo "RNDIS" > functions/$FUNCTION/os_desc/interface.rndis/compatible_id
-	echo "5162001" > functions/$FUNCTION/os_desc/interface.rndis/sub_compatible_id
 
-	echo $MAC_HOST > functions/$FUNCTION/host_addr
-	echo $MAC_DEV > functions/$FUNCTION/dev_addr
+	# OS descriptors
+	echo 1 > os_desc/use
+	echo 0xcd > os_desc/b_vendor_code
+	echo MSFT100 > os_desc/qw_sign
+	echo RNDIS > functions/$FUNCTION/os_desc/interface.rndis/compatible_id
+	echo 5162001 > functions/$FUNCTION/os_desc/interface.rndis/sub_compatible_id
 	
-	ln -s functions/rndis.usb0 configs/c.1
-	
-	# Tell Windows to use config #2
-	ln -s configs/c.1 os_desc
+	ln -s functions/$FUNCTION $CONFIG
 
+	ln -s $CONFIG os_desc
 }
 
 delete_rndis() {
@@ -88,7 +81,7 @@ create_msd() {
         echo 1 > functions/$FUNCTION/lun.0/removable
         echo 0 > functions/$FUNCTION/lun.0/cdrom
 
-        ln -s functions/$FUNCTION configs/c.1
+        ln -s functions/$FUNCTION $CONFIG
 
         echo "OK"
 }
@@ -247,11 +240,19 @@ case "$1" in
 	echo $SERIAL > strings/0x409/serialnumber
 	echo $MANUF > strings/0x409/manufacturer
 	echo $PRODUCT > strings/0x409/product
+
+	echo 0xEF > bDeviceClass
+	echo 0x02 > bDeviceSubClass
+	echo 0x01 > bDeviceProtocol
+	echo 0x100 > bcdDevice
+
 	echo "OK"
 
 	echo "Creating Config"
 	mkdir configs/c.1
 	mkdir configs/c.1/strings/0x409
+
+	echo 896 > configs/c.1/MaxPower
 
 	echo "Creating functions..."
 	case $BOARD in
@@ -260,8 +261,8 @@ case "$1" in
 			;;
 
 		"NXP i.MX8MPlus ADI TOF carrier + ADSD3500")
-			create_rndis configs/c.1 rndis.usb0
-			create_msd configs/c.1 mass_storage.0 $USBFILE
+			create_rndis configs/c.1 rndis.0
+			create_msd configs/c.1 mass_storage.0 /dev/mmcblk1p1
 			;;
 
 		*)
@@ -273,8 +274,6 @@ case "$1" in
 
 	echo "Binding USB Device Controller"
 	echo $UDC > UDC
-	echo peripheral > $UDC_ROLE
-	cat $UDC_ROLE
 	echo "OK"
 	;;
 
@@ -300,8 +299,8 @@ case "$1" in
 			;;
 
 		"NXP i.MX8MPlus ADI TOF carrier + ADSD3500")
+			delete_rndis configs/c.1 rndis.0
 			delete_msd configs/c.1 mass_storage.0
-			delete_rndis configs/c.1 rndis.usb0
 			;;
 
 		*)
