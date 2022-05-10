@@ -509,7 +509,7 @@ Network::Network(int connectionId) {
  * Desription:   Destructor for network class
  */
 Network::~Network() {
-    if (context.at(m_connectionId) != NULL) {
+    if (context.at(m_connectionId) != NULL && Server_Connected[m_connectionId]) {
         /*set a flag to complete the thread */
         std::unique_lock<std::mutex> mlock(thread_mutex[m_connectionId]);
         Thread_Running[m_connectionId] = 1;
