@@ -130,7 +130,7 @@ ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
 
 	// Parse config file for this application
     //Parse config.json
-    std::ifstream ifs("tof-viewer_config.ini");
+    std::ifstream ifs("tof-viewer_config.json");
     std::string content((std::istreambuf_iterator<char>(ifs)),
                         (std::istreambuf_iterator<char>()));
     cJSON *config_json = cJSON_Parse(content.c_str());
