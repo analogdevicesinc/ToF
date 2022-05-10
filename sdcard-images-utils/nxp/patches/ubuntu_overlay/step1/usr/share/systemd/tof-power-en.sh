@@ -136,7 +136,7 @@ fi
 done # Reads back channel 0..7 and temperature (channel #8)
 
 if [[ $BOARD == "NXP i.MX8MPlus ADI TOF board" ]]; then
-		modprobe addicmos fw_load=0 calib_load=0
-		modprobe spi_nor
+	modprobe adsd3100 fw_load=0 calib_load=0
+	modprobe spi_nor
 fi
 modprobe imx8_media_dev

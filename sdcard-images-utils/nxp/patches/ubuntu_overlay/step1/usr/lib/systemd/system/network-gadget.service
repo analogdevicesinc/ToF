@@ -1,7 +1,7 @@
 [Unit]
 Description=Network server service
 Wants=adi-tof.service usb-gadget.service
-ConditionPathExists=/sys/kernel/config/usb_gadget/g1/functions/rndis.usb0
+ConditionPathExists=/sys/kernel/config/usb_gadget/g1/functions/rndis.0
 
 [Service]
 Type=exec
