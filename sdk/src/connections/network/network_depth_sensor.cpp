@@ -729,6 +729,7 @@ aditof::Status NetworkDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8
     net->send_buff[m_sensorIndex].set_func_name("Adsd3500ReadPayloadCmd");
     net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(cmd));
     net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(payload_len));
+    net->send_buff[m_sensorIndex].add_func_bytes_param(readback_data, 4 * sizeof (uint8_t));
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
