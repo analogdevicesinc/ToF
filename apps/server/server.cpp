@@ -560,6 +560,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         uint16_t payload_len = static_cast<uint16_t>(buff_recv.func_int32_param(1));
         uint8_t *data = new uint8_t[payload_len];
 
+	memcpy(data, buff_recv.func_bytes_param(0).c_str(), 4 * sizeof(uint8_t));
         aditof::Status status =
             camDepthSensor->adsd3500_read_payload_cmd(cmd, data, payload_len);
         if (status == aditof::Status::OK) {
