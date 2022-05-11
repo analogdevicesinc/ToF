@@ -37,7 +37,7 @@
 #define CTRL_PHASE_DEPTH_BITS (0x9819e2)
 #define CTRL_AB_BITS (0x9819e3)
 #define CTRL_CONFIDENCE_BITS (0x9819e4)
-#define ADSD3500_CTRL_PACKET_SIZE 4115
+#define ADSD3500_CTRL_PACKET_SIZE 4099
 // Can be moved to target_definitions in "camera"/"platform"
 #define TEMP_SENSOR_DEV_PATH "/dev/i2c-1"
 #define LASER_TEMP_SENSOR_I2C_ADDR 0x49
@@ -831,7 +831,12 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* 
     buf[3] = 0xAD;
     buf[6] = uint8_t(cmd & 0xFF);   
 
-    memcpy(buf + 12, readback_data, 8);
+    uint32_t checksum = 0;
+    for (int i = 0; i < 7; i++){
+        checksum += buf[i+4];
+     }
+    memcpy(buf + 11, &checksum, 4);
+    memcpy(buf + 15, readback_data, 4);
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
@@ -861,7 +866,7 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* 
 			return Status::GENERIC_ERROR;
 	}
 
-    memcpy(readback_data, extCtrl.p_u8, payload_len);
+    memcpy(readback_data, extCtrl.p_u8 + 3, payload_len);
 
     //switch to standard mode
     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
