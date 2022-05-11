@@ -790,8 +790,10 @@ aditof::Status CameraItof::loadConfigData(void) {
         if (!value.empty()) {
             if (value == "8")
                 value = "2";
-            else
+            else if (value == "4")
                 value = "1";
+            else
+                value = "0";
             m_depthSensor->setControl("confidenceBits", value);
         }
 
@@ -805,8 +807,10 @@ aditof::Status CameraItof::loadConfigData(void) {
                 value = "4";
             else if (value == "10")
                 value = "3";
-            else
+            else if (value == "8")
                 value = "2";
+            else
+                value = "0";
             m_depthSensor->setControl("abBits", value);
         }
 
