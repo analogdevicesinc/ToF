@@ -219,21 +219,23 @@ aditof::Status CameraItof::initialize() {
     //get intrinsics for adsd3500 TO DO: check endianess of intrinsics
     if(m_adsd3500Enabled){
         for (auto availableFrameTypes : m_availableSensorFrameTypes){
-            float intrinsics[14] = {0};
+            uint8_t intrinsics[56] = {0};
             uint8_t dealiasParams[52] = {0};
             TofiXYZDealiasData dealiasStruct;
             //the first element of readback_data for adsd3500_read_payload is used for the custom command
             //it will be overwritten by the returned data
             uint8_t mode = ModeInfo::getInstance()->getModeInfo(availableFrameTypes.type).mode;
-            intrinsics[0] = mode << 24;
-            dealiasParams[0] = mode << 24;
+            intrinsics[0] = mode;
+            dealiasParams[0] = mode;
 
             //hardcoded function values to return intrinsics
-            status = m_depthSensor->adsd3500_read_payload_cmd(0x01, (uint8_t*)intrinsics, 56);
+            status = m_depthSensor->adsd3500_read_payload_cmd(0x01, intrinsics, 56);
             if (status != Status::OK) {
                 LOG(ERROR) << "Failed to read intrinsics for adsd3500!";
                 return status;
             }
+
+            //hardcoded function values to return dealias parameters
             status = m_depthSensor->adsd3500_read_payload_cmd(0x02, dealiasParams, 52);
             if(status != Status::OK){
                 LOG(ERROR) << "Failed to read dealias parameters for adsd3500!";
