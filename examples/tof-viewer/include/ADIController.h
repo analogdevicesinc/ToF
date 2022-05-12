@@ -29,7 +29,7 @@ namespace adicontroller
 		/**
 		* @brief	Constructor. Creates instance of main frame pointer and the first camera in the bus
 		*/
-		ADIController(const std::string &cameraIP = "");
+          ADIController(std::vector<std::shared_ptr<aditof::Camera>> camerasList);
 
 		/**
 		* @brief	Controller destructor
@@ -172,7 +172,6 @@ namespace adicontroller
 		bool startPointCloudBinToFSFConversion(const std::string& fileName, int& frames, int& width, int& height);
 
 		std::vector<std::shared_ptr<aditof::Camera>> m_cameras;
-		aditof::System m_system;
 		std::unique_ptr<ADIToFRecorder> m_recorder;
 		bool panicStop = false;
 		size_t panicCount = 0;
