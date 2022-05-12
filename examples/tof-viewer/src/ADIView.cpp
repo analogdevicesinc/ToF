@@ -212,15 +212,10 @@ void ADIView::render()
 			if (beginDisplayDepthImage)
 			{
 				
-				aditof::System system;
-				aditof::Status status;
-				std::vector<std::shared_ptr<aditof::Camera>> cameras;
-
-				// Initialize TOF system				
-				status = system.getCameraList(cameras);
+				aditof::Status status;			
 
 				// Initialize first TOF camera
-				std::shared_ptr<aditof::Camera> camera1 = cameras.front();
+				std::shared_ptr<aditof::Camera> camera1 = m_ctrl->m_cameras.front();
 				status = camera1->initialize();
 
 				// Choose the frame type the camera should produce
