@@ -455,21 +455,18 @@ void ADIMainWindow::RefreshDevices() {
 	m_selectedDevice = -1;
 	m_connectedDevices.clear();
 	m_configFiles.clear();
+    m_camerasList.clear();
 
-	aditof::System system;
 	aditof::Status status;
-	std::vector<std::shared_ptr<aditof::Camera> > cameras;
-	status = system.getCameraList(cameras);
-	for (size_t ix = 0; ix < cameras.size(); ++ix) {
-		m_connectedDevices.emplace_back(ix, "ToF Camera " + 
-												std::to_string(ix));
+	status = m_system.getCameraList(m_camerasList);
+	for (size_t ix = 0; ix < m_camerasList.size(); ++ix) {
+		m_connectedDevices.emplace_back(ix, "ToF Camera " + std::to_string(ix));
 	}
 
     if (!m_skipNetworkCameras) {	
 		// Add network camera
-	    std::vector<std::shared_ptr<aditof::Camera> > ipcameras;
-        system.getCameraListAtIp(ipcameras, m_cameraIp);
-        if (ipcameras.size() > 0) {
+        m_system.getCameraListAtIp(m_camerasList, m_cameraIp);
+        if (m_camerasList.size() > 0) {
             int index = m_connectedDevices.size();
             m_connectedDevices.emplace_back(index, "ToF Camera" +
                                                        std::to_string(index));
@@ -749,7 +746,7 @@ void ADIMainWindow::ShowPlaybackTree() {
 			if (!path.empty()) {
 				if (view == NULL) {
 					auto controller = std::make_shared<adicontroller::ADIController>(
-						m_skipNetworkCameras ? "" : m_cameraIp);
+						m_camerasList);
 					view = std::make_shared<adiviewer::ADIView>(controller,
 						"Record Viewer");
 				}				
@@ -856,7 +853,7 @@ void ADIMainWindow::ShowPlaybackTree() {
 				if (!path.empty()) {
 					if (view == NULL) {
 						auto controller = std::make_shared<adicontroller::ADIController>(
-								m_skipNetworkCameras ? "" : m_cameraIp);
+								m_camerasList);
 						view = std::make_shared<adiviewer::ADIView>(controller,
 							"Record Viewer");
 					}
@@ -1147,8 +1144,7 @@ void ADIMainWindow::InitCamera() {
 	std::string version = aditof::getApiVersion();
 	//my_log.AddLog("Preparing camera. Please wait...\n");
     LOG(INFO) << "Preparing camera. Please wait...\n";
-	auto controller = std::make_shared<adicontroller::ADIController>(
-		m_skipNetworkCameras ? "" : m_cameraIp);
+	auto controller = std::make_shared<adicontroller::ADIController>(m_camerasList);
 
 	view = std::make_shared<adiviewer::ADIView>(controller,
 												"ToFViewer " + version);
@@ -1322,7 +1318,7 @@ void ADIMainWindow::InitCCDCamera() {
 	my_log.AddLog("Preparing camera. Please wait...\n");
 	
 	auto controller = std::make_shared<adicontroller::ADIController>(
-		m_skipNetworkCameras ? "" : m_cameraIp);	
+		m_camerasList);	
 	
 	my_log.AddLog("Camera ready.\n");
 	//my_log.AddLog(sbuf->pubsetbuf);

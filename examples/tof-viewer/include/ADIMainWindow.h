@@ -450,7 +450,7 @@ namespace adiMainWindow
 		*/
 		void GetHoveredImagePix(ImVec2 &hoveredImagePixel, ImVec2 imageStartPos, ImVec2 mousePos, ImVec2 displayDimensions);
 		int m_selectedDevice = -1;
-		std::vector<std::pair<int, std::string> > m_connectedDevices;
+        std::vector<std::pair<int, std::string>> m_connectedDevices;
 		
 		/**
 		* @brief Returns current application path
@@ -495,6 +495,9 @@ namespace adiMainWindow
          * @brief Return the current selected camera object
          */
         std::shared_ptr<aditof::Camera> getActiveCamera();
+
+		aditof::System m_system;
+        std::vector<std::shared_ptr<aditof::Camera>> m_camerasList;
 
 		bool m_skipNetworkCameras;
 		std::string m_cameraIp;
