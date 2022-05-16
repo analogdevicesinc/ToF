@@ -744,12 +744,10 @@ void ADIMainWindow::ShowPlaybackTree() {
             std::copy(std::begin(filters), std::end(filters), std::back_inserter(customFilters));
 			std::string path = openADIFileName().c_str();
 			if (!path.empty()) {
-				if (view == NULL) {
-					auto controller = std::make_shared<adicontroller::ADIController>(
-						m_camerasList);
-					view = std::make_shared<adiviewer::ADIView>(controller,
-						"Record Viewer");
-				}				
+                if (view == NULL) {
+					view = std::make_shared<adiviewer::ADIView>(
+                    m_controller, "Record Viewer");
+                }
 				if (path.find(".fsf") != std::string::npos) { //If fsf File was found
 					_fsfShowPbOpWin = true;
 					_getFSFInfo = true;
@@ -851,12 +849,6 @@ void ADIMainWindow::ShowPlaybackTree() {
 				customFilter = std::string("Raw Files (*.bin)\0*.bin*\0 All Files (*.*)\0*.*\0", 46);
 				std::string path = openADIFileName().c_str();
 				if (!path.empty()) {
-					if (view == NULL) {
-						auto controller = std::make_shared<adicontroller::ADIController>(
-								m_camerasList);
-						view = std::make_shared<adiviewer::ADIView>(controller,
-							"Record Viewer");
-					}
 					if (path.find(".bin") != std::string::npos) { //If bin File was found
 						int frames = 1;
 						int width = 1024;
@@ -1144,9 +1136,9 @@ void ADIMainWindow::InitCamera() {
 	std::string version = aditof::getApiVersion();
 	//my_log.AddLog("Preparing camera. Please wait...\n");
     LOG(INFO) << "Preparing camera. Please wait...\n";
-	auto controller = std::make_shared<adicontroller::ADIController>(m_camerasList);
+	m_controller = std::make_shared<adicontroller::ADIController>(m_camerasList);
 
-	view = std::make_shared<adiviewer::ADIView>(controller,
+	view = std::make_shared<adiviewer::ADIView>(m_controller,
 												"ToFViewer " + version);
 
 	aditof::Status status = aditof::Status::OK;
@@ -1317,14 +1309,11 @@ void ADIMainWindow::InitCCDCamera() {
 	std::string version = aditof::getApiVersion();
 	my_log.AddLog("Preparing camera. Please wait...\n");
 	
-	auto controller = std::make_shared<adicontroller::ADIController>(
-		m_camerasList);	
-	
 	my_log.AddLog("Camera ready.\n");
+
+	//TO DO: do we stil need this?
+
 	//my_log.AddLog(sbuf->pubsetbuf);
-	
-	view  = std::make_shared<adiviewer::ADIView>(controller,
-											"ToFViewer " + version);
 }
 
 
