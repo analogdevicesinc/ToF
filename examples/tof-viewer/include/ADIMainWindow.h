@@ -499,6 +499,8 @@ namespace adiMainWindow
 		aditof::System m_system;
         std::vector<std::shared_ptr<aditof::Camera>> m_camerasList;
 
+		std::shared_ptr<adicontroller::ADIController> m_controller;
+
 		bool m_skipNetworkCameras;
 		std::string m_cameraIp;
 		std::vector<std::pair<int, std::string> > m_configFiles;
