@@ -1079,7 +1079,7 @@ aditof::Status CameraItof::loadModuleData() {
     }
 
     if(m_adsd3500Enabled) {
-        return initialize();
+        return status;
     }
     
     cleanupTempFiles();
@@ -1106,7 +1106,7 @@ aditof::Status CameraItof::loadModuleData() {
 
     if (!tempJsonFile.empty()) {
         setControl("initialization_config", tempJsonFile);
-        return initialize();
+        return status;
     } else {
         LOG(ERROR) << "Error loading module data";
         return Status::GENERIC_ERROR;
