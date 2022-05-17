@@ -54,6 +54,7 @@ static std::vector<std::shared_ptr<aditof::StorageInterface>> storages;
 static std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
     temperatureSensors;
 bool sensors_are_created = false;
+bool clientEngagedWithSensors = false;
 
 /* Server only works with one depth sensor */
 std::shared_ptr<aditof::DepthSensorInterface> camDepthSensor;
@@ -96,6 +97,7 @@ static void cleanup_sensors() {
     camDepthSensor.reset();
 
     sensors_are_created = false;
+    clientEngagedWithSensors = false;
 }
 
 Network ::Network() : context(nullptr) {}
@@ -291,6 +293,11 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     switch (s_map_api_Values[buff_recv.func_name()]) {
 
     case FIND_SENSORS: {
+        // Check if client didn't hang up (why would want to search for sensor if it already tried to open one)
+        if (clientEngagedWithSensors) {
+            cleanup_sensors();   
+        }
+
         if (!sensors_are_created) {
             auto sensorsEnumerator =
                 aditof::SensorEnumeratorFactory::buildTargetSensorEnumerator();
@@ -363,6 +370,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     case OPEN: {
         aditof::Status status = camDepthSensor->open();
         buff_send.set_status(static_cast<::payload::Status>(status));
+        clientEngagedWithSensors = true;
         break;
     }
 
@@ -622,6 +630,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         status = storages[index]->open(sensorHandle);
 
         buff_send.set_status(static_cast<::payload::Status>(status));
+        clientEngagedWithSensors = true;
         break;
     }
 
@@ -707,6 +716,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         status = temperatureSensors[index]->open(sensorHandle);
 
         buff_send.set_status(static_cast<::payload::Status>(status));
+        clientEngagedWithSensors = true;
         break;
     }
 
