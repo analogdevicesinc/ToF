@@ -340,7 +340,14 @@ aditof::Status CameraItof::start() {
 }
 
 aditof::Status CameraItof::stop() {
-    return m_depthSensor->stop();
+    aditof::Status status;
+
+    status = m_depthSensor->stop();
+    if (status != aditof::Status::OK) {
+        LOG(INFO) << "Failed to stop camera!";
+    }
+
+    return status;
 }
 
 aditof::Status CameraItof::setMode(const std::string &mode,
