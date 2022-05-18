@@ -1090,16 +1090,6 @@ void ADIMainWindow::stopPlayCCD() {
 	openGLCleanUp();	
 	isPlaying = false;
 	isPlayRecorded = false;
-
-	std::shared_ptr<aditof::Camera> camera = getActiveCamera();
-	if (!camera) {
-		LOG(WARNING) << "No camera found";
-            return;
-	}
-
-    if (aditof::Status::GENERIC_ERROR == camera->stop()) {
-        LOG(ERROR) << "Error, failed on stop camera!";
-    }
 }
 
 void ADIMainWindow::openGLCleanUp() {
