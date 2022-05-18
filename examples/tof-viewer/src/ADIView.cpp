@@ -539,7 +539,7 @@ void ADIView::_displayPointCloudImage()
 
 		std::unique_lock<std::mutex> imshow_lock(m_imshowMutex);
 		m_waitKeyBarrier += 1;
-		if (m_waitKeyBarrier == 1/*numOfThreads*/) {
+		if (m_waitKeyBarrier == numOfThreads) {
 			imshow_lock.unlock();
 			m_barrierCv.notify_one();
 		}
