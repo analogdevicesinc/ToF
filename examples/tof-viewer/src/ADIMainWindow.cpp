@@ -1363,7 +1363,6 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect) {
 		if (displayDepth) {
 			displayIR = false;			
 			synchronizePointCloudVideo();
-			synchronizeDepthIRVideo();	
 			displayPointCloudWindow(overlayFlags);
 			displayDepthWindow(overlayFlags);
 		} else {
@@ -1707,6 +1706,7 @@ void ADIMainWindow::synchronizePointCloudVideo() {
 	view->m_capturedFrame->getDetails(frameDetails);
 	std::unique_lock<std::mutex> lock(view->m_frameCapturedMutex);
 
+	view->m_depthFrameAvailable = true;
 	view->m_pointCloudFrameAvailable = true;
 	view->frameHeight = frameDetails.height;
 	view->frameWidth = frameDetails.width;
@@ -1718,7 +1718,7 @@ void ADIMainWindow::synchronizePointCloudVideo() {
 	/*********************************/
 	std::unique_lock<std::mutex> imshow_lock(view->m_imshowMutex);
 	view->m_barrierCv.wait(imshow_lock,
-			[&]() { return view->m_waitKeyBarrier == 1/*view->numOfThreads*/; });
+			[&]() { return view->m_waitKeyBarrier == view->numOfThreads; });
 	view->m_waitKeyBarrier = 0;
 	/*********************************/
 }
