@@ -536,6 +536,19 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
             LOG(ERROR) << "Depth compute libray not initialized";
             return Status::GENERIC_ERROR;
         }
+
+        uint16_t *tempDepthFrame = m_tofi_compute_context->p_depth_frame;
+        uint16_t *tempAbFrame = m_tofi_compute_context->p_ab_frame;
+        uint16_t *tempXyzFrame = (uint16_t*)m_tofi_compute_context->p_xyz_frame;
+        
+        frame->getData("depth", &m_tofi_compute_context->p_depth_frame);
+        frame->getData("ir", &m_tofi_compute_context->p_ab_frame);
+
+        if (m_xyzEnabled) {
+            uint16_t *xyzFrame = (uint16_t *)m_tofi_compute_context->p_xyz_frame;
+            frame->getData("xyz", &xyzFrame);
+        }
+
         uint32_t ret = TofiCompute(frameDataLocation, m_tofi_compute_context, NULL);
 
         if (ret != ADI_TOFI_SUCCESS) {
@@ -543,22 +556,9 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
             return Status::GENERIC_ERROR;
         }
 
-        uint16_t *depthFrameLocation;
-        frame->getData("depth", &depthFrameLocation);
-        memcpy(depthFrameLocation, (uint8_t *)m_tofi_compute_context->p_depth_frame,
-            (m_details.frameType.height * m_details.frameType.width * sizeof(uint16_t)));
-
-        uint16_t *irFrameLocation;
-        frame->getData("ir", &irFrameLocation);
-        memcpy(irFrameLocation, m_tofi_compute_context->p_ab_frame, (m_details.frameType.height * m_details.frameType.width * sizeof(uint16_t)));
-
-        applyCalibrationToFrame(frameDataLocation, std::atoi(m_details.mode.c_str()));
-
-        if (m_xyzEnabled) {
-            uint16_t* xyzFrameLocation;
-            frame->getData("xyz", &xyzFrameLocation);
-            memcpy(xyzFrameLocation, m_tofi_compute_context->p_xyz_frame, (m_details.frameType.height * m_details.frameType.width * sizeof(aditof::Point3I)));
-        }
+        m_tofi_compute_context->p_depth_frame = tempDepthFrame;
+        m_tofi_compute_context->p_ab_frame = tempAbFrame;
+        m_tofi_compute_context->p_xyz_frame = (int16_t*)tempXyzFrame;
     }
 
     return Status::OK;
