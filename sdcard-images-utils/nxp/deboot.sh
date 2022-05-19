@@ -251,7 +251,7 @@ tail -n 10000 /usr/share/doc/*/copyright > /licenses.txt
 EOF
 
   # Apply step1 overlay
-  sudo cp -R ${SCRIPT_DIR}/patches/ubuntu_overlay/step1/* ${ROOTFS_TMP}/usr/
+  sudo cp -R ${SCRIPT_DIR}/patches/ubuntu_overlay/step1/* ${ROOTFS_TMP}/
 
   sudo mv stage3.sh ${ROOTFS_TMP}/tmp
   sudo chmod +x ${ROOTFS_TMP}/tmp/stage3.sh
