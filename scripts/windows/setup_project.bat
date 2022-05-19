@@ -146,7 +146,7 @@ set /a opt=0
 set vs=15
 if %generator%=="Visual Studio 16 2019" (
     set /a opt=1
-    set vs=15
+    set vs=16
 )
 if %generator%=="Visual Studio 15 2017 Win64" (
     set /a opt=1
@@ -159,8 +159,8 @@ if %generator%=="Visual Studio 14 2015 Win64" (
 
 if %set_generator%==0 (
    set /a opt=1
-   set generator="Visual Studio 15 2017 Win64"
-   set vs=15
+   set generator="Visual Studio 16 2019 Win64"
+   set vs=16
    )
 if %opt%==0 (
     echo Please enter a correct configuration ("Visual Studio 16 2019"; "Visual Studio 15 2017 Win64" or "Visual Studio 14 2015 Win64"^)
