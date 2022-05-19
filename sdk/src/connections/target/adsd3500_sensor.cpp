@@ -403,65 +403,6 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
     dev = &m_implData->videoDevs[0];
 
-#if 0 // Set custom controls for ADSD3500 camera (Disable because we have new API for this)
-    static struct v4l2_control ctrl;
-
-    memset(&ctrl, 0, sizeof(ctrl));
-
-    ctrl.id = CTRL_AB_AVG;
-    ctrl.value = 1; //Enable AB averaging
-
-    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
-        LOG(WARNING) << "Setting Mode error "
-                     << "errno: " << errno << " error: " << strerror(errno);
-        status = Status::GENERIC_ERROR;
-    }
-
-    memset(&ctrl, 0, sizeof(ctrl));
-
-    ctrl.id = CTRL_DEPTH_EN;
-    ctrl.value = 1; //Enable Depth compute in ADSD3500
-
-    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
-        LOG(WARNING) << "Setting Mode error "
-                     << "errno: " << errno << " error: " << strerror(errno);
-        status = Status::GENERIC_ERROR;
-    }
-
-    memset(&ctrl, 0, sizeof(ctrl));
-
-    ctrl.id = CTRL_PHASE_DEPTH_BITS;
-    ctrl.value = 6; //Set number of bits per depth component 6 = 16 Bits
-
-    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
-        LOG(WARNING) << "Setting Mode error "
-                     << "errno: " << errno << " error: " << strerror(errno);
-        status = Status::GENERIC_ERROR;
-    }
-
-    memset(&ctrl, 0, sizeof(ctrl));
-
-    ctrl.id = CTRL_AB_BITS;
-    ctrl.value = 6; //Set number of bits per AB component 6 = 16 Bits
-
-    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
-        LOG(WARNING) << "Setting Mode error "
-                     << "errno: " << errno << " error: " << strerror(errno);
-        status = Status::GENERIC_ERROR;
-    }
-
-    memset(&ctrl, 0, sizeof(ctrl));
-
-    ctrl.id = CTRL_CONFIDENCE_BITS;
-    ctrl.value = 2; //Set number of bits per Confidence component 2 = 8 Bits
-
-    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
-        LOG(WARNING) << "Setting Mode error "
-                     << "errno: " << errno << " error: " << strerror(errno);
-        status = Status::GENERIC_ERROR;
-    }
-#endif
-
 #if 1 // Don't request buffers & set fromat for UVC context. It is already done in uvc-app/lib/v4l2.c
     m_capturesPerFrame = 1;
 
