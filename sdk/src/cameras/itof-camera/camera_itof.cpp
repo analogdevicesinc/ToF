@@ -545,8 +545,9 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         frame->getData("ir", &m_tofi_compute_context->p_ab_frame);
 
         if (m_xyzEnabled) {
-            uint16_t *xyzFrame = (uint16_t *)m_tofi_compute_context->p_xyz_frame;
+            uint16_t *xyzFrame;
             frame->getData("xyz", &xyzFrame);
+            m_tofi_compute_context->p_xyz_frame = (int16_t*)xyzFrame;
         }
 
         uint32_t ret = TofiCompute(frameDataLocation, m_tofi_compute_context, NULL);
