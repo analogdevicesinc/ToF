@@ -142,8 +142,6 @@ aditof::Status CameraItof::initialize() {
         m_devStarted = true;
     }
 
-    m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
-
     // Parse config.json
     std::string config = m_controls["initialization_config"];
     std::ifstream ifs(config.c_str());
