@@ -1,13 +1,12 @@
 cmake_minimum_required(VERSION 2.8)
 project(aditof)
 
+if(UNIX)
+    set(CMAKE_POSITION_INDEPENDENT_CODE "1")
+endif()
+
 if(USE_DEPTH_COMPUTE_STUBS)
-    if(UNIX)
-    	set(CMAKE_POSITION_INDEPENDENT_CODE "1")
-    endif()
     add_subdirectory(common/adi/depth-compute-stub)	
-else()
-    set(CMAKE_POSITION_INDEPENDENT_CODE "0")
 endif()
 add_subdirectory(common/adi/ccb)
 
