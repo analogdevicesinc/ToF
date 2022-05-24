@@ -1,7 +1,7 @@
-From 1f121a9b8f4c26f2735bc2f0dd002c444f48d7ce Mon Sep 17 00:00:00 2001
+From c220862b40587128c04797fe9517e72c562d99e8 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Fri, 21 May 2021 11:49:25 +0300
-Subject: [PATCH 08/33] drivers: usb: gadget: Add XU control descriptor
+Subject: [PATCH 08/35] drivers: usb: gadget: Add XU control descriptor
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
@@ -149,5 +149,5 @@ index bfdae12cdacf..f82080a16345 100644
  } __attribute__((__packed__));
  
 -- 
-2.35.1
+2.17.1
 
