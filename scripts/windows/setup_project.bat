@@ -159,7 +159,7 @@ if %generator%=="Visual Studio 14 2015 Win64" (
 
 if %set_generator%==0 (
    set /a opt=1
-   set generator="Visual Studio 16 2019 Win64"
+   set generator="Visual Studio 16 2019"
    set opencv_vs=16
    )
 if %opt%==0 (
