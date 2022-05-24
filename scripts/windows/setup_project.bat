@@ -205,7 +205,7 @@ CALL :install_websockets %config_type% %generator%
 
 ::build the project with the selected options
 pushd %build_dire%
-cmake -G %generator% -DWITH_PYTHON=off -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir%
+cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir%
 cmake --build . --config %config_type%
 popd
 EXIT /B %ERRORLEVEL%
