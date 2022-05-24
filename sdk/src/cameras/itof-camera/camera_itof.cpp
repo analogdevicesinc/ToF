@@ -218,7 +218,7 @@ aditof::Status CameraItof::initialize() {
     if(m_adsd3500Enabled){
         for (auto availableFrameTypes : m_availableSensorFrameTypes) {
             uint8_t intrinsics[56] = {0};
-            uint8_t dealiasParams[52] = {0};
+            uint8_t dealiasParams[32] = {0};
             TofiXYZDealiasData dealiasStruct;
             //the first element of readback_data for adsd3500_read_payload is used for the custom command
             //it will be overwritten by the returned data
@@ -240,16 +240,13 @@ aditof::Status CameraItof::initialize() {
             }
 
             //hardcoded function values to return dealias parameters
-            status = m_depthSensor->adsd3500_read_payload_cmd(0x02, dealiasParams, 52);
+            status = m_depthSensor->adsd3500_read_payload_cmd(0x02, dealiasParams, 32);
             if(status != Status::OK){
                 LOG(ERROR) << "Failed to read dealias parameters for adsd3500!";
                 return status;
             }
 
             memcpy(&dealiasStruct, dealiasParams, sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
-
-            //TO DO: to be fixed in new FW release
-            memcpy(&dealiasStruct.Freq, dealiasParams + 22, 6);
             memcpy(&dealiasStruct.camera_intrinsics, intrinsics, sizeof(CameraIntrinsics));
             
             m_xyz_dealias_data[mode] = dealiasStruct;
