@@ -6,6 +6,7 @@
 /********************************************************************************/
 
 #include <aditof/camera.h>
+#include <aditof/depth_sensor_interface.h>
 #include <aditof/floatTolin.h>
 #include <aditof/frame.h>
 #include <aditof/system.h>
@@ -460,6 +461,10 @@ int main(int argc, char *argv[]) {
         return 0;
     }  
 
+    std::shared_ptr<DepthSensorInterface> depthSensor = camera->getSensor();
+    std::string sensorName;
+    status = depthSensor->getName(sensorName);
+
     // Set UVC format type and camera frame details
     if ("raw" == frame_type) {
         camera->setControl("enableDepthCompute", "off");
@@ -619,13 +624,25 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
-        frame.getDetails(fDetails);
 
+        
+        frame.getDetails(fDetails);
+        
         height = fDetails.height;
         width = fDetails.width;
-        std::string attrVal;
-        frame.getAttribute("total_captures", attrVal);
-        subFrames = std::stoi(attrVal);
+
+        if (sensorName == "adsd3500") {
+            if (mode == 7) {
+                subFrames = 1;
+            } else if (mode == 10) {
+                subFrames = 3;
+            }
+        } else {
+            std::string attrVal;
+            frame.getAttribute("total_captures", attrVal);
+            subFrames = std::stoi(attrVal);
+        }
+
         frameType = "raw";
 
         // Depth Data
