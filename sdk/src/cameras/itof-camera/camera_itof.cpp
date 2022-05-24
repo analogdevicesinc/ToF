@@ -1245,7 +1245,7 @@ aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath)
     crc_output_t res = compute_crc(&crc_params, fw_content, fw_len);
     nResidualCRC = res.crc_32bit;
 
-    fw_upgrade_header.crc_of_fw32 = nResidualCRC;
+    fw_upgrade_header.crc_of_fw32 = ~nResidualCRC;
 
     status = m_depthSensor->adsd3500_write_payload(fw_upgrade_header.cmd_header_byte, 16);
     if(status != Status::OK){
