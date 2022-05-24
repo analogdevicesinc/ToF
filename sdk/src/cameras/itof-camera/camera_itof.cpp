@@ -671,7 +671,7 @@ aditof::Status CameraItof::initComputeLibrary(void) {
         return aditof::Status::GENERIC_ERROR;
     }
 
-    if (m_loadedConfigData) {
+    if (m_loadedConfigData || m_adsd3500Enabled) {
         ConfigFileData calData = {m_calData.p_data, m_calData.size};
         uint32_t status = ADI_TOFI_SUCCESS;
 
