@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 
 # Install the helper header for open3d in include/aditof
 include(GNUInstallDirs)
