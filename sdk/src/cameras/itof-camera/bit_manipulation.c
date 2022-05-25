@@ -109,9 +109,15 @@ reflect32(uint32_t in_byte)
 
 inline
 uint8_t
-reflect8(uint8_t in_byte)
+reflect8_local(uint8_t in_byte)
 {
     return reflect8_table[in_byte];
+}
+
+uint8_t
+reflect8(uint8_t in_byte)
+{
+    return reflect8_local(in_byte);
 }
 
 /**
@@ -149,7 +155,7 @@ reverse(void *payload, uint8_t bit_size)
     switch(bit_size)
     {
         case 8:
-            *((uint8_t*)payload) = reflect8(*((uint8_t*)payload));
+            *((uint8_t*)payload) = reflect8_local(*((uint8_t*)payload));
             break;
         case 32:
             *((uint32_t*)payload) = reflect32(*((uint32_t*)payload));
