@@ -253,6 +253,8 @@ aditof::Status CameraItof::initialize() {
         }
 
         //get values for fw version and git hash
+        m_adsd3500FwGitHash.clear();
+
         for (int i = 0; i < 3; i++) {
             uint8_t fwData[44] = {0};
             fwData[0] = uint8_t(i + 1);
