@@ -375,7 +375,11 @@ class CameraItof : public aditof::Camera {
     uint16_t m_modechange_framedrop_count = 0;
     aditof::TOF_ModuleFiles_t m_tempFiles;
     std::vector<aditof::DepthSensorFrameType> m_availableSensorFrameTypes;
-    std::vector<std::pair<std::string, int32_t>> m_sensor_settings;    
+    std::vector<std::pair<std::string, int32_t>> m_sensor_settings;
+
+    //vector with lenght 3 for current, upgrade and factory firmware
+    //pair between firmware version and git hash
+    std::vector<std::pair<std::string, std::string>> m_adsd3500FwGitHash;
 };
 
 #endif // CAMERA_ITOF_H
