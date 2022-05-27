@@ -107,7 +107,7 @@ reflect32(uint32_t in_byte)
     return temp;
 }
 
-inline
+static inline
 uint8_t
 reflect8_local(uint8_t in_byte)
 {
