@@ -251,6 +251,25 @@ aditof::Status CameraItof::initialize() {
             
             m_xyz_dealias_data[mode] = dealiasStruct;
         }
+
+        //get values for fw version and git hash
+        for (int i = 0; i < 3; i++) {
+            uint8_t fwData[44] = {0};
+            fwData[0] = uint8_t(i + 1);
+
+            status = m_depthSensor->adsd3500_read_payload_cmd(0x05, fwData, 44);
+            if (status != Status::OK) {
+                LOG(INFO) << "Failed to retrieve fw version and git hash for adsd3500!";
+                return status;
+            }
+            std::string fwVersion((char *)(fwData), 4);
+            std::string fwHash((char *)(fwData + 4), 40);
+            m_adsd3500FwGitHash.emplace_back(std::make_pair(fwVersion, fwHash));
+        }
+
+        LOG(INFO) << "Current adsd3500 firmware version is: " << m_adsd3500FwGitHash.front().first;
+        LOG(INFO) << "Current adsd3500 firmware git hash is: " << m_adsd3500FwGitHash.front().second;
+
     }
     
     if (m_eeprom) {
