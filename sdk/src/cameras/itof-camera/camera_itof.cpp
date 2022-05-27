@@ -832,6 +832,7 @@ aditof::Status CameraItof::loadConfigData(void) {
         if (!value.empty()) {
             std::string en = (value == "0") ? "1" : "0";
             m_depthSensor->setControl("depthEnable", en);
+            m_depthSensor->setControl("abAveraging", en);
         }
 
         // XYZ set through camera control takes precedence over the setting from .ini file
