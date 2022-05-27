@@ -586,7 +586,7 @@ int main(int argc, char *argv[]) {
     uint8_t  *headerBuffer;
     uint32_t height;
     uint32_t width;
-    uint32_t subFrames;
+    uint32_t subFrames = 0;
     uint64_t frame_size = 0;
     uint64_t elapsed_time;
 
