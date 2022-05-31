@@ -359,6 +359,7 @@ class CameraItof : public aditof::Camera {
 
     FileData m_calData;
     FileData m_depthINIData;
+    std::map <std::string, FileData> m_depthINIDataMap;
     uint8_t *m_jconfigData = NULL;
     TofiConfig *m_tofi_config = NULL;
     TofiComputeContext *m_tofi_compute_context = NULL;
@@ -370,6 +371,7 @@ class CameraItof : public aditof::Camera {
     std::string m_sensorFirmwareFile;
     std::string m_ccb_calibrationFile;
     std::string m_ini_depth;
+    std::map <std::string, std::string> m_ini_depth_map;
     bool m_xyzEnabled;
     bool m_xyzSetViaControl;
     uint16_t m_modechange_framedrop_count = 0;
