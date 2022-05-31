@@ -342,6 +342,11 @@ class CameraItof : public aditof::Camera {
     */
     std::string iniFileContentFindKeyAndGetValue(std::ifstream &iniContent, const std::string &key);
 
+    /**
+     * Configure the sensor with various settings that affect the frame type.
+     */
+    void configureSensorFrameType();
+
   private:
     using noArgCallable = std::function<aditof::Status()>;
 
