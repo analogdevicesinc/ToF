@@ -48,6 +48,7 @@
 #include <vector>
 #include <cstdint>
 #include "adsd3500/crc/include/compute_crc.h"
+#include "utils.h"
 
 CameraItof::CameraItof(
     std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
@@ -183,9 +184,34 @@ aditof::Status CameraItof::initialize() {
 
         // Get depth ini file location
         const cJSON *json_depth_ini_file = cJSON_GetObjectItemCaseSensitive(config_json, "DEPTH_INI");
-        if (cJSON_IsString(json_depth_ini_file) && (json_depth_ini_file->valuestring != NULL))
-            // save depth ini file location
-            m_ini_depth = std::string(json_depth_ini_file->valuestring);
+        if (cJSON_IsString(json_depth_ini_file) && (json_depth_ini_file->valuestring != NULL)) {
+            // store depth ini file location
+            std::string mode;
+            std::vector<std::string> iniFiles;
+
+            Utils::splitIntoTokens(std::string(json_depth_ini_file->valuestring), ';', iniFiles);
+            if (iniFiles.size() > 1) {
+                for (const std::string& file : iniFiles) {
+                    //extract last string that is after last underscore (e.g. 'mp' will be extracted from ini_file_mp)
+                    size_t lastUnderscorePos = file.find_last_of("_");
+                    if (lastUnderscorePos == std::string::npos) {
+                        LOG(WARNING) << "File: " << file << " has no suffix that can be used to identify the mode";
+                        continue;
+                    }
+                    mode = file.substr(lastUnderscorePos + 1);
+                    // TO DO: check is mode is supported by the camera
+
+                    LOG(INFO) << "Found Depth ini file: " << file;
+                    // Create map with mode name as key and path as value
+                    m_ini_depth_map.emplace(mode, file);
+                }
+                // Set m_ini_depth to first map element
+                auto it = m_ini_depth_map.begin();
+                m_ini_depth = it->second;
+            } else {
+                m_ini_depth = std::string(json_depth_ini_file->valuestring);
+            }
+        }
         LOG(INFO) << "Current Depth ini file is: " << m_ini_depth;
 
         // Get optional power config
@@ -686,9 +712,17 @@ aditof::Status CameraItof::initComputeLibrary(void) {
         uint32_t status = ADI_TOFI_SUCCESS;
 
         if (!m_ini_depth.empty()) {
-            uint8_t *tempDataParser = new uint8_t[m_depthINIData.size];
-            memcpy(tempDataParser, m_depthINIData.p_data, m_depthINIData.size);
-            ConfigFileData depth_ini = {tempDataParser, m_depthINIData.size};
+            size_t dataSize = m_depthINIData.size;
+            unsigned char *pData = m_depthINIData.p_data;
+
+            if (m_depthINIDataMap.size() > 1) {
+                dataSize = m_depthINIDataMap[m_ini_depth].size;
+                pData = m_depthINIDataMap[m_ini_depth].p_data;
+            }
+
+            uint8_t *tempDataParser = new uint8_t[dataSize];
+            memcpy(tempDataParser, pData, dataSize);
+            ConfigFileData depth_ini = {tempDataParser, dataSize};
 
             if (m_adsd3500Enabled) {
                 m_tofi_config = InitTofiConfig_isp(
@@ -776,8 +810,14 @@ aditof::Status CameraItof::loadConfigData(void) {
 
     aditof::Status retErr = aditof::Status::GENERIC_ERROR;
 
-    if (!m_ini_depth.empty()) {
-        m_depthINIData = LoadFileContents(const_cast<char *>(m_ini_depth.c_str()));
+    if (m_ini_depth_map.size() > 0) {
+        for (auto it = m_ini_depth_map.begin(); it != m_ini_depth_map.end(); ++it) {
+            m_depthINIDataMap.emplace(it->first, LoadFileContents(const_cast<char *>(it->first.c_str())));
+        }
+    } else {
+        if (!m_ini_depth.empty()) {
+            m_depthINIData = LoadFileContents(const_cast<char *>(m_ini_depth.c_str()));
+        }
     }
 
     if (!m_ccb_calibrationFile.empty()) {
