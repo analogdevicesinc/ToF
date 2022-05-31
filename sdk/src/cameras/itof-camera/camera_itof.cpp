@@ -415,6 +415,8 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
         return Status::INVALID_ARGUMENT;
     }
 
+    m_ini_depth = m_ini_depth_map[frameType];
+    configureSensorFrameType();
     setMode(frameType);
     
     status = m_depthSensor->setFrameType(*frameTypeIt);
@@ -825,72 +827,6 @@ aditof::Status CameraItof::loadConfigData(void) {
     } else {
         m_calData.p_data = NULL;
         m_calData.size = 0;
-    }
-
-    std::ifstream depthIniStream(m_ini_depth);
-    if (depthIniStream.is_open()) {
-        std::string value;
-
-        // TO DO: Do we need to read here whether depth is enabled or not and also the AB averaging?
-
-        value = iniFileContentFindKeyAndGetValue(depthIniStream, "bitsInPhaseOrDepth");
-        if (!value.empty()) {
-            if (value == "16")
-                value = "6";
-            else if (value == "14")
-                value = "5";
-            else if (value == "12")
-                value = "4";
-            else if (value == "10")
-                value = "3";
-            else
-                value = "2";
-            m_depthSensor->setControl("phaseDepthBits", value);
-        }
-
-        value = iniFileContentFindKeyAndGetValue(depthIniStream, "bitsInConf");
-        if (!value.empty()) {
-            if (value == "8")
-                value = "2";
-            else if (value == "4")
-                value = "1";
-            else
-                value = "0";
-            m_depthSensor->setControl("confidenceBits", value);
-        }
-
-        value = iniFileContentFindKeyAndGetValue(depthIniStream, "bitsInAB");
-        if (!value.empty()) {
-            if (value == "16")
-                value = "6";
-            else if (value == "14")
-                value = "5";
-            else if (value == "12")
-                value = "4";
-            else if (value == "10")
-                value = "3";
-            else if (value == "8")
-                value = "2";
-            else
-                value = "0";
-            m_depthSensor->setControl("abBits", value);
-        }
-
-        value = iniFileContentFindKeyAndGetValue(depthIniStream, "partialDepthEnable");
-        if (!value.empty()) {
-            std::string en = (value == "0") ? "1" : "0";
-            m_depthSensor->setControl("depthEnable", en);
-            m_depthSensor->setControl("abAveraging", en);
-        }
-
-        // XYZ set through camera control takes precedence over the setting from .ini file
-        if (!m_xyzSetViaControl) {
-            m_xyzEnabled = iniFileContentFindKeyAndGetValue(depthIniStream, "xyzEnable") == "1";
-        }
-
-        depthIniStream.close();
-    } else {
-        LOG(ERROR) << "Unable to open file: " << m_ini_depth;
     }
 
     m_jsonFileSize = jsonFileSize;
@@ -1345,4 +1281,73 @@ aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath)
     LOG(INFO) << "Adsd3500 firmware updated succesfully!";
 
     return aditof::Status::OK;
+}
+
+void CameraItof::configureSensorFrameType()
+{
+    std::ifstream depthIniStream(m_ini_depth);
+    if (depthIniStream.is_open()) {
+        std::string value;
+
+        // TO DO: Do we need to read here whether depth is enabled or not and also the AB averaging?
+
+        value = iniFileContentFindKeyAndGetValue(depthIniStream, "bitsInPhaseOrDepth");
+        if (!value.empty()) {
+            if (value == "16")
+                value = "6";
+            else if (value == "14")
+                value = "5";
+            else if (value == "12")
+                value = "4";
+            else if (value == "10")
+                value = "3";
+            else
+                value = "2";
+            m_depthSensor->setControl("phaseDepthBits", value);
+        }
+
+        value = iniFileContentFindKeyAndGetValue(depthIniStream, "bitsInConf");
+        if (!value.empty()) {
+            if (value == "8")
+                value = "2";
+            else if (value == "4")
+                value = "1";
+            else
+                value = "0";
+            m_depthSensor->setControl("confidenceBits", value);
+        }
+
+        value = iniFileContentFindKeyAndGetValue(depthIniStream, "bitsInAB");
+        if (!value.empty()) {
+            if (value == "16")
+                value = "6";
+            else if (value == "14")
+                value = "5";
+            else if (value == "12")
+                value = "4";
+            else if (value == "10")
+                value = "3";
+            else if (value == "8")
+                value = "2";
+            else
+                value = "0";
+            m_depthSensor->setControl("abBits", value);
+        }
+
+        value = iniFileContentFindKeyAndGetValue(depthIniStream, "partialDepthEnable");
+        if (!value.empty()) {
+            std::string en = (value == "0") ? "1" : "0";
+            m_depthSensor->setControl("depthEnable", en);
+            m_depthSensor->setControl("abAveraging", en);
+        }
+
+        // XYZ set through camera control takes precedence over the setting from .ini file
+        if (!m_xyzSetViaControl) {
+            m_xyzEnabled = iniFileContentFindKeyAndGetValue(depthIniStream, "xyzEnable") == "1";
+        }
+
+        depthIniStream.close();
+    } else {
+        LOG(ERROR) << "Unable to open file: " << m_ini_depth;
+    }
 }
