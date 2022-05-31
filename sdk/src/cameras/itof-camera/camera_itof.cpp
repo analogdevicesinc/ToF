@@ -814,7 +814,7 @@ aditof::Status CameraItof::loadConfigData(void) {
 
     if (m_ini_depth_map.size() > 0) {
         for (auto it = m_ini_depth_map.begin(); it != m_ini_depth_map.end(); ++it) {
-            m_depthINIDataMap.emplace(it->first, LoadFileContents(const_cast<char *>(it->first.c_str())));
+            m_depthINIDataMap.emplace(it->second, LoadFileContents(const_cast<char *>(it->second.c_str())));
         }
     } else {
         if (!m_ini_depth.empty()) {
