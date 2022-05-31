@@ -223,14 +223,8 @@ aditof::Status CameraItof::initialize() {
             //the first element of readback_data for adsd3500_read_payload is used for the custom command
             //it will be overwritten by the returned data
             uint8_t mode = ModeInfo::getInstance()->getModeInfo(availableFrameTypes.type).mode;
-
-            if (mode != 10) {
-                intrinsics[0] = mode;
-                dealiasParams[0] = mode;
-            } else {
-                intrinsics[0] = 5;
-                dealiasParams[0] = 5;
-            }
+            intrinsics[0] = mode;
+            dealiasParams[0] = mode;
 
             //hardcoded function values to return intrinsics
             status = m_depthSensor->adsd3500_read_payload_cmd(0x01, intrinsics, 56);
