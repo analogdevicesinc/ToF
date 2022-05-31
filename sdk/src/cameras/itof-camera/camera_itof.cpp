@@ -198,12 +198,15 @@ aditof::Status CameraItof::initialize() {
                         LOG(WARNING) << "File: " << file << " has no suffix that can be used to identify the mode";
                         continue;
                     }
-                    mode = file.substr(lastUnderscorePos + 1);
+
+                    size_t dotPos = file.find_last_of(".");
+                    mode = file.substr(lastUnderscorePos + 1,dotPos - lastUnderscorePos - 1);
                     // TO DO: check is mode is supported by the camera
 
                     LOG(INFO) << "Found Depth ini file: " << file;
                     // Create map with mode name as key and path as value
                     m_ini_depth_map.emplace(mode, file);
+
                 }
                 // Set m_ini_depth to first map element
                 auto it = m_ini_depth_map.begin();
@@ -415,7 +418,9 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
         return Status::INVALID_ARGUMENT;
     }
 
-    m_ini_depth = m_ini_depth_map[frameType];
+    if (m_ini_depth_map.size() > 1) {
+        m_ini_depth = m_ini_depth_map[frameType];
+    }
     configureSensorFrameType();
     setMode(frameType);
     
