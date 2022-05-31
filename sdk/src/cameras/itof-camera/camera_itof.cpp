@@ -690,12 +690,10 @@ aditof::Status CameraItof::initComputeLibrary(void) {
             memcpy(tempDataParser, m_depthINIData.p_data, m_depthINIData.size);
             ConfigFileData depth_ini = {tempDataParser, m_depthINIData.size};
 
-            if(m_adsd3500Enabled){
-                if (m_adsd3500Enabled) {
-                    m_tofi_config = InitTofiConfig_isp(
-                        (ConfigFileData *)&depth_ini, convertedMode,
-                            &status, m_xyz_dealias_data);
-                }   
+            if (m_adsd3500Enabled) {
+                m_tofi_config = InitTofiConfig_isp(
+                    (ConfigFileData *)&depth_ini, convertedMode,
+                        &status, m_xyz_dealias_data);
             } else {
                 if (calData.p_data != NULL) {
                     m_tofi_config = InitTofiConfig(&calData, NULL, &depth_ini,
