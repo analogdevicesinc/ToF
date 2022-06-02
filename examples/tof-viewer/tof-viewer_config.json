@@ -1,7 +1,7 @@
 {
 "sensorFirmware": "./config/NXP_MIPI4kSuperframe.cfg",
 "VAUX_POWER_VOLTAGE": "18",
-"skip_network_cameras": "on",
-"camera_ip": "192.168.1.2",
-"DEPTH_INI": "./config/RawToDepth.ini"
+"skip_network_cameras": "off",
+"camera_ip": "10.42.0.1",
+"DEPTH_INI": "./config/RawToDepthAdsd3500_mp.ini;./config/RawToDepthAdsd3500_qmp.ini"
 }
