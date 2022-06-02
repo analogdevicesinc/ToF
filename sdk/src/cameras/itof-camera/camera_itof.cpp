@@ -598,6 +598,15 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         m_tofi_compute_context->p_depth_frame = tempDepthFrame;
         m_tofi_compute_context->p_ab_frame = tempAbFrame;
         m_tofi_compute_context->p_xyz_frame = (int16_t*)tempXyzFrame;
+
+        if (m_adsd3500Enabled && m_abEnabled &&
+            m_details.frameType.type == "mp") {
+            uint16_t *mpAbFrame;
+            frame->getData("ir", &mpAbFrame);
+            memcpy(mpAbFrame, frameDataLocation + m_details.frameType.height *
+                   m_details.frameType.width * 3, m_details.frameType.height * m_details.frameType.width *
+                       sizeof(uint16_t));
+        }
     }
 
     return Status::OK;
@@ -1324,6 +1333,7 @@ void CameraItof::configureSensorFrameType()
 
         value = iniFileContentFindKeyAndGetValue(depthIniStream, "bitsInAB");
         if (!value.empty()) {
+            m_abEnabled = 1;
             if (value == "16")
                 value = "6";
             else if (value == "14")
@@ -1334,8 +1344,10 @@ void CameraItof::configureSensorFrameType()
                 value = "3";
             else if (value == "8")
                 value = "2";
-            else
+            else {
                 value = "0";
+                m_abEnabled = 0;
+            }
             m_depthSensor->setControl("abBits", value);
         }
 
