@@ -129,14 +129,14 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     },
     {"mp", 
          {
-             {"raw", 1024, 3072},
+             {"raw", 1024, 4096},
              {"ir", 1024, 1024},
              {"xyz", 1024, 1024},
              {"depth", 1024, 1024},
              {"embedded_header", 1, 128}
          },
          1024,
-         3072,
+         4096,
     }
     };
 };
