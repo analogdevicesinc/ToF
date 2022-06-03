@@ -236,7 +236,6 @@ int main(int argc, char *argv[]) {
     uint16_t err = 0;
     uint32_t n_frames = 0;
     uint32_t mode = 0;
-    uint32_t fps_counter = 0;
     uint32_t ext_frame_sync_en = 0;
     uint32_t warmup_time = 0;
     std::string ip;
