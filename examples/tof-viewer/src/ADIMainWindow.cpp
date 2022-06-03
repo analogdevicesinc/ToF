@@ -1631,8 +1631,7 @@ void ADIMainWindow::initOpenGLPointCloudTexture() {
 	view->pcShader.AttachShader(std::move(vertexShader));
 	view->pcShader.AttachShader(std::move(fragmentShader));	
 	view->pcShader.Link();
-	vertexShader.~ADIShader();
-	fragmentShader.~ADIShader();
+
 	//Get the model, view, and projection index
 	view->modelIndex = glGetUniformLocation(view->pcShader.Id(), "model");
 	view->viewIndex = glGetUniformLocation(view->pcShader.Id(), "view");
