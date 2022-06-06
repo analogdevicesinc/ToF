@@ -371,7 +371,7 @@ int Network::callback_function(struct lws *wsi,
     int connectionId = 0;
     auto status = std::find(web_socket.begin(),web_socket.end(),wsi);
     if(status != web_socket.end()){
-        connectionId = std::distance(web_socket.begin(),status);
+        connectionId = static_cast<int>(std::distance(web_socket.begin(),status));
     }
     
     switch (reason) {
@@ -406,7 +406,7 @@ int Network::callback_function(struct lws *wsi,
             }
 
             // process message
-            google::protobuf::io::ArrayInputStream ais(in, len);
+            google::protobuf::io::ArrayInputStream ais(in, static_cast<int>(len));
             CodedInputStream coded_input(&ais);
             recv_buff[connectionId].ParseFromCodedStream(&coded_input);
 
