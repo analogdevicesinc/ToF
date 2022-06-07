@@ -32,6 +32,7 @@
 #include <aditof/camera.h>
 #include <aditof/frame.h>
 #include <aditof/system.h>
+#include <aditof/version.h>
 #include <glog/logging.h>
 #include <iostream>
 
@@ -41,6 +42,10 @@ int main(int argc, char *argv[]) {
 
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
+
+    LOG(INFO) << "SDK version: " << aditof::getApiVersion()
+              << " | branch: " << aditof::getBranchVersion()
+              << " | commit: " << aditof::getCommitVersion();
 
     Status status = Status::OK;
 

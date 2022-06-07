@@ -70,9 +70,6 @@ buildCameras(std::unique_ptr<SensorEnumeratorInterface> enumerator) {
 SystemImpl::SystemImpl() {
     static bool sdkRevisionLogged = false;
     if (!sdkRevisionLogged) {
-        LOG(INFO) << "SDK version: " << aditof::getApiVersion()
-                  << " | branch: " << ADITOFSDK_GIT_BRANCH
-                  << " | commit: " << ADITOFSDK_GIT_COMMIT;
         sdkRevisionLogged = true;
 #if HAS_NETWORK
         LOG(INFO) << "SDK built with websockets version:"
