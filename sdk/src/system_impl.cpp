@@ -67,21 +67,21 @@ buildCameras(std::unique_ptr<SensorEnumeratorInterface> enumerator) {
     return cameras;
 }
 
-SystemImpl::SystemImpl() {
-    static bool sdkRevisionLogged = false;
-    if (!sdkRevisionLogged) {
-        sdkRevisionLogged = true;
-#if HAS_NETWORK
-        LOG(INFO) << "SDK built with websockets version:"
-                  << LWS_LIBRARY_VERSION;
-#endif
-    }
-}
+SystemImpl::SystemImpl() {}
 
 SystemImpl::~SystemImpl() = default;
 
 Status SystemImpl::getCameraList(
     std::vector<std::shared_ptr<Camera>> &cameraList) const {
+
+#if HAS_NETWORK
+    static bool logged = false;
+    if (!logged) {
+        LOG(INFO) << "SDK built with websockets version:"
+                  << LWS_LIBRARY_VERSION;
+        logged = true;
+    }
+#endif
 
     cameraList.clear();
     std::unique_ptr<SensorEnumeratorInterface> sensorEnumerator;
@@ -116,6 +116,15 @@ Status SystemImpl::getCameraList(
 Status
 SystemImpl::getCameraListAtIp(std::vector<std::shared_ptr<Camera>> &cameraList,
                               const std::string &ip) const {
+
+#if HAS_NETWORK
+    static bool logged = false;
+    if (!logged) {
+        LOG(INFO) << "SDK built with websockets version:"
+                  << LWS_LIBRARY_VERSION;
+        logged = true;
+    }
+#endif
 
     cameraList.clear();
 
