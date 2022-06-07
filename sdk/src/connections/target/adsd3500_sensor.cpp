@@ -472,13 +472,14 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
             return status;
         }
 
-        __u32 pixelFormat;
+        __u32 pixelFormat = 0;
         if (type.type == "qmp") {
             pixelFormat = V4L2_PIX_FMT_SBGGR8;
         } else if (type.type == "mp") {
             pixelFormat = V4L2_PIX_FMT_SBGGR12;
         } else {
             LOG(ERROR) << "frame type: " << type.type << " " << "is unhandled";
+            return Status::GENERIC_ERROR;
         }
 
         /* Set the frame format in the driver */
