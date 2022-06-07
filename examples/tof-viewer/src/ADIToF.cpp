@@ -12,6 +12,7 @@
 #include <iostream>
 #include <algorithm>
 #include <aditof/system.h>
+#include <aditof/version.h>
 #include <glog/logging.h>
 
 #include "ADIMainWindow.h"
@@ -78,6 +79,10 @@ int main(int argc, char **argv)
     glogLogSink *sink = new glogLogSink(view->getLog());
     google::AddLogSink(sink);
 #endif
+
+	LOG(INFO) << "SDK version: " << aditof::getApiVersion()
+              << " | branch: " << aditof::getBranchVersion()
+              << " | commit: " << aditof::getCommitVersion();
 
 	if (view->startImGUI(ProcessArgs(argc, argv)))
 	{
