@@ -10,6 +10,12 @@ If NumPy library is not found you should install it using pip (a package manager
 pip install numpy
 ```
 
+Matplotlib library is needed for displaying the received frame.
+If Matplotlib library is not found you should install it using pip.
+```python 
+pip install matplotlib
+```
+
 Importing necessary modules
 ```python
 import aditofpython as tof
