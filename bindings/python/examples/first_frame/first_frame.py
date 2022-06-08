@@ -31,6 +31,7 @@
 #
 import aditofpython as tof
 import numpy as np
+import matplotlib.pyplot as plt
 
 system = tof.System()
 
@@ -43,7 +44,7 @@ camera1 = cameras[0]
 status = camera1.initialize()
 print("camera1.initialize()", status)
 
-camera1.setControl("loadModuleData", "call");
+camera1.setControl("loadModuleData", "call")
 
 types = []
 status = camera1.getAvailableFrameTypes(types)
@@ -73,3 +74,10 @@ print("depth frame details:", "width:", frameDataDetails.width, "height:", frame
 
 image = np.array(frame.getData("depth"), copy=False)
 print(image)
+
+plt.figure()
+plt.imshow(image)
+plt.colorbar()
+plt.show()
+
+
