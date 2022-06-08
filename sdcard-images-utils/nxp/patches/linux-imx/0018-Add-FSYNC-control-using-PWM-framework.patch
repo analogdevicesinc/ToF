@@ -1,7 +1,7 @@
-From cbe34f600205da202b7d33d69e7db5eaadfa004b Mon Sep 17 00:00:00 2001
+From 20bcff3a38953a0bb8912d43f8917a043451e3c6 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Fri, 17 Sep 2021 11:52:08 +0300
-Subject: [PATCH 18/22] Add FSYNC control using PWM framework
+Subject: [PATCH 18/26] Add FSYNC control using PWM framework
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---

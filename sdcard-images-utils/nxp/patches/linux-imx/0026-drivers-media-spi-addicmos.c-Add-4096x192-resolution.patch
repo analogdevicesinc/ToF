@@ -1,0 +1,64 @@
+From 6706ad34a45aeda55eafb0df2fcc43f2009fd84a Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Wed, 8 Jun 2022 14:09:31 +0300
+Subject: [PATCH 26/26] drivers: media: spi: addicmos.c: Add 4096x192
+ resolution
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ drivers/media/spi/addicmos.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/media/spi/addicmos.c b/drivers/media/spi/addicmos.c
+index f93c97e9ee07..42c67962d29e 100644
+--- a/drivers/media/spi/addicmos.c
++++ b/drivers/media/spi/addicmos.c
+@@ -161,6 +161,7 @@ static const struct reg_sequence addicmos_standby_setting[] = {
+ };
+ 
+ static const s64 link_freq_tbl[] = {
++	732000000,
+ 	732000000,
+ 	732000000,
+ 	732000000,
+@@ -185,27 +186,33 @@ static const struct addicmos_mode_info addicmos_mode_info_data[] = {
+ 	},
+ 	{
+ 		.width = 4096,
+-		.height = 256,
++		.height = 192,
+ 		.pixel_rate = 488000000,
+ 		.link_freq_idx = 2 /* an index in link_freq_tbl[] */
+ 	},
+ 	{
+ 		.width = 4096,
+-		.height = 640,
++		.height = 256,
+ 		.pixel_rate = 488000000,
+ 		.link_freq_idx = 3 /* an index in link_freq_tbl[] */
+ 	},
+ 	{
+ 		.width = 4096,
+-		.height = 2304,
++		.height = 640,
+ 		.pixel_rate = 488000000,
+ 		.link_freq_idx = 4 /* an index in link_freq_tbl[] */
+ 	},
+ 	{
+ 		.width = 4096,
+-		.height = 2560,
++		.height = 2304,
+ 		.pixel_rate = 488000000,
+ 		.link_freq_idx = 5 /* an index in link_freq_tbl[] */
++	},
++	{
++		.width = 4096,
++		.height = 2560,
++		.pixel_rate = 488000000,
++		.link_freq_idx = 6 /* an index in link_freq_tbl[] */
+ 	}
+ };
+ 
+-- 
+2.17.1
+

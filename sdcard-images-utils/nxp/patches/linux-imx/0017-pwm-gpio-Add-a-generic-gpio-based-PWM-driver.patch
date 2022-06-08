@@ -1,7 +1,7 @@
-From 47e1b5a06867069b22b8c1e593a7e4e65ca76d5e Mon Sep 17 00:00:00 2001
+From 2820376c4857d95d6cacfd1048a58631d2776314 Mon Sep 17 00:00:00 2001
 From: Olliver Schinagl <oliver@schinagl.nl>
 Date: Mon, 26 Oct 2015 22:32:38 +0100
-Subject: [PATCH 17/22] pwm: gpio: Add a generic gpio based PWM driver
+Subject: [PATCH 17/26] pwm: gpio: Add a generic gpio based PWM driver
 
 This patch adds a bit-banging gpio PWM driver. It makes use of hrtimers,
 to allow nano-second resolution, though it obviously strongly depends on
@@ -46,10 +46,10 @@ index 000000000000..336f61faa446
 +		pwm-gpios = <&pio 7 2 GPIO_ACTIVE_LOW>;
 +	};
 diff --git a/MAINTAINERS b/MAINTAINERS
-index fe533686c769..64d8876c1de0 100644
+index 2f2a97bd6d47..bbca5252eaca 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -7368,6 +7368,11 @@ F:	Documentation/i2c/muxes/i2c-mux-gpio.rst
+@@ -7371,6 +7371,11 @@ F:	Documentation/i2c/muxes/i2c-mux-gpio.rst
  F:	drivers/i2c/muxes/i2c-mux-gpio.c
  F:	include/linux/platform_data/i2c-mux-gpio.h
  
@@ -62,7 +62,7 @@ index fe533686c769..64d8876c1de0 100644
  M:	Krzysztof Halasa <khc@pm.waw.pl>
  S:	Maintained
 diff --git a/drivers/pwm/Kconfig b/drivers/pwm/Kconfig
-index 63be5362fd3a..41f8b7fd39dc 100644
+index 3ffd0a261d6f..883b0d66221e 100644
 --- a/drivers/pwm/Kconfig
 +++ b/drivers/pwm/Kconfig
 @@ -212,6 +212,21 @@ config PWM_IMX1
@@ -88,7 +88,7 @@ index 63be5362fd3a..41f8b7fd39dc 100644
  	tristate "i.MX27 PWM support"
  	depends on ARCH_MXC || COMPILE_TEST
 diff --git a/drivers/pwm/Makefile b/drivers/pwm/Makefile
-index cbdcd55d69ee..eea0216215a7 100644
+index 55bb0655102a..9d5f24b5ed57 100644
 --- a/drivers/pwm/Makefile
 +++ b/drivers/pwm/Makefile
 @@ -15,6 +15,7 @@ obj-$(CONFIG_PWM_CRC)		+= pwm-crc.o

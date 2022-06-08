@@ -1,7 +1,7 @@
-From 8e77854410c634dc2075ef02d85bb34a0d0d0bde Mon Sep 17 00:00:00 2001
+From 4f66077869dd684421c2a2da83c070c4f41c8e01 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Thu, 22 Apr 2021 09:36:10 +0300
-Subject: [PATCH 05/22] Convert pixel format to YUYV
+Subject: [PATCH 05/26] Convert pixel format to YUYV
 
 Signed-off-by: btogorean <bogdan.togorean@analog.com>
 ---
@@ -9,10 +9,10 @@ Signed-off-by: btogorean <bogdan.togorean@analog.com>
  1 file changed, 4 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/staging/media/imx/imx8-isi-cap.c b/drivers/staging/media/imx/imx8-isi-cap.c
-index 344d42dbbaa6..5bfd73bf47da 100644
+index e1728e758bcc..3e7691e0253f 100644
 --- a/drivers/staging/media/imx/imx8-isi-cap.c
 +++ b/drivers/staging/media/imx/imx8-isi-cap.c
-@@ -59,14 +59,6 @@ struct mxc_isi_fmt mxc_isi_out_formats[] = {
+@@ -60,14 +60,6 @@ struct mxc_isi_fmt mxc_isi_out_formats[] = {
  		.memplanes	= 1,
  		.colplanes	= 1,
  		.mbus_code  = MEDIA_BUS_FMT_BGR888_1X24,
@@ -27,7 +27,7 @@ index 344d42dbbaa6..5bfd73bf47da 100644
  	}, {
  		.name		= "YUV32 (X-Y-U-V)",
  		.fourcc		= V4L2_PIX_FMT_YUV32,
-@@ -92,8 +84,8 @@ struct mxc_isi_fmt mxc_isi_out_formats[] = {
+@@ -93,8 +85,8 @@ struct mxc_isi_fmt mxc_isi_out_formats[] = {
  		.colplanes	= 1,
  		.mbus_code	= MEDIA_BUS_FMT_RGB888_1X24,
  	}, {
@@ -38,7 +38,7 @@ index 344d42dbbaa6..5bfd73bf47da 100644
  		.depth		= { 16 },
  		.color		= MXC_ISI_OUT_FMT_RAW12,
  		.memplanes	= 1,
-@@ -119,8 +111,8 @@ struct mxc_isi_fmt mxc_isi_src_formats[] = {
+@@ -120,8 +112,8 @@ struct mxc_isi_fmt mxc_isi_src_formats[] = {
  		.memplanes	= 1,
  		.colplanes	= 1,
  	}, {

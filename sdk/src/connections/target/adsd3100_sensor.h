@@ -113,7 +113,17 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
                     {"embedded_header", 1, 128},
                 },
                 3840, 216, //TODO header size not counted here
-            }, 
+            },
+            {"qmp_onephase",	//Added to test one phase
+                {
+                    {"raw", 512, 1536},
+                    {"ir", 512, 512},
+                    {"xyz", 512, 512},
+                    {"depth", 512, 512},
+                    {"embedded_header", 1, 128}
+                },
+                4096, 192,
+            },
             {"pcm",
                 {
                     {"ir", 1024, 1024},

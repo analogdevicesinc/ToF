@@ -1,7 +1,7 @@
-From c394cd10a3342dc6df3cdb3b2c45da4603cd0ab1 Mon Sep 17 00:00:00 2001
+From 1e53fe46e130bda1348d581c07f171b566273455 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Fri, 21 May 2021 12:07:14 +0300
-Subject: [PATCH 10/22] drivers: media: spi: addicmos: Add resolutions for max
+Subject: [PATCH 10/26] drivers: media: spi: addicmos: Add resolutions for max
  frames FW
 
 When firmware configured for setting frame-end only after all

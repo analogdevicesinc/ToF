@@ -1,7 +1,7 @@
-From bf1474e087717cf131aac4f5dcedfaf25b5945f2 Mon Sep 17 00:00:00 2001
+From e1167635411b6947ec2b6520893c065f1fb6f6ea Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Fri, 4 Feb 2022 10:17:58 +0200
-Subject: [PATCH] drivers: mtd: spi-nor: Add support for MX25U1632F
+Subject: [PATCH 23/26] drivers: mtd: spi-nor: Add support for MX25U1632F
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
@@ -9,10 +9,10 @@ Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/mtd/spi-nor/macronix.c b/drivers/mtd/spi-nor/macronix.c
-index 9203abaac229..1d628842f10e 100644
+index c145a09cecd1..62ba71c0e15d 100644
 --- a/drivers/mtd/spi-nor/macronix.c
 +++ b/drivers/mtd/spi-nor/macronix.c
-@@ -44,6 +44,7 @@ static const struct flash_info macronix_parts[] = {
+@@ -143,6 +143,7 @@ static const struct flash_info macronix_parts[] = {
  	{ "mx25l3255e",  INFO(0xc29e16, 0, 64 * 1024,  64, SECT_4K) },
  	{ "mx25l6405d",  INFO(0xc22017, 0, 64 * 1024, 128, SECT_4K) },
  	{ "mx25u2033e",  INFO(0xc22532, 0, 64 * 1024,   4, SECT_4K) },
@@ -21,5 +21,5 @@ index 9203abaac229..1d628842f10e 100644
  			      SECT_4K | SPI_NOR_DUAL_READ |
  			      SPI_NOR_QUAD_READ) },
 -- 
-2.34.1
+2.17.1
 

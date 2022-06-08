@@ -1,7 +1,7 @@
-From cf497d3a3c5601d56e2da42b5a4d4f400f17c1c0 Mon Sep 17 00:00:00 2001
+From ea46736226048ce0844fce7025eabb3721d1d887 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Wed, 10 Nov 2021 15:03:13 +0200
-Subject: [PATCH 22/22] drivers: media: addicmos.c: Modify chip_config ctrl
+Subject: [PATCH 22/26] drivers: media: addicmos.c: Modify chip_config ctrl
 
 Modify chip_config ctrl to get through V4L a block of
 addr<->reg values and loop through in driver and not in SDK.
