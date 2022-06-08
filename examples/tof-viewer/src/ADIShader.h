@@ -66,7 +66,9 @@ namespace adiviewer
 
 		~ADIShader()
 		{
-			glDeleteShader(ID);
+			if(ID != 0) {
+				glDeleteShader(ID);
+			}
 		}
 
 		ADIShader(const ADIShader&) = delete;
