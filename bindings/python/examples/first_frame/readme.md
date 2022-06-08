@@ -10,6 +10,13 @@ If NumPy library is not found you should install it using pip (a package manager
 pip install numpy
 ```
 
+Importing necessary modules
+```python
+import aditofpython as tof
+import numpy as np
+import matplotlib.pyplot as plt
+```
+
 For creating the system object
 ```python
 system = tof.System()
@@ -53,4 +60,23 @@ Getting a frame from the camera
 frame = tof.Frame()
 status = camera1.requestFrame(frame)
 print("camera1.requestFrame()", status)
+```
+
+Printing the frame details
+```python
+frameDataDetails = tof.FrameDataDetails()
+status = frame.getDataDetails("depth", frameDataDetails)
+print("frame.getDataDetails()", status)
+print("depth frame details:", "width:", frameDataDetails.width, "height:", frameDataDetails.height, "type:", frameDataDetails.type)
+
+image = np.array(frame.getData("depth"), copy=False)
+print(image)
+```
+
+Displaying the received frame
+```python
+plt.figure()
+plt.imshow(image, cmap = 'gray')
+plt.colorbar()
+plt.show()
 ```
