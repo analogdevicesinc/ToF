@@ -73,7 +73,6 @@ print("frame.getDataDetails()", status)
 print("depth frame details:", "width:", frameDataDetails.width, "height:", frameDataDetails.height, "type:", frameDataDetails.type)
 
 image = np.array(frame.getData("depth"), copy=False)
-print(image)
 
 plt.figure()
 plt.imshow(image)
