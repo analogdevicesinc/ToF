@@ -135,7 +135,7 @@ echo "        fdt ../imx8mp-adi-tof-noreg.dtb" >> $ROOTDIR/images/extlinux.conf
 if [[ $BUILD_TYPE == "buildroot" ]]; then
 	echo "        initrd ../rootfs.cpio.uboot" >> $ROOTDIR/images/extlinux.conf
 else
-	echo "        append root=/dev/mmcblk1p2 rootwait rw" >> $ROOTDIR/images/extlinux.conf
+	echo "        append root=/dev/mmcblk1p2 rootwait ro init=/usr/lib/init_resize.sh" >> $ROOTDIR/images/extlinux.conf
 fi
 echo "label ADSD3500" >> $ROOTDIR/images/extlinux.conf
 echo "        linux ../Image" >> $ROOTDIR/images/extlinux.conf
@@ -143,7 +143,7 @@ echo "        fdt ../imx8mp-adi-tof-adsd3500.dtb" >> $ROOTDIR/images/extlinux.co
 if [[ $BUILD_TYPE == "buildroot" ]]; then
 	echo "        initrd ../rootfs.cpio.uboot" >> $ROOTDIR/images/extlinux.conf
 else
-	echo "        append root=/dev/mmcblk1p2 rootwait rw" >> $ROOTDIR/images/extlinux.conf
+	echo "        append root=/dev/mmcblk1p2 rootwait ro init=/usr/lib/init_resize.sh" >> $ROOTDIR/images/extlinux.conf
 fi
 
 mmd -i tmp/part1.fat32 ::/extlinux
