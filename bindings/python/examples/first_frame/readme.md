@@ -74,13 +74,12 @@ frameDataDetails = tof.FrameDataDetails()
 status = frame.getDataDetails("depth", frameDataDetails)
 print("frame.getDataDetails()", status)
 print("depth frame details:", "width:", frameDataDetails.width, "height:", frameDataDetails.height, "type:", frameDataDetails.type)
-
-image = np.array(frame.getData("depth"), copy=False)
-print(image)
 ```
 
 Displaying the received frame
 ```python
+image = np.array(frame.getData("depth"), copy=False)
+
 plt.figure()
 plt.imshow(image, cmap = 'gray')
 plt.colorbar()
