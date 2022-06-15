@@ -93,19 +93,25 @@ if __name__ == "__main__":
     if not status:
         print("system.getAvailableModes() failed with status: ", status)
 
+    status = cameras[0].setMode(modes[ModesEnum.MODE_NEAR.value])
+    if not status:
+        print("cameras[0].setMode() failed with status: ", status)
+    
+    cameras[0].setControl("loadModuleData", "call")
+
     types = []
     status = cameras[0].getAvailableFrameTypes(types)
     if not status:
         print("system.getAvailableFrameTypes() failed with status: ", status)
-
-    status = cameras[0].setFrameType(types[0])
+    
+    status = cameras[0].setFrameType(types[2]) # types[2] is 'mp_pcm' type.
     if not status:
         print("cameras[0].setFrameType() failed with status:", status)
-
-    status = cameras[0].setMode(modes[ModesEnum.MODE_NEAR.value])
+    
+    status = cameras[0].start()
     if not status:
-        print("cameras[0].setMode() failed with status: ", status)
-
+        print("cameras[0].start() failed with status:", status)
+   
     camDetails = tof.CameraDetails()
     status = cameras[0].getDetails(camDetails)
     if not status:
@@ -115,8 +121,8 @@ if __name__ == "__main__":
     smallSignalThreshold = 100
     cameras[0].setControl("noise_reduction_threshold", str(smallSignalThreshold))
 
-    camera_range = camDetails.maxDepth
-    bitCount = camDetails.bitCount
+    camera_range = 5000
+    bitCount = 9
     frame = tof.Frame()
 
     max_value_of_IR_pixel = 2 ** bitCount - 1
@@ -153,6 +159,7 @@ if __name__ == "__main__":
 
         # Start the computations for object detection using DNN
         blob = cv.dnn.blobFromImage(result, inScaleFactor, (inWidth, inHeight), (meanVal, meanVal, meanVal), swapRB)
+        
         net.setInput(blob)
         detections = net.forward()
 
