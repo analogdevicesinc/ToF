@@ -966,7 +966,7 @@ aditof::Status Adsd3500Sensor::adsd3500_write_payload(uint8_t* payload, uint16_t
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Adsd3500 error "
+        LOG(WARNING) << "Writing Adsd3500 error "
                          << "errno: " << errno << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
         }
