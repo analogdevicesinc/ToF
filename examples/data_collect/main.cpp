@@ -436,6 +436,9 @@ int main(int argc, char *argv[]) {
         if(status != Status::OK){
             LOG(ERROR) << "Could not update the adsd3500 firmware";
             return 0;
+        } else {
+            LOG(INFO) << "Please reboot the board!";
+            return 0;
         }
     }
 
