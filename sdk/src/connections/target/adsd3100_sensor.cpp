@@ -253,8 +253,13 @@ using namespace aditof;
     if (!m_implData->fsync_line)
         LOG(WARNING) << "FSYNC_CONN GPIO not available: FSYNC is controlled by PWM";
     else
+#ifdef SET_FSYNC_SLAVE
         m_implData->fsync_line.request({"SDK_FSYNC",
-                                       ::gpiod::line_request ::DIRECTION_OUTPUT, 0 }, 0);
+                                       ::gpiod::line_request::DIRECTION_INPUT, 0 }, 0);
+#else
+        m_implData->fsync_line.request({"SDK_FSYNC",
+                                       ::gpiod::line_request::DIRECTION_OUTPUT, 0 }, 0);
+#endif
 
     return status;
 }
@@ -707,8 +712,6 @@ aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
     dev = &m_implData->videoDevs[0];
 
     for (int idx = 0; idx < m_capturesPerFrame; idx++) {
-        fsyncTogglePrivate();
-
         status = waitForBufferPrivate(dev);
         if (status != Status::OK) {
             return status;
@@ -895,6 +898,8 @@ aditof::Status Adsd3100Sensor::waitForBufferPrivate(struct VideoDev *dev) {
     FD_ZERO(&fds);
     FD_SET(dev->fd, &fds);
 
+    fsyncTogglePrivate();
+
     tv.tv_sec = 20;
     tv.tv_usec = 0;
 
@@ -977,6 +982,10 @@ Adsd3100Sensor::enqueueInternalBufferPrivate(struct v4l2_buffer &buf,
 aditof::Status Adsd3100Sensor::fsyncTogglePrivate() {
     if (!m_implData->fsync_line)
         return aditof::Status::UNAVAILABLE;
+    
+    //Do nothing for direction input. Used for slave configuration
+    if (m_implData->fsync_line.direction() == 1)
+        return aditof::Status::OK;
 
     m_implData->fsync_line.set_value(1);
     usleep(10);

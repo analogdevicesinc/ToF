@@ -28,6 +28,7 @@ option(WITH_OFFLINE "Build offline interface?" OFF)
 option(USE_ITOF "Use ITOF camera?" ON)
 option(WITH_TOOLS "Build tools?" OFF)
 option(USE_DEPTH_COMPUTE_STUBS "Use empty generated libs?" OFF)
+option(FSYNC_SLAVE "This board configure FSYNC GPIO as input?" OFF)
 
 ################################## Git ########################################
 include(FindGit OPTIONAL)
@@ -63,6 +64,10 @@ add_definitions(-DADITOFSDK_GIT_BRANCH="${ADITOFSDK_GIT_BRANCH}")
 
 if (WITH_NETWORK)
         add_definitions(-DHAS_NETWORK)
+endif()
+
+if (FSYNC_SLAVE)
+        add_definitions(-DSET_FSYNC_SLAVE)
 endif()
 
 set(RESOURCES_DIR "${CMAKE_BINARY_DIR}/resources")
