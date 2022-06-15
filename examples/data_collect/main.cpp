@@ -797,7 +797,7 @@ void fileWriterTask( const thread_params * const pThreadParams ) {
 
     char out_file[MAX_FILE_PATH_SIZE] = {0};
     if (nullptr == pThreadParams->pFsfParams) {
-        snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05" PRIu64 "d.bin", pThreadParams->pFolderPath, pThreadParams->pFrame_type, pThreadParams->nFileTime,
+        snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05" PRIu64 ".bin", pThreadParams->pFolderPath, pThreadParams->pFrame_type, pThreadParams->nFileTime,
              pThreadParams->nFrameCount);
 
         std::ofstream rawFile(out_file, std::ios::out | std::ios::binary | std::ofstream::trunc );
