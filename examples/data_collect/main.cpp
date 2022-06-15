@@ -635,16 +635,22 @@ int main(int argc, char *argv[]) {
         height = fDetails.height;
         width = fDetails.width;
 
+        // We have both 8bit and 16bit pixels, compute the size in 8bit
         if (sensorName == "adsd3500") {
             if (mode == 7) {
-                subFrames = 1;
+                //one 16bit depth, one 16bit ab, one 8bit confidence
+                // =>> 5 * 8 bit subframes
+                subFrames = 5;
             } else if (mode == 10) {
-                subFrames = 3;
+                // 4 x 16 bit subframes =>> 8 x 8 bit subframes
+                subFrames = 8;
             }
         } else {
             std::string attrVal;
             frame.getAttribute("total_captures", attrVal);
             subFrames = std::stoi(attrVal);
+            //here it was 16 bit. changed to 8 bit
+            subFrames = subFrames * 2;
         }
 
         frameType = "raw";
@@ -654,7 +660,7 @@ int main(int argc, char *argv[]) {
             frame_size = sizeof(uint16_t) * height * width;
             frameType = "depth";
         } else if (frame_type == "raw") {
-            frame_size = sizeof(uint16_t) * height * width * subFrames;
+            frame_size = height * width * subFrames;
             frameType = "frameData"; // TO DO: change this to "raw" when it gets done
         } else {
             LOG(WARNING) << "Can't recognize frame data type!";
