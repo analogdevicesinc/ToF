@@ -606,9 +606,9 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
             memcpy(mpAbFrame, frameDataLocation + m_details.frameType.height *
                    m_details.frameType.width * 3, m_details.frameType.height * m_details.frameType.width *
                        sizeof(uint16_t));
-	    //TO DO: hardcoded shift with 7 bits to reduce AB frame brightness
+	    //TO DO: shift with 4 because we use only 12 bits
             for (unsigned int i = 0; i < (m_details.frameType.height * m_details.frameType.width); ++i) {
-                mpAbFrame[i] = mpAbFrame[i] >> 7;
+                mpAbFrame[i] = mpAbFrame[i] >> 4;
             }
         }
     }
