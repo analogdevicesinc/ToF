@@ -59,6 +59,7 @@ class Network {
     static bool Send_Successful[MAX_CAMERA_NUM];
     static bool Data_Received[MAX_CAMERA_NUM];
     static bool Server_Connected[MAX_CAMERA_NUM];
+    static bool Thread_Detached[MAX_CAMERA_NUM];
 
     int Thread_Running[MAX_CAMERA_NUM];
 
