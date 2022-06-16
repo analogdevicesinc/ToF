@@ -77,6 +77,7 @@ condition_variable Network::thread_Cond_Var[MAX_CAMERA_NUM];
 bool Network::Send_Successful[MAX_CAMERA_NUM];
 bool Network::Data_Received[MAX_CAMERA_NUM];
 bool Network::Server_Connected[MAX_CAMERA_NUM];
+bool Network::Thread_Detached[MAX_CAMERA_NUM];
 
 /*
 * isServer_Connected(): checks if server is connected
@@ -175,6 +176,7 @@ int Network::ServerConnect(const std::string &ip) {
 
     threadObj[m_connectionId] = std::thread(&Network::call_lws_service, this);
 
+    Network::Thread_Detached[m_connectionId] = true;
     threadObj[m_connectionId].detach();
 
     /*Wait for thread to be ready and server is connected*/
@@ -498,6 +500,7 @@ Network::Network(int connectionId) {
     Network::Data_Received[connectionId] = false;
     Network::Thread_Running[connectionId] = 0;
     Network::Server_Connected[connectionId] = false;
+    Network::Thread_Detached[connectionId] = false;
 
     m_connectionId = connectionId;
     context.emplace_back(nullptr);
@@ -509,13 +512,14 @@ Network::Network(int connectionId) {
  * Desription:   Destructor for network class
  */
 Network::~Network() {
-    if (context.at(m_connectionId) != NULL && Server_Connected[m_connectionId]) {
+    if (context.at(m_connectionId) != NULL && Thread_Detached[m_connectionId]) {
         /*set a flag to complete the thread */
         std::unique_lock<std::mutex> mlock(thread_mutex[m_connectionId]);
         Thread_Running[m_connectionId] = 1;
         /*wait for thread to finish*/
         thread_Cond_Var[m_connectionId].wait(mlock,
                              std::bind(&Network::isThread_Running, this));
+        Thread_Detached[m_connectionId] = false;
 
         lws_context_destroy(context.at(m_connectionId));
     }
