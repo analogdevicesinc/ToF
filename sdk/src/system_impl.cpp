@@ -108,6 +108,9 @@ Status SystemImpl::getCameraList(
 #endif
 
     sensorEnumerator->searchSensors();
+	std::string kernel;
+	sensorEnumerator->getKernelVersion(kernel);
+	LOG(INFO) << "kernel version"<<kernel;
     cameraList = buildCameras(std::move(sensorEnumerator));
 
     return Status::OK;
