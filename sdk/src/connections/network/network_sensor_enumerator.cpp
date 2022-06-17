@@ -144,3 +144,27 @@ Status NetworkSensorEnumerator::getTemperatureSensors(
 
     return Status::OK;
 }
+
+aditof::Status NetworkSensorEnumerator::getUbootVersion(
+    std::string &uBootVersion) const {
+    uBootVersion = m_uBootVersion;
+    return aditof::Status::OK;
+}
+
+aditof::Status NetworkSensorEnumerator::getKernelVersion(
+    std::string &kernelVersion) const {
+    kernelVersion = m_kernelVersion;
+    return aditof::Status::OK;
+}
+
+aditof::Status NetworkSensorEnumerator::getRfsVersion(
+    std::string &rfsVersion) const {
+    rfsVersion = m_rfsVersion;
+    return aditof::Status::OK;
+}
+
+aditof::Status NetworkSensorEnumerator::getSdkVersion(
+    std::string &sdkVersion) const {
+    sdkVersion = m_sdkVersion;
+    return aditof::Status::OK;
+}

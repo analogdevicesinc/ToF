@@ -92,8 +92,26 @@ Status TargetSensorEnumerator::getTemperatureSensors(
     return Status::OK;
 }
 
-aditof::Status TargetSensorEnumerator::getCardImageVersion(
-    std::string &cardImageVersion) const {
-    cardImageVersion = m_cardImageVersion;
+aditof::Status TargetSensorEnumerator::getUbootVersion(
+    std::string &uBootVersion) const {
+    uBootVersion = m_uBootVersion;
+    return aditof::Status::OK;
+}
+
+aditof::Status TargetSensorEnumerator::getKernelVersion(
+    std::string &kernelVersion) const {
+    kernelVersion = m_kernelVersion;
+    return aditof::Status::OK;
+}
+
+aditof::Status TargetSensorEnumerator::getRfsVersion(
+    std::string &rfsVersion) const {
+    rfsVersion = m_rfsVersion;
+    return aditof::Status::OK;
+}
+
+aditof::Status TargetSensorEnumerator::getSdkVersion(
+    std::string &sdkVersion) const {
+    sdkVersion = m_sdkVersion;
     return aditof::Status::OK;
 }
