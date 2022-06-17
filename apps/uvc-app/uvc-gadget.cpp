@@ -482,6 +482,20 @@ uvc_payload::ServerResponse handleClientRequest(const uvc_payload::ClientRequest
     break;
   }
 
+  case uvc_payload::FunctionName::GET_KERNEL_VERSION: {
+
+    std::string data;
+	sensorsEnumerator->getKernelVersion(data);
+
+    if (status == aditof::Status::OK) {
+      response.add_bytes_payload(data, data.length());
+    }
+
+    response.set_status(static_cast<::uvc_payload::Status>(status));
+
+    break;
+  }
+
   default: {
     const std::string errorMsg("Unknown function name set in the client request");
     LOG(ERROR) << errorMsg;

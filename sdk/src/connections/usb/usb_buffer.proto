@@ -24,6 +24,7 @@ enum FunctionName
   STORAGE_WRITE = 7;
   STORAGE_CLOSE = 8;
   STORAGE_READ_CAPACITY = 9;
+  GET_KERNEL_VERSION = 10;
 }
 
 message StorageInfo

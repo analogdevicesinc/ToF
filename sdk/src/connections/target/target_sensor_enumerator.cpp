@@ -93,7 +93,7 @@ aditof::Status TargetSensorEnumerator::getUbootVersion(
 
 aditof::Status TargetSensorEnumerator::getKernelVersion(
     std::string &kernelVersion) const {
-    kernelVersion = m_kernelVersion;
+    kernelVersion = "testtest";
     return aditof::Status::OK;
 }
 
