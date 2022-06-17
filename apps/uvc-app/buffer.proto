@@ -32,6 +32,7 @@ enum FunctionName
   STORAGE_WRITE = 15;
   STORAGE_CLOSE = 16;
   STORAGE_READ_CAPACITY = 17;
+  GET_KERNEL_VERSION = 18;
 }
 
 message ImagerInfo
