@@ -149,6 +149,7 @@ class DepthSensorInterface {
      * @return Status
      */
     virtual aditof::Status getHandle(void **handle) = 0;
+
 };
 
 } // namespace aditof

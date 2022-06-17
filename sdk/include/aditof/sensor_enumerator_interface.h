@@ -91,7 +91,10 @@ class SensorEnumeratorInterface {
      * @param[out] cardImageVersion - string containing data abouth the version.
      * @return Status
      */
-    virtual aditof::Status getCardImageVersion(std::string &cardImageVersion) const = 0;
+	virtual aditof::Status getUbootVersion(std::string &uBootVersion) const = 0;
+	virtual aditof::Status getKernelVersion(std::string &kernelVersion) const = 0;
+	virtual aditof::Status getRfsVersion(std::string &rfsVersion) const = 0;
+	virtual aditof::Status getSdkVersion(std::string &sdkVersion) const = 0;
 };
 
 } // namespace aditof
