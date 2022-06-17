@@ -50,8 +50,10 @@ class TargetSensorEnumerator : public aditof::SensorEnumeratorInterface {
     virtual aditof::Status getTemperatureSensors(
         std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
             &temperatureSensors) override;
-    virtual aditof::Status getCardImageVersion(std::string &cardImageVersion) const override;
-
+	virtual aditof::Status getUbootVersion(std::string &uBootVersion) const override;
+	virtual aditof::Status getKernelVersion(std::string &kernelVersion) const override;
+	virtual aditof::Status getRfsVersion(std::string &rfsVersion) const override;
+	virtual aditof::Status getSdkVersion(std::string &sdkVersion) const override;
   private:
     enum class SensorType {
         SENSOR_ADSD3100, //!< ADSD ITOF sensor
@@ -83,6 +85,10 @@ class TargetSensorEnumerator : public aditof::SensorEnumeratorInterface {
     std::vector<StorageInfo> m_storagesInfo;
     std::vector<TemperatureSensorInfo> m_temperatureSensorsInfo;
     std::string m_cardImageVersion;
+	std::string m_uBootVersion;
+	std::string m_kernelVersion;
+	std::string m_rfsVersion;
+	std::string m_sdkVersion;
 };
 
 #endif // TARGET_SENSOR_ENUMERATOR_H
