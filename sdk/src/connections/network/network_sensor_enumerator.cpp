@@ -100,8 +100,10 @@ Status NetworkSensorEnumerator::searchSensors() {
             std::pair<std::string, unsigned int>(name, id));
     }
 
-    status = static_cast<Status>(net->recv_buff[sensorIndex].status());
+	m_kernelVersion = msg.card_image_version().kernelVersion();
 
+    status = static_cast<Status>(net->recv_buff[sensorIndex].status());
+	
     return status;
 }
 
