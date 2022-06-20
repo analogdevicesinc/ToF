@@ -292,7 +292,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
     case FIND_SENSORS: {
         if (!sensors_are_created) {
-            auto sensorsEnumerator =
+            sensorsEnumerator =
                 aditof::SensorEnumeratorFactory::buildTargetSensorEnumerator();
             if (!sensorsEnumerator) {
                 std::string errMsg =
@@ -348,7 +348,10 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             pbTempSensorInfo->set_id(temp_sensor_id);
             ++temp_sensor_id;
         }
-
+		auto cardVersion = buff_send.mutable_card_image_version();
+		std::string kernelVersion;
+		sensorsEnumerator->getKernelVersion(kernelVersion);
+		cardVersion->set_kernelVersion(kernelVersion);
         buff_send.set_status(
             static_cast<::payload::Status>(aditof::Status::OK));
         break;
