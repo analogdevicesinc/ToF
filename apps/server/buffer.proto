@@ -25,7 +25,9 @@ message ImagerInfo
 
 message CardImageVersion
 {
-  string name = 10;
+  string kernelVersion = 10;
+  string sdVersion = 20;
+  string ubootVersion = 30;
 }
 
 message StorageInfo
@@ -87,4 +89,5 @@ message ServerResponse
   repeated DepthSensorFrameType available_frame_types = 70;  // List of supported frame types
   SensorsInfo sensors_info = 80;                             // List of information about existing devices on the same platform as the server
   string message = 90;                                       // Additional message (if any)
+  CardImageVersion card_image_version = 100;
 }
