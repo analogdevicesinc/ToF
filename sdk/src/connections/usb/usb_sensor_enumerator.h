@@ -52,8 +52,7 @@ class UsbSensorEnumerator : public aditof::SensorEnumeratorInterface {
 
 	virtual aditof::Status getUbootVersion(std::string &uBootVersion) const override;
 	virtual aditof::Status getKernelVersion(std::string &kernelVersion) const override;
-	virtual aditof::Status getRfsVersion(std::string &rfsVersion) const override;
-	virtual aditof::Status getSdkVersion(std::string &sdkVersion) const override;
+	virtual aditof::Status getSdVersion(std::string &sdVersion) const override;
 
   private:
     struct SensorInfo {

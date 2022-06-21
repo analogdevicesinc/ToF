@@ -296,13 +296,7 @@ aditof::Status UsbSensorEnumerator::getKernelVersion(
     return aditof::Status::OK;
 }
 
-aditof::Status UsbSensorEnumerator::getRfsVersion(
-    std::string &rfsVersion) const {
-    rfsVersion = m_rfsVersion;
-    return aditof::Status::OK;
-}
-
-aditof::Status UsbSensorEnumerator::getSdkVersion(
+aditof::Status UsbSensorEnumerator::getSdVersion(
     std::string &sdkVersion) const {
     sdkVersion = m_sdkVersion;
     return aditof::Status::OK;
