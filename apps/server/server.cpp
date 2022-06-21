@@ -56,6 +56,8 @@ static std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
 bool sensors_are_created = false;
 bool clientEngagedWithSensors = false;
 
+std::unique_ptr<aditof::SensorEnumeratorInterface> sensorsEnumerator;
+
 /* Server only works with one depth sensor */
 std::shared_ptr<aditof::DepthSensorInterface> camDepthSensor;
 std::shared_ptr<aditof::V4lBufferAccessInterface> sensorV4lBufAccess;
@@ -361,10 +363,18 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             pbTempSensorInfo->set_id(temp_sensor_id);
             ++temp_sensor_id;
         }
+		std::string kernelversion;
+		std::string ubootversion;
+		std::string sdversion;
 		auto cardVersion = buff_send.mutable_card_image_version();
-		std::string kernelVersion;
-		sensorsEnumerator->getKernelVersion(kernelVersion);
-		cardVersion->set_kernelVersion(kernelVersion);
+		
+		sensorsEnumerator->getKernelVersion(kernelversion);
+		cardVersion->set_kernelversion(kernelversion);
+		sensorsEnumerator->getUbootVersion(ubootversion);
+		cardVersion->set_ubootversion(ubootversion);
+		sensorsEnumerator->getSdVersion(sdversion);
+		cardVersion->set_sdversion(sdversion);
+		
         buff_send.set_status(
             static_cast<::payload::Status>(aditof::Status::OK));
         break;

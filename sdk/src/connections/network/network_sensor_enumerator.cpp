@@ -100,7 +100,9 @@ Status NetworkSensorEnumerator::searchSensors() {
             std::pair<std::string, unsigned int>(name, id));
     }
 
-	m_kernelVersion = msg.card_image_version().kernelVersion();
+	m_kernelVersion = msg.card_image_version().kernelversion();
+	m_sdVersion = msg.card_image_version().sdversion();
+	m_uBootVersion = msg.card_image_version().ubootversion();
 
     status = static_cast<Status>(net->recv_buff[sensorIndex].status());
 	
@@ -159,14 +161,8 @@ aditof::Status NetworkSensorEnumerator::getKernelVersion(
     return aditof::Status::OK;
 }
 
-aditof::Status NetworkSensorEnumerator::getRfsVersion(
-    std::string &rfsVersion) const {
-    rfsVersion = m_rfsVersion;
-    return aditof::Status::OK;
-}
-
-aditof::Status NetworkSensorEnumerator::getSdkVersion(
-    std::string &sdkVersion) const {
-    sdkVersion = m_sdkVersion;
+aditof::Status NetworkSensorEnumerator::getSdVersion(
+    std::string &sdVersion) const {
+    sdVersion = m_sdVersion;
     return aditof::Status::OK;
 }

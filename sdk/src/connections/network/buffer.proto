@@ -25,9 +25,9 @@ message ImagerInfo
 
 message CardImageVersion
 {
-  string kernelVersion = 10;
-  string sdVersion = 20;
-  string ubootVersion = 30;
+  string kernelversion = 10;
+  string sdversion = 20;
+  string ubootversion = 30;
 }
 
 message StorageInfo
