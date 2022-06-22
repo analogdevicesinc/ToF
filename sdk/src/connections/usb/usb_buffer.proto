@@ -24,7 +24,13 @@ enum FunctionName
   STORAGE_WRITE = 7;
   STORAGE_CLOSE = 8;
   STORAGE_READ_CAPACITY = 9;
-  GET_KERNEL_VERSION = 10;
+}
+
+message CardImageVersion
+{
+  string kernelversion = 10;
+  string sdversion = 20;
+  string ubootversion = 30;
 }
 
 message StorageInfo
@@ -82,5 +88,6 @@ message ServerResponse
   repeated bytes bytes_payload = 40;                         // List of structures of type byte-array for transporting data back to client
   DepthSensorFrameTypeVector available_frame_types = 50;     // List of supported frame types
   SensorsInfo sensors_info = 60;                             // List of information about existing devices on the same platform as the server
-  string message = 70;                                       // Additional message (if any)
+  string message = 70;
+  CardImageVersion card_image_version = 100;                                       // Additional message (if any)
 }
