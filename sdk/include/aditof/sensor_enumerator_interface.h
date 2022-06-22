@@ -84,6 +84,16 @@ class SensorEnumeratorInterface {
     virtual aditof::Status getTemperatureSensors(
         std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
             &temperatureSensors) = 0;
+
+
+    /**
+     * @brief Get the card image version number.
+     * @param[out] cardImageVersion - string containing data abouth the version.
+     * @return Status
+     */
+	virtual aditof::Status getUbootVersion(std::string &uBootVersion) const = 0;
+	virtual aditof::Status getKernelVersion(std::string &kernelVersion) const = 0;
+	virtual aditof::Status getSdVersion(std::string &sdVersion) const = 0;
 };
 
 } // namespace aditof

@@ -50,14 +50,23 @@ class UsbSensorEnumerator : public aditof::SensorEnumeratorInterface {
         std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
             &temperatureSensors) override;
 
+	virtual aditof::Status getUbootVersion(std::string &uBootVersion) const override;
+	virtual aditof::Status getKernelVersion(std::string &kernelVersion) const override;
+	virtual aditof::Status getSdVersion(std::string &sdVersion) const override;
+
   private:
     struct SensorInfo {
         std::string driverPath;
     };
 
+	int fd;
+
     std::vector<SensorInfo> m_sensorsInfo;
     std::vector<std::pair<std::string, unsigned int>> m_storagesInfo;
     std::vector<std::pair<std::string, unsigned int>> m_temperatureSensorsInfo;
+	std::string m_uBootVersion;
+	std::string m_kernelVersion;
+	std::string m_sdVersion;
 };
 
 #endif // USB_SENSOR_ENUMERATOR_H

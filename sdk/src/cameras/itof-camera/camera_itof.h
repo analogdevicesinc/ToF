@@ -94,6 +94,16 @@
  *                    or disabled through .ini configuration file but if this control is explicitly called
  *                    then it will override the option in the .ini file. By default XYZ frame is disabled.
  *   Accepted values: One of the following strings: 'on' or 'off'
+ *
+ * getUbootVersion
+ *   Description:     Returns the 'u-boot' version that is installed on the camera
+ *                    platform.
+ *   Accepted values: Not applicable. It is a read-only control. Do not use it with setControl().
+ *
+ * getKernelVersion
+ *   Description:     Returns the 'u-boot' version that is installed on the camera
+ *                    platform.
+ *   Accepted values: Not applicable. It is a read-only control. Do not use it with setControl().
  */
 
 class CameraItof : public aditof::Camera {

@@ -111,6 +111,15 @@ Status SystemImpl::getCameraList(
 #endif
 
     sensorEnumerator->searchSensors();
+	std::string kernel;
+	std::string uboot;
+	std::string sd_ver;
+	sensorEnumerator->getKernelVersion(kernel);
+	sensorEnumerator->getUbootVersion(uboot);
+	sensorEnumerator->getSdVersion(sd_ver);
+	LOG(INFO) << "Software Versions\n"<<kernel;
+	LOG(INFO) <<uboot;
+	LOG(INFO) <<sd_ver;
     cameraList = buildCameras(std::move(sensorEnumerator));
 
     return Status::OK;
@@ -132,6 +141,18 @@ SystemImpl::getCameraListAtIp(std::vector<std::shared_ptr<Camera>> &cameraList,
         return Status::GENERIC_ERROR;
     }
     Status status = sensorEnumerator->searchSensors();
+
+	std::string kernel;
+	std::string uboot;
+	std::string sd_ver;
+	sensorEnumerator->getKernelVersion(kernel);
+	sensorEnumerator->getUbootVersion(uboot);
+	sensorEnumerator->getSdVersion(sd_ver);
+	LOG(INFO) << "Software Versions"<<std::endl;
+	LOG(INFO) << kernel;
+	LOG(INFO) <<uboot;
+	LOG(INFO) <<sd_ver;
+
     if (status == Status::OK) {
         cameraList = buildCameras(std::move(sensorEnumerator));
     }

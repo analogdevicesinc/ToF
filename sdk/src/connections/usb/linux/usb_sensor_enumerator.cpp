@@ -86,7 +86,7 @@ Status UsbSensorEnumerator::searchSensors() {
             continue;
         }
 
-        int fd = open(driverPath.c_str(), O_RDWR | O_NONBLOCK, 0);
+        fd = open(driverPath.c_str(), O_RDWR | O_NONBLOCK, 0);
         if (-1 == fd) {
             LOG(WARNING) << "Cannot open '" << driverPath
                          << "' error: " << errno << "(" << strerror(errno)
@@ -200,6 +200,10 @@ Status UsbSensorEnumerator::searchSensors() {
             m_storagesInfo.emplace_back(
                 std::make_pair(tempSensor.name(), tempSensor.id()));
         }
+
+		m_kernelVersion = responseMsg.card_image_version().kernelversion();
+		m_sdVersion = responseMsg.card_image_version().sdversion();
+		m_uBootVersion = responseMsg.card_image_version().ubootversion();
     }
 
     closedir(d);
@@ -247,4 +251,60 @@ Status UsbSensorEnumerator::getTemperatureSensors(
     }
 
     return Status::OK;
+}
+
+aditof::Status UsbSensorEnumerator::getUbootVersion(
+    std::string &uBootVersion) const {
+    uBootVersion = m_uBootVersion;
+    return aditof::Status::OK;
+}
+
+aditof::Status UsbSensorEnumerator::getKernelVersion(
+    std::string &kernelVersion) const {
+	aditof::Status status;
+	usb_payload::ClientRequest requestMsg;
+        requestMsg.set_func_name(usb_payload::FunctionName::GET_KERNEL_VERSION);
+        requestMsg.add_func_int32_param(
+            1); // TO DO: Check if this is needed. Without it, the serialized string will be empty.
+
+        std::string requestStr;
+        requestMsg.SerializeToString(&requestStr);
+        status = UsbLinuxUtils::uvcExUnitSendRequest(fd, requestStr);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Request to search for sensors failed";
+            return status;
+        }
+
+        // Read UVC gadget response
+        std::string responseStr;
+        status = UsbLinuxUtils::uvcExUnitGetResponse(fd, responseStr);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Request to search for sensors failed";
+            return status;
+        }
+        usb_payload::ServerResponse responseMsg;
+        bool parsed = responseMsg.ParseFromString(responseStr);
+        if (!parsed) {
+            LOG(ERROR) << "Failed to deserialize string containing UVC gadget "
+                          "response";
+            return Status::INVALID_ARGUMENT;
+        }
+
+        DLOG(INFO) << "Received the following message with "
+                      "available sensors from target: "
+                   << responseMsg.DebugString();
+
+        if (responseMsg.status() != usb_payload::Status::OK) {
+            LOG(ERROR) << "Search for sensors operation failed on UVC gadget";
+            return static_cast<Status>(responseMsg.status());
+        }
+
+    kernelVersion = std::string(responseMsg.bytes_payload(0).c_str(), responseMsg.bytes_payload(0).length());
+    return aditof::Status::OK;
+}
+
+aditof::Status UsbSensorEnumerator::getSdVersion(
+    std::string &sdVersion) const {
+    sdVersion = m_sdVersion;
+    return aditof::Status::OK;
 }

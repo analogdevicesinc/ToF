@@ -18,6 +18,13 @@ enum ServerStatus
   REQUEST_UNKNOWN = 1;
 }
 
+message CardImageVersion
+{
+  string kernelversion = 10;
+  string sdversion = 20;
+  string ubootversion = 30;
+}
+
 message StorageInfo
 {
   string name = 10;
@@ -74,4 +81,5 @@ message ServerResponse
   repeated DepthSensorFrameType available_frame_types = 70;  // List of supported frame types
   SensorsInfo sensors_info = 80;                             // List of information about existing devices on the same platform as the server
   string message = 90;                                       // Additional message (if any)
+  CardImageVersion card_image_version = 100;
 }

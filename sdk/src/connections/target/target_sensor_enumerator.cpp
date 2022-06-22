@@ -29,6 +29,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include <fstream>
 #include "connections/target/target_sensor_enumerator.h"
 #include "connections/target/adsd3100_sensor.h"
 #include "connections/target/eeprom.h"
@@ -84,3 +85,58 @@ Status TargetSensorEnumerator::getTemperatureSensors(
 
     return Status::OK;
 }
+
+aditof::Status TargetSensorEnumerator::getUbootVersion(
+    std::string &uBootVersion) const {
+    std::ifstream fid;
+	std::string line;
+	fid.open("/boot/sw-versions");
+	if (fid.is_open()) {
+		while(fid) {
+			std::getline(fid, line);
+			if (line.find("boot") != std::string::npos) {
+				uBootVersion.append(line);
+			}
+			line.clear();
+		}
+	}
+	fid.close();
+    return aditof::Status::OK;
+}
+
+aditof::Status TargetSensorEnumerator::getKernelVersion(
+    std::string &kernelVersion) const {
+	std::ifstream fid;
+	std::string line;
+	fid.open("/boot/sw-versions");
+	if (fid.is_open()) {
+		while(fid) {
+			std::getline(fid, line);
+			if (line.find("kernel") != std::string::npos) {
+				kernelVersion.append(line);
+			}
+			line.clear();
+		}
+	}
+	fid.close();
+    return aditof::Status::OK;
+}
+
+aditof::Status TargetSensorEnumerator::getSdVersion(
+    std::string &sdVersion) const {
+    std::ifstream fid;
+	std::string line;
+	fid.open("/boot/sw-versions");
+	if (fid.is_open()) {
+		while(fid) {
+			std::getline(fid, line);
+			if (line.find("sd_img_ver") != std::string::npos) {
+				sdVersion.append(line);
+			}
+			line.clear();
+		}
+	}
+	fid.close();
+    return aditof::Status::OK;
+}
+
