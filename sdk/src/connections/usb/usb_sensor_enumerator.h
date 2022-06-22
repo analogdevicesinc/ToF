@@ -65,11 +65,9 @@ class UsbSensorEnumerator : public aditof::SensorEnumeratorInterface {
     std::vector<SensorInfo> m_sensorsInfo;
     std::vector<std::pair<std::string, unsigned int>> m_storagesInfo;
     std::vector<std::pair<std::string, unsigned int>> m_temperatureSensorsInfo;
-    std::string m_cardImageVersion;
 	std::string m_uBootVersion;
 	std::string m_kernelVersion;
-	std::string m_rfsVersion;
-	std::string m_sdkVersion;
+	std::string m_sdVersion;
 };
 
 #endif // USB_SENSOR_ENUMERATOR_H

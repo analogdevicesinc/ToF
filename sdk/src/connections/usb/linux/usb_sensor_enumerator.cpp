@@ -197,6 +197,10 @@ Status UsbSensorEnumerator::searchSensors() {
             m_storagesInfo.emplace_back(
                 std::make_pair(tempSensor.name(), tempSensor.id()));
         }
+
+		m_kernelVersion = responseMsg.card_image_version().kernelversion();
+		m_sdVersion = responseMsg.card_image_version().sdversion();
+		m_uBootVersion = responseMsg.card_image_version().ubootversion();
     }
 
     closedir(d);
@@ -297,7 +301,7 @@ aditof::Status UsbSensorEnumerator::getKernelVersion(
 }
 
 aditof::Status UsbSensorEnumerator::getSdVersion(
-    std::string &sdkVersion) const {
-    sdkVersion = m_sdkVersion;
+    std::string &sdVersion) const {
+    sdVersion = m_sdVersion;
     return aditof::Status::OK;
 }

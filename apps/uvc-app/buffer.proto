@@ -32,7 +32,13 @@ enum FunctionName
   STORAGE_WRITE = 15;
   STORAGE_CLOSE = 16;
   STORAGE_READ_CAPACITY = 17;
-  GET_KERNEL_VERSION = 18;
+}
+
+message CardImageVersion
+{
+  string kernelversion = 10;
+  string sdversion = 20;
+  string ubootversion = 30;
 }
 
 message ImagerInfo
@@ -56,7 +62,7 @@ message SensorsInfo
 {
   repeated StorageInfo storages = 10;               // Information about available storages
   repeated TemperatureSensorInfo temp_sensors = 20; // Information about available temperature sensors
-  ImagerInfo image_sensors = 30;                  // Information abouth available depth sensors
+  ImagerInfo image_sensors = 30;                    // Information abouth available depth sensors
 }
 
 message DepthSensorFrameContent
@@ -99,4 +105,5 @@ message ServerResponse
   DepthSensorFrameTypeVector available_frame_types = 50;     // List of supported frame types
   SensorsInfo sensors_info = 60;                             // List of information about existing devices on the same platform as the server
   string message = 70;                                       // Additional message (if any)
+  CardImageVersion card_image_version = 80;                  // Version info of different software components on the OS running on camera
 }
