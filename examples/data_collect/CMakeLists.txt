@@ -55,4 +55,4 @@ if ( WIN32 )
    endif()
 endif()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE aditof)
+target_link_libraries(${PROJECT_NAME} PRIVATE aditof cxxopts)

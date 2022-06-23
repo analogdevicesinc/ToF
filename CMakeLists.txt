@@ -101,7 +101,7 @@ add_definitions(-DRESOURCES="${RESOURCES_DIR}")
 
 add_subdirectory(apps)
 add_subdirectory(sdk)
-
+add_subdirectory(common/third_party/cxxopts/)
 
 if(WITH_TOOLS)
         # if (MSVC)

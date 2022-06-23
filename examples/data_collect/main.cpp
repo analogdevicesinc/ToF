@@ -9,7 +9,7 @@
 #include <aditof/floatTolin.h>
 #include <aditof/frame.h>
 #include <aditof/system.h>
-#include <docopt.h>
+#include <cxxopts.hpp>
 #include <fsf_common.h>
 #include <fstream>
 #include <glog/logging.h>
@@ -62,59 +62,6 @@ typedef struct thread_params {
     const char *nFileTime;
     fsf_params *pFsfParams;    
 } thread_params;
-
-static const char kUsagePublic[] =
-    R"(Data Collect.
-    Usage:
-      data_collect FILE
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--fsf <0|1>] [--wt <warmup>] [--ccb FILE] FILE
-      data_collect (-h | --help) 
-
-    Arguments:
-      FILE            Input config_default.json file (which has *.ccb and *.cfg)
-
-    Options:
-      -h --help          Show this screen.
-      --f <folder>       Input folder to save data to. Max folder name size is 512. [default: ./]
-      --n <ncapture>     Number of frames to capture. [default: 1]
-      --m <mode>         Mode to capture data in. [default: 10]
-      --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
-      --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
-      --wt <warmup>      Warmup Time (in seconds) before data capture [default: 0]
-      --ccb <FILE>       The path to store CCB content
-
-    Valid mode (--m) options are:
-        0: QMpixel short range (512x512)
-        1: QVGA LT (320x288)
-        3: Passive IR (1024x1024)
-        5: 1Mpixel with passive IR (1024x1024)
-        7: QMpixel (512x512)
-       10: 1Mpixel (1024x1024)
-)";
-// Hide 'ft' (frame_type) option from public doc string
-static const char kUsageInternal[] =
-    R"(Data Collect.
-    Usage:
-      data_collect FILE
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--ft <frame_type>] [--fsf <0|1>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fps <setfps>] FILE
-      data_collect (-h | --help) 
-
-    Arguments:
-      FILE            Input config_default.json file (which has *.ccb and *.cfg)
-
-    Options:
-      -h --help          Show this screen.
-      --f <folder>       Input folder to save data to. Max folder name size is 512. [default: ./]
-      --n <ncapture>     Number of frames to capture. [default: 1]
-      --m <mode>         Mode to capture data in. [default: 10]
-      --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
-      --ft <frame_type>  Type of frame to be captured [default: raw]
-      --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
-      --wt <warmup>      Warmup Time (in seconds) before data capture [default: 0]
-      --ccb <FILE>       The path to store CCB content      
-      --ip <ip>          Camera IP      
-      --fps <setfps>     Set target FPS value [range: 50 to 200] 
-)";
 
 #ifdef MULTI_THREADED 
 void fileWriterTask( const thread_params * const pThreadParams );
@@ -250,26 +197,43 @@ int main(int argc, char *argv[]) {
 
     std::map<int, int> modeIndexMap = {{1, 0}, {3, 1}, {5, 2}, {7, 3}, {10, 4}};
 
-    std::map<std::string, docopt::value> args = docopt::docopt_private(kUsagePublic, kUsageInternal, {argv + 1, argv + argc}, true);
+    cxxopts::Options options("data_collect", "One line description of data_collect");
+    options.allow_unrecognised_options().add_options()
+        ("FILE", "Input config_default.json file (which has *.ccb and *.cfg)", cxxopts::value<std::string>()->default_value("config/config_default.json"))
+        ("h,help", "Print usage")//boolean value
+        ("f,folder", "Input folder to save data to. Max folder name size is 512. [default: ./]", cxxopts::value<std::string>()->default_value("./"))
+        ("n,ncapture", "Number of frames to capture. [default: 1]", cxxopts::value<int>()->default_value("1"))
+        ("m,mode", "Mode to capture data in. [default: 10]", cxxopts::value<int>()->default_value("10"))
+        ("e,ext_fsync", "External FSYNC [0: Internal 1: External] [default: 0]")//boolean value
+        ("t,frame_type", "Type of frame to be captured [default: raw]", cxxopts::value<std::string>()->default_value("raw"))
+        ("fsf", "FSF file type [0: Disable 1: Enable] [default: 0]")//boolean value
+        ("w,wt", "Warmup Time (in seconds) before data capture [default: 0]", cxxopts::value<int>()->default_value("0"))
+        ("c,ccb", "The path to store CCB content", cxxopts::value<std::string>()->default_value(""))
+        ("i,ip", "Camera IP", cxxopts::value<std::string>()->default_value(""))
+        ("fps", "Set target FPS value [range: 50 to 200]", cxxopts::value<int>()->default_value("50"))
+        ;
+
+    auto args = options.parse(argc, argv);
+
+    if (args.count("help")) {
+        std::cout << options.help() << std::endl;
+        exit(0);
+    }
 
     // Parsing the arguments from command line
-    err = snprintf(json_file_path, sizeof(json_file_path), "%s", args["FILE"].asString().c_str());
+    err = snprintf(json_file_path, sizeof(json_file_path), "%s", args["FILE"].as<std::string>().c_str());
     if (err < 0) {
         LOG(ERROR) << "Error copying the json file path!";
         return 0;
     }
 
-    // Parsing output folder
-    if (args["--f"]) {
-        err = snprintf(folder_path, sizeof(folder_path), "%s", args["--f"].asString().c_str());
-    } else {
-        err = snprintf(folder_path, sizeof(folder_path), "%s", ".");
-    }
-
+    // Parsing output folder    
+    err = snprintf(folder_path, sizeof(folder_path), "%s", args["folder"].as<std::string>().c_str());
     if (err < 0) {
         LOG(ERROR) << "Error copying the output folder path!";
         return 0;
     }
+
 #ifdef _WIN32
     // Create folder if not created already
     char dir_path[MAX_PATH];
@@ -295,79 +259,61 @@ int main(int argc, char *argv[]) {
 #endif
 
     // Parsing number of frames
-    if (args["--n"]) {
-        n_frames = args["--n"].asLong();
-    }
+    n_frames = args["ncapture"].as<int>();
     Fsfparams.n_frames = n_frames;
 
     bool modeIsValid = false;
     // Parsing mode type
-    if (args["--m"]) {
-        mode = args["--m"].asLong();
-        modeIsValid = (mode == 1 || mode == 3 || mode == 5 || mode == 7 || mode == 10);
-        if (!modeIsValid) {
-            LOG(ERROR) << "Invalid Mode.." << mode << "The accepted values for mode are: 1, 3, 5, 7, 10";
-            return 0;
-        }
+    mode = args["mode"].as<int>();
+    modeIsValid = (mode == 1 || mode == 3 || mode == 5 || mode == 7 || mode == 10);
+    if (!modeIsValid) {
+        LOG(ERROR) << "Invalid Mode.." << mode << "The accepted values for mode are: 1, 3, 5, 7, 10";
+        return 0;
     }
 
     // Parsing ip
-    if (args["--ip"]) {
-        ip = args["--ip"].asString();
-        if (ip.empty()) {
-            LOG(ERROR) << "Invalid ip (--ip) from command line!";
-            return 0;
-        }
-    }    
+    ip = args["ip"].as<std::string>();
+    if (args.count("ip") && ip.empty()) {
+        LOG(ERROR) << "Invalid ip (--ip) from command line!";
+        return 0;
+    }
 
     //set FPS value
-    if (args["--fps"]) {
-        setfps = args["--fps"].asLong();
-        if (setfps > 200 || setfps < 50) {
-            LOG(ERROR) << "Invalid FPS value.." << setfps;
-            return 0;
-        }
+    setfps = args["fps"].as<int>();
+    if (setfps > 200 || setfps < 50) {
+        LOG(ERROR) << "Invalid FPS value.." << setfps;
+        return 0;
     }
     else {
         setfps = fps_defaults[mode];
     }    
 
-    if (args["--ext_fsync"]) {
-        ext_frame_sync_en = args["--ext_fsync"].asLong();
-    }
+    ext_frame_sync_en = (uint32_t)(args["ext_fsync"].as<bool>());
 
-    if (args["--ft"]) {
-        frame_type = args["--ft"].asString();
-    } else {
-        frame_type = "raw";
-    }
+    frame_type = args["frame_type"].as<std::string>();    
     if (frame_type.length() <= 0) {
         LOG(ERROR) << "Error parsing frame_type (--ft) from command line!";
         return 0;
     }    
 
     //Parsing Warm up time
-    if (args["--wt"]) {
-        warmup_time = args["--wt"].asLong();
-        if (warmup_time < 0) {
-            LOG(ERROR) << "Invalid warm up time input!";        
-        }
+    warmup_time = args["wt"].as<int>();
+    if (warmup_time < 0) {
+        LOG(ERROR) << "Invalid warm up time input!";        
     }
 
+
     // Checking fsf flag
-    if (args["--fsf"]) {
-        fsf_flag = args["--fsf"].asLong();
-        if (fsf_flag && n_frames > DEFAULT_MAX_FRAMES) {
-            LOG(ERROR) << "FSF file format is limited to a maximum of 300 frames!";
-            return 0;
-        }
+    fsf_flag = (uint32_t)(args["fsf"].as<bool>());
+    if (fsf_flag && n_frames > DEFAULT_MAX_FRAMES) {
+        LOG(ERROR) << "FSF file format is limited to a maximum of 300 frames!";
+        return 0;
     }
+
 
     //Parsing CCB path
     std::string ccbFilePath;
-    if (args["--ccb"]) {
-        ccbFilePath = args["--ccb"].asString();
-    }
+    ccbFilePath = args["ccb"].as<std::string>();
 
     LOG(INFO) << "Output folder: " << folder_path;
     LOG(INFO) << "Mode: " << mode;
@@ -749,7 +695,7 @@ void fileWriterTask( const thread_params * const pThreadParams ) {
 
     char out_file[MAX_FILE_PATH_SIZE] = {0};
     if (nullptr == pThreadParams->pFsfParams) {
-        snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05lld.bin", pThreadParams->pFolderPath, pThreadParams->pFrame_type, pThreadParams->nFileTime,
+        snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05ld.bin", pThreadParams->pFolderPath, pThreadParams->pFrame_type, pThreadParams->nFileTime,
              pThreadParams->nFrameCount);
 
         std::ofstream rawFile(out_file, std::ios::out | std::ios::binary | std::ofstream::trunc );
