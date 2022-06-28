@@ -857,7 +857,7 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* 
     memcpy(readback_data, extCtrl.p_u8 + 3, payload_len);
 
     //If we use the read ccb command we need to keep adsd3500 in burst mode
-    if(cmd != 0x13){
+    if(cmd == 0x13){
         return status;
     }
 
