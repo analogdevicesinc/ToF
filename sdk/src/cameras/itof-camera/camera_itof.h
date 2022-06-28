@@ -331,6 +331,14 @@ class CameraItof : public aditof::Camera {
      */
     aditof::Status updateAdsd3500Firmware(const std::string &filePath);
 
+        /**
+     * @brief Read the ccb from adsd3500 memory and store it in m_tempFiles.ccbFile
+     *
+     * @return Status
+     * @see Status
+     */
+    aditof::Status readAdsd3500CCB();
+
     /**
      * INI files have key value pairs like this:
      * enableSomething = 1
