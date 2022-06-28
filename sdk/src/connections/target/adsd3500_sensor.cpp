@@ -875,6 +875,12 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* 
     return status;
 }
 
+aditof::Status Adsd3500Sensor::adsd3500_write_payload(uint8_t* payload, uint16_t payload_len) {
+    using namespace aditof;
+
+    return Status::UNAVAILABLE;
+}
+
 aditof::Status Adsd3500Sensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
     using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];

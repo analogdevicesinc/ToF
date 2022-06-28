@@ -796,6 +796,10 @@ aditof::Status UsbDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* 
     return aditof::Status::OK;
 }
 
+aditof::Status UsbDepthSensor::adsd3500_read_payload(uint8_t* payload, uint16_t payload_len) {
+    return aditof::Status::OK;
+}
+
 aditof::Status UsbDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
     return aditof::Status::OK;
 }
