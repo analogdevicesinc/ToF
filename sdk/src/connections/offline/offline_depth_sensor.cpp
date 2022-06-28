@@ -102,6 +102,10 @@ aditof::Status OfflineDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8
     return aditof::Status::OK;
 }
 
+aditof::Status OfflineDepthSensor::adsd3500_read_payload(uint8_t* payload, uint16_t payload_len) {
+    return aditof::Status::OK;
+}
+
 aditof::Status OfflineDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
     return aditof::Status::OK;
 }
