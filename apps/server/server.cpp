@@ -580,6 +580,21 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
+    case ADSD3500_READ_PAYLOAD: {
+        uint16_t payload_len = static_cast<uint16_t>(buff_recv.func_int32_param(1));
+        uint8_t *data = new uint8_t[payload_len];
+
+        aditof::Status status =
+            camDepthSensor->adsd3500_read_payload(data, payload_len);
+        if (status == aditof::Status::OK) {
+            buff_send.add_bytes_payload(data, payload_len);
+        }
+
+        delete[] data;
+        buff_send.set_status(static_cast<::payload::Status>(status));
+        break;
+    }
+
     case ADSD3500_WRITE_PAYLOAD_CMD: {
         uint32_t cmd = static_cast<uint32_t>(buff_recv.func_int32_param(0));
         uint16_t payload_len = static_cast<uint16_t>(buff_recv.func_int32_param(1));
