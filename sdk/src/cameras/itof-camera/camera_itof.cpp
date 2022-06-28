@@ -1356,6 +1356,14 @@ aditof::Status CameraItof::readAdsd3500CCB() {
         return status;
     }
 
+    //Commands to switch back to standard mode
+    uint8_t switchBuf[] = {0x01, 0x00, 0x10, 0xAD, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
+                           0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    status = m_depthSensor->adsd3500_write_payload(switchBuf, sizeof(switchBuf)/sizeof(switchBuf[0]));
+    if(status != Status::OK){
+        LOG(ERROR) << "Failed to switch adsd3500 to standard mode!";
+        return status;
+    }
 
     LOG(INFO) << "Succesfully read ccb from adsd3500";
     
