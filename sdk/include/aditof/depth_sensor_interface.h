@@ -159,6 +159,15 @@ class DepthSensorInterface {
      */
     virtual aditof::Status adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) = 0;
 
+        /**
+     * @brief Reads a chunk of data from adsd3500. This will perform a burst read making it
+     *        useful for reading chunks of data.
+     * @param payload - the location from where to take the data chunk and read it
+     * @param payload_len - the number of bytes to read
+     * @return Status
+     */
+    virtual aditof::Status adsd3500_read_payload(uint8_t* payload, uint16_t payload_len) = 0;
+
     /**
      * @brief Send a write command to adsd3500. This will perform a burst write making it
      *        useful for writing chunks of data.
