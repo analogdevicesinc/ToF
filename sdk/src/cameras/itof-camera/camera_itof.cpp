@@ -673,6 +673,13 @@ aditof::Status CameraItof::setControl(const std::string &control,
             uint8_t level = 0;
             return setCameraSyncMode(mode, level);
         } else if (control == "saveModuleCCB") {
+            if(m_adsd3500Enabled) {
+                status = readAdsd3500CCB();
+                if(status != Status::OK){
+                    LOG(ERROR) << "Failed to load ccb from adsd3500 module!";
+                    return Status::GENERIC_ERROR;
+                }
+            }
             return saveCCBToFile(value);
         } else if (control == "saveModuleCFG"){
             return saveCFGToFile(value);
@@ -1299,6 +1306,63 @@ aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath)
     LOG(INFO) << "Adsd3500 firmware updated succesfully!";
 
     return aditof::Status::OK;
+}
+
+aditof::Status CameraItof::readAdsd3500CCB() {
+    using namespace aditof;
+    Status status = Status::OK;
+
+    uint8_t ccbHeader[16];
+
+    //For this case adsd3500 will remain in burst mode
+    //A manuall switch to standard mode will be required at the end of the function
+    status = m_depthSensor->adsd3500_write_payload_cmd(0x13, ccbHeader, 16);
+    if(status != Status::OK){
+        LOG(ERROR) << "Failed to get ccb command header";
+        return status;
+    }
+
+    uint16_t chunkSize;
+    uint32_t ccbFileSize;
+    uint32_t crcOfCCB;
+    uint16_t numOfChunks;
+
+    memcpy(&chunkSize, ccbHeader + 1, 2);
+    memcpy(&ccbFileSize, ccbHeader + 4, 4);
+    memcpy(&crcOfCCB, ccbHeader + 12, 4);
+
+    numOfChunks = ccbFileSize / chunkSize;
+    uint8_t* ccbContent = new uint8_t[ccbFileSize];
+
+    for(int i = 0; i < numOfChunks; i++){
+        status = m_depthSensor->adsd3500_read_payload(ccbContent + i * chunkSize, chunkSize);
+        if(status != Status::OK){
+            LOG(ERROR) << "Failed to read chunk number " << i << " out of " << numOfChunks 
+                            << " chunks for adsd3500!";
+            return status;
+        }
+
+        if(i % 20 == 0){
+            LOG(INFO) << "Succesfully read chunk number " << i << " out of " << numOfChunks 
+                            << " chunks for adsd3500!";
+        }
+    }
+
+    //read last chunk. smaller size than the rest
+    status = m_depthSensor->adsd3500_read_payload(ccbContent + numOfChunks * chunkSize, ccbFileSize % chunkSize);
+    if(status != Status::OK){
+        LOG(ERROR) << "Failed to read chunk number " << numOfChunks + 1 << " out of " << numOfChunks + 1
+                        << " chunks for adsd3500!";
+        return status;
+    }
+
+
+    LOG(INFO) << "Succesfully read ccb from adsd3500";
+    
+    m_tempFiles.ccbFile = std::string((char*)ccbContent, ccbFileSize);
+    delete[] ccbContent;
+
+    return status;
 }
 
 void CameraItof::configureSensorFrameType()
