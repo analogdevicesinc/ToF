@@ -757,6 +757,12 @@ aditof::Status NetworkDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8
     return status;
 }
 
+aditof::Status NetworkDepthSensor::adsd3500_write_payload(uint8_t* payload, uint16_t payload_len) {
+    using namespace aditof;
+
+    return Status::UNAVAILABLE;
+}
+
 aditof::Status NetworkDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
     using namespace aditof;
 
