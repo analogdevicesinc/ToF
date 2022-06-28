@@ -1337,13 +1337,13 @@ aditof::Status CameraItof::readAdsd3500CCB() {
     for(int i = 0; i < numOfChunks; i++){
         status = m_depthSensor->adsd3500_read_payload(ccbContent + i * chunkSize, chunkSize);
         if(status != Status::OK){
-            LOG(ERROR) << "Failed to read chunk number " << i << " out of " << numOfChunks 
+            LOG(ERROR) << "Failed to read chunk number " << i << " out of " << numOfChunks + 1
                             << " chunks for adsd3500!";
             return status;
         }
 
         if(i % 20 == 0){
-            LOG(INFO) << "Succesfully read chunk number " << i << " out of " << numOfChunks 
+            LOG(INFO) << "Succesfully read chunk number " << i << " out of " << numOfChunks + 1
                             << " chunks for adsd3500!";
         }
     }
