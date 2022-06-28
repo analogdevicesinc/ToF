@@ -856,6 +856,11 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* 
 
     memcpy(readback_data, extCtrl.p_u8 + 3, payload_len);
 
+    //If we use the read ccb command we need to keep adsd3500 in burst mode
+    if(cmd != 0x13){
+        return status;
+    }
+
     //switch to standard mode
     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
     extCtrls.controls = &extCtrl;
@@ -875,10 +880,31 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* 
     return status;
 }
 
-aditof::Status Adsd3500Sensor::adsd3500_write_payload(uint8_t* payload, uint16_t payload_len) {
+aditof::Status Adsd3500Sensor::adsd3500_read_payload(uint8_t* payload, uint16_t payload_len) {
     using namespace aditof;
+    struct VideoDev *dev = &m_implData->videoDevs[0];
+    Status status = Status::OK;
 
-    return Status::UNAVAILABLE;
+    static struct v4l2_ext_control extCtrl;
+    static struct v4l2_ext_controls extCtrls;
+    static uint8_t buf[ADSD3500_CTRL_PACKET_SIZE];
+    memset(buf, 0, ADSD3500_CTRL_PACKET_SIZE * sizeof(uint8_t));
+
+    extCtrl.size = ADSD3500_CTRL_PACKET_SIZE;
+    extCtrl.id = V4L2_CID_AD_DEV_CHIP_CONFIG;
+
+    memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
+    extCtrls.controls = &extCtrl;
+    extCtrls.count = 1;
+
+    if (xioctl(dev->sfd, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1) {
+		LOG(WARNING) << "Failed to get ctrl with id " << extCtrl.id;
+			return Status::GENERIC_ERROR;
+	}
+
+    memcpy(readback_data, extCtrl.p_u8 + 3, payload_len);
+
+    return status;
 }
 
 aditof::Status Adsd3500Sensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
