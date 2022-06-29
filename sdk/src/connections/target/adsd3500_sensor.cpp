@@ -902,7 +902,7 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload(uint8_t* payload, uint16_t 
 			return Status::GENERIC_ERROR;
 	}
 
-    memcpy(readback_data, extCtrl.p_u8 + 3, payload_len);
+    memcpy(payload, extCtrl.p_u8 + 3, payload_len);
 
     return status;
 }
