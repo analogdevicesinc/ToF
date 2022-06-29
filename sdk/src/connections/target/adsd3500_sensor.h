@@ -75,7 +75,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     virtual aditof::Status adsd3500_read_cmd(uint16_t cmd, uint16_t *data) override;
     virtual aditof::Status adsd3500_write_cmd(uint16_t cmd, uint16_t data) override;
     virtual aditof::Status adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) override;
-    virtual aditof::Status adsd3500_read_payload(uint8_t* payload, uint32_t payload_len) override;
+    virtual aditof::Status adsd3500_read_payload(uint8_t* payload, uint16_t payload_len) override;
     virtual aditof::Status adsd3500_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) override;
     virtual aditof::Status adsd3500_write_payload(uint8_t* payload, uint16_t payload_len) override;
 
