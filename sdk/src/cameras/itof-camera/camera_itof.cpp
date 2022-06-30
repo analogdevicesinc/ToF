@@ -1316,7 +1316,7 @@ aditof::Status CameraItof::readAdsd3500CCB() {
 
     //For this case adsd3500 will remain in burst mode
     //A manuall switch to standard mode will be required at the end of the function
-    status = m_depthSensor->adsd3500_write_payload_cmd(0x13, ccbHeader, 16);
+    status = m_depthSensor->adsd3500_read_payload_cmd(0x13, ccbHeader, 16);
     if(status != Status::OK){
         LOG(ERROR) << "Failed to get ccb command header";
         return status;
