@@ -1349,11 +1349,13 @@ aditof::Status CameraItof::readAdsd3500CCB() {
     }
 
     //read last chunk. smaller size than the rest
-    status = m_depthSensor->adsd3500_read_payload(ccbContent + numOfChunks * chunkSize, ccbFileSize % chunkSize);
-    if(status != Status::OK){
-        LOG(ERROR) << "Failed to read chunk number " << numOfChunks + 1 << " out of " << numOfChunks + 1
-                        << " chunks for adsd3500!";
-        return status;
+    if(ccbFileSize % chunkSize != 0){
+        status = m_depthSensor->adsd3500_read_payload(ccbContent + numOfChunks * chunkSize, ccbFileSize % chunkSize);
+        if(status != Status::OK){
+            LOG(ERROR) << "Failed to read chunk number " << numOfChunks + 1 << " out of " << numOfChunks + 1
+                            << " chunks for adsd3500!";
+            return status;
+        }
     }
 
     //Commands to switch back to standard mode
