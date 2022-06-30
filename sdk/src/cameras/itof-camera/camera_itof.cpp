@@ -1295,8 +1295,8 @@ aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath)
     }
 
     //Commands to switch back to standard mode
-    uint8_t switchBuf[] = {0x01, 0x00, 0x10, 0xAD, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
-                           0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    uint8_t switchBuf[] = {0xAD, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 
+                           0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
     status = m_depthSensor->adsd3500_write_payload(switchBuf, sizeof(switchBuf)/sizeof(switchBuf[0]));
     if(status != Status::OK){
         LOG(ERROR) << "Failed to switch adsd3500 to standard mode!";
@@ -1312,7 +1312,8 @@ aditof::Status CameraItof::readAdsd3500CCB() {
     using namespace aditof;
     Status status = Status::OK;
 
-    uint8_t ccbHeader[16];
+    uint8_t ccbHeader[16] = {0};
+    ccbHeader[0] = 1;
 
     //For this case adsd3500 will remain in burst mode
     //A manuall switch to standard mode will be required at the end of the function
@@ -1359,8 +1360,8 @@ aditof::Status CameraItof::readAdsd3500CCB() {
     }
 
     //Commands to switch back to standard mode
-    uint8_t switchBuf[] = {0x01, 0x00, 0x10, 0xAD, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
-                           0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    uint8_t switchBuf[] = {0xAD, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 
+                           0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
     status = m_depthSensor->adsd3500_write_payload(switchBuf, sizeof(switchBuf)/sizeof(switchBuf[0]));
     if(status != Status::OK){
         LOG(ERROR) << "Failed to switch adsd3500 to standard mode!";
@@ -1368,9 +1369,19 @@ aditof::Status CameraItof::readAdsd3500CCB() {
     }
 
     LOG(INFO) << "Succesfully read ccb from adsd3500";
+
+    std::ofstream tempFile;
+    std::string fileName = "temp_ccb.ccb";
     
-    m_tempFiles.ccbFile = std::string((char*)ccbContent, ccbFileSize);
+    //remove the trailling 4 bytes containing the crc
+    std::string fileContent = std::string((char*)ccbContent, ccbFileSize - 4);
+    tempFile.open (fileName, std::ios::binary);
+
+    tempFile << fileContent;
+
+    m_tempFiles.ccbFile = fileName;
     delete[] ccbContent;
+    tempFile.close();
 
     return status;
 }
