@@ -581,7 +581,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
 
     case ADSD3500_READ_PAYLOAD: {
-        uint16_t payload_len = static_cast<uint16_t>(buff_recv.func_int32_param(1));
+        uint16_t payload_len = static_cast<uint16_t>(buff_recv.func_int32_param(0));
         uint8_t *data = new uint8_t[payload_len];
 
         aditof::Status status =
