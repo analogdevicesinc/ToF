@@ -571,6 +571,14 @@ int main(int argc, char *argv[]) {
     }
 #endif    
 
+    // Store CCB to file
+    if (!ccbFilePath.empty()) {
+        status = camera->setControl("saveModuleCCB", ccbFilePath);
+        if (status != Status::OK) {
+            LOG(INFO) << "Failed to store CCB to " << ccbFilePath;
+        }
+    }
+
     // Program the camera with cfg passed, set the mode by writing to 0x200 and start the camera        
     status = camera->start();
     if (status != Status::OK) {
@@ -773,14 +781,6 @@ int main(int argc, char *argv[]) {
         if (total_time.count() > 0.0) {
             double fps = (double)n_frames / total_time.count();
             LOG(INFO) << "FPS: " << fps;
-        }
-    }
-
-    // Store CCB to file
-    if (!ccbFilePath.empty()) {
-        status = camera->setControl("saveModuleCCB", ccbFilePath);
-        if (status != Status::OK) {
-            LOG(INFO) << "Failed to store CCB to " << ccbFilePath;
         }
     }
 
