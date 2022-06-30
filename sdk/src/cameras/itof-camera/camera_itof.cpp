@@ -1368,7 +1368,23 @@ aditof::Status CameraItof::readAdsd3500CCB() {
         return status;
     }
 
-    LOG(INFO) << "Succesfully read ccb from adsd3500";
+    LOG(INFO) << "Succesfully read ccb from adsd3500. Checking crc...";
+
+    crc_parameters_t crc_params;
+    crc_params.type = CRC_32bit;
+    crc_params.polynomial.polynomial_crc32_bit = ADI_ROM_CFG_CRC_POLYNOMIAL;
+    crc_params.initial_crc.crc_32bit = nResidualCRC;
+    crc_params.crc_compute_flags = IS_CRC_MIRROR;
+
+    crc_output_t res = compute_crc(&crc_params, ccbContent, ccbFileSize - 4);
+    uint32_t computedCrc = res.crc_32bit;
+
+    if(crcOfCCB != ~computedCrc){
+        LOG(ERROR) << "Invalid crc for ccb read from memory!";
+        return Status::GENERIC_ERROR;
+    } else {
+        LOG(INFO) << "Crc of ccb is valid.";
+    }
 
     std::ofstream tempFile;
     std::string fileName = "temp_ccb.ccb";
