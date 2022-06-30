@@ -833,6 +833,10 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* 
             return Status::GENERIC_ERROR;
         }
 
+    if(cmd == 0x13){
+        usleep(1000);
+    }
+
     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
     extCtrls.controls = &extCtrl;
     extCtrls.count = 1;
@@ -896,6 +900,20 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload(uint8_t* payload, uint16_t 
     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
     extCtrls.controls = &extCtrl;
     extCtrls.count = 1;
+
+    buf[0] = 0x00;
+    buf[1] = uint8_t(payload_len >> 8);
+    buf[2] = uint8_t(payload_len & 0xFF);
+
+    extCtrl.p_u8 = buf;
+
+    usleep(30000);
+
+    if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+        LOG(WARNING) << "Reading Adsd3500 error "
+                         << "errno: " << errno << " error: " << strerror(errno);
+            return Status::GENERIC_ERROR;
+    }
 
     if (xioctl(dev->sfd, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1) {
 		LOG(WARNING) << "Failed to get ctrl with id " << extCtrl.id;

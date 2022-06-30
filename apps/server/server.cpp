@@ -808,6 +808,7 @@ void Initialize() {
     s_map_api_Values["Adsd3500ReadCmd"] = ADSD3500_READ_CMD;
     s_map_api_Values["Adsd3500WriteCmd"] = ADSD3500_WRITE_CMD;
     s_map_api_Values["Adsd3500ReadPayloadCmd"] = ADSD3500_READ_PAYLOAD_CMD;
+    s_map_api_Values["Adsd3500ReadPayload"] = ADSD3500_READ_PAYLOAD;
     s_map_api_Values["Adsd3500WritePayloadCmd"] = ADSD3500_WRITE_PAYLOAD_CMD;
     s_map_api_Values["Adsd3500WritePayload"] = ADSD3500_WRITE_PAYLOAD;
     s_map_api_Values["StorageOpen"] = STORAGE_OPEN;
