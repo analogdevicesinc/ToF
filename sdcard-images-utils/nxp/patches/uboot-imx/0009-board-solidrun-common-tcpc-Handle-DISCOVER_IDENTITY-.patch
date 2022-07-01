@@ -1,7 +1,8 @@
-From 5cdfb83adc4c05d0f38846b6a39d0f62090bfb7e Mon Sep 17 00:00:00 2001
+From 173f8935517d83c940f9f750f9fe42389b418e7b Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Thu, 3 Mar 2022 16:47:31 +0200
-Subject: [PATCH] board: solidrun: common: tcpc: Handle DISCOVER_IDENTITY VDM
+Subject: [PATCH 09/11] board: solidrun: common: tcpc: Handle DISCOVER_IDENTITY
+ VDM
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
