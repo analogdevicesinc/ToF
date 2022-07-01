@@ -1,7 +1,7 @@
-From 434e495d4475d31524b261ecf268b52d23a55470 Mon Sep 17 00:00:00 2001
+From 63dc79b4f387a48e1b9e03be8113221290598937 Mon Sep 17 00:00:00 2001
 From: Ye Li <ye.li@nxp.com>
 Date: Thu, 27 May 2021 03:13:14 -0700
-Subject: [PATCH 1/2] LFU-143 tcpc: Add i2c read/write return check
+Subject: [PATCH 07/11] LFU-143 tcpc: Add i2c read/write return check
 
 Fix coverity Issue: 2970631/5409463 Unchecked return value.
 Add relevant return check for i2c read and write

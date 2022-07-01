@@ -1,7 +1,7 @@
-From 6858072066e641d860be2f3831e6597ce7743043 Mon Sep 17 00:00:00 2001
+From 41fd82cdb1e6f2cf2b43ed4b1c667290dde0b59e Mon Sep 17 00:00:00 2001
 From: Rabeeh Khoury <rabeeh@solid-run.com>
 Date: Mon, 23 Nov 2020 20:42:17 +0200
-Subject: [PATCH 5/5] imx8mp: add eqos ethernet port and disable fec
+Subject: [PATCH 05/11] imx8mp: add eqos ethernet port and disable fec
 
 eqos port is the main ethernet port connected from the SOM and exported
 on the HummingBoard mate/pulse and all it's variants.
@@ -156,5 +156,5 @@ index a1e2c47dfe..b31310204c 100644
  #define CONFIG_SYS_NONCACHED_MEMORY     (1 * SZ_1M)     /* 1M */
  #endif
 -- 
-2.25.1
+2.17.1
 
