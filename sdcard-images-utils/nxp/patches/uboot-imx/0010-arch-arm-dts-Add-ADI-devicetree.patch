@@ -1,20 +1,34 @@
-From ddff7b0a77c668af73e65c72c303e66b195fd7cb Mon Sep 17 00:00:00 2001
-From: TalPilo <tal.pilo@solid-run.com>
-Date: Wed, 30 Sep 2020 11:38:40 +0300
-Subject: [PATCH 02/11] Add imx8mp solidrun device tree to u-boot
+From 79fe5130e28f832fc6ab28faecb7ec36e7b437fb Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Fri, 1 Jul 2022 09:16:59 +0300
+Subject: [PATCH 10/11] arch: arm: dts: Add ADI devicetree
 
-Signed-off-by: TalPilo <tal.pilo@solid-run.com>
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
- arch/arm/dts/imx8mp-solidrun.dts | 571 +++++++++++++++++++++++++++++++
- 1 file changed, 571 insertions(+)
- create mode 100644 arch/arm/dts/imx8mp-solidrun.dts
+ arch/arm/dts/Makefile             |   1 +
+ arch/arm/dts/imx8mp-adi.dts       | 580 ++++++++++++++++++++++++++++++
+ configs/imx8mp_solidrun_defconfig |  10 +-
+ 3 files changed, 584 insertions(+), 7 deletions(-)
+ create mode 100644 arch/arm/dts/imx8mp-adi.dts
 
-diff --git a/arch/arm/dts/imx8mp-solidrun.dts b/arch/arm/dts/imx8mp-solidrun.dts
+diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
+index 30dbf74406..b12624047c 100644
+--- a/arch/arm/dts/Makefile
++++ b/arch/arm/dts/Makefile
+@@ -796,6 +796,7 @@ dtb-$(CONFIG_ARCH_IMX8M) += \
+ 	imx8mq-evk.dtb \
+ 	imx8mp-ddr4-evk.dtb \
+ 	imx8mp-evk.dtb \
++	imx8mp-adi.dtb \
+ 	imx8mp-solidrun.dtb \
+ 	imx8mm-ddr4-ab2.dtb \
+ 	imx8mm-ab2.dtb \
+diff --git a/arch/arm/dts/imx8mp-adi.dts b/arch/arm/dts/imx8mp-adi.dts
 new file mode 100644
-index 0000000000..44726378e4
+index 0000000000..59f67d2900
 --- /dev/null
-+++ b/arch/arm/dts/imx8mp-solidrun.dts
-@@ -0,0 +1,571 @@
++++ b/arch/arm/dts/imx8mp-adi.dts
+@@ -0,0 +1,580 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright 2020 SolidRun ltd.
@@ -86,16 +100,28 @@ index 0000000000..44726378e4
 +		startup-delay-us = <100>;
 +		off-on-delay-us = <12000>;
 +	};
++
++	reg_vcc_3p3: regulator-vcc-3p3 {
++		compatible = "regulator-fixed";
++		pinctrl-names = "default";
++		regulator-name = "VCC_3P3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		gpio = <&gpio5 2 GPIO_ACTIVE_HIGH>;
++		startup-delay-us = <100>;
++		off-on-delay-us = <1200>;
++		enable-active-high;
++		regulator-always-on;
++	};
 +};
 +
-+/* ETH0 */
 +&fec {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_fec>;
 +	phy-mode = "rgmii-id";
 +	phy-handle = <&ethphy1>;
 +	fsl,magic-packet;
-+	status = "okay";
++	status = "disabled";
 +
 +	mdio {
 +		#address-cells = <1>;
@@ -109,23 +135,28 @@ index 0000000000..44726378e4
 +	};
 +};
 +
-+/* need to check*/
-+&flexspi {
++&eqos {
 +	pinctrl-names = "default";
-+	pinctrl-0 = <&pinctrl_flexspi0>;
++	pinctrl-0 = <&pinctrl_eqos>;
++	phy-mode = "rgmii-id";
++	phy-handle = <&ethphy0>;
 +	status = "okay";
++        compatible = "fsl,imx-eqos";
++        /delete-property/ assigned-clocks;
++        /delete-property/ assigned-clock-parents;
++        /delete-property/ assigned-clock-rates;
 +
-+	flash0: mt25qu256aba@0 {
-+		reg = <0>;
++	mdio {
 +		#address-cells = <1>;
-+		#size-cells = <1>;
-+		compatible = "jedec,spi-nor";
-+		spi-max-frequency = <80000000>;
-+		spi-tx-bus-width = <4>;
-+		spi-rx-bus-width = <4>;
++		#size-cells = <0>;
++
++		ethphy0: ethernet-phy@0 {
++			compatible = "ethernet-phy-ieee802.3-c22";
++			reg = <0>;
++			eee-broken-1000t;
++		};
 +	};
 +};
-+
 +
 +&i2c1 {
 +	clock-frequency = <400000>;
@@ -135,6 +166,12 @@ index 0000000000..44726378e4
 +	scl-gpios = <&gpio5 14 GPIO_ACTIVE_HIGH>;
 +	sda-gpios = <&gpio5 15 GPIO_ACTIVE_HIGH>;
 +	status = "okay";
++
++	eeprom: eeprom@50 {
++		compatible = "atmel,24c02";
++		reg = <0x50>;
++		pagesize = <16>;
++	};
 +
 +	pmic: pca9450@25 {
 +		reg = <0x25>;
@@ -252,20 +289,6 @@ index 0000000000..44726378e4
 +	scl-gpios = <&gpio5 16 GPIO_ACTIVE_HIGH>;
 +	sda-gpios = <&gpio5 17 GPIO_ACTIVE_HIGH>;
 +	status = "okay";
-+
-+	adv_bridge: adv7535@39 {
-+		compatible = "adi,adv7533";
-+		reg = <0x39>;
-+		adi,addr-cec = <0x3c>;
-+		adi,dsi-lanes = <4>;
-+		status = "okay";
-+
-+		port {
-+			adv7535_from_dsim: endpoint {
-+				remote-endpoint = <&dsim_to_adv7535>;
-+			};
-+		};
-+	};
 +};
 +
 +&i2c3 {
@@ -276,28 +299,14 @@ index 0000000000..44726378e4
 +	scl-gpios = <&gpio5 18 GPIO_ACTIVE_HIGH>;
 +	sda-gpios = <&gpio5 19 GPIO_ACTIVE_HIGH>;
 +	status = "okay";
-+
-+	pca6416: gpio@20 {
-+		compatible = "ti,tca6416";
-+		reg = <0x20>;
-+		gpio-controller;
-+		#gpio-cells = <2>;
-+	};
 +};
 +
 +&lcdif1 {
-+	status = "okay";
++	status = "disabled";
 +};
 +
 +&mipi_dsi {
-+	status = "okay";
-+
-+	port@1 {
-+		dsim_to_adv7535: endpoint {
-+			remote-endpoint = <&adv7535_from_dsim>;
-+		};
-+	};
-+
++	status = "disabled";
 +};
 +
 +&snvs_pwrkey {
@@ -363,6 +372,26 @@ index 0000000000..44726378e4
 +
 +&iomuxc {
 +	pinctrl-names = "default";
++
++	pinctrl_eqos: eqosgrp {
++		fsl,pins = <
++			MX8MP_IOMUXC_ENET_MDC__ENET_QOS_MDC		0x3
++			MX8MP_IOMUXC_ENET_MDIO__ENET_QOS_MDIO		0x3
++			MX8MP_IOMUXC_ENET_RD0__ENET_QOS_RGMII_RD0	0x91
++			MX8MP_IOMUXC_ENET_RD1__ENET_QOS_RGMII_RD1	0x91
++			MX8MP_IOMUXC_ENET_RD2__ENET_QOS_RGMII_RD2	0x91
++			MX8MP_IOMUXC_ENET_RD3__ENET_QOS_RGMII_RD3	0x91
++			MX8MP_IOMUXC_ENET_RXC__CCM_ENET_QOS_CLOCK_GENERATE_RX_CLK	0x91
++			MX8MP_IOMUXC_ENET_RX_CTL__ENET_QOS_RGMII_RX_CTL	0x91
++			MX8MP_IOMUXC_ENET_TD0__ENET_QOS_RGMII_TD0	0x1f
++			MX8MP_IOMUXC_ENET_TD1__ENET_QOS_RGMII_TD1	0x1f
++			MX8MP_IOMUXC_ENET_TD2__ENET_QOS_RGMII_TD2	0x1f
++			MX8MP_IOMUXC_ENET_TD3__ENET_QOS_RGMII_TD3	0x1f
++			MX8MP_IOMUXC_ENET_TX_CTL__ENET_QOS_RGMII_TX_CTL	0x1f
++			MX8MP_IOMUXC_ENET_TXC__CCM_ENET_QOS_CLOCK_GENERATE_TX_CLK	0x1f
++			MX8MP_IOMUXC_SAI1_TXD7__GPIO4_IO19		0x19
++		>;
++	};
 +
 +	pinctrl_fec: fecgrp {
 +		fsl,pins = <
@@ -456,12 +485,6 @@ index 0000000000..44726378e4
 +	pinctrl_pmic: pmicirq {
 +		fsl,pins = <
 +			MX8MP_IOMUXC_GPIO1_IO03__GPIO1_IO03	0x41
-+		>;
-+	};
-+
-+	pinctrl_typec: typec1grp {
-+		fsl,pins = <
-+			MX8MP_IOMUXC_SAI1_TXD7__GPIO4_IO19	0x1c4
 +		>;
 +	};
 +
@@ -586,6 +609,45 @@ index 0000000000..44726378e4
 +		>;
 +	};
 +};
+diff --git a/configs/imx8mp_solidrun_defconfig b/configs/imx8mp_solidrun_defconfig
+index 2001b445e0..e4eb41c316 100644
+--- a/configs/imx8mp_solidrun_defconfig
++++ b/configs/imx8mp_solidrun_defconfig
+@@ -27,7 +27,7 @@ CONFIG_SPL_LOAD_FIT=y
+ CONFIG_SPL_FIT_GENERATOR="arch/arm/mach-imx/mkimage_fit_atf.sh"
+ CONFIG_OF_SYSTEM_SETUP=y
+ CONFIG_SYS_EXTRA_OPTIONS="IMX_CONFIG=arch/arm/mach-imx/imx8m/imximage-8mp-lpddr4.cfg"
+-CONFIG_DEFAULT_FDT_FILE="imx8mp-hummingboard-pulse.dtb"
++CONFIG_DEFAULT_FDT_FILE="imx8mp-adi-tof-adsd3500.dtb"
+ CONFIG_BOARD_LATE_INIT=y
+ CONFIG_BOARD_EARLY_INIT_F=y
+ CONFIG_SPL_BOARD_INIT=y
+@@ -61,7 +61,7 @@ CONFIG_CMD_FAT=y
+ CONFIG_CMD_SF=y
+ CONFIG_CMD_LED=y
+ CONFIG_OF_CONTROL=y
+-CONFIG_DEFAULT_DEVICE_TREE="imx8mp-solidrun"
++CONFIG_DEFAULT_DEVICE_TREE="imx8mp-adi"
+ CONFIG_ENV_IS_IN_MMC=y
+ CONFIG_ENV_IS_IN_SPI_FLASH=y
+ CONFIG_ENV_IS_NOWHERE=y
+@@ -143,11 +143,6 @@ CONFIG_OF_BOARD_SETUP=y
+ 
+ CONFIG_REGMAP=y
+ CONFIG_SYSCON=y
+-CONFIG_VIDEO_IMX_LCDIFV3=y
+-CONFIG_VIDEO_IMX_SEC_DSI=y
+-CONFIG_DM_VIDEO=y
+-CONFIG_VIDEO_LCD_RAYDIUM_RM67191=y
+-CONFIG_VIDEO_ADV7535=y
+ CONFIG_SYS_WHITE_ON_BLACK=y
+ CONFIG_TARGET_IMX8MP_SOLIDRUN=y
+ CONFIG_BOOTP_BOOTPATH=y
+@@ -163,3 +158,4 @@ CONFIG_BOOTCOMMAND="run distro_bootcmd"
+ CONFIG_CMD_PXE=y
+ CONFIG_ENV_SIZE=0x2000
+ CONFIG_NET_RANDOM_ETHADDR=y
++CONFIG_I2C_EEPROM=y
 -- 
 2.17.1
 

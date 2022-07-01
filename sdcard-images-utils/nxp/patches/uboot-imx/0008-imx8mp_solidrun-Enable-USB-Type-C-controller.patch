@@ -1,7 +1,7 @@
-From 8efd2c325bf279df5359993df6c5f13d9b4aafc7 Mon Sep 17 00:00:00 2001
+From ba99654e27b2c55db6008c7d4889ba06115b6373 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Wed, 15 Sep 2021 10:47:11 +0300
-Subject: [PATCH 2/2] imx8mp_solidrun: Enable USB Type C controller
+Subject: [PATCH 08/11] imx8mp_solidrun: Enable USB Type C controller
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
