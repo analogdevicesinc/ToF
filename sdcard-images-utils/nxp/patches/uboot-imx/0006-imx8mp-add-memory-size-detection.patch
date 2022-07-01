@@ -1,7 +1,7 @@
-From fd819d6bb8c3d51d02e02b85a572a1b851c2af4b Mon Sep 17 00:00:00 2001
+From 6aed6e1be1fd09e2ffc86ab70e7a9e5ec361a658 Mon Sep 17 00:00:00 2001
 From: Rabeeh Khoury <rabeeh@solid-run.com>
 Date: Mon, 14 Dec 2020 14:57:16 +0200
-Subject: [PATCH] imx8mp: add memory size detection
+Subject: [PATCH 06/11] imx8mp: add memory size detection
 
 SolidRun supports Samsung 1GByte at 4Gtps and Micron 3GByte at 3.2Gtps
 speeds.
@@ -28,7 +28,7 @@ Signed-off-by: Rabeeh Khoury <rabeeh@solid-run.com>
  rename board/solidrun/imx8mp_solidrun/{lpddr4_timing.c => lpddr4_timing_3gb_micron.c} (98%)
 
 diff --git a/board/solidrun/imx8mp_solidrun/Makefile b/board/solidrun/imx8mp_solidrun/Makefile
-index 7cbe536f..6ef4c05b 100644
+index 7cbe536f88..6ef4c05b40 100644
 --- a/board/solidrun/imx8mp_solidrun/Makefile
 +++ b/board/solidrun/imx8mp_solidrun/Makefile
 @@ -8,5 +8,5 @@ obj-y += imx8mp_solidrun.o mmc.o
@@ -39,7 +39,7 @@ index 7cbe536f..6ef4c05b 100644
 +obj-$(CONFIG_IMX8M_LPDDR4) += lpddr4_timing_3gb_micron.o lpddr4_timing_1gb_samsung.o
  endif
 diff --git a/board/solidrun/imx8mp_solidrun/imx8mp_solidrun.c b/board/solidrun/imx8mp_solidrun/imx8mp_solidrun.c
-index dcfe6a2b..51a5cbad 100644
+index dcfe6a2b37..51a5cbade6 100644
 --- a/board/solidrun/imx8mp_solidrun/imx8mp_solidrun.c
 +++ b/board/solidrun/imx8mp_solidrun/imx8mp_solidrun.c
 @@ -28,6 +28,9 @@
@@ -83,7 +83,7 @@ index dcfe6a2b..51a5cbad 100644
  	struct wdog_regs *wdog = (struct wdog_regs *)WDOG1_BASE_ADDR;
 diff --git a/board/solidrun/imx8mp_solidrun/lpddr4_timing_1gb_samsung.c b/board/solidrun/imx8mp_solidrun/lpddr4_timing_1gb_samsung.c
 new file mode 100644
-index 00000000..efc81678
+index 0000000000..efc8167817
 --- /dev/null
 +++ b/board/solidrun/imx8mp_solidrun/lpddr4_timing_1gb_samsung.c
 @@ -0,0 +1,1854 @@
@@ -1945,7 +1945,7 @@ diff --git a/board/solidrun/imx8mp_solidrun/lpddr4_timing.c b/board/solidrun/imx
 similarity index 98%
 rename from board/solidrun/imx8mp_solidrun/lpddr4_timing.c
 rename to board/solidrun/imx8mp_solidrun/lpddr4_timing_3gb_micron.c
-index 42571625..11f53af7 100644
+index 425716250d..11f53af7af 100644
 --- a/board/solidrun/imx8mp_solidrun/lpddr4_timing.c
 +++ b/board/solidrun/imx8mp_solidrun/lpddr4_timing_3gb_micron.c
 @@ -11,7 +11,7 @@
@@ -2021,7 +2021,7 @@ index 42571625..11f53af7 100644
  	.ddrc_cfg_num = ARRAY_SIZE(ddr_ddrc_cfg),
  	.ddrphy_cfg = ddr_ddrphy_cfg,
 diff --git a/board/solidrun/imx8mp_solidrun/spl.c b/board/solidrun/imx8mp_solidrun/spl.c
-index b26f5321..c215cf64 100644
+index b26f5321bb..c215cf64bf 100644
 --- a/board/solidrun/imx8mp_solidrun/spl.c
 +++ b/board/solidrun/imx8mp_solidrun/spl.c
 @@ -25,8 +25,12 @@
@@ -2071,5 +2071,5 @@ index b26f5321..c215cf64 100644
  
  #define I2C_PAD_CTRL (PAD_CTL_DSE6 | PAD_CTL_HYS | PAD_CTL_PUE | PAD_CTL_PE)
 -- 
-2.25.1
+2.17.1
 
