@@ -38,34 +38,27 @@ AppLog *applog = nullptr;
 };
 #endif
 
-ADIViewerArgs ProcessArgs(int argc, char** argv);
+void ProcessArgs(int argc, char **argv, ADIViewerArgs &args);
 
-ADIViewerArgs ProcessArgs(int argc, char** argv)
-{
-	ADIViewerArgs args;
+void ProcessArgs(int argc, char **argv, ADIViewerArgs &args) {
+    // Skip argv[0], which is the path to the executable
+    //
 
-	// Skip argv[0], which is the path to the executable
-	//
-	for (int i = 1; i < argc; i++)
-	{
-		// Force to uppercase
-		//
-		std::string arg = argv[i];
-		std::transform(arg.begin(), arg.end(), arg.begin(), [](unsigned char c) {
-			return static_cast<unsigned char>(std::toupper(c));
-			});
+    for (int i = 1; i < argc; i++) {
+        // Force to uppercase
+        //
+        std::string arg = argv[i];
+        std::transform(arg.begin(), arg.end(), arg.begin(),
+                       [](unsigned char c) {
+                           return static_cast<unsigned char>(std::toupper(c));
+                       });
 
-		if (arg == "-HIGHDPI")
-		{
-			args.HighDpi = true;
-		}
-		else if (arg == "-NORMALDPI")
-		{
-			args.HighDpi = false;
-		}
-	}
-
-	return args;
+        if (arg == std::string("--HIGHDPI")) {
+            args.HighDpi = true;
+        } else if (arg == std::string("--NORMALDPI")) {
+            args.HighDpi = false;
+        }
+    }
 }
 
 int main(int argc, char **argv)
@@ -84,7 +77,10 @@ int main(int argc, char **argv)
               << " | branch: " << aditof::getBranchVersion()
               << " | commit: " << aditof::getCommitVersion();
 
-	if (view->startImGUI(ProcessArgs(argc, argv)))
+    ADIViewerArgs args;
+
+    ProcessArgs(argc, argv, args);
+	if (view->startImGUI(args))
 	{
 		view->render();
 	}

@@ -39,21 +39,16 @@ int CALLBACK WinMain(_In_ HINSTANCE hInstance,
 
 	// Set default DPI
 	//
-	SetProcessDPIAware();
-	constexpr int NormalDpi = 96;
-	const char HighDpiArgument[] = "-HIGHDPI";
-	if (GetDpiForSystem() > NormalDpi)
-	{
-		++argc;
-		argv.emplace_back(const_cast<char*>(HighDpiArgument));
-	}
-
-	// Add remaining actual arguments from the command-line
-	//
-	for (int i = 1; i < __argc; i++)
-	{
-		argv.emplace_back(__argv[i]);
-	}
+    SetProcessDPIAware();
+    constexpr uint16_t NormalDpi = 96;
+    uint16_t systemDPI = GetDpiForSystem();
+    if (systemDPI > NormalDpi) {
+        argc++;
+        argv.emplace_back(const_cast<char *>("--HIGHDPI"));
+    } else {
+        argc++;
+        argv.emplace_back(const_cast<char *>("--NORMALDPI"));
+    }
 
 	 main(argc, &argv[0]);
 	 fclose(stderr);
