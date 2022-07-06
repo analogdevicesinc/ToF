@@ -19,6 +19,11 @@
 #include <linmath.h>
 #include <aditof/system.h>
 
+#include <unordered_map>  
+#define _USE_MATH_DEFINES
+#include <math.h>
+#include <array>
+
 /**
 * @brief Manage monitor resolution
 */
@@ -198,6 +203,12 @@ namespace adiMainWindow
 	
 	class ADIMainWindow
 	{
+	private:
+		const float OFFSETFROMTOPOFGUI = 38;
+		const float INITIALRAD = 0.0f;
+		const uint32_t INITIALDEG = 0;
+		const float NORMALDPISCALAR = 1.0f;
+		const float HIGHDPISCALAR = 2.0f;
 	public:
 		/**
 		* @brief Main window constructor
@@ -223,8 +234,10 @@ namespace adiMainWindow
 		/**
 		* @brief Modify Screen DPI
 		*/
-		void SetHighDpi();
+		void setDpi();
+
 		bool _isHighDPI = false;
+        float dpiScaleFactor = HIGHDPISCALAR;
 
 		std::thread initCameraWorker;
 		bool cameraWorkerDone = false;
@@ -304,8 +317,24 @@ namespace adiMainWindow
                     "STDERR\n";
 
 	private:
+        float rotationangleradians = INITIALRAD;
+        uint32_t rotationangledegrees = INITIALDEG;
+        const float offsetfromtop = OFFSETFROMTOPOFGUI;
+        std::unordered_map<std::string, std::array<float, 4>> dictWinPosition;
 		std::shared_ptr<adiviewer::ADIView> view = nullptr;    
 		AppLog my_log;
+
+		/**
+		* @brief Rotation of an ImGui texture.
+		*/
+		void ImageRotated(ImTextureID tex_id, ImVec2 center,
+                            ImVec2 size, float angle);
+        
+		/**
+		* @brief Vector operations to support rotation.
+		*/
+		ImVec2 ImRotate(const ImVec2 &v, float cos_a,
+                                        float sin_a);
 
 		/**
 		* @brief Create the necessary OpenGL vertex attributes and buffers based on
@@ -471,6 +500,11 @@ namespace adiMainWindow
 		bool waitForCameraReady();
 
 		/**
+		* @brief Displays the Information Window
+		*/
+		void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags);
+
+		/**
 		* @brief Displays AB Window
 		*/
 		void displayActiveBrightnessWindow(ImGuiWindowFlags overlayFlags);
@@ -564,14 +598,23 @@ namespace adiMainWindow
 		*/
 		void createColorBar(ImVec2 position, ImVec2 size);
 
+
+		/**
+		* @brief Common pre-display for GUI windows
+		*/
+		bool displayDataWindow(ImVec2 &displayUpdate, ImVec2 &size);
+
+		float imagescale = 1.0f;
+        const float imagesizemax = 516.0f;
 		unsigned int ir_video_texture = 0;
 		unsigned int depth_video_texture = 0; 
 		unsigned int pointCloud_video_texture = 0;
+        bool setTempWinPositionOnce = true;
 		bool setIRWinPositionOnce = true;
 		bool setDepthWinPositionOnce = true;
 		bool setLogWinPositionOnce = true;
 		bool setPointCloudPositionOnce = true;
-		bool _isOpenDevice;
+        bool _isOpenDevice;
 		float customColorPlay = 0.4f;
 		float customColorStop = 0.0f;
 		float customColorSave = 0.3f;
@@ -580,6 +623,7 @@ namespace adiMainWindow
 		bool displayIR = true;
 		bool displayDepth = true;
 		bool displayPointCloud = false;
+        bool displayTemp = true;
 		int rawSeeker = 0;
 
 		//Logging
