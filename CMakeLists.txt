@@ -26,7 +26,6 @@ option(WITH_ROS "Build ros bindings?" OFF)
 option(WITH_NETWORK "Build network interface?" OFF)
 option(WITH_OFFLINE "Build offline interface?" OFF)
 option(USE_ITOF "Use ITOF camera?" ON)
-option(WITH_TOOLS "Build tools?" OFF)
 option(USE_DEPTH_COMPUTE_STUBS "Use empty generated libs?" OFF)
 
 ################################## Git ########################################
