@@ -48,7 +48,7 @@ sudo cmake --build . --target install
 git clone https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
-cmake -DNXP=1 -DUSE_ITOF=1 -DWITH_EXAMPLES=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
+cmake -DNXP=1 -DWITH_EXAMPLES=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
 make
 ```
 
@@ -56,7 +56,7 @@ make
 ```console
 cd ToF
 mkdir build && cd build
-cmake -DNXP=1 -DUSE_ITOF=1 -DWITH_EXAMPLES=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
+cmake -DNXP=1 -DWITH_EXAMPLES=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
 make
 ```
 
