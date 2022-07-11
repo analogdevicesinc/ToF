@@ -29,7 +29,7 @@ This ROS package facilitates DEPTH and IR data acquisition and processing for th
 git clone https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
-cmake -DNXP=1 -DWITH_ROS=1 -DUSE_ITOF=1 -DWITH_EXAMPLES=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" .. 
+cmake -DNXP=1 -DWITH_ROS=1 -DWITH_EXAMPLES=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" .. 
 sudo cmake --build . --target install
 sudo cmake --build . --target aditof_ros_package
 ```
