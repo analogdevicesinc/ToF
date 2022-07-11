@@ -25,7 +25,6 @@ option(WITH_OPEN3D "Build open3d bindings?" OFF)
 option(WITH_ROS "Build ros bindings?" OFF)
 option(WITH_NETWORK "Build network interface?" OFF)
 option(WITH_OFFLINE "Build offline interface?" OFF)
-option(USE_ITOF "Use ITOF camera?" ON)
 option(USE_DEPTH_COMPUTE_STUBS "Use empty generated libs?" OFF)
 
 ################################## Git ########################################
@@ -89,10 +88,7 @@ if (WITH_OFFLINE)
         endif()
 endif()
 
-if (USE_ITOF)
-        add_definitions(-DITOF)
-        set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
-endif()
+set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
 
 set(CONFIG_DIR_NAME "config")
 add_definitions(-DCONFIG_DIR_NAME="${CONFIG_DIR_NAME}")

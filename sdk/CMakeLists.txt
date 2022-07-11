@@ -29,12 +29,8 @@ file(GLOB HEADERS
     ${CMAKE_SOURCE_DIR}/sdk/include/aditof/*.h
 )
 
-
-if(USE_ITOF)
-    set(CAMERA_DIR "cameras/itof-camera")
-    set(FRAME_DIR "cameras/itof-frame")
-    add_definitions(-DITOF)
-endif()    
+set(CAMERA_DIR "cameras/itof-camera")
+set(FRAME_DIR "cameras/itof-frame")
 
 if( WIN32 )
         set(OS_SPECIFIC_DIR "connections/usb/windows")
@@ -145,48 +141,45 @@ else()
 endif()
 
 #LIBTOFI_LIBDIR_PATH - path to libtofi_config.so and libtofi_compute.so folder
-
-if (USE_ITOF)
 	
-	if ( UNIX )
-    		add_library(libtofi_compute SHARED IMPORTED)
-    		set_target_properties(libtofi_compute PROPERTIES
-	 		IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_compute.so"
-         		IMPORTED_NO_SONAME 1
-    		)
+if ( UNIX )
+        add_library(libtofi_compute SHARED IMPORTED)
+        set_target_properties(libtofi_compute PROPERTIES
+        IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_compute.so"
+            IMPORTED_NO_SONAME 1
+        )
 
-    		add_library(libtofi_config SHARED IMPORTED)
-    		set_target_properties(libtofi_config PROPERTIES
-         		IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_config.so"
-         		IMPORTED_NO_SONAME 1
-		)
+        add_library(libtofi_config SHARED IMPORTED)
+        set_target_properties(libtofi_config PROPERTIES
+            IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_config.so"
+            IMPORTED_NO_SONAME 1
+    )
 
-	elseif( WIN32 )
-        if (NOT USE_DEPTH_COMPUTE_STUBS)
-    		add_library(libtofi_compute SHARED IMPORTED)
-    		set_target_properties(libtofi_compute PROPERTIES
-	 		IMPORTED_IMPLIB "${LIBTOFI_LIBDIR_PATH}/tofi_compute.lib"
-         		IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/tofi_compute.dll")
-    		
-    		add_library(libtofi_config SHARED IMPORTED)
-    		set_target_properties(libtofi_config PROPERTIES
-         		IMPORTED_IMPLIB "${LIBTOFI_LIBDIR_PATH}/tofi_config.lib"
-         		IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/tofi_config.dll")
-        else()
-            target_link_libraries(${PROJECT_NAME} PRIVATE tofi_compute)
-	        target_link_libraries(${PROJECT_NAME} PRIVATE tofi_config)
-        endif()
-	else()
-		message( FATAL_ERROR "Unsupported platform for libtofi_compute and libtofi_config. CMake will exit." )
-	endif()	
+elseif( WIN32 )
+    if (NOT USE_DEPTH_COMPUTE_STUBS)
+        add_library(libtofi_compute SHARED IMPORTED)
+        set_target_properties(libtofi_compute PROPERTIES
+        IMPORTED_IMPLIB "${LIBTOFI_LIBDIR_PATH}/tofi_compute.lib"
+            IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/tofi_compute.dll")
 
-	if (NOT USE_DEPTH_COMPUTE_STUBS)
-        target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_compute)
-        target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_config)
+        add_library(libtofi_config SHARED IMPORTED)
+        set_target_properties(libtofi_config PROPERTIES
+            IMPORTED_IMPLIB "${LIBTOFI_LIBDIR_PATH}/tofi_config.lib"
+            IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/tofi_config.dll")
+    else()
+        target_link_libraries(${PROJECT_NAME} PRIVATE tofi_compute)
+        target_link_libraries(${PROJECT_NAME} PRIVATE tofi_config)
     endif()
-
-    target_link_libraries(${PROJECT_NAME} PRIVATE ccb)
+else()
+    message( FATAL_ERROR "Unsupported platform for libtofi_compute and libtofi_config. CMake will exit." )
 endif()
+
+if (NOT USE_DEPTH_COMPUTE_STUBS)
+    target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_compute)
+    target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_config)
+endif()
+
+target_link_libraries(${PROJECT_NAME} PRIVATE ccb)
 
 if (CMAKE_COMPILER_IS_GNUCC)
     target_compile_options(${PROJECT_NAME} PUBLIC
