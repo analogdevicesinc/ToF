@@ -114,11 +114,7 @@ Status UsbSensorEnumerator::searchSensors() {
             continue;
         }
 
-#if defined(ITOF)
         std::string devName("ADI CMOS TOF UVC Gadget");
-#else
-        std::string devName("ADI TOF DEPTH SENSOR");
-#endif
 
         if (strncmp(reinterpret_cast<const char *>(cap.card), devName.c_str(),
                     devName.length()) != 0) {
