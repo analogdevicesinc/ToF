@@ -217,17 +217,17 @@ aditof::Status CameraItof::initialize() {
     }
 
     status = loadModuleData();
-    if(status != Status::OK){
-        LOG(ERROR) << "Failed to load module data!";
-        return Status::GENERIC_ERROR;
-    }
-
-    //CCB and CFG files will be taken from module memory if
-    //they are not passed in the initialization_config json file
-    status = parseJsonFileContent();
-    if(status != Status::OK){
-        LOG(ERROR) << "Failed to parse Json file!";
-        return status;
+    if (status != Status::OK) {
+        LOG(INFO) << "No CCB/CFG data found in camera module,";
+        LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data from JSON config file...";
+    } else {
+        //CCB and CFG files will be taken from module memory if
+        //they are not passed in the initialization_config json file
+        status = parseJsonFileContent();
+        if(status != Status::OK){
+            LOG(ERROR) << "Failed to parse Json file!";
+            return status;
+        }
     }
 
     aditof::Status configStatus = loadConfigData();
@@ -1414,7 +1414,7 @@ void CameraItof::configureSensorFrameType()
 aditof::Status CameraItof::parseJsonFileContent(){
     using namespace aditof;
     Status status = Status::OK;
-    
+
     // Parse config.json
     std::string config = m_controls["initialization_config"];
     std::ifstream ifs(config.c_str());
@@ -1461,33 +1461,36 @@ aditof::Status CameraItof::parseJsonFileContent(){
             std::string mode;
             std::vector<std::string> iniFiles;
 
-            Utils::splitIntoTokens(std::string(json_depth_ini_file->valuestring), ';', iniFiles);
-            if (iniFiles.size() > 1) {
-                for (const std::string& file : iniFiles) {
-                    //extract last string that is after last underscore (e.g. 'mp' will be extracted from ini_file_mp)
-                    size_t lastUnderscorePos = file.find_last_of("_");
-                    if (lastUnderscorePos == std::string::npos) {
-                        LOG(WARNING) << "File: " << file << " has no suffix that can be used to identify the mode";
-                        continue;
+            if(m_ini_depth.empty()){
+                Utils::splitIntoTokens(std::string(json_depth_ini_file->valuestring), ';', iniFiles);
+                if (iniFiles.size() > 1) {
+                    for (const std::string& file : iniFiles) {
+                        //extract last string that is after last underscore (e.g. 'mp' will be extracted from ini_file_mp)
+                        size_t lastUnderscorePos = file.find_last_of("_");
+                        if (lastUnderscorePos == std::string::npos) {
+                            LOG(WARNING) << "File: " << file << " has no suffix that can be used to identify the mode";
+                            continue;
+                        }
+
+                        size_t dotPos = file.find_last_of(".");
+                        mode = file.substr(lastUnderscorePos + 1,dotPos - lastUnderscorePos - 1);
+                        // TO DO: check is mode is supported by the camera
+
+                        LOG(INFO) << "Found Depth ini file: " << file;
+                        // Create map with mode name as key and path as value
+                        m_ini_depth_map.emplace(mode, file);
+
                     }
-
-                    size_t dotPos = file.find_last_of(".");
-                    mode = file.substr(lastUnderscorePos + 1,dotPos - lastUnderscorePos - 1);
-                    // TO DO: check is mode is supported by the camera
-
-                    LOG(INFO) << "Found Depth ini file: " << file;
-                    // Create map with mode name as key and path as value
-                    m_ini_depth_map.emplace(mode, file);
-
+                    // Set m_ini_depth to first map element
+                    auto it = m_ini_depth_map.begin();
+                    m_ini_depth = it->second;
+                } else {
+                    m_ini_depth = std::string(json_depth_ini_file->valuestring);
                 }
-                // Set m_ini_depth to first map element
-                auto it = m_ini_depth_map.begin();
-                m_ini_depth = it->second;
-            } else {
-                m_ini_depth = std::string(json_depth_ini_file->valuestring);
+
+                LOG(INFO) << "Current Depth ini file is: " << m_ini_depth;
             }
         }
-        LOG(INFO) << "Current Depth ini file is: " << m_ini_depth;
 
         // Get optional power config
         const cJSON *json_vaux_pwr = cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_ENABLE");
