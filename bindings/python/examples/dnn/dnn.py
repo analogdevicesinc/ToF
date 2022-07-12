@@ -96,8 +96,6 @@ if __name__ == "__main__":
     status = cameras[0].setMode(modes[ModesEnum.MODE_NEAR.value])
     if not status:
         print("cameras[0].setMode() failed with status: ", status)
-    
-    cameras[0].setControl("loadModuleData", "call")
 
     types = []
     status = cameras[0].getAvailableFrameTypes(types)

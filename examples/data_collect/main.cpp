@@ -448,13 +448,6 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    // optionally load configuration data from module memory
-    status = camera->setControl("loadModuleData", "call");
-    if (status != Status::OK) {
-        LOG(INFO) << "No CCB/CFG data found in camera module,";
-        LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data from JSON config file...";
-    }
-
     // Get frame types
     std::vector<std::string> frameTypes;
     status = camera->getAvailableFrameTypes(frameTypes);
