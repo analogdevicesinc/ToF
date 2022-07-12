@@ -268,8 +268,8 @@ class CameraItof : public aditof::Camera {
     /**
      * @brief Read camera module memory and initialize camera with loaded data.
      *
-     * Must be called after initialize() and powerUp(). Calibration or Firmware
-     * data are NOT loaded if already defined by initialize() config file.
+     * Called inside initialize() function. Calibration or Firmware
+     * data are NOT loaded if already defined in json config file.
      *
      * @return Status
      * @see Status
