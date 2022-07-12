@@ -131,14 +131,6 @@ std::shared_ptr<Camera> initCamera(int argc, char **argv) {
         return 0;
     }
 
-    // optionally load configuration data from module memory
-    status = camera->setControl("loadModuleData", "call");
-    if (status != Status::OK) {
-        LOG(INFO) << "No CCB/CFG data found in camera module,";
-        LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data "
-                     "from JSON config file...";
-    }
-
     status = camera->setControl("enableDepthCompute", "off");
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set depthCompute to off!";
