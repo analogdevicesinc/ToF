@@ -355,6 +355,12 @@ class CameraItof : public aditof::Camera {
      */
     void configureSensorFrameType();
 
+
+    /**
+     * Reads the content of json file and populates the parameters
+     */
+    aditof::Status parseJsonFileContent();
+
   private:
     using noArgCallable = std::function<aditof::Status()>;
 
