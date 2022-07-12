@@ -1213,14 +1213,6 @@ void ADIMainWindow::InitCamera() {
         return;
     }
 
-    // load optional configuration data from module memory
-    status = camera->setControl("loadModuleData", "call");
-    if (status != aditof::Status::OK) {
-        LOG(INFO) << "No CCB/CFG data found in camera module,";
-        LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data "
-                     "from JSON config file...";
-    }
-
 	if (!_usesExternalModeDefinition)
 		camera->getAvailableFrameTypes(_cameraModes);
 
