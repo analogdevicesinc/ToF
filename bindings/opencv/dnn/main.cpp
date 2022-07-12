@@ -71,6 +71,13 @@ int main(int argc, char *argv[]) {
 
     Status status = Status::OK;
 
+    if (argc < 2) {
+        LOG(ERROR) << "No config file provided! ./aditof-opencv-dnn <config_file>";
+        return 0;
+    }
+
+    std::string configFile = argv[1];
+
     System system;
 
     std::vector<std::shared_ptr<Camera>> cameras;
@@ -81,6 +88,13 @@ int main(int argc, char *argv[]) {
     }
 
     auto camera = cameras.front();
+    
+    status = camera->setControl("initialization_config", configFile);
+    if(status != Status::OK){
+        LOG(ERROR) << "Failed to set control!";
+        return 0;
+    }
+
     status = camera->initialize();
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
