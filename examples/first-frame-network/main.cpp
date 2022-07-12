@@ -49,13 +49,13 @@ int main(int argc, char *argv[]) {
 
     Status status = Status::OK;
 
-    if (argc < 2) {
-        LOG(ERROR) << "No ip provided! ./first-frame-network ip!";
+    if (argc < 3) {
+        LOG(ERROR) << "No ip or config file provided! ./first-frame-network <ip> <config_file>";
         return 0;
     }
 
     std::string ip = argv[1];
-
+    std::string configFile = argv[2];
     System system;
 
     std::vector<std::shared_ptr<Camera>> cameras;
@@ -66,6 +66,13 @@ int main(int argc, char *argv[]) {
     }
 
     auto camera = cameras.front();
+
+    status = camera->setControl("initialization_config", configFile);
+    if(status != Status::OK){
+        LOG(ERROR) << "Failed to set control!";
+        return 0;
+    }
+
     status = camera->initialize();
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
