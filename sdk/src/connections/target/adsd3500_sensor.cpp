@@ -115,6 +115,7 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     m_controls.emplace("phaseDepthBits", "0");
     m_controls.emplace("abBits", "0");
     m_controls.emplace("confidenceBits", "0");
+    m_controls.emplace("fps","0");
 
     // Define the commands that correspond to the sensor controls
     m_implData->controlsCommands["abAveraging"] = 0x9819e5;
@@ -637,19 +638,34 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
         return Status::INVALID_ARGUMENT;
     }
 
-    // Send the command that sets the control value
-    struct v4l2_control ctrl;
-    memset(&ctrl, 0, sizeof(ctrl));
-
-    ctrl.id = m_implData->controlsCommands[control];
-    ctrl.value = std::stoi(value);
-
     struct VideoDev *dev = &m_implData->videoDevs[0];
 
-    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
-        LOG(WARNING) << "Failed to set control: " << control << " "
-                     << "errno: " << errno << " error: " << strerror(errno);
-        status = Status::GENERIC_ERROR;
+    if(control!= "fps") {
+        // Send the command that sets the control value
+        struct v4l2_control ctrl;
+        memset(&ctrl, 0, sizeof(ctrl));
+
+        ctrl.id = m_implData->controlsCommands[control];
+        ctrl.value = std::stoi(value);
+
+        if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
+            LOG(WARNING) << "Failed to set control: " << control << " "
+                         << "errno: " << errno << " error: " << strerror(errno);
+            status = Status::GENERIC_ERROR;
+        }
+    } else {
+        struct v4l2_streamparm fpsControl;
+        memset(&fpsControl, 0, sizeof(struct v4l2_streamparm));
+    
+        fpsControl.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        fpsControl.parm.capture.timeperframe.numerator = 1;
+        fpsControl.parm.capture.timeperframe.denominator = std::stoi(value);
+    
+        if (xioctl(dev->fd, VIDIOC_S_PARM, &fpsControl) == -1) {
+            LOG(WARNING) << "Failed to set control: " << control << " "
+                         << "errno: " << errno << " error: " << strerror(errno);
+            status = Status::GENERIC_ERROR;
+        }
     }
 
     return status;

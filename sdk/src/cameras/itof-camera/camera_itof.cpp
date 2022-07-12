@@ -56,7 +56,7 @@ CameraItof::CameraItof(
     std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &tSensors)
     : m_depthSensor(depthSensor), m_devStarted(false), m_eepromInitialized(false),
       m_modechange_framedrop_count(0), m_xyzEnabled(false), m_xyzSetViaControl(false), m_loadedConfigData(false), m_tempFiles{},
-      m_adsd3500Enabled(false) {
+      m_adsd3500Enabled(false), m_cameraFps(0) {
     m_details.mode = "qmp";
     m_details.cameraId = "";
 
@@ -228,6 +228,14 @@ aditof::Status CameraItof::initialize() {
         if (cJSON_IsString(json_vaux_voltage) && (json_vaux_voltage->valuestring != NULL)) {
             m_sensor_settings.push_back(std::make_pair(json_vaux_voltage->string, atoi(json_vaux_voltage->valuestring)));
         }
+
+        // Get fps from config
+        const cJSON *json_fps = cJSON_GetObjectItemCaseSensitive(config_json, "FPS");
+        if (cJSON_IsString(json_fps) && (json_fps->valuestring != NULL)) {
+            m_cameraFps = atoi(json_fps->valuestring);
+            LOG(INFO) << "Camera FPS set from Json file: " << m_cameraFps;
+        }
+
     } else if (!config.empty()) {
         LOG(ERROR) << "Couldn't parse config file: " << config.c_str();
         return Status::GENERIC_ERROR;
@@ -310,6 +318,14 @@ aditof::Status CameraItof::initialize() {
         }
     }
 
+    //Set FPS
+    if(m_cameraFps != 0){
+        status = m_depthSensor->setControl("fps",std::to_string(m_cameraFps));
+        if (status != Status::OK) {
+            LOG(INFO) << "Failed to set fps!";
+            return Status::GENERIC_ERROR;
+        }
+    }
     LOG(INFO) << "Camera initialized";
 
     return Status::OK;
