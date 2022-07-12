@@ -65,15 +65,12 @@ CameraItof::CameraItof(
     m_controls.emplace("powerUp", "call");
     m_controls.emplace("powerDown", "call");
     m_controls.emplace("syncMode", "0, 0");
-    m_controls.emplace("loadModuleData", "call");
     m_controls.emplace("saveModuleCCB", "");
     m_controls.emplace("saveModuleCFG", "");
 
     m_noArgCallables.emplace("powerUp", std::bind(&CameraItof::powerUp, this));
     m_noArgCallables.emplace("powerDown",
                              std::bind(&CameraItof::powerUp, this));
-    m_noArgCallables.emplace("loadModuleData",
-                             std::bind(&CameraItof::loadModuleData, this));
     m_controls.emplace("enableDepthCompute", "on");
     m_controls.emplace("enableXYZframe", "off");
 
@@ -141,112 +138,6 @@ aditof::Status CameraItof::initialize() {
             return status;
         }
         m_devStarted = true;
-    }
-
-    // Parse config.json
-    std::string config = m_controls["initialization_config"];
-    std::ifstream ifs(config.c_str());
-    std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
-
-    cJSON *config_json = cJSON_Parse(content.c_str());
-    if (config_json != NULL) {
-        // Get sensorfirmware file location
-        const cJSON *json_sensorFirmware_file = cJSON_GetObjectItemCaseSensitive(config_json, "sensorFirmware");
-        if (cJSON_IsString(json_sensorFirmware_file) && (json_sensorFirmware_file->valuestring != NULL)) {
-            if (m_sensorFirmwareFile.empty()) {
-                // save firmware file location
-                m_sensorFirmwareFile = std::string(json_sensorFirmware_file->valuestring);
-                LOG(INFO) << "Current sensor firmware is: "
-                          << m_sensorFirmwareFile;
-            } else {
-                LOG(WARNING) << "Duplicate firmware file ignored: " << json_sensorFirmware_file->valuestring;
-            }
-        }
-
-        // Get calibration file location
-        const cJSON *json_ccb_calibration_file = cJSON_GetObjectItemCaseSensitive(config_json, "CCB_Calibration");
-        if (cJSON_IsString(json_ccb_calibration_file) && (json_ccb_calibration_file->valuestring != NULL)) {
-            if (m_ccb_calibrationFile.empty()) {
-                // save calibration file location
-                m_ccb_calibrationFile = std::string(json_ccb_calibration_file->valuestring);
-                LOG(INFO) << "Current calibration file is: "
-                          << m_ccb_calibrationFile;
-            } else {
-                LOG(WARNING) << "Duplicate calibration file ignored: " << json_ccb_calibration_file->valuestring;
-            }
-        }
-
-        // Get optional eeprom type name
-        const cJSON *eeprom_type_name = cJSON_GetObjectItemCaseSensitive(config_json, "MODULE_EEPROM_TYPE");
-        if (cJSON_IsString(eeprom_type_name) && (eeprom_type_name->valuestring != NULL)) {
-            m_eepromDeviceName = eeprom_type_name->valuestring;
-        }
-
-        // Get depth ini file location
-        const cJSON *json_depth_ini_file = cJSON_GetObjectItemCaseSensitive(config_json, "DEPTH_INI");
-        if (cJSON_IsString(json_depth_ini_file) && (json_depth_ini_file->valuestring != NULL)) {
-            // store depth ini file location
-            std::string mode;
-            std::vector<std::string> iniFiles;
-
-            Utils::splitIntoTokens(std::string(json_depth_ini_file->valuestring), ';', iniFiles);
-            if (iniFiles.size() > 1) {
-                for (const std::string& file : iniFiles) {
-                    //extract last string that is after last underscore (e.g. 'mp' will be extracted from ini_file_mp)
-                    size_t lastUnderscorePos = file.find_last_of("_");
-                    if (lastUnderscorePos == std::string::npos) {
-                        LOG(WARNING) << "File: " << file << " has no suffix that can be used to identify the mode";
-                        continue;
-                    }
-
-                    size_t dotPos = file.find_last_of(".");
-                    mode = file.substr(lastUnderscorePos + 1,dotPos - lastUnderscorePos - 1);
-                    // TO DO: check is mode is supported by the camera
-
-                    LOG(INFO) << "Found Depth ini file: " << file;
-                    // Create map with mode name as key and path as value
-                    m_ini_depth_map.emplace(mode, file);
-
-                }
-                // Set m_ini_depth to first map element
-                auto it = m_ini_depth_map.begin();
-                m_ini_depth = it->second;
-            } else {
-                m_ini_depth = std::string(json_depth_ini_file->valuestring);
-            }
-        }
-        LOG(INFO) << "Current Depth ini file is: " << m_ini_depth;
-
-        // Get optional power config
-        const cJSON *json_vaux_pwr = cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_ENABLE");
-        if (cJSON_IsString(json_vaux_pwr) && (json_vaux_pwr->valuestring != NULL)) {
-            m_sensor_settings.push_back(std::make_pair(json_vaux_pwr->string, atoi(json_vaux_pwr->valuestring)));
-        }
-
-        // Get optional power config
-        const cJSON *json_vaux_voltage = cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_VOLTAGE");
-        if (cJSON_IsString(json_vaux_voltage) && (json_vaux_voltage->valuestring != NULL)) {
-            m_sensor_settings.push_back(std::make_pair(json_vaux_voltage->string, atoi(json_vaux_voltage->valuestring)));
-        }
-
-        // Get fps from config
-        const cJSON *json_fps = cJSON_GetObjectItemCaseSensitive(config_json, "FPS");
-        if (cJSON_IsString(json_fps) && (json_fps->valuestring != NULL)) {
-            m_cameraFps = atoi(json_fps->valuestring);
-            LOG(INFO) << "Camera FPS set from Json file: " << m_cameraFps;
-        }
-
-    } else if (!config.empty()) {
-        LOG(ERROR) << "Couldn't parse config file: " << config.c_str();
-        return Status::GENERIC_ERROR;
-    }
-
-    aditof::Status configStatus = loadConfigData();
-    if (configStatus == aditof::Status::OK) {
-        m_loadedConfigData = true;
-    } else {
-        LOG(ERROR) << "loadConfigData failed";
-        return Status::GENERIC_ERROR;
     }
 
     m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
@@ -318,6 +209,35 @@ aditof::Status CameraItof::initialize() {
         }
     }
 
+    //Populate the data from the json file provided
+    status = parseJsonFileContent();
+    if(status != Status::OK){
+        LOG(ERROR) << "Failed to parse Json file!";
+        return status;
+    }
+
+    status = loadModuleData();
+    if(status != Status::OK){
+        LOG(ERROR) << "Failed to load module data!";
+        return Status::GENERIC_ERROR;
+    }
+
+    //CCB and CFG files will be taken from module memory if
+    //they are not passed in the initialization_config json file
+    status = parseJsonFileContent();
+    if(status != Status::OK){
+        LOG(ERROR) << "Failed to parse Json file!";
+        return status;
+    }
+
+    aditof::Status configStatus = loadConfigData();
+    if (configStatus == aditof::Status::OK) {
+        m_loadedConfigData = true;
+    } else {
+        LOG(ERROR) << "loadConfigData failed";
+        return Status::GENERIC_ERROR;
+    }
+
     //Set FPS
     if(m_cameraFps != 0){
         status = m_depthSensor->setControl("fps",std::to_string(m_cameraFps));
@@ -326,6 +246,7 @@ aditof::Status CameraItof::initialize() {
             return Status::GENERIC_ERROR;
         }
     }
+
     LOG(INFO) << "Camera initialized";
 
     return Status::OK;
@@ -1487,5 +1408,110 @@ void CameraItof::configureSensorFrameType()
         depthIniStream.close();
     } else {
         LOG(ERROR) << "Unable to open file: " << m_ini_depth;
+    }
+}
+
+aditof::Status CameraItof::parseJsonFileContent(){
+    using namespace aditof;
+    Status status = Status::OK;
+    
+    // Parse config.json
+    std::string config = m_controls["initialization_config"];
+    std::ifstream ifs(config.c_str());
+    std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
+
+    cJSON *config_json = cJSON_Parse(content.c_str());
+    if (config_json != NULL) {
+        // Get sensorfirmware file location
+        const cJSON *json_sensorFirmware_file = cJSON_GetObjectItemCaseSensitive(config_json, "sensorFirmware");
+        if (cJSON_IsString(json_sensorFirmware_file) && (json_sensorFirmware_file->valuestring != NULL)) {
+            if (m_sensorFirmwareFile.empty()) {
+                // save firmware file location
+                m_sensorFirmwareFile = std::string(json_sensorFirmware_file->valuestring);
+                LOG(INFO) << "Current sensor firmware is: "
+                          << m_sensorFirmwareFile;
+            } else {
+                LOG(WARNING) << "Duplicate firmware file ignored: " << json_sensorFirmware_file->valuestring;
+            }
+        }
+
+        // Get calibration file location
+        const cJSON *json_ccb_calibration_file = cJSON_GetObjectItemCaseSensitive(config_json, "CCB_Calibration");
+        if (cJSON_IsString(json_ccb_calibration_file) && (json_ccb_calibration_file->valuestring != NULL)) {
+            if (m_ccb_calibrationFile.empty()) {
+                // save calibration file location
+                m_ccb_calibrationFile = std::string(json_ccb_calibration_file->valuestring);
+                LOG(INFO) << "Current calibration file is: "
+                          << m_ccb_calibrationFile;
+            } else {
+                LOG(WARNING) << "Duplicate calibration file ignored: " << json_ccb_calibration_file->valuestring;
+            }
+        }
+
+        // Get optional eeprom type name
+        const cJSON *eeprom_type_name = cJSON_GetObjectItemCaseSensitive(config_json, "MODULE_EEPROM_TYPE");
+        if (cJSON_IsString(eeprom_type_name) && (eeprom_type_name->valuestring != NULL)) {
+            m_eepromDeviceName = eeprom_type_name->valuestring;
+        }
+
+        // Get depth ini file location
+        const cJSON *json_depth_ini_file = cJSON_GetObjectItemCaseSensitive(config_json, "DEPTH_INI");
+        if (cJSON_IsString(json_depth_ini_file) && (json_depth_ini_file->valuestring != NULL)) {
+            // store depth ini file location
+            std::string mode;
+            std::vector<std::string> iniFiles;
+
+            Utils::splitIntoTokens(std::string(json_depth_ini_file->valuestring), ';', iniFiles);
+            if (iniFiles.size() > 1) {
+                for (const std::string& file : iniFiles) {
+                    //extract last string that is after last underscore (e.g. 'mp' will be extracted from ini_file_mp)
+                    size_t lastUnderscorePos = file.find_last_of("_");
+                    if (lastUnderscorePos == std::string::npos) {
+                        LOG(WARNING) << "File: " << file << " has no suffix that can be used to identify the mode";
+                        continue;
+                    }
+
+                    size_t dotPos = file.find_last_of(".");
+                    mode = file.substr(lastUnderscorePos + 1,dotPos - lastUnderscorePos - 1);
+                    // TO DO: check is mode is supported by the camera
+
+                    LOG(INFO) << "Found Depth ini file: " << file;
+                    // Create map with mode name as key and path as value
+                    m_ini_depth_map.emplace(mode, file);
+
+                }
+                // Set m_ini_depth to first map element
+                auto it = m_ini_depth_map.begin();
+                m_ini_depth = it->second;
+            } else {
+                m_ini_depth = std::string(json_depth_ini_file->valuestring);
+            }
+        }
+        LOG(INFO) << "Current Depth ini file is: " << m_ini_depth;
+
+        // Get optional power config
+        const cJSON *json_vaux_pwr = cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_ENABLE");
+        if (cJSON_IsString(json_vaux_pwr) && (json_vaux_pwr->valuestring != NULL)) {
+            m_sensor_settings.push_back(std::make_pair(json_vaux_pwr->string, atoi(json_vaux_pwr->valuestring)));
+        }
+
+        // Get optional power config
+        const cJSON *json_vaux_voltage = cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_VOLTAGE");
+        if (cJSON_IsString(json_vaux_voltage) && (json_vaux_voltage->valuestring != NULL)) {
+            m_sensor_settings.push_back(std::make_pair(json_vaux_voltage->string, atoi(json_vaux_voltage->valuestring)));
+        }
+
+        // Get fps from config
+        const cJSON *json_fps = cJSON_GetObjectItemCaseSensitive(config_json, "FPS");
+        if (cJSON_IsString(json_fps) && (json_fps->valuestring != NULL)) {
+            m_cameraFps = atoi(json_fps->valuestring);
+            LOG(INFO) << "Camera FPS set from Json file: " << m_cameraFps;
+        }
+
+        return status;
+
+    } else if (!config.empty()) {
+        LOG(ERROR) << "Couldn't parse config file: " << config.c_str();
+        return Status::GENERIC_ERROR;
     }
 }
