@@ -54,8 +54,8 @@ fi
 # Build linux
 echo "*** Building Linux kernel"
 cd $ROOTDIR/build/linux-imx
-make imx_v8_defconfig
-./scripts/kconfig/merge_config.sh .config $ROOTDIR/configs/kernel.extra
+cp $ROOTDIR/configs/adi_imx_v8_defconfig arch/arm64/configs/
+make adi_imx_v8_defconfig
 make -j32 Image dtbs modules
 if [[ -d modules ]]; then
 	rm -R modules
