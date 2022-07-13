@@ -1,7 +1,7 @@
-From 8471041016ac68104ab66187f8aacee1d5d07797 Mon Sep 17 00:00:00 2001
+From d795f20a395f55dfaedbc661a3497423ddaeda4e Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Wed, 7 Jul 2021 12:07:54 +0300
-Subject: [PATCH 14/35] arch: arm64: imx8mp-adi-tof-noreg: Activate pull-down
+Subject: [PATCH 14/36] arch: arm64: imx8mp-adi-tof-noreg: Activate pull-down
  on flash WP
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>

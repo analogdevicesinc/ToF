@@ -1,7 +1,7 @@
-From dbfcaff081d782abddbfea26d4045c53f4d7a505 Mon Sep 17 00:00:00 2001
+From 666af9589e253c417348b467ee2c9aa07e1ff996 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Mon, 28 Feb 2022 11:08:48 +0200
-Subject: [PATCH 29/35] drivers: staging: media: imx: imx8: Fix SBGGR8 support
+Subject: [PATCH 29/36] drivers: staging: media: imx: imx8: Fix SBGGR8 support
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---

@@ -1,7 +1,7 @@
-From 612bc014834551c2cc0800e277595b1a4a890463 Mon Sep 17 00:00:00 2001
+From dcf3ab6fdd2d4a49cf39be991f4a1c67af0f2009 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Tue, 8 Feb 2022 11:51:27 +0200
-Subject: [PATCH 24/35] drivers: media: spi: addicmos: Fix resolution for QVGA
+Subject: [PATCH 24/36] drivers: media: spi: addicmos: Fix resolution for QVGA
  mode
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>

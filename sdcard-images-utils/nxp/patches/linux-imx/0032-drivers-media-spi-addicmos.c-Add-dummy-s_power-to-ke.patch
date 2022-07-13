@@ -1,7 +1,7 @@
-From ab2a63e0cda1c81b8943b9c2c5a5fc612af2c4fa Mon Sep 17 00:00:00 2001
+From cf709fa23c30641825e0e5d8d9ea80d873f017d1 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Thu, 10 Mar 2022 10:04:43 +0200
-Subject: [PATCH 32/35] drivers: media: spi: addicmos.c: Add dummy s_power to
+Subject: [PATCH 32/36] drivers: media: spi: addicmos.c: Add dummy s_power to
  keep capture driver happy
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>

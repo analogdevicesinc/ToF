@@ -1,7 +1,7 @@
-From 1c1ee04b45a331d0071284cdb7e0a1899152d7fa Mon Sep 17 00:00:00 2001
+From 2462fa8d1eb04bd27a95ad1e1f543a010a12ccd5 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Mon, 28 Feb 2022 11:07:06 +0200
-Subject: [PATCH 28/35] drivers: usb: gadget: function: uvc_v4l2.c: Add support
+Subject: [PATCH 28/36] drivers: usb: gadget: function: uvc_v4l2.c: Add support
  for SBGGR8/16
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
