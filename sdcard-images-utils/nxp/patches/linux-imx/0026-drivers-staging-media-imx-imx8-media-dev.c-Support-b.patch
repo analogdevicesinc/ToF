@@ -1,7 +1,7 @@
-From 7d9588728885f18751eba851c80a50c10dac1f17 Mon Sep 17 00:00:00 2001
+From 179267d3ae3447c59044f2a8d694259ea20460e6 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Thu, 5 May 2022 11:49:35 +0300
-Subject: [PATCH 26/35] drivers: staging: media: imx: imx8-media-dev.c: Support
+Subject: [PATCH 26/36] drivers: staging: media: imx: imx8-media-dev.c: Support
  both SPI and I2C
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
