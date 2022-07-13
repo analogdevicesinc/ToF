@@ -244,6 +244,8 @@ aditof::Status CameraItof::initialize() {
         if (status != Status::OK) {
             LOG(INFO) << "Failed to set fps!";
             return Status::GENERIC_ERROR;
+        } else {
+            LOG(INFO) << "Camera FPS set from Json file: " << m_cameraFps;
         }
     }
 
@@ -1508,7 +1510,6 @@ aditof::Status CameraItof::parseJsonFileContent(){
         const cJSON *json_fps = cJSON_GetObjectItemCaseSensitive(config_json, "FPS");
         if (cJSON_IsString(json_fps) && (json_fps->valuestring != NULL)) {
             m_cameraFps = atoi(json_fps->valuestring);
-            LOG(INFO) << "Camera FPS set from Json file: " << m_cameraFps;
         }
 
         return status;
