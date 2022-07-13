@@ -355,6 +355,9 @@ class CameraItof : public aditof::Camera {
      */
     void configureSensorFrameType();
 
+    aditof::Status CameraItof::adsd3500_set_toggle_mode(int mode);
+    aditof::Status CameraItof::adsd3500_toggle_fsync();
+
   private:
     using noArgCallable = std::function<aditof::Status()>;
 
@@ -369,6 +372,7 @@ class CameraItof : public aditof::Camera {
     bool m_eepromInitialized;
     bool m_tempSensorInitialized;
     bool m_adsd3500Enabled;
+    bool m_adsd3500_master;
 
     FileData m_calData;
     FileData m_depthINIData;

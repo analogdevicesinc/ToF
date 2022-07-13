@@ -115,6 +115,8 @@ CameraItof::CameraItof(
     if (m_adsd3500Enabled) {
         m_controls.emplace("updateAdsd3500Firmware", "");
     }
+
+    m_adsd3500_master = true;
 }
 
 CameraItof::~CameraItof() {
@@ -479,6 +481,10 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
 
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
     }
+
+    LOG(ERROR) << m_controls["enableDepthCompute"];
+    LOG(ERROR) << m_details.frameType.totalCaptures;
+    LOG(ERROR) << m_adsd3500Enabled;
 
     if (m_controls["enableDepthCompute"] == "on" && ((m_details.frameType.totalCaptures > 1) || m_adsd3500Enabled)){
         status = initComputeLibrary();
@@ -1488,4 +1494,39 @@ void CameraItof::configureSensorFrameType()
     } else {
         LOG(ERROR) << "Unable to open file: " << m_ini_depth;
     }
+}
+
+aditof::Status CameraItof::adsd3500_set_toggle_mode(int mode) {
+    /*mode = 1, adsd3500 fsync automatically toggles at user specified framerate*/
+    /*mode = 0, adsd3500 fsync does not automatically toggle*/
+    using namespace aditof;
+    Status status = Status::OK;
+
+    status = m_depthSensor->adsd3500_write_cmd(0x0025, mode);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to switch to burst mode!";
+        return status;
+    }
+
+    m_adsd3500_master = mode;
+
+    return status;
+}
+
+aditof::Status CameraItof::adsd3500_toggle_fsync() {
+    using namespace aditof;
+    Status status = Status::OK;
+
+    if (m_adsd3500_master) {
+        LOG(ERROR) << "ADSD3500 not set to master - cannot toggle FSYNC";
+    } else {
+        // Toggle Fsync
+        status = m_depthSensor->adsd3500_write_cmd(0x0026, 0x0000);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to switch to burst mode!";
+            return status;
+        }
+    }
+
+    return status;
 }
