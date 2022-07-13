@@ -1512,10 +1512,10 @@ aditof::Status CameraItof::parseJsonFileContent(){
             m_cameraFps = atoi(json_fps->valuestring);
         }
 
-        return status;
-
     } else if (!config.empty()) {
         LOG(ERROR) << "Couldn't parse config file: " << config.c_str();
         return Status::GENERIC_ERROR;
     }
+
+    return status;
 }
