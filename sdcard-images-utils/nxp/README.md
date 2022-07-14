@@ -23,7 +23,7 @@ Dependencies that must be installed:
 * Bison
 * Flex
 * gcc aarch64
-* lbssl-dev
+* libssl-dev
 * qemu, qemu-user-static
 * debootstrap
 * zlib dev
