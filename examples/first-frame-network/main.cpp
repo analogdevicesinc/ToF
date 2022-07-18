@@ -61,10 +61,21 @@ int main(int argc, char *argv[]) {
     }
 
     auto camera = cameras.front();
-    status = camera->initialize();
+
+    // user can pass any config.json stored anywhere in HW
+    status = camera->setControl("initialization_config",
+                                "config/config_walden_nxp.json");
     if (status != Status::OK) {
-        LOG(ERROR) << "Could not initialize camera!";
+        LOG(ERROR) << "Could not set the initialization config file!";
         return 0;
+    }
+
+    // optionally load configuration data from module memory
+    status = camera->setControl("loadModuleData", "call");
+    if (status != Status::OK) {
+        LOG(INFO) << "No CCB/CFG data found in camera module,";
+        LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data "
+                     "from JSON config file...";
     }
 
     std::vector<std::string> frameTypes;
@@ -73,6 +84,7 @@ int main(int argc, char *argv[]) {
         std::cout << "no frame type available!";
         return 0;
     }
+
     status = camera->setFrameType("pcm");
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
