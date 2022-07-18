@@ -34,6 +34,7 @@
 #include "v4l_buffer_access_interface.h"
 #include "../../cameras/itof-camera/mode_info.h"
 #include <memory>
+#include <unordered_map>
 
 class Adsd3100Sensor : public aditof::DepthSensorInterface,
                        public aditof::V4lBufferAccessInterface {
@@ -117,6 +118,7 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
         std::string m_captureDev;
         std::unique_ptr<ImplData> m_implData;
         uint8_t m_capturesPerFrame;
+        std::unordered_map<std::string, std::string> m_controls;
 
          const std::vector<aditof::DepthSensorFrameType> availableFrameTypes =
         {
