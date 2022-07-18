@@ -19,7 +19,6 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <unordered_map>
 #include "cameras/itof-camera/mode_info.h"
 
 #define MAX_SUBFRAMES_COUNT 10 // maximum number of subframes that are used to create a full frame (maximum total_captures of all modes)
@@ -102,6 +101,8 @@ Adsd3100Sensor::Adsd3100Sensor(const std::string &driverPath,
 
     m_sensorDetails.connectionType = aditof::ConnectionType::ON_TARGET;
     m_sensorName = "adsd3100";
+
+    m_controls.emplace("fps","0");
 }
 
 Adsd3100Sensor::~Adsd3100Sensor() {
@@ -821,7 +822,32 @@ aditof::Status Adsd3100Sensor::getAvailableControls(std::vector<std::string> &co
 aditof::Status Adsd3100Sensor::setControl(const std::string &control,
                                const std::string &value)
 {
-    return aditof::Status::UNAVAILABLE;
+    using namespace aditof;
+    Status status = Status::OK;
+
+    if (m_controls.count(control) == 0) {
+        LOG(WARNING) << "Unsupported control";
+        return Status::INVALID_ARGUMENT;
+    }
+
+    struct VideoDev *dev = &m_implData->videoDevs[0];
+
+    if(control == "fps") {
+        struct v4l2_streamparm fpsControl;
+        memset(&fpsControl, 0, sizeof(struct v4l2_streamparm));
+    
+        fpsControl.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        fpsControl.parm.capture.timeperframe.numerator = 1;
+        fpsControl.parm.capture.timeperframe.denominator = std::stoi(value);
+    
+        if (xioctl(dev->fd, VIDIOC_S_PARM, &fpsControl) == -1) {
+            LOG(WARNING) << "Failed to set control: " << control << " "
+                         << "errno: " << errno << " error: " << strerror(errno);
+            status = Status::GENERIC_ERROR;
+        }
+    }
+
+    return status;
 }
 
 aditof::Status Adsd3100Sensor::getControl(const std::string &control,
