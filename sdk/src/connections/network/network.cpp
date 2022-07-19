@@ -184,7 +184,7 @@ int Network::ServerConnect(const std::string &ip) {
     std::unique_lock<std::recursive_mutex> mlock(m_mutex[m_connectionId]);
 
     /*Wait till server is connected or timeout of 3 sec*/
-    if (Cond_Var[m_connectionId].wait_for(mlock, std::chrono::seconds(10),
+    if (Cond_Var[m_connectionId].wait_for(mlock, std::chrono::seconds(3),
                           std::bind(&Network::isServer_Connected, this)) ==
         false) {
         Server_Connected[m_connectionId] = false;
