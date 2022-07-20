@@ -56,8 +56,9 @@ Status NetworkSensorEnumerator::searchSensors() {
 
     if (net->ServerConnect(m_ip) != 0) {
         LOG(WARNING) << "Server Connect Failed";
-        net.reset();
-        sensorCount = 0;
+        net.reset(nullptr);
+        sensorCount--;
+        assert(sensorCount >= 0);
         return Status::UNREACHABLE;
     }
 
