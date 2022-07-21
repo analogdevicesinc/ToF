@@ -22,50 +22,56 @@
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * FOR ANY DRAWECT, INDRAWECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "message_factory.h"
-#include "publisher_factory.h"
-#include <aditof_utils.h>
-#include <ros/ros.h>
+#ifndef RAWIMAGE_MSG_H
+#define RAWIMAGE_MSG_H
 
-using namespace aditof;
+#include <aditof/frame.h>
 
-int main(int argc, char **argv) {
-    std::string *arguments = parseArgs(argc, argv);
+#include "aditof_sensor_msg.h"
+#include "aditof_utils.h"
 
-    std::shared_ptr<Camera> camera = initCamera(arguments);
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/image_encodings.h>
 
-    ros::init(argc, argv, "aditof_camera_node");
-    ROS_ASSERT_MSG(camera, "initCamera call failed");
-    setFrameType(camera, "qmp");
-    ROS_ASSERT_MSG(camera, "camera frametype set failed");
-    startCamera(camera);
-    ROS_ASSERT_MSG(camera, "start camera failed");
-    ros::NodeHandle nHandle("aditof_roscpp");
-    ROS_ASSERT_MSG(camera, "handle error");
+class RAWImageMsg : public AditofSensorMsg {
+  public:
+    RAWImageMsg(const std::shared_ptr<aditof::Camera> &camera,
+               aditof::Frame **frame, std::string encoding, ros::Time tStamp);
+    /**
+     * @brief Each message corresponds to one frame
+     */
+    sensor_msgs::Image msg;
 
-    ros::Publisher frame_pubisher =
-        nHandle.advertise<sensor_msgs::PointCloud2>("aditof_pcloud", 5);
+    /**
+     * @brief Converts the frame data to a message
+     */
+    void FrameDataToMsg(const std::shared_ptr<aditof::Camera> &camera,
+                        aditof::Frame **frame, ros::Time tStamp);
+    /**
+     * @brief Assigns values to the message fields concerning metadata
+     */
+    void setMetadataMembers(int width, int height, ros::Time tStamp);
 
-    auto tmp = new Frame;
-    aditof::Frame **frame = &tmp;
+    /**
+     * @brief Assigns values to the message fields concerning the point data
+     */
+    void setDataMembers(const std::shared_ptr<aditof::Camera> &camera,
+                        uint16_t *frameData);
 
-    getNewFrame(camera, frame);
-    PointCloud2Msg *msg = new PointCloud2Msg(camera, frame, ros::Time::now());
+    /**
+     * @brief Publishes a message
+     */
+    void publishMsg(const ros::Publisher &pub);
 
-    while (ros::ok()) {
-        getNewFrame(camera, frame);
-        msg->FrameDataToMsg(camera, frame, ros::Time::now());
-        msg->publishMsg(frame_pubisher);
-        //ros::spinOnce();
-    }
+  private:
+    RAWImageMsg();
+};
 
-    delete msg;
-    return 0;
-}
+#endif // RAWIMAGE_MSG_H

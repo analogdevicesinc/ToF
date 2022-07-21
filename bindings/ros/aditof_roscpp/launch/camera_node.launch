@@ -1,5 +1,8 @@
 <launch>
   <arg name="ip" default='""'/>
-  <arg name="use_depth_library" default='"false"'/>
-  <node pkg="aditof_roscpp" type="aditof_camera_node" name="aditof_camera_node" args="$(arg ip) $(arg use_depth_library)" output="screen"/>
+  <arg name="config_file" default="config/config_walden_nxp.json"/>
+  <arg name="mode" default="1"/>
+  <arg name="use_depthCompute" default="true"/>
+  <node pkg="aditof_roscpp" type="aditof_camera_node" name="aditof_camera_node" args="ip=$(arg ip) config_file=$(arg config_file) mode=$(arg mode) use_depthCompute=$(arg use_depthCompute) rqt=false" output="screen"/>
 </launch>
+  

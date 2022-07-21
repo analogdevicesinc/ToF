@@ -33,7 +33,7 @@
 
 AditofSensorMsg *
 MessageFactory::create(const std::shared_ptr<aditof::Camera> &camera,
-                       aditof::Frame *frame, MessageType type,
+                       aditof::Frame **frame, MessageType type,
                        ros::Time tStamp) {
     switch (type) {
     case MessageType::sensor_msgs_PointCloud2:
@@ -46,6 +46,9 @@ MessageFactory::create(const std::shared_ptr<aditof::Camera> &camera,
                               sensor_msgs::image_encodings::MONO16, tStamp);
     case MessageType::sensor_msgs_CameraInfo:
         return new CameraInfoMsg(camera, frame, tStamp);
+    case MessageType::sensor_msgs_RAWImage:
+        return new RAWImageMsg(camera, frame,
+                               sensor_msgs::image_encodings::MONO16, tStamp);
     }
     return nullptr;
 }

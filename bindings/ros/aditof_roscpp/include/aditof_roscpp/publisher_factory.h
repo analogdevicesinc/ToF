@@ -29,43 +29,36 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef PUBLISHER_FACTORY_H
+#define PUBLISHER_FACTORY_H
+
+#include "../../../../sdk/include/aditof/camera.h"
 #include "message_factory.h"
-#include "publisher_factory.h"
 #include <aditof_utils.h>
+#include <dynamic_reconfigure/server.h>
+#include <memory>
 #include <ros/ros.h>
+#include <typeinfo>
+#include <vector>
 
-using namespace aditof;
+class PublisherFactory {
+  public:
+    PublisherFactory();
+    void createNew(ModeTypes mode, ros::NodeHandle nHandle,
+                   const std::shared_ptr<aditof::Camera> &camera,
+                   aditof::Frame **frame);
+    void updatePublishers(const std::shared_ptr<aditof::Camera> &camera,
+                          aditof::Frame **frame);
+    void deletePublishers(const std::shared_ptr<aditof::Camera> &camera);
+    void setDepthFormat(const int val);
 
-int main(int argc, char **argv) {
-    std::string *arguments = parseArgs(argc, argv);
+  private:
+    std::vector<ros::Publisher> img_publishers;
+    std::vector<std::shared_ptr<AditofSensorMsg>> imgMsgs;
 
-    std::shared_ptr<Camera> camera = initCamera(arguments);
+  public:
+    ModeTypes m_currentMode = ModeTypes::NONE;
+    bool m_enableDepthCompute = 1;
+};
 
-    ros::init(argc, argv, "aditof_camera_node");
-    ROS_ASSERT_MSG(camera, "initCamera call failed");
-    setFrameType(camera, "qmp");
-    ROS_ASSERT_MSG(camera, "camera frametype set failed");
-    startCamera(camera);
-    ROS_ASSERT_MSG(camera, "start camera failed");
-    ros::NodeHandle nHandle("aditof_roscpp");
-    ROS_ASSERT_MSG(camera, "handle error");
-
-    ros::Publisher frame_pubisher =
-        nHandle.advertise<sensor_msgs::PointCloud2>("aditof_pcloud", 5);
-
-    auto tmp = new Frame;
-    aditof::Frame **frame = &tmp;
-
-    getNewFrame(camera, frame);
-    PointCloud2Msg *msg = new PointCloud2Msg(camera, frame, ros::Time::now());
-
-    while (ros::ok()) {
-        getNewFrame(camera, frame);
-        msg->FrameDataToMsg(camera, frame, ros::Time::now());
-        msg->publishMsg(frame_pubisher);
-        //ros::spinOnce();
-    }
-
-    delete msg;
-    return 0;
-}
+#endif // PUBLISHER_FACTORY_H

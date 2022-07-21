@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(aditof_roscpp)
 
-option(WITH_ROS_EXAMPLES "Build ROS examples" OFF)
+option(WITH_ROS_EXAMPLES "Build ROS examples" ON)
 
 list(APPEND CMAKE_PREFIX_PATH ${ADITOF_CMAKE_INSTALL_PREFIX}
      ${ADITOF_CMAKE_PREFIX_PATH})
@@ -31,7 +31,13 @@ target_sources(aditof_camera_node
                INTERFACE ${CMAKE_SOURCE_DIR}/include/${PROJECT_NAME})
 target_link_libraries(aditof_camera_node aditof::aditof)
 target_link_libraries(aditof_camera_node ${catkin_LIBRARIES})
+
 add_dependencies(aditof_camera_node ${PROJECT_NAME}_gencfg)
+
+
+#Creating soft links toward the .so depthCompute libraries next to repository
+file(CREATE_LINK "${CMAKE_SOURCE_DIR}/../../../../libs/libtofi_compute.so" "/usr/lib/libtofi_compute.so"  SYMBOLIC)
+file(CREATE_LINK "${CMAKE_SOURCE_DIR}/../../../../libs/libtofi_config.so" "/usr/lib/libtofi_config.so"  SYMBOLIC)
 
 
 if(WITH_ROS_EXAMPLES)
@@ -46,10 +52,13 @@ if(WITH_ROS_EXAMPLES)
   target_link_libraries(aditof_rviz_pcl ${catkin_LIBRARIES})
 
 
+
 # Copying config files and depth compute libraries from sdk/config, sdk/lib folders to build/examples/first-frame and build/first-frame/Debug or Release folders    
 add_custom_command( TARGET ${PROJECT_NAME} POST_BUILD
 COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../../../sdk/src/cameras/itof-camera/config ${ROS_HOME}/
     COMMENT "Copying cfgs and libs to build config "
 )
+  
 
 endif()
+

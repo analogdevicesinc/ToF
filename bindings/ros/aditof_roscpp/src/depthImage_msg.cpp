@@ -35,16 +35,16 @@ using namespace aditof;
 DepthImageMsg::DepthImageMsg() {}
 
 DepthImageMsg::DepthImageMsg(const std::shared_ptr<aditof::Camera> &camera,
-                             aditof::Frame *frame, std::string encoding,
+                             aditof::Frame **frame, std::string encoding,
                              ros::Time tStamp) {
     imgEncoding = encoding;
-    FrameDataToMsg(camera, frame, tStamp);
+    //FrameDataToMsg(camera, frame, tStamp);
 }
 
 void DepthImageMsg::FrameDataToMsg(const std::shared_ptr<Camera> &camera,
-                                   aditof::Frame *frame, ros::Time tStamp) {
-    FrameDataDetails fDetails;
-    frame->getDataDetails("depth",fDetails);
+                                   aditof::Frame **frame, ros::Time tStamp) {
+    FrameDetails fDetails;
+    (*frame)->getDetails(fDetails);
 
     setMetadataMembers(fDetails.width, fDetails.height, tStamp);
 
@@ -76,12 +76,14 @@ void DepthImageMsg::setMetadataMembers(int width, int height,
 
 void DepthImageMsg::setDataMembers(const std::shared_ptr<Camera> &camera,
                                    uint16_t *frameData) {
+
     if (msg.encoding.compare(sensor_msgs::image_encodings::RGBA8) == 0) {
         std::vector<uint16_t> depthData(frameData,
                                         frameData + msg.width * msg.height);
-        auto min_range = std::min_element(depthData.begin(), depthData.end());
-
-        dataToRGBA8(*min_range, getRangeMax(camera), frameData);
+        dataToRGBA8(0, 0x0fff, frameData);
+    } else if (msg.encoding.compare(sensor_msgs::image_encodings::MONO16) ==
+               0) {
+        memcpy(msg.data.data(), frameData, 2 * msg.width * msg.height);
     } else
         ROS_ERROR("Image encoding invalid or not available");
 }
@@ -148,3 +150,10 @@ Rgba8Color DepthImageMsg::HSVtoRGBA8(double hue, double sat, double val) {
 }
 
 void DepthImageMsg::publishMsg(const ros::Publisher &pub) { pub.publish(msg); }
+
+void DepthImageMsg::setDepthDataFormat(int value) {
+    msg.encoding = (value == 0) ? sensor_msgs::image_encodings::RGBA8
+                                : sensor_msgs::image_encodings::MONO16;
+    imgEncoding = (value == 0) ? sensor_msgs::image_encodings::RGBA8
+                               : sensor_msgs::image_encodings::MONO16;
+}

@@ -22,33 +22,40 @@
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * FOR ANY DRAWECT, INDRAWECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "irImage_msg.h"
+#include "rawImage_msg.h"
 using namespace aditof;
 
-IRImageMsg::IRImageMsg() {}
+RAWImageMsg::RAWImageMsg() {}
 
-IRImageMsg::IRImageMsg(const std::shared_ptr<aditof::Camera> &camera,
-                       aditof::Frame **frame, std::string encoding,
-                       ros::Time tStamp) {
-    imgEncoding = encoding;
+RAWImageMsg::RAWImageMsg(const std::shared_ptr<aditof::Camera> &camera,
+                         aditof::Frame **frame, std::string encoding,
+                         ros::Time tStamp) {
+
+    msg.encoding = encoding;
     //FrameDataToMsg(camera, frame, tStamp);
 }
 
-void IRImageMsg::FrameDataToMsg(const std::shared_ptr<Camera> &camera,
-                                aditof::Frame **frame, ros::Time tStamp) {
-    FrameDetails fDetails;
-    (*frame)->getDetails(fDetails);
+void RAWImageMsg::FrameDataToMsg(const std::shared_ptr<Camera> &camera,
+                                 aditof::Frame **frame, ros::Time tStamp) {
 
-    setMetadataMembers(fDetails.width, fDetails.height, tStamp);
+    aditof::CameraDetails *details_tmp = new aditof::CameraDetails;
+    getCameraDataDetails(camera, *details_tmp);
+    for (auto iter : (*details_tmp).frameType.dataDetails) {
+        if (!std::strcmp(iter.type.c_str(), "raw")) {
+            msg.width = iter.width;
+            msg.height = iter.height;
+        }
+    }
+    setMetadataMembers(msg.width, msg.height, tStamp);
 
-    uint16_t *frameData = getFrameData(frame, "ir");
+    uint16_t *frameData = getFrameData(frame, "raw");
     if (!frameData) {
         LOG(ERROR) << "getFrameData call failed";
         return;
@@ -57,31 +64,29 @@ void IRImageMsg::FrameDataToMsg(const std::shared_ptr<Camera> &camera,
     setDataMembers(camera, frameData);
 }
 
-void IRImageMsg::setMetadataMembers(int width, int height, ros::Time tStamp) {
+void RAWImageMsg::setMetadataMembers(int width, int height, ros::Time tStamp) {
     msg.header.stamp = tStamp;
-    msg.header.frame_id = "aditof_ir_img";
+    msg.header.frame_id = "aditof_raw_img";
 
-    msg.width = width;
-    msg.height = height;
-
-    msg.encoding = imgEncoding;
+    msg.encoding = msg.encoding;
     msg.is_bigendian = false;
 
-    int pixelByteCnt = sensor_msgs::image_encodings::bitDepth(imgEncoding) / 8 *
-                       sensor_msgs::image_encodings::numChannels(imgEncoding);
+    int pixelByteCnt = sensor_msgs::image_encodings::bitDepth(msg.encoding) /
+                       8 *
+                       sensor_msgs::image_encodings::numChannels(msg.encoding);
     msg.step = width * pixelByteCnt;
 
     msg.data.resize(msg.step * height);
 }
 
-void IRImageMsg::setDataMembers(const std::shared_ptr<Camera> &camera,
-                                uint16_t *frameData) {
+void RAWImageMsg::setDataMembers(const std::shared_ptr<Camera> &camera,
+                                 uint16_t *frameData) {
     if (msg.encoding.compare(sensor_msgs::image_encodings::MONO16) == 0) {
-        irTo16bitGrayscale(frameData, msg.width, msg.height);
+
         uint8_t *msgDataPtr = msg.data.data();
         std::memcpy(msgDataPtr, frameData, msg.step * msg.height);
     } else
         ROS_ERROR("Image encoding invalid or not available");
 }
 
-void IRImageMsg::publishMsg(const ros::Publisher &pub) { pub.publish(msg); }
+void RAWImageMsg::publishMsg(const ros::Publisher &pub) { pub.publish(msg); }

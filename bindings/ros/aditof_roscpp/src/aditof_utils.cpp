@@ -33,61 +33,85 @@
 
 #include <aditof/frame.h>
 #include <aditof/system.h>
+#include <regex>
 #include <ros/package.h>
 #include <ros/ros.h>
 #include <string.h>
 #include <unistd.h>
 
+std::mutex mtx_dynamic_rec;
 using namespace aditof;
 
-bool isValidIPv4(const char *IPAddress)
-{
-   unsigned char a,b,c,d;
-   return sscanf(IPAddress,"%d.%d.%d.%d", &a, &b, &c, &d) == 4;
-}
-
-std::string parseArgsForIp(int argc, char **argv) {
+std::string *parseArgs(int argc, char **argv) {
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
-    
-    if (argc > 1) {
-        for (int i = 1; i < argc; i++) {
-            std::string ip = argv[i];
-            if (isValidIPv4(ip.c_str()))
-                return ip;
-        }
+
+    std::string ip = "";
+    std::string config_path = "";
+    std::string use_depthCompute = "";
+    std::string mode = "";
+    std::string rqt = "";
+
+    for (int i = 1; i < argc; i++) {
+        std::string left;
+        std::string right;
+        std::string argnew(argv[i]);
+
+        left = argnew.substr(0, argnew.find("=", 0));
+        right = argnew.substr(argnew.find("=", 0) + 1, argnew.size());
+
+        if (std::strcmp(left.c_str(), "ip") == 0)
+            ip = right;
+        else if (std::strcmp(left.c_str(), "config_file") == 0)
+            config_path = right;
+        else if (std::strcmp(left.c_str(), "use_depthCompute") == 0)
+            use_depthCompute = right;
+        else if (std::strcmp(left.c_str(), "mode") == 0)
+            mode = right;
+        else if (std::strcmp(left.c_str(), "rqt") == 0)
+            rqt = right;
     }
-    LOG(INFO)
-        << "No ip provided, attempting to connect to the camera through USB";
-    return std::string();
+
+    if (ip.empty()) {
+        LOG(INFO) << "No ip provided, attempting to connect to the camera "
+                     "through USB";
+    }
+    if (config_path.empty()) {
+        LOG(INFO) << "Config file not provided!";
+    }
+    if (use_depthCompute.empty()) {
+        LOG(INFO) << "'use_depthCompute' option not provided!";
+    }
+
+    if (mode.empty()) {
+        LOG(INFO) << "Camera mode not provided!";
+    }
+
+    if (rqt.empty()) {
+        LOG(INFO) << "Dynamic RQT option not provided!";
+    }
+
+    std::string *result = new std::string[5];
+    result[0] = ip;
+    result[1] = config_path;
+    result[2] = use_depthCompute;
+    result[3] = mode;
+    result[4] = rqt;
+    return result;
 }
 
-bool parseArgsForDepthLibarary(int argc, char **argv) {
-
-    if (argc > 1) {
-        for (int i = 1; i < argc; i++) {
-            std::string var = argv[i];
-            if (std::strcmp(var.c_str(),"true")==0)
-                return true;
-        }
-    }
-    LOG(INFO) << "No depth_compute option provided, default value: FALSE";
-    return false;
-}
-
-std::shared_ptr<Camera> initCamera(int argc, char **argv) {
+std::shared_ptr<Camera> initCamera(std::string *arguments) {
 
     Status status = Status::OK;
-    std::string ip = parseArgsForIp(argc, argv);
-    bool useDepthLibrary = parseArgsForDepthLibarary(argc, argv);
+    LOG(INFO) << "Started camera intialization";
 
     System system;
 
     std::vector<std::shared_ptr<Camera>> cameras;
-    if (ip.empty()) {
+    if (arguments[0].empty()) {
         system.getCameraList(cameras);
     } else {
-        system.getCameraListAtIp(cameras, ip);
+        system.getCameraListAtIp(cameras, arguments[0]);
     }
 
     if (cameras.empty()) {
@@ -97,26 +121,11 @@ std::shared_ptr<Camera> initCamera(int argc, char **argv) {
 
     std::shared_ptr<Camera> camera = cameras.front();
 
-    /*std::string package_path = ros::package::getPath("aditof_roscpp");
-    package_path = package_path + "/../../config/config_walden_nxp.json";
-    LOG(INFO) << "Json config file location: "<< package_path;*/
-
     // user can pass any config.json stored anywhere in HW
-
-    status = camera->setControl(
-        "initialization_config",
-        "/home/analog/.ros/config/config_walden_nxp.json");
+    status = camera->setControl("initialization_config", arguments[1]);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set the initialization config file!";
         return 0;
-    }
-        
-    if (!useDepthLibrary){
-        status = camera->setControl("enableDepthCompute", "off");
-        if (status != Status::OK) {
-            LOG(ERROR) << "Could not set the initialization config file!";
-            return 0;
-        }
     }
 
     status = camera->initialize();
@@ -125,34 +134,38 @@ std::shared_ptr<Camera> initCamera(int argc, char **argv) {
         return 0;
     }
 
-    status = camera->setControl("powerUp", "call");
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not PowerUp camera!";
-        return 0;
-    }
-
-    // optionally load configuration data from module memory
-    status = camera->setControl("loadModuleData", "call");
-    if (status != Status::OK) {
-        LOG(INFO) << "No CCB/CFG data found in camera module,";
-        LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data "
-                     "from JSON config file...";
-    }
-
-    status = camera->setControl("enableDepthCompute", "off");
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not set depthCompute to off!";
-        return 0;
-    }
-
     return camera;
 }
+
+void enableCameraDepthCompute(const std::shared_ptr<aditof::Camera> &camera,
+                              const bool value) {
+    //set depthCompute to on or off
+    aditof::Status status = aditof::Status::OK;
+
+    status = camera->setControl("enableDepthCompute", (value) ? "on" : "off");
+    if (status != Status::OK) {
+        LOG(ERROR) << "Couldn't set depth compute option";
+        return;
+    }
+}
+
 void startCamera(const std::shared_ptr<aditof::Camera> &camera) {
     Status status = Status::OK;
 
     status = camera->start();
     if (status != Status::OK) {
         LOG(ERROR) << "Could not start camera!";
+        return;
+    }
+    return;
+}
+
+void stopCamera(const std::shared_ptr<aditof::Camera> &camera) {
+    Status status = Status::OK;
+
+    status = camera->stop();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not stop camera!";
         return;
     }
     return;
@@ -178,6 +191,24 @@ void setFrameType(const std::shared_ptr<aditof::Camera> &camera,
     status = camera->setFrameType(type);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
+        return;
+    }
+}
+
+void getAvailableFrameType(const std::shared_ptr<aditof::Camera> &camera,
+                           std::vector<std::string> &availableFrameTypes) {
+    camera->getAvailableFrameTypes(availableFrameTypes);
+    if (availableFrameTypes.empty()) {
+        LOG(ERROR) << "No frame type available!";
+        return;
+    }
+}
+
+void getCameraDataDetails(const std::shared_ptr<aditof::Camera> &camera,
+                          aditof::CameraDetails &details) {
+    Status status = camera->getDetails(details);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Couldn't get camera details!";
         return;
     }
 }
@@ -247,18 +278,25 @@ void disableNoiseReduction(const std::shared_ptr<Camera> &camera) {
     }
 }
 
-void getNewFrame(const std::shared_ptr<Camera> &camera, aditof::Frame *frame) {
+void getNewFrame(const std::shared_ptr<Camera> &camera, aditof::Frame **frame) {
     Status status = Status::OK;
-    status = camera->requestFrame(frame);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not request frame!";
+
+    try {
+        status = camera->requestFrame(*frame);
+        if (status != Status::OK) {
+            //LOG(ERROR) << "Could not request frame!";
+        }
+    } catch (std::exception &e) {
     }
 }
 
-uint16_t *getFrameData(aditof::Frame *frame, const std::string &dataType) {
+uint16_t *getFrameData(aditof::Frame **frame, const std::string &dataType) {
     uint16_t *frameData;
     Status status = Status::OK;
-    status = frame->getData(dataType, &frameData);
+    aditof::Frame *test;
+    test = new Frame;
+
+    status = (*frame)->getData(dataType, &frameData);
 
     if (status != Status::OK) {
         LOG(ERROR) << "Could not get frame data!";
@@ -293,9 +331,9 @@ int getRangeMin(const std::shared_ptr<Camera> &camera) {
 void irTo16bitGrayscale(uint16_t *frameData, int width, int height) {
     std::vector<uint16_t> data(frameData, frameData + width * height);
 
-    auto min_val = std::min_element(data.begin(), data.end());
-    auto max_val = std::max_element(data.begin(), data.end());
-    uint16_t delta = *max_val - *min_val;
+    auto min_val = 0;      //std::min_element(data.begin(), data.end());
+    auto max_val = 0x0fff; //std::max_element(data.begin(), data.end());
+    uint16_t delta = max_val - min_val;
     int minColorValue = 0;
 
     if (delta == 0) {
@@ -303,10 +341,26 @@ void irTo16bitGrayscale(uint16_t *frameData, int width, int height) {
     }
 
     for (int i = 0; i < width * height; i++) {
-        float norm_val = static_cast<float>(data[i] - *min_val) / delta;
+        float norm_val = static_cast<float>(data[i] - min_val) / delta;
         float grayscale_val =
             norm_val * std::numeric_limits<unsigned short int>::max() +
             (1.0f - norm_val) * minColorValue;
         frameData[i] = static_cast<uint16_t>(grayscale_val);
     }
+}
+
+enum ModeTypes intToMode(int var) {
+    ModeTypes newMode;
+    switch (var) {
+    case 0:
+        newMode = ModeTypes::mode3;
+        break;
+    case 1:
+        newMode = ModeTypes::mode7;
+        break;
+    case 2:
+        newMode = ModeTypes::mode10;
+        break;
+    }
+    return (newMode);
 }

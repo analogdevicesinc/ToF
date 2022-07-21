@@ -34,14 +34,22 @@
 
 #include <aditof/camera.h>
 #include <glog/logging.h>
+#include <mutex>
 
-bool isValidIPv4(const char *IPAddress);
-std::string parseArgs(int argc, char **argv);
-bool parseArgsForDepthLibarary(int argc, char **argv);
-std::shared_ptr<aditof::Camera> initCamera(int argc, char **argv);
+enum class ModeTypes { NONE, mode3, mode7, mode10 };
+
+std::string *parseArgs(int argc, char **argv);
+std::shared_ptr<aditof::Camera> initCamera(std::string *arguments);
 void startCamera(const std::shared_ptr<aditof::Camera> &camera);
+void stopCamera(const std::shared_ptr<aditof::Camera> &camera);
 void setFrameType(const std::shared_ptr<aditof::Camera> &camera,
                   const std::string &type);
+void getAvailableFrameType(const std::shared_ptr<aditof::Camera> &camera,
+                           std::vector<std::string> &availableFrameTypes);
+void getCameraDataDetails(const std::shared_ptr<aditof::Camera> &camera,
+                          aditof::CameraDetails &details);
+void enableCameraDepthCompute(const std::shared_ptr<aditof::Camera> &camera,
+                              const bool value);
 void setMode(const std::shared_ptr<aditof::Camera> &camera,
              const std::string &mode);
 void setCameraRevision(const std::shared_ptr<aditof::Camera> &camera,
@@ -52,13 +60,13 @@ void applyNoiseReduction(const std::shared_ptr<aditof::Camera> &camera,
                          int threshold);
 void disableNoiseReduction(const std::shared_ptr<aditof::Camera> &camera);
 void getNewFrame(const std::shared_ptr<aditof::Camera> &camera,
-                 aditof::Frame *frame);
-uint16_t *getFrameData(aditof::Frame *frame, const std::string &dataType);
-
+                 aditof::Frame **frame);
+uint16_t *getFrameData(aditof::Frame **frame, const std::string &dataType);
 aditof::IntrinsicParameters
 getIntrinsics(const std::shared_ptr<aditof::Camera> &camera);
 int getRangeMax(const std::shared_ptr<aditof::Camera> &camera);
 int getRangeMin(const std::shared_ptr<aditof::Camera> &camera);
 void irTo16bitGrayscale(uint16_t *frameData, int width, int height);
+enum ModeTypes intToMode(int var);
 
 #endif // ADITOF_UTILS_H

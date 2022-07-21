@@ -31,6 +31,7 @@
  */
 #include "aditof_roscpp/Aditof_roscppConfig.h"
 #include "message_factory.h"
+#include "publisher_factory.h"
 #include <aditof_utils.h>
 #include <dynamic_reconfigure/server.h>
 #include <ros/ros.h>
@@ -39,95 +40,86 @@
 
 using namespace aditof;
 
-int main(int argc, char **argv) {
+std::mutex m_mtxDynamicRec;
+std::mutex m_mtxDynamicRec2;
 
-    std::shared_ptr<Camera> camera = initCamera(argc, argv);
-    ROS_ASSERT_MSG(camera, "initCamera call failed");
+void callback(aditof_roscpp::Aditof_roscppConfig &config,
+              PublisherFactory *publisher, ros::NodeHandle *nHandle,
+              const std::shared_ptr<aditof::Camera> &camera,
+              aditof::Frame **frame) {
 
-    setFrameType(camera, "mp_pcm");
-    startCamera(camera);
+    //aquire two mutexes and blocking publisher message updates
+    while (m_mtxDynamicRec.try_lock())
+        ;
+    while (m_mtxDynamicRec2.try_lock())
+        ;
+    ModeTypes newMode = intToMode(config.camera_mode);
 
-    ros::init(argc, argv, "aditof_camera_node");
-    dynamic_reconfigure::Server<aditof_roscpp::Aditof_roscppConfig> server;
-    dynamic_reconfigure::Server<
-        aditof_roscpp::Aditof_roscppConfig>::CallbackType f;
+    if (publisher->m_currentMode != newMode ||
+        publisher->m_enableDepthCompute != config.depth_compute) {
 
-    //create publishers
-    ros::NodeHandle nHandle("aditof_roscpp");
-    /*ros::Publisher pcl_pubisher =
-        nHandle.advertise<sensor_msgs::PointCloud2>("aditof_pcloud", 5);
-    ROS_ASSERT_MSG(pcl_pubisher, "creating pcl_pubisher failed");*/
+        publisher->m_enableDepthCompute = (bool)(config.depth_compute);
 
-    ros::Publisher depth_img_pubisher =
-        nHandle.advertise<sensor_msgs::Image>("aditof_depth", 5);
-    ROS_ASSERT_MSG(depth_img_pubisher, "creating depth_img_pubisher failed");
-
-    ros::Publisher ir_img_pubisher =
-        nHandle.advertise<sensor_msgs::Image>("aditof_ir", 5);
-    ROS_ASSERT_MSG(ir_img_pubisher, "creating ir_img_pubisher failed");
-/*
-    ros::Publisher camera_info_pubisher =
-        nHandle.advertise<sensor_msgs::CameraInfo>("aditof_camera_info", 5);
-    ROS_ASSERT_MSG(camera_info_pubisher,
-                   "creating camera_info_pubisher failed");
-*/
-    Frame frame;
-    getNewFrame(camera, &frame);
-
-    //create messages
-    ros::Time timeStamp = ros::Time::now();
-    
-    /*AditofSensorMsg *pcl_msg = MessageFactory::create(
-        camera, &frame, MessageType::sensor_msgs_PointCloud2, timeStamp);
-    ROS_ASSERT_MSG(pcl_msg, "pointcloud message creation failed");
-    PointCloud2Msg *pclMsg = dynamic_cast<PointCloud2Msg *>(pcl_msg);
-    ROS_ASSERT_MSG(pclMsg,
-                   "downcast from AditofSensorMsg to PointCloud2Msg failed");*/
-
-    AditofSensorMsg *depth_img_msg = MessageFactory::create(
-        camera, &frame, MessageType::sensor_msgs_DepthImage, timeStamp);
-    ROS_ASSERT_MSG(depth_img_msg, "depth_image message creation failed");
-    DepthImageMsg *depthImgMsg = dynamic_cast<DepthImageMsg *>(depth_img_msg);
-    ROS_ASSERT_MSG(depthImgMsg,
-                   "downcast from AditofSensorMsg to DepthImageMsg failed");
-
-    AditofSensorMsg *ir_img_msg = MessageFactory::create(
-        camera, &frame, MessageType::sensor_msgs_IRImage, timeStamp);
-    ROS_ASSERT_MSG(ir_img_msg, "ir_image message creation failed");
-    IRImageMsg *irImgMsg = dynamic_cast<IRImageMsg *>(ir_img_msg);
-    ROS_ASSERT_MSG(irImgMsg,
-                   "downcast from AditofSensorMsg to IRImageMsg failed");
-
-  /*  AditofSensorMsg *camera_info_msg = MessageFactory::create(
-        camera, &frame, MessageType::sensor_msgs_CameraInfo, timeStamp);
-    ROS_ASSERT_MSG(camera_info_msg, "camera_info_msg message creation failed");
-    CameraInfoMsg *cameraInfoMsg =
-        dynamic_cast<CameraInfoMsg *>(camera_info_msg);
-    ROS_ASSERT_MSG(cameraInfoMsg,
-                   "downcast from AditofSensorMsg to CameraInfoMsg failed");
-*/
-    while (ros::ok()) {
-        ros::Time tStamp = ros::Time::now();
-        getNewFrame(camera, &frame);
-
-        //pclMsg->FrameDataToMsg(camera, &frame, tStamp);
-        //pclMsg->publishMsg(pcl_pubisher);
-
-        depthImgMsg->FrameDataToMsg(camera, &frame, tStamp);
-        depthImgMsg->publishMsg(depth_img_pubisher);
-
-        irImgMsg->FrameDataToMsg(camera, &frame, tStamp);
-        irImgMsg->publishMsg(ir_img_pubisher);
-
-        //cameraInfoMsg->FrameDataToMsg(camera, &frame, tStamp);
-        //cameraInfoMsg->publishMsg(camera_info_pubisher);
-
-        ros::spinOnce();
+        publisher->createNew(newMode, *nHandle, camera, frame);
+        LOG(INFO) << "New mode selected";
     }
 
-    //delete pcl_msg;
-    delete depth_img_msg;
-    delete ir_img_msg;
-    //delete camera_info_msg;
+    //set depth data format
+    publisher->setDepthFormat(config.depth_data_format);
+
+    //release mutexes and let ros spin work
+    m_mtxDynamicRec.unlock();
+    m_mtxDynamicRec2.unlock();
+    //camera->start();
+}
+
+int main(int argc, char **argv) {
+
+    PublisherFactory publishers;
+    auto tmp = new Frame;
+    std::string *arguments = parseArgs(argc, argv);
+    /*
+    pos 0 - ip
+    pos 1 - config_path
+    pos 2 - use_depthCompute
+    pos 3 - mode
+    pos 4 - rqt 
+    */
+
+    std::shared_ptr<Camera> camera = initCamera(arguments);
+    ROS_ASSERT_MSG(camera, "initCamera call failed");
+    ros::init(argc, argv, "aditof_camera_node");
+    //ROS_ASSERT_MSG(camera, "ros init failed");
+    //create handle
+    ros::NodeHandle nHandle("aditof_roscpp");
+    aditof::Frame **frame = &tmp;
+    publishers.m_enableDepthCompute =
+        (std::strcmp(arguments[2].c_str(), "true") ? false : true);
+    if (std::strcmp(arguments[4].c_str(), "true") != 0) {
+        publishers.createNew(intToMode(std::stoi(arguments[3])), nHandle,
+                             camera, frame);
+    }
+    dynamic_reconfigure::Server<aditof_roscpp::Aditof_roscppConfig> server;
+    if (std::strcmp(arguments[4].c_str(), "true") == 0) {
+        dynamic_reconfigure::Server<
+            aditof_roscpp::Aditof_roscppConfig>::CallbackType f;
+        f = boost::bind(&callback, _1, &publishers, &nHandle, camera, frame);
+        server.setCallback(f);
+    }
+
+    while (ros::ok()) {
+        while (m_mtxDynamicRec.try_lock())
+            ;
+        while (m_mtxDynamicRec2.try_lock())
+            ;
+
+        m_mtxDynamicRec.unlock();
+        getNewFrame(camera, frame);
+        publishers.updatePublishers(camera, frame);
+        ros::spinOnce();
+        m_mtxDynamicRec2.unlock();
+    }
+    publishers.deletePublishers(camera);
+
     return 0;
 }
