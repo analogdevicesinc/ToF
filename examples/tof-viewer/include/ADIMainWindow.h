@@ -502,7 +502,7 @@ namespace adiMainWindow
 		/**
 		* @brief Displays the Information Window
 		*/
-		void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags);
+		void displayInfoWindow(ImGuiWindowFlags overlayFlags);
 
 		/**
 		* @brief Displays AB Window
