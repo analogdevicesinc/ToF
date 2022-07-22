@@ -1,0 +1,41 @@
+From cf709fa23c30641825e0e5d8d9ea80d873f017d1 Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Thu, 10 Mar 2022 10:04:43 +0200
+Subject: [PATCH 32/36] drivers: media: spi: addicmos.c: Add dummy s_power to
+ keep capture driver happy
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ drivers/media/spi/addicmos.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/media/spi/addicmos.c b/drivers/media/spi/addicmos.c
+index f93c97e9ee07..b22928807ec7 100644
+--- a/drivers/media/spi/addicmos.c
++++ b/drivers/media/spi/addicmos.c
+@@ -357,6 +357,14 @@ static int addicmos_s_register(struct v4l2_subdev *sd,
+ }
+ #endif
+ 
++static int addicmos_s_power(struct v4l2_subdev *sd, int on)
++{
++	struct addicmos *addicmos = to_addicmos(sd);
++
++	dev_dbg(addicmos->dev, "%s: %d\n", __func__, on);
++	return 0;
++}
++
+ static int addicmos_chip_config(struct addicmos *addicmos,
+ 				    struct v4l2_ctrl *ctrl)
+ {
+@@ -746,6 +754,7 @@ static const struct v4l2_subdev_core_ops addicmos_core_ops = {
+ 	.g_register	= addicmos_g_register,
+ 	.s_register	= addicmos_s_register,
+ #endif
++	.s_power = addicmos_s_power,
+ };
+ 
+ static const struct dev_pm_ops addicmos_pm_ops = {
+-- 
+2.17.1
+

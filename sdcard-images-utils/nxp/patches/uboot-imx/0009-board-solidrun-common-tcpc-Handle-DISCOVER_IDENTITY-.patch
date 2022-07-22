@@ -1,0 +1,267 @@
+From 173f8935517d83c940f9f750f9fe42389b418e7b Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Thu, 3 Mar 2022 16:47:31 +0200
+Subject: [PATCH 09/11] board: solidrun: common: tcpc: Handle DISCOVER_IDENTITY
+ VDM
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ board/solidrun/common/tcpc.c | 63 ++++++++++++++++++++++----------
+ board/solidrun/common/tcpc.h | 69 +++++++++++++++++++++++++++++-------
+ 2 files changed, 101 insertions(+), 31 deletions(-)
+
+diff --git a/board/solidrun/common/tcpc.c b/board/solidrun/common/tcpc.c
+index 5356eccdc1..b824d83877 100644
+--- a/board/solidrun/common/tcpc.c
++++ b/board/solidrun/common/tcpc.c
+@@ -486,7 +486,7 @@ static int tcpc_pd_receive_message(struct tcpc_port *port, struct pd_message *ms
+ 	/* Generally the max tSenderResponse is 30ms, max tTypeCSendSourceCap is 200ms, we set the timeout to 500ms */
+ 	ret = tcpc_polling_reg(port, TCPC_ALERT, 2, TCPC_ALERT_RX_STATUS, TCPC_ALERT_RX_STATUS, 500);
+ 	if (ret) {
+-		tcpc_log(port, "%s: Polling ALERT register, TCPC_ALERT_RX_STATUS bit failed, ret = %d\n",
++		tcpc_debug_log(port, "%s: Polling ALERT register, TCPC_ALERT_RX_STATUS bit failed, ret = %d\n",
+ 			__func__, ret);
+ 		return ret;
+ 	}
+@@ -704,6 +704,9 @@ static int tcpc_pd_build_request(struct tcpc_port *port,
+ 		max_ma = max_mw * 1000 / mv;
+ 	}
+ 
++	/* Set response flags */
++	flags |= RDO_USB_COMM | RDO_NO_SUSPEND;
++
+ 	if (type == PDO_TYPE_BATT) {
+ 		*rdo = RDO_BATT(index + 1, mw, max_mw, flags);
+ 
+@@ -724,12 +727,13 @@ static int tcpc_pd_build_request(struct tcpc_port *port,
+ static void tcpc_handle_vdm(struct tcpc_port *port, struct pd_message *msg, unsigned int objcount)
+ {
+ 	enum vdm_command_type vdm_cmd;
+-	u32 vdm_header, vdo;
+-	int i;
++	struct pd_message tx_msg;
++	u32 vdm_header;
++	int ret;
+ 	
+ 	vdm_header = msg->payload[0];
+ 	
+-	if (vdm_type(vdm_header) != 1) {
++	if (vdm_type(vdm_header) != VDM_TYPE_STRUCTURED) {
+ 		/* Unstructured */
+ 		tcpc_log(port, "VDM type: unstructured\n");
+ 		return;
+@@ -737,10 +741,20 @@ static void tcpc_handle_vdm(struct tcpc_port *port, struct pd_message *msg, unsi
+ 	
+ 	/* Structured */
+ 	vdm_cmd = vdm_command(vdm_header);
+-	tcpc_log(port, "VDM type: structured, cmd: %u\n", vdm_cmd);
++	tcpc_debug_log(port, "VDM type: structured, cmd: %u\n", vdm_cmd);
+ 	
+ 	switch(vdm_cmd) {
+ 		case VDM_DISCOVER_IDENTITY:
++			memset(&tx_msg, 0, sizeof(tx_msg));
++			tx_msg.header = PD_HEADER(PD_DATA_VENDOR_DEF, TYPEC_SINK, TYPEC_DEVICE, port->tx_msg_id, 4);
++			tx_msg.payload[0] = VDM_HEADER_STRUCTURED(VDM_PD_SID, VDM_ACK, VDM_DISCOVER_IDENTITY);
++			tx_msg.payload[1] = VDM_ID_HEADER(0, 1, PD_USB_PERIPH, NOT_DFP, 0x064b);
++			tx_msg.payload[2] = 0x0;
++			tx_msg.payload[3] = 0xa4a2 << 16;
++
++			ret = tcpc_pd_transmit_message(port, &tx_msg, 18);
++			if (ret)
++				tcpc_log(port, "send request failed\n");
+ 			return;
+ 		case VDM_DISCOVER_SVIDs:
+ 		case VDM_DISCOVER_MODES:
+@@ -753,18 +767,13 @@ static void tcpc_handle_vdm(struct tcpc_port *port, struct pd_message *msg, unsi
+ 			tcpc_log(port, "Unexpect VDM command: %u\n", vdm_cmd);
+ 			break;
+ 	}
+-	
+-	for (i = 1; i < objcount; i++) {
+-		vdo = msg->payload[i];
+-		tcpc_debug_log(port, "VDO %d: payload %u\n", i, vdo);
+-	}
+ }
+ 
+ static void tcpc_pd_sink_process(struct tcpc_port *port)
+ {
+ 	int ret;
+ 	uint8_t msgtype;
+-	uint32_t objcnt;
++	uint32_t objcnt, rdo = 0;
+ 	struct pd_message msg;
+ 	enum pd_sink_state pd_state = WAIT_SOURCE_CAP;
+ 
+@@ -777,17 +786,35 @@ static void tcpc_pd_sink_process(struct tcpc_port *port)
+ 
+ 		switch (pd_state) {
+ 		case WAIT_SOURCE_CAP:
++			if (msgtype != PD_DATA_SOURCE_CAP)
++				continue;
++
++			tcpc_log_source_caps(port, &msg, objcnt);
++
++			tcpc_pd_build_request(port, &msg, objcnt,
++				port->cfg.max_snk_mv, port->cfg.max_snk_ma,
++				port->cfg.max_snk_mw, port->cfg.op_snk_mv,
++				&rdo);
++
++			memset(&msg, 0, sizeof(msg));
++			msg.header = PD_HEADER(PD_DATA_REQUEST, TYPEC_SINK, TYPEC_DEVICE, port->tx_msg_id, 1);
++			msg.payload[0] = rdo;
++
++			ret = tcpc_pd_transmit_message(port, &msg, 6);
++			if (ret)
++				tcpc_log(port, "send request failed\n");
++			else
++				pd_state = WAIT_SOURCE_ACCEPT;
++
++			break;
+ 		case SINK_READY:
+ 			if (msgtype == PD_DATA_VENDOR_DEF){
+ 				tcpc_handle_vdm(port, &msg, objcnt);
+-			}
+-				
+-			if (msgtype != PD_DATA_SOURCE_CAP)
+ 				continue;
++			}
+ 
+-			uint32_t rdo = 0;
+-
+-			tcpc_log_source_caps(port, &msg, objcnt);
++			if (msgtype != PD_CTRL_GET_SINK_CAP)
++				continue;
+ 
+ 			tcpc_pd_build_request(port, &msg, objcnt,
+ 				port->cfg.max_snk_mv, port->cfg.max_snk_ma,
+@@ -795,7 +822,7 @@ static void tcpc_pd_sink_process(struct tcpc_port *port)
+ 				&rdo);
+ 
+ 			memset(&msg, 0, sizeof(msg));
+-			msg.header = PD_HEADER(PD_DATA_REQUEST, 0, 0, port->tx_msg_id, 1);  /* power sink, data device, id 0, len 1 */
++			msg.header = PD_HEADER(PD_DATA_SINK_CAP, TYPEC_SINK, TYPEC_DEVICE, port->tx_msg_id, 1);
+ 			msg.payload[0] = rdo;
+ 
+ 			ret = tcpc_pd_transmit_message(port, &msg, 6);
+diff --git a/board/solidrun/common/tcpc.h b/board/solidrun/common/tcpc.h
+index 7ff0746744..c4ff734a2b 100644
+--- a/board/solidrun/common/tcpc.h
++++ b/board/solidrun/common/tcpc.h
+@@ -182,6 +182,13 @@ enum pd_data_msg_type {
+ 	PD_DATA_VENDOR_DEF = 15,
+ };
+ 
++enum vdm_command_type_type {
++	VDM_REQ = 0,
++	VDM_ACK = 1,
++	VDM_NAK = 2,
++	VDM_BUSY = 3,
++};
++
+ enum vdm_command_type {
+ 	/* 0 Reserved */
+ 	VDM_DISCOVER_IDENTITY = 1,
+@@ -194,6 +201,20 @@ enum vdm_command_type {
+ 	/* 16-31 SVID Specific */
+ };
+ 
++enum vdo_ufp_type {
++	NOT_UFP = 0,
++	PD_USB_HUB = 1,
++	PD_USB_PERIPH = 2,
++	PSD = 3,
++};
++
++enum vdo_dfp_type {
++	NOT_DFP = 0,
++	PD_USB_HUB_DFP = 1,
++	PD_USB_HOST = 2,
++	POWER_BRICK = 3,
++};
++
+ enum tcpc_transmit_type {
+ 	TCPC_TX_SOP = 0,
+ 	TCPC_TX_SOP_PRIME = 1,
+@@ -214,7 +235,6 @@ enum pd_sink_state {
+ 	SINK_READY,
+ };
+ 
+-
+ #define PD_REV10        0x0
+ #define PD_REV20        0x1
+ 
+@@ -237,7 +257,6 @@ enum pd_sink_state {
+ 	 (((id) & PD_HEADER_ID_MASK) << PD_HEADER_ID_SHIFT) |           \
+ 	 (((cnt) & PD_HEADER_CNT_MASK) << PD_HEADER_CNT_SHIFT))
+ 
+-
+ static inline unsigned int pd_header_cnt(uint16_t header)
+ {
+ 	return (header >> PD_HEADER_CNT_SHIFT) & PD_HEADER_CNT_MASK;
+@@ -413,28 +432,52 @@ static inline unsigned int rdo_max_power(u32 rdo)
+ 	return ((rdo >> RDO_BATT_MAX_PWR_SHIFT) & RDO_PWR_MASK) * 250;
+ }
+ 
+-#define PD_VDM_HEADER_SVID_SHIFT           16
+-#define PD_VDM_HEADER_SVID_MASK            0xFFFF
+-#define PD_VDM_HEADER_TYPE_SHIFT           15
+-#define PD_VDM_HEADER_TYPE_MASK            0x1
+-#define PD_VDM_HEADER_COMMAND_TYPE_SHIFT   6
+-#define PD_VDM_HEADER_COMMAND_TYPE_MASK    0x3
+-#define PD_VDM_HEADER_COMMAND_SHIFT        0
+-#define PD_VDM_HEADER_COMMAND_MASK         0x1F
++#define VDM_PD_SID                      0xFF00
++#define VDM_TYPE_STRUCTURED             0x1
++
++#define VDM_HEADER_SVID_SHIFT           16
++#define VDM_HEADER_SVID_MASK            0xFFFF
++#define VDM_HEADER_TYPE_SHIFT           15
++#define VDM_HEADER_VER_SHIFT            13
++#define VDM_HEADER_CMD_TYP_SHIFT        6
++#define VDM_HEADER_CMD_TYP_MASK         0x3
++#define VDM_HEADER_CMD_MASK             0x1F
++
++#define VDM_HEADER_STRUCTURED(svid, cmdtyp, cmd)                    \
++	(((svid & VDM_HEADER_SVID_MASK) << VDM_HEADER_SVID_SHIFT) |     \
++	 (VDM_TYPE_STRUCTURED << VDM_HEADER_TYPE_SHIFT) |               \
++	 (PD_REV10 << VDM_HEADER_VER_SHIFT) |                           \
++	 ((cmdtyp & VDM_HEADER_CMD_TYP_MASK) << VDM_HEADER_CMD_TYP_SHIFT) |     \
++	 (cmd & VDM_HEADER_CMD_MASK))
++	
++#define VDM_ID_HEADER_HOST              BIT(31)
++#define VDM_ID_HEADER_DEV               BIT(30)
++#define VDM_ID_HEADER_UFP_SHIFT         27
++#define VDM_ID_HEADER_UFP_MASK          0x7
++#define VDM_ID_HEADER_DFP_SHIFT         23
++#define VDM_ID_HEADER_DFP_MASK          0x7
++#define VDM_ID_HEADER_VID_MASK          0xFFFF
++
++#define VDM_ID_HEADER(host, device, ufp, dfp, vid)                  \
++	(((host) ? VDM_ID_HEADER_HOST : 0 ) |                           \
++	 ((device) ? VDM_ID_HEADER_DEV : 0 ) |                          \
++	 ((ufp & VDM_ID_HEADER_UFP_MASK) << VDM_ID_HEADER_UFP_SHIFT) |  \
++	 ((dfp & VDM_ID_HEADER_DFP_MASK) << VDM_ID_HEADER_DFP_SHIFT) |  \
++	 (vid & VDM_ID_HEADER_VID_MASK))
+ 
+ static inline unsigned int vdm_type(u32 vdm)
+ {
+-	return (vdm >> PD_VDM_HEADER_TYPE_SHIFT) & PD_VDM_HEADER_TYPE_MASK;
++	return (vdm >> VDM_HEADER_TYPE_SHIFT) & VDM_HEADER_TYPE_SHIFT;
+ }
+ 
+ static inline unsigned int vdm_command_type(u32 vdm)
+ {
+-	return (vdm >> PD_VDM_HEADER_COMMAND_TYPE_SHIFT) & PD_VDM_HEADER_COMMAND_TYPE_MASK;
++	return (vdm >> VDM_HEADER_CMD_TYP_SHIFT) & VDM_HEADER_CMD_TYP_MASK;
+ }
+ 
+ static inline unsigned int vdm_command(u32 vdm)
+ {
+-	return (vdm >> PD_VDM_HEADER_COMMAND_SHIFT) & PD_VDM_HEADER_COMMAND_MASK;
++	return (vdm & VDM_HEADER_CMD_MASK);
+ }
+ 
+ #define TCPC_LOG_BUFFER_SIZE 1024
+-- 
+2.17.1
+
