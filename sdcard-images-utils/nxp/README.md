@@ -16,6 +16,19 @@ User can specify local mirror location to speed up the fetch of packages and git
 * NXP_GIT_LOCATION is used to specify the root location of git repositories for NXP firmware, kernel, bootloader and tools.
 * TOF_GIT_LOCATION is used to specify the location of git repository of TOF SDK.
 
+## Dependencies
+
+Dependencies that must be installed: 
+
+* Bison
+* Flex
+* gcc aarch64
+* libssl-dev
+* qemu, qemu-user-static
+* debootstrap
+* zlib dev
+* device tree compiler
+
 ## Build with host tools
 Simply running ./runme.sh, it will check for required tools, clone and build images and place results in images/ directory.
 The selection of target is performed using "BUILD_TYPE" variable from runme.sh script. Valid options are: ubuntu | buildroot
