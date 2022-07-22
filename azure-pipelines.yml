@@ -35,7 +35,7 @@ jobs:
         imageName: 'ubuntu-20.04'
 
       #IMX
-      ubuntu_18_imx:
+      ubuntu_20_04_imx:
         imageName: 'ubuntu-20.04'
         DOCKER: "danielguramulta/aditof-sdk-debian" #TODO update this to a dedicated docker
 
