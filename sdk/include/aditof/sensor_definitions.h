@@ -108,12 +108,19 @@ struct DepthSensorFrameType {
 
 
 };
+
+/**
+ * @brief prints human readable frame content details
+ */
 inline std::ostream& operator << (std::ostream& o, const DepthSensorFrameContent& a)
 {
     o << "T: " << a.type << "\tW: " << a.width << "\tH: "<< a.height << "\n";
     return o;
 }
 
+/**
+ * @brief prints human readable frame details
+ */
 inline std::ostream& operator << (std::ostream& o, const DepthSensorFrameType& a)
 {
     o << "DepthSensorFrame: T: " << a.type << "\tW: " << a.width << "\tH: "<< a.height << " contains:\n";
