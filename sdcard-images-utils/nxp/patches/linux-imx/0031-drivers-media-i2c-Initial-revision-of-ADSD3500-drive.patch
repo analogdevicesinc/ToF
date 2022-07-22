@@ -1,0 +1,2338 @@
+From 853b433fe26a136531e39b3039ec6c452f310c2d Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Wed, 3 Nov 2021 16:26:00 +0200
+Subject: [PATCH 31/36] drivers: media: i2c: Initial revision of ADSD3500
+ driver
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+
+arch: arm64: dts: Initial revision of ADSD3500 devicetree
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ arch/arm64/boot/dts/freescale/Makefile        |    2 +-
+ .../dts/freescale/imx8mp-adi-tof-adsd3500.dts | 1212 +++++++++++++++++
+ drivers/media/i2c/Kconfig                     |   13 +
+ drivers/media/i2c/Makefile                    |    1 +
+ drivers/media/i2c/adsd3500.c                  |  974 +++++++++++++
+ drivers/media/i2c/adsd3500_regs.h             |   59 +
+ 6 files changed, 2260 insertions(+), 1 deletion(-)
+ create mode 100644 arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500.dts
+ create mode 100644 drivers/media/i2c/adsd3500.c
+ create mode 100644 drivers/media/i2c/adsd3500_regs.h
+
+diff --git a/arch/arm64/boot/dts/freescale/Makefile b/arch/arm64/boot/dts/freescale/Makefile
+index 45eb94278be2..250cd1e0cd9d 100644
+--- a/arch/arm64/boot/dts/freescale/Makefile
++++ b/arch/arm64/boot/dts/freescale/Makefile
+@@ -103,7 +103,7 @@ dtb-$(CONFIG_ARCH_MXC) += imx8mp-evk.dtb imx8mp-evk-rm67191.dtb imx8mp-evk-it626
+ 			  imx8mp-evk-sof-wm8960.dtb imx8mp-evk-dsp.dtb\
+ 			  imx8mp-evk-iqaudio-dacplus.dtb imx8mp-evk-iqaudio-dacpro.dtb imx8mp-evk-hifiberry-dacplus.dtb \
+ 			  imx8mp-evk-usdhc1-m2.dtb imx8mp-evk-rm67199.dtb \
+-			  imx8mp-adi-tof-noreg.dtb
++			  imx8mp-adi-tof-noreg.dtb imx8mp-adi-tof-adsd3500.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mq-evk.dtb imx8mq-evk-rpmsg.dtb imx8mp-ab2.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mp-ddr4-evk.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mp-evk-ndm.dtb
+diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500.dts b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500.dts
+new file mode 100644
+index 000000000000..e8c04e913ec9
+--- /dev/null
++++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500.dts
+@@ -0,0 +1,1212 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Copyright 2022 Analog Devices Inc.
++ */
++
++/dts-v1/;
++
++#include <dt-bindings/usb/pd.h>
++#include <dt-bindings/iio/adi,ad5592r.h>
++#include "imx8mp.dtsi"
++
++/ {
++	model = "NXP i.MX8MPlus ADI TOF carrier + ADSD3500";
++	compatible = "fsl,imx8mp-solidrun", "fsl,imx8mp";
++
++	reserved-memory {
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++
++		rpmsg_reserved: rpmsg@0x55800000 {
++			no-map;
++			reg = <0 0x55800000 0 0x800000>;
++		};
++	};
++
++	chosen {
++		stdout-path = &uart2;
++	};
++
++	leds {
++		compatible = "gpio-leds";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_gpio_led>;
++
++		green {
++			label = "LED1";
++			gpios = <&gpio5 5 GPIO_ACTIVE_HIGH>;
++			linux,default-trigger = "heartbeat";
++		};
++	};
++
++	modem_reset: modem-reset {
++		compatible = "gpio-reset";
++		reset-gpios = <&gpio2 6 GPIO_ACTIVE_LOW>;
++		reset-delay-us = <2000>;
++		reset-post-delay-ms = <40>;
++		#reset-cells = <0>;
++	};
++
++	reg_v5v0: regulator-v5v0 {
++		compatible = "regulator-fixed";
++		regulator-name = "V5V0";
++		pinctrl-names = "default";
++		pingtrl-0 = <&pinctrl_v5v0_en>;
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		gpio = <&gpio4 30 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++		status = "okay";
++		regulator-always-on;
++	};
++
++	reg_vmain: regulator-vmain {
++		compatible = "regulator-fixed";
++		regulator-name = "VMAIN";
++		pinctrl-names = "default";
++		pingtrl-0 = <&pinctrl_vmain_en>;
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		gpio = <&gpio5 0 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++		status = "okay";
++	};
++
++	reg_vsys: regulator-vsys {
++		compatible = "regulator-fixed";
++		regulator-name = "VSYS";
++		pinctrl-names = "default";
++		pingtrl-0 = <&pinctrl_vsys_en>;
++		vin-supply = <&reg_vmain>;
++		regulator-min-microvolt = <4300000>;
++		regulator-max-microvolt = <4300000>;
++		gpio = <&gpio5 1 GPIO_ACTIVE_HIGH>;
++		startup-delay-us = <70000>;
++		enable-active-high;
++		status = "okay";
++		regulator-always-on;
++	};
++
++	reg_vaux: regulator-vaux {
++		compatible = "regulator-fixed";
++		regulator-name = "VAUX";
++		pinctrl-names = "default";
++		pingtrl-0 = <&pinctrl_vaux_en>;
++		vin-supply = <&reg_vmain>;
++		regulator-min-microvolt = <18000000>;
++		regulator-max-microvolt = <18000000>;
++		gpio = <&gpio4 31 GPIO_ACTIVE_HIGH>;
++		startup-delay-us = <100000>;
++		enable-active-high;
++		status = "okay";
++		regulator-always-on;
++	};
++
++	reg_vdd_0p8: regulator-vdd-0p8 {
++		compatible = "regulator-fixed";
++		regulator-name = "VDD_0P8";
++		vin-supply = <&reg_v5v0>;
++		regulator-min-microvolt = <800000>;
++		regulator-max-microvolt = <800000>;
++		gpio = <&gpio_exp_1 7 GPIO_ACTIVE_HIGH>;
++		startup-delay-us = <100000>;
++		enable-active-high;
++		status = "okay";
++		regulator-always-on;
++	};
++
++	reg_vdd_1p8: regulator-vdd-1p8 {
++		compatible = "regulator-fixed";
++		regulator-name = "VDD_1P8";
++		pinctrl-names = "default";
++		pingtrl-0 = <&pinctrl_vaux_en>;
++		vin-supply = <&reg_v5v0>;
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		gpio = <&gpio_exp_1 6 GPIO_ACTIVE_HIGH>;
++		startup-delay-us = <100000>;
++		enable-active-high;
++		status = "okay";
++		regulator-always-on;
++	};
++
++	reg_vcc_3p3: regulator-vcc-3p3 {
++		compatible = "regulator-fixed";
++		regulator-name = "VCC_3P3";
++		pinctrl-names = "default";
++		pingtrl-0 = <&pinctrl_vcc_3p3_en>;
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		gpio = <&gpio5 2 GPIO_ACTIVE_HIGH>;
++		startup-delay-us = <7000>;
++		enable-active-high;
++		regulator-always-on;
++		status = "okay";
++	};
++
++	reg_can1_stby: regulator-can1-stby {
++		compatible = "regulator-fixed";
++		regulator-name = "can1-stby";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_flexcan1_reg>;
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		gpio = <&gpio5 5 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++		status = "disabled";
++	};
++
++	reg_can2_stby: regulator-can2-stby {
++		compatible = "regulator-fixed";
++		regulator-name = "can2-stby";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_flexcan2_reg>;
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		gpio = <&gpio4 27 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++		status = "disabled";
++	};
++
++	reg_usb1_host_vbus: regulator-usb1-vbus {
++		compatible = "regulator-fixed";
++		regulator-name = "usb1_host_vbus";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_usb1_vbus>;
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		gpio = <&gpio1 14 GPIO_ACTIVE_HIGH>;
++		enable-active-high;
++		regulator-always-on;
++	};
++
++	reg_sd1_vmmc: sd1_regulator {
++		compatible = "regulator-fixed";
++		regulator-name = "WLAN_EN";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		gpio = <&gpio2 11 GPIO_ACTIVE_HIGH>;
++		off-on-delay = <20000>;
++		startup-delay-us = <100>;
++		enable-active-high;
++	};
++
++	reg_usdhc2_vmmc: regulator-usdhc2 {
++		compatible = "regulator-fixed";
++		regulator-name = "VSD_3V3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		gpio = <&gpio2 19 GPIO_ACTIVE_HIGH>;
++		startup-delay-us = <100>;
++		off-on-delay-us = <12000>;
++	};
++
++	cbtl04gp {
++		compatible = "nxp,cbtl04gp";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_typec_mux>;
++		switch-gpios = <&gpio1 13 GPIO_ACTIVE_LOW>;
++		orientation-switch;
++
++		port {
++			usb3_data_ss: endpoint {
++				remote-endpoint = <&typec_con_ss>;
++			};
++		};
++	};
++
++	mpcie {
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_mpcie>;
++		gpio-0 = <&gpio1 1 GPIO_ACTIVE_HIGH>;
++		gpio-1 = <&gpio1 5 GPIO_ACTIVE_HIGH>;
++		status = "okay";
++		enable-active-high;
++	};
++
++	pwm: pwm-gpio {
++		compatible = "pwm-gpio";
++		#pwm-cells = <2>;
++		pwm-gpios = <&gpio5 28 GPIO_ACTIVE_HIGH>;
++	};
++};
++
++&clk {
++	init-on-array = <IMX8MP_CLK_HSIO_ROOT>;
++};
++
++&pwm4 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_pwm4>;
++	status = "okay";
++};
++
++&snvs_rtc{
++	status = "disabled";
++};
++
++/*eth0*/
++&eqos {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_eqos>;
++	phy-mode = "rgmii-id";
++	phy-handle = <&ethphy0>;
++	status = "okay";
++
++	mdio {
++		compatible = "snps,dwmac-mdio";
++		#address-cells = <1>;
++		#size-cells = <0>;
++
++		ethphy0: ethernet-phy@0 {
++			compatible = "ethernet-phy-ieee802.3-c22";
++			reg = <0>;
++			eee-broken-1000t;
++		};
++	};
++};
++
++&i2c1 {
++	clock-frequency = <100000>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_i2c1>;
++	status = "okay";
++
++	eeprom: eeprom@50{
++		compatible = "st,24c02", "atmel,24c02";
++		reg = <0x50>;
++		pagesize = <16>;
++	};
++
++	pmic: pca9450@25 {
++		reg = <0x25>;
++		compatible = "nxp,pca9450c";
++		/* PMIC PCA9450 PMIC_nINT GPIO1_IO3 */
++		pinctrl-0 = <&pinctrl_pmic>;
++		interrupt-parent = <&gpio1>;
++		interrupts = <3 GPIO_ACTIVE_LOW>;
++
++		regulators {
++			buck1: BUCK1 {
++				regulator-name = "BUCK1";
++				regulator-min-microvolt = <600000>;
++				regulator-max-microvolt = <2187500>;
++				regulator-boot-on;
++				regulator-always-on;
++				regulator-ramp-delay = <3125>;
++			};
++
++			buck2: BUCK2 {
++				regulator-name = "BUCK2";
++				regulator-min-microvolt = <600000>;
++				regulator-max-microvolt = <2187500>;
++				regulator-boot-on;
++				regulator-always-on;
++				regulator-ramp-delay = <3125>;
++				nxp,dvs-run-voltage = <950000>;
++				nxp,dvs-standby-voltage = <850000>;
++			};
++
++			buck4: BUCK4 {
++				regulator-name = "BUCK4";
++				regulator-min-microvolt = <600000>;
++				regulator-max-microvolt = <3400000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			buck5: BUCK5 {
++				regulator-name = "BUCK5";
++				regulator-min-microvolt = <600000>;
++				regulator-max-microvolt = <3400000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			buck6: BUCK6 {
++				regulator-name = "BUCK6";
++				regulator-min-microvolt = <600000>;
++				regulator-max-microvolt = <3400000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			ldo1: LDO1 {
++				regulator-name = "LDO1";
++				regulator-min-microvolt = <1600000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			ldo2: LDO2 {
++				regulator-name = "LDO2";
++				regulator-min-microvolt = <800000>;
++				regulator-max-microvolt = <1150000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			ldo3: LDO3 {
++				regulator-name = "LDO3";
++				regulator-min-microvolt = <800000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			ldo4: LDO4 {
++				regulator-name = "LDO4";
++				regulator-min-microvolt = <800000>;
++				regulator-max-microvolt = <3300000>;
++				regulator-boot-on;
++				regulator-always-on;
++			};
++
++			ldo5: LDO5 {
++				regulator-name = "LDO5";
++				regulator-min-microvolt = <1800000>;
++				regulator-max-microvolt = <3300000>;
++			};
++		};
++	};
++};
++
++&i2c2 {
++	clock-frequency = <100000>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_i2c2>;
++	status = "okay";
++
++	adsd3500@38 {
++		compatible = "adi,adsd3500";
++		reg = <0x38>;
++		reset-gpios = <&gpio3 0 GPIO_ACTIVE_LOW>;
++		port {
++			adsd3500_ep: endpoint {
++				remote-endpoint = <&mipi_csi0_ep>;
++				data-lanes = <1 2>;
++				clock-lanes = <0>;
++				link-frequencies = /bits/ 64 <732000000>;
++			};
++		};
++	};
++
++	gpio_exp_1: gpio@58 {
++            compatible = "maxim,max7320";
++            reg = <0x58>;
++            vcc-supply = <&reg_v5v0>;
++            gpio-controller;
++            #gpio-cells = <2>;
++            gpio-line-names = "M0", "M1", "SI0", "U0",
++                              "IDSEL", "DS2", "EN_1P8", "EN_0P8";
++    };
++
++	gpio_exp_2: gpio@68 {
++            compatible = "maxim,max7321";
++            reg = <0x68>;
++            vcc-supply = <&reg_v5v0>;
++            gpio-controller;
++            #gpio-cells = <2>;
++            gpio-line-names = "OC0", "OC1", "OC2", "OC3",
++                               "OC4", "OC5", "OC6", "FLASH_WP";
++    };
++};
++
++&mipi_csi_0 {
++	#address-cells = <1>;
++	#size-cells = <0>;
++	status = "okay";
++
++	port@0 {
++		reg = <0>;
++		mipi_csi0_ep: endpoint {
++			remote-endpoint = <&adsd3500_ep>;
++			data-lanes = <2>;
++			csis-hs-settle = <32>;
++			csis-clk-settle = <0>;
++			csis-wclk;
++		};
++	};
++};
++
++&ecspi2 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_ecspi2>;
++	cs-gpios = <&gpio5 13 GPIO_ACTIVE_LOW>, <&gpio3 9 GPIO_ACTIVE_LOW>;
++	status = "disabled";
++};
++
++&isp_0 {
++	status = "disabled";
++};
++
++&isp_1 {
++	status = "disabled";
++};
++
++&dewarp {
++	status = "disabled";
++};
++
++&i2c3 {
++	clock-frequency = <100000>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_i2c3>;
++	status = "okay";
++
++	ad5593r@10 {
++		compatible = "adi,ad5593r";
++		#size-cells = <0>;
++		#address-cells = <1>;
++		reg = <0x10>;
++		reset-gpios = <&gpio5 4 GPIO_ACTIVE_LOW>;
++		status = "disabled";
++
++		channel@0 {
++			reg = <0>;
++			adi,mode = <CH_MODE_DAC>;
++			adi,off-state = <CH_OFFSTATE_OUT_TRISTATE>;
++		};
++		channel@1 {
++			reg = <1>;
++			adi,mode = <CH_MODE_DAC>;
++			adi,off-state = <CH_OFFSTATE_OUT_TRISTATE>;
++		};
++		channel@2 {
++			reg = <2>;
++			adi,mode = <CH_MODE_DAC>;
++			adi,off-state = <CH_OFFSTATE_OUT_TRISTATE>;
++		};
++		channel@3 {
++			reg = <3>;
++			adi,mode = <CH_MODE_ADC>;
++			adi,off-state = <CH_OFFSTATE_OUT_TRISTATE>;
++		};
++		channel@4 {
++			reg = <4>;
++			adi,mode = <CH_MODE_ADC>;
++			adi,off-state = <CH_OFFSTATE_OUT_TRISTATE>;
++		};
++		channel@5 {
++			reg = <5>;
++			adi,mode = <CH_MODE_ADC>;
++			adi,off-state = <CH_OFFSTATE_OUT_TRISTATE>;
++		};
++		channel@6 {
++			reg = <6>;
++			adi,mode = <CH_MODE_ADC>;
++			adi,off-state = <CH_OFFSTATE_OUT_TRISTATE>;
++		};
++		channel@7 {
++			reg = <7>;
++			adi,mode = <CH_MODE_ADC>;
++			adi,off-state = <CH_OFFSTATE_OUT_TRISTATE>;
++		};
++	};
++
++	ptn5110: tcpc@50 {
++		compatible = "nxp,ptn5110";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_typec>;
++		reg = <0x50>;
++		interrupt-parent = <&gpio1>;
++		interrupts = <10 8>;
++
++		port {
++			typec_dr_sw: endpoint {
++				remote-endpoint = <&usb3_drd_sw>;
++			};
++		};
++
++		usb_con: connector {
++			compatible = "usb-c-connector";
++			label = "USB-C";
++			power-role = "sink";
++			data-role = "device";
++			sink-pdos = <PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)
++						 PDO_VAR(5000, 20000, 3000)>;
++			op-sink-microwatt = <15000000>;
++
++			ports {
++				#address-cells = <1>;
++				#size-cells = <0>;
++
++				port@1 {
++					reg = <1>;
++					typec_con_ss: endpoint {
++						remote-endpoint = <&usb3_data_ss>;
++					};
++				};
++			};
++		};
++	};
++};
++
++&i2c4 {
++	clock-frequency = <100000>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_i2c4>;
++	status = "okay";
++};
++
++&irqsteer_hdmi {
++	status = "okay";
++};
++
++&hdmi_pavi {
++	status = "okay";
++};
++
++&hdmi {
++	status = "okay";
++};
++
++&hdmiphy {
++	status = "okay";
++};
++
++/*micro HDMI*/
++&lcdif1 {
++        status = "disabled";
++};
++
++&lcdif2 {
++	status = "disabled";
++};
++
++/*HDMI*/
++&lcdif3 {
++	status = "okay";
++};
++
++&ldb {
++	status = "disabled";
++};
++
++&ldb_phy {
++	status = "disabled";
++};
++
++&mipi_dsi {
++	status = "disabled";
++};
++
++&easrc {
++	fsl,asrc-rate  = <48000>;
++	status = "okay";
++};
++
++&micfil {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_pdm>;
++	assigned-clocks = <&clk IMX8MP_CLK_PDM>;
++	assigned-clock-parents = <&clk IMX8MP_AUDIO_PLL1_OUT>;
++	assigned-clock-rates = <196608000>;
++	status = "disabled";
++};
++
++&pcie{
++        pinctrl-names = "default";
++        pinctrl-0 = <&pinctrl_pcie>;
++        disable-gpio = <&gpio1 5 GPIO_ACTIVE_LOW>;
++        reset-gpio = <&gpio4 28 GPIO_ACTIVE_LOW>;/*need to verify which igpio is final*/
++        ext_osc = <0>;
++        clocks = <&clk IMX8MP_CLK_HSIO_AXI_DIV>,
++                 <&clk IMX8MP_CLK_PCIE_AUX>,
++                 <&clk IMX8MP_CLK_PCIE_PHY>,
++                 <&clk IMX8MP_CLK_PCIE_ROOT>;
++        clock-names = "pcie", "pcie_aux", "pcie_phy", "pcie_bus";
++        assigned-clocks = <&clk IMX8MP_CLK_HSIO_AXI_SRC>,
++                          <&clk IMX8MP_CLK_PCIE_AUX>;
++        assigned-clock-parents = <&clk IMX8MP_SYS_PLL2_500M>,
++                                 <&clk IMX8MP_SYS_PLL2_50M>;
++        reserved-region = <&rpmsg_reserved>;
++        status = "disabled";
++};
++
++&pcie_phy{
++	ext_osc = <0>;
++	status = "disabled";
++};
++
++&sdma2 {
++	status = "okay";
++};
++
++&uart1 { /* BT */
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_uart1>;
++	assigned-clocks = <&clk IMX8MP_CLK_UART1>;
++	assigned-clock-parents = <&clk IMX8MP_SYS_PLL1_80M>;
++	fsl,uart-has-rtscts;
++	resets = <&modem_reset>;
++	status = "okay";
++};
++
++&uart2 {
++	/* console */
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_uart2>;
++	status = "okay";
++};
++
++&uart3 {
++	status = "disabled";
++};
++
++&usb3_phy0 {
++	vbus-power-supply = <&ptn5110>;
++	fsl,phy-tx-vref-tune = <6>;
++	fsl,phy-tx-rise-tune = <0>;
++	fsl,phy-tx-preemp-amp-tune = <3>;
++	fsl,phy-comp-dis-tune = <7>;
++	fsl,pcs-tx-deemph-3p5db = <0x21>;
++	fsl,phy-pcs-tx-swing-full = <0x7f>;
++	status = "okay";
++};
++
++&usb3_0 {
++	status = "okay";
++};
++
++&usb_dwc3_0 {
++	dr_mode = "otg";
++	hnp-disable;
++	srp-disable;
++	adp-disable;
++	usb-role-switch;
++	status = "okay";
++
++	port {
++		usb3_drd_sw: endpoint {
++			remote-endpoint = <&typec_dr_sw>;
++		};
++	};
++};
++
++&usb3_phy1 {
++	fsl,phy-tx-preemp-amp-tune = <2>;
++	status = "disabled";
++};
++
++&usb3_1 {
++	status = "disabled";
++};
++
++&usb_dwc3_1 {
++	dr_mode = "host";
++	status = "disabled";
++};
++
++/* wifi */
++&usdhc1 {
++	pinctrl-names = "default", "state_100mhz", "state_200mhz";
++	pinctrl-0 = <&pinctrl_usdhc1>, <&pinctrl_usdhc1_gpio>;
++	pinctrl-1 = <&pinctrl_usdhc1_100mhz>, <&pinctrl_usdhc1_gpio>;
++	pinctrl-2 = <&pinctrl_usdhc1_200mhz>, <&pinctrl_usdhc1_gpio>;
++	bus-width = <4>;
++	non-removable;
++	vmmc-supply = <&reg_sd1_vmmc>;
++	reset-gpio = <&gpio2 11 GPIO_ACTIVE_LOW>;
++	status = "okay";
++	#address-cells = <1>;
++	#size-cells = <0>;
++	brcmf: brcmf@1 {
++		reg = <1>;
++		compatible = "brcm,bcm4329-fmac";
++		interrupts = <1 IRQ_TYPE_LEVEL_HIGH>;
++		interrupt-names = "host-wake";
++	};
++};
++
++&usdhc2 {
++	pinctrl-names = "default", "state_100mhz", "state_200mhz";
++	pinctrl-0 = <&pinctrl_usdhc2>, <&pinctrl_usdhc2_gpio>;
++	pinctrl-1 = <&pinctrl_usdhc2_100mhz>, <&pinctrl_usdhc2_gpio>;
++	pinctrl-2 = <&pinctrl_usdhc2_200mhz>, <&pinctrl_usdhc2_gpio>;
++	cd-gpios = <&gpio2 12 GPIO_ACTIVE_LOW>;
++	vmmc-supply = <&reg_usdhc2_vmmc>;
++	bus-width = <4>;
++	status = "okay";
++};
++
++&usdhc3 {
++	pinctrl-names = "default", "state_100mhz", "state_200mhz";
++	pinctrl-0 = <&pinctrl_usdhc3>;
++	pinctrl-1 = <&pinctrl_usdhc3_100mhz>;
++	pinctrl-2 = <&pinctrl_usdhc3_200mhz>;
++	bus-width = <8>;
++	non-removable;
++	status = "okay";
++};
++
++&wdog1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_wdog>;
++	fsl,ext-reset-output;
++	status = "okay";
++};
++
++&iomuxc {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_hog>;
++
++	pinctrl_hog: hoggrp {
++		fsl,pins = <
++			MX8MP_IOMUXC_HDMI_DDC_SCL__HDMIMIX_HDMI_SCL	0x400001c3
++			MX8MP_IOMUXC_HDMI_DDC_SDA__HDMIMIX_HDMI_SDA	0x400001c3
++			MX8MP_IOMUXC_HDMI_HPD__HDMIMIX_HDMI_HPD		0x40000019
++			MX8MP_IOMUXC_HDMI_CEC__HDMIMIX_HDMI_CEC		0x40000019
++			MX8MP_IOMUXC_NAND_ALE__GPIO3_IO00		0x100
++			MX8MP_IOMUXC_SPDIF_RX__GPIO5_IO04		0x140
++		>;
++	};
++
++	pinctrl_pwm4: pwm4grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SAI5_RXFS__PWM4_OUT	0x116
++		>;
++	};
++
++	pinctrl_eqos: eqosgrp {
++		fsl,pins = <
++			MX8MP_IOMUXC_ENET_MDC__ENET_QOS_MDC	0x3
++			MX8MP_IOMUXC_ENET_MDIO__ENET_QOS_MDIO	0x3
++			MX8MP_IOMUXC_ENET_RD0__ENET_QOS_RGMII_RD0	0x91
++			MX8MP_IOMUXC_ENET_RD1__ENET_QOS_RGMII_RD1	0x91
++			MX8MP_IOMUXC_ENET_RD2__ENET_QOS_RGMII_RD2	0x91
++			MX8MP_IOMUXC_ENET_RD3__ENET_QOS_RGMII_RD3	0x91
++			MX8MP_IOMUXC_ENET_RXC__CCM_ENET_QOS_CLOCK_GENERATE_RX_CLK	0x91
++			MX8MP_IOMUXC_ENET_RX_CTL__ENET_QOS_RGMII_RX_CTL	0x91
++			MX8MP_IOMUXC_ENET_TD0__ENET_QOS_RGMII_TD0		0x1f
++			MX8MP_IOMUXC_ENET_TD1__ENET_QOS_RGMII_TD1		0x1f
++			MX8MP_IOMUXC_ENET_TD2__ENET_QOS_RGMII_TD2		0x1f
++			MX8MP_IOMUXC_ENET_TD3__ENET_QOS_RGMII_TD3		0x1f
++			MX8MP_IOMUXC_ENET_TX_CTL__ENET_QOS_RGMII_TX_CTL	0x1f
++			MX8MP_IOMUXC_ENET_TXC__CCM_ENET_QOS_CLOCK_GENERATE_TX_CLK	0x1f
++			MX8MP_IOMUXC_SAI2_RXC__GPIO4_IO22		0x19
++		>;
++	};
++
++	pinctrl_fec: fecgrp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SAI1_TXD7__GPIO4_IO19		0x19
++			MX8MP_IOMUXC_SAI1_RXD2__ENET1_MDC		0x3
++			MX8MP_IOMUXC_SAI1_RXD3__ENET1_MDIO		0x3
++			MX8MP_IOMUXC_SAI1_RXD4__ENET1_RGMII_RD0		0x91
++			MX8MP_IOMUXC_SAI1_RXD5__ENET1_RGMII_RD1		0x91
++			MX8MP_IOMUXC_SAI1_RXD6__ENET1_RGMII_RD2		0x91
++			MX8MP_IOMUXC_SAI1_RXD7__ENET1_RGMII_RD3		0x91
++			MX8MP_IOMUXC_SAI1_TXC__ENET1_RGMII_RXC		0x91
++			MX8MP_IOMUXC_SAI1_TXFS__ENET1_RGMII_RX_CTL	0x91
++			MX8MP_IOMUXC_SAI1_TXD0__ENET1_RGMII_TD0		0x1f
++			MX8MP_IOMUXC_SAI1_TXD1__ENET1_RGMII_TD1		0x1f
++			MX8MP_IOMUXC_SAI1_TXD2__ENET1_RGMII_TD2		0x1f
++			MX8MP_IOMUXC_SAI1_TXD3__ENET1_RGMII_TD3		0x1f
++			MX8MP_IOMUXC_SAI1_TXD4__ENET1_RGMII_TX_CTL	0x1f
++			MX8MP_IOMUXC_SAI1_TXD5__ENET1_RGMII_TXC		0x1f
++			MX8MP_IOMUXC_SAI1_RXD0__GPIO4_IO02		0x19
++		>;
++	};
++
++	pinctrl_flexcan1: flexcan1grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SPDIF_RX__CAN1_RX          0x154
++			MX8MP_IOMUXC_SPDIF_TX__CAN1_TX          0x154
++		>;
++	};
++
++	pinctrl_flexcan2: flexcan2grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SAI5_MCLK__CAN2_RX		0x154
++			MX8MP_IOMUXC_SAI5_RXD3__CAN2_TX		0x154
++		>;
++	};
++
++	pinctrl_flexcan1_reg: flexcan1reggrp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SPDIF_EXT_CLK__GPIO5_IO05	0x154	/* CAN1_STBY */
++		>;
++	};
++
++	pinctrl_flexcan2_reg: flexcan2reggrp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SAI2_MCLK__GPIO4_IO27	0x154	/* CAN2_STBY */
++		>;
++	};
++
++	pinctrl_gpio_led: gpioledgrp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SPDIF_EXT_CLK__GPIO5_IO05		0x100
++		>;
++	};
++
++	pinctrl_i2c1: i2c1grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_I2C1_SCL__I2C1_SCL		0x400001c3
++			MX8MP_IOMUXC_I2C1_SDA__I2C1_SDA		0x400001c3
++		>;
++	};
++
++	pinctrl_i2c2: i2c2grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_I2C2_SCL__I2C2_SCL			0x400001c3
++			MX8MP_IOMUXC_I2C2_SDA__I2C2_SDA			0x400001c3
++		>;
++	};
++
++	pinctrl_i2c3: i2c3grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_I2C3_SCL__I2C3_SCL			0x400001c3
++			MX8MP_IOMUXC_I2C3_SDA__I2C3_SDA			0x400001c3
++		>;
++	};
++
++	pinctrl_i2c4: i2c4grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_I2C4_SCL__I2C4_SCL			0x400001c3
++			MX8MP_IOMUXC_I2C4_SDA__I2C4_SDA			0x400001c3
++		>;
++	};
++
++	pinctrl_pcie: pciegrp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SD1_DATA4__GPIO2_IO06		0x41
++			MX8MP_IOMUXC_SD1_DATA5__GPIO2_IO07		0x41
++			MX8MP_IOMUXC_SAI3_RXFS__GPIO4_IO28		0x41/*pcie reset*/
++		>;
++	};
++
++	pinctrl_mpcie: mpciegrp {
++		fsl,pins = <
++                        MX8MP_IOMUXC_GPIO1_IO01__GPIO1_IO01     0x19
++			MX8MP_IOMUXC_GPIO1_IO05__GPIO1_IO05     0x19
++                >;
++	};
++
++	pinctrl_pmic: pmicirq {
++		fsl,pins = <
++			MX8MP_IOMUXC_GPIO1_IO03__GPIO1_IO03	0x41
++		>;
++	};
++
++	pinctrl_typec: typec1grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_GPIO1_IO10__GPIO1_IO10	0x1c4
++		>;
++	};
++
++	pinctrl_typec_mux: typec1muxgrp {
++		fsl,pins = <
++			MX8MP_IOMUXC_GPIO1_IO13__GPIO1_IO13				0x19
++		>;
++	};
++
++	pinctrl_pdm: pdmgrp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SAI5_RXC__AUDIOMIX_PDM_CLK			0xd6
++			MX8MP_IOMUXC_SAI5_RXD0__AUDIOMIX_PDM_BIT_STREAM00	0xd6
++			MX8MP_IOMUXC_SAI5_RXD1__AUDIOMIX_PDM_BIT_STREAM01	0xd6
++			MX8MP_IOMUXC_SAI5_RXD2__AUDIOMIX_PDM_BIT_STREAM02	0xd6
++			MX8MP_IOMUXC_SAI5_RXD3__AUDIOMIX_PDM_BIT_STREAM03	0xd6
++		>;
++	};
++
++	pinctrl_sai3: sai3grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SAI3_TXFS__AUDIOMIX_SAI3_TX_SYNC	0xd6
++			MX8MP_IOMUXC_SAI3_TXC__AUDIOMIX_SAI3_TX_BCLK	0xd6
++			MX8MP_IOMUXC_SAI3_RXD__AUDIOMIX_SAI3_RX_DATA00	0xd6
++			MX8MP_IOMUXC_SAI3_TXD__AUDIOMIX_SAI3_TX_DATA00	0xd6
++			MX8MP_IOMUXC_SAI3_MCLK__AUDIOMIX_SAI3_MCLK	0xd6
++			MX8MP_IOMUXC_SAI3_RXC__GPIO4_IO29		0xd6
++		>;
++	};
++
++	pinctrl_i2c2_synaptics_dsx_io: synaptics_dsx_iogrp {
++		fsl,pins = <
++			MX8MP_IOMUXC_GPIO1_IO09__GPIO1_IO09		0x16
++		>;
++	};
++
++	pinctrl_uart1: uart1grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_UART1_RXD__UART1_DCE_RX	0x140
++			MX8MP_IOMUXC_UART1_TXD__UART1_DCE_TX	0x140
++			MX8MP_IOMUXC_UART3_RXD__UART1_DCE_CTS	0x140
++			MX8MP_IOMUXC_UART3_TXD__UART1_DCE_RTS	0x140
++		>;
++	};
++
++	pinctrl_uart2: uart2grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_UART2_RXD__UART2_DCE_RX	0x49
++			MX8MP_IOMUXC_UART2_TXD__UART2_DCE_TX	0x49
++		>;
++	};
++
++	pinctrl_usb1: usb1grp {
++                fsl,pins = <
++                        MX8MP_IOMUXC_GPIO1_IO15__GPIO1_IO15     0x19
++                >;
++        };
++
++	pinctrl_usb1_vbus: usb1grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_GPIO1_IO14__GPIO1_IO14	0x19
++		>;
++	};
++
++	pinctrl_usdhc1_gpio: usdhc1grp-gpio {
++		fsl,pins = <
++			MX8MP_IOMUXC_SD1_STROBE__GPIO2_IO11	0x41 /* WL_REG_ON*/
++			MX8MP_IOMUXC_SD1_RESET_B__GPIO2_IO10	0x41/* BT_REG_ON*/
++			/*MX8MP_IOMUXC_SD1_DATA5__GPIO2_IO07	0x41*//*BT_DEV_WAKE*/
++		>;
++	};
++
++	pinctrl_usdhc1: usdhc1grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SD1_CLK__USDHC1_CLK	0x190
++			MX8MP_IOMUXC_SD1_CMD__USDHC1_CMD	0x1d0
++			MX8MP_IOMUXC_SD1_DATA0__USDHC1_DATA0	0x1d0
++			MX8MP_IOMUXC_SD1_DATA1__USDHC1_DATA1	0x1d0
++			MX8MP_IOMUXC_SD1_DATA2__USDHC1_DATA2	0x1d0
++			MX8MP_IOMUXC_SD1_DATA3__USDHC1_DATA3	0x1d0
++		>;
++	};
++
++	pinctrl_usdhc1_100mhz: usdhc1grp-100mhz {
++		fsl,pins = <
++			MX8MP_IOMUXC_SD1_CLK__USDHC1_CLK	0x194
++			MX8MP_IOMUXC_SD1_CMD__USDHC1_CMD	0x1d4
++			MX8MP_IOMUXC_SD1_DATA0__USDHC1_DATA0	0x1d4
++			MX8MP_IOMUXC_SD1_DATA1__USDHC1_DATA1	0x1d4
++			MX8MP_IOMUXC_SD1_DATA2__USDHC1_DATA2	0x1d4
++			MX8MP_IOMUXC_SD1_DATA3__USDHC1_DATA3	0x1d4
++		>;
++	};
++
++	pinctrl_usdhc1_200mhz: usdhc1grp-200mhz {
++		fsl,pins = <
++			MX8MP_IOMUXC_SD1_CLK__USDHC1_CLK	0x196
++			MX8MP_IOMUXC_SD1_CMD__USDHC1_CMD	0x1d6
++			MX8MP_IOMUXC_SD1_DATA0__USDHC1_DATA0	0x1d6
++			MX8MP_IOMUXC_SD1_DATA1__USDHC1_DATA1	0x1d6
++			MX8MP_IOMUXC_SD1_DATA2__USDHC1_DATA2	0x1d6
++			MX8MP_IOMUXC_SD1_DATA3__USDHC1_DATA3	0x1d6
++		>;
++	};
++
++	pinctrl_usdhc2_gpio: usdhc2grp-gpio {
++		fsl,pins = <
++			MX8MP_IOMUXC_SD2_CD_B__GPIO2_IO12 	0x1c4
++			MX8MP_IOMUXC_SD2_RESET_B__GPIO2_IO19	0x41
++		>;
++	};
++
++	pinctrl_usdhc2: usdhc2grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SD2_CLK__USDHC2_CLK	0x190
++			MX8MP_IOMUXC_SD2_CMD__USDHC2_CMD	0x1d0
++			MX8MP_IOMUXC_SD2_DATA0__USDHC2_DATA0	0x1d0
++			MX8MP_IOMUXC_SD2_DATA1__USDHC2_DATA1	0x1d0
++			MX8MP_IOMUXC_SD2_DATA2__USDHC2_DATA2	0x1d0
++			MX8MP_IOMUXC_SD2_DATA3__USDHC2_DATA3	0x1d0
++			MX8MP_IOMUXC_GPIO1_IO04__USDHC2_VSELECT	0xc1
++		>;
++	};
++
++	pinctrl_usdhc2_100mhz: usdhc2grp-100mhz {
++		fsl,pins = <
++			MX8MP_IOMUXC_SD2_CLK__USDHC2_CLK	0x194
++			MX8MP_IOMUXC_SD2_CMD__USDHC2_CMD	0x1d4
++			MX8MP_IOMUXC_SD2_DATA0__USDHC2_DATA0	0x1d4
++			MX8MP_IOMUXC_SD2_DATA1__USDHC2_DATA1	0x1d4
++			MX8MP_IOMUXC_SD2_DATA2__USDHC2_DATA2	0x1d4
++			MX8MP_IOMUXC_SD2_DATA3__USDHC2_DATA3	0x1d4
++			MX8MP_IOMUXC_GPIO1_IO04__USDHC2_VSELECT 0xc1
++		>;
++	};
++
++	pinctrl_usdhc2_200mhz: usdhc2grp-200mhz {
++		fsl,pins = <
++			MX8MP_IOMUXC_SD2_CLK__USDHC2_CLK	0x196
++			MX8MP_IOMUXC_SD2_CMD__USDHC2_CMD	0x1d6
++			MX8MP_IOMUXC_SD2_DATA0__USDHC2_DATA0	0x1d6
++			MX8MP_IOMUXC_SD2_DATA1__USDHC2_DATA1	0x1d6
++			MX8MP_IOMUXC_SD2_DATA2__USDHC2_DATA2	0x1d6
++			MX8MP_IOMUXC_SD2_DATA3__USDHC2_DATA3	0x1d6
++			MX8MP_IOMUXC_GPIO1_IO04__USDHC2_VSELECT 0xc1
++		>;
++	};
++
++	pinctrl_usdhc3: usdhc3grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_NAND_WE_B__USDHC3_CLK	0x190
++			MX8MP_IOMUXC_NAND_WP_B__USDHC3_CMD	0x1d0
++			MX8MP_IOMUXC_NAND_DATA04__USDHC3_DATA0	0x1d0
++			MX8MP_IOMUXC_NAND_DATA05__USDHC3_DATA1	0x1d0
++			MX8MP_IOMUXC_NAND_DATA06__USDHC3_DATA2	0x1d0
++			MX8MP_IOMUXC_NAND_DATA07__USDHC3_DATA3	0x1d0
++			MX8MP_IOMUXC_NAND_RE_B__USDHC3_DATA4	0x1d0
++			MX8MP_IOMUXC_NAND_CE2_B__USDHC3_DATA5	0x1d0
++			MX8MP_IOMUXC_NAND_CE3_B__USDHC3_DATA6	0x1d0
++			MX8MP_IOMUXC_NAND_CLE__USDHC3_DATA7	0x1d0
++			MX8MP_IOMUXC_NAND_CE1_B__USDHC3_STROBE	0x190
++		>;
++	};
++
++	pinctrl_usdhc3_100mhz: usdhc3grp-100mhz {
++		fsl,pins = <
++			MX8MP_IOMUXC_NAND_WE_B__USDHC3_CLK	0x194
++			MX8MP_IOMUXC_NAND_WP_B__USDHC3_CMD	0x1d4
++			MX8MP_IOMUXC_NAND_DATA04__USDHC3_DATA0	0x1d4
++			MX8MP_IOMUXC_NAND_DATA05__USDHC3_DATA1	0x1d4
++			MX8MP_IOMUXC_NAND_DATA06__USDHC3_DATA2	0x1d4
++			MX8MP_IOMUXC_NAND_DATA07__USDHC3_DATA3	0x1d4
++			MX8MP_IOMUXC_NAND_RE_B__USDHC3_DATA4	0x1d4
++			MX8MP_IOMUXC_NAND_CE2_B__USDHC3_DATA5	0x1d4
++			MX8MP_IOMUXC_NAND_CE3_B__USDHC3_DATA6	0x1d4
++			MX8MP_IOMUXC_NAND_CLE__USDHC3_DATA7	0x1d4
++			MX8MP_IOMUXC_NAND_CE1_B__USDHC3_STROBE	0x194
++		>;
++	};
++
++	pinctrl_usdhc3_200mhz: usdhc3grp-200mhz {
++		fsl,pins = <
++			MX8MP_IOMUXC_NAND_WE_B__USDHC3_CLK	0x196
++			MX8MP_IOMUXC_NAND_WP_B__USDHC3_CMD	0x1d6
++			MX8MP_IOMUXC_NAND_DATA04__USDHC3_DATA0	0x1d6
++			MX8MP_IOMUXC_NAND_DATA05__USDHC3_DATA1	0x1d6
++			MX8MP_IOMUXC_NAND_DATA06__USDHC3_DATA2	0x1d6
++			MX8MP_IOMUXC_NAND_DATA07__USDHC3_DATA3	0x1d6
++			MX8MP_IOMUXC_NAND_RE_B__USDHC3_DATA4	0x1d6
++			MX8MP_IOMUXC_NAND_CE2_B__USDHC3_DATA5	0x1d6
++			MX8MP_IOMUXC_NAND_CE3_B__USDHC3_DATA6	0x1d6
++			MX8MP_IOMUXC_NAND_CLE__USDHC3_DATA7	0x1d6
++			MX8MP_IOMUXC_NAND_CE1_B__USDHC3_STROBE	0x196
++		>;
++	};
++
++	pinctrl_wdog: wdoggrp {
++		fsl,pins = <
++			MX8MP_IOMUXC_GPIO1_IO02__WDOG1_WDOG_B	0xc6
++		>;
++	};
++
++	pinctrl_csi0_rst: csi0_rst_grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_GPIO1_IO06__GPIO1_IO06		0x19
++		>;
++	};
++
++	pinctrl_ecspi2: ecspi2grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_ECSPI2_SS0__GPIO5_IO13			0x140 /* ADICMOS CS: CS pin with pull-up */
++			MX8MP_IOMUXC_NAND_DATA03__GPIO3_IO09		0x140 /* ADICMOS NVRAM: CS pin with pull-up */
++			MX8MP_IOMUXC_ECSPI2_SCLK__ECSPI2_SCLK		0x82 /* SCK: SPI clock */
++			MX8MP_IOMUXC_ECSPI2_MISO__ECSPI2_MISO		0x82 /* MISO: SPI master-in-slave-out */
++		>;
++	};
++
++	pinctrl_v5v0_en: v5v0-en-grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SAI3_RXD__GPIO4_IO30		0x100
++		>;
++	};
++
++	pinctrl_vmain_en: vmain-en-grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SAI3_TXC__GPIO5_IO00		0x100
++		>;
++	};
++
++	pinctrl_vsys_en: vsys-en-grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SAI3_TXD__GPIO5_IO01		0x100
++		>;
++	};
++
++	pinctrl_vaux_en: vaux-en-grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SAI3_TXFS__GPIO4_IO31		0x100
++		>;
++	};
++
++	pinctrl_vcc_3p3_en: vcc-3p3-en-grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SAI3_MCLK__GPIO5_IO02		0x100
++		>;
++	};
++
++	pinctrl_rst_l: rst-l-grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SAI2_TXD0__GPIO4_IO26		0x140
++		>;
++	};
++
++	pinctrl_ad5593r_rst: ad5593r-rst-grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_SPDIF_RX__GPIO5_IO04		0x140
++		>;
++	};
++};
++
++&vpu_g1 {
++	status = "okay";
++};
++
++&vpu_g2 {
++	status = "okay";
++};
++
++&vpu_vc8000e {
++	status = "okay";
++};
++
++&ocotp {
++	status = "okay";
++};
++
++&gpu_3d {
++	status = "okay";
++};
++
++&gpu_2d {
++	status = "okay";
++};
++
++&ml_vipsi {
++	status = "okay";
++};
++
++&mix_gpu_ml {
++	status = "okay";
++};
++
++&cameradev {
++	status = "okay";
++};
++
++&isi_0 {
++	status = "okay";
++
++	cap_device {
++		status = "okay";
++	};
++};
++
++&isi_1 {
++	status = "disabled";
++
++	cap_device {
++		status = "disabled";
++	};
++};
++
++&dsp {
++	status = "okay";
++};
+diff --git a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
+index 878f66ef2719..ecc5e5c2ded1 100644
+--- a/drivers/media/i2c/Kconfig
++++ b/drivers/media/i2c/Kconfig
+@@ -765,6 +765,19 @@ config VIDEO_IMX219
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called imx219.
+ 
++config VIDEO_ADSD3500
++	tristate "Analog Devices ADSD3500"
++	depends on I2C && VIDEO_V4L2
++	select MEDIA_CONTROLLER
++	select VIDEO_V4L2_SUBDEV_API
++	select V4L2_FWNODE
++	select REGMAP_I2C
++	help
++	  This is a Video4Linux2 driver for Analog Devices ADSD3500 ISP Chip
++
++	  To compile this driver as a module, choose M here: the
++	  module will be called adsd3500.
++
+ config VIDEO_IMX258
+ 	tristate "Sony IMX258 sensor support"
+ 	depends on I2C && VIDEO_V4L2
+diff --git a/drivers/media/i2c/Makefile b/drivers/media/i2c/Makefile
+index f0a77473979d..2a5325669839 100644
+--- a/drivers/media/i2c/Makefile
++++ b/drivers/media/i2c/Makefile
+@@ -26,6 +26,7 @@ obj-$(CONFIG_VIDEO_AK7375)  += ak7375.o
+ obj-$(CONFIG_VIDEO_DW9714)  += dw9714.o
+ obj-$(CONFIG_VIDEO_DW9768)  += dw9768.o
+ obj-$(CONFIG_VIDEO_DW9807_VCM)  += dw9807-vcm.o
++obj-$(CONFIG_VIDEO_ADSD3500) += adsd3500.o
+ obj-$(CONFIG_VIDEO_ADV7170) += adv7170.o
+ obj-$(CONFIG_VIDEO_ADV7175) += adv7175.o
+ obj-$(CONFIG_VIDEO_ADV7180) += adv7180.o
+diff --git a/drivers/media/i2c/adsd3500.c b/drivers/media/i2c/adsd3500.c
+new file mode 100644
+index 000000000000..122078fa0149
+--- /dev/null
++++ b/drivers/media/i2c/adsd3500.c
+@@ -0,0 +1,974 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Driver for the Analog Devices ADSD3500 chip.
++ *
++ * Copyright (C) 2022 Analog Devices, All Rights Reserved.
++ *
++ */
++
++#include "adsd3500_regs.h"
++#include <linux/gpio/consumer.h>
++#include <linux/pinctrl/consumer.h>
++#include <linux/pwm.h>
++#include <linux/i2c.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/pm_runtime.h>
++#include <linux/regmap.h>
++#include <media/v4l2-ctrls.h>
++#include <media/v4l2-fwnode.h>
++#include <media/v4l2-subdev.h>
++
++struct adsd3500_mode_info {
++	uint32_t width;
++	uint32_t height;
++	uint32_t pixel_rate;
++	uint32_t code;
++	uint32_t link_freq_idx;
++};
++
++struct adsd3500_config_info {
++	uint8_t nr_depth_bits;
++	uint8_t nr_ab_bits;
++	uint8_t nr_confidence_bits;
++	uint8_t nr_mipi_lanes;
++	bool use_vc;
++};
++
++struct adsd3500 {
++	struct regmap *regmap;
++	struct device *dev;
++	struct v4l2_subdev sd;
++	struct media_pad pad;
++	struct v4l2_mbus_framefmt fmt;
++	struct v4l2_rect crop;
++
++	const struct adsd3500_mode_info *current_mode;
++	struct adsd3500_config_info current_config;
++
++	struct v4l2_ctrl_handler ctrls;
++	struct v4l2_ctrl *pixel_rate;
++	struct v4l2_ctrl *link_freq;
++	/* custom controls */
++	struct v4l2_ctrl *operating_mode;
++	struct v4l2_ctrl *set_chip_config;
++	struct v4l2_ctrl *depth_bits;
++	struct v4l2_ctrl *ab_bits;
++	struct v4l2_ctrl *confidence_bits;
++	struct v4l2_ctrl *ab_avg;
++	struct v4l2_ctrl *depth_en;
++
++	struct mutex lock;
++	bool streaming;
++
++	struct gpio_desc *rst_gpio;
++};
++
++static inline struct adsd3500 *to_adsd3500(struct v4l2_subdev *sd)
++{
++	return container_of(sd, struct adsd3500, sd);
++}
++
++#define V4L2_CID_ADSD3500_OPERATING_MODE  (V4L2_CID_USER_ADSD_BASE + 0)
++#define V4L2_CID_ADSD3500_CHIP_CONFIG (V4L2_CID_USER_ADSD_BASE + 1)
++#define V4L2_CID_ADSD3500_DEPTH_BITS (V4L2_CID_USER_ADSD_BASE + 2)
++#define V4L2_CID_ADSD3500_AB_BITS (V4L2_CID_USER_ADSD_BASE + 3)
++#define V4L2_CID_ADSD3500_CONFIDENCE_BITS (V4L2_CID_USER_ADSD_BASE + 4)
++#define V4L2_CID_ADSD3500_AB_AVG (V4L2_CID_USER_ADSD_BASE + 5)
++#define V4L2_CID_ADSD3500_DEPTH_EN (V4L2_CID_USER_ADSD_BASE + 6)
++
++static const struct reg_sequence adsd3500_powerup_setting[] = {
++};
++
++static const struct reg_sequence adsd3500_powerdown_setting[] = {
++};
++
++static const struct reg_sequence adsd3500_standby_setting[] = {
++};
++
++static const s64 link_freq_tbl[] = {
++	732000000,
++	732000000,
++	732000000,
++	732000000,
++	732000000,
++	732000000,
++	732000000,
++	732000000,
++	732000000,
++};
++
++/* Elements of the structure must be ordered ascending by width & height */
++static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
++	{ //RAW12 12BPP
++		.width = 512,
++		.height = 512,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{ //RAW8 16BPP
++		.width = 1024,
++		.height = 512,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.link_freq_idx = 1 /* an index in link_freq_tbl[] */
++	},
++	{ //RAW8 20BPP
++		.width = 1280,
++		.height = 512,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.link_freq_idx = 2 /* an index in link_freq_tbl[] */
++	},
++	{ //RAW8 24BPP
++		.width = 1536,
++		.height = 512,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.link_freq_idx = 3 /* an index in link_freq_tbl[] */
++	},
++	{ //RAW8 28BPP
++		.width = 1792,
++		.height = 512,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.link_freq_idx = 4 /* an index in link_freq_tbl[] */
++	},
++	{ //RAW8 32BPP
++		.width = 2048,
++		.height = 512,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.link_freq_idx = 5 /* an index in link_freq_tbl[] */
++	},
++	{ //RAW8 36BPP
++		.width = 2304,
++		.height = 512,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.link_freq_idx = 6 /* an index in link_freq_tbl[] */
++	},
++	{ //RAW8 40BPP
++		.width = 2560,
++		.height = 512,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.link_freq_idx = 7 /* an index in link_freq_tbl[] */
++	},
++	{ //RAW12 12BPP * 3 phase
++		.width = 3072,
++		.height = 1024,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.link_freq_idx = 8 /* an index in link_freq_tbl[] */
++	}
++};
++
++static bool adsd3500_regmap_accessible_reg(struct device *dev, unsigned int reg)
++{
++	switch (reg) {
++		case GET_CHIP_ID_CMD:
++		case GET_IMAGER_MODE_CMD:
++		case GET_IMAGER_AB_INVLD_TRSHLD:
++		case GET_IMAGER_CONFIDENCE_TRSHLD:
++		case GET_IMAGER_JBLF_STATE:
++		case GET_IMAGER_JBLF_FILT_SIZE:
++			return 1;
++		default:
++			return 0;
++	}
++}
++
++static const struct regmap_config adsd3500_regmap_config = {
++	.reg_bits = 16,
++	.val_bits = 16,
++	.cache_type = REGCACHE_NONE,
++	.readable_reg = adsd3500_regmap_accessible_reg,
++};
++
++static int adsd3500_power_on(struct device *dev)
++{
++	struct i2c_client *client = to_i2c_client(dev);
++	struct v4l2_subdev *sd = i2c_get_clientdata(client);
++	struct adsd3500 *adsd3500 = to_adsd3500(sd);
++	struct v4l2_ctrl *operating_mode = adsd3500->operating_mode;
++	struct v4l2_ctrl *ab_avg = adsd3500->ab_avg;
++	struct v4l2_ctrl *depth_en = adsd3500->depth_en;
++	struct adsd3500_config_info config = adsd3500->current_config;
++	unsigned int write_cmd, write_val = 0;
++	unsigned int read_val;
++	int ret;
++
++	dev_dbg(adsd3500->dev, "Entered addicmos_power_on\n");
++
++	ret = regmap_read(adsd3500->regmap, GET_CHIP_ID_CMD, &read_val);
++	if (ret < 0) {
++		dev_err(adsd3500->dev, "Read of Chip ID register failed.\n");
++	}
++
++	if (read_val != ADSD3500_CHIP_ID) {
++		dev_err(adsd3500->dev, "Chip ID: %.4X is wrong.\n", read_val);
++	}
++	dev_dbg(adsd3500->dev, "Read Chip ID: %.4X\n", read_val);
++
++	write_cmd = SET_IMAGER_MODE_CMD | SET_IMAGER_MODE(operating_mode->val);
++
++	write_val |= SET_IMAGER_MODE_DEPTH_EN(depth_en->val);
++	write_val |= SET_IMAGER_MODE_DEPTH_BITS(config.nr_depth_bits ? 6 - config.nr_depth_bits: 0);
++	
++	write_val |= SET_IMAGER_MODE_AB_EN(config.nr_ab_bits ? 1 : 0);
++	write_val |= SET_IMAGER_MODE_AB_BITS(config.nr_ab_bits ? 6 - config.nr_ab_bits : 0);
++
++	write_val |= SET_IMAGER_MODE_CONF_BITS(config.nr_confidence_bits);
++
++	write_val |= SET_IMAGER_MODE_VC_EN(!config.use_vc);
++	write_val |= SET_IMAGER_MODE_AB_AVG_EN(ab_avg->val);
++	write_val |= SET_IMAGER_MODE_MIPI_LANES_NR(config.nr_mipi_lanes);
++
++	ret = regmap_write(adsd3500->regmap, write_cmd, write_val);
++	if (ret) {
++		dev_err(adsd3500->dev, "Could not set mode register\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static int adsd3500_power_off(struct device *dev)
++{
++	return 0;
++}
++
++#ifdef CONFIG_VIDEO_ADV_DEBUG
++static int adsd3500_g_register(struct v4l2_subdev *sd,
++			       struct v4l2_dbg_register *reg)
++{
++	struct adsd3500 *adsd3500 = to_adsd3500(sd);
++	unsigned int read_val;
++	int ret;
++
++	reg->size = 2;
++	ret = regmap_read(adsd3500->regmap, reg->reg, &read_val);
++	reg->val = read_val;
++
++	return ret;
++}
++
++static int adsd3500_s_register(struct v4l2_subdev *sd,
++			       const struct v4l2_dbg_register *reg)
++{
++	struct adsd3500 *adsd3500 = to_adsd3500(sd);
++
++	return regmap_write(adsd3500->regmap, reg->reg, reg->val);
++}
++#endif
++
++static int adsd3500_s_power(struct v4l2_subdev *sd, int on)
++{
++	struct adsd3500 *adsd3500 = to_adsd3500(sd);
++
++	dev_dbg(adsd3500->dev, "%s: %d\n", __func__, on);
++	return 0;
++}
++
++static int adsd3500_bpp_config(struct adsd3500 *priv,
++				    struct v4l2_ctrl *ctrl)
++{
++	switch (ctrl->id) {
++	case V4L2_CID_ADSD3500_DEPTH_BITS:
++		priv->current_config.nr_depth_bits = ctrl->val;
++		break;
++	case V4L2_CID_ADSD3500_AB_BITS:
++		priv->current_config.nr_ab_bits = ctrl->val;
++		break;
++	case V4L2_CID_ADSD3500_CONFIDENCE_BITS:
++		priv->current_config.nr_confidence_bits = ctrl->val;
++		break;
++	default:
++		break;
++	}
++
++	return 0;
++}
++
++static int adsd3500_chip_config(struct adsd3500 *priv,
++				    struct v4l2_ctrl *ctrl)
++{
++	struct device *dev = priv->dev;
++	struct i2c_client *client = to_i2c_client(dev);
++	uint16_t pld_size;
++	uint8_t r_w, *data;
++	int ret;
++
++	r_w = *ctrl->p_new.p_u8;
++	pld_size = (uint16_t)(*(ctrl->p_new.p_u8 + 1) << 8 | *(ctrl->p_new.p_u8 + 2));
++	data = ctrl->p_new.p_u8 + 3;
++
++	dev_dbg(dev, "Entered adsd3500_chip_config. R/W: %d, PLD_SIZE: %d\n", r_w, pld_size);
++
++	if ((pld_size > 4096) || (pld_size < 2))
++		return -EINVAL;
++	
++	if (r_w > 1)
++		return -EINVAL;
++
++	if (r_w) {
++		ret = i2c_master_send(client, data, pld_size);
++		if (ret < 0) {
++			dev_warn(dev, "Write burst transfer failed\n");
++			return -EIO;
++		}
++	} else {
++		ret = i2c_master_recv(client, data, pld_size);
++		if (ret < 0) {
++			dev_warn(dev, "Read burst transfer failed\n");
++			return -EIO;
++		}
++	}
++	memset(ctrl->p_new.p_u8, 0xFF, 1);
++	return 0;
++}
++
++static int adsd3500_s_ctrl(struct v4l2_ctrl *ctrl)
++{
++	struct adsd3500 *adsd3500 = container_of(ctrl->handler,
++						 struct adsd3500, ctrls);
++	int ret = 0;
++
++	switch (ctrl->id) {
++	case V4L2_CID_ADSD3500_OPERATING_MODE:
++	case V4L2_CID_ADSD3500_AB_AVG:
++	case V4L2_CID_ADSD3500_DEPTH_EN:
++	case V4L2_CID_PIXEL_RATE:
++	case V4L2_CID_LINK_FREQ:
++		break;
++	case V4L2_CID_ADSD3500_CHIP_CONFIG:
++		ret = adsd3500_chip_config(adsd3500, ctrl);
++		break;
++	case V4L2_CID_ADSD3500_DEPTH_BITS:
++	case V4L2_CID_ADSD3500_AB_BITS:
++	case V4L2_CID_ADSD3500_CONFIDENCE_BITS:
++		ret = adsd3500_bpp_config(adsd3500, ctrl);
++		break;
++	default:
++		dev_err(adsd3500->dev, "%s > Unhandled: %x  param=%x\n",
++			__func__, ctrl->id, ctrl->val);
++		ret = -EINVAL;
++		break;
++	}
++
++	return ret;
++}
++
++static const s64 nr_bits_qmenu[] = {
++	0, 4, 8, 10, 12, 14, 16
++};
++
++static const struct v4l2_ctrl_ops adsd3500_ctrl_ops = {
++	.s_ctrl = adsd3500_s_ctrl,
++};
++
++static const struct v4l2_ctrl_config adsd3500_ctrl_operating_mode = {
++	.ops		= &adsd3500_ctrl_ops,
++	.id			= V4L2_CID_ADSD3500_OPERATING_MODE,
++	.name		= "Operating Mode",
++	.type		= V4L2_CTRL_TYPE_INTEGER,
++	.def		= 0,
++	.min		= 0,
++	.max		= 10,
++	.step		= 1
++};
++
++static const struct v4l2_ctrl_config adsd3500_ctrl_chip_config = {
++	.ops		= &adsd3500_ctrl_ops,
++	.id			= V4L2_CID_ADSD3500_CHIP_CONFIG,
++	.name		= "Chip Config",
++	.type		= V4L2_CTRL_TYPE_U8,
++	.def		= 0x00,
++	.min		= 0x00,
++	.max		= 0xFF,
++	.step		= 1,
++	.dims		= { 4099 }
++};
++
++static const struct v4l2_ctrl_config adsd3500_ctrl_depth_bits = {
++	.ops		= &adsd3500_ctrl_ops,
++	.id			= V4L2_CID_ADSD3500_DEPTH_BITS,
++	.name		= "Phase / Depth Bits",
++	.type		= V4L2_CTRL_TYPE_INTEGER_MENU,
++	.def		= 2,
++	.min		= 2,
++	.max		= 6,
++	.menu_skip_mask = 0x03,
++	.qmenu_int	= nr_bits_qmenu,
++};
++
++static const struct v4l2_ctrl_config adsd3500_ab_depth_bits = {
++	.ops		= &adsd3500_ctrl_ops,
++	.id			= V4L2_CID_ADSD3500_AB_BITS,
++	.name		= "AB Bits",
++	.type		= V4L2_CTRL_TYPE_INTEGER_MENU,
++	.def		= 0,
++	.min		= 0,
++	.max		= 6,
++	.menu_skip_mask = 0x02,
++	.qmenu_int	= nr_bits_qmenu,
++};
++
++static const struct v4l2_ctrl_config adsd3500_confidence_bits = {
++	.ops		= &adsd3500_ctrl_ops,
++	.id			= V4L2_CID_ADSD3500_CONFIDENCE_BITS,
++	.name		= "Confidence Bits",
++	.type		= V4L2_CTRL_TYPE_INTEGER_MENU,
++	.def		= 0,
++	.min		= 0,
++	.max		= 2,
++	.qmenu_int	= nr_bits_qmenu,
++};
++
++static const struct v4l2_ctrl_config adsd3500_ab_avg = {
++	.ops		= &adsd3500_ctrl_ops,
++	.id			= V4L2_CID_ADSD3500_AB_AVG,
++	.name		= "AB Averaging",
++	.type		= V4L2_CTRL_TYPE_BOOLEAN,
++	.def		= 1,
++	.min		= 0,
++	.max		= 1,
++	.step		= 1,
++};
++
++static const struct v4l2_ctrl_config adsd3500_depth_en = {
++	.ops		= &adsd3500_ctrl_ops,
++	.id			= V4L2_CID_ADSD3500_DEPTH_EN,
++	.name		= "Depth enable",
++	.type		= V4L2_CTRL_TYPE_BOOLEAN,
++	.def		= 1,
++	.min		= 0,
++	.max		= 1,
++	.step		= 1,
++};
++
++static int adsd3500_enum_mbus_code(struct v4l2_subdev *sd,
++				   struct v4l2_subdev_pad_config *cfg,
++				   struct v4l2_subdev_mbus_code_enum *code)
++{
++	if (code->pad != 0)
++		return -EINVAL;
++
++	switch (code->index) {
++	case 0:
++		code->code = MEDIA_BUS_FMT_SBGGR8_1X8;
++		break;
++	case 1:
++		code->code = MEDIA_BUS_FMT_SBGGR12_1X12;
++		break;
++	default:
++		return -EINVAL;
++	}
++	return 0;
++}
++
++static int adsd3500_enum_frame_size(struct v4l2_subdev *subdev,
++				    struct v4l2_subdev_pad_config *cfg,
++				    struct v4l2_subdev_frame_size_enum *fse)
++{
++	int i, j = 0;
++
++	if (fse->index >= ARRAY_SIZE(adsd3500_mode_info_data))
++		return -EINVAL;
++
++	for (i = 0; i < ARRAY_SIZE(adsd3500_mode_info_data); i++)
++	{
++		if(adsd3500_mode_info_data[i].code == fse->code)
++			j++;
++		if (j > fse->index)
++			break;
++	}
++
++	if (i < ARRAY_SIZE(adsd3500_mode_info_data)) {
++		fse->min_width = adsd3500_mode_info_data[i].width;
++		fse->max_width = adsd3500_mode_info_data[i].width;
++		fse->min_height = adsd3500_mode_info_data[i].height;
++		fse->max_height = adsd3500_mode_info_data[i].height;
++	} else {
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++static struct v4l2_mbus_framefmt *
++adsd3500_get_pad_format(struct adsd3500 *adsd3500,
++			struct v4l2_subdev_pad_config *cfg, unsigned int pad,
++			enum v4l2_subdev_format_whence which)
++{
++	switch (which) {
++	case V4L2_SUBDEV_FORMAT_TRY:
++		return v4l2_subdev_get_try_format(&adsd3500->sd, cfg, pad);
++	case V4L2_SUBDEV_FORMAT_ACTIVE:
++		return &adsd3500->fmt;
++	default:
++		return ERR_PTR(-EINVAL);
++	}
++}
++
++static int adsd3500_get_format(struct v4l2_subdev *sd,
++			       struct v4l2_subdev_pad_config *cfg,
++			       struct v4l2_subdev_format *format)
++{
++	struct adsd3500 *adsd3500 = to_adsd3500(sd);
++	struct v4l2_mbus_framefmt *pad_format;
++
++	pad_format = adsd3500_get_pad_format(adsd3500, cfg, format->pad,
++					     format->which);
++	if (IS_ERR(pad_format))
++		return PTR_ERR(pad_format);
++
++	format->format = *pad_format;
++
++	return 0;
++}
++
++static struct v4l2_rect *
++adsd3500_get_pad_crop(struct adsd3500 *adsd3500,
++		      struct v4l2_subdev_pad_config *cfg,
++		      unsigned int pad, enum v4l2_subdev_format_whence which)
++{
++	switch (which) {
++	case V4L2_SUBDEV_FORMAT_TRY:
++		return v4l2_subdev_get_try_crop(&adsd3500->sd, cfg, pad);
++	case V4L2_SUBDEV_FORMAT_ACTIVE:
++		return &adsd3500->crop;
++	default:
++		return ERR_PTR(-EINVAL);
++	}
++}
++
++static int adsd3500_set_format(struct v4l2_subdev *sd,
++			       struct v4l2_subdev_pad_config *cfg,
++			       struct v4l2_subdev_format *format)
++{
++	struct adsd3500 *adsd3500 = to_adsd3500(sd);
++	struct v4l2_mbus_framefmt *framefmt;
++	struct v4l2_rect *crop;
++	const struct adsd3500_mode_info *new_mode;
++	int ret;
++
++	dev_dbg(adsd3500->dev, "set_fmt: %x %dx%d %d\n",
++		format->format.code, format->format.width,
++		format->format.height, format->which);
++
++	mutex_lock(&adsd3500->lock);
++
++	if (format->pad != 0)
++		return -EINVAL;
++
++	crop = adsd3500_get_pad_crop(adsd3500, cfg, format->pad,
++				     format->which);
++	if (IS_ERR(crop))
++		return PTR_ERR(crop);
++
++	new_mode = v4l2_find_nearest_size(adsd3500_mode_info_data,
++					  ARRAY_SIZE(adsd3500_mode_info_data),
++					  width, height, format->format.width,
++					  format->format.height);
++	crop->width = new_mode->width;
++	crop->height = new_mode->height;
++
++	if (format->which == V4L2_SUBDEV_FORMAT_ACTIVE) {
++		ret = v4l2_ctrl_s_ctrl_int64(adsd3500->pixel_rate,
++					     new_mode->pixel_rate);
++		if (ret < 0)
++			return ret;
++
++		ret = v4l2_ctrl_s_ctrl(adsd3500->link_freq,
++				       new_mode->link_freq_idx);
++		if (ret < 0)
++			return ret;
++
++		adsd3500->current_mode = new_mode;
++	}
++
++	framefmt = adsd3500_get_pad_format(adsd3500, cfg, format->pad,
++					   format->which);
++	if (IS_ERR(framefmt))
++		return PTR_ERR(framefmt);
++
++	framefmt->width = crop->width;
++	framefmt->height = crop->height;
++	framefmt->code = new_mode->code;
++	framefmt->field = V4L2_FIELD_NONE;
++	framefmt->colorspace = V4L2_COLORSPACE_RAW;
++
++	format->format = *framefmt;
++	adsd3500->fmt = *framefmt;
++
++	mutex_unlock(&adsd3500->lock);
++
++	return 0;
++}
++
++static int adsd3500_entity_init_cfg(struct v4l2_subdev *subdev,
++				    struct v4l2_subdev_pad_config *cfg)
++{
++	struct v4l2_subdev_format fmt = { 0 };
++
++	fmt.which = cfg ? V4L2_SUBDEV_FORMAT_TRY : V4L2_SUBDEV_FORMAT_ACTIVE;
++	fmt.format.width = adsd3500_mode_info_data[0].width;
++	fmt.format.height = adsd3500_mode_info_data[0].height;
++	fmt.format.code = adsd3500_mode_info_data[0].code;
++
++	return adsd3500_set_format(subdev, cfg, &fmt);
++}
++
++static int adsd3500_get_selection(struct v4l2_subdev *sd,
++				  struct v4l2_subdev_pad_config *cfg,
++				  struct v4l2_subdev_selection *sel)
++{
++	struct adsd3500 *adsd3500 = to_adsd3500(sd);
++	struct v4l2_rect *crop;
++
++	if (sel->target != V4L2_SEL_TGT_CROP)
++		return -EINVAL;
++
++	crop = adsd3500_get_pad_crop(adsd3500, cfg, sel->pad, sel->which);
++	if (IS_ERR(crop))
++		return PTR_ERR(crop);
++
++	sel->r = *crop;
++
++	return 0;
++}
++
++static int adsd3500_start_streaming(struct adsd3500 *adsd3500)
++{
++	int ret;
++
++	ret = regmap_write(adsd3500->regmap, STREAM_ON_CMD, STREAM_ON_VAL);
++	if (ret < 0)
++		dev_err(adsd3500->dev, "Write of STREAM-ON command failed.\n");
++
++	return ret;
++}
++
++static int adsd3500_stop_streaming(struct adsd3500 *adsd3500)
++{
++	int ret;
++
++	ret = regmap_write(adsd3500->regmap, STREAM_OFF_CMD, STREAM_OFF_VAL);
++	if (ret < 0)
++		dev_err(adsd3500->dev, "Write of STREAM-OFF command failed.\n");
++
++	return ret;
++}
++
++static int adsd3500_s_stream(struct v4l2_subdev *subdev, int enable)
++{
++	struct adsd3500 *adsd3500 = to_adsd3500(subdev);
++	int ret = 0;
++
++	dev_dbg(adsd3500->dev, "s_stream: %d\n", enable);
++
++	mutex_lock(&adsd3500->lock);
++	if (adsd3500->streaming == enable) {
++		mutex_unlock(&adsd3500->lock);
++		return 0;
++	}
++
++	if (enable) {
++		ret = pm_runtime_get_sync(adsd3500->dev);
++		if (ret < 0) {
++			pm_runtime_put_noidle(adsd3500->dev);
++			goto err_unlock;
++		}
++
++		ret = adsd3500_start_streaming(adsd3500);
++		if (ret)
++			goto err_rpm_put;
++	} else {
++		adsd3500_stop_streaming(adsd3500);
++		pm_runtime_put(adsd3500->dev);
++	}
++
++	adsd3500->streaming = enable;
++	mutex_unlock(&adsd3500->lock);
++
++	return ret;
++
++err_rpm_put:
++	pm_runtime_put(adsd3500->dev);
++err_unlock:
++	mutex_unlock(&adsd3500->lock);
++
++	return ret;
++}
++
++static int adsd3500_g_frame_interval(struct v4l2_subdev *subdev,
++				     struct v4l2_subdev_frame_interval *fi)
++{
++	fi->interval.numerator = 1;
++	fi->interval.denominator = 30;
++
++	return 0;
++}
++
++static int adsd3500_s_frame_interval(struct v4l2_subdev *subdev,
++				     struct v4l2_subdev_frame_interval *fi)
++{
++	return 0;
++}
++
++static int adsd3500_link_setup(struct media_entity *entity,
++			   const struct media_pad *local,
++			   const struct media_pad *remote, u32 flags)
++{
++	return 0;
++}
++
++
++
++static const struct v4l2_subdev_core_ops adsd3500_core_ops = {
++#ifdef CONFIG_VIDEO_ADV_DEBUG
++	.g_register	= adsd3500_g_register,
++	.s_register	= adsd3500_s_register,
++#endif
++	.s_power = adsd3500_s_power,
++};
++
++static const struct v4l2_subdev_video_ops adsd3500_video_ops = {
++	.s_stream			= adsd3500_s_stream,
++	.g_frame_interval	= adsd3500_g_frame_interval,
++	.s_frame_interval	= adsd3500_s_frame_interval,
++};
++
++static const struct v4l2_subdev_pad_ops adsd3500_subdev_pad_ops = {
++	.init_cfg			= adsd3500_entity_init_cfg,
++	.enum_mbus_code		= adsd3500_enum_mbus_code,
++	.enum_frame_size	= adsd3500_enum_frame_size,
++	.get_fmt			= adsd3500_get_format,
++	.set_fmt			= adsd3500_set_format,
++	.get_selection		= adsd3500_get_selection,
++};
++
++static const struct v4l2_subdev_ops adsd3500_subdev_ops = {
++#ifdef CONFIG_VIDEO_ADV_DEBUG
++	.core	= &adsd3500_core_ops,
++#endif
++	.video	= &adsd3500_video_ops,
++	.pad	= &adsd3500_subdev_pad_ops,
++};
++
++static const struct media_entity_operations adsd3500_subdev_entity_ops = {
++	.link_setup = adsd3500_link_setup,
++};
++
++static int adsd3500_init_ctrls(struct adsd3500 *priv){
++	struct device *dev = priv->dev;
++	int ret;
++
++	v4l2_ctrl_handler_init(&priv->ctrls, 3);
++
++	priv->pixel_rate = v4l2_ctrl_new_std(&priv->ctrls,
++						  &adsd3500_ctrl_ops,
++						  V4L2_CID_PIXEL_RATE,
++						  1, INT_MAX, 1, 1);
++	priv->link_freq = v4l2_ctrl_new_int_menu(&priv->ctrls,
++						     &adsd3500_ctrl_ops,
++						     V4L2_CID_LINK_FREQ,
++						     ARRAY_SIZE(
++							     link_freq_tbl) - 1,
++						     0, link_freq_tbl);
++	if (priv->link_freq)
++		priv->link_freq->flags |= V4L2_CTRL_FLAG_READ_ONLY;
++
++	priv->operating_mode = v4l2_ctrl_new_custom(&priv->ctrls,
++						&adsd3500_ctrl_operating_mode,
++						NULL);
++	priv->set_chip_config = v4l2_ctrl_new_custom(&priv->ctrls,
++						&adsd3500_ctrl_chip_config,
++						NULL);
++
++	priv->depth_bits = v4l2_ctrl_new_custom(&priv->ctrls,
++						&adsd3500_ctrl_depth_bits,
++						NULL);
++
++	priv->ab_bits = v4l2_ctrl_new_custom(&priv->ctrls,
++						&adsd3500_ab_depth_bits,
++						NULL);
++
++	priv->confidence_bits = v4l2_ctrl_new_custom(&priv->ctrls,
++						&adsd3500_confidence_bits,
++						NULL);
++
++	priv->ab_avg = v4l2_ctrl_new_custom(&priv->ctrls,
++						&adsd3500_ab_avg,
++						NULL);
++
++	priv->depth_en = v4l2_ctrl_new_custom(&priv->ctrls,
++						&adsd3500_depth_en,
++						NULL);
++
++	ret = priv->ctrls.error;
++	if (ret) {
++		dev_err(dev, "%s: control initialization error %d\n",
++			__func__, ret);
++		return ret;
++	}
++	priv->sd.ctrl_handler = &priv->ctrls;
++
++	//Initialize by default to 4 (RAW12, 12 bpp)
++	v4l2_ctrl_s_ctrl(priv->depth_bits, 4);
++
++	return 0;
++}
++
++static int adsd3500_parse_dt(struct adsd3500 *priv){
++	struct v4l2_fwnode_endpoint bus_cfg = {.bus_type = V4L2_MBUS_CSI2_DPHY};
++	struct fwnode_handle *endpoint;
++	struct device *dev = priv->dev;
++	int ret;
++
++	endpoint = fwnode_graph_get_next_endpoint(dev_fwnode(dev), NULL);
++	if (!endpoint) {
++		dev_err(dev, "endpoint node not found\n");
++		return -EINVAL;
++	}
++
++	ret = v4l2_fwnode_endpoint_parse(endpoint, &bus_cfg);
++	fwnode_handle_put(endpoint);
++	if (ret < 0) {
++		dev_err(dev, "parsing endpoint node failed\n");
++		return ret;
++	}
++
++	priv->current_config.nr_mipi_lanes = bus_cfg.bus.mipi_csi2.num_data_lanes;
++
++	priv->rst_gpio = gpiod_get_optional(dev, "reset", GPIOD_OUT_LOW);
++	if (IS_ERR(priv->rst_gpio)) {
++		dev_err(dev, "Unable to get \"reset\" gpio\n");
++		return PTR_ERR(priv->rst_gpio);
++	}
++
++	priv->current_config.use_vc = of_property_read_bool(dev->of_node, "adi,use-vc");
++
++	return 0;
++}
++
++static int adsd3500_probe(struct i2c_client *client)
++{
++	
++	struct device *dev = &client->dev;
++	
++	struct adsd3500 *adsd3500;
++	int ret;
++
++	adsd3500 = devm_kzalloc(&client->dev, sizeof(struct adsd3500), GFP_KERNEL);
++	if (!adsd3500)
++		return -ENOMEM;
++	adsd3500->dev = dev;
++
++	adsd3500->regmap = devm_regmap_init_i2c(client,
++						 &adsd3500_regmap_config);
++	if (IS_ERR(adsd3500->regmap)) {
++		dev_err(dev, "Error initializing I2C regmap\n");
++		return PTR_ERR(adsd3500->regmap);
++	}
++
++	mutex_init(&adsd3500->lock);
++
++	adsd3500_parse_dt(adsd3500);
++
++	if(adsd3500->rst_gpio)
++		gpiod_set_value(adsd3500->rst_gpio, 1);
++
++	ret = adsd3500_init_ctrls(adsd3500);
++	if (ret < 0)
++		goto release_gpio;
++
++	v4l2_i2c_subdev_init(&adsd3500->sd, client, &adsd3500_subdev_ops);
++	adsd3500->sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE;
++	adsd3500->pad.flags = MEDIA_PAD_FL_SOURCE;
++	adsd3500->sd.dev = &client->dev;
++	adsd3500->sd.entity.ops = &adsd3500_subdev_entity_ops;
++	adsd3500->sd.entity.function = MEDIA_ENT_F_CAM_SENSOR;
++
++	ret = media_entity_pads_init(&adsd3500->sd.entity, 1, &adsd3500->pad);
++	if (ret < 0) {
++		dev_err(dev, "Could not register media entity\n");
++		goto free_ctrl;
++	}
++
++	ret = adsd3500_entity_init_cfg(&adsd3500->sd, NULL);
++	if (ret) {
++		dev_err(dev, "Could not init v4l2 device\n");
++		goto free_entity;
++	}
++
++	ret = v4l2_async_register_subdev(&adsd3500->sd);
++	if (ret < 0) {
++		dev_err(dev, "Could not register v4l2 device\n");
++		goto free_entity;
++	}
++
++	pm_runtime_set_active(dev);
++	pm_runtime_enable(dev);
++	pm_runtime_idle(dev);
++
++	return 0;
++
++free_entity:
++	media_entity_cleanup(&adsd3500->sd.entity);
++free_ctrl:
++	v4l2_ctrl_handler_free(&adsd3500->ctrls);
++	mutex_destroy(&adsd3500->lock);
++release_gpio:
++	gpiod_put(adsd3500->rst_gpio);
++
++	return ret;
++}
++
++static int adsd3500_remove(struct i2c_client *client)
++{
++	struct v4l2_subdev *sd = i2c_get_clientdata(client);
++	struct adsd3500 *adsd3500 = to_adsd3500(sd);
++
++	v4l2_async_unregister_subdev(&adsd3500->sd);
++	media_entity_cleanup(&adsd3500->sd.entity);
++	gpiod_put(adsd3500->rst_gpio);
++	v4l2_ctrl_handler_free(&adsd3500->ctrls);
++	mutex_destroy(&adsd3500->lock);
++
++	pm_runtime_disable(adsd3500->dev);
++	if (!pm_runtime_status_suspended(adsd3500->dev))
++		adsd3500_power_off(adsd3500->dev);
++	pm_runtime_set_suspended(adsd3500->dev);
++
++	return 0;
++}
++
++static const struct of_device_id adsd3500_of_match[] = {
++	{ .compatible = "adi,adsd3500" },
++	{ /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(of, adsd3500_of_match);
++
++static const struct dev_pm_ops adsd3500_pm_ops = {
++	SET_RUNTIME_PM_OPS(adsd3500_power_off, adsd3500_power_on, NULL)
++};
++
++static struct i2c_driver adsd3500_i2c_driver = {
++	.driver			= {
++		.of_match_table = adsd3500_of_match,
++		.name		= "adsd3500",
++		.pm		= &adsd3500_pm_ops,
++	},
++	.probe_new		= adsd3500_probe,
++	.remove			= adsd3500_remove,
++};
++
++module_i2c_driver(adsd3500_i2c_driver);
++
++MODULE_DESCRIPTION("Analog Devices ADI ADSD3500 Driver");
++MODULE_AUTHOR("Bogdan Togorean");
++MODULE_LICENSE("GPL v2");
+diff --git a/drivers/media/i2c/adsd3500_regs.h b/drivers/media/i2c/adsd3500_regs.h
+new file mode 100644
+index 000000000000..95f88fe6deff
+--- /dev/null
++++ b/drivers/media/i2c/adsd3500_regs.h
+@@ -0,0 +1,59 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Driver for the Analog Devices ADSD3500 chip.
++ *
++ * Copyright (C) 2021 Analog Devices, All Rights Reserved.
++ *
++ */
++
++#ifndef _ADSD3500_REGS_H_
++#define _ADSD3500_REGS_H_
++
++#include <linux/bitfield.h>
++
++#define GET_CHIP_ID_CMD						0x0112
++
++#define STREAM_ON_CMD						0x00AD
++#define STREAM_ON_VAL					    0x00C5
++
++#define STREAM_OFF_CMD						0x000C
++#define STREAM_OFF_VAL						0x0002
++
++#define SET_IMAGER_MODE_CMD					0xDA00
++#define SET_IMAGER_MODE_MSK					GENMASK(7, 0)
++#define SET_IMAGER_MODE(x)				    FIELD_PREP(SET_IMAGER_MODE_MSK, x)
++#define SET_IMAGER_MODE_DEPTH_EN_MSK		BIT_MASK(0)
++#define SET_IMAGER_MODE_DEPTH_EN(x)		    FIELD_PREP(SET_IMAGER_MODE_DEPTH_EN_MSK, x)
++#define SET_IMAGER_MODE_VC_EN_MSK			BIT_MASK(1)
++#define SET_IMAGER_MODE_VC_EN(x)			FIELD_PREP(SET_IMAGER_MODE_VC_EN_MSK, x)
++#define SET_IMAGER_MODE_AB_EN_MSK			BIT_MASK(2)
++#define SET_IMAGER_MODE_AB_EN(x)			FIELD_PREP(SET_IMAGER_MODE_AB_EN_MSK, x)
++#define SET_IMAGER_MODE_AB_AVG_EN_MSK		BIT_MASK(3)
++#define SET_IMAGER_MODE_AB_AVG_EN(x)		FIELD_PREP(SET_IMAGER_MODE_AB_AVG_EN_MSK, x)
++#define SET_IMAGER_MODE_DEPTH_BITS_MSK		GENMASK(6, 4)
++#define SET_IMAGER_MODE_DEPTH_BITS(x)		FIELD_PREP(SET_IMAGER_MODE_DEPTH_BITS_MSK, x)
++#define SET_IMAGER_MODE_AB_BITS_MSK			GENMASK(9, 7)
++#define SET_IMAGER_MODE_AB_BITS(x)  		FIELD_PREP(SET_IMAGER_MODE_AB_BITS_MSK, x)
++#define SET_IMAGER_MODE_CONF_BITS_MSK		GENMASK(11, 10)
++#define SET_IMAGER_MODE_CONF_BITS(x)		FIELD_PREP(SET_IMAGER_MODE_CONF_BITS_MSK, x)
++#define SET_IMAGER_MODE_MIPI_LANES_NR_MSK   GENMASK(13, 12)
++#define SET_IMAGER_MODE_MIPI_LANES_NR(x)    FIELD_PREP(SET_IMAGER_MODE_MIPI_LANES_NR_MSK, x)
++
++#define GET_IMAGER_MODE_CMD					0x0012
++#define GET_IMAGER_AB_INVLD_TRSHLD			0x0015
++#define GET_IMAGER_CONFIDENCE_TRSHLD		0x0016
++#define GET_IMAGER_JBLF_STATE				0x0017
++#define GET_IMAGER_JBLF_FILT_SIZE			0x0018
++
++#define SET_FRAMERATE_CMD                   0x0022
++#define GET_FRAMERATE_CMD                   0x0023
++
++#define READ_REGISTER_CMD					0xFFFF
++#define WRITE_REGISTER_CMD					0xFFFF
++
++#define SWITCH_TO_BURST_CMD         	    0x0019
++#define SWITCH_TO_BURST_VAL         	    0x0000
++
++#define ADSD3500_CHIP_ID					0x5931
++
++#endif
+-- 
+2.17.1
+
