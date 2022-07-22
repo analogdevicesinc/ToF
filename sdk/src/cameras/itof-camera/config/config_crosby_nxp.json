@@ -1,0 +1,6 @@
+{
+"sensorFirmware": "./config/camera_configuration_crosby.cfg",
+"VAUX_POWER_VOLTAGE": "18",
+"DEPTH_INI": "./config/RawToDepth.ini",
+"FPS": "10"
+}

@@ -1,0 +1,17 @@
+[Match]
+Name=usb0
+
+[Network]
+#DHCP=yes
+Address=10.42.0.1/24
+DHCPServer=true
+IPMasquerade=true
+
+[DHCPServer]
+PoolOffset=100
+PoolSize=20
+EmitDNS=no
+EmitRouter=no
+
+[Link]
+MTUBytes=15000
