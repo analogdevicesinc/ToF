@@ -11,6 +11,8 @@ NUM_JOBS=4
 ARGS="$2"
 
 mkdir -p build
+mkdir ../libs
+
 pushd build
 cmake .. ${ARGS} -DCMAKE_PREFIX_PATH="${GLOG_INSTALL_DIR};${PROTOBUF_INSTALL_DIR};${WEBSOCKETS_INSTALL_DIR};${OPENCV_INSTALL_DIR}"
 make -j${NUM_JOBS}
