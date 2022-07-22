@@ -1,0 +1,9 @@
+{
+"sensorFirmware": "./config/NXP_MIPI4kSuperframe.cfg",
+"CCB_Calibration": "./config/camera_calibration_adsd3500.ccb",
+"VAUX_POWER_VOLTAGE": "18",
+"skip_network_cameras": "on",
+"DEPTH_INI": "./config/RawToDepthAdsd3500.ini",
+"modes": "qmp, mp",
+"FPS": "10"
+}

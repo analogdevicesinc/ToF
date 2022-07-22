@@ -1,0 +1,91 @@
+From 41e58ea1f2905890e1d8eaa93e5f1273b93c7de0 Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Mon, 23 May 2022 15:55:13 +0300
+Subject: [PATCH 35/36] drivers: media: i2c: adsd3500: Fix MP frames width and
+ height
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ drivers/media/i2c/adsd3500.c | 32 ++++++++++++++++++++------------
+ 1 file changed, 20 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/media/i2c/adsd3500.c b/drivers/media/i2c/adsd3500.c
+index e3a67a793e51..358a68fa47d6 100644
+--- a/drivers/media/i2c/adsd3500.c
++++ b/drivers/media/i2c/adsd3500.c
+@@ -87,6 +87,7 @@ static const struct reg_sequence adsd3500_standby_setting[] = {
+ };
+ 
+ static const s64 link_freq_tbl[] = {
++	732000000,
+ 	732000000,
+ 	732000000,
+ 	732000000,
+@@ -103,11 +104,11 @@ static const s64 link_freq_tbl[] = {
+ 
+ /* Elements of the structure must be ordered ascending by width & height */
+ static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
+-	{ //RAW12 12BPP
++	{ //RAW8 8BPP
+ 		.width = 512,
+ 		.height = 512,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 	{ //RAW8 16BPP
+@@ -159,33 +160,40 @@ static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 7 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW12 1 Phase / Frame
+-		.width = 1024,
+-		.height = 1024,
++	{ //RAW12 12BPP Depth only
++		.width = 512,
++		.height = 512,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+ 		.link_freq_idx = 8 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW12 12BPP * 3 phase
+-		.width = 3072,
++	{ //RAW12 1 Phase / Frame
++		.width = 1024,
+ 		.height = 1024,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+ 		.link_freq_idx = 9 /* an index in link_freq_tbl[] */
+ 	},
+ 	{ //RAW12 12BPP * 3 phase
+-		.width = 4096,
+-		.height = 1024,
++		.width = 1024,
++		.height = 3072,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+ 		.link_freq_idx = 10 /* an index in link_freq_tbl[] */
+ 	},
++	{ //RAW12 12BPP * 3 phase
++		.width = 1024,
++		.height = 4096,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.link_freq_idx = 11 /* an index in link_freq_tbl[] */
++	},
+ 	{ //RAW16 16BPP * 3 phase
+-		.width = 3072,
+-		.height = 1024,
++		.width = 1024,
++		.height = 3072,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR16_1X16,
+-		.link_freq_idx = 11 /* an index in link_freq_tbl[] */
++		.link_freq_idx = 12 /* an index in link_freq_tbl[] */
+ 	}
+ };
+ 
+-- 
+2.17.1
+

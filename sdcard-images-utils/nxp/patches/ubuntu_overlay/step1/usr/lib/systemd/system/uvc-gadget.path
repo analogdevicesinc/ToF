@@ -1,0 +1,9 @@
+[Unit]
+Description=Enable uvc when path is available
+
+[Path]
+PathExists=/sys/kernel/config/usb_gadget/g1/functions/uvc.0
+Unit=uvc-gadget.service
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,198 @@
+\hypertarget{memutils_8h}{\section{memutils.\-h File Reference}
+\label{memutils_8h}\index{memutils.\-h@{memutils.\-h}}
+}
+
+
+Utility functions for memory manipulation.  
+
+
+{\ttfamily \#include \char`\"{}utils/generic/generic.\-h\char`\"{}}\\*
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{memutils_8h_ab47f9d4ddfd9df5055a997c2a8ddb381}{\#define {\bfseries V\-A\-L\-I\-D\-\_\-\-H\-S\-P\-\_\-\-M\-E\-M\-O\-R\-Y\-\_\-\-A\-D\-D\-R\-E\-S\-S\-\_\-\-B\-A\-S\-E}~0x2\-F000000}\label{memutils_8h_ab47f9d4ddfd9df5055a997c2a8ddb381}
+
+\item 
+\hypertarget{memutils_8h_a7167f451719f48f8486871a3f220c84e}{\#define {\bfseries V\-A\-L\-I\-D\-\_\-\-H\-S\-P\-\_\-\-M\-E\-M\-O\-R\-Y\-\_\-\-A\-D\-D\-R\-E\-S\-S\-\_\-\-M\-A\-S\-K}~0x\-F\-F\-F00000}\label{memutils_8h_a7167f451719f48f8486871a3f220c84e}
+
+\item 
+\hypertarget{memutils_8h_a89f181ddb3b3d5d014f08edabe803103}{\#define {\bfseries M\-A\-X\-\_\-\-H\-S\-P\-\_\-\-A\-D\-D\-R\-E\-S\-S\-\_\-\-R\-A\-N\-G\-E\-\_\-\-S\-I\-Z\-E}~0x10000}\label{memutils_8h_a89f181ddb3b3d5d014f08edabe803103}
+
+\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{memutils_8h_afea2eba1606d4c9f29b02e5d13fed181}{Mem\-Cmp\-\_\-\-Result\-\_\-t} \{ \hyperlink{memutils_8h_afea2eba1606d4c9f29b02e5d13fed181a2bcf35ab101d5e848cce0bc176e3c095}{M\-E\-M\-C\-M\-P\-\_\-\-S\-U\-C\-C\-E\-S\-S} = 0x\-F\-F\-F\-F\-F\-F\-F\-F, 
+\hyperlink{memutils_8h_afea2eba1606d4c9f29b02e5d13fed181a843db92ad5139e1cdded36c0a86a1c25}{M\-E\-M\-C\-M\-P\-\_\-\-F\-A\-I\-L} = 0x00000000
+ \}
+\begin{DoxyCompactList}\small\item\em Result of memory comparison, where a success requires many bits to be set (more secure) \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void $\ast$ \hyperlink{memutils_8h_a9cebf4b6732b1c2d98613e00e0c788b8}{memcpy32} (void $\ast$dst, const void $\ast$src, uint32\-\_\-t size)
+\begin{DoxyCompactList}\small\item\em Copy memory from source in memory to destination. \end{DoxyCompactList}\item 
+void $\ast$ \hyperlink{memutils_8h_ac242fda1f425f7087869284c4437f35b}{memset32} (void $\ast$ptr, int value, size\-\_\-t size)
+\begin{DoxyCompactList}\small\item\em Fills a block of memory with a constant value. \end{DoxyCompactList}\item 
+void \hyperlink{memutils_8h_a375b049125d95b43ad5e2c3544331f5e}{Reverse\-Mem\-Cpy32} (void $\ast$dst, const void $\ast$src, uint32\-\_\-t size)
+\begin{DoxyCompactList}\small\item\em Copy memory from source to destination, reversing bytes. \end{DoxyCompactList}\item 
+void \hyperlink{memutils_8h_a23231c7cb92cb998ad2f1abc346d4af0}{Reverse\-Bytes32} (void $\ast$ptr, uint32\-\_\-t size)
+\begin{DoxyCompactList}\small\item\em Reverses bytes in memory. \end{DoxyCompactList}\item 
+\hyperlink{memutils_8h_afea2eba1606d4c9f29b02e5d13fed181}{Mem\-Cmp\-\_\-\-Result\-\_\-t} \hyperlink{memutils_8h_a7451a9119e26710c8ab9aaa2adc2ebad}{Secure\-Mem\-Cmp32} (const void $\ast$ptr1, const void $\ast$ptr2, size\-\_\-t n)
+\begin{DoxyCompactList}\small\item\em Compares memory in a secure manner. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Utility functions for memory manipulation. 
+
+\subsection{Enumeration Type Documentation}
+\hypertarget{memutils_8h_afea2eba1606d4c9f29b02e5d13fed181}{\index{memutils.\-h@{memutils.\-h}!Mem\-Cmp\-\_\-\-Result\-\_\-t@{Mem\-Cmp\-\_\-\-Result\-\_\-t}}
+\index{Mem\-Cmp\-\_\-\-Result\-\_\-t@{Mem\-Cmp\-\_\-\-Result\-\_\-t}!memutils.h@{memutils.\-h}}
+\subsubsection[{Mem\-Cmp\-\_\-\-Result\-\_\-t}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf Mem\-Cmp\-\_\-\-Result\-\_\-t}}}\label{memutils_8h_afea2eba1606d4c9f29b02e5d13fed181}
+
+
+Result of memory comparison, where a success requires many bits to be set (more secure) 
+
+\begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{M\-E\-M\-C\-M\-P\-\_\-\-S\-U\-C\-C\-E\-S\-S@{M\-E\-M\-C\-M\-P\-\_\-\-S\-U\-C\-C\-E\-S\-S}!memutils.\-h@{memutils.\-h}}\index{memutils.\-h@{memutils.\-h}!M\-E\-M\-C\-M\-P\-\_\-\-S\-U\-C\-C\-E\-S\-S@{M\-E\-M\-C\-M\-P\-\_\-\-S\-U\-C\-C\-E\-S\-S}}\item[{\em 
+\hypertarget{memutils_8h_afea2eba1606d4c9f29b02e5d13fed181a2bcf35ab101d5e848cce0bc176e3c095}{M\-E\-M\-C\-M\-P\-\_\-\-S\-U\-C\-C\-E\-S\-S}\label{memutils_8h_afea2eba1606d4c9f29b02e5d13fed181a2bcf35ab101d5e848cce0bc176e3c095}
+}]Success \index{M\-E\-M\-C\-M\-P\-\_\-\-F\-A\-I\-L@{M\-E\-M\-C\-M\-P\-\_\-\-F\-A\-I\-L}!memutils.\-h@{memutils.\-h}}\index{memutils.\-h@{memutils.\-h}!M\-E\-M\-C\-M\-P\-\_\-\-F\-A\-I\-L@{M\-E\-M\-C\-M\-P\-\_\-\-F\-A\-I\-L}}\item[{\em 
+\hypertarget{memutils_8h_afea2eba1606d4c9f29b02e5d13fed181a843db92ad5139e1cdded36c0a86a1c25}{M\-E\-M\-C\-M\-P\-\_\-\-F\-A\-I\-L}\label{memutils_8h_afea2eba1606d4c9f29b02e5d13fed181a843db92ad5139e1cdded36c0a86a1c25}
+}]Failure \end{description}
+\end{Desc}
+
+
+\subsection{Function Documentation}
+\hypertarget{memutils_8h_a9cebf4b6732b1c2d98613e00e0c788b8}{\index{memutils.\-h@{memutils.\-h}!memcpy32@{memcpy32}}
+\index{memcpy32@{memcpy32}!memutils.h@{memutils.\-h}}
+\subsubsection[{memcpy32}]{\setlength{\rightskip}{0pt plus 5cm}void$\ast$ memcpy32 (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{dst, }
+\item[{const void $\ast$}]{src, }
+\item[{uint32\-\_\-t}]{size}
+\end{DoxyParamCaption}
+)}}\label{memutils_8h_a9cebf4b6732b1c2d98613e00e0c788b8}
+
+
+Copy memory from source in memory to destination. 
+
+{\bfseries Description\-:} Copies {\ttfamily size} bytes from {\ttfamily src} memory area to {\ttfamily dst} memory area. N\-O\-T\-E\-: Addresses and size must be 32-\/bit aligned.
+
+
+\begin{DoxyParams}{Parameters}
+{\em dst} & Pointer to destination memory area \\
+\hline
+{\em src} & Pointer to source memory area \\
+\hline
+{\em size} & Size of data in bytes\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Void pointer to the destination memory 
+\end{DoxyReturn}
+\hypertarget{memutils_8h_ac242fda1f425f7087869284c4437f35b}{\index{memutils.\-h@{memutils.\-h}!memset32@{memset32}}
+\index{memset32@{memset32}!memutils.h@{memutils.\-h}}
+\subsubsection[{memset32}]{\setlength{\rightskip}{0pt plus 5cm}void$\ast$ memset32 (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{ptr, }
+\item[{int}]{value, }
+\item[{size\-\_\-t}]{size}
+\end{DoxyParamCaption}
+)}}\label{memutils_8h_ac242fda1f425f7087869284c4437f35b}
+
+
+Fills a block of memory with a constant value. 
+
+{\bfseries Description\-:} Sets {\ttfamily size} bytes of memory starting at {\ttfamily ptr} with value {\ttfamily value} N\-O\-T\-E\-: Address and size must be 32-\/bit aligned.
+
+
+\begin{DoxyParams}{Parameters}
+{\em ptr} & Pointer to memory \\
+\hline
+{\em value} & Value to set \\
+\hline
+{\em size} & Size of memory in bytes\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Void pointer to the memory 
+\end{DoxyReturn}
+\hypertarget{memutils_8h_a23231c7cb92cb998ad2f1abc346d4af0}{\index{memutils.\-h@{memutils.\-h}!Reverse\-Bytes32@{Reverse\-Bytes32}}
+\index{Reverse\-Bytes32@{Reverse\-Bytes32}!memutils.h@{memutils.\-h}}
+\subsubsection[{Reverse\-Bytes32}]{\setlength{\rightskip}{0pt plus 5cm}void Reverse\-Bytes32 (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{ptr, }
+\item[{uint32\-\_\-t}]{size}
+\end{DoxyParamCaption}
+)}}\label{memutils_8h_a23231c7cb92cb998ad2f1abc346d4af0}
+
+
+Reverses bytes in memory. 
+
+{\bfseries Description\-:} Reverses in-\/place the {\ttfamily size} bytes in {\ttfamily ptr} memory area, so that the last byte in the buffer becomes the first byte. This is typically used to deal with endianness. N\-O\-T\-E\-: Address and size must be 32-\/bit aligned.
+
+
+\begin{DoxyParams}{Parameters}
+{\em ptr} & Pointer to memory \\
+\hline
+{\em size} & Size of memory in bytes\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\hypertarget{memutils_8h_a375b049125d95b43ad5e2c3544331f5e}{\index{memutils.\-h@{memutils.\-h}!Reverse\-Mem\-Cpy32@{Reverse\-Mem\-Cpy32}}
+\index{Reverse\-Mem\-Cpy32@{Reverse\-Mem\-Cpy32}!memutils.h@{memutils.\-h}}
+\subsubsection[{Reverse\-Mem\-Cpy32}]{\setlength{\rightskip}{0pt plus 5cm}void Reverse\-Mem\-Cpy32 (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{dst, }
+\item[{const void $\ast$}]{src, }
+\item[{uint32\-\_\-t}]{size}
+\end{DoxyParamCaption}
+)}}\label{memutils_8h_a375b049125d95b43ad5e2c3544331f5e}
+
+
+Copy memory from source to destination, reversing bytes. 
+
+{\bfseries Description\-:} Copies {\ttfamily size} bytes from {\ttfamily src} memory area to {\ttfamily dst} memory area, reversing the bytes in the process so that the last byte in {\ttfamily dst} is the first byte in {\ttfamily src}. This is typically used to deal with endianness. Note that the buffers C\-A\-N\-N\-O\-T overlap. N\-O\-T\-E\-: Addresses and size must be 32-\/bit aligned.
+
+
+\begin{DoxyParams}{Parameters}
+{\em dst} & Pointer to destination memory area \\
+\hline
+{\em src} & Pointer to source memory area \\
+\hline
+{\em size} & Size of data in bytes\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\hypertarget{memutils_8h_a7451a9119e26710c8ab9aaa2adc2ebad}{\index{memutils.\-h@{memutils.\-h}!Secure\-Mem\-Cmp32@{Secure\-Mem\-Cmp32}}
+\index{Secure\-Mem\-Cmp32@{Secure\-Mem\-Cmp32}!memutils.h@{memutils.\-h}}
+\subsubsection[{Secure\-Mem\-Cmp32}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Mem\-Cmp\-\_\-\-Result\-\_\-t} Secure\-Mem\-Cmp32 (
+\begin{DoxyParamCaption}
+\item[{const void $\ast$}]{ptr1, }
+\item[{const void $\ast$}]{ptr2, }
+\item[{size\-\_\-t}]{n}
+\end{DoxyParamCaption}
+)}}\label{memutils_8h_a7451a9119e26710c8ab9aaa2adc2ebad}
+
+
+Compares memory in a secure manner. 
+
+{\bfseries Description\-:} Compares first {\ttfamily n} bytes of memory areas {\ttfamily ptr1} and {\ttfamily ptr2}. The comparison is done in secure way, where the execution time will always be the same (timing invariant), and a successful return value consists of more than a single bit being set. N\-O\-T\-E\-: Addresses and size must be 32-\/bit aligned.
+
+
+\begin{DoxyParams}{Parameters}
+{\em ptr1} & Pointer to memory area 1 \\
+\hline
+{\em ptr2} & Pointer to memory area 2 \\
+\hline
+{\em n} & Size in bytes of memory to compare\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+{\ttfamily Mem\-Cmp\-\_\-\-Result\-\_\-t} indicating the result of the comparison. 
+\end{DoxyReturn}

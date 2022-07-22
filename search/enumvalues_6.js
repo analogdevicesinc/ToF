@@ -1,0 +1,23 @@
+var searchData=
+[
+  ['imager_5fboot_5ffailure',['IMAGER_BOOT_FAILURE',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6a503872344e52f7126ae45ff726fc5d60',1,'aditof']]],
+  ['imager_5fcommunication_5ferror',['IMAGER_COMMUNICATION_ERROR',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6a348c2a9e4bd0f51efa67e643a59cb1bc',1,'aditof']]],
+  ['imager_5ferror',['IMAGER_ERROR',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6acdee140d1766e54e85cbafc9995e2299',1,'aditof']]],
+  ['imager_5fstream_5foff',['IMAGER_STREAM_OFF',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6a83ace88a83567c2dfa520dacaa5c5713',1,'aditof']]],
+  ['init_5ffw_5fwrite_5fcomplete',['INIT_FW_WRITE_COMPLETE',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6ab01b7fd994865bf480542fa192413a95',1,'aditof']]],
+  ['invalid_5fargument',['INVALID_ARGUMENT',['../namespaceaditof.html#a44f136ae2a9a546362d75a5d73443da9af295a0c3e37c94f078e1c5476479132d',1,'aditof']]],
+  ['invalid_5fbin_5fsize',['INVALID_BIN_SIZE',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6aebf4efc9775ffd0628b7a15af64596e4',1,'aditof']]],
+  ['invalid_5fccb',['INVALID_CCB',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6a66214bf1ea84bc0448917e4e419034a7',1,'aditof']]],
+  ['invalid_5fccb_5fwrite_5fcrc',['INVALID_CCB_WRITE_CRC',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6a3250dd51b7abb1d4696c4908eadb6507',1,'aditof']]],
+  ['invalid_5fcfg_5fwrite_5fcrc',['INVALID_CFG_WRITE_CRC',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6a1f273f7b697a2fb72331adf64697b14c',1,'aditof']]],
+  ['invalid_5fchipid',['INVALID_CHIPID',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6aa54e23b90d9d7eb11b4295115a566e12',1,'aditof']]],
+  ['invalid_5fdynamic_5fmode_5fcompositions',['INVALID_DYNAMIC_MODE_COMPOSITIONS',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6a11d0cf0ed8c5cf6fd54246ac13792931',1,'aditof']]],
+  ['invalid_5ffirmware_5fcrc',['INVALID_FIRMWARE_CRC',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6a107b37368808be7c7491b486c1b4b618',1,'aditof']]],
+  ['invalid_5fimager',['INVALID_IMAGER',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6a364baf778bda7df94153456db7a39fe5',1,'aditof']]],
+  ['invalid_5fini_5fupdate_5fin_5fpcm_5fmode',['INVALID_INI_UPDATE_IN_PCM_MODE',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6a24927c169b900fc8efc8f019a9690acc',1,'aditof']]],
+  ['invalid_5finit_5ffw_5fwrite_5fcrc',['INVALID_INIT_FW_WRITE_CRC',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6adbec1ca864a6f1cb43ee87068649f034',1,'aditof']]],
+  ['invalid_5fjblf_5ffilter_5fsize',['INVALID_JBLF_FILTER_SIZE',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6a4a462d9a23b38f612321408eda8b4dca',1,'aditof']]],
+  ['invalid_5fmemory_5fregion',['INVALID_MEMORY_REGION',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6a036d22e8ac1b16e8b1731581bda820ac',1,'aditof']]],
+  ['invalid_5fmode',['INVALID_MODE',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6a3850fef095f068e996766fd34f9a567b',1,'aditof']]],
+  ['invalid_5fphase_5finvalid_5fvalue',['INVALID_PHASE_INVALID_VALUE',['../namespaceaditof.html#a320673d4700814b3be0f55bc2efcf9d6ac6b2b885fef86ee2a4590fe90547718b',1,'aditof']]]
+];

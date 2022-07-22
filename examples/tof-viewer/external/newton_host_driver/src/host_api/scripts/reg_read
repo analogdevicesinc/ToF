@@ -1,0 +1,8 @@
+./linux/newton_control.exe reset_hsp
+./linux/newton_control.exe spi_write 4 0112
+./linux/newton_control.exe spi_write 4 1009
+./linux/newton_control.exe spi_write 4 0000
+./linux/newton_control.exe spi_write 4 0004
+./linux/newton_control.exe spi_write 2 0004
+./linux/newton_control.exe spi_read 2
+./linux/newton_control.exe spi_read a
