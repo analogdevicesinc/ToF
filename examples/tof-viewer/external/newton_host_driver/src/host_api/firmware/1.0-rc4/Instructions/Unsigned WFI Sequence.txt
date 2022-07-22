@@ -1,0 +1,3 @@
+[Load ROM Firmware]
+./newton reset_hsp
+./newton load cmd_file host_api/dataFiles/newton_load_firmware_example.txt
