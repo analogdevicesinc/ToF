@@ -20,6 +20,7 @@ build_default() {
     if [[ "${COMPILER_CC}" != "" ]]; then export CC=${COMPILER_CC}; fi
     
     mkdir -p ${BUILD_DIR}
+    mkdir ../libs
 
     pushd ${BUILD_DIR}
     pwd
