@@ -82,7 +82,7 @@ struct DepthSensorFrameContent {
 };
 
 /**
- * @struct DepthSensorFrameFormat
+ * @struct DepthSensorFrameType
  * @brief Describes the type of entire frame that a depth sensor can capture and transmit
  */
 struct DepthSensorFrameType {
