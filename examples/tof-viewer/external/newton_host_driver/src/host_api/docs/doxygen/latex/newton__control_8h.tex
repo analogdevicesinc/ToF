@@ -1,0 +1,1616 @@
+\hypertarget{newton__control_8h}{}\doxysection{newton\+\_\+control.\+h File Reference}
+\label{newton__control_8h}\index{newton\_control.h@{newton\_control.h}}
+{\ttfamily \#include $<$stdio.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$stdint.\+h$>$}\newline
+{\ttfamily \#include $<$stdbool.\+h$>$}\newline
+{\ttfamily \#include $<$unistd.\+h$>$}\newline
+{\ttfamily \#include $<$string.\+h$>$}\newline
+{\ttfamily \#include $<$ctype.\+h$>$}\newline
+{\ttfamily \#include $<$time.\+h$>$}\newline
+{\ttfamily \#include $<$sys/ioctl.\+h$>$}\newline
+{\ttfamily \#include $<$sys/stat.\+h$>$}\newline
+{\ttfamily \#include $<$linux/types.\+h$>$}\newline
+{\ttfamily \#include $<$linux/spi/spidev.\+h$>$}\newline
+{\ttfamily \#include $<$fcntl.\+h$>$}\newline
+{\ttfamily \#include \char`\"{}newton\+\_\+addr\+\_\+cdef.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}newton\+\_\+typedefs.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}newton\+\_\+mem\+Map.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}fpga\+\_\+backdoor\+\_\+addr\+\_\+cdef.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}fpga\+\_\+backdoor\+\_\+typedefs.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}hsp\+\_\+regs\+\_\+addr\+\_\+cdef.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}hsp\+\_\+regs\+\_\+typedefs.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}json.\+h\char`\"{}}\newline
+{\ttfamily \#include \char`\"{}cutils/str\+\_\+parms.\+h\char`\"{}}\newline
+\doxysubsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \mbox{\hyperlink{struct__adi__ErrorLog__s}{\+\_\+adi\+\_\+\+Error\+Log\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__USEQ__REGS__MAP1__USEQRAMLOADADDR__s}{\+\_\+\+A\+D\+I\+\_\+\+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+M\+A\+P1\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+L\+O\+A\+D\+A\+D\+D\+R\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__USEQ__REGS__MAP1__USEQRAMRDSTADDR__s}{\+\_\+\+A\+D\+I\+\_\+\+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+M\+A\+P1\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+R\+D\+S\+T\+A\+D\+D\+R\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__USEQ__REGS__MAP1__USEQRAMLOADDATA__s}{\+\_\+\+A\+D\+I\+\_\+\+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+M\+A\+P1\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+L\+O\+A\+D\+D\+A\+T\+A\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__USEQ__REGS__MAP1__USEQRAMLOADDATAALIAS__s}{\+\_\+\+A\+D\+I\+\_\+\+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+M\+A\+P1\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+L\+O\+A\+D\+D\+A\+T\+A\+A\+L\+I\+A\+S\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__USEQ__REGS__MAP1__USEQRAMRDDATA__s}{\+\_\+\+A\+D\+I\+\_\+\+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+M\+A\+P1\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+R\+D\+D\+A\+T\+A\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__USEQ__REGS__MAP1__USEQRAMRDDATAALIAS__s}{\+\_\+\+A\+D\+I\+\_\+\+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+M\+A\+P1\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+R\+D\+D\+A\+T\+A\+A\+L\+I\+A\+S\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSCTRL__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+C\+T\+R\+L\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSWAVEFREQ__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+W\+A\+V\+E\+F\+R\+E\+Q\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSWAVEGENACC__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+W\+A\+V\+E\+G\+E\+N\+A\+C\+C\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSRAMADDR__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+R\+A\+M\+A\+D\+D\+R\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSRAMRDCMD__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+R\+A\+M\+R\+D\+C\+M\+D\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSWAVEGENADDR__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+W\+A\+V\+E\+G\+E\+N\+A\+D\+D\+R\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSMARGIN__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+M\+A\+R\+G\+I\+N\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSDBG__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+D\+B\+G\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSRAMDATA__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+R\+A\+M\+D\+A\+T\+A\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSRAMDATA__ALIAS__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+R\+A\+M\+D\+A\+T\+A\+\_\+\+A\+L\+I\+A\+S\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__CORRECTION__CONFIG__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+C\+O\+R\+R\+E\+C\+T\+I\+O\+N\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__USE__CASE__FRAME__CONFIG__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+\+F\+R\+A\+M\+E\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__USE__CASE__MIPI__PACKET__CONTROL__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+\+M\+I\+P\+I\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__GAIN0__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+G\+A\+I\+N0\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__GAIN1__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+G\+A\+I\+N1\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__GAIN2__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+G\+A\+I\+N2\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__GAIN3__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+G\+A\+I\+N3\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__PARITY__GAIN__MEM__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+A\+R\+I\+T\+Y\+\_\+\+G\+A\+I\+N\+\_\+\+M\+E\+M\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__PARITY__LINE__MEM__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+A\+R\+I\+T\+Y\+\_\+\+L\+I\+N\+E\+\_\+\+M\+E\+M\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__PP__LFSR__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+L\+F\+S\+R\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__PP__DECODE__ST__1__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+D\+E\+C\+O\+D\+E\+\_\+\+S\+T\+\_\+1\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__PP__DECODE__ST__2__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+D\+E\+C\+O\+D\+E\+\_\+\+S\+T\+\_\+2\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__PP__ENCODE__ST__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+E\+N\+C\+O\+D\+E\+\_\+\+S\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__PP__ENCODE__GT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+E\+N\+C\+O\+D\+E\+\_\+\+G\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__DBG__MUX__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+D\+B\+G\+\_\+\+M\+U\+X\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__GAIN__MARGIN__CONTROL__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+G\+A\+I\+N\+\_\+\+M\+A\+R\+G\+I\+N\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__LINE__MARGIN__CONTROL__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+L\+I\+N\+E\+\_\+\+M\+A\+R\+G\+I\+N\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__ROI__ROW__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+O\+I\+\_\+\+R\+O\+W\+\_\+\+S\+T\+A\+R\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__ROI__HEIGHT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+O\+I\+\_\+\+H\+E\+I\+G\+H\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__ROI__COLUMN__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+O\+I\+\_\+\+C\+O\+L\+U\+M\+N\+\_\+\+S\+T\+A\+R\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__ROI__WIDTH__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+O\+I\+\_\+\+W\+I\+D\+T\+H\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__PP__USEQ__WRITE__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+U\+S\+E\+Q\+\_\+\+W\+R\+I\+T\+E\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__PP__ADC__DELAY__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+A\+D\+C\+\_\+\+D\+E\+L\+A\+Y\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__MIPI__BUFF__MARGIN__CONTROL__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+M\+I\+P\+I\+\_\+\+B\+U\+F\+F\+\_\+\+M\+A\+R\+G\+I\+N\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__MIPI__HEADER__WIDTH__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+M\+I\+P\+I\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+W\+I\+D\+T\+H\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__FRAME__NUMBER__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+F\+R\+A\+M\+E\+\_\+\+N\+U\+M\+B\+E\+R\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__MICRO__SEQUENCER__FW__VERSION__LSB__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+M\+I\+C\+R\+O\+\_\+\+S\+E\+Q\+U\+E\+N\+C\+E\+R\+\_\+\+F\+W\+\_\+\+V\+E\+R\+S\+I\+O\+N\+\_\+\+L\+S\+B\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__MICRO__SEQUENCER__FW__VERSION__MSB__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+M\+I\+C\+R\+O\+\_\+\+S\+E\+Q\+U\+E\+N\+C\+E\+R\+\_\+\+F\+W\+\_\+\+V\+E\+R\+S\+I\+O\+N\+\_\+\+M\+S\+B\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__TS__CAL__VER__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+T\+S\+\_\+\+C\+A\+L\+\_\+\+V\+E\+R\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__ADC__CAL__VER__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+A\+D\+C\+\_\+\+C\+A\+L\+\_\+\+V\+E\+R\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__REG__0__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+0\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__REG__1__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+1\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__REG__2__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+2\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__REG__3__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+3\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__REG__4__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+4\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__REG__5__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+5\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__REG__6__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+6\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__REG__7__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+7\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__PARITY__MIPI__BUFFER__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+A\+R\+I\+T\+Y\+\_\+\+M\+I\+P\+I\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__PACKET__COUNT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+C\+O\+U\+N\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__PACKETS__PER__FRAME__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+A\+C\+K\+E\+T\+S\+\_\+\+P\+E\+R\+\_\+\+F\+R\+A\+M\+E\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__ROW__VECTOR__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+T\+O\+R\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__ROWS__PER__PACKET__OUT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+O\+W\+S\+\_\+\+P\+E\+R\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+O\+U\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__MIPI__RD__EN__MAX__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+M\+I\+P\+I\+\_\+\+R\+D\+\_\+\+E\+N\+\_\+\+M\+A\+X\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__ANALOG__SS__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+A\+N\+A\+L\+O\+G\+\_\+\+S\+S\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__MIPI__BUFF__PARITY__ERR__CNT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+M\+I\+P\+I\+\_\+\+B\+U\+F\+F\+\_\+\+P\+A\+R\+I\+T\+Y\+\_\+\+E\+R\+R\+\_\+\+C\+N\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__LINE__MEM__PARITY__ERR__CNT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+L\+I\+N\+E\+\_\+\+M\+E\+M\+\_\+\+P\+A\+R\+I\+T\+Y\+\_\+\+E\+R\+R\+\_\+\+C\+N\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__GAIN__MEM__PARITY__ERR__CNT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+G\+A\+I\+N\+\_\+\+M\+E\+M\+\_\+\+P\+A\+R\+I\+T\+Y\+\_\+\+E\+R\+R\+\_\+\+C\+N\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__IA__SELECT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+S\+E\+L\+E\+C\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__IA__ADDR__REG__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+A\+D\+D\+R\+\_\+\+R\+E\+G\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__IA__WRDATA__REG__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+W\+R\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__IA__WRDATA__REG__ALIAS__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+W\+R\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+\+A\+L\+I\+A\+S\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__IA__RDDATA__REG__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+R\+D\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__IA__RDDATA__REG__ALIAS__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+R\+D\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+\+A\+L\+I\+A\+S\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DATAPATH__IA__BANK__TYPE__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+B\+A\+N\+K\+\_\+\+T\+Y\+P\+E\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DE__CONTROL__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__BINNED1X2__REPEAT__COUNT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+B\+I\+N\+N\+E\+D1\+X2\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+\+C\+O\+U\+N\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__OVERRIDE__DATA__REG1__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+\+D\+A\+T\+A\+\_\+\+R\+E\+G1\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__OVERRIDE__DATA__REG2__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+\+D\+A\+T\+A\+\_\+\+R\+E\+G2\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__OVERRIDE__DATA__REG3__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+\+D\+A\+T\+A\+\_\+\+R\+E\+G3\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__BINNED1X2__END__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+B\+I\+N\+N\+E\+D1\+X2\+\_\+\+E\+N\+D\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__OVERRIDE__SEL__REG1__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+\+S\+E\+L\+\_\+\+R\+E\+G1\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__OVERRIDE__SEL__REG2__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+\+S\+E\+L\+\_\+\+R\+E\+G2\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__OVERRIDE__SEL__REG3__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+\+S\+E\+L\+\_\+\+R\+E\+G3\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__BINNED1X2__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+B\+I\+N\+N\+E\+D1\+X2\+\_\+\+S\+T\+A\+R\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__EE__LOW__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+E\+E\+\_\+\+L\+O\+W\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__EE__HIGH__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+E\+E\+\_\+\+H\+I\+G\+H\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__EO__LOW__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+E\+O\+\_\+\+L\+O\+W\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__EO__HIGH__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+E\+O\+\_\+\+H\+I\+G\+H\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__OE__LOW__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+O\+E\+\_\+\+L\+O\+W\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__OE__HIGH__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+O\+E\+\_\+\+H\+I\+G\+H\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__OO__LOW__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+O\+O\+\_\+\+L\+O\+W\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__OO__HIGH__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+O\+O\+\_\+\+H\+I\+G\+H\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__SELB__LOW__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+S\+E\+L\+B\+\_\+\+L\+O\+W\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__SELB__HIGH__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+S\+E\+L\+B\+\_\+\+H\+I\+G\+H\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__NATIVE__RESOLUTION__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+N\+A\+T\+I\+V\+E\+\_\+\+R\+E\+S\+O\+L\+U\+T\+I\+O\+N\+\_\+\+S\+T\+A\+R\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__NATIVE__RESOLUTION__END__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+N\+A\+T\+I\+V\+E\+\_\+\+R\+E\+S\+O\+L\+U\+T\+I\+O\+N\+\_\+\+E\+N\+D\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__NATIVE__RESOLUTION__REPEAT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+N\+A\+T\+I\+V\+E\+\_\+\+R\+E\+S\+O\+L\+U\+T\+I\+O\+N\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__SUB__SAMPLED__2X__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+S\+U\+B\+\_\+\+S\+A\+M\+P\+L\+E\+D\+\_\+2\+X\+\_\+\+S\+T\+A\+R\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__SUB__SAMPLED__2X__END__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+S\+U\+B\+\_\+\+S\+A\+M\+P\+L\+E\+D\+\_\+2\+X\+\_\+\+E\+N\+D\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__SUB__SAMPLED__2X__REPEAT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+S\+U\+B\+\_\+\+S\+A\+M\+P\+L\+E\+D\+\_\+2\+X\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__SUB__SAMPLED__4X__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+S\+U\+B\+\_\+\+S\+A\+M\+P\+L\+E\+D\+\_\+4\+X\+\_\+\+S\+T\+A\+R\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__SUB__SAMPLED__4X__END__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+S\+U\+B\+\_\+\+S\+A\+M\+P\+L\+E\+D\+\_\+4\+X\+\_\+\+E\+N\+D\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__SUB__SAMPLED__4X__REPEAT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+S\+U\+B\+\_\+\+S\+A\+M\+P\+L\+E\+D\+\_\+4\+X\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__BINNED__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+B\+I\+N\+N\+E\+D\+\_\+\+S\+T\+A\+R\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__BINNED__END__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+B\+I\+N\+N\+E\+D\+\_\+\+E\+N\+D\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__BINNED__REPEAT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+B\+I\+N\+N\+E\+D\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DARK__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+A\+R\+K\+\_\+\+S\+T\+A\+R\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DARK__END__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+A\+R\+K\+\_\+\+E\+N\+D\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DARK__REPEAT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+A\+R\+K\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__PREAMBLE__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+P\+R\+E\+A\+M\+B\+L\+E\+\_\+\+S\+T\+A\+R\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__PREAMBLE__END__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+P\+R\+E\+A\+M\+B\+L\+E\+\_\+\+E\+N\+D\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__PREAMBLE__REPEAT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+P\+R\+E\+A\+M\+B\+L\+E\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__POSTAMBLE__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+P\+O\+S\+T\+A\+M\+B\+L\+E\+\_\+\+S\+T\+A\+R\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__POSTAMBLE__END__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+P\+O\+S\+T\+A\+M\+B\+L\+E\+\_\+\+E\+N\+D\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__POSTAMBLE__REPEAT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+P\+O\+S\+T\+A\+M\+B\+L\+E\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__ARRAY__INIT__VEC__DARK__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+I\+N\+I\+T\+\_\+\+V\+E\+C\+\_\+\+D\+A\+R\+K\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__ARRAY__INIT__VEC__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+I\+N\+I\+T\+\_\+\+V\+E\+C\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__TYPE__OVERRIDE__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+T\+Y\+P\+E\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__MEM__DFT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+M\+E\+M\+\_\+\+D\+F\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DBG__MUX__CONTROL__0__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+B\+G\+\_\+\+M\+U\+X\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+0\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DBG__MUX__CONTROL__1__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+B\+G\+\_\+\+M\+U\+X\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+1\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DBG__MUX__CONTROL__2__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+B\+G\+\_\+\+M\+U\+X\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+2\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DBG__MUX__CONTROL__3__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+B\+G\+\_\+\+M\+U\+X\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+3\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DBG__MUX__CONTROL__4__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+B\+G\+\_\+\+M\+U\+X\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+4\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DE__IA__SELECT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+S\+E\+L\+E\+C\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DE__IA__ADDR__REG__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+A\+D\+D\+R\+\_\+\+R\+E\+G\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DE__IA__WRDATA__REG__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+W\+R\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DE__IA__WRDATA__REG__ALIAS__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+W\+R\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+\+A\+L\+I\+A\+S\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DE__IA__RDDATA__REG__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+R\+D\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DE__IA__RDDATA__REG__ALIAS__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+R\+D\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+\+A\+L\+I\+A\+S\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__0__ROW__VEC__TOPBOT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+0\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+\_\+\+T\+O\+P\+B\+O\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__0__ROW__VEC__MAIN__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+0\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+\_\+\+M\+A\+I\+N\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__0__COLUMN__VEC__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+0\+\_\+\+C\+O\+L\+U\+M\+N\+\_\+\+V\+E\+C\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__0__ROI__TYPE__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+0\+\_\+\+R\+O\+I\+\_\+\+T\+Y\+P\+E\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__1__ROW__VEC__TOPBOT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+1\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+\_\+\+T\+O\+P\+B\+O\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__1__ROW__VEC__MAIN__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+1\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+\_\+\+M\+A\+I\+N\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__1__COLUMN__VEC__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+1\+\_\+\+C\+O\+L\+U\+M\+N\+\_\+\+V\+E\+C\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__1__ROI__TYPE__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+1\+\_\+\+R\+O\+I\+\_\+\+T\+Y\+P\+E\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__2__ROW__VEC__TOPBOT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+2\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+\_\+\+T\+O\+P\+B\+O\+T\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__2__ROW__VEC__MAIN__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+2\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+\_\+\+M\+A\+I\+N\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__2__COLUMN__VEC__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+2\+\_\+\+C\+O\+L\+U\+M\+N\+\_\+\+V\+E\+C\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__2__ROI__TYPE__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+2\+\_\+\+R\+O\+I\+\_\+\+T\+Y\+P\+E\+\_\+s}}
+\item 
+struct \mbox{\hyperlink{structrevisionID__t}{revision\+I\+D\+\_\+t}}
+\end{DoxyCompactItemize}
+\doxysubsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{newton__control_8h_a87caa481e2ccd90affac7696b3dc9dbc}\label{newton__control_8h_a87caa481e2ccd90affac7696b3dc9dbc}} 
+\#define {\bfseries M\+A\+X\+\_\+\+R\+E\+G\+\_\+\+L\+I\+ST}~2048 / 4
+\item 
+\mbox{\Hypertarget{newton__control_8h_a5bf3cb25bfdb1b1e8d32d2f282f2fa37}\label{newton__control_8h_a5bf3cb25bfdb1b1e8d32d2f282f2fa37}} 
+\#define {\bfseries H\+O\+S\+T\+\_\+\+A\+P\+I\+\_\+\+V\+E\+R\+S\+I\+ON}~1.\+0
+\item 
+\mbox{\Hypertarget{newton__control_8h_ae911768019ae60591abd5fade9035d57}\label{newton__control_8h_ae911768019ae60591abd5fade9035d57}} 
+\#define {\bfseries R\+S\+TN}~3
+\item 
+\mbox{\Hypertarget{newton__control_8h_ae6038199c193e2f47cbbfc00bc5f8c7f}\label{newton__control_8h_ae6038199c193e2f47cbbfc00bc5f8c7f}} 
+\#define {\bfseries i2c\+Scl\+\_\+spis\+Sclk}~14
+\item 
+\mbox{\Hypertarget{newton__control_8h_a212ca328a6409c98f8c3dfbbe1ba561d}\label{newton__control_8h_a212ca328a6409c98f8c3dfbbe1ba561d}} 
+\#define {\bfseries I2\+C\+\_\+\+S\+CL}~14
+\item 
+\mbox{\Hypertarget{newton__control_8h_abbb3ec5fdcce33652bc76ac38957bcda}\label{newton__control_8h_abbb3ec5fdcce33652bc76ac38957bcda}} 
+\#define {\bfseries i2c\+Sda\+\_\+spis\+Mosi}~12
+\item 
+\mbox{\Hypertarget{newton__control_8h_a18aefd12ad84d4c33dc97923cb821e47}\label{newton__control_8h_a18aefd12ad84d4c33dc97923cb821e47}} 
+\#define {\bfseries I2\+C\+\_\+\+S\+DA}~12
+\item 
+\mbox{\Hypertarget{newton__control_8h_a88bf249529e644e5622555f0c1e17016}\label{newton__control_8h_a88bf249529e644e5622555f0c1e17016}} 
+\#define {\bfseries G\+P\+I\+O0\+\_\+spis\+Miso\+\_\+trst\+Dft}~13
+\item 
+\mbox{\Hypertarget{newton__control_8h_a20f88dbc839eb32b5fec903474befdd7}\label{newton__control_8h_a20f88dbc839eb32b5fec903474befdd7}} 
+\#define {\bfseries G\+P\+I\+O0}~13
+\item 
+\mbox{\Hypertarget{newton__control_8h_a8332ba6540eff5cd2400f56d3001c957}\label{newton__control_8h_a8332ba6540eff5cd2400f56d3001c957}} 
+\#define {\bfseries G\+P\+I\+O1\+\_\+spis\+Scs}~10
+\item 
+\mbox{\Hypertarget{newton__control_8h_abe59d3a7ce7a18e9440bd54cae1f3fc8}\label{newton__control_8h_abe59d3a7ce7a18e9440bd54cae1f3fc8}} 
+\#define {\bfseries G\+P\+I\+O1}~10
+\item 
+\mbox{\Hypertarget{newton__control_8h_a38a6b4dc3f90653f5a6b277a8f14a914}\label{newton__control_8h_a38a6b4dc3f90653f5a6b277a8f14a914}} 
+\#define {\bfseries G\+P\+I\+O2\+\_\+uart\+Sout}~15
+\item 
+\mbox{\Hypertarget{newton__control_8h_a88a95401ea8409c83cbda42f31450cd0}\label{newton__control_8h_a88a95401ea8409c83cbda42f31450cd0}} 
+\#define {\bfseries G\+P\+I\+O2}~15
+\item 
+\mbox{\Hypertarget{newton__control_8h_af76df1166b3604685703f9a4894a6865}\label{newton__control_8h_af76df1166b3604685703f9a4894a6865}} 
+\#define {\bfseries G\+P\+I\+O3\+\_\+uart\+Sin}~16
+\item 
+\mbox{\Hypertarget{newton__control_8h_af3cc04d651b622d5323d74dc2f0999a0}\label{newton__control_8h_af3cc04d651b622d5323d74dc2f0999a0}} 
+\#define {\bfseries G\+P\+I\+O3}~16
+\item 
+\mbox{\Hypertarget{newton__control_8h_abf6bc3e45e0cd79de6dde56721dcd4eb}\label{newton__control_8h_abf6bc3e45e0cd79de6dde56721dcd4eb}} 
+\#define {\bfseries G\+P\+I\+O4\+\_\+mbox\+Out\+\_\+tdo\+Dft}~0
+\item 
+\mbox{\Hypertarget{newton__control_8h_a98aeff9c8b3bbdfd119e4ec4d3f615c8}\label{newton__control_8h_a98aeff9c8b3bbdfd119e4ec4d3f615c8}} 
+\#define {\bfseries G\+P\+I\+O4}~0
+\item 
+\mbox{\Hypertarget{newton__control_8h_a07b220d676e246b43495633312e0fc8f}\label{newton__control_8h_a07b220d676e246b43495633312e0fc8f}} 
+\#define {\bfseries G\+P\+I\+O5\+\_\+fsync\+\_\+tms\+Dft}~1
+\item 
+\mbox{\Hypertarget{newton__control_8h_a1a96368c99d63b0e715b7e0421f4a209}\label{newton__control_8h_a1a96368c99d63b0e715b7e0421f4a209}} 
+\#define {\bfseries G\+P\+I\+O5}~1
+\item 
+\mbox{\Hypertarget{newton__control_8h_a934849ea70b8444d93b00e9caf30f54d}\label{newton__control_8h_a934849ea70b8444d93b00e9caf30f54d}} 
+\#define {\bfseries G\+P\+I\+O6\+\_\+light\+En\+\_\+trst\+Hsp}~28
+\item 
+\mbox{\Hypertarget{newton__control_8h_a46027cd97ff756e5ddadcc10811b5699}\label{newton__control_8h_a46027cd97ff756e5ddadcc10811b5699}} 
+\#define {\bfseries G\+P\+I\+O6}~28
+\item 
+\mbox{\Hypertarget{newton__control_8h_af0a61c9ef45b39e37614baaa4b87d7f6}\label{newton__control_8h_af0a61c9ef45b39e37614baaa4b87d7f6}} 
+\#define {\bfseries G\+P\+I\+O7\+\_\+spim\+Sclk\+\_\+tdi\+Hsp}~29
+\item 
+\mbox{\Hypertarget{newton__control_8h_a3820cacb614277004870fc37b33ad084}\label{newton__control_8h_a3820cacb614277004870fc37b33ad084}} 
+\#define {\bfseries G\+P\+I\+O7}~29
+\item 
+\mbox{\Hypertarget{newton__control_8h_a61584d22da5d529a79935feea020faf1}\label{newton__control_8h_a61584d22da5d529a79935feea020faf1}} 
+\#define {\bfseries G\+P\+I\+O8\+\_\+spim\+Mosi\+\_\+tms\+Hsp}~25
+\item 
+\mbox{\Hypertarget{newton__control_8h_aa951be0ce26f788049a86e407a70ae20}\label{newton__control_8h_aa951be0ce26f788049a86e407a70ae20}} 
+\#define {\bfseries G\+P\+I\+O8}~25
+\item 
+\mbox{\Hypertarget{newton__control_8h_acd7194b0057d79a47251517c65ae8dae}\label{newton__control_8h_acd7194b0057d79a47251517c65ae8dae}} 
+\#define {\bfseries G\+P\+I\+O9\+\_\+spim\+Scs\+\_\+tck}~27
+\item 
+\mbox{\Hypertarget{newton__control_8h_ae2a4c4d28729daf18e1923a1878e7352}\label{newton__control_8h_ae2a4c4d28729daf18e1923a1878e7352}} 
+\#define {\bfseries G\+P\+I\+O9}~27
+\item 
+\mbox{\Hypertarget{newton__control_8h_a687f35de8e0a0b015517306f146c0156}\label{newton__control_8h_a687f35de8e0a0b015517306f146c0156}} 
+\#define {\bfseries G\+P\+I\+O10\+\_\+spim\+Miso\+\_\+tdo\+Hsp}~24
+\item 
+\mbox{\Hypertarget{newton__control_8h_ae285b2475841ecb1ac23d8511b360d0e}\label{newton__control_8h_ae285b2475841ecb1ac23d8511b360d0e}} 
+\#define {\bfseries G\+P\+I\+O10}~24
+\item 
+\mbox{\Hypertarget{newton__control_8h_ae14869a27ae7d64d5790cdb2b866f737}\label{newton__control_8h_ae14869a27ae7d64d5790cdb2b866f737}} 
+\#define {\bfseries P\+I\+N\+\_\+\+H\+I\+GH}~1
+\item 
+\mbox{\Hypertarget{newton__control_8h_a4569b310ad4177e935f20becec046af2}\label{newton__control_8h_a4569b310ad4177e935f20becec046af2}} 
+\#define {\bfseries P\+I\+N\+\_\+\+L\+OW}~1
+\item 
+\#define {\bfseries E\+R\+R\+O\+R\+\_\+\+C\+O\+D\+E\+\_\+\+B\+A\+SE}~0x0ad10000
+\item 
+\#define {\bfseries B\+I\+T\+\_\+\+R\+A\+T\+E\+\_\+\+C\+O\+U\+NT}~6
+\end{DoxyCompactItemize}
+\doxysubsection*{Typedefs}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{newton__control_8h_ad758b7a5c3f18ed79d2fcd23d9f16357}\label{newton__control_8h_ad758b7a5c3f18ed79d2fcd23d9f16357}} 
+typedef unsigned long long {\bfseries u64}
+\item 
+\mbox{\Hypertarget{newton__control_8h_a10e94b422ef0c20dcdec20d31a1f5049}\label{newton__control_8h_a10e94b422ef0c20dcdec20d31a1f5049}} 
+typedef unsigned int {\bfseries u32}
+\item 
+\mbox{\Hypertarget{newton__control_8h_a9e6c91d77e24643b888dbd1a1a590054}\label{newton__control_8h_a9e6c91d77e24643b888dbd1a1a590054}} 
+typedef unsigned short {\bfseries u16}
+\item 
+\mbox{\Hypertarget{newton__control_8h_a4a020a9446b094e07e53376ac939a64d}\label{newton__control_8h_a4a020a9446b094e07e53376ac939a64d}} 
+typedef unsigned char {\bfseries u08}
+\item 
+\mbox{\Hypertarget{newton__control_8h_af79f5e053317266411a3c76e25866796}\label{newton__control_8h_af79f5e053317266411a3c76e25866796}} 
+typedef void($\ast$ {\bfseries callback\+\_\+t}) (void)
+\item 
+\mbox{\Hypertarget{newton__control_8h_a68b578daee6fe20ddbdcc35948eb23cb}\label{newton__control_8h_a68b578daee6fe20ddbdcc35948eb23cb}} 
+typedef struct str\+\_\+parms {\bfseries str\+\_\+parms}
+\item 
+\mbox{\Hypertarget{newton__control_8h_a02bd6a2b94caf2e5b9f6f385fa2857f6}\label{newton__control_8h_a02bd6a2b94caf2e5b9f6f385fa2857f6}} 
+typedef struct \mbox{\hyperlink{struct__adi__ErrorLog__s}{\+\_\+adi\+\_\+\+Error\+Log\+\_\+s}} {\bfseries adi\+\_\+\+Error\+Log\+\_\+s}
+\item 
+typedef enum \mbox{\hyperlink{newton__control_8h_afd3d7a1f2b03991d1af7a861bcb6ba75}{adi\+\_\+command}} \mbox{\hyperlink{newton__control_8h_aa17326e1fc82b40e18a47c754a3f20a5}{adi\+\_\+command\+\_\+e}}
+\begin{DoxyCompactList}\small\item\em H\+SP Mailbox Commands. \end{DoxyCompactList}\item 
+typedef enum \mbox{\hyperlink{newton__control_8h_a065f1834389c928e9bbf585bfb4fc15c}{adi\+\_\+load\+Targets}} \mbox{\hyperlink{newton__control_8h_ad34cd296ac69b3671a8da8f371d7968c}{adi\+\_\+load\+Targets\+\_\+e}}
+\begin{DoxyCompactList}\small\item\em Newton R\+AM Targets. \end{DoxyCompactList}\item 
+typedef enum \mbox{\hyperlink{newton__control_8h_adc05302ebc7a52ca552e75b34f5412f6}{adi\+\_\+hsp\+Mem\+Bit\+Widths}} \mbox{\hyperlink{newton__control_8h_af4a2f12bd8d1ab1d0d1580eda8f54cf2}{adi\+\_\+hsp\+Mem\+Bit\+Widths\+\_\+e}}
+\begin{DoxyCompactList}\small\item\em H\+SP memory bit widths. \end{DoxyCompactList}\item 
+typedef enum \mbox{\hyperlink{newton__control_8h_a560b2deb7401ebf60d26fb7eac06c06b}{adi\+\_\+newton\+Mem\+Bit\+Widths}} \mbox{\hyperlink{newton__control_8h_ab84a02fe39ebadeb8d16bc927f407d04}{adi\+\_\+newton\+Mem\+Bit\+Widths\+\_\+e}}
+\begin{DoxyCompactList}\small\item\em Newton memory bit widths. \end{DoxyCompactList}\item 
+typedef enum \mbox{\hyperlink{newton__control_8h_a2417c480624ef79f2375539559938df4}{adi\+\_\+newton\+Mem\+Byte\+Widths}} \mbox{\hyperlink{newton__control_8h_a2fdeb3bafc2dfa6df29ddf9e4c5119f9}{adi\+\_\+newton\+Mem\+Byte\+Widths\+\_\+e}}
+\begin{DoxyCompactList}\small\item\em Newton memory bytte widths. \end{DoxyCompactList}\item 
+typedef enum \mbox{\hyperlink{newton__control_8h_aa82d1f54c0c89145c5567025313d750d}{adi\+\_\+newton\+Mem\+Depths}} \mbox{\hyperlink{newton__control_8h_af88fdddaf08d31a7eaa740df481f5a47}{adi\+\_\+newton\+Mem\+Depths\+\_\+e}}
+\begin{DoxyCompactList}\small\item\em Newton memory depths. \end{DoxyCompactList}\item 
+typedef enum \mbox{\hyperlink{newton__control_8h_ad359be753ee6b29ae1ef07d6623e05de}{adi\+\_\+newton\+Mem\+Masks}} \mbox{\hyperlink{newton__control_8h_aa985e91107aa42766b263a12294ce368}{adi\+\_\+newton\+Mem\+Masks\+\_\+e}}
+\begin{DoxyCompactList}\small\item\em Newton memory masks. \end{DoxyCompactList}\item 
+typedef enum \mbox{\hyperlink{newton__control_8h_a33165fbd4fce4fceb597f0c01ff38152}{adi\+\_\+command\+Load\+States}} \mbox{\hyperlink{newton__control_8h_a84dd5392768a91a709c90942f3bbc1a5}{adi\+\_\+command\+Load\+States\+\_\+e}}
+\begin{DoxyCompactList}\small\item\em Command Read States. \end{DoxyCompactList}\item 
+typedef enum \mbox{\hyperlink{newton__control_8h_a8f59d3e0771657f9ae4509e7bc9f720e}{adi\+\_\+hsp\+Error\+Codes}} \mbox{\hyperlink{newton__control_8h_a5a9d71a983d576ef4a7734e43cd6898e}{adi\+\_\+hsp\+Error\+Codes\+\_\+e}}
+\begin{DoxyCompactList}\small\item\em H\+SP Error Codes. \end{DoxyCompactList}\item 
+typedef enum \mbox{\hyperlink{newton__control_8h_a104bc89ff79d05c085e10b967ca5df29}{adi\+\_\+newton\+Register\+Addresses}} \mbox{\hyperlink{newton__control_8h_a0d6d70ca01dc694c11f99b2b13aaa0db}{adi\+\_\+newton\+Register\+Addresses\+\_\+e}}
+\begin{DoxyCompactList}\small\item\em Newton memory depths. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{newton__control_8h_a691755fc3d76a79e145ff02aeb93ab77}\label{newton__control_8h_a691755fc3d76a79e145ff02aeb93ab77}} 
+typedef struct \mbox{\hyperlink{struct__ADI__USEQ__REGS__MAP1__USEQRAMLOADADDR__s}{\+\_\+\+A\+D\+I\+\_\+\+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+M\+A\+P1\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+L\+O\+A\+D\+A\+D\+D\+R\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+M\+A\+P1\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+L\+O\+A\+D\+A\+D\+D\+R\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__USEQ__REGS__MAP1__USEQRAMRDSTADDR__s}{\+\_\+\+A\+D\+I\+\_\+\+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+M\+A\+P1\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+R\+D\+S\+T\+A\+D\+D\+R\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+M\+A\+P1\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+R\+D\+S\+T\+A\+D\+D\+R\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__USEQ__REGS__MAP1__USEQRAMLOADDATA__s}{\+\_\+\+A\+D\+I\+\_\+\+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+M\+A\+P1\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+L\+O\+A\+D\+D\+A\+T\+A\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+M\+A\+P1\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+L\+O\+A\+D\+D\+A\+T\+A\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__USEQ__REGS__MAP1__USEQRAMLOADDATAALIAS__s}{\+\_\+\+A\+D\+I\+\_\+\+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+M\+A\+P1\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+L\+O\+A\+D\+D\+A\+T\+A\+A\+L\+I\+A\+S\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+M\+A\+P1\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+L\+O\+A\+D\+D\+A\+T\+A\+A\+L\+I\+A\+S\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__USEQ__REGS__MAP1__USEQRAMRDDATA__s}{\+\_\+\+A\+D\+I\+\_\+\+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+M\+A\+P1\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+R\+D\+D\+A\+T\+A\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+M\+A\+P1\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+R\+D\+D\+A\+T\+A\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__USEQ__REGS__MAP1__USEQRAMRDDATAALIAS__s}{\+\_\+\+A\+D\+I\+\_\+\+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+M\+A\+P1\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+R\+D\+D\+A\+T\+A\+A\+L\+I\+A\+S\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+M\+A\+P1\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+R\+D\+D\+A\+T\+A\+A\+L\+I\+A\+S\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSCTRL__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+C\+T\+R\+L\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+C\+T\+R\+L\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSWAVEFREQ__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+W\+A\+V\+E\+F\+R\+E\+Q\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+W\+A\+V\+E\+F\+R\+E\+Q\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSWAVEGENACC__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+W\+A\+V\+E\+G\+E\+N\+A\+C\+C\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+W\+A\+V\+E\+G\+E\+N\+A\+C\+C\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSRAMADDR__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+R\+A\+M\+A\+D\+D\+R\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+R\+A\+M\+A\+D\+D\+R\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSRAMRDCMD__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+R\+A\+M\+R\+D\+C\+M\+D\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+R\+A\+M\+R\+D\+C\+M\+D\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSWAVEGENADDR__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+W\+A\+V\+E\+G\+E\+N\+A\+D\+D\+R\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+W\+A\+V\+E\+G\+E\+N\+A\+D\+D\+R\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSMARGIN__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+M\+A\+R\+G\+I\+N\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+M\+A\+R\+G\+I\+N\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSDBG__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+D\+B\+G\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+D\+B\+G\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSRAMDATA__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+R\+A\+M\+D\+A\+T\+A\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+R\+A\+M\+D\+A\+T\+A\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__LPS__REGS__YODA__LPSRAMDATA__ALIAS__s}{\+\_\+\+A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+R\+A\+M\+D\+A\+T\+A\+\_\+\+A\+L\+I\+A\+S\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+L\+P\+S\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+L\+P\+S\+R\+A\+M\+D\+A\+T\+A\+\_\+\+A\+L\+I\+A\+S\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__CORRECTION__CONFIG__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+C\+O\+R\+R\+E\+C\+T\+I\+O\+N\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+C\+O\+R\+R\+E\+C\+T\+I\+O\+N\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__USE__CASE__FRAME__CONFIG__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+\+F\+R\+A\+M\+E\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+\+F\+R\+A\+M\+E\+\_\+\+C\+O\+N\+F\+I\+G\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__USE__CASE__MIPI__PACKET__CONTROL__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+\+M\+I\+P\+I\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+\+M\+I\+P\+I\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__GAIN0__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+G\+A\+I\+N0\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+G\+A\+I\+N0\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__GAIN1__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+G\+A\+I\+N1\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+G\+A\+I\+N1\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__GAIN2__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+G\+A\+I\+N2\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+G\+A\+I\+N2\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__GAIN3__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+G\+A\+I\+N3\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+G\+A\+I\+N3\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__PARITY__GAIN__MEM__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+A\+R\+I\+T\+Y\+\_\+\+G\+A\+I\+N\+\_\+\+M\+E\+M\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+A\+R\+I\+T\+Y\+\_\+\+G\+A\+I\+N\+\_\+\+M\+E\+M\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__PARITY__LINE__MEM__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+A\+R\+I\+T\+Y\+\_\+\+L\+I\+N\+E\+\_\+\+M\+E\+M\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+A\+R\+I\+T\+Y\+\_\+\+L\+I\+N\+E\+\_\+\+M\+E\+M\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__PP__LFSR__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+L\+F\+S\+R\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+L\+F\+S\+R\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__PP__DECODE__ST__1__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+D\+E\+C\+O\+D\+E\+\_\+\+S\+T\+\_\+1\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+D\+E\+C\+O\+D\+E\+\_\+\+S\+T\+\_\+1\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__PP__DECODE__ST__2__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+D\+E\+C\+O\+D\+E\+\_\+\+S\+T\+\_\+2\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+D\+E\+C\+O\+D\+E\+\_\+\+S\+T\+\_\+2\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__PP__ENCODE__ST__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+E\+N\+C\+O\+D\+E\+\_\+\+S\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+E\+N\+C\+O\+D\+E\+\_\+\+S\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__PP__ENCODE__GT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+E\+N\+C\+O\+D\+E\+\_\+\+G\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+E\+N\+C\+O\+D\+E\+\_\+\+G\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__DBG__MUX__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+D\+B\+G\+\_\+\+M\+U\+X\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+D\+B\+G\+\_\+\+M\+U\+X\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__GAIN__MARGIN__CONTROL__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+G\+A\+I\+N\+\_\+\+M\+A\+R\+G\+I\+N\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+G\+A\+I\+N\+\_\+\+M\+A\+R\+G\+I\+N\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__LINE__MARGIN__CONTROL__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+L\+I\+N\+E\+\_\+\+M\+A\+R\+G\+I\+N\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+L\+I\+N\+E\+\_\+\+M\+A\+R\+G\+I\+N\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__ROI__ROW__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+O\+I\+\_\+\+R\+O\+W\+\_\+\+S\+T\+A\+R\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+O\+I\+\_\+\+R\+O\+W\+\_\+\+S\+T\+A\+R\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__ROI__HEIGHT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+O\+I\+\_\+\+H\+E\+I\+G\+H\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+O\+I\+\_\+\+H\+E\+I\+G\+H\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__ROI__COLUMN__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+O\+I\+\_\+\+C\+O\+L\+U\+M\+N\+\_\+\+S\+T\+A\+R\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+O\+I\+\_\+\+C\+O\+L\+U\+M\+N\+\_\+\+S\+T\+A\+R\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__ROI__WIDTH__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+O\+I\+\_\+\+W\+I\+D\+T\+H\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+O\+I\+\_\+\+W\+I\+D\+T\+H\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__PP__USEQ__WRITE__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+U\+S\+E\+Q\+\_\+\+W\+R\+I\+T\+E\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+U\+S\+E\+Q\+\_\+\+W\+R\+I\+T\+E\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__PP__ADC__DELAY__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+A\+D\+C\+\_\+\+D\+E\+L\+A\+Y\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+P\+\_\+\+A\+D\+C\+\_\+\+D\+E\+L\+A\+Y\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__MIPI__BUFF__MARGIN__CONTROL__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+M\+I\+P\+I\+\_\+\+B\+U\+F\+F\+\_\+\+M\+A\+R\+G\+I\+N\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+M\+I\+P\+I\+\_\+\+B\+U\+F\+F\+\_\+\+M\+A\+R\+G\+I\+N\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__MIPI__HEADER__WIDTH__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+M\+I\+P\+I\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+W\+I\+D\+T\+H\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+M\+I\+P\+I\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+W\+I\+D\+T\+H\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__FRAME__NUMBER__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+F\+R\+A\+M\+E\+\_\+\+N\+U\+M\+B\+E\+R\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+F\+R\+A\+M\+E\+\_\+\+N\+U\+M\+B\+E\+R\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__MICRO__SEQUENCER__FW__VERSION__LSB__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+M\+I\+C\+R\+O\+\_\+\+S\+E\+Q\+U\+E\+N\+C\+E\+R\+\_\+\+F\+W\+\_\+\+V\+E\+R\+S\+I\+O\+N\+\_\+\+L\+S\+B\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+M\+I\+C\+R\+O\+\_\+\+S\+E\+Q\+U\+E\+N\+C\+E\+R\+\_\+\+F\+W\+\_\+\+V\+E\+R\+S\+I\+O\+N\+\_\+\+L\+S\+B\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__MICRO__SEQUENCER__FW__VERSION__MSB__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+M\+I\+C\+R\+O\+\_\+\+S\+E\+Q\+U\+E\+N\+C\+E\+R\+\_\+\+F\+W\+\_\+\+V\+E\+R\+S\+I\+O\+N\+\_\+\+M\+S\+B\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+M\+I\+C\+R\+O\+\_\+\+S\+E\+Q\+U\+E\+N\+C\+E\+R\+\_\+\+F\+W\+\_\+\+V\+E\+R\+S\+I\+O\+N\+\_\+\+M\+S\+B\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__TS__CAL__VER__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+T\+S\+\_\+\+C\+A\+L\+\_\+\+V\+E\+R\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+s\+S\+\_\+\+C\+A\+L\+\_\+\+V\+E\+R\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__ADC__CAL__VER__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+A\+D\+C\+\_\+\+C\+A\+L\+\_\+\+V\+E\+R\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+A\+D\+C\+\_\+\+C\+A\+L\+\_\+\+V\+E\+R\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__REG__0__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+0\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+0\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__REG__1__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+1\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+1\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__REG__2__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+2\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+2\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__REG__3__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+3\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+3\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__REG__4__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+4\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+4\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__REG__5__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+5\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+5\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__REG__6__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+6\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+6\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__REG__7__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+7\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+\_\+7\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__PARITY__MIPI__BUFFER__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+A\+R\+I\+T\+Y\+\_\+\+M\+I\+P\+I\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+A\+R\+I\+T\+Y\+\_\+\+M\+I\+P\+I\+\_\+\+B\+U\+F\+F\+E\+R\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__PACKET__COUNT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+C\+O\+U\+N\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+C\+O\+U\+N\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__PACKETS__PER__FRAME__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+A\+C\+K\+E\+T\+S\+\_\+\+P\+E\+R\+\_\+\+F\+R\+A\+M\+E\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+P\+A\+C\+K\+E\+T\+S\+\_\+\+P\+E\+R\+\_\+\+F\+R\+A\+M\+E\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__ROW__VECTOR__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+T\+O\+R\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+T\+O\+R\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__ROWS__PER__PACKET__OUT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+O\+W\+S\+\_\+\+P\+E\+R\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+O\+U\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+O\+W\+S\+\_\+\+P\+E\+R\+\_\+\+P\+A\+C\+K\+E\+T\+\_\+\+O\+U\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__MIPI__RD__EN__MAX__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+M\+I\+P\+I\+\_\+\+R\+D\+\_\+\+E\+N\+\_\+\+M\+A\+X\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+M\+I\+P\+I\+\_\+\+R\+D\+\_\+\+E\+N\+\_\+\+M\+A\+X\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__ANALOG__SS__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+A\+N\+A\+L\+O\+G\+\_\+\+S\+S\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+A\+N\+A\+L\+O\+G\+\_\+\+S\+S\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__MIPI__BUFF__PARITY__ERR__CNT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+M\+I\+P\+I\+\_\+\+B\+U\+F\+F\+\_\+\+P\+A\+R\+I\+T\+Y\+\_\+\+E\+R\+R\+\_\+\+C\+N\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+M\+I\+P\+I\+\_\+\+B\+U\+F\+F\+\_\+\+P\+A\+R\+I\+T\+Y\+\_\+\+E\+R\+R\+\_\+\+C\+N\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__LINE__MEM__PARITY__ERR__CNT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+L\+I\+N\+E\+\_\+\+M\+E\+M\+\_\+\+P\+A\+R\+I\+T\+Y\+\_\+\+E\+R\+R\+\_\+\+C\+N\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+L\+I\+N\+E\+\_\+\+M\+E\+M\+\_\+\+P\+A\+R\+I\+T\+Y\+\_\+\+E\+R\+R\+\_\+\+C\+N\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__GAIN__MEM__PARITY__ERR__CNT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+G\+A\+I\+N\+\_\+\+M\+E\+M\+\_\+\+P\+A\+R\+I\+T\+Y\+\_\+\+E\+R\+R\+\_\+\+C\+N\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+G\+A\+I\+N\+\_\+\+M\+E\+M\+\_\+\+P\+A\+R\+I\+T\+Y\+\_\+\+E\+R\+R\+\_\+\+C\+N\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__IA__SELECT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+S\+E\+L\+E\+C\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+S\+E\+L\+E\+C\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__IA__ADDR__REG__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+A\+D\+D\+R\+\_\+\+R\+E\+G\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+A\+D\+D\+R\+\_\+\+R\+E\+G\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__IA__WRDATA__REG__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+W\+R\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+W\+R\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__IA__WRDATA__REG__ALIAS__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+W\+R\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+\+A\+L\+I\+A\+S\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+W\+R\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+\+A\+L\+I\+A\+S\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__IA__RDDATA__REG__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+R\+D\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+R\+D\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__IA__RDDATA__REG__ALIAS__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+R\+D\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+\+A\+L\+I\+A\+S\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+R\+D\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+\+A\+L\+I\+A\+S\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DATAPATH__IA__BANK__TYPE__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+B\+A\+N\+K\+\_\+\+T\+Y\+P\+E\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+I\+A\+\_\+\+B\+A\+N\+K\+\_\+\+T\+Y\+P\+E\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DE__CONTROL__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__BINNED1X2__REPEAT__COUNT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+B\+I\+N\+N\+E\+D1\+X2\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+\+C\+O\+U\+N\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+B\+I\+N\+N\+E\+D1\+X2\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+\+C\+O\+U\+N\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__OVERRIDE__DATA__REG1__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+\+D\+A\+T\+A\+\_\+\+R\+E\+G1\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+\+D\+A\+T\+A\+\_\+\+R\+E\+G1\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__OVERRIDE__DATA__REG2__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+\+D\+A\+T\+A\+\_\+\+R\+E\+G2\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+\+D\+A\+T\+A\+\_\+\+R\+E\+G2\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__OVERRIDE__DATA__REG3__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+\+D\+A\+T\+A\+\_\+\+R\+E\+G3\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+\+D\+A\+T\+A\+\_\+\+R\+E\+G3\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__BINNED1X2__END__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+B\+I\+N\+N\+E\+D1\+X2\+\_\+\+E\+N\+D\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+B\+I\+N\+N\+E\+D1\+X2\+\_\+\+E\+N\+D\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__OVERRIDE__SEL__REG1__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+\+S\+E\+L\+\_\+\+R\+E\+G1\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+\+S\+E\+L\+\_\+\+R\+E\+G1\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__OVERRIDE__SEL__REG2__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+\+S\+E\+L\+\_\+\+R\+E\+G2\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+\+S\+E\+L\+\_\+\+R\+E\+G2\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__OVERRIDE__SEL__REG3__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+\+S\+E\+L\+\_\+\+R\+E\+G3\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+\+S\+E\+L\+\_\+\+R\+E\+G3\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__BINNED1X2__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+B\+I\+N\+N\+E\+D1\+X2\+\_\+\+S\+T\+A\+R\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+B\+I\+N\+N\+E\+D1\+X2\+\_\+\+S\+T\+A\+R\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__EE__LOW__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+E\+E\+\_\+\+L\+O\+W\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+E\+E\+\_\+\+L\+O\+W\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__EE__HIGH__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+E\+E\+\_\+\+H\+I\+G\+H\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+E\+E\+\_\+\+H\+I\+G\+H\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__EO__LOW__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+E\+O\+\_\+\+L\+O\+W\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+E\+O\+\_\+\+L\+O\+W\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__EO__HIGH__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+E\+O\+\_\+\+H\+I\+G\+H\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+E\+O\+\_\+\+H\+I\+G\+H\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__OE__LOW__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+O\+E\+\_\+\+L\+O\+W\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+O\+E\+\_\+\+L\+O\+W\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__OE__HIGH__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+O\+E\+\_\+\+H\+I\+G\+H\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+O\+E\+\_\+\+H\+I\+G\+H\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__OO__LOW__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+O\+O\+\_\+\+L\+O\+W\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+O\+O\+\_\+\+L\+O\+W\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__OO__HIGH__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+O\+O\+\_\+\+H\+I\+G\+H\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+O\+O\+\_\+\+H\+I\+G\+H\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__SELB__LOW__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+S\+E\+L\+B\+\_\+\+L\+O\+W\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+S\+E\+L\+B\+\_\+\+L\+O\+W\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__AMP__MUX__SEL__SELB__HIGH__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+S\+E\+L\+B\+\_\+\+H\+I\+G\+H\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+M\+P\+\_\+\+M\+U\+X\+\_\+\+S\+E\+L\+\_\+\+S\+E\+L\+B\+\_\+\+H\+I\+G\+H\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__NATIVE__RESOLUTION__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+N\+A\+T\+I\+V\+E\+\_\+\+R\+E\+S\+O\+L\+U\+T\+I\+O\+N\+\_\+\+S\+T\+A\+R\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+N\+A\+T\+I\+V\+E\+\_\+\+R\+E\+S\+O\+L\+U\+T\+I\+O\+N\+\_\+\+S\+T\+A\+R\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__NATIVE__RESOLUTION__END__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+N\+A\+T\+I\+V\+E\+\_\+\+R\+E\+S\+O\+L\+U\+T\+I\+O\+N\+\_\+\+E\+N\+D\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+N\+A\+T\+I\+V\+E\+\_\+\+R\+E\+S\+O\+L\+U\+T\+I\+O\+N\+\_\+\+E\+N\+D\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__NATIVE__RESOLUTION__REPEAT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+N\+A\+T\+I\+V\+E\+\_\+\+R\+E\+S\+O\+L\+U\+T\+I\+O\+N\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+N\+A\+T\+I\+V\+E\+\_\+\+R\+E\+S\+O\+L\+U\+T\+I\+O\+N\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__SUB__SAMPLED__2X__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+S\+U\+B\+\_\+\+S\+A\+M\+P\+L\+E\+D\+\_\+2\+X\+\_\+\+S\+T\+A\+R\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+S\+U\+B\+\_\+\+S\+A\+M\+P\+L\+E\+D\+\_\+2\+X\+\_\+\+S\+T\+A\+R\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__SUB__SAMPLED__2X__END__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+S\+U\+B\+\_\+\+S\+A\+M\+P\+L\+E\+D\+\_\+2\+X\+\_\+\+E\+N\+D\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+S\+U\+B\+\_\+\+S\+A\+M\+P\+L\+E\+D\+\_\+2\+X\+\_\+\+E\+N\+D\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__SUB__SAMPLED__2X__REPEAT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+S\+U\+B\+\_\+\+S\+A\+M\+P\+L\+E\+D\+\_\+2\+X\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+S\+U\+B\+\_\+\+S\+A\+M\+P\+L\+E\+D\+\_\+2\+X\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__SUB__SAMPLED__4X__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+S\+U\+B\+\_\+\+S\+A\+M\+P\+L\+E\+D\+\_\+4\+X\+\_\+\+S\+T\+A\+R\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+S\+U\+B\+\_\+\+S\+A\+M\+P\+L\+E\+D\+\_\+4\+X\+\_\+\+S\+T\+A\+R\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__SUB__SAMPLED__4X__END__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+S\+U\+B\+\_\+\+S\+A\+M\+P\+L\+E\+D\+\_\+4\+X\+\_\+\+E\+N\+D\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+S\+U\+B\+\_\+\+S\+A\+M\+P\+L\+E\+D\+\_\+4\+X\+\_\+\+E\+N\+D\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__SUB__SAMPLED__4X__REPEAT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+S\+U\+B\+\_\+\+S\+A\+M\+P\+L\+E\+D\+\_\+4\+X\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+S\+U\+B\+\_\+\+S\+A\+M\+P\+L\+E\+D\+\_\+4\+X\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__BINNED__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+B\+I\+N\+N\+E\+D\+\_\+\+S\+T\+A\+R\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+B\+I\+N\+N\+E\+D\+\_\+\+S\+T\+A\+R\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__BINNED__END__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+B\+I\+N\+N\+E\+D\+\_\+\+E\+N\+D\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+B\+I\+N\+N\+E\+D\+\_\+\+E\+N\+D\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__BINNED__REPEAT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+B\+I\+N\+N\+E\+D\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+B\+I\+N\+N\+E\+D\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DARK__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+A\+R\+K\+\_\+\+S\+T\+A\+R\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+A\+R\+K\+\_\+\+S\+T\+A\+R\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DARK__END__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+A\+R\+K\+\_\+\+E\+N\+D\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+A\+R\+K\+\_\+\+E\+N\+D\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DARK__REPEAT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+A\+R\+K\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+A\+R\+K\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__PREAMBLE__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+P\+R\+E\+A\+M\+B\+L\+E\+\_\+\+S\+T\+A\+R\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+P\+R\+E\+A\+M\+B\+L\+E\+\_\+\+S\+T\+A\+R\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__PREAMBLE__END__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+P\+R\+E\+A\+M\+B\+L\+E\+\_\+\+E\+N\+D\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+P\+R\+E\+A\+M\+B\+L\+E\+\_\+\+E\+N\+D\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__PREAMBLE__REPEAT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+P\+R\+E\+A\+M\+B\+L\+E\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+P\+R\+E\+A\+M\+B\+L\+E\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__POSTAMBLE__START__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+P\+O\+S\+T\+A\+M\+B\+L\+E\+\_\+\+S\+T\+A\+R\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+P\+O\+S\+T\+A\+M\+B\+L\+E\+\_\+\+S\+T\+A\+R\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__POSTAMBLE__END__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+P\+O\+S\+T\+A\+M\+B\+L\+E\+\_\+\+E\+N\+D\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+P\+O\+S\+T\+A\+M\+B\+L\+E\+\_\+\+E\+N\+D\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__POSTAMBLE__REPEAT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+P\+O\+S\+T\+A\+M\+B\+L\+E\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+P\+O\+S\+T\+A\+M\+B\+L\+E\+\_\+\+R\+E\+P\+E\+A\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__ARRAY__INIT__VEC__DARK__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+I\+N\+I\+T\+\_\+\+V\+E\+C\+\_\+\+D\+A\+R\+K\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+I\+N\+I\+T\+\_\+\+V\+E\+C\+\_\+\+D\+A\+R\+K\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__ARRAY__INIT__VEC__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+I\+N\+I\+T\+\_\+\+V\+E\+C\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+A\+R\+R\+A\+Y\+\_\+\+I\+N\+I\+T\+\_\+\+V\+E\+C\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__TYPE__OVERRIDE__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+T\+Y\+P\+E\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+T\+Y\+P\+E\+\_\+\+O\+V\+E\+R\+R\+I\+D\+E\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__MEM__DFT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+M\+E\+M\+\_\+\+D\+F\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+M\+E\+M\+\_\+\+D\+F\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DBG__MUX__CONTROL__0__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+B\+G\+\_\+\+M\+U\+X\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+0\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+B\+G\+\_\+\+M\+U\+X\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+0\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DBG__MUX__CONTROL__1__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+B\+G\+\_\+\+M\+U\+X\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+1\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+B\+G\+\_\+\+M\+U\+X\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+1\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DBG__MUX__CONTROL__2__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+B\+G\+\_\+\+M\+U\+X\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+2\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+B\+G\+\_\+\+M\+U\+X\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+2\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DBG__MUX__CONTROL__3__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+B\+G\+\_\+\+M\+U\+X\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+3\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+B\+G\+\_\+\+M\+U\+X\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+3\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DBG__MUX__CONTROL__4__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+B\+G\+\_\+\+M\+U\+X\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+4\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+B\+G\+\_\+\+M\+U\+X\+\_\+\+C\+O\+N\+T\+R\+O\+L\+\_\+4\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DE__IA__SELECT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+S\+E\+L\+E\+C\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+S\+E\+L\+E\+C\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DE__IA__ADDR__REG__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+A\+D\+D\+R\+\_\+\+R\+E\+G\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+A\+D\+D\+R\+\_\+\+R\+E\+G\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DE__IA__WRDATA__REG__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+W\+R\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+W\+R\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DE__IA__WRDATA__REG__ALIAS__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+W\+R\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+\+A\+L\+I\+A\+S\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+W\+R\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+\+A\+L\+I\+A\+S\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DE__IA__RDDATA__REG__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+R\+D\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+R\+D\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__DE__IA__RDDATA__REG__ALIAS__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+R\+D\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+\+A\+L\+I\+A\+S\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+R\+D\+D\+A\+T\+A\+\_\+\+R\+E\+G\+\_\+\+A\+L\+I\+A\+S\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__0__ROW__VEC__TOPBOT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+0\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+\_\+\+T\+O\+P\+B\+O\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+0\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+\_\+\+T\+O\+P\+B\+O\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__0__ROW__VEC__MAIN__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+0\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+\_\+\+M\+A\+I\+N\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+0\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+\_\+\+M\+A\+I\+N\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__0__COLUMN__VEC__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+0\+\_\+\+C\+O\+L\+U\+M\+N\+\_\+\+V\+E\+C\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+0\+\_\+\+C\+O\+L\+U\+M\+N\+\_\+\+V\+E\+C\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__0__ROI__TYPE__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+0\+\_\+\+R\+O\+I\+\_\+\+T\+Y\+P\+E\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+0\+\_\+\+R\+O\+I\+\_\+\+T\+Y\+P\+E\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__1__ROW__VEC__TOPBOT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+1\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+\_\+\+T\+O\+P\+B\+O\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+1\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+\_\+\+T\+O\+P\+B\+O\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__1__ROW__VEC__MAIN__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+1\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+\_\+\+M\+A\+I\+N\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+1\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+\_\+\+M\+A\+I\+N\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__1__COLUMN__VEC__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+1\+\_\+\+C\+O\+L\+U\+M\+N\+\_\+\+V\+E\+C\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+1\+\_\+\+C\+O\+L\+U\+M\+N\+\_\+\+V\+E\+C\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__1__ROI__TYPE__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+1\+\_\+\+R\+O\+I\+\_\+\+T\+Y\+P\+E\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+1\+\_\+\+R\+O\+I\+\_\+\+T\+Y\+P\+E\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__2__ROW__VEC__TOPBOT__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+2\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+\_\+\+T\+O\+P\+B\+O\+T\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+2\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+\_\+\+T\+O\+P\+B\+O\+T\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__2__ROW__VEC__MAIN__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+2\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+\_\+\+M\+A\+I\+N\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+2\+\_\+\+R\+O\+W\+\_\+\+V\+E\+C\+\_\+\+M\+A\+I\+N\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__2__COLUMN__VEC__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+2\+\_\+\+C\+O\+L\+U\+M\+N\+\_\+\+V\+E\+C\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+2\+\_\+\+C\+O\+L\+U\+M\+N\+\_\+\+V\+E\+C\+\_\+s}
+\item 
+typedef struct \mbox{\hyperlink{struct__ADI__DE__REGS__YODA__USE__CASE__0__ROI__2__ROI__TYPE__s}{\+\_\+\+A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+2\+\_\+\+R\+O\+I\+\_\+\+T\+Y\+P\+E\+\_\+s}} {\bfseries A\+D\+I\+\_\+\+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+Y\+O\+D\+A\+\_\+\+U\+S\+E\+\_\+\+C\+A\+S\+E\+\_\+0\+\_\+\+R\+O\+I\+\_\+2\+\_\+\+R\+O\+I\+\_\+\+T\+Y\+P\+E\+\_\+s}
+\end{DoxyCompactItemize}
+\doxysubsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{newton__control_8h_ac11761caf59e853d73cfa6d819990850}{adi\+\_\+pin\+\_\+numbers\+\_\+e}} \{ \newline
+{\bfseries P\+I\+N\+\_\+\+R\+S\+TN} = 3, 
+{\bfseries P\+I\+N\+\_\+\+I2\+C\+\_\+\+S\+CL} = 14, 
+{\bfseries P\+I\+N\+\_\+\+I2\+C\+\_\+\+S\+DA} = 12, 
+{\bfseries P\+I\+N\+\_\+\+G\+P\+I\+O0} = 13, 
+\newline
+{\bfseries P\+I\+N\+\_\+\+G\+P\+I\+O1} = 10, 
+{\bfseries P\+I\+N\+\_\+\+G\+P\+I\+O2} = 16, 
+{\bfseries P\+I\+N\+\_\+\+G\+P\+I\+O3} = 15, 
+{\bfseries P\+I\+N\+\_\+\+G\+P\+I\+O4} = 24, 
+\newline
+{\bfseries P\+I\+N\+\_\+\+G\+P\+I\+O5} = 21, 
+{\bfseries P\+I\+N\+\_\+\+G\+P\+I\+O6} = 28, 
+{\bfseries P\+I\+N\+\_\+\+G\+P\+I\+O7} = 29, 
+{\bfseries P\+I\+N\+\_\+\+G\+P\+I\+O8} = 25, 
+\newline
+{\bfseries P\+I\+N\+\_\+\+G\+P\+I\+O9} = 27, 
+{\bfseries P\+I\+N\+\_\+\+G\+P\+I\+O10} = 24
+ \}
+\begin{DoxyCompactList}\small\item\em Newton Wiring\+Pi Pins. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{newton__control_8h_a2a8d25c88cc87eaf9b055e90212489d9}{adi\+\_\+pin\+\_\+modes\+\_\+e}} \{ \newline
+{\bfseries P\+I\+N\+\_\+\+M\+O\+D\+E\+\_\+\+F\+U\+N\+C\+T\+I\+O\+N\+AL} = 0, 
+{\bfseries P\+I\+N\+\_\+\+M\+O\+D\+E\+\_\+\+H\+S\+P\+\_\+\+D\+E\+B\+UG}, 
+{\bfseries P\+I\+N\+\_\+\+M\+O\+D\+E\+\_\+\+D\+F\+T\+\_\+\+J\+T\+AG}, 
+{\bfseries P\+I\+N\+\_\+\+M\+O\+D\+E\+\_\+\+P\+R\+O\+D\+\_\+\+S\+C\+AN}, 
+\newline
+{\bfseries P\+I\+N\+\_\+\+M\+O\+D\+E\+\_\+\+F\+I\+E\+L\+D\+\_\+\+R\+E\+T\+U\+R\+N\+\_\+\+S\+C\+AN}, 
+{\bfseries P\+I\+N\+\_\+\+M\+O\+D\+E\+\_\+\+K\+E\+E\+P\+\_\+\+C\+U\+R\+R\+E\+N\+T\+\_\+\+M\+O\+DE}
+ \}
+\begin{DoxyCompactList}\small\item\em Newton Pin Modes. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{newton__control_8h_a6282eb06a2b5868d896645bfc5851112}{adi\+\_\+attribute\+\_\+e}} \{ \newline
+{\bfseries N\+O\+\_\+\+A\+T\+TR} = 0x00, 
+{\bfseries W\+R\+I\+T\+E\+\_\+\+A\+T\+TR} = 0x01, 
+{\bfseries S\+I\+G\+N\+E\+D\+\_\+\+A\+T\+TR} = 0x02, 
+{\bfseries E\+N\+C\+R\+Y\+P\+T\+E\+D\+\_\+\+A\+T\+TR} = 0x04, 
+\newline
+{\bfseries G\+R\+O\+U\+P\+E\+D\+\_\+\+A\+T\+TR} = 0x08, 
+{\bfseries M\+B\+X\+\_\+\+U\+N\+S\+I\+G\+N\+E\+D\+\_\+\+S\+E\+Q\+\_\+\+W\+FI} = 0x10, 
+{\bfseries M\+B\+X\+\_\+\+U\+N\+S\+I\+G\+N\+E\+D\+\_\+\+S\+E\+Q\+\_\+1\+SP} = 0x20, 
+{\bfseries M\+B\+X\+\_\+\+A\+D\+I\+\_\+\+S\+E\+Q\+\_\+\+W\+FI} = 0x30, 
+\newline
+{\bfseries M\+B\+X\+\_\+\+A\+D\+I\+\_\+\+S\+E\+Q\+\_\+1\+SP} = 0x40, 
+{\bfseries M\+B\+X\+\_\+\+A\+D\+I\+\_\+\+S\+E\+Q\+\_\+\+P\+R\+O\+D\+\_\+1\+SP} = 0x60, 
+{\bfseries M\+B\+X\+\_\+\+M\+S\+F\+T\+\_\+\+S\+E\+Q\+\_\+\+P\+R\+O\+D\+\_\+1\+SP} = 0x70, 
+{\bfseries M\+B\+X\+\_\+\+M\+S\+F\+T\+\_\+\+A\+D\+I\+\_\+\+S\+E\+Q\+\_\+\+P\+R\+O\+D\+\_\+1\+SP} = 0x80
+ \}
+\begin{DoxyCompactList}\small\item\em H\+SP mailbox attributes. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{newton__control_8h_afd3d7a1f2b03991d1af7a861bcb6ba75}{adi\+\_\+command}} \{ \newline
+{\bfseries C\+M\+D\+\_\+\+G\+R\+O\+U\+P\+E\+D\+\_\+\+D\+A\+TA} = 0x1001, 
+{\bfseries C\+M\+D\+\_\+\+S\+E\+Q\+\_\+\+R\+AM} = 0x1002, 
+{\bfseries C\+M\+D\+\_\+\+W\+A\+V\+E\+\_\+\+R\+AM} = 0x1003, 
+{\bfseries C\+M\+D\+\_\+\+M\+A\+P\+\_\+\+R\+AM} = 0x1004, 
+\newline
+{\bfseries C\+M\+D\+\_\+\+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+AM} = 0x1005, 
+{\bfseries C\+M\+D\+\_\+\+D\+U\+M\+P\+\_\+\+E\+N\+G\+I\+N\+E\+\_\+\+R\+AM} = 0x1006, 
+{\bfseries C\+M\+D\+\_\+\+L\+P\+S1\+\_\+\+R\+AM} = 0x1007, 
+{\bfseries C\+M\+D\+\_\+\+L\+P\+S2\+\_\+\+R\+AM} = 0x1008, 
+\newline
+{\bfseries C\+M\+D\+\_\+\+R\+E\+G\+I\+S\+T\+E\+R\+\_\+\+C\+FG} = 0x1009, 
+{\bfseries C\+M\+D\+\_\+1\+S\+P\+\_\+\+I\+M\+A\+GE} = 0x100A, 
+{\bfseries C\+M\+D\+\_\+\+E\+R\+R\+O\+R\+\_\+\+L\+OG} = 0x100B, 
+{\bfseries C\+M\+D\+\_\+\+P\+U\+B\+L\+I\+C\+\_\+\+K\+EY} = 0x100C, 
+\newline
+{\bfseries C\+M\+D\+\_\+\+S\+I\+G\+N\+A\+T\+U\+RE} = 0x100D, 
+{\bfseries C\+M\+D\+\_\+\+O\+P\+E\+R\+A\+T\+I\+N\+G\+\_\+\+M\+O\+DE} = 0x100E
+ \}
+\begin{DoxyCompactList}\small\item\em H\+SP Mailbox Commands. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{newton__control_8h_a065f1834389c928e9bbf585bfb4fc15c}{adi\+\_\+load\+Targets}} \{ \newline
+{\bfseries U\+S\+E\+Q\+\_\+\+S\+E\+Q\+\_\+\+R\+AM} = 0, 
+{\bfseries U\+S\+E\+Q\+\_\+\+M\+A\+P\+\_\+\+R\+AM}, 
+{\bfseries U\+S\+E\+Q\+\_\+\+W\+A\+V\+E\+\_\+\+R\+AM}, 
+{\bfseries D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+AM}, 
+\newline
+{\bfseries D\+E\+\_\+\+R\+AM}, 
+{\bfseries L\+P\+S1\+\_\+\+R\+AM}, 
+{\bfseries L\+P\+S2\+\_\+\+R\+AM}, 
+{\bfseries C\+M\+D\+\_\+\+F\+I\+LE}, 
+\newline
+{\bfseries H\+S\+P\+\_\+\+R\+OM}, 
+{\bfseries H\+S\+P\+\_\+\+R\+AM}, 
+{\bfseries E\+F\+U\+SE}
+ \}
+\begin{DoxyCompactList}\small\item\em Newton R\+AM Targets. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{newton__control_8h_adc05302ebc7a52ca552e75b34f5412f6}{adi\+\_\+hsp\+Mem\+Bit\+Widths}} \{ {\bfseries H\+S\+P\+\_\+\+R\+O\+M\+\_\+\+W\+I\+D\+TH} = 40, 
+{\bfseries H\+S\+P\+\_\+\+R\+A\+M\+\_\+\+W\+I\+D\+TH} = 40, 
+{\bfseries E\+F\+U\+S\+E\+\_\+\+W\+I\+D\+TH} = 32
+ \}
+\begin{DoxyCompactList}\small\item\em H\+SP memory bit widths. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{newton__control_8h_a560b2deb7401ebf60d26fb7eac06c06b}{adi\+\_\+newton\+Mem\+Bit\+Widths}} \{ \newline
+{\bfseries U\+S\+E\+Q\+\_\+\+S\+E\+Q\+\_\+\+R\+A\+M\+\_\+\+W\+I\+D\+TH} = 16, 
+{\bfseries U\+S\+E\+Q\+\_\+\+M\+A\+P\+\_\+\+R\+A\+M\+\_\+\+W\+I\+D\+TH} = 11, 
+{\bfseries U\+S\+E\+Q\+\_\+\+W\+A\+V\+E\+\_\+\+R\+A\+M\+\_\+\+W\+I\+D\+TH} = 16, 
+{\bfseries D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+A\+M\+\_\+\+W\+I\+D\+TH} = 16, 
+\newline
+{\bfseries D\+E\+\_\+\+R\+A\+M\+\_\+\+W\+I\+D\+TH} = 64, 
+{\bfseries L\+P\+S1\+\_\+\+R\+A\+M\+\_\+\+W\+I\+D\+TH} = 24, 
+{\bfseries L\+P\+S2\+\_\+\+R\+A\+M\+\_\+\+W\+I\+D\+TH} = 24
+ \}
+\begin{DoxyCompactList}\small\item\em Newton memory bit widths. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{newton__control_8h_a2417c480624ef79f2375539559938df4}{adi\+\_\+newton\+Mem\+Byte\+Widths}} \{ \newline
+{\bfseries U\+S\+E\+Q\+\_\+\+S\+E\+Q\+\_\+\+R\+A\+M\+\_\+\+W\+I\+D\+T\+H\+\_\+\+B\+Y\+T\+ES} = 2, 
+{\bfseries U\+S\+E\+Q\+\_\+\+M\+A\+P\+\_\+\+R\+A\+M\+\_\+\+W\+I\+D\+T\+H\+\_\+\+B\+Y\+T\+ES} = 2, 
+{\bfseries U\+S\+E\+Q\+\_\+\+W\+A\+V\+E\+\_\+\+R\+A\+M\+\_\+\+W\+I\+D\+T\+H\+\_\+\+B\+Y\+T\+ES} = 2, 
+{\bfseries D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+A\+M\+\_\+\+W\+I\+D\+T\+H\+\_\+\+B\+Y\+T\+ES} = 2, 
+\newline
+{\bfseries D\+E\+\_\+\+R\+A\+M\+\_\+\+W\+I\+D\+T\+H\+\_\+\+B\+Y\+T\+ES} = 8, 
+{\bfseries L\+P\+S1\+\_\+\+R\+A\+M\+\_\+\+W\+I\+D\+T\+H\+\_\+\+B\+Y\+T\+ES} = 4, 
+{\bfseries L\+P\+S2\+\_\+\+R\+A\+M\+\_\+\+W\+I\+D\+T\+H\+\_\+\+B\+Y\+T\+ES} = 4
+ \}
+\begin{DoxyCompactList}\small\item\em Newton memory bytte widths. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{newton__control_8h_aa82d1f54c0c89145c5567025313d750d}{adi\+\_\+newton\+Mem\+Depths}} \{ \newline
+{\bfseries U\+S\+E\+Q\+\_\+\+S\+E\+Q\+\_\+\+R\+A\+M\+\_\+\+D\+E\+P\+TH} = 4096, 
+{\bfseries U\+S\+E\+Q\+\_\+\+M\+A\+P\+\_\+\+R\+A\+M\+\_\+\+D\+E\+P\+TH} = 128, 
+{\bfseries U\+S\+E\+Q\+\_\+\+W\+A\+V\+E\+\_\+\+R\+A\+M\+\_\+\+D\+E\+P\+TH} = 2048, 
+{\bfseries D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+A\+M\+\_\+\+D\+E\+P\+TH} = 4096, 
+\newline
+{\bfseries D\+E\+\_\+\+R\+A\+M\+\_\+\+D\+E\+P\+TH} = 1024, 
+{\bfseries L\+P\+S1\+\_\+\+R\+A\+M\+\_\+\+D\+E\+P\+TH} = 256, 
+{\bfseries L\+P\+S2\+\_\+\+R\+A\+M\+\_\+\+D\+E\+P\+TH} = 256
+ \}
+\begin{DoxyCompactList}\small\item\em Newton memory depths. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{newton__control_8h_ad359be753ee6b29ae1ef07d6623e05de}{adi\+\_\+newton\+Mem\+Masks}} \{ \newline
+{\bfseries U\+S\+E\+Q\+\_\+\+S\+E\+Q\+\_\+\+R\+A\+M\+\_\+\+M\+A\+SK} = 0xffff, 
+{\bfseries U\+S\+E\+Q\+\_\+\+M\+A\+P\+\_\+\+R\+A\+M\+\_\+\+M\+A\+SK} = 0x7ff, 
+{\bfseries U\+S\+E\+Q\+\_\+\+W\+A\+V\+E\+\_\+\+R\+A\+M\+\_\+\+M\+A\+SK} = 0xffff, 
+{\bfseries D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+A\+M\+\_\+\+M\+A\+SK} = 0xffff, 
+\newline
+{\bfseries D\+E\+\_\+\+R\+A\+M\+\_\+\+M\+A\+SK} = 0xffffffffffffffff, 
+{\bfseries L\+P\+S1\+\_\+\+R\+A\+M\+\_\+\+M\+A\+SK} = 0xffffff, 
+{\bfseries L\+P\+S2\+\_\+\+R\+A\+M\+\_\+\+M\+A\+SK} = 0xffffff
+ \}
+\begin{DoxyCompactList}\small\item\em Newton memory masks. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{newton__control_8h_a33165fbd4fce4fceb597f0c01ff38152}{adi\+\_\+command\+Load\+States}} \{ \newline
+{\bfseries C\+M\+D\+\_\+\+L\+O\+A\+D\+\_\+\+H\+E\+A\+D\+ER} = 0, 
+{\bfseries C\+M\+D\+\_\+\+G\+R\+O\+U\+P\+E\+D\+\_\+\+D\+A\+T\+A\+\_\+\+W\+R\+I\+TE}, 
+{\bfseries C\+M\+D\+\_\+\+L\+O\+A\+D\+\_\+\+R\+E\+G\+\_\+\+W\+R\+I\+TE}, 
+{\bfseries C\+M\+D\+\_\+\+L\+O\+A\+D\+\_\+\+R\+E\+G\+\_\+\+R\+E\+AD}, 
+\newline
+{\bfseries C\+M\+D\+\_\+\+L\+O\+A\+D\+\_\+\+R\+A\+M\+\_\+\+W\+R\+I\+TE}, 
+{\bfseries C\+M\+D\+\_\+\+L\+O\+A\+D\+\_\+\+E\+R\+R\+O\+R\+\_\+\+L\+OG}, 
+{\bfseries C\+M\+D\+\_\+\+L\+O\+A\+D\+\_\+1\+S\+P\+\_\+\+I\+M\+A\+GE}, 
+{\bfseries C\+M\+D\+\_\+\+L\+O\+A\+D\+\_\+\+S\+I\+G\+N\+A\+T\+U\+RE}, 
+\newline
+{\bfseries C\+M\+D\+\_\+\+L\+O\+A\+D\+\_\+\+P\+U\+B\+L\+I\+C\+\_\+\+K\+EY}, 
+{\bfseries C\+M\+D\+\_\+\+L\+O\+A\+D\+\_\+\+O\+P\+E\+R\+A\+T\+I\+N\+G\+\_\+\+M\+O\+DE}, 
+{\bfseries C\+M\+D\+\_\+\+L\+O\+A\+D\+\_\+\+U\+N\+K\+N\+O\+WN}
+ \}
+\begin{DoxyCompactList}\small\item\em Command Read States. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{newton__control_8h_a8f59d3e0771657f9ae4509e7bc9f720e}{adi\+\_\+hsp\+Error\+Codes}} \{ \newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea4390df86c8f10bbeb894468785ff5e38}{H\+S\+P\+\_\+\+S\+U\+C\+C\+E\+SS}} = 0x00, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720eab188a5313f7850d73bb0af98a47a4a44}{H\+S\+P\+\_\+\+U\+N\+K\+N\+O\+W\+N\+\_\+\+E\+R\+R\+OR}} = 0x01, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea80bdae43686366288a94579428547497}{H\+S\+P\+\_\+\+I\+N\+V\+A\+L\+I\+D\+\_\+\+P\+A\+R\+A\+M\+E\+T\+ER}} = 0x02, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea44964e51b994570fa2b29693f6fc4008}{H\+S\+P\+\_\+\+N\+O\+T\+\_\+\+I\+M\+P\+L\+E\+M\+E\+N\+T\+ED}} = 0x03, 
+\newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720eaa63737585b4c2fe4f5a91a05c11f0dbe}{H\+S\+P\+\_\+\+C\+O\+M\+M\+A\+N\+D\+\_\+\+E\+R\+R\+OR}} = 0x04, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ead9272e1c42b10a5447de848535911e9a}{H\+S\+P\+\_\+\+B\+U\+S\+\_\+\+E\+R\+R\+OR}} = 0x05, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720eabe8121d78ba3e3b5c819f941d6db2eff}{H\+S\+P\+\_\+\+F\+A\+U\+L\+T\+\_\+\+E\+R\+R\+OR}} = 0x06, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea0739fa3b4029f3b29ef415680e0e2df5}{H\+S\+P\+\_\+\+N\+O\+T\+\_\+\+O\+W\+N\+E\+R\+\_\+\+E\+R\+R\+OR}} = 0x07, 
+\newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea2bfc1198ab2c37cebd54d719500cab33}{H\+S\+P\+\_\+\+B\+U\+S\+Y\+\_\+\+S\+T\+A\+TE}} = 0x08, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea930036c80a8a77e7becf57e0bbb690d7}{H\+S\+P\+\_\+\+S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+M\+I\+S\+M\+A\+T\+CH}} = 0x09, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea7b558716eb885e77d840330312d1a566}{H\+S\+P\+\_\+\+A\+U\+T\+H\+E\+N\+T\+I\+C\+A\+T\+I\+O\+N\+\_\+\+F\+A\+I\+L\+ED}} = 0x0A, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720eae3974da7bf398d01d88f2ae89c5d0f6c}{H\+S\+P\+\_\+\+I\+R\+Q\+\_\+\+S\+T\+A\+TE}} = 0x0B, 
+\newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea7c4e8d5f0b0111ecd931fe3dcd63d86d}{H\+S\+P\+\_\+\+F\+I\+Q\+\_\+\+S\+T\+A\+TE}} = 0x0C, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea5a39b2114a0ba1f71c9b33dbad883804}{H\+S\+P\+\_\+\+K\+E\+Y\+\_\+\+N\+O\+T\+\_\+\+Z\+E\+R\+O\+\_\+\+E\+R\+R\+OR}} = 0x0D, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720eaaf0e4ee94e1e2c149eb2756f4dba1671}{H\+S\+P\+\_\+\+B\+L\+A\+N\+K\+\_\+\+C\+H\+E\+C\+K\+\_\+\+F\+A\+IL}} = 0x0E, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea0386459a2498d3083755524ff12fff39}{H\+S\+P\+\_\+\+E\+C\+C\+\_\+\+C\+O\+R\+R\+E\+C\+T\+I\+O\+N\+\_\+\+F\+A\+IL}} = 0x0F, 
+\newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ead3c0c78875330b7b0a66423de1a39daa}{H\+S\+P\+\_\+\+S\+V\+N\+\_\+\+V\+E\+R\+S\+I\+O\+N\+\_\+\+M\+I\+S\+M\+A\+T\+CH}} = 0x10, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea693f0a0be1f4d93d4a660d5a28f994cd}{H\+S\+P\+\_\+\+I\+N\+V\+A\+L\+I\+D\+\_\+\+O\+P\+E\+R\+A\+T\+I\+N\+G\+\_\+\+M\+O\+DE}} = 0x11, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea7f9b00725ca34ed5fc1a784fa4b341bf}{H\+S\+P\+\_\+\+I\+N\+V\+A\+L\+I\+D\+\_\+\+C\+E\+K\+\_\+\+K\+EY}} = 0x12, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea2b8634d56a6de5063fd9694c9423b978}{H\+S\+P\+\_\+\+D\+E\+C\+R\+Y\+P\+T\+I\+O\+N\+\_\+\+F\+A\+I\+L\+ED}} = 0x13, 
+\newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea10a67be9d9957136a49adb41bc812aab}{H\+S\+P\+\_\+\+S\+W\+\_\+\+F\+A\+U\+LT}} = 0x14, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea4448795dc2713a8f4f23ef780eac039b}{H\+S\+P\+\_\+\+H\+W\+\_\+\+F\+A\+U\+LT}} = 0x15, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea7c8c6cdd3cb7bb91a68c385659f63dc1}{H\+S\+P\+\_\+\+F\+I\+Q\+\_\+\+U\+N\+H\+A\+N\+D\+L\+ED}} = 0x16, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea7ff4932cbddf24d1ba0e7330e53bad2b}{H\+S\+P\+\_\+\+F\+I\+Q\+\_\+\+C\+R\+Y\+P\+T\+O\+\_\+\+E\+RR}} = 0x17, 
+\newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea1beda213fdd039608d63ffc318a86372}{H\+S\+P\+\_\+\+F\+I\+Q\+\_\+\+A\+C\+C\+\_\+\+V\+IO}} = 0x18, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea9817f3d2e93b289dbd3c7ddcc2cc28f6}{H\+S\+P\+\_\+\+F\+I\+Q\+\_\+\+M\+E\+M\+\_\+\+E\+D\+C\+\_\+\+E\+RR}} = 0x19, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea5daa7fbbb338530e2658c96b39fe17d7}{H\+S\+P\+\_\+\+F\+I\+Q\+\_\+\+M\+E\+M\+\_\+\+E\+R\+A\+S\+E\+\_\+\+E\+RR}} = 0x1A, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea5ace7fc29de0729fb4c6b8c06ec1920a}{H\+S\+P\+\_\+\+F\+I\+Q\+\_\+\+S\+P\+\_\+\+B\+U\+S\+\_\+\+E\+RR}} = 0x1B, 
+\newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea1403d4b6455d94f700f299b3baf5c4d2}{H\+S\+P\+\_\+\+F\+I\+Q\+\_\+\+F\+A\+T\+A\+L\+\_\+\+U\+N\+H\+A\+N\+D\+L\+ED}} = 0x1C, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea8fc33cba0203044929498a4d1a4cdce8}{H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+I\+N\+V\+A\+L\+I\+D\+\_\+\+C\+M\+D\+\_\+\+E\+R\+R\+OR}} = 0x80, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea4895818094277cde013aa9902441c35f}{H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+I\+N\+V\+A\+L\+I\+D\+\_\+\+S\+I\+Z\+E\+\_\+\+E\+R\+R\+OR}} = 0x81, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea0c2328cc1d5d1fd34d3423435ed2a387}{H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+I\+N\+V\+A\+L\+I\+D\+\_\+\+A\+D\+D\+R\+\_\+\+E\+R\+R\+OR}} = 0x82, 
+\newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea452124fbeb7b4bfda1fc779ba8bf2064}{H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+I\+N\+V\+A\+L\+I\+D\+\_\+\+A\+T\+T\+R\+I\+B\+U\+T\+E\+\_\+\+E\+R\+R\+OR}} = 0x83, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea8b5a6e604d095e9b1a7a742c8412d61c}{H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+R\+E\+G\+I\+S\+T\+E\+R\+\_\+\+A\+C\+C\+E\+S\+S\+\_\+\+E\+R\+R\+OR}} = 0x84, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720ea0b61911f2d576945e91ef3851796a264}{H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+E\+X\+C\+E\+E\+D\+\_\+\+E\+N\+C\+R\+Y\+P\+T\+\_\+\+E\+N\+T\+R\+I\+E\+S\+\_\+\+E\+R\+R\+OR}} = 0x85, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720eacbd41760de52441ae02ba8ea21156758}{H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+S\+I\+G\+N\+\_\+\+V\+E\+R\+F\+\_\+\+F\+A\+I\+L\+\_\+\+E\+R\+R\+OR}} = 0x86, 
+\newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720eaa3b2f6e5aa5b8e77f5cab8e2c1e72474}{H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+I\+N\+V\+A\+L\+I\+D\+\_\+\+A\+U\+T\+H\+\_\+\+C\+E\+RT}} = 0x87, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720eae09df8f0ab9dd77e839c71f73f35364e}{H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+G\+R\+O\+U\+P\+E\+D\+\_\+\+D\+A\+T\+A\+\_\+\+S\+I\+Z\+E\+\_\+\+M\+I\+S\+M\+A\+T\+C\+H\+\_\+\+E\+R\+R\+OR}} = 0x88, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga8f59d3e0771657f9ae4509e7bc9f720eae388a33e37a00209ec84cce94251da6a}{H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+S\+E\+Q\+\_\+\+E\+R\+R\+OR}} = 0x89
+ \}
+\begin{DoxyCompactList}\small\item\em H\+SP Error Codes. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{newton__control_8h_a104bc89ff79d05c085e10b967ca5df29}{adi\+\_\+newton\+Register\+Addresses}} \{ \newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29a5d020269199cb71de30040d3f5843432}{U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+L\+O\+A\+D\+A\+D\+DR}} = 0X000000\+C0, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29a7f75865c2cd22f0eeca94bdcab379c07}{U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+R\+D\+S\+T\+A\+D\+DR}} = 0X000000\+C2, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29a431cd192b563b0084c1df8e53bcb06e0}{U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+L\+O\+A\+D\+D\+A\+TA}} = 0X000000\+C4, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29a12616dd5b693e80e6633e8fd1639fe7f}{U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+R\+D\+D\+A\+TA}} = 0X000000\+C8, 
+\newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29a20b91272352f68f2e8176385f3edf354}{L\+P\+S1\+\_\+\+R\+E\+G\+S\+\_\+\+L\+P\+S\+R\+A\+M\+A\+D\+DR}} = 0X00000906, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29ae7203ba0595c57e826fb58ace810acf2}{L\+P\+S1\+\_\+\+R\+E\+G\+S\+\_\+\+L\+P\+S\+R\+A\+M\+R\+D\+C\+MD}} = 0X00000908, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29a68acba07c9d7845328b7ec99664609ff}{L\+P\+S1\+\_\+\+R\+E\+G\+S\+\_\+\+L\+P\+S\+R\+A\+M\+D\+A\+TA}} = 0X00000920, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29a3cd937d6efafc44be7967505ef5c13cd}{L\+P\+S2\+\_\+\+R\+E\+G\+S\+\_\+\+L\+P\+S\+R\+A\+M\+A\+D\+DR}} = 0X00000\+A06, 
+\newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29a9a139613e9341781322b94a2aa76c49b}{L\+P\+S2\+\_\+\+R\+E\+G\+S\+\_\+\+L\+P\+S\+R\+A\+M\+R\+D\+C\+MD}} = 0X00000\+A08, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29a7bf2b33853473c467576dfc5e1f3eeb3}{L\+P\+S2\+\_\+\+R\+E\+G\+S\+\_\+\+L\+P\+S\+R\+A\+M\+D\+A\+TA}} = 0X00000\+A20, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29a56715a9d18d9ef71ba3a386710b462cb}{D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+S\+\_\+\+I\+A\+\_\+\+S\+E\+L\+E\+CT}} = 0X00000\+D70, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29a71d0af4a534e3ab1a050b9ffd5d1ab7e}{D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+S\+\_\+\+I\+A\+\_\+\+A\+D\+D\+R\+\_\+\+R\+EG}} = 0X00000\+D72, 
+\newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29a1f56cdd9062b21c8f8f9fce5c4ca807b}{D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+S\+\_\+\+I\+A\+\_\+\+W\+R\+D\+A\+T\+A\+\_\+\+R\+EG}} = 0X00000\+D74, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29a771b81283028e27b3301bffada58c125}{D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+S\+\_\+\+I\+A\+\_\+\+R\+D\+D\+A\+T\+A\+\_\+\+R\+EG}} = 0X00000\+D78, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29a5f0de0b4459c8a4b8f703569ad26e2d1}{D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+S\+\_\+\+I\+A\+\_\+\+B\+A\+N\+K\+\_\+\+T\+Y\+PE}} = 0X00000\+D7C, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29a333f3a95c2efa3a75871cab6a41ea4a9}{D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+S\+E\+L\+E\+CT}} = 0X00000\+E70, 
+\newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29a9e7a2087781a6ccc0ad2007b771eed1f}{D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+A\+D\+D\+R\+\_\+\+R\+EG}} = 0X00000\+E72, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29af572e81fbadfb5dd79efb332ce6e682a}{D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+W\+R\+D\+A\+T\+A\+\_\+\+R\+EG}} = 0X00000\+E74, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga104bc89ff79d05c085e10b967ca5df29a5fb484c582fbafb237eca5b8d9736776}{D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+R\+D\+D\+A\+T\+A\+\_\+\+R\+EG}} = 0X00000\+E78
+ \}
+\begin{DoxyCompactList}\small\item\em Newton memory depths. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga869103c3b57944c240ca00daed6b03b8}{adi\+\_\+error\+Codes\+\_\+e}} \{ \newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8adabbebcd29de7dd8be245e8541de1aaf}{A\+D\+I\+\_\+\+N\+O\+\_\+\+E\+R\+R\+OR}} = 0, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8ae9cd3e5069214a86a60528c0a69ee791}{A\+D\+I\+\_\+\+J\+S\+O\+N\+\_\+\+F\+I\+L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND}} = 0x0ad10001, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8a9615100f4c6e36bca0563359ea7639b3}{A\+D\+I\+\_\+\+J\+S\+O\+N\+\_\+\+F\+I\+L\+E\+\_\+\+O\+P\+E\+N\+\_\+\+E\+R\+R\+OR}} = 0x0ad10002, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8af962a7472d70e7fe7188ed5105430391}{A\+D\+I\+\_\+\+J\+S\+O\+N\+\_\+\+P\+A\+R\+S\+E\+\_\+\+E\+R\+R\+OR}} = 0x0ad10003, 
+\newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8a19a604cbc49651c40f341a54a9e6f0d6}{A\+D\+I\+\_\+\+J\+S\+O\+N\+\_\+\+U\+N\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+K\+EY}} = 0x0ad10004, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8ab5f46d0b16d03d6629ef5bcb122850d5}{A\+D\+I\+\_\+\+U\+N\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+S\+P\+I\+\_\+\+B\+Y\+T\+E\+\_\+\+C\+O\+U\+NT}} = 0x0ad10005, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8a944a16afe0d955f768d7014e11c0d760}{A\+D\+I\+\_\+\+F\+I\+L\+E\+\_\+\+N\+O\+T\+\_\+\+F\+O\+U\+ND}} = 0x0ad10006, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8a502f9bec87db402d3d072fa0a5a145e2}{A\+D\+I\+\_\+\+S\+P\+I\+\_\+\+D\+R\+I\+V\+E\+R\+\_\+\+E\+R\+R\+OR}} = 0x0ad10007, 
+\newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8aa1d46b0cef2ef7f36f3d8588c7c51d82}{A\+D\+I\+\_\+\+S\+P\+I\+\_\+\+X\+F\+E\+R\+\_\+\+E\+R\+R\+OR}} = 0x0ad10008, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8a4ec4a4c769b2d4e33eacaffd952f3d32}{A\+D\+I\+\_\+\+S\+P\+I\+\_\+\+B\+I\+T\+\_\+\+R\+A\+T\+E\+\_\+\+E\+R\+R\+OR}} = 0x0ad10009, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8a8964f3f4912fead0ddb68197e2ceb1d9}{A\+D\+I\+\_\+\+E\+R\+R\+O\+R\+\_\+\+C\+O\+D\+E\+\_\+\+M\+I\+S\+S\+I\+NG}} = 0x0ad1000a, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8a5f712ff1cceaa1e53fd96b4fc3a089d1}{A\+D\+I\+\_\+\+U\+N\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+A\+R\+GS}} = 0x0ad1000b, 
+\newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8a265a7cab581fa7e273fc52d31cef1d42}{A\+D\+I\+\_\+\+H2\+S\+\_\+\+V\+A\+L\+I\+D\+\_\+\+T\+I\+M\+E\+O\+UT}} = 0x0ad1000c, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8af5138251baad8a915dc171406b93f6e4}{A\+D\+I\+\_\+\+S2\+H\+\_\+\+N\+O\+T\+\_\+\+V\+A\+L\+I\+D\+\_\+\+T\+I\+M\+E\+O\+UT}} = 0x0ad1000d, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8a059a22dd213775680cb753775fab4820}{A\+D\+I\+\_\+\+H2\+S\+\_\+\+E\+R\+R\+OR}} = 0x0ad1000e, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8af733301189fdf3e08be6e2df18f37ff7}{A\+D\+I\+\_\+\+M\+I\+S\+C\+O\+M\+P\+A\+R\+E\+\_\+\+E\+R\+R\+OR}} = 0x0ad1000f, 
+\newline
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8a81fc58ca3d02a4325b3a6ced391b38c1}{A\+D\+I\+\_\+\+F\+I\+L\+E\+\_\+\+F\+O\+R\+M\+A\+T\+\_\+\+E\+R\+R\+OR}} = 0x0ad10010, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8afdcee1cdeef62bc031c3c7aa03755ec8}{A\+D\+I\+\_\+\+U\+N\+E\+X\+P\+E\+C\+T\+E\+D\+\_\+\+P\+I\+N\+\_\+\+M\+O\+DE}} = 0x0ad10011, 
+\mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gga869103c3b57944c240ca00daed6b03b8ac98a8a5bc40e09d62ad95b41da033626}{A\+D\+I\+\_\+\+W\+I\+R\+I\+N\+G\+P\+I\+\_\+\+E\+R\+R\+OR}} = 0x0ad10012
+ \}
+\begin{DoxyCompactList}\small\item\em Error code definitions. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gab239301ab4dd6face509606095c7851e}{adi\+\_\+data\+\_\+type\+\_\+codes\+\_\+e}} \{ {\bfseries D\+T\+Y\+P\+E\+\_\+\+I\+N\+T32} = 0, 
+{\bfseries D\+T\+Y\+P\+E\+\_\+\+U\+I\+N\+T32}, 
+{\bfseries D\+T\+Y\+P\+E\+\_\+\+F\+L\+O\+AT}
+ \}
+\begin{DoxyCompactList}\small\item\em Enums for specifying the data type codes. \end{DoxyCompactList}\item 
+enum \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gabe2c47476122c4f1a9c12148e57d5150}{spi\+Bit\+Rates}} \{ \newline
+{\bfseries S\+P\+I\+\_\+\+B\+I\+T\+\_\+\+R\+A\+T\+E\+\_\+1M} = 1000, 
+{\bfseries S\+P\+I\+\_\+\+B\+I\+T\+\_\+\+R\+A\+T\+E\+\_\+2M} = 2000, 
+{\bfseries S\+P\+I\+\_\+\+B\+I\+T\+\_\+\+R\+A\+T\+E\+\_\+4M} = 4000, 
+{\bfseries S\+P\+I\+\_\+\+B\+I\+T\+\_\+\+R\+A\+T\+E\+\_\+8M} = 8000, 
+\newline
+{\bfseries S\+P\+I\+\_\+\+B\+I\+T\+\_\+\+R\+A\+T\+E\+\_\+12M} = 12000, 
+{\bfseries S\+P\+I\+\_\+\+B\+I\+T\+\_\+\+R\+A\+T\+E\+\_\+16M} = 16000
+ \}
+\begin{DoxyCompactList}\small\item\em Enums for specifying valid S\+PI Clock Rates. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga22c4c40374ccb429c239617e8a666847}{adi\+\_\+spi\+\_\+write}} (int bytes\+\_\+out, u08 $\ast$data\+\_\+out, int bytes\+\_\+in, u08 $\ast$data\+\_\+in)
+\begin{DoxyCompactList}\small\item\em Write a 32-\/bit word to the Newton over the S\+PI Interface. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gabd6700a5ffc7fe0a4fad5c513727bbcf}{adi\+\_\+spi\+\_\+write\+\_\+word\+\_\+multiple}} (u16 address, int data\+Length, u16 $\ast$data\+Write\+Ptr)
+\begin{DoxyCompactList}\small\item\em Write multiple 16-\/bit words to the Newton over the S\+PI Interface. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gae049d3389d332ad8f29734045e8b17ae}{adi\+\_\+spi\+\_\+read\+\_\+word\+\_\+multiple}} (u16 address, int data\+Length, u16 $\ast$data\+Read\+Ptr)
+\begin{DoxyCompactList}\small\item\em Read multiple 16-\/bit words from the Newton over the S\+PI Interface. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga1d8804b0d62cf27f72c67f336c5af1e8}{adi\+\_\+spi\+\_\+open}} (int bit\+Rate)
+\begin{DoxyCompactList}\small\item\em Open the S\+PI Device. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga1ec4600b48df5acaf14721915f2fa419}{adi\+\_\+spi\+\_\+close}} ()
+\begin{DoxyCompactList}\small\item\em Close the S\+PI Device. \end{DoxyCompactList}\item 
+bool \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga3ea81494cdb52b08b21ecd1c7683475e}{adi\+\_\+is\+\_\+spi\+\_\+open}} ()
+\begin{DoxyCompactList}\small\item\em Test if the S\+PI Device is open. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gaa52fa7b2bc93f6bf4bfb4fffefd60647}{adi\+\_\+wait\+\_\+for\+\_\+hsp\+\_\+ready}} ()
+\begin{DoxyCompactList}\small\item\em Wait for H\+SP ready. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gaf9b007749ebaa027c51d70f993c7cf8e}{adi\+\_\+send\+\_\+command}} (u16 command, u16 address, int word\+\_\+count, \mbox{\hyperlink{newton__control_8h_a6282eb06a2b5868d896645bfc5851112}{adi\+\_\+attribute\+\_\+e}} attribute)
+\begin{DoxyCompactList}\small\item\em Send command to H\+SP. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gaa9ae112af9dbae7d3e2c3cf739620779}{adi\+\_\+clear\+\_\+h2s\+\_\+valid}} ()
+\begin{DoxyCompactList}\small\item\em Clear H2S valid. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga6ba7dbe36f3ce7a8e3d2c8e8139e67af}{adi\+\_\+wait\+\_\+for\+\_\+h2s\+\_\+valid}} ()
+\begin{DoxyCompactList}\small\item\em W\+Wait for H2S Valid from H\+SP. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga0c73e9628c4326b5167c5533ffe0b408}{adi\+\_\+wait\+\_\+for\+\_\+s2h\+\_\+not\+\_\+valid}} ()
+\begin{DoxyCompactList}\small\item\em Wait for S2H not valid from H\+SP. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga42c637c4a0f6e5afa1ac104df60eafd5}{adi\+\_\+send\+\_\+data}} (int word\+\_\+count, u16 $\ast$wr\+\_\+data)
+\begin{DoxyCompactList}\small\item\em Send data to H\+SP. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga6515189a954f93fd86414889d8fe8d72}{adi\+\_\+send\+\_\+write\+\_\+register\+\_\+list}} (u16 $\ast$wr\+\_\+addr, u16 $\ast$wr\+\_\+data, int word\+\_\+count)
+\begin{DoxyCompactList}\small\item\em Send write register list Send data to H\+SP. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga544d97e46bc3c1e0419894cdf629d2ba}{adi\+\_\+send\+\_\+read\+\_\+register\+\_\+list}} (u16 $\ast$rd\+\_\+addr, int word\+\_\+count)
+\begin{DoxyCompactList}\small\item\em Send read register list Send data to H\+SP. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga2c68b65e57fae434f24ab6ebfb12950e}{adi\+\_\+get\+\_\+data}} (int word\+\_\+count, u16 $\ast$rd\+\_\+data)
+\begin{DoxyCompactList}\small\item\em Get data from H\+SP. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga7042c125e352af2b7ee1111425efefa3}{adi\+\_\+spi\+\_\+read\+\_\+word}} (u16 address, u16 $\ast$data)
+\begin{DoxyCompactList}\small\item\em Read a 16-\/bit word from the Newton over the S\+PI Interface. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga4b4d9f381f945f2958f17e21bd5808ab}{adi\+\_\+read\+\_\+register}} (u16 addr, u16 $\ast$rd\+\_\+data)
+\begin{DoxyCompactList}\small\item\em Perform register read through H\+SP. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga3eb2360451c2add5da7a0956dd39bf59}{adi\+\_\+read\+\_\+register\+\_\+backdoor}} (u16 addr, u16 $\ast$data)
+\begin{DoxyCompactList}\small\item\em Perform register write bypassing the H\+SP. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga052aee9ece45da790c85811489b065e8}{adi\+\_\+write\+\_\+burst}} (u16 addr, u16 word\+\_\+count, u16 $\ast$wr\+\_\+data)
+\begin{DoxyCompactList}\small\item\em Perform write burst through H\+SP with incrementing addresses. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga4aac8702493e41e85aa77105dc012980}{adi\+\_\+write\+\_\+register\+\_\+list}} (u16 $\ast$wr\+\_\+addr, int burst\+\_\+size, u16 $\ast$wr\+\_\+data)
+\begin{DoxyCompactList}\small\item\em Write list of registers. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga70697470574c0d2a26f1d64861c1e32e}{adi\+\_\+read\+\_\+register\+\_\+list}} (u16 $\ast$rd\+\_\+addr, int burst\+\_\+size, u16 $\ast$rd\+\_\+data)
+\begin{DoxyCompactList}\small\item\em Read register list. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga17af3cad8717bd74ae893a7eec002e30}{adi\+\_\+read\+\_\+burst}} (u16 addr, u16 word\+\_\+count, u16 $\ast$rd\+\_\+data)
+\begin{DoxyCompactList}\small\item\em Perform read burst through H\+SP with incrementing addresses. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga65b32cf84ae5bce43e2751725b29075c}{adi\+\_\+check\+\_\+done\+\_\+code}} ()
+\begin{DoxyCompactList}\small\item\em Check the 1SP completion code. \end{DoxyCompactList}\item 
+u16 \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gaf011fdc488075448592bf962c9b2783b}{adi\+\_\+spi\+\_\+read\+\_\+word\+\_\+py}} (u16 address)
+\begin{DoxyCompactList}\small\item\em Read a 16-\/bit word from the Newton over the S\+PI Interface. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga05f1523d5fd27e2bfd50046833aaed07}{adi\+\_\+spi\+\_\+write\+\_\+word}} (u16 address, u16 data)
+\begin{DoxyCompactList}\small\item\em Write a 16-\/bit word to the Newton over the S\+PI Interface. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga045f7dd08c99fb83a7233e0d5ce261a7}{adi\+\_\+dump\+\_\+error\+\_\+log}} ()
+\begin{DoxyCompactList}\small\item\em Dump Error Log. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga89315cc4b86afcaf6d2db4025a9cc1bb}{adi\+\_\+write\+\_\+register}} (u16 addr, u16 wr\+\_\+data)
+\begin{DoxyCompactList}\small\item\em Perform register write through H\+SP. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gaaf7700610e589c921149c275fc0329c5}{adi\+\_\+write\+\_\+register\+\_\+backdoor}} (u16 addr, u16 data)
+\begin{DoxyCompactList}\small\item\em Perform register write bypassing H\+SP. \end{DoxyCompactList}\item 
+u16 \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga0b2c0526ff50483629e11bac41d51a52}{adi\+\_\+read\+\_\+register\+\_\+py}} (u16 addr)
+\begin{DoxyCompactList}\small\item\em Perform register read through H\+SP. \end{DoxyCompactList}\item 
+u16 \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga32f385540656cceb1de20a4f0e75449d}{adi\+\_\+check\+\_\+register\+\_\+py}} (u16 addr, u16 data)
+\begin{DoxyCompactList}\small\item\em Perform register read through H\+SP. \end{DoxyCompactList}\item 
+u16 \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga1883d9e02502c139a25da26fa9adb474}{adi\+\_\+read\+\_\+register\+\_\+backdoor\+\_\+py}} (u16 addr)
+\begin{DoxyCompactList}\small\item\em Perform register write bypassing the H\+SP. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gaf5fbbd8194c11925fd93ed523ecf5501}{adi\+\_\+load\+\_\+command\+\_\+file}} (const char $\ast$file\+Name)
+\begin{DoxyCompactList}\small\item\em Load command file. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gabe252deae323e71dc23ac0e5e987c1e8}{adi\+\_\+verify\+\_\+command\+\_\+file}} (const char $\ast$file\+Name)
+\begin{DoxyCompactList}\small\item\em erifies that the R\+A\+Ms match the memory images contained in the soecifide file. \end{DoxyCompactList}\item 
+int {\bfseries adi\+\_\+verify\+\_\+command\+\_\+file\+\_\+hsp} (const char $\ast$file\+Name)
+\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga0172ea84370bf865835b9a3bc3ca58ac}{adi\+\_\+load\+\_\+hsp}} (\mbox{\hyperlink{newton__control_8h_ad34cd296ac69b3671a8da8f371d7968c}{adi\+\_\+load\+Targets\+\_\+e}} load\+Target, char $\ast$file\+Name)
+\begin{DoxyCompactList}\small\item\em Load the memory image contained in the specified file into the specified H\+SP memory. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga6d2866691e75b65ac5aa0acfc292bda6}{adi\+\_\+verify\+\_\+hsp}} (\mbox{\hyperlink{newton__control_8h_ad34cd296ac69b3671a8da8f371d7968c}{adi\+\_\+load\+Targets\+\_\+e}} verify\+Target, const char $\ast$file\+Name)
+\begin{DoxyCompactList}\small\item\em Verify that the memory image contained in the specified file matches the containt of the specified H\+SP memory. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gae147f3bc5f2b879c366747b7ccb5b66d}{adi\+\_\+unload\+\_\+hsp}} (\mbox{\hyperlink{newton__control_8h_ad34cd296ac69b3671a8da8f371d7968c}{adi\+\_\+load\+Targets\+\_\+e}} unload\+Target, const char $\ast$file\+Name)
+\begin{DoxyCompactList}\small\item\em Unload the memory image to the specified file from the specified H\+SP memory. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gaf61dc681353e7898e4aae7c15671e98c}{adi\+\_\+soft\+\_\+reset}} ()
+\begin{DoxyCompactList}\small\item\em Issue a soft reset to the newton. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gac79450a40a0d7588f20628bc8a86eb0e}{adi\+\_\+reset\+\_\+hsp}} ()
+\begin{DoxyCompactList}\small\item\em Issue a soft reset to the H\+SP hardware. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gae0a4301dd632d84eb2c8f26bd8051e5b}{adi\+\_\+reset\+\_\+newton}} (\mbox{\hyperlink{newton__control_8h_a2a8d25c88cc87eaf9b055e90212489d9}{adi\+\_\+pin\+\_\+modes\+\_\+e}} pin\+\_\+mode)
+\begin{DoxyCompactList}\small\item\em Issue a hard reset to newton. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga1729fbdd9ac5c43613f4d17b176824b6}{adi\+\_\+test\+\_\+useq\+\_\+ram}} ()
+\begin{DoxyCompactList}\small\item\em Test the micro-\/sequencer sequence memory. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gad5ae0e6c0245520879b643b2f5d61362}{adi\+\_\+newton\+\_\+config}} (int bit\+Rate\+Override)
+\begin{DoxyCompactList}\small\item\em Configure the newton control program. \end{DoxyCompactList}\item 
+char $\ast$ \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gac74e2d801a2c8b13c23610f48275e601}{adi\+\_\+error\+\_\+msg}} (int return\+Code)
+\begin{DoxyCompactList}\small\item\em Return error message string for given error code. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gaa19216beb654c2f14726b1cda5330918}{adi\+\_\+configure\+\_\+newton\+\_\+gpio}} (int gpio, int direction)
+\begin{DoxyCompactList}\small\item\em Configure (input or output) the specified Newton G\+P\+IO. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga77a89e12550194c6a9d76a0a969e03a1}{adi\+\_\+set\+\_\+newton\+\_\+gpio}} (int gpio, int value)
+\begin{DoxyCompactList}\small\item\em Set Newton G\+P\+IO to the specified value. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gad0ab8aca12f7f66d2c0fc1693fdf7cca}{adi\+\_\+get\+\_\+newton\+\_\+gpio}} (int gpio)
+\begin{DoxyCompactList}\small\item\em Get Newton G\+P\+IO value. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gaca8046fdb96f8904e1ddc50b99f4637e}{adi\+\_\+toggle\+\_\+newton\+\_\+gpio}} (int gpio)
+\begin{DoxyCompactList}\small\item\em Toggle (change state of) Newton G\+P\+IO. \end{DoxyCompactList}\item 
+int \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_ga4a7b79e58158a866759668969d618366}{adi\+\_\+pulse\+\_\+newton\+\_\+gpio}} (int gpio, int width)
+\begin{DoxyCompactList}\small\item\em Pulse Newton G\+P\+IO for the specified pulse width. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\doxysubsection*{Variables}
+\begin{DoxyCompactItemize}
+\item 
+enum \mbox{\hyperlink{group__USE__CASE__0__ROI__2__ROI__TYPE_gabe2c47476122c4f1a9c12148e57d5150}{spi\+Bit\+Rates}} {\bfseries spi\+Bit\+Rates\+\_\+e}
+\item 
+struct spi\+\_\+ioc\+\_\+transfer {\bfseries global\+\_\+tr}
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\hypertarget{newton__control_8h_newton_control_api_sec}{}\doxysubsection{Newton Control A\+PI}\label{newton__control_8h_newton_control_api_sec}
+\hypertarget{newton__control_8h_api_intro_sec}{}\doxysubsection{Newton Control A\+PI}\label{newton__control_8h_api_intro_sec}
+The purpose of the Newton Control A\+PI is to provide an A\+PI for controlling the Newton from a host processor via the S\+PI Slave interface of the Newton.\hypertarget{newton__control_8h_functions_sec}{}\doxysubsection{Summary of Functionality}\label{newton__control_8h_functions_sec}
+The following is a summary of funcionality provided by the Newton Control A\+PI\+:
+
+
+\begin{DoxyItemize}
+\item Reset H\+SP
+\item S\+PI read
+\item S\+PI write
+\item register read
+\item register write
+\item Load fuses from file
+\item Load H\+SP R\+OM from file
+\item Load program into newton memory from file
+\item Unload fuses to file
+\item Unload H\+SP R\+OM to file
+\item Unload program from newton memory to file
+\item Verify fuses against file contents
+\item Verify H\+SP R\+OM against file contents
+\item Verify program in newton memory against file contents
+\end{DoxyItemize}\hypertarget{newton__control_8h_examples_sec}{}\doxysubsection{Code examples}\label{newton__control_8h_examples_sec}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{FIXME: need \textcolor{keyword}{new} code example}
+\end{DoxyCode}
+\hypertarget{newton__control_8h_load_firmware_sec}{}\doxysubsection{Load Firmware code example}\label{newton__control_8h_load_firmware_sec}
+
+\begin{DoxyCode}{0}
+\DoxyCodeLine{FIXME: need \textcolor{keyword}{new} code example}
+\end{DoxyCode}
+
+
+See \mbox{\hyperlink{newton__control_8h}{newton\+\_\+control.\+h}} for detailed documentation. 
+
+\doxysubsection{Typedef Documentation}
+\mbox{\Hypertarget{newton__control_8h_aa17326e1fc82b40e18a47c754a3f20a5}\label{newton__control_8h_aa17326e1fc82b40e18a47c754a3f20a5}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_command\_e@{adi\_command\_e}}
+\index{adi\_command\_e@{adi\_command\_e}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_command\_e}{adi\_command\_e}}
+{\footnotesize\ttfamily typedef enum \mbox{\hyperlink{newton__control_8h_afd3d7a1f2b03991d1af7a861bcb6ba75}{adi\+\_\+command}} \mbox{\hyperlink{newton__control_8h_aa17326e1fc82b40e18a47c754a3f20a5}{adi\+\_\+command\+\_\+e}}}
+
+
+
+H\+SP Mailbox Commands. 
+
+H\+SP Mailbox Commands. \mbox{\Hypertarget{newton__control_8h_a84dd5392768a91a709c90942f3bbc1a5}\label{newton__control_8h_a84dd5392768a91a709c90942f3bbc1a5}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_commandLoadStates\_e@{adi\_commandLoadStates\_e}}
+\index{adi\_commandLoadStates\_e@{adi\_commandLoadStates\_e}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_commandLoadStates\_e}{adi\_commandLoadStates\_e}}
+{\footnotesize\ttfamily typedef enum \mbox{\hyperlink{newton__control_8h_a33165fbd4fce4fceb597f0c01ff38152}{adi\+\_\+command\+Load\+States}} \mbox{\hyperlink{newton__control_8h_a84dd5392768a91a709c90942f3bbc1a5}{adi\+\_\+command\+Load\+States\+\_\+e}}}
+
+
+
+Command Read States. 
+
+Command Read States. \mbox{\Hypertarget{newton__control_8h_a5a9d71a983d576ef4a7734e43cd6898e}\label{newton__control_8h_a5a9d71a983d576ef4a7734e43cd6898e}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_hspErrorCodes\_e@{adi\_hspErrorCodes\_e}}
+\index{adi\_hspErrorCodes\_e@{adi\_hspErrorCodes\_e}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_hspErrorCodes\_e}{adi\_hspErrorCodes\_e}}
+{\footnotesize\ttfamily typedef enum \mbox{\hyperlink{newton__control_8h_a8f59d3e0771657f9ae4509e7bc9f720e}{adi\+\_\+hsp\+Error\+Codes}} \mbox{\hyperlink{newton__control_8h_a5a9d71a983d576ef4a7734e43cd6898e}{adi\+\_\+hsp\+Error\+Codes\+\_\+e}}}
+
+
+
+H\+SP Error Codes. 
+
+H\+SP error codes. \mbox{\Hypertarget{newton__control_8h_af4a2f12bd8d1ab1d0d1580eda8f54cf2}\label{newton__control_8h_af4a2f12bd8d1ab1d0d1580eda8f54cf2}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_hspMemBitWidths\_e@{adi\_hspMemBitWidths\_e}}
+\index{adi\_hspMemBitWidths\_e@{adi\_hspMemBitWidths\_e}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_hspMemBitWidths\_e}{adi\_hspMemBitWidths\_e}}
+{\footnotesize\ttfamily typedef enum \mbox{\hyperlink{newton__control_8h_adc05302ebc7a52ca552e75b34f5412f6}{adi\+\_\+hsp\+Mem\+Bit\+Widths}} \mbox{\hyperlink{newton__control_8h_af4a2f12bd8d1ab1d0d1580eda8f54cf2}{adi\+\_\+hsp\+Mem\+Bit\+Widths\+\_\+e}}}
+
+
+
+H\+SP memory bit widths. 
+
+H\+SP memory bit widths. \mbox{\Hypertarget{newton__control_8h_ad34cd296ac69b3671a8da8f371d7968c}\label{newton__control_8h_ad34cd296ac69b3671a8da8f371d7968c}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_loadTargets\_e@{adi\_loadTargets\_e}}
+\index{adi\_loadTargets\_e@{adi\_loadTargets\_e}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_loadTargets\_e}{adi\_loadTargets\_e}}
+{\footnotesize\ttfamily typedef enum \mbox{\hyperlink{newton__control_8h_a065f1834389c928e9bbf585bfb4fc15c}{adi\+\_\+load\+Targets}} \mbox{\hyperlink{newton__control_8h_ad34cd296ac69b3671a8da8f371d7968c}{adi\+\_\+load\+Targets\+\_\+e}}}
+
+
+
+Newton R\+AM Targets. 
+
+Newton R\+AM targets. \mbox{\Hypertarget{newton__control_8h_ab84a02fe39ebadeb8d16bc927f407d04}\label{newton__control_8h_ab84a02fe39ebadeb8d16bc927f407d04}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_newtonMemBitWidths\_e@{adi\_newtonMemBitWidths\_e}}
+\index{adi\_newtonMemBitWidths\_e@{adi\_newtonMemBitWidths\_e}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_newtonMemBitWidths\_e}{adi\_newtonMemBitWidths\_e}}
+{\footnotesize\ttfamily typedef enum \mbox{\hyperlink{newton__control_8h_a560b2deb7401ebf60d26fb7eac06c06b}{adi\+\_\+newton\+Mem\+Bit\+Widths}} \mbox{\hyperlink{newton__control_8h_ab84a02fe39ebadeb8d16bc927f407d04}{adi\+\_\+newton\+Mem\+Bit\+Widths\+\_\+e}}}
+
+
+
+Newton memory bit widths. 
+
+Newton memory bit widths. \mbox{\Hypertarget{newton__control_8h_a2fdeb3bafc2dfa6df29ddf9e4c5119f9}\label{newton__control_8h_a2fdeb3bafc2dfa6df29ddf9e4c5119f9}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_newtonMemByteWidths\_e@{adi\_newtonMemByteWidths\_e}}
+\index{adi\_newtonMemByteWidths\_e@{adi\_newtonMemByteWidths\_e}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_newtonMemByteWidths\_e}{adi\_newtonMemByteWidths\_e}}
+{\footnotesize\ttfamily typedef enum \mbox{\hyperlink{newton__control_8h_a2417c480624ef79f2375539559938df4}{adi\+\_\+newton\+Mem\+Byte\+Widths}} \mbox{\hyperlink{newton__control_8h_a2fdeb3bafc2dfa6df29ddf9e4c5119f9}{adi\+\_\+newton\+Mem\+Byte\+Widths\+\_\+e}}}
+
+
+
+Newton memory bytte widths. 
+
+Newton memory byte widths. \mbox{\Hypertarget{newton__control_8h_af88fdddaf08d31a7eaa740df481f5a47}\label{newton__control_8h_af88fdddaf08d31a7eaa740df481f5a47}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_newtonMemDepths\_e@{adi\_newtonMemDepths\_e}}
+\index{adi\_newtonMemDepths\_e@{adi\_newtonMemDepths\_e}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_newtonMemDepths\_e}{adi\_newtonMemDepths\_e}}
+{\footnotesize\ttfamily typedef enum \mbox{\hyperlink{newton__control_8h_aa82d1f54c0c89145c5567025313d750d}{adi\+\_\+newton\+Mem\+Depths}} \mbox{\hyperlink{newton__control_8h_af88fdddaf08d31a7eaa740df481f5a47}{adi\+\_\+newton\+Mem\+Depths\+\_\+e}}}
+
+
+
+Newton memory depths. 
+
+Newton memory depths. \mbox{\Hypertarget{newton__control_8h_aa985e91107aa42766b263a12294ce368}\label{newton__control_8h_aa985e91107aa42766b263a12294ce368}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_newtonMemMasks\_e@{adi\_newtonMemMasks\_e}}
+\index{adi\_newtonMemMasks\_e@{adi\_newtonMemMasks\_e}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_newtonMemMasks\_e}{adi\_newtonMemMasks\_e}}
+{\footnotesize\ttfamily typedef enum \mbox{\hyperlink{newton__control_8h_ad359be753ee6b29ae1ef07d6623e05de}{adi\+\_\+newton\+Mem\+Masks}} \mbox{\hyperlink{newton__control_8h_aa985e91107aa42766b263a12294ce368}{adi\+\_\+newton\+Mem\+Masks\+\_\+e}}}
+
+
+
+Newton memory masks. 
+
+Newton memory masks. \mbox{\Hypertarget{newton__control_8h_a0d6d70ca01dc694c11f99b2b13aaa0db}\label{newton__control_8h_a0d6d70ca01dc694c11f99b2b13aaa0db}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_newtonRegisterAddresses\_e@{adi\_newtonRegisterAddresses\_e}}
+\index{adi\_newtonRegisterAddresses\_e@{adi\_newtonRegisterAddresses\_e}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_newtonRegisterAddresses\_e}{adi\_newtonRegisterAddresses\_e}}
+{\footnotesize\ttfamily typedef enum \mbox{\hyperlink{newton__control_8h_a104bc89ff79d05c085e10b967ca5df29}{adi\+\_\+newton\+Register\+Addresses}} \mbox{\hyperlink{newton__control_8h_a0d6d70ca01dc694c11f99b2b13aaa0db}{adi\+\_\+newton\+Register\+Addresses\+\_\+e}}}
+
+
+
+Newton memory depths. 
+
+Newton memory depths. 
+
+\doxysubsection{Enumeration Type Documentation}
+\mbox{\Hypertarget{newton__control_8h_a6282eb06a2b5868d896645bfc5851112}\label{newton__control_8h_a6282eb06a2b5868d896645bfc5851112}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_attribute\_e@{adi\_attribute\_e}}
+\index{adi\_attribute\_e@{adi\_attribute\_e}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_attribute\_e}{adi\_attribute\_e}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{newton__control_8h_a6282eb06a2b5868d896645bfc5851112}{adi\+\_\+attribute\+\_\+e}}}
+
+
+
+H\+SP mailbox attributes. 
+
+Newton H\+SP mailbox attributes. \mbox{\Hypertarget{newton__control_8h_afd3d7a1f2b03991d1af7a861bcb6ba75}\label{newton__control_8h_afd3d7a1f2b03991d1af7a861bcb6ba75}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_command@{adi\_command}}
+\index{adi\_command@{adi\_command}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_command}{adi\_command}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{newton__control_8h_afd3d7a1f2b03991d1af7a861bcb6ba75}{adi\+\_\+command}}}
+
+
+
+H\+SP Mailbox Commands. 
+
+H\+SP Mailbox Commands. \mbox{\Hypertarget{newton__control_8h_a33165fbd4fce4fceb597f0c01ff38152}\label{newton__control_8h_a33165fbd4fce4fceb597f0c01ff38152}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_commandLoadStates@{adi\_commandLoadStates}}
+\index{adi\_commandLoadStates@{adi\_commandLoadStates}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_commandLoadStates}{adi\_commandLoadStates}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{newton__control_8h_a33165fbd4fce4fceb597f0c01ff38152}{adi\+\_\+command\+Load\+States}}}
+
+
+
+Command Read States. 
+
+Command Read States. \mbox{\Hypertarget{newton__control_8h_a8f59d3e0771657f9ae4509e7bc9f720e}\label{newton__control_8h_a8f59d3e0771657f9ae4509e7bc9f720e}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_hspErrorCodes@{adi\_hspErrorCodes}}
+\index{adi\_hspErrorCodes@{adi\_hspErrorCodes}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_hspErrorCodes}{adi\_hspErrorCodes}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{newton__control_8h_a8f59d3e0771657f9ae4509e7bc9f720e}{adi\+\_\+hsp\+Error\+Codes}}}
+
+
+
+H\+SP Error Codes. 
+
+H\+SP error codes. \begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_SUCCESS@{HSP\_SUCCESS}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_SUCCESS@{HSP\_SUCCESS}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea4390df86c8f10bbeb894468785ff5e38}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea4390df86c8f10bbeb894468785ff5e38}} 
+H\+S\+P\+\_\+\+S\+U\+C\+C\+E\+SS&Success \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_UNKNOWN\_ERROR@{HSP\_UNKNOWN\_ERROR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_UNKNOWN\_ERROR@{HSP\_UNKNOWN\_ERROR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720eab188a5313f7850d73bb0af98a47a4a44}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720eab188a5313f7850d73bb0af98a47a4a44}} 
+H\+S\+P\+\_\+\+U\+N\+K\+N\+O\+W\+N\+\_\+\+E\+R\+R\+OR&Unknown error \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_INVALID\_PARAMETER@{HSP\_INVALID\_PARAMETER}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_INVALID\_PARAMETER@{HSP\_INVALID\_PARAMETER}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea80bdae43686366288a94579428547497}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea80bdae43686366288a94579428547497}} 
+H\+S\+P\+\_\+\+I\+N\+V\+A\+L\+I\+D\+\_\+\+P\+A\+R\+A\+M\+E\+T\+ER&Invalid parameter \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_NOT\_IMPLEMENTED@{HSP\_NOT\_IMPLEMENTED}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_NOT\_IMPLEMENTED@{HSP\_NOT\_IMPLEMENTED}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea44964e51b994570fa2b29693f6fc4008}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea44964e51b994570fa2b29693f6fc4008}} 
+H\+S\+P\+\_\+\+N\+O\+T\+\_\+\+I\+M\+P\+L\+E\+M\+E\+N\+T\+ED&Not implemented \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_COMMAND\_ERROR@{HSP\_COMMAND\_ERROR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_COMMAND\_ERROR@{HSP\_COMMAND\_ERROR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720eaa63737585b4c2fe4f5a91a05c11f0dbe}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720eaa63737585b4c2fe4f5a91a05c11f0dbe}} 
+H\+S\+P\+\_\+\+C\+O\+M\+M\+A\+N\+D\+\_\+\+E\+R\+R\+OR&Command error \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_BUS\_ERROR@{HSP\_BUS\_ERROR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_BUS\_ERROR@{HSP\_BUS\_ERROR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ead9272e1c42b10a5447de848535911e9a}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ead9272e1c42b10a5447de848535911e9a}} 
+H\+S\+P\+\_\+\+B\+U\+S\+\_\+\+E\+R\+R\+OR&Bus error \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_FAULT\_ERROR@{HSP\_FAULT\_ERROR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_FAULT\_ERROR@{HSP\_FAULT\_ERROR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720eabe8121d78ba3e3b5c819f941d6db2eff}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720eabe8121d78ba3e3b5c819f941d6db2eff}} 
+H\+S\+P\+\_\+\+F\+A\+U\+L\+T\+\_\+\+E\+R\+R\+OR&Fault error \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_NOT\_OWNER\_ERROR@{HSP\_NOT\_OWNER\_ERROR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_NOT\_OWNER\_ERROR@{HSP\_NOT\_OWNER\_ERROR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea0739fa3b4029f3b29ef415680e0e2df5}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea0739fa3b4029f3b29ef415680e0e2df5}} 
+H\+S\+P\+\_\+\+N\+O\+T\+\_\+\+O\+W\+N\+E\+R\+\_\+\+E\+R\+R\+OR&Not owner error \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_BUSY\_STATE@{HSP\_BUSY\_STATE}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_BUSY\_STATE@{HSP\_BUSY\_STATE}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea2bfc1198ab2c37cebd54d719500cab33}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea2bfc1198ab2c37cebd54d719500cab33}} 
+H\+S\+P\+\_\+\+B\+U\+S\+Y\+\_\+\+S\+T\+A\+TE&H\+SP is busy \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_SIGNATURE\_MISMATCH@{HSP\_SIGNATURE\_MISMATCH}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_SIGNATURE\_MISMATCH@{HSP\_SIGNATURE\_MISMATCH}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea930036c80a8a77e7becf57e0bbb690d7}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea930036c80a8a77e7becf57e0bbb690d7}} 
+H\+S\+P\+\_\+\+S\+I\+G\+N\+A\+T\+U\+R\+E\+\_\+\+M\+I\+S\+M\+A\+T\+CH&Signature does not match \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_AUTHENTICATION\_FAILED@{HSP\_AUTHENTICATION\_FAILED}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_AUTHENTICATION\_FAILED@{HSP\_AUTHENTICATION\_FAILED}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea7b558716eb885e77d840330312d1a566}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea7b558716eb885e77d840330312d1a566}} 
+H\+S\+P\+\_\+\+A\+U\+T\+H\+E\+N\+T\+I\+C\+A\+T\+I\+O\+N\+\_\+\+F\+A\+I\+L\+ED&Authentication failed \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_IRQ\_STATE@{HSP\_IRQ\_STATE}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_IRQ\_STATE@{HSP\_IRQ\_STATE}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720eae3974da7bf398d01d88f2ae89c5d0f6c}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720eae3974da7bf398d01d88f2ae89c5d0f6c}} 
+H\+S\+P\+\_\+\+I\+R\+Q\+\_\+\+S\+T\+A\+TE&Trapped in I\+RQ \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_FIQ\_STATE@{HSP\_FIQ\_STATE}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_FIQ\_STATE@{HSP\_FIQ\_STATE}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea7c4e8d5f0b0111ecd931fe3dcd63d86d}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea7c4e8d5f0b0111ecd931fe3dcd63d86d}} 
+H\+S\+P\+\_\+\+F\+I\+Q\+\_\+\+S\+T\+A\+TE&Trapped in F\+IQ \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_KEY\_NOT\_ZERO\_ERROR@{HSP\_KEY\_NOT\_ZERO\_ERROR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_KEY\_NOT\_ZERO\_ERROR@{HSP\_KEY\_NOT\_ZERO\_ERROR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea5a39b2114a0ba1f71c9b33dbad883804}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea5a39b2114a0ba1f71c9b33dbad883804}} 
+H\+S\+P\+\_\+\+K\+E\+Y\+\_\+\+N\+O\+T\+\_\+\+Z\+E\+R\+O\+\_\+\+E\+R\+R\+OR&Key not zero error \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_BLANK\_CHECK\_FAIL@{HSP\_BLANK\_CHECK\_FAIL}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_BLANK\_CHECK\_FAIL@{HSP\_BLANK\_CHECK\_FAIL}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720eaaf0e4ee94e1e2c149eb2756f4dba1671}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720eaaf0e4ee94e1e2c149eb2756f4dba1671}} 
+H\+S\+P\+\_\+\+B\+L\+A\+N\+K\+\_\+\+C\+H\+E\+C\+K\+\_\+\+F\+A\+IL&Fuse word check is not blank; this might not be error \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_ECC\_CORRECTION\_FAIL@{HSP\_ECC\_CORRECTION\_FAIL}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_ECC\_CORRECTION\_FAIL@{HSP\_ECC\_CORRECTION\_FAIL}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea0386459a2498d3083755524ff12fff39}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea0386459a2498d3083755524ff12fff39}} 
+H\+S\+P\+\_\+\+E\+C\+C\+\_\+\+C\+O\+R\+R\+E\+C\+T\+I\+O\+N\+\_\+\+F\+A\+IL&Ecc correction fails, having more than 1 errors \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_SVN\_VERSION\_MISMATCH@{HSP\_SVN\_VERSION\_MISMATCH}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_SVN\_VERSION\_MISMATCH@{HSP\_SVN\_VERSION\_MISMATCH}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ead3c0c78875330b7b0a66423de1a39daa}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ead3c0c78875330b7b0a66423de1a39daa}} 
+H\+S\+P\+\_\+\+S\+V\+N\+\_\+\+V\+E\+R\+S\+I\+O\+N\+\_\+\+M\+I\+S\+M\+A\+T\+CH&S\+VN in 1SP header does not match the S\+VN in fuses \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_INVALID\_OPERATING\_MODE@{HSP\_INVALID\_OPERATING\_MODE}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_INVALID\_OPERATING\_MODE@{HSP\_INVALID\_OPERATING\_MODE}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea693f0a0be1f4d93d4a660d5a28f994cd}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea693f0a0be1f4d93d4a660d5a28f994cd}} 
+H\+S\+P\+\_\+\+I\+N\+V\+A\+L\+I\+D\+\_\+\+O\+P\+E\+R\+A\+T\+I\+N\+G\+\_\+\+M\+O\+DE&Invalid operating mode \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_INVALID\_CEK\_KEY@{HSP\_INVALID\_CEK\_KEY}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_INVALID\_CEK\_KEY@{HSP\_INVALID\_CEK\_KEY}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea7f9b00725ca34ed5fc1a784fa4b341bf}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea7f9b00725ca34ed5fc1a784fa4b341bf}} 
+H\+S\+P\+\_\+\+I\+N\+V\+A\+L\+I\+D\+\_\+\+C\+E\+K\+\_\+\+K\+EY&Invalid C\+EK decryption key \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_DECRYPTION\_FAILED@{HSP\_DECRYPTION\_FAILED}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_DECRYPTION\_FAILED@{HSP\_DECRYPTION\_FAILED}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea2b8634d56a6de5063fd9694c9423b978}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea2b8634d56a6de5063fd9694c9423b978}} 
+H\+S\+P\+\_\+\+D\+E\+C\+R\+Y\+P\+T\+I\+O\+N\+\_\+\+F\+A\+I\+L\+ED&Decrypted payload does not match expected hash \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_SW\_FAULT@{HSP\_SW\_FAULT}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_SW\_FAULT@{HSP\_SW\_FAULT}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea10a67be9d9957136a49adb41bc812aab}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea10a67be9d9957136a49adb41bc812aab}} 
+H\+S\+P\+\_\+\+S\+W\+\_\+\+F\+A\+U\+LT&SW Exception \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_HW\_FAULT@{HSP\_HW\_FAULT}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_HW\_FAULT@{HSP\_HW\_FAULT}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea4448795dc2713a8f4f23ef780eac039b}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea4448795dc2713a8f4f23ef780eac039b}} 
+H\+S\+P\+\_\+\+H\+W\+\_\+\+F\+A\+U\+LT&Unexpected HW fault \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_FIQ\_UNHANDLED@{HSP\_FIQ\_UNHANDLED}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_FIQ\_UNHANDLED@{HSP\_FIQ\_UNHANDLED}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea7c8c6cdd3cb7bb91a68c385659f63dc1}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea7c8c6cdd3cb7bb91a68c385659f63dc1}} 
+H\+S\+P\+\_\+\+F\+I\+Q\+\_\+\+U\+N\+H\+A\+N\+D\+L\+ED&Unhandled F\+IQ error \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_FIQ\_CRYPTO\_ERR@{HSP\_FIQ\_CRYPTO\_ERR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_FIQ\_CRYPTO\_ERR@{HSP\_FIQ\_CRYPTO\_ERR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea7ff4932cbddf24d1ba0e7330e53bad2b}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea7ff4932cbddf24d1ba0e7330e53bad2b}} 
+H\+S\+P\+\_\+\+F\+I\+Q\+\_\+\+C\+R\+Y\+P\+T\+O\+\_\+\+E\+RR&Critical Crypto error \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_FIQ\_ACC\_VIO@{HSP\_FIQ\_ACC\_VIO}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_FIQ\_ACC\_VIO@{HSP\_FIQ\_ACC\_VIO}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea1beda213fdd039608d63ffc318a86372}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea1beda213fdd039608d63ffc318a86372}} 
+H\+S\+P\+\_\+\+F\+I\+Q\+\_\+\+A\+C\+C\+\_\+\+V\+IO&Access violation \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_FIQ\_MEM\_EDC\_ERR@{HSP\_FIQ\_MEM\_EDC\_ERR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_FIQ\_MEM\_EDC\_ERR@{HSP\_FIQ\_MEM\_EDC\_ERR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea9817f3d2e93b289dbd3c7ddcc2cc28f6}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea9817f3d2e93b289dbd3c7ddcc2cc28f6}} 
+H\+S\+P\+\_\+\+F\+I\+Q\+\_\+\+M\+E\+M\+\_\+\+E\+D\+C\+\_\+\+E\+RR&M\+EM E\+DC error \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_FIQ\_MEM\_ERASE\_ERR@{HSP\_FIQ\_MEM\_ERASE\_ERR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_FIQ\_MEM\_ERASE\_ERR@{HSP\_FIQ\_MEM\_ERASE\_ERR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea5daa7fbbb338530e2658c96b39fe17d7}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea5daa7fbbb338530e2658c96b39fe17d7}} 
+H\+S\+P\+\_\+\+F\+I\+Q\+\_\+\+M\+E\+M\+\_\+\+E\+R\+A\+S\+E\+\_\+\+E\+RR&Mem Erase error \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_FIQ\_SP\_BUS\_ERR@{HSP\_FIQ\_SP\_BUS\_ERR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_FIQ\_SP\_BUS\_ERR@{HSP\_FIQ\_SP\_BUS\_ERR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea5ace7fc29de0729fb4c6b8c06ec1920a}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea5ace7fc29de0729fb4c6b8c06ec1920a}} 
+H\+S\+P\+\_\+\+F\+I\+Q\+\_\+\+S\+P\+\_\+\+B\+U\+S\+\_\+\+E\+RR&SP Bus error \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_FIQ\_FATAL\_UNHANDLED@{HSP\_FIQ\_FATAL\_UNHANDLED}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_FIQ\_FATAL\_UNHANDLED@{HSP\_FIQ\_FATAL\_UNHANDLED}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea1403d4b6455d94f700f299b3baf5c4d2}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea1403d4b6455d94f700f299b3baf5c4d2}} 
+H\+S\+P\+\_\+\+F\+I\+Q\+\_\+\+F\+A\+T\+A\+L\+\_\+\+U\+N\+H\+A\+N\+D\+L\+ED&Fatal F\+IQ that are not handled \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_MBX\_INVALID\_CMD\_ERROR@{HSP\_MBX\_INVALID\_CMD\_ERROR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_MBX\_INVALID\_CMD\_ERROR@{HSP\_MBX\_INVALID\_CMD\_ERROR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea8fc33cba0203044929498a4d1a4cdce8}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea8fc33cba0203044929498a4d1a4cdce8}} 
+H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+I\+N\+V\+A\+L\+I\+D\+\_\+\+C\+M\+D\+\_\+\+E\+R\+R\+OR&Invalid Command Packet Command field \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_MBX\_INVALID\_SIZE\_ERROR@{HSP\_MBX\_INVALID\_SIZE\_ERROR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_MBX\_INVALID\_SIZE\_ERROR@{HSP\_MBX\_INVALID\_SIZE\_ERROR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea4895818094277cde013aa9902441c35f}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea4895818094277cde013aa9902441c35f}} 
+H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+I\+N\+V\+A\+L\+I\+D\+\_\+\+S\+I\+Z\+E\+\_\+\+E\+R\+R\+OR&Invalid Command Packet Size field \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_MBX\_INVALID\_ADDR\_ERROR@{HSP\_MBX\_INVALID\_ADDR\_ERROR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_MBX\_INVALID\_ADDR\_ERROR@{HSP\_MBX\_INVALID\_ADDR\_ERROR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea0c2328cc1d5d1fd34d3423435ed2a387}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea0c2328cc1d5d1fd34d3423435ed2a387}} 
+H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+I\+N\+V\+A\+L\+I\+D\+\_\+\+A\+D\+D\+R\+\_\+\+E\+R\+R\+OR&Invalid Command Packet Addr field \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_MBX\_INVALID\_ATTRIBUTE\_ERROR@{HSP\_MBX\_INVALID\_ATTRIBUTE\_ERROR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_MBX\_INVALID\_ATTRIBUTE\_ERROR@{HSP\_MBX\_INVALID\_ATTRIBUTE\_ERROR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea452124fbeb7b4bfda1fc779ba8bf2064}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea452124fbeb7b4bfda1fc779ba8bf2064}} 
+H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+I\+N\+V\+A\+L\+I\+D\+\_\+\+A\+T\+T\+R\+I\+B\+U\+T\+E\+\_\+\+E\+R\+R\+OR&Invalid Command Packet Attribute field \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_MBX\_REGISTER\_ACCESS\_ERROR@{HSP\_MBX\_REGISTER\_ACCESS\_ERROR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_MBX\_REGISTER\_ACCESS\_ERROR@{HSP\_MBX\_REGISTER\_ACCESS\_ERROR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea8b5a6e604d095e9b1a7a742c8412d61c}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea8b5a6e604d095e9b1a7a742c8412d61c}} 
+H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+R\+E\+G\+I\+S\+T\+E\+R\+\_\+\+A\+C\+C\+E\+S\+S\+\_\+\+E\+R\+R\+OR&Invalid register access \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_MBX\_EXCEED\_ENCRYPT\_ENTRIES\_ERROR@{HSP\_MBX\_EXCEED\_ENCRYPT\_ENTRIES\_ERROR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_MBX\_EXCEED\_ENCRYPT\_ENTRIES\_ERROR@{HSP\_MBX\_EXCEED\_ENCRYPT\_ENTRIES\_ERROR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea0b61911f2d576945e91ef3851796a264}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720ea0b61911f2d576945e91ef3851796a264}} 
+H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+E\+X\+C\+E\+E\+D\+\_\+\+E\+N\+C\+R\+Y\+P\+T\+\_\+\+E\+N\+T\+R\+I\+E\+S\+\_\+\+E\+R\+R\+OR&Exceeded Number of Mailbox Encryption Entries \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_MBX\_SIGN\_VERF\_FAIL\_ERROR@{HSP\_MBX\_SIGN\_VERF\_FAIL\_ERROR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_MBX\_SIGN\_VERF\_FAIL\_ERROR@{HSP\_MBX\_SIGN\_VERF\_FAIL\_ERROR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720eacbd41760de52441ae02ba8ea21156758}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720eacbd41760de52441ae02ba8ea21156758}} 
+H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+S\+I\+G\+N\+\_\+\+V\+E\+R\+F\+\_\+\+F\+A\+I\+L\+\_\+\+E\+R\+R\+OR&Signature Verification Failed \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_MBX\_INVALID\_AUTH\_CERT@{HSP\_MBX\_INVALID\_AUTH\_CERT}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_MBX\_INVALID\_AUTH\_CERT@{HSP\_MBX\_INVALID\_AUTH\_CERT}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720eaa3b2f6e5aa5b8e77f5cab8e2c1e72474}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720eaa3b2f6e5aa5b8e77f5cab8e2c1e72474}} 
+H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+I\+N\+V\+A\+L\+I\+D\+\_\+\+A\+U\+T\+H\+\_\+\+C\+E\+RT&Unsigned Authorization Certificate \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_MBX\_GROUPED\_DATA\_SIZE\_MISMATCH\_ERROR@{HSP\_MBX\_GROUPED\_DATA\_SIZE\_MISMATCH\_ERROR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_MBX\_GROUPED\_DATA\_SIZE\_MISMATCH\_ERROR@{HSP\_MBX\_GROUPED\_DATA\_SIZE\_MISMATCH\_ERROR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720eae09df8f0ab9dd77e839c71f73f35364e}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720eae09df8f0ab9dd77e839c71f73f35364e}} 
+H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+G\+R\+O\+U\+P\+E\+D\+\_\+\+D\+A\+T\+A\+\_\+\+S\+I\+Z\+E\+\_\+\+M\+I\+S\+M\+A\+T\+C\+H\+\_\+\+E\+R\+R\+OR&Mismatch of Grouped data size attribute and sum of subpacket data size \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{HSP\_MBX\_SEQ\_ERROR@{HSP\_MBX\_SEQ\_ERROR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!HSP\_MBX\_SEQ\_ERROR@{HSP\_MBX\_SEQ\_ERROR}}}\mbox{\Hypertarget{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720eae388a33e37a00209ec84cce94251da6a}\label{newton__control_8h_ga8f59d3e0771657f9ae4509e7bc9f720eae388a33e37a00209ec84cce94251da6a}} 
+H\+S\+P\+\_\+\+M\+B\+X\+\_\+\+S\+E\+Q\+\_\+\+E\+R\+R\+OR&Error in the mailbox sequence \\
+\hline
+
+\end{DoxyEnumFields}
+\mbox{\Hypertarget{newton__control_8h_adc05302ebc7a52ca552e75b34f5412f6}\label{newton__control_8h_adc05302ebc7a52ca552e75b34f5412f6}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_hspMemBitWidths@{adi\_hspMemBitWidths}}
+\index{adi\_hspMemBitWidths@{adi\_hspMemBitWidths}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_hspMemBitWidths}{adi\_hspMemBitWidths}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{newton__control_8h_adc05302ebc7a52ca552e75b34f5412f6}{adi\+\_\+hsp\+Mem\+Bit\+Widths}}}
+
+
+
+H\+SP memory bit widths. 
+
+H\+SP memory bit widths. \mbox{\Hypertarget{newton__control_8h_a065f1834389c928e9bbf585bfb4fc15c}\label{newton__control_8h_a065f1834389c928e9bbf585bfb4fc15c}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_loadTargets@{adi\_loadTargets}}
+\index{adi\_loadTargets@{adi\_loadTargets}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_loadTargets}{adi\_loadTargets}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{newton__control_8h_a065f1834389c928e9bbf585bfb4fc15c}{adi\+\_\+load\+Targets}}}
+
+
+
+Newton R\+AM Targets. 
+
+Newton R\+AM targets. \mbox{\Hypertarget{newton__control_8h_a560b2deb7401ebf60d26fb7eac06c06b}\label{newton__control_8h_a560b2deb7401ebf60d26fb7eac06c06b}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_newtonMemBitWidths@{adi\_newtonMemBitWidths}}
+\index{adi\_newtonMemBitWidths@{adi\_newtonMemBitWidths}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_newtonMemBitWidths}{adi\_newtonMemBitWidths}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{newton__control_8h_a560b2deb7401ebf60d26fb7eac06c06b}{adi\+\_\+newton\+Mem\+Bit\+Widths}}}
+
+
+
+Newton memory bit widths. 
+
+Newton memory bit widths. \mbox{\Hypertarget{newton__control_8h_a2417c480624ef79f2375539559938df4}\label{newton__control_8h_a2417c480624ef79f2375539559938df4}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_newtonMemByteWidths@{adi\_newtonMemByteWidths}}
+\index{adi\_newtonMemByteWidths@{adi\_newtonMemByteWidths}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_newtonMemByteWidths}{adi\_newtonMemByteWidths}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{newton__control_8h_a2417c480624ef79f2375539559938df4}{adi\+\_\+newton\+Mem\+Byte\+Widths}}}
+
+
+
+Newton memory bytte widths. 
+
+Newton memory byte widths. \mbox{\Hypertarget{newton__control_8h_aa82d1f54c0c89145c5567025313d750d}\label{newton__control_8h_aa82d1f54c0c89145c5567025313d750d}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_newtonMemDepths@{adi\_newtonMemDepths}}
+\index{adi\_newtonMemDepths@{adi\_newtonMemDepths}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_newtonMemDepths}{adi\_newtonMemDepths}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{newton__control_8h_aa82d1f54c0c89145c5567025313d750d}{adi\+\_\+newton\+Mem\+Depths}}}
+
+
+
+Newton memory depths. 
+
+Newton memory depths. \mbox{\Hypertarget{newton__control_8h_ad359be753ee6b29ae1ef07d6623e05de}\label{newton__control_8h_ad359be753ee6b29ae1ef07d6623e05de}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_newtonMemMasks@{adi\_newtonMemMasks}}
+\index{adi\_newtonMemMasks@{adi\_newtonMemMasks}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_newtonMemMasks}{adi\_newtonMemMasks}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{newton__control_8h_ad359be753ee6b29ae1ef07d6623e05de}{adi\+\_\+newton\+Mem\+Masks}}}
+
+
+
+Newton memory masks. 
+
+Newton memory masks. \mbox{\Hypertarget{newton__control_8h_a104bc89ff79d05c085e10b967ca5df29}\label{newton__control_8h_a104bc89ff79d05c085e10b967ca5df29}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_newtonRegisterAddresses@{adi\_newtonRegisterAddresses}}
+\index{adi\_newtonRegisterAddresses@{adi\_newtonRegisterAddresses}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_newtonRegisterAddresses}{adi\_newtonRegisterAddresses}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{newton__control_8h_a104bc89ff79d05c085e10b967ca5df29}{adi\+\_\+newton\+Register\+Addresses}}}
+
+
+
+Newton memory depths. 
+
+Newton memory depths. \begin{DoxyEnumFields}{Enumerator}
+\raisebox{\heightof{T}}[0pt][0pt]{\index{USEQ\_REGS\_USEQRAMLOADADDR@{USEQ\_REGS\_USEQRAMLOADADDR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!USEQ\_REGS\_USEQRAMLOADADDR@{USEQ\_REGS\_USEQRAMLOADADDR}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a5d020269199cb71de30040d3f5843432}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a5d020269199cb71de30040d3f5843432}} 
+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+L\+O\+A\+D\+A\+D\+DR&Useq Ram Load start Address Register \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{USEQ\_REGS\_USEQRAMRDSTADDR@{USEQ\_REGS\_USEQRAMRDSTADDR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!USEQ\_REGS\_USEQRAMRDSTADDR@{USEQ\_REGS\_USEQRAMRDSTADDR}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a7f75865c2cd22f0eeca94bdcab379c07}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a7f75865c2cd22f0eeca94bdcab379c07}} 
+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+R\+D\+S\+T\+A\+D\+DR&Useq Ram Read start Address Register \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{USEQ\_REGS\_USEQRAMLOADDATA@{USEQ\_REGS\_USEQRAMLOADDATA}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!USEQ\_REGS\_USEQRAMLOADDATA@{USEQ\_REGS\_USEQRAMLOADDATA}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a431cd192b563b0084c1df8e53bcb06e0}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a431cd192b563b0084c1df8e53bcb06e0}} 
+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+L\+O\+A\+D\+D\+A\+TA&Useq Ram Load Data Register \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{USEQ\_REGS\_USEQRAMRDDATA@{USEQ\_REGS\_USEQRAMRDDATA}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!USEQ\_REGS\_USEQRAMRDDATA@{USEQ\_REGS\_USEQRAMRDDATA}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a12616dd5b693e80e6633e8fd1639fe7f}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a12616dd5b693e80e6633e8fd1639fe7f}} 
+U\+S\+E\+Q\+\_\+\+R\+E\+G\+S\+\_\+\+U\+S\+E\+Q\+R\+A\+M\+R\+D\+D\+A\+TA&Useq Ram Read Data Register \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LPS1\_REGS\_LPSRAMADDR@{LPS1\_REGS\_LPSRAMADDR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!LPS1\_REGS\_LPSRAMADDR@{LPS1\_REGS\_LPSRAMADDR}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a20b91272352f68f2e8176385f3edf354}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a20b91272352f68f2e8176385f3edf354}} 
+L\+P\+S1\+\_\+\+R\+E\+G\+S\+\_\+\+L\+P\+S\+R\+A\+M\+A\+D\+DR&No description provided \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LPS1\_REGS\_LPSRAMRDCMD@{LPS1\_REGS\_LPSRAMRDCMD}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!LPS1\_REGS\_LPSRAMRDCMD@{LPS1\_REGS\_LPSRAMRDCMD}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29ae7203ba0595c57e826fb58ace810acf2}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29ae7203ba0595c57e826fb58ace810acf2}} 
+L\+P\+S1\+\_\+\+R\+E\+G\+S\+\_\+\+L\+P\+S\+R\+A\+M\+R\+D\+C\+MD&No description provided \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LPS1\_REGS\_LPSRAMDATA@{LPS1\_REGS\_LPSRAMDATA}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!LPS1\_REGS\_LPSRAMDATA@{LPS1\_REGS\_LPSRAMDATA}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a68acba07c9d7845328b7ec99664609ff}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a68acba07c9d7845328b7ec99664609ff}} 
+L\+P\+S1\+\_\+\+R\+E\+G\+S\+\_\+\+L\+P\+S\+R\+A\+M\+D\+A\+TA&No description provided \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LPS2\_REGS\_LPSRAMADDR@{LPS2\_REGS\_LPSRAMADDR}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!LPS2\_REGS\_LPSRAMADDR@{LPS2\_REGS\_LPSRAMADDR}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a3cd937d6efafc44be7967505ef5c13cd}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a3cd937d6efafc44be7967505ef5c13cd}} 
+L\+P\+S2\+\_\+\+R\+E\+G\+S\+\_\+\+L\+P\+S\+R\+A\+M\+A\+D\+DR&No description provided \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LPS2\_REGS\_LPSRAMRDCMD@{LPS2\_REGS\_LPSRAMRDCMD}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!LPS2\_REGS\_LPSRAMRDCMD@{LPS2\_REGS\_LPSRAMRDCMD}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a9a139613e9341781322b94a2aa76c49b}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a9a139613e9341781322b94a2aa76c49b}} 
+L\+P\+S2\+\_\+\+R\+E\+G\+S\+\_\+\+L\+P\+S\+R\+A\+M\+R\+D\+C\+MD&No description provided \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{LPS2\_REGS\_LPSRAMDATA@{LPS2\_REGS\_LPSRAMDATA}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!LPS2\_REGS\_LPSRAMDATA@{LPS2\_REGS\_LPSRAMDATA}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a7bf2b33853473c467576dfc5e1f3eeb3}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a7bf2b33853473c467576dfc5e1f3eeb3}} 
+L\+P\+S2\+\_\+\+R\+E\+G\+S\+\_\+\+L\+P\+S\+R\+A\+M\+D\+A\+TA&No description provided \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DATAPATH\_REGS\_IA\_SELECT@{DATAPATH\_REGS\_IA\_SELECT}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!DATAPATH\_REGS\_IA\_SELECT@{DATAPATH\_REGS\_IA\_SELECT}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a56715a9d18d9ef71ba3a386710b462cb}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a56715a9d18d9ef71ba3a386710b462cb}} 
+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+S\+\_\+\+I\+A\+\_\+\+S\+E\+L\+E\+CT&No description provided \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DATAPATH\_REGS\_IA\_ADDR\_REG@{DATAPATH\_REGS\_IA\_ADDR\_REG}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!DATAPATH\_REGS\_IA\_ADDR\_REG@{DATAPATH\_REGS\_IA\_ADDR\_REG}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a71d0af4a534e3ab1a050b9ffd5d1ab7e}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a71d0af4a534e3ab1a050b9ffd5d1ab7e}} 
+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+S\+\_\+\+I\+A\+\_\+\+A\+D\+D\+R\+\_\+\+R\+EG&No description provided \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DATAPATH\_REGS\_IA\_WRDATA\_REG@{DATAPATH\_REGS\_IA\_WRDATA\_REG}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!DATAPATH\_REGS\_IA\_WRDATA\_REG@{DATAPATH\_REGS\_IA\_WRDATA\_REG}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a1f56cdd9062b21c8f8f9fce5c4ca807b}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a1f56cdd9062b21c8f8f9fce5c4ca807b}} 
+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+S\+\_\+\+I\+A\+\_\+\+W\+R\+D\+A\+T\+A\+\_\+\+R\+EG&No description provided \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DATAPATH\_REGS\_IA\_RDDATA\_REG@{DATAPATH\_REGS\_IA\_RDDATA\_REG}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!DATAPATH\_REGS\_IA\_RDDATA\_REG@{DATAPATH\_REGS\_IA\_RDDATA\_REG}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a771b81283028e27b3301bffada58c125}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a771b81283028e27b3301bffada58c125}} 
+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+S\+\_\+\+I\+A\+\_\+\+R\+D\+D\+A\+T\+A\+\_\+\+R\+EG&No description provided \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DATAPATH\_REGS\_IA\_BANK\_TYPE@{DATAPATH\_REGS\_IA\_BANK\_TYPE}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!DATAPATH\_REGS\_IA\_BANK\_TYPE@{DATAPATH\_REGS\_IA\_BANK\_TYPE}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a5f0de0b4459c8a4b8f703569ad26e2d1}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a5f0de0b4459c8a4b8f703569ad26e2d1}} 
+D\+A\+T\+A\+P\+A\+T\+H\+\_\+\+R\+E\+G\+S\+\_\+\+I\+A\+\_\+\+B\+A\+N\+K\+\_\+\+T\+Y\+PE&No description provided \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DE\_REGS\_DE\_IA\_SELECT@{DE\_REGS\_DE\_IA\_SELECT}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!DE\_REGS\_DE\_IA\_SELECT@{DE\_REGS\_DE\_IA\_SELECT}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a333f3a95c2efa3a75871cab6a41ea4a9}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a333f3a95c2efa3a75871cab6a41ea4a9}} 
+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+S\+E\+L\+E\+CT&No description provided \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DE\_REGS\_DE\_IA\_ADDR\_REG@{DE\_REGS\_DE\_IA\_ADDR\_REG}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!DE\_REGS\_DE\_IA\_ADDR\_REG@{DE\_REGS\_DE\_IA\_ADDR\_REG}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a9e7a2087781a6ccc0ad2007b771eed1f}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a9e7a2087781a6ccc0ad2007b771eed1f}} 
+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+A\+D\+D\+R\+\_\+\+R\+EG&No description provided \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DE\_REGS\_DE\_IA\_WRDATA\_REG@{DE\_REGS\_DE\_IA\_WRDATA\_REG}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!DE\_REGS\_DE\_IA\_WRDATA\_REG@{DE\_REGS\_DE\_IA\_WRDATA\_REG}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29af572e81fbadfb5dd79efb332ce6e682a}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29af572e81fbadfb5dd79efb332ce6e682a}} 
+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+W\+R\+D\+A\+T\+A\+\_\+\+R\+EG&No description provided \\
+\hline
+
+\raisebox{\heightof{T}}[0pt][0pt]{\index{DE\_REGS\_DE\_IA\_RDDATA\_REG@{DE\_REGS\_DE\_IA\_RDDATA\_REG}!newton\_control.h@{newton\_control.h}}\index{newton\_control.h@{newton\_control.h}!DE\_REGS\_DE\_IA\_RDDATA\_REG@{DE\_REGS\_DE\_IA\_RDDATA\_REG}}}\mbox{\Hypertarget{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a5fb484c582fbafb237eca5b8d9736776}\label{newton__control_8h_ga104bc89ff79d05c085e10b967ca5df29a5fb484c582fbafb237eca5b8d9736776}} 
+D\+E\+\_\+\+R\+E\+G\+S\+\_\+\+D\+E\+\_\+\+I\+A\+\_\+\+R\+D\+D\+A\+T\+A\+\_\+\+R\+EG&No description provided \\
+\hline
+
+\end{DoxyEnumFields}
+\mbox{\Hypertarget{newton__control_8h_a2a8d25c88cc87eaf9b055e90212489d9}\label{newton__control_8h_a2a8d25c88cc87eaf9b055e90212489d9}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_pin\_modes\_e@{adi\_pin\_modes\_e}}
+\index{adi\_pin\_modes\_e@{adi\_pin\_modes\_e}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_pin\_modes\_e}{adi\_pin\_modes\_e}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{newton__control_8h_a2a8d25c88cc87eaf9b055e90212489d9}{adi\+\_\+pin\+\_\+modes\+\_\+e}}}
+
+
+
+Newton Pin Modes. 
+
+Newton Pin Modes. \mbox{\Hypertarget{newton__control_8h_ac11761caf59e853d73cfa6d819990850}\label{newton__control_8h_ac11761caf59e853d73cfa6d819990850}} 
+\index{newton\_control.h@{newton\_control.h}!adi\_pin\_numbers\_e@{adi\_pin\_numbers\_e}}
+\index{adi\_pin\_numbers\_e@{adi\_pin\_numbers\_e}!newton\_control.h@{newton\_control.h}}
+\doxysubsubsection{\texorpdfstring{adi\_pin\_numbers\_e}{adi\_pin\_numbers\_e}}
+{\footnotesize\ttfamily enum \mbox{\hyperlink{newton__control_8h_ac11761caf59e853d73cfa6d819990850}{adi\+\_\+pin\+\_\+numbers\+\_\+e}}}
+
+
+
+Newton Wiring\+Pi Pins. 
+
+Newton Wiring\+Pi pin numbers. 

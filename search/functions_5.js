@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['getavailablecontrols',['getAvailableControls',['../classaditof_1_1_camera.html#a682c7e8b7f37010e94c8d53475721865',1,'aditof::Camera::getAvailableControls()'],['../classaditof_1_1_depth_sensor_interface.html#aa3ea1e91140c8746b7aa59e725b83bd0',1,'aditof::DepthSensorInterface::getAvailableControls()']]],
+  ['getavailablemodes',['getAvailableModes',['../classaditof_1_1_camera.html#aae9e8b261839498e9c1aa73cdabf95ea',1,'aditof::Camera::getAvailableModes()'],['../classaditof_1_1_depth_sensor_interface.html#a06ee02b49af6ca7f00e7b93224885b9e',1,'aditof::DepthSensorInterface::getAvailableModes()']]],
+  ['getcameralist',['getCameraList',['../classaditof_1_1_system.html#a445aa61a33d452c71467521873df15f7',1,'aditof::System']]],
+  ['getcontrol',['getControl',['../classaditof_1_1_camera.html#a14bc023a5a70fc0509b2356a94c37caf',1,'aditof::Camera::getControl()'],['../classaditof_1_1_depth_sensor_interface.html#a042d0a3c4afdcb1b3b540c029e1a1eea',1,'aditof::DepthSensorInterface::getControl()']]],
+  ['getdata',['getData',['../classaditof_1_1_frame.html#a145163a4ca19819497330985b91e741a',1,'aditof::Frame']]],
+  ['getdatadetails',['getDataDetails',['../classaditof_1_1_frame.html#a1dc723be92fa58a1fc8411b5ab72ff60',1,'aditof::Frame']]],
+  ['getdepthcomputeparams',['getDepthComputeParams',['../classaditof_1_1_depth_sensor_interface.html#a163fcbefb810c9d3c2b548891d1a7735',1,'aditof::DepthSensorInterface']]],
+  ['getdepthsensors',['getDepthSensors',['../classaditof_1_1_sensor_enumerator_interface.html#aea18b4cf7ff7fda189bcee630b8a46e0',1,'aditof::SensorEnumeratorInterface']]],
+  ['getdetails',['getDetails',['../classaditof_1_1_frame.html#a6d2d0386843a225f39ee27c93d37b424',1,'aditof::Frame::getDetails()'],['../classaditof_1_1_camera.html#a32f30de6c2b380902088e144b78d668e',1,'aditof::Camera::getDetails()'],['../classaditof_1_1_depth_sensor_interface.html#a6309647747633b404e90981a099f5d6d',1,'aditof::DepthSensorInterface::getDetails()']]],
+  ['getframe',['getFrame',['../classaditof_1_1_depth_sensor_interface.html#a7f51802a01bffe72c763f3109c866afd',1,'aditof::DepthSensorInterface']]],
+  ['getframeprocessparams',['getFrameProcessParams',['../classaditof_1_1_camera.html#a2d6b1978d32a9422e55ca48ea60ca2b7',1,'aditof::Camera']]],
+  ['gethandle',['getHandle',['../classaditof_1_1_depth_sensor_interface.html#a8f3835e0d68e6a1a06871926c5579c39',1,'aditof::DepthSensorInterface']]],
+  ['getimagertype',['getImagerType',['../classaditof_1_1_camera.html#a2240f893779917e6c6f57a4c08362923',1,'aditof::Camera']]],
+  ['getiniparamsarrayformode',['getIniParamsArrayForMode',['../classaditof_1_1_depth_sensor_interface.html#a13d6a05b1cd6f0f356842f3451feac00',1,'aditof::DepthSensorInterface']]],
+  ['getkernelversion',['getKernelVersion',['../classaditof_1_1_sensor_enumerator_interface.html#ae3ef4798bc980a17f36932799fa43ed9',1,'aditof::SensorEnumeratorInterface']]],
+  ['getmetadatastruct',['getMetadataStruct',['../classaditof_1_1_frame.html#a6d7c3fb16c16a0b875f59d3bc1bccefd',1,'aditof::Frame']]],
+  ['getmodedetails',['getModeDetails',['../classaditof_1_1_depth_sensor_interface.html#a4c8dae8736904e16847ca56012070da6',1,'aditof::DepthSensorInterface']]],
+  ['getname',['getName',['../classaditof_1_1_depth_sensor_interface.html#a2d4fcba5c167b21caf74b5d66b42d5c3',1,'aditof::DepthSensorInterface']]],
+  ['getsdversion',['getSdVersion',['../classaditof_1_1_sensor_enumerator_interface.html#aae1d850f413944f1424634bfafcf38a2',1,'aditof::SensorEnumeratorInterface']]],
+  ['getsensor',['getSensor',['../classaditof_1_1_camera.html#acff037088b2b2712a7712bc7d7831afa',1,'aditof::Camera']]],
+  ['getstringadsd3030',['GetStringADSD3030',['../classaditof_1_1_a_d_s_d_errors.html#a8c4aa76f6a2c686dc6fe4a6667dd6760',1,'aditof::ADSDErrors']]],
+  ['getstringadsd3100',['GetStringADSD3100',['../classaditof_1_1_a_d_s_d_errors.html#ac42fae6adf8488332bf4b677bf4d8468',1,'aditof::ADSDErrors']]],
+  ['getstringadsd3500',['GetStringADSD3500',['../classaditof_1_1_a_d_s_d_errors.html#ad2a043813813929b499ec6f9ee7c0e60',1,'aditof::ADSDErrors']]],
+  ['getubootversion',['getUbootVersion',['../classaditof_1_1_sensor_enumerator_interface.html#af563b3151c0343a72dfe450bece362fc',1,'aditof::SensorEnumeratorInterface']]]
+];

@@ -1,0 +1,229 @@
+\hypertarget{aeb_8h}{\section{aeb.\-h File Reference}
+\label{aeb_8h}\index{aeb.\-h@{aeb.\-h}}
+}
+
+
+Functions to enable and disable A\-E\-B bits (debug and test features)  
+
+
+{\ttfamily \#include \char`\"{}utils/generic/generic.\-h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}aeb\-\_\-features.\-h\char`\"{}}\\*
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{aeb_8h_ad38c244dd053e5ffca4b7922bfe91090}{Aeb\-Enable} (uint32\-\_\-t aeb\-Mask)
+\begin{DoxyCompactList}\small\item\em Enable Access Enable Block bits. \end{DoxyCompactList}\item 
+void \hyperlink{aeb_8h_a996d439d18004fa3ceea9b76cb52a18e}{Aeb\-Enable\-Feature} (\hyperlink{aeb__features_8h_a3f28e2e2250f63dfc3cc556f72c1e51c}{Aeb\-\_\-\-Feature\-\_\-t} aeb\-Feature)
+\begin{DoxyCompactList}\small\item\em Enable Access Enable Block feature. \end{DoxyCompactList}\item 
+void \hyperlink{aeb_8h_ae79f591c28e732e652de4228b45fefba}{Aeb\-Disable} (uint32\-\_\-t aeb\-Mask)
+\begin{DoxyCompactList}\small\item\em Disable Access Enable Block bits. \end{DoxyCompactList}\item 
+void \hyperlink{aeb_8h_aa971b428b3448839401583cdab87d33f}{Aeb\-Disable\-Feature} (\hyperlink{aeb__features_8h_a3f28e2e2250f63dfc3cc556f72c1e51c}{Aeb\-\_\-\-Feature\-\_\-t} aeb\-Feature)
+\begin{DoxyCompactList}\small\item\em Disable Access Enable Block Feature. \end{DoxyCompactList}\item 
+void \hyperlink{aeb_8h_aaca0afeece49a0c549ef43656b393a05}{Aeb\-Restore\-Default} (uint32\-\_\-t aeb\-Mask)
+\begin{DoxyCompactList}\small\item\em Restore Access Enable Block bits back to their power-\/on default. \end{DoxyCompactList}\item 
+void \hyperlink{aeb_8h_acb64364015b66b2693d0383be8180aa2}{Aeb\-Restore\-Default\-Feature} (\hyperlink{aeb__features_8h_a3f28e2e2250f63dfc3cc556f72c1e51c}{Aeb\-\_\-\-Feature\-\_\-t} aeb\-Feature)
+\begin{DoxyCompactList}\small\item\em Restore Access Enable Block Feature back to its power-\/on default. \end{DoxyCompactList}\item 
+void \hyperlink{aeb_8h_a710717c7ac34d1378f8fab25a06eea5a}{Aeb\-Lock} (uint32\-\_\-t aeb\-Mask)
+\begin{DoxyCompactList}\small\item\em Lock Access Enable Block bits. \end{DoxyCompactList}\item 
+void \hyperlink{aeb_8h_a65c0235eec7622fc64c8c0a5e491f2b8}{Aeb\-Lock\-Feature} (\hyperlink{aeb__features_8h_a3f28e2e2250f63dfc3cc556f72c1e51c}{Aeb\-\_\-\-Feature\-\_\-t} aeb\-Feature)
+\begin{DoxyCompactList}\small\item\em Lock Access Enable Block Feature. \end{DoxyCompactList}\item 
+bool \hyperlink{aeb_8h_ac039916ba78f0848d05dabbcefab76c4}{Is\-Aeb\-Feature\-Enabled} (\hyperlink{aeb__features_8h_a3f28e2e2250f63dfc3cc556f72c1e51c}{Aeb\-\_\-\-Feature\-\_\-t} aeb\-Feature)
+\begin{DoxyCompactList}\small\item\em Check if A\-E\-B is enabled on a given feature. \end{DoxyCompactList}\item 
+uint32\-\_\-t \hyperlink{aeb_8h_adfebe45f6843e86a1cc9b4b445d22125}{Get\-Aeb\-Status\-Bits} (void)
+\begin{DoxyCompactList}\small\item\em Get current A\-E\-B status bits as a single 32-\/bit word. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Functions to enable and disable A\-E\-B bits (debug and test features) 
+
+\subsection{Function Documentation}
+\hypertarget{aeb_8h_ae79f591c28e732e652de4228b45fefba}{\index{aeb.\-h@{aeb.\-h}!Aeb\-Disable@{Aeb\-Disable}}
+\index{Aeb\-Disable@{Aeb\-Disable}!aeb.h@{aeb.\-h}}
+\subsubsection[{Aeb\-Disable}]{\setlength{\rightskip}{0pt plus 5cm}void Aeb\-Disable (
+\begin{DoxyParamCaption}
+\item[{uint32\-\_\-t}]{aeb\-Mask}
+\end{DoxyParamCaption}
+)}}\label{aeb_8h_ae79f591c28e732e652de4228b45fefba}
+
+
+Disable Access Enable Block bits. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em uint32\-\_\-t} & Mask of A\-E\-B bits to disable\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\hypertarget{aeb_8h_aa971b428b3448839401583cdab87d33f}{\index{aeb.\-h@{aeb.\-h}!Aeb\-Disable\-Feature@{Aeb\-Disable\-Feature}}
+\index{Aeb\-Disable\-Feature@{Aeb\-Disable\-Feature}!aeb.h@{aeb.\-h}}
+\subsubsection[{Aeb\-Disable\-Feature}]{\setlength{\rightskip}{0pt plus 5cm}void Aeb\-Disable\-Feature (
+\begin{DoxyParamCaption}
+\item[{{\bf Aeb\-\_\-\-Feature\-\_\-t}}]{aeb\-Feature}
+\end{DoxyParamCaption}
+)}}\label{aeb_8h_aa971b428b3448839401583cdab87d33f}
+
+
+Disable Access Enable Block Feature. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em aeb\-Feature} & A\-E\-B feature to disable\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\hypertarget{aeb_8h_ad38c244dd053e5ffca4b7922bfe91090}{\index{aeb.\-h@{aeb.\-h}!Aeb\-Enable@{Aeb\-Enable}}
+\index{Aeb\-Enable@{Aeb\-Enable}!aeb.h@{aeb.\-h}}
+\subsubsection[{Aeb\-Enable}]{\setlength{\rightskip}{0pt plus 5cm}void Aeb\-Enable (
+\begin{DoxyParamCaption}
+\item[{uint32\-\_\-t}]{aeb\-Mask}
+\end{DoxyParamCaption}
+)}}\label{aeb_8h_ad38c244dd053e5ffca4b7922bfe91090}
+
+
+Enable Access Enable Block bits. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em uint32\-\_\-t} & Mask of A\-E\-B bits to enable\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\hypertarget{aeb_8h_a996d439d18004fa3ceea9b76cb52a18e}{\index{aeb.\-h@{aeb.\-h}!Aeb\-Enable\-Feature@{Aeb\-Enable\-Feature}}
+\index{Aeb\-Enable\-Feature@{Aeb\-Enable\-Feature}!aeb.h@{aeb.\-h}}
+\subsubsection[{Aeb\-Enable\-Feature}]{\setlength{\rightskip}{0pt plus 5cm}void Aeb\-Enable\-Feature (
+\begin{DoxyParamCaption}
+\item[{{\bf Aeb\-\_\-\-Feature\-\_\-t}}]{aeb\-Feature}
+\end{DoxyParamCaption}
+)}}\label{aeb_8h_a996d439d18004fa3ceea9b76cb52a18e}
+
+
+Enable Access Enable Block feature. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em aeb\-Feature} & A\-E\-B feature to enable\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\hypertarget{aeb_8h_a710717c7ac34d1378f8fab25a06eea5a}{\index{aeb.\-h@{aeb.\-h}!Aeb\-Lock@{Aeb\-Lock}}
+\index{Aeb\-Lock@{Aeb\-Lock}!aeb.h@{aeb.\-h}}
+\subsubsection[{Aeb\-Lock}]{\setlength{\rightskip}{0pt plus 5cm}void Aeb\-Lock (
+\begin{DoxyParamCaption}
+\item[{uint32\-\_\-t}]{aeb\-Mask}
+\end{DoxyParamCaption}
+)}}\label{aeb_8h_a710717c7ac34d1378f8fab25a06eea5a}
+
+
+Lock Access Enable Block bits. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em uint32\-\_\-t} & Mask of A\-E\-B bits to lock\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\hypertarget{aeb_8h_a65c0235eec7622fc64c8c0a5e491f2b8}{\index{aeb.\-h@{aeb.\-h}!Aeb\-Lock\-Feature@{Aeb\-Lock\-Feature}}
+\index{Aeb\-Lock\-Feature@{Aeb\-Lock\-Feature}!aeb.h@{aeb.\-h}}
+\subsubsection[{Aeb\-Lock\-Feature}]{\setlength{\rightskip}{0pt plus 5cm}void Aeb\-Lock\-Feature (
+\begin{DoxyParamCaption}
+\item[{{\bf Aeb\-\_\-\-Feature\-\_\-t}}]{aeb\-Feature}
+\end{DoxyParamCaption}
+)}}\label{aeb_8h_a65c0235eec7622fc64c8c0a5e491f2b8}
+
+
+Lock Access Enable Block Feature. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em aeb\-Feature} & A\-E\-B feature to lock\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\hypertarget{aeb_8h_aaca0afeece49a0c549ef43656b393a05}{\index{aeb.\-h@{aeb.\-h}!Aeb\-Restore\-Default@{Aeb\-Restore\-Default}}
+\index{Aeb\-Restore\-Default@{Aeb\-Restore\-Default}!aeb.h@{aeb.\-h}}
+\subsubsection[{Aeb\-Restore\-Default}]{\setlength{\rightskip}{0pt plus 5cm}void Aeb\-Restore\-Default (
+\begin{DoxyParamCaption}
+\item[{uint32\-\_\-t}]{aeb\-Mask}
+\end{DoxyParamCaption}
+)}}\label{aeb_8h_aaca0afeece49a0c549ef43656b393a05}
+
+
+Restore Access Enable Block bits back to their power-\/on default. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em uint32\-\_\-t} & Mask of A\-E\-B bits to restore to default\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\hypertarget{aeb_8h_acb64364015b66b2693d0383be8180aa2}{\index{aeb.\-h@{aeb.\-h}!Aeb\-Restore\-Default\-Feature@{Aeb\-Restore\-Default\-Feature}}
+\index{Aeb\-Restore\-Default\-Feature@{Aeb\-Restore\-Default\-Feature}!aeb.h@{aeb.\-h}}
+\subsubsection[{Aeb\-Restore\-Default\-Feature}]{\setlength{\rightskip}{0pt plus 5cm}void Aeb\-Restore\-Default\-Feature (
+\begin{DoxyParamCaption}
+\item[{{\bf Aeb\-\_\-\-Feature\-\_\-t}}]{aeb\-Feature}
+\end{DoxyParamCaption}
+)}}\label{aeb_8h_acb64364015b66b2693d0383be8180aa2}
+
+
+Restore Access Enable Block Feature back to its power-\/on default. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em aeb\-Feature} & A\-E\-B feature to restore to default\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+void 
+\end{DoxyReturn}
+\hypertarget{aeb_8h_adfebe45f6843e86a1cc9b4b445d22125}{\index{aeb.\-h@{aeb.\-h}!Get\-Aeb\-Status\-Bits@{Get\-Aeb\-Status\-Bits}}
+\index{Get\-Aeb\-Status\-Bits@{Get\-Aeb\-Status\-Bits}!aeb.h@{aeb.\-h}}
+\subsubsection[{Get\-Aeb\-Status\-Bits}]{\setlength{\rightskip}{0pt plus 5cm}uint32\-\_\-t Get\-Aeb\-Status\-Bits (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{aeb_8h_adfebe45f6843e86a1cc9b4b445d22125}
+
+
+Get current A\-E\-B status bits as a single 32-\/bit word. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em void} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+uint32\-\_\-t A\-E\-B status bits 
+\end{DoxyReturn}
+\hypertarget{aeb_8h_ac039916ba78f0848d05dabbcefab76c4}{\index{aeb.\-h@{aeb.\-h}!Is\-Aeb\-Feature\-Enabled@{Is\-Aeb\-Feature\-Enabled}}
+\index{Is\-Aeb\-Feature\-Enabled@{Is\-Aeb\-Feature\-Enabled}!aeb.h@{aeb.\-h}}
+\subsubsection[{Is\-Aeb\-Feature\-Enabled}]{\setlength{\rightskip}{0pt plus 5cm}bool Is\-Aeb\-Feature\-Enabled (
+\begin{DoxyParamCaption}
+\item[{{\bf Aeb\-\_\-\-Feature\-\_\-t}}]{aeb\-Feature}
+\end{DoxyParamCaption}
+)}}\label{aeb_8h_ac039916ba78f0848d05dabbcefab76c4}
+
+
+Check if A\-E\-B is enabled on a given feature. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em aeb\-Feature} & A\-E\-B feature to be checked if enabled\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+bool 
+\end{DoxyReturn}
