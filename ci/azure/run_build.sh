@@ -48,7 +48,7 @@ build_deploy_doxygen() {
 }
 
 build_docker() {
-    run_docker ${DOCKER} /aditof_sdk/ci/azure/inside_docker.sh "${DEFAULT_CMAKE_FLAGS} ${EXTRA_CMAKE_FLAGS}"
+    run_docker ${DOCKER} /ToF/ci/azure/inside_docker.sh "${DEFAULT_CMAKE_FLAGS} ${EXTRA_CMAKE_FLAGS}"
 }
 
 build_ros(){
