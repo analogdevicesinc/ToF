@@ -47,11 +47,6 @@ void PublisherFactory::createNew(ModeTypes mode, ros::NodeHandle nHandle,
     deletePublishers(camera);
 
     switch (mode) {
-    case ModeTypes::mode3: {
-        enableCameraDepthCompute(camera, false);
-        setFrameType(camera, "pcm");
-        break;
-    }
     case ModeTypes::mode7: {
         enableCameraDepthCompute(camera, m_enableDepthCompute);
         setFrameType(camera, "qmp");

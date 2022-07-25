@@ -137,13 +137,20 @@ std::shared_ptr<Camera> initCamera(std::string *arguments) {
     return camera;
 }
 
-    status = camera->setControl("enableDepthCompute", "off");
+void enableCameraDepthCompute(const std::shared_ptr<aditof::Camera> &camera,
+                              const bool value) {
+    //set depthCompute to on or off
+    aditof::Status status = aditof::Status::OK;
 
-    status = camera->setFrameType("qmp");
+    status = camera->setControl("enableDepthCompute", (value) ? "on" : "off");
     if (status != Status::OK) {
-        LOG(ERROR) << "Could not set camera frame type!";
-        return 0;
+        LOG(ERROR) << "Couldn't set depth compute option";
+        return;
     }
+}
+
+void startCamera(const std::shared_ptr<aditof::Camera> &camera) {
+    Status status = Status::OK;
 
     status = camera->start();
     if (status != Status::OK) {
