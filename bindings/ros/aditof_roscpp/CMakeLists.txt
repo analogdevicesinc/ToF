@@ -34,10 +34,9 @@ target_link_libraries(aditof_camera_node ${catkin_LIBRARIES})
 
 add_dependencies(aditof_camera_node ${PROJECT_NAME}_gencfg)
 
-
 #Creating soft links toward the .so depthCompute libraries next to repository
-file(CREATE_LINK "${CMAKE_SOURCE_DIR}/../../../../libs/libtofi_compute.so" "/usr/lib/libtofi_compute.so"  SYMBOLIC)
-file(CREATE_LINK "${CMAKE_SOURCE_DIR}/../../../../libs/libtofi_config.so" "/usr/lib/libtofi_config.so"  SYMBOLIC)
+file(CREATE_LINK "${LIBTOFI_LIBDIR_PATH}/libtofi_compute.so" "/usr/lib/libtofi_compute.so" SYMBOLIC)
+file(CREATE_LINK "${LIBTOFI_LIBDIR_PATH}/libtofi_config.so" "/usr/lib/libtofi_config.so" SYMBOLIC)
 
 
 if(WITH_ROS_EXAMPLES)

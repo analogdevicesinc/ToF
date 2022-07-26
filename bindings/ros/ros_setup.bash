@@ -26,4 +26,4 @@ source /opt/ros/$ROS_DISTRO/setup.sh
 
 #we have to save the old value of CMAKE_INSTALL_PREFIX in another variable
 #because after running the setup.sh script, the variable will be reassigned
-catkin_make -DADITOF_CMAKE_INSTALL_PREFIX=$1 -DADITOF_CMAKE_PREFIX_PATH=$2
+catkin_make -DADITOF_CMAKE_INSTALL_PREFIX=$1 -DADITOF_CMAKE_PREFIX_PATH=$2 -DLIBTOFI_LIBDIR_PATH=$3
