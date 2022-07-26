@@ -37,7 +37,7 @@ jobs:
       #IMX
       ubuntu_20_04_imx:
         imageName: 'ubuntu-20.04'
-        DOCKER: "danielguramulta/aditof-sdk-debian" #TODO update this to a dedicated docker
+        DOCKER: "septimiuvana/tof-imx8-docker"
         EXTRA_CMAKE_FLAGS: "-DNXP=1"
 
       ##code quality, TO DO: once entire code is formatted enable clang-format
