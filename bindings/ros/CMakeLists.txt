@@ -18,16 +18,16 @@ if(UNIX)
   string(CONCAT OLD_CMAKE_INSTALL_PREFIX "\"${CMAKE_INSTALL_PREFIX}\"")
   string(CONCAT OLD_CMAKE_PREFIX_PATH "\"${CMAKE_PREFIX_PATH}\"")
 
-  if("${ROS_HOME}" STREQUAL "")
-    message(FATAL_ERROR "No ROS_HOME provided!")
+  if("${ROS_HOME_DIR}" STREQUAL "")
+    message(FATAL_ERROR "No ROS_HOME_DIR provided!")
   else()
-    file(COPY ${CMAKE_BINARY_DIR}/../sdk/src/cameras/itof-camera/config DESTINATION "${ROS_HOME}")
+    file(COPY ${CMAKE_BINARY_DIR}/../sdk/src/cameras/itof-camera/config DESTINATION "${ROS_HOME_DIR}")
   endif()
 
   add_custom_command(
     TARGET aditof_ros_package
     COMMAND ${CMAKE_BINARY_DIR}/ros_setup.bash "${OLD_CMAKE_INSTALL_PREFIX}"
-            "${OLD_CMAKE_PREFIX_PATH}" ${VERSION} DEPENDS aditof)
+            "${OLD_CMAKE_PREFIX_PATH}" "${LIBTOFI_LIBDIR_PATH}" ${VERSION} DEPENDS aditof)
   
 endif()
 
