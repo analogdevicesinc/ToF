@@ -141,6 +141,18 @@ void handleClientRequest(const char *in_buf, const size_t in_len, char **out_buf
             ++temp_sensor_id;
         }
 
+        std::string kernelversion;
+		std::string ubootversion;
+		std::string sdversion;
+		auto cardVersion = buff_send.mutable_card_image_version();
+
+        sensorsEnumerator->getKernelVersion(kernelversion);
+		cardVersion->set_kernelversion(kernelversion);
+		sensorsEnumerator->getUbootVersion(ubootversion);
+		cardVersion->set_ubootversion(ubootversion);
+		sensorsEnumerator->getSdVersion(sdversion);
+		cardVersion->set_sdversion(sdversion);
+
         response.set_status(
             static_cast<::uvc_payload::Status>(aditof::Status::OK));
 

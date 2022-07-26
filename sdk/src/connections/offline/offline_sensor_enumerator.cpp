@@ -26,3 +26,18 @@ aditof::Status OfflineSensorEnumerator::getTemperatureSensors(
         &temperatureSensors) {
     return aditof::Status::UNAVAILABLE;
 }
+
+aditof::Status OfflineSensorEnumerator::getUbootVersion(
+    std::string &uBootVersion) const {
+    return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status OfflineSensorEnumerator::getKernelVersion(
+    std::string &kernelVersion) const {
+    return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status OfflineSensorEnumerator::getSdVersion(
+    std::string &sdVersion) const {
+    return aditof::Status::UNAVAILABLE;
+}
