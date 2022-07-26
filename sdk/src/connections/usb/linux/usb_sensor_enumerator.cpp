@@ -258,45 +258,7 @@ aditof::Status UsbSensorEnumerator::getUbootVersion(
 
 aditof::Status UsbSensorEnumerator::getKernelVersion(
     std::string &kernelVersion) const {
-	aditof::Status status;
-	usb_payload::ClientRequest requestMsg;
-        requestMsg.set_func_name(usb_payload::FunctionName::GET_KERNEL_VERSION);
-        requestMsg.add_func_int32_param(
-            1); // TO DO: Check if this is needed. Without it, the serialized string will be empty.
-
-        std::string requestStr;
-        requestMsg.SerializeToString(&requestStr);
-        status = UsbLinuxUtils::uvcExUnitSendRequest(fd, requestStr);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Request to search for sensors failed";
-            return status;
-        }
-
-        // Read UVC gadget response
-        std::string responseStr;
-        status = UsbLinuxUtils::uvcExUnitGetResponse(fd, responseStr);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Request to search for sensors failed";
-            return status;
-        }
-        usb_payload::ServerResponse responseMsg;
-        bool parsed = responseMsg.ParseFromString(responseStr);
-        if (!parsed) {
-            LOG(ERROR) << "Failed to deserialize string containing UVC gadget "
-                          "response";
-            return Status::INVALID_ARGUMENT;
-        }
-
-        DLOG(INFO) << "Received the following message with "
-                      "available sensors from target: "
-                   << responseMsg.DebugString();
-
-        if (responseMsg.status() != usb_payload::Status::OK) {
-            LOG(ERROR) << "Search for sensors operation failed on UVC gadget";
-            return static_cast<Status>(responseMsg.status());
-        }
-
-    kernelVersion = std::string(responseMsg.bytes_payload(0).c_str(), responseMsg.bytes_payload(0).length());
+    kernelVersion = m_kernelVersion;
     return aditof::Status::OK;
 }
 

@@ -19,6 +19,12 @@ public:
     virtual aditof::Status getTemperatureSensors(
         std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
             &temperatureSensors) override;
+    virtual aditof::Status getUbootVersion(
+        std::string &uBootVersion) const override;
+	virtual aditof::Status getKernelVersion(
+        std::string &kernelVersion) const override;
+	virtual aditof::Status getSdVersion(
+        std::string &sdVersion) const override;
 
 private:
     std::vector<std::string> m_sensorsInfo;
