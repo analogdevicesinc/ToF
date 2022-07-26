@@ -21,7 +21,7 @@ This ROS package facilitates depth and IR data acquisition and processing for th
 git clone https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
-cmake -DWITH_NETWORK=1 -DWITH_ROS=on -DROS_HOME_DIR="/home/<user>/.ros" -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
+cmake -DWITH_NETWORK=1 -DWITH_ROS=on -DROS_HOME_DIR="/home/${USER}/.ros" -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
 sudo cmake --build . --target install
 ```
  - **Build the aditof_roscpp package**
