@@ -53,12 +53,17 @@
 CameraItof::CameraItof(
     std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
     std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms,
-    std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &tSensors)
+    std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &tSensors,
+    const std::string &ubootVersion, const std::string &kernelVersion,
+    const std::string &sdCardImageVersion)
     : m_depthSensor(depthSensor), m_devStarted(false), m_eepromInitialized(false),
       m_modechange_framedrop_count(0), m_xyzEnabled(false), m_xyzSetViaControl(false), m_loadedConfigData(false), m_tempFiles{},
       m_adsd3500Enabled(false), m_cameraFps(0) {
     m_details.mode = "qmp";
     m_details.cameraId = "";
+    m_details.uBootVersion = ubootVersion;
+    m_details.kernelVersion = kernelVersion;
+    m_details.sdCardImageVersion = sdCardImageVersion;
 
     // Define some of the controls of this camera
     m_controls.emplace("initialization_config", "");

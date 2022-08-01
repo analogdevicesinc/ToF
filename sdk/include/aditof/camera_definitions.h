@@ -126,6 +126,21 @@ struct CameraDetails {
      * @brief The number of bits used for representing one pixel data.
      */
     int bitCount;
+
+    /**
+     * @brief The U-Boot version that is installed on the embedded system that the camera is attached to.
+     */
+    std::string uBootVersion;
+
+    /**
+     * @brief The kernel version that is installed on the embedded system that the camera is attached to.
+     */
+    std::string kernelVersion;
+
+    /**
+     * @brief The SD card image version on the embedded system that the camera is attached to.
+     */
+    std::string sdCardImageVersion;
 };
 
 } // namespace aditof
