@@ -501,7 +501,7 @@ void ModuleMemory::displayCRCError(uint8_t chunkType) {
 
 TOF_ChunkHeader_t ModuleMemory::initChunckHeader(TOF_ChunkType_t type, uint32_t address, uint32_t dataSize, bool isLastChunk) {
 
-    TOF_ChunkVesion_t fileVersion = {};
+    TOF_ChunkVersion_t fileVersion = {};
     fileVersion.chunkid = CHUNK_ID_ANALOG_DEVICES;
     fileVersion.chunktype = type;
     fileVersion.major = FLASH_MAJOR_VERSION;
