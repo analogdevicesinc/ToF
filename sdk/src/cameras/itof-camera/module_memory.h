@@ -70,7 +70,7 @@ typedef enum {
 } TOF_ChunkType_t;
 
 /**
- * @struct TOF_ChunkVesion_t
+ * @struct TOF_ChunkVersion_t
  * @brief Describes chunk type and version
  */
 typedef struct {
@@ -78,14 +78,14 @@ typedef struct {
         uint8_t chunktype; ///< TOF_ChunkType_t value
         uint8_t major; ///< major version of chunk
         uint8_t minor; ///< minor version of chunk
-} TOF_ChunkVesion_t;
+} TOF_ChunkVersion_t;
 
 /**
  * @struct TOF_ChunkHeader_t
  * @brief Header for each memory chunk
  */
 typedef struct tag_chunkHeader {
-    TOF_ChunkVesion_t revision;         ///< chunk id type and version
+    TOF_ChunkVersion_t revision;         ///< chunk id type and version
     uint32_t          headerSizeBytes;  ///< chunk header size, i.e. sizeof(TOF_ChunkHeader_t)                                    
     uint32_t          chunkSizeBytes;   ///< chunk data size + 4bytes CRC, does not include chunk header
     uint32_t          nextChunkAddress; ///< memory start address of next chunk, chucks can be non-continguous
