@@ -52,15 +52,21 @@ buildCameras(std::unique_ptr<SensorEnumeratorInterface> enumerator) {
     std::vector<std::shared_ptr<DepthSensorInterface>> depthSensors;
     std::vector<std::shared_ptr<StorageInterface>> storages;
     std::vector<std::shared_ptr<TemperatureSensorInterface>> temperatureSensors;
+	std::string uboot;
+    std::string kernel;
+	std::string sd_ver;
 
     enumerator->getDepthSensors(depthSensors);
     enumerator->getStorages(storages);
     enumerator->getTemperatureSensors(temperatureSensors);
 
-    for (const auto &dSensor : depthSensors) {
+    enumerator->getUbootVersion(uboot);
+    enumerator->getKernelVersion(kernel);
+	enumerator->getSdVersion(sd_ver);
 
+    for (const auto &dSensor : depthSensors) {
         std::shared_ptr<Camera> camera = std::make_shared<CameraItof>(
-            dSensor, storages, temperatureSensors);
+            dSensor, storages, temperatureSensors, uboot, kernel, sd_ver);
         cameras.emplace_back(camera);
     }
 
@@ -107,17 +113,10 @@ Status SystemImpl::getCameraList(
     }
 #endif
 
-    sensorEnumerator->searchSensors();
-	std::string kernel;
-	std::string uboot;
-	std::string sd_ver;
-	sensorEnumerator->getKernelVersion(kernel);
-	sensorEnumerator->getUbootVersion(uboot);
-	sensorEnumerator->getSdVersion(sd_ver);
-	LOG(INFO) << "Software Versions\n"<<kernel;
-	LOG(INFO) <<uboot;
-	LOG(INFO) <<sd_ver;
-    cameraList = buildCameras(std::move(sensorEnumerator));
+    Status status = sensorEnumerator->searchSensors();
+    if (status == Status::OK) {
+        cameraList = buildCameras(std::move(sensorEnumerator));
+    }
 
     return Status::OK;
 }
@@ -147,18 +146,6 @@ SystemImpl::getCameraListAtIp(std::vector<std::shared_ptr<Camera>> &cameraList,
         return Status::GENERIC_ERROR;
     }
     Status status = sensorEnumerator->searchSensors();
-
-	std::string kernel;
-	std::string uboot;
-	std::string sd_ver;
-	sensorEnumerator->getKernelVersion(kernel);
-	sensorEnumerator->getUbootVersion(uboot);
-	sensorEnumerator->getSdVersion(sd_ver);
-	LOG(INFO) << "Software Versions"<<std::endl;
-	LOG(INFO) << kernel;
-	LOG(INFO) <<uboot;
-	LOG(INFO) <<sd_ver;
-
     if (status == Status::OK) {
         cameraList = buildCameras(std::move(sensorEnumerator));
     }

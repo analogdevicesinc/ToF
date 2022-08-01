@@ -99,15 +99,6 @@
  *   Description:     Update the firmware of Adsd3500 with the content found in the specified file.
  *   Accepted values: A path to a file (including file name and extension) where the firmware for
  *                    adsd3500 is stored.
- * getUbootVersion
- *   Description:     Returns the 'u-boot' version that is installed on the camera
- *                    platform.
- *   Accepted values: Not applicable. It is a read-only control. Do not use it with setControl().
- *
- * getKernelVersion
- *   Description:     Returns the 'u-boot' version that is installed on the camera
- *                    platform.
- *   Accepted values: Not applicable. It is a read-only control. Do not use it with setControl().
  */
 
 class CameraItof : public aditof::Camera {
@@ -115,7 +106,8 @@ class CameraItof : public aditof::Camera {
     CameraItof(std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
                std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms,
                std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
-                   &tSensors);
+                   &tSensors, const std::string &ubootVersion, const std::string &kernelVersion,
+                   const std::string &sdCardImageVersion);
     ~CameraItof();
 
   public: // implements Camera
