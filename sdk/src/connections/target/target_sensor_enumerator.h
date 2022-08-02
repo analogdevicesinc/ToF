@@ -54,6 +54,9 @@ class TargetSensorEnumerator : public aditof::SensorEnumeratorInterface {
 	virtual aditof::Status getKernelVersion(std::string &kernelVersion) const override;
 	virtual aditof::Status getSdVersion(std::string &sdVersion) const override;
   private:
+	std::string getVersionOfComponent(const std::string &component) const;
+
+  private:
     enum class SensorType {
         SENSOR_ADSD3100, //!< ADSD ITOF sensor
         SENSOR_ADSD3500  //!< ADSD3500 sensor
