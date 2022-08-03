@@ -14,16 +14,16 @@ For more details on building the SDK on a host platform please check the **User 
 
 | Operating System | Documentation | GitHub master status | Downloads |
 | --------- | ----------- | ----------- | ----------- |
-| Windows | [Build Instructions](scripts/windows) | [![Build status](https://ci.appveyor.com/api/projects/status/46t36hmy77ejrf88/branch/master?svg=true)](https://ci.appveyor.com/project/analogdevicesinc/ToF/branch/master) | [![aditof-demo installer](https://img.shields.io/badge/release-aditof_demo_installer-blue.svg)](https://github.com/analogdevicesinc/ToF/releases/latest) |
-| Linux | [Build Instructions](doc/itof/linux_build_instructions.md) | [![Build status](https://ci.appveyor.com/api/projects/status/46t36hmy77ejrf88/branch/master?svg=true)](https://ci.appveyor.com/project/analogdevicesinc/ToF/branch/master) | [![aditof-demo installer](https://img.shields.io/badge/release-aditof_demo_installer-blue.svg)](https://github.com/analogdevicesinc/ToF/releases/latest) |
+| Windows | [Build Instructions](scripts/windows) | [![Build status](https://dev.azure.com/AnalogDevices/3DToF-rework/_apis/build/status/analogdevicesinc.ToF?branchName=master)](https://dev.azure.com/AnalogDevices/3DToF-rework/_build?view=runs&branchFilter=3310) | [![ToF evaluation kit installer](https://img.shields.io/badge/release-ToF_evaluation_kit_installer-blue.svg)](https://github.com/analogdevicesinc/ToF/releases/latest) |
+| Linux | [Build Instructions](doc/itof/linux_build_instructions.md) | [![Build status](https://dev.azure.com/AnalogDevices/3DToF-rework/_apis/build/status/analogdevicesinc.ToF?branchName=master)](https://dev.azure.com/AnalogDevices/3DToF-rework/_build?view=runs&branchFilter=3310) | [![ToF evaluation kit installer](https://img.shields.io/badge/release-ToF_evaluation_kit_installer-blue.svg)](https://github.com/analogdevicesinc/ToF/releases/latest) |
 
 ## Supported embedded platforms
 
 For more details on building the SDK on an embedded platform please check the **User Guide** specified below:
 ### ITOF camera
-| Operating system | Documentation |
-| --------- | ----------- |
-| NXP | [Build instructions](doc/itof/nxp_build_instructions.md) |
+| Operating system | Documentation | GitHub master status |
+| --------- | ----------- | ----------- |
+| NXP | [Build instructions](doc/itof/nxp_build_instructions.md) | [![Build status](https://dev.azure.com/AnalogDevices/3DToF-rework/_apis/build/status/analogdevicesinc.ToF?branchName=master)](https://dev.azure.com/AnalogDevices/3DToF-rework/_build?view=runs&branchFilter=3310) |
 
 [How to write the SD card image onto the SD card?](doc/sdcard_burn.md)
 
