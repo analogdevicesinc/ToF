@@ -352,22 +352,28 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, TOF_ModuleFiles_
             uint32_t blockCRC = *((uint32_t *)(pChunkData + payloadSize));
             //Use mirrored CRC first, if it fails, try non mirrored
             if (crcFast(pChunkData, payloadSize, true) == blockCRC) {
+                if (processNVMFirmware(pChunkHeader->revision.chunktype, pChunkData, payloadSize) != Status::OK) {
+                    isBadChunk = true;
+                }
 
-                if (processNVMFirmware(pChunkHeader->revision.chunktype,
-                                       pChunkData, payloadSize) !=
-                    Status::OK) {                    
-                    isBadChunk = true;
-                }
-                
             } else if (crcFast(pChunkData, payloadSize, false) == blockCRC) {//Try using non mirrored CRC
-                if (processNVMFirmware(pChunkHeader->revision.chunktype,
-                                       pChunkData, payloadSize) != Status::OK) {
+                if (processNVMFirmware(pChunkHeader->revision.chunktype, pChunkData, payloadSize) != Status::OK) {
                     isBadChunk = true;
                 }
+
             } else {
-                displayCRCError(pChunkHeader->revision.chunktype);
                 isBadChunk = true;
             }
+
+            if(isBadChunk){
+                if(pChunkHeader->revision.chunktype != CHUNK_TYPE_ADSD3500_FIRMWARE_FACTORY_HEADER && 
+                    pChunkHeader->revision.chunktype != CHUNK_TYPE_ADSD3500_FIRMWARE_UPGRADE_HEADER) {
+                    displayCRCError(pChunkHeader->revision.chunktype);
+                } else {
+                    isBadChunk = false;
+                }    
+            }
+
         } else {
             LOG(WARNING) << "Failed reading module memory data";
             isBadChunk = true;
