@@ -5,6 +5,7 @@
 
 ### Pre-requisites
 * CMake
+* OpenGL
 * Glog v0.3.5
 * Libwebsockets v3.1
 * Protocol Buffers v3.9.0
@@ -13,6 +14,11 @@
 * CMake:
 ```console
 sudo apt install cmake
+```
+
+* OpenGL:
+```console
+sudo apt install libgl1-mesa-dev libglfw3-dev
 ```
 
 * Glog:
