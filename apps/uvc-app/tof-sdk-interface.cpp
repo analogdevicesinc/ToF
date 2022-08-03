@@ -16,6 +16,11 @@ std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
     temperatureSensors;
 std::shared_ptr<aditof::DepthSensorInterface> camDepthSensor;
 
+/* Version information */
+std::string kernelversion;
+std::string ubootversion;
+std::string sdversion;
+
 int init_tof_sdk(char* cap_dev_path) {
     auto sensorsEnumerator =
         aditof::SensorEnumeratorFactory::buildTargetSensorEnumerator();
@@ -28,6 +33,9 @@ int init_tof_sdk(char* cap_dev_path) {
     sensorsEnumerator->getDepthSensors(depthSensors);
     sensorsEnumerator->getStorages(storages);
     sensorsEnumerator->getTemperatureSensors(temperatureSensors);
+    sensorsEnumerator->getKernelVersion(kernelversion);
+    sensorsEnumerator->getUbootVersion(ubootversion);
+    sensorsEnumerator->getSdVersion(sdversion);
 
     if (depthSensors.size() < 1) {
         DLOG(ERROR) << "No camera sensor are available!\n";
@@ -141,16 +149,10 @@ void handleClientRequest(const char *in_buf, const size_t in_len, char **out_buf
             ++temp_sensor_id;
         }
 
-        std::string kernelversion;
-		std::string ubootversion;
-		std::string sdversion;
-		auto cardVersion = buff_send.mutable_card_image_version();
+		auto cardVersion = response.mutable_card_image_version();
 
-        sensorsEnumerator->getKernelVersion(kernelversion);
 		cardVersion->set_kernelversion(kernelversion);
-		sensorsEnumerator->getUbootVersion(ubootversion);
 		cardVersion->set_ubootversion(ubootversion);
-		sensorsEnumerator->getSdVersion(sdversion);
 		cardVersion->set_sdversion(sdversion);
 
         response.set_status(
