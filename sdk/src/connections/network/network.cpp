@@ -65,8 +65,8 @@ int recv_data_error = 0; /*flag for recv data*/
 char server_msg[] = "Connection Allowed";
 
 /*Declare static members*/
-std::vector<lws*> Network::web_socket;
-std::vector<lws_context*> Network::context;
+std::vector<lws *> Network::web_socket;
+std::vector<lws_context *> Network::context;
 ClientRequest Network::send_buff[MAX_CAMERA_NUM];
 ServerResponse Network::recv_buff[MAX_CAMERA_NUM];
 recursive_mutex Network::m_mutex[MAX_CAMERA_NUM];
@@ -87,7 +87,9 @@ bool Network::Thread_Detached[MAX_CAMERA_NUM];
 * Desription:   This function checks if server is connected and returns
 Server_Connected flag value.
 */
-bool Network::isServer_Connected() { return Network::Server_Connected[m_connectionId]; }
+bool Network::isServer_Connected() {
+    return Network::Server_Connected[m_connectionId];
+}
 
 /*
 * isThread_Running(): check if thread created is running
@@ -114,7 +116,9 @@ flag value
                      false - if error in data sending
 * Desription:   This function returns Send_Successful flag value
 */
-bool Network::isSend_Successful() { return Network::Send_Successful[m_connectionId]; }
+bool Network::isSend_Successful() {
+    return Network::Send_Successful[m_connectionId];
+}
 
 /*
 * isData_Received(): check if data received from server and returns
@@ -125,7 +129,9 @@ Data_Received flag value
 * Desription:   This function is used to check if any data received from server
 *               returns Data_Received flag value.
 */
-bool Network::isData_Received() { return Network::Data_Received[m_connectionId]; }
+bool Network::isData_Received() {
+    return Network::Data_Received[m_connectionId];
+}
 
 /*
 * ServerConnect():  intializes the websocket and connects to server
@@ -156,22 +162,22 @@ int Network::ServerConnect(const std::string &ip) {
     ccinfo.origin = "origin";
     ccinfo.protocol = protocols[PROTOCOL_0].name;
 
-    if(!m_connectionId){
+    if (!m_connectionId) {
         lws *webSocket = lws_client_connect_via_info(&ccinfo);
 
         web_socket.clear();
         web_socket.emplace_back(webSocket);
     } else {
-        
-       for(size_t i = 0; i < web_socket.size(); i++){ 
-            if(web_socket.at(i) == nullptr){
+
+        for (size_t i = 0; i < web_socket.size(); i++) {
+            if (web_socket.at(i) == nullptr) {
                 web_socket.erase(web_socket.begin() + i);
                 i--;
             }
         }
         web_socket.push_back(lws_client_connect_via_info(&ccinfo));
     }
-    
+
     /*Start a new thread to service any pending event on web socket*/
 
     threadObj[m_connectionId] = std::thread(&Network::call_lws_service, this);
@@ -184,9 +190,9 @@ int Network::ServerConnect(const std::string &ip) {
     std::unique_lock<std::recursive_mutex> mlock(m_mutex[m_connectionId]);
 
     /*Wait till server is connected or timeout of 3 sec*/
-    if (Cond_Var[m_connectionId].wait_for(mlock, std::chrono::seconds(3),
-                          std::bind(&Network::isServer_Connected, this)) ==
-        false) {
+    if (Cond_Var[m_connectionId].wait_for(
+            mlock, std::chrono::seconds(3),
+            std::bind(&Network::isServer_Connected, this)) == false) {
         Server_Connected[m_connectionId] = false;
         return -1;
     } else if (web_socket.at(m_connectionId) != NULL) {
@@ -194,13 +200,15 @@ int Network::ServerConnect(const std::string &ip) {
          * or not*/
         if (recv_server_data() == 0) {
             /*Data received correctly*/
-            if (strcmp(recv_buff[m_connectionId].message().c_str(), server_msg) == 0) {
+            if (strcmp(recv_buff[m_connectionId].message().c_str(),
+                       server_msg) == 0) {
                 /*Server is connected successfully*/
                 cout << "Conn established" << endl;
                 return 0;
             } else {
                 /*Another client is connected already*/
-                cout << "Server Message :: " << recv_buff[m_connectionId].message() << endl;
+                cout << "Server Message :: "
+                     << recv_buff[m_connectionId].message() << endl;
                 Server_Connected[m_connectionId] = false;
                 return -1;
             }
@@ -231,15 +239,16 @@ int Network::SendCommand() {
 
     recv_buff[m_connectionId].Clear();
 
-    while (numRetry++ < MAX_RETRY_CNT && Server_Connected[m_connectionId] != false) {
+    while (numRetry++ < MAX_RETRY_CNT &&
+           Server_Connected[m_connectionId] != false) {
 
         lws_callback_on_writable(web_socket.at(m_connectionId));
         /*Acquire the lock*/
         std::unique_lock<std::recursive_mutex> mlock(m_mutex[m_connectionId]);
 
-        if (Cond_Var[m_connectionId].wait_for(mlock, std::chrono::seconds(10),
-                              std::bind(&Network::isSend_Successful, this)) ==
-            false) {
+        if (Cond_Var[m_connectionId].wait_for(
+                mlock, std::chrono::seconds(10),
+                std::bind(&Network::isSend_Successful, this)) == false) {
             status = -1; /*timeout occurs*/
 #ifdef NW_DEBUG
             cout << "Send Timeout error" << endl;
@@ -290,13 +299,14 @@ int Network::recv_server_data() {
     uint8_t numRetry = 0;
     /*Wait until data received from the server after command execution*/
 
-    while (numRetry++ < MAX_RETRY_CNT && Server_Connected[m_connectionId] != false) {
+    while (numRetry++ < MAX_RETRY_CNT &&
+           Server_Connected[m_connectionId] != false) {
 
         /*Acquire the lock*/
         std::unique_lock<std::mutex> mlock(mutex_recv[m_connectionId]);
-        if (Cond_Var[m_connectionId].wait_for(mlock, std::chrono::seconds(10),
-                              std::bind(&Network::isData_Received, this)) ==
-            true) {
+        if (Cond_Var[m_connectionId].wait_for(
+                mlock, std::chrono::seconds(10),
+                std::bind(&Network::isData_Received, this)) == true) {
             /*reset the flag value to receive again*/
             Data_Received[m_connectionId] = false;
 
@@ -371,11 +381,12 @@ int Network::callback_function(struct lws *wsi,
                                enum lws_callback_reasons reason, void *user,
                                void *in, size_t len) {
     int connectionId = 0;
-    auto status = std::find(web_socket.begin(),web_socket.end(),wsi);
-    if(status != web_socket.end()){
-        connectionId = static_cast<int>(std::distance(web_socket.begin(),status));
+    auto status = std::find(web_socket.begin(), web_socket.end(), wsi);
+    if (status != web_socket.end()) {
+        connectionId =
+            static_cast<int>(std::distance(web_socket.begin(), status));
     }
-    
+
     switch (reason) {
     case LWS_CALLBACK_CLIENT_ESTABLISHED: {
         /*Notify host SDK that server is connected */
@@ -408,7 +419,8 @@ int Network::callback_function(struct lws *wsi,
             }
 
             // process message
-            google::protobuf::io::ArrayInputStream ais(in, static_cast<int>(len));
+            google::protobuf::io::ArrayInputStream ais(in,
+                                                       static_cast<int>(len));
             CodedInputStream coded_input(&ais);
             recv_buff[connectionId].ParseFromCodedStream(&coded_input);
 
@@ -517,8 +529,8 @@ Network::~Network() {
         std::unique_lock<std::mutex> mlock(thread_mutex[m_connectionId]);
         Thread_Running[m_connectionId] = 1;
         /*wait for thread to finish*/
-        thread_Cond_Var[m_connectionId].wait(mlock,
-                             std::bind(&Network::isThread_Running, this));
+        thread_Cond_Var[m_connectionId].wait(
+            mlock, std::bind(&Network::isThread_Running, this));
         Thread_Detached[m_connectionId] = false;
 
         lws_context_destroy(context.at(m_connectionId));

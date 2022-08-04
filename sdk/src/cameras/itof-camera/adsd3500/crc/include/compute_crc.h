@@ -51,28 +51,24 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern "C" {
 #endif
 
-#define IS_CRC_MIRROR      (1 << 0)
+#define IS_CRC_MIRROR (1 << 0)
 
-typedef enum 
-{ 
-    CRC_8bit    = 8,
-    CRC_16bit   = 16,
-    CRC_32bit   = 32,
+typedef enum {
+    CRC_8bit = 8,
+    CRC_16bit = 16,
+    CRC_32bit = 32,
 } CRC_TYPE;
 
-typedef union
-{
+typedef union {
     uint8_t crc_8bit;
     uint16_t crc_16bit;
     uint32_t crc_32bit;
 } crc_output_t;
 
 /* Structure to control the parameters of the algorithm */
-typedef struct
-{
+typedef struct {
     CRC_TYPE type;
-    union
-    {
+    union {
         uint8_t polynomial_crc8_bit;
         uint16_t polynomial_crc16_bit;
         uint32_t polynomial_crc32_bit;
@@ -85,7 +81,8 @@ typedef struct
 
 extern uint32_t const crc32_table[256];
 
-crc_output_t compute_crc(crc_parameters_t *crc_parameters, uint8_t *data, uint32_t data_len);
+crc_output_t compute_crc(crc_parameters_t *crc_parameters, uint8_t *data,
+                         uint32_t data_len);
 
 #if __cplusplus
 }

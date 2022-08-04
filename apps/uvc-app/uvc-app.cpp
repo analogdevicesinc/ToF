@@ -1,8 +1,8 @@
 
 #include <glog/logging.h>
 
-#include <aditof/version.h>
 #include "tof-sdk-interface.h"
+#include <aditof/version.h>
 
 extern "C" {
 #include "configfs.h"
@@ -11,36 +11,36 @@ extern "C" {
 #include "v4l2-source.h"
 }
 
-int main(int argc, char *argv[])
-{
-	char *function = NULL;
-	char *cap_device_1 = NULL;
-	const char *cap_device = "/dev/video0";
-	struct uvc_function_config *fc;
-	struct uvc_stream *stream = NULL;
-	struct video_source *src = NULL;
-	struct events events;
-	int ret = 0;
+int main(int argc, char *argv[]) {
+    char *function = NULL;
+    char *cap_device_1 = NULL;
+    const char *cap_device = "/dev/video0";
+    struct uvc_function_config *fc;
+    struct uvc_stream *stream = NULL;
+    struct video_source *src = NULL;
+    struct events events;
+    int ret = 0;
 
-	// Init google logging system
-  	google::InitGoogleLogging(argv[0]);
-  	FLAGS_alsologtostderr = 1;
-	
-	DLOG(INFO) << argv[0] << " " << "has started";
-	DLOG(INFO) << "This UVC instance is using aditof sdk version: "
-         << ADITOF_API_VERSION;
+    // Init google logging system
+    google::InitGoogleLogging(argv[0]);
+    FLAGS_alsologtostderr = 1;
 
-	ret = init_tof_sdk(cap_device_1);
-	if (ret)
-		return ret;
+    DLOG(INFO) << argv[0] << " "
+               << "has started";
+    DLOG(INFO) << "This UVC instance is using aditof sdk version: "
+               << ADITOF_API_VERSION;
 
-	fc = configfs_parse_uvc_function(function);
-	if (!fc) {
-		DLOG(INFO) << "Failed to identify function configuration\n";
-		return 1;
-	}
+    ret = init_tof_sdk(cap_device_1);
+    if (ret)
+        return ret;
 
-	/*
+    fc = configfs_parse_uvc_function(function);
+    if (!fc) {
+        DLOG(INFO) << "Failed to identify function configuration\n";
+        return 1;
+    }
+
+    /*
 	 * Create the events handler.
 	 */
     events_init(&events);

@@ -9,17 +9,14 @@
 
 #include <aditof/status_definitions.h>
 #include <cstdint>
-#include <vector>
-#include <string>
 #include <ostream>
+#include <string>
+#include <vector>
 
-const std::vector<std::string> g_availableModes = {
-    "pcm",  
-    "qmp",
-    "mp"
-};
+const std::vector<std::string> g_availableModes = {"pcm", "qmp", "mp"};
 
-aditof::Status convertCameraMode(const std::string &modes, uint8_t& convertedMode);
+aditof::Status convertCameraMode(const std::string &modes,
+                                 uint8_t &convertedMode);
 
 /**
  * @class ModeInfo
@@ -65,7 +62,7 @@ class ModeInfo {
      * @return modeInfo*
      * @see modeInfo
      */
-    modeInfo getModeInfo(const std::string& mode);
+    modeInfo getModeInfo(const std::string &mode);
 
     /**
      * @brief Get the number of modes supported
@@ -76,7 +73,8 @@ class ModeInfo {
   private:
     static modeInfo g_modeInfoData[]; //static array of all modes supported
     static ModeInfo *m_instance;      //single instance
-    ModeInfo() {} // private so that it can not be called, always access through getInstance()
+    ModeInfo() {
+    } // private so that it can not be called, always access through getInstance()
     ModeInfo(const ModeInfo &);            // copy constructor is private
     ModeInfo &operator=(const ModeInfo &); // assignment operator is private
 };

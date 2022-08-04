@@ -59,8 +59,10 @@ PYBIND11_MODULE(aditofpython, m) {
         .def_readwrite("type", &aditof::FrameDataDetails::type)
         .def_readwrite("width", &aditof::FrameDataDetails::width)
         .def_readwrite("height", &aditof::FrameDataDetails::height)
-        .def_readwrite("subelementSize", &aditof::FrameDataDetails::subelementSize)
-        .def_readwrite("subelementsPerElement", &aditof::FrameDataDetails::subelementsPerElement);
+        .def_readwrite("subelementSize",
+                       &aditof::FrameDataDetails::subelementSize)
+        .def_readwrite("subelementsPerElement",
+                       &aditof::FrameDataDetails::subelementsPerElement);
 
     py::class_<aditof::FrameDetails>(m, "FrameDetails")
         .def(py::init<>())
@@ -126,17 +128,25 @@ PYBIND11_MODULE(aditofpython, m) {
     py::class_<frameData>(m, "frameData", py::buffer_protocol())
         .def(py::init<>())
         .def_buffer([](const frameData &f) -> py::buffer_info {
-            int nbDimensions = 2 + (f.details.subelementsPerElement > 1 ? 1 : 0);
+            int nbDimensions =
+                2 + (f.details.subelementsPerElement > 1 ? 1 : 0);
             // 2D configuration
-            std::vector<ssize_t> shape = {static_cast<py::ssize_t>(f.details.height),
+            std::vector<ssize_t> shape = {
+                static_cast<py::ssize_t>(f.details.height),
                 static_cast<py::ssize_t>(f.details.width)};
-            std::vector<ssize_t> strides = {static_cast<py::ssize_t>(f.details.subelementSize * f.details.subelementsPerElement * f.details.width),
-                static_cast<py::ssize_t>(f.details.subelementSize * f.details.subelementsPerElement)};
+            std::vector<ssize_t> strides = {
+                static_cast<py::ssize_t>(f.details.subelementSize *
+                                         f.details.subelementsPerElement *
+                                         f.details.width),
+                static_cast<py::ssize_t>(f.details.subelementSize *
+                                         f.details.subelementsPerElement)};
 
             // Additions for a 3D configuration
             if (nbDimensions == 3) {
-                shape.emplace_back(static_cast<py::ssize_t>(f.details.subelementsPerElement));
-                strides.emplace_back(static_cast<py::ssize_t>(f.details.subelementSize));
+                shape.emplace_back(
+                    static_cast<py::ssize_t>(f.details.subelementsPerElement));
+                strides.emplace_back(
+                    static_cast<py::ssize_t>(f.details.subelementSize));
             }
 
             std::string format;
@@ -147,12 +157,8 @@ PYBIND11_MODULE(aditofpython, m) {
             }
 
             return py::buffer_info(
-                f.pData,
-                static_cast<py::ssize_t>(f.details.subelementSize),
-                format,
-                nbDimensions,
-                shape,
-                strides);
+                f.pData, static_cast<py::ssize_t>(f.details.subelementSize),
+                format, nbDimensions, shape, strides);
         });
 
     // ADI Time of Flight API
@@ -277,7 +283,8 @@ PYBIND11_MODULE(aditofpython, m) {
             [](aditof::Frame &frame, const std::string &dataType) -> frameData {
                 frameData f;
 
-                frame.getData(dataType, reinterpret_cast<uint16_t **>(&f.pData));
+                frame.getData(dataType,
+                              reinterpret_cast<uint16_t **>(&f.pData));
                 frame.getDataDetails(dataType, f.details);
 
                 return f;
@@ -324,34 +331,32 @@ PYBIND11_MODULE(aditofpython, m) {
              },
              py::arg("buffer"))
         .def("regread",
-             [](aditof::DepthSensorInterface &device,
-                uint16_t address) {
-                  uint16_t addrPtr[1], dataPtr[1];
-                  addrPtr[0] = address;
-                  device.readRegisters(addrPtr, dataPtr, 1);
-                  return dataPtr[0];
+             [](aditof::DepthSensorInterface &device, uint16_t address) {
+                 uint16_t addrPtr[1], dataPtr[1];
+                 addrPtr[0] = address;
+                 device.readRegisters(addrPtr, dataPtr, 1);
+                 return dataPtr[0];
              },
              py::arg("address"))
         .def("regwrite",
-             [](aditof::DepthSensorInterface &device,
-                uint16_t address, uint16_t data) {
-                   uint16_t addrPtr[1], dataPtr[1];
-                   addrPtr[0] = address;
-                   dataPtr[0] = data;
-                   return device.writeRegisters(addrPtr, dataPtr, 1);
+             [](aditof::DepthSensorInterface &device, uint16_t address,
+                uint16_t data) {
+                 uint16_t addrPtr[1], dataPtr[1];
+                 addrPtr[0] = address;
+                 dataPtr[0] = data;
+                 return device.writeRegisters(addrPtr, dataPtr, 1);
              },
              py::arg("address"), py::arg("data"))
         .def("regwriteburst",
-             [](aditof::DepthSensorInterface &device,
-                uint16_t address, py::array_t<uint16_t> data,
-                const std::string &incr) {
-                  uint16_t addrPtr[1];
-                  addrPtr[0] = address;
-                  if (incr.compare("increment") == 0)
-                    addrPtr[0] |= 0x4000;
-                  py::buffer_info dataBuffInfo = data.request();
-                  uint16_t *dataPtr = static_cast<uint16_t *>(dataBuffInfo.ptr);
-                  return device.writeRegisters(addrPtr, dataPtr, data.size());
+             [](aditof::DepthSensorInterface &device, uint16_t address,
+                py::array_t<uint16_t> data, const std::string &incr) {
+                 uint16_t addrPtr[1];
+                 addrPtr[0] = address;
+                 if (incr.compare("increment") == 0)
+                     addrPtr[0] |= 0x4000;
+                 py::buffer_info dataBuffInfo = data.request();
+                 uint16_t *dataPtr = static_cast<uint16_t *>(dataBuffInfo.ptr);
+                 return device.writeRegisters(addrPtr, dataPtr, data.size());
              },
              py::arg("address"), py::arg("data"), py::arg("increment"))
         .def("readRegisters",

@@ -42,10 +42,10 @@ namespace aditof {
  * @brief Types of connections
  */
 enum class ConnectionType {
-    ON_TARGET,   //!< on the target, direct sysfs access
-    USB,      //!< connects to target via USB
-    NETWORK, //!< connects to target via Network
-    OFFLINE, //!< connects to a software module, no hardware involved
+    ON_TARGET, //!< on the target, direct sysfs access
+    USB,       //!< connects to target via USB
+    NETWORK,   //!< connects to target via Network
+    OFFLINE,   //!< connects to a software module, no hardware involved
 };
 
 } // namespace aditof

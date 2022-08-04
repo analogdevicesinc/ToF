@@ -5,8 +5,8 @@
 /*                                                                              */
 /********************************************************************************/
 #include "mode_info.h"
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 
 // TODO: load this information from camera module EEPROM
 ModeInfo::modeInfo ModeInfo::g_modeInfoData[] = {
@@ -41,8 +41,8 @@ unsigned int ModeInfo::getNumModes() {
            sizeof(ModeInfo::g_modeInfoData[0]);
 }
 
-
-aditof::Status convertCameraMode(const std::string &mode, uint8_t& convertedMode) {
+aditof::Status convertCameraMode(const std::string &mode,
+                                 uint8_t &convertedMode) {
     if (mode == "lt_bin") {
         convertedMode = 1;
     } else if (mode == "pcm") {
@@ -58,10 +58,10 @@ aditof::Status convertCameraMode(const std::string &mode, uint8_t& convertedMode
     return aditof::Status::OK;
 }
 
-ModeInfo::modeInfo ModeInfo::getModeInfo(const std::string& mode){
+ModeInfo::modeInfo ModeInfo::getModeInfo(const std::string &mode) {
     unsigned char modeIndex;
 
     convertCameraMode(mode, modeIndex);
-    
+
     return getModeInfo(modeIndex);
 }

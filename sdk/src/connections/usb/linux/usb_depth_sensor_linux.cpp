@@ -67,7 +67,8 @@ struct UsbDepthSensor::ImplData {
     std::unordered_map<std::string, CalibrationData> calibration_cache;
 };
 
-UsbDepthSensor::UsbDepthSensor(const std::string &name, const std::string &driverPath)
+UsbDepthSensor::UsbDepthSensor(const std::string &name,
+                               const std::string &driverPath)
     : m_driverPath(driverPath), m_implData(new UsbDepthSensor::ImplData) {
     m_implData->fd = 0;
     m_implData->opened = false;
@@ -260,20 +261,20 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
     bool found = false;
     struct v4l2_fmtdesc fmtdesc;
-    memset(&fmtdesc,0,sizeof(fmtdesc));
+    memset(&fmtdesc, 0, sizeof(fmtdesc));
     fmtdesc.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    while (UsbLinuxUtils::xioctl(m_implData->fd, VIDIOC_ENUM_FMT, &fmtdesc) == 0)
-    {
+    while (UsbLinuxUtils::xioctl(m_implData->fd, VIDIOC_ENUM_FMT, &fmtdesc) ==
+           0) {
         struct v4l2_frmsizeenum frmenum;
         memset(&frmenum, 0, sizeof frmenum);
         frmenum.pixel_format = fmtdesc.pixelformat;
-        while (UsbLinuxUtils::xioctl(m_implData->fd, VIDIOC_ENUM_FRAMESIZES, &frmenum) == 0)
-        {
+        while (UsbLinuxUtils::xioctl(m_implData->fd, VIDIOC_ENUM_FRAMESIZES,
+                                     &frmenum) == 0) {
             if ((frmenum.discrete.width == type.width) &&
                 (frmenum.discrete.height == type.height)) {
-                    found = true;
-                    break;
-                }
+                found = true;
+                break;
+            }
             frmenum.index++;
         }
         if (found)
@@ -299,7 +300,6 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
                      << strerror(errno) << ")";
         return Status::GENERIC_ERROR;
     }
-
 
     CLEAR(req);
     req.count = 4;
@@ -629,7 +629,8 @@ aditof::Status UsbDepthSensor::writeRegisters(const uint16_t *address,
     return Status::OK;
 }
 
-aditof::Status UsbDepthSensor::getAvailableControls(std::vector<std::string> &controls) const {
+aditof::Status
+UsbDepthSensor::getAvailableControls(std::vector<std::string> &controls) const {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -650,8 +651,7 @@ aditof::Status UsbDepthSensor::getAvailableControls(std::vector<std::string> &co
     std::string responseStr;
     status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR)
-            << "Failed to get response of the request to get controls";
+        LOG(ERROR) << "Failed to get response of the request to get controls";
         return status;
     }
     usb_payload::ServerResponse responseMsg;
@@ -678,7 +678,7 @@ aditof::Status UsbDepthSensor::getAvailableControls(std::vector<std::string> &co
 }
 
 aditof::Status UsbDepthSensor::setControl(const std::string &control,
-                               const std::string &value) {
+                                          const std::string &value) {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -701,18 +701,21 @@ aditof::Status UsbDepthSensor::setControl(const std::string &control,
     std::string responseStr;
     status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Failed to get response of the request to set control: " << control;
+        LOG(ERROR) << "Failed to get response of the request to set control: "
+                   << control;
         return status;
     }
     usb_payload::ServerResponse responseMsg;
     bool parsed = responseMsg.ParseFromString(responseStr);
     if (!parsed) {
-        LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
         return aditof::Status::INVALID_ARGUMENT;
     }
 
     if (responseMsg.status() != usb_payload::Status::OK) {
-        LOG(ERROR) << "Set control:" << control << " operation failed on UVC gadget";
+        LOG(ERROR) << "Set control:" << control
+                   << " operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
     }
 
@@ -720,7 +723,7 @@ aditof::Status UsbDepthSensor::setControl(const std::string &control,
 }
 
 aditof::Status UsbDepthSensor::getControl(const std::string &control,
-                               std::string &value) const {
+                                          std::string &value) const {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -742,18 +745,21 @@ aditof::Status UsbDepthSensor::getControl(const std::string &control,
     std::string responseStr;
     status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Failed to get response of the request to get control: " << control;
+        LOG(ERROR) << "Failed to get response of the request to get control: "
+                   << control;
         return status;
     }
     usb_payload::ServerResponse responseMsg;
     bool parsed = responseMsg.ParseFromString(responseStr);
     if (!parsed) {
-        LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
         return aditof::Status::INVALID_ARGUMENT;
     }
 
     if (responseMsg.status() != usb_payload::Status::OK) {
-        LOG(ERROR) << "Get control: " << control << " operation failed on UVC gadget";
+        LOG(ERROR) << "Get control: " << control
+                   << " operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
     }
 
@@ -784,7 +790,7 @@ aditof::Status UsbDepthSensor::getName(std::string &name) const {
     return aditof::Status::OK;
 }
 
-aditof::Status UsbDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data){
+aditof::Status UsbDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data) {
     return aditof::Status::OK;
 }
 
@@ -792,18 +798,24 @@ aditof::Status UsbDepthSensor::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
     return aditof::Status::OK;
 }
 
-aditof::Status UsbDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) {
+aditof::Status UsbDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd,
+                                                         uint8_t *readback_data,
+                                                         uint16_t payload_len) {
     return aditof::Status::OK;
 }
 
-aditof::Status UsbDepthSensor::adsd3500_read_payload(uint8_t* payload, uint16_t payload_len) {
+aditof::Status UsbDepthSensor::adsd3500_read_payload(uint8_t *payload,
+                                                     uint16_t payload_len) {
     return aditof::Status::OK;
 }
 
-aditof::Status UsbDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
+aditof::Status
+UsbDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload,
+                                           uint16_t payload_len) {
     return aditof::Status::OK;
 }
 
-aditof::Status UsbDepthSensor::adsd3500_write_payload(uint8_t* payload, uint16_t payload_len) {
+aditof::Status UsbDepthSensor::adsd3500_write_payload(uint8_t *payload,
+                                                      uint16_t payload_len) {
     return aditof::Status::OK;
 }

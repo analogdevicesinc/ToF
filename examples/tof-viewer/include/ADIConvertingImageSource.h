@@ -12,9 +12,6 @@
 #include <memory>
 #include <mutex>
 
-namespace adiMainWindow
-{
-
-}
+namespace adiMainWindow {}
 
 #endif //ADICONVERTINGIMAGESOURCE_H

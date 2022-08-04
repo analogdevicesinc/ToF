@@ -32,7 +32,7 @@ class SafeQueue {
             m_queue.pop();
         }
         return true;
-    }    
+    }
 
     bool empty() const { return m_queue.empty(); }
 

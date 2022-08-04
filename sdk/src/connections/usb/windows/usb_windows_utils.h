@@ -66,8 +66,8 @@ DEFINE_GUID(MEDIASUBTYPE_Y8, 0x20203859, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa,
 DEFINE_GUID(MEDIASUBTYPE_Y800, 0x30303859, 0x0000, 0x0010, 0x80, 0x00, 0x00,
             0xaa, 0x00, 0x38, 0x9b, 0x71);
 
-static const GUID EXT_UNIT_GUID = { 0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00,
-                                   0x00,       0x00,   0x00,   0x00, 0x00 };
+static const GUID EXT_UNIT_GUID = {0x00000000, 0x0000, 0x0000, 0x00, 0x00, 0x00,
+                                   0x00,       0x00,   0x00,   0x00, 0x00};
 
 #pragma comment(lib, "strmiids")
 
@@ -204,8 +204,12 @@ class UsbWindowsUtils {
                                         uint32_t address, const uint8_t *data,
                                         uint32_t bufferLength);
 
-    static aditof::Status uvcExUnitGetString(IBaseFilter *pVideoInputFilter, int uvcControlId, std::string &outStr);
+    static aditof::Status uvcExUnitGetString(IBaseFilter *pVideoInputFilter,
+                                             int uvcControlId,
+                                             std::string &outStr);
 
-    static aditof::Status uvcExUnitSendRequest(IBaseFilter *pVideoInputFilter, const std::string &requestStr);
-    static aditof::Status uvcExUnitGetResponse(IBaseFilter *pVideoInputFilter, std::string &responseStr);
+    static aditof::Status uvcExUnitSendRequest(IBaseFilter *pVideoInputFilter,
+                                               const std::string &requestStr);
+    static aditof::Status uvcExUnitGetResponse(IBaseFilter *pVideoInputFilter,
+                                               std::string &responseStr);
 };

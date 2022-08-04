@@ -39,13 +39,12 @@
 #include <vector>
 
 namespace usb_payload {
-  class DepthSensorFrameTypeVector;
-  class DepthSensorFrameType;
-}
+class DepthSensorFrameTypeVector;
+class DepthSensorFrameType;
+} // namespace usb_payload
 
 class UsbUtils {
   public:
-
     /**
      * @brief Converts from protobuf message to aditof type (vector of DepthSensorFrameType)
      * @param[out] depthSensorFrameTypes - the vector obtained from conversion

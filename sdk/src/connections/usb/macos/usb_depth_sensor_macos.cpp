@@ -104,7 +104,7 @@ aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
 }
 
 aditof::Status UsbDepthSensor::readRegisters(const uint16_t *address,
-                                                uint16_t *data, size_t length) {
+                                             uint16_t *data, size_t length) {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -114,8 +114,8 @@ aditof::Status UsbDepthSensor::readRegisters(const uint16_t *address,
 }
 
 aditof::Status UsbDepthSensor::writeRegisters(const uint16_t *address,
-                                                 const uint16_t *data,
-                                                 size_t length) {
+                                              const uint16_t *data,
+                                              size_t length) {
     using namespace aditof;
     Status status = Status::OK;
 

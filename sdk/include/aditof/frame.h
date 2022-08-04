@@ -100,7 +100,7 @@ class Frame {
          * @return Status
          */
     SDK_API Status getDataDetails(const std::string &dataType,
-                          FrameDataDetails &details) const;
+                                  FrameDataDetails &details) const;
 
     /**
      * @brief Gets the address where the specified data is being stored
@@ -125,7 +125,7 @@ class Frame {
      * @return Status
      */
     SDK_API virtual Status setAttribute(const std::string &attribute,
-                                const std::string &value);
+                                        const std::string &value);
 
     /**
      * @brief Gets the value of a specific frame attribute
@@ -134,7 +134,8 @@ class Frame {
      * @return Status
      */
     SDK_API virtual Status getAttribute(const std::string &attribute,
-                                std::string &value) const;
+                                        std::string &value) const;
+
   private:
     std::unique_ptr<FrameImpl> m_impl;
     Status allocFrameData();

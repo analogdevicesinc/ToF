@@ -34,8 +34,7 @@ namespace aditof {
  * @brief Describes the properties of common configuration file header for all sensors
  */
 
-typedef struct 
-{
+typedef struct {
     uint16_t FileFormatVersion;
     uint16_t ConfigFileHdrSize;
     uint32_t ConfigFileSize;
@@ -44,18 +43,16 @@ typedef struct
     uint16_t ConfigVerMinor;
     uint16_t ChipId;
     uint16_t SystemId;
-}config_header_struct;
+} config_header_struct;
 
 /**
  * @struct config_struct
  * @brief Describes the file header for all sensor CFG files
  */
-typedef struct 
-{
+typedef struct {
     uint8_t FileSignature[4];
     config_header_struct header;
 } file_header_struct;
-
 
 } //namespace aditof
 

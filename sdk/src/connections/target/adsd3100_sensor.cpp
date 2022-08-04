@@ -8,6 +8,7 @@
 #include "aditof/frame_operations.h"
 #include "utils.h"
 
+#include "cameras/itof-camera/mode_info.h"
 #include <algorithm>
 #include <arm_neon.h>
 #include <cmath>
@@ -19,10 +20,11 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include "cameras/itof-camera/mode_info.h"
 
-#define MAX_SUBFRAMES_COUNT 10 // maximum number of subframes that are used to create a full frame (maximum total_captures of all modes)
-#define EXTRA_BUFFERS_COUNT 3  // how many extra buffers are sent to the driver in addition to the total_captures of a mode
+#define MAX_SUBFRAMES_COUNT                                                    \
+    10 // maximum number of subframes that are used to create a full frame (maximum total_captures of all modes)
+#define EXTRA_BUFFERS_COUNT                                                    \
+    3 // how many extra buffers are sent to the driver in addition to the total_captures of a mode
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
@@ -33,7 +35,6 @@
 #define TEMP_SENSOR_DEV_PATH "/dev/i2c-1"
 #define LASER_TEMP_SENSOR_I2C_ADDR 0x49
 #define AFE_TEMP_SENSOR_I2C_ADDR 0x4b
-
 
 #define ADI_DEBUG 1
 #define REQ_COUNT 10
@@ -75,7 +76,7 @@ struct VideoDev {
           started(false) {}
 };
 struct Adsd3100Sensor::ImplData {
-     uint8_t numVideoDevs;
+    uint8_t numVideoDevs;
     struct VideoDev *videoDevs;
     aditof::DepthSensorFrameType frameType;
     ImplData() : numVideoDevs(1), videoDevs(nullptr), frameType{"", {}, 0, 0} {}
@@ -102,11 +103,11 @@ Adsd3100Sensor::Adsd3100Sensor(const std::string &driverPath,
     m_sensorDetails.connectionType = aditof::ConnectionType::ON_TARGET;
     m_sensorName = "adsd3100";
 
-    m_controls.emplace("fps","0");
+    m_controls.emplace("fps", "0");
 }
 
 Adsd3100Sensor::~Adsd3100Sensor() {
-  struct VideoDev *dev;
+    struct VideoDev *dev;
 
     for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
         dev = &m_implData->videoDevs[i];
@@ -141,8 +142,8 @@ Adsd3100Sensor::~Adsd3100Sensor() {
 }
 
 aditof::Status Adsd3100Sensor::open() {
-using namespace aditof;
-     using namespace aditof;
+    using namespace aditof;
+    using namespace aditof;
     Status status = Status::OK;
 
     LOG(INFO) << "Opening device";
@@ -251,7 +252,7 @@ using namespace aditof;
 }
 
 aditof::Status Adsd3100Sensor::start() {
-   using namespace aditof;
+    using namespace aditof;
     Status status = Status::OK;
     struct VideoDev *dev;
     struct v4l2_buffer buf;
@@ -318,58 +319,58 @@ aditof::Status Adsd3100Sensor::stop() {
     return status;
 }
 
-
-aditof::Status
-Adsd3100Sensor::getAvailableFrameTypes(
+aditof::Status Adsd3100Sensor::getAvailableFrameTypes(
     std::vector<aditof::DepthSensorFrameType> &types) {
     using namespace aditof;
     Status status = Status::OK;
 
-    types = availableFrameTypes; //TBD shall we copy / move vector instead of assign 
+    types =
+        availableFrameTypes; //TBD shall we copy / move vector instead of assign
 
     return status;
 }
 
-aditof::Status Adsd3100Sensor::setModeByIndex(uint8_t modeIndex){
+aditof::Status Adsd3100Sensor::setModeByIndex(uint8_t modeIndex) {
     using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
     Status status = Status::OK;
 
     static struct v4l2_control ctrl;
-    
+
     memset(&ctrl, 0, sizeof(ctrl));
-    
+
     ctrl.id = CTRL_SET_MODE;
     ctrl.value = modeIndex;
 
     if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
         LOG(WARNING) << "Setting Mode error "
-                        << "errno: " << errno << " error: " << strerror(errno);
+                     << "errno: " << errno << " error: " << strerror(errno);
         status = Status::GENERIC_ERROR;
     }
 
     return status;
 }
 
-aditof::Status Adsd3100Sensor::setMode(const std::string& mode){
+aditof::Status Adsd3100Sensor::setMode(const std::string &mode) {
     uint8_t modeIndex;
     aditof::Status status = aditof::Status::OK;
     LOG(INFO) << "Setting camera mode to " << mode;
     //get mode index by name
     status = convertCameraMode(mode, modeIndex);
-    if (status != aditof::Status::OK){
+    if (status != aditof::Status::OK) {
         return status;
     }
     //get register value by mode index - nothing to do, the value corresponds to the index
     //set register / control
     status = setModeByIndex(modeIndex);
-    if (status != aditof::Status::OK){
+    if (status != aditof::Status::OK) {
         return status;
     }
     return aditof::Status::OK;
 }
 
-aditof::Status Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
+aditof::Status
+Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     using namespace aditof;
     Status status = Status::OK;
     struct VideoDev *dev;
@@ -381,18 +382,20 @@ aditof::Status Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &
     size_t pix_fallout, pix_drv;
 
     status = setMode(type.type);
-    if (status != aditof::Status::OK){
+    if (status != aditof::Status::OK) {
         LOG(INFO) << "Failed to set camera mode";
         return status;
     }
 
-     //We have two resolution domains. First is driver one which is defined in adsd3100_sensor.h
-     //The second is the depthcompute input domain defined in mode_info.cpp
-     //The total number of pixels between these two should be equal
-     //Here compute the number of frames that should be requested to the driver based on the required number of pixels from g_modeInfoData[]
-     pix_fallout = ModeInfo::getInstance()->getModeInfo(type.type).width * ModeInfo::getInstance()->getModeInfo(type.type).height * ModeInfo::getInstance()->getModeInfo(type.type).subframes;
-     pix_drv = type.width * type.height;
-     m_capturesPerFrame = pix_fallout / pix_drv;
+    //We have two resolution domains. First is driver one which is defined in adsd3100_sensor.h
+    //The second is the depthcompute input domain defined in mode_info.cpp
+    //The total number of pixels between these two should be equal
+    //Here compute the number of frames that should be requested to the driver based on the required number of pixels from g_modeInfoData[]
+    pix_fallout = ModeInfo::getInstance()->getModeInfo(type.type).width *
+                  ModeInfo::getInstance()->getModeInfo(type.type).height *
+                  ModeInfo::getInstance()->getModeInfo(type.type).subframes;
+    pix_drv = type.width * type.height;
+    m_capturesPerFrame = pix_fallout / pix_drv;
 
     for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
         dev = &m_implData->videoDevs[i];
@@ -409,15 +412,16 @@ aditof::Status Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &
             free(dev->videoBuffers);
             dev->nVideoBuffers = 0;
             CLEAR(req);
-	        req.count = 0;
-	        req.type = dev->videoBuffersType;
-	        req.memory = V4L2_MEMORY_MMAP;
+            req.count = 0;
+            req.type = dev->videoBuffersType;
+            req.memory = V4L2_MEMORY_MMAP;
 
-	        if (xioctl(dev->fd, VIDIOC_REQBUFS, &req) == -1) {
-	            LOG(WARNING) << "VIDIOC_REQBUFS error "
-	                         << "errno: " << errno << " error: " << strerror(errno);
-	            return Status::GENERIC_ERROR;
-	        }
+            if (xioctl(dev->fd, VIDIOC_REQBUFS, &req) == -1) {
+                LOG(WARNING)
+                    << "VIDIOC_REQBUFS error "
+                    << "errno: " << errno << " error: " << strerror(errno);
+                return Status::GENERIC_ERROR;
+            }
         } else if (dev->nVideoBuffers) {
             return status;
         }
@@ -426,7 +430,7 @@ aditof::Status Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &
         CLEAR(fmt);
         fmt.type = dev->videoBuffersType;
         fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_SBGGR12;
-        fmt.fmt.pix.width = type.width; 
+        fmt.fmt.pix.width = type.width;
         fmt.fmt.pix.height = type.height;
 
         if (xioctl(dev->fd, VIDIOC_S_FMT, &fmt) == -1) {
@@ -501,200 +505,200 @@ aditof::Status Adsd3100Sensor::setFrameType(const aditof::DepthSensorFrameType &
 aditof::Status Adsd3100Sensor::program(const uint8_t *firmware, size_t size) {
     using namespace aditof;
     Status status = Status::OK;
-//     uint32_t offset;
+    //     uint32_t offset;
 
-//     /* Dummy Write To Kick Things off */
-//     uint16_t nAddr = 0x112u;
-//     uint16_t nData = 0x112u;
-//     Adsd3100Sensor::writeRegisters(&nAddr, &nData, 1);
+    //     /* Dummy Write To Kick Things off */
+    //     uint16_t nAddr = 0x112u;
+    //     uint16_t nData = 0x112u;
+    //     Adsd3100Sensor::writeRegisters(&nAddr, &nData, 1);
 
-//     m_configuration.getConfigOffset(offset_type_register, &offset);
-//     writeConfigBlock(offset);
+    //     m_configuration.getConfigOffset(offset_type_register, &offset);
+    //     writeConfigBlock(offset);
 
-//     /* Enable All Digital Clocks */
-//     nAddr = 0x14u;
-//     nData = 0x0u;
-//     Adsd3100Sensor::writeRegisters(&nAddr, &nData, 1);
+    //     /* Enable All Digital Clocks */
+    //     nAddr = 0x14u;
+    //     nData = 0x0u;
+    //     Adsd3100Sensor::writeRegisters(&nAddr, &nData, 1);
 
-//     m_configuration.getConfigOffset(offset_type_lx5_ram, &offset);
-//     writeConfigBlock(offset);
+    //     m_configuration.getConfigOffset(offset_type_lx5_ram, &offset);
+    //     writeConfigBlock(offset);
 
-//     m_configuration.getConfigOffset(offset_type_lx5_dram_bank0, &offset);
-//     writeConfigBlock(offset);
+    //     m_configuration.getConfigOffset(offset_type_lx5_dram_bank0, &offset);
+    //     writeConfigBlock(offset);
 
-//     m_configuration.getConfigOffset(offset_type_lx5_dram_bank1, &offset);
-//     writeConfigBlock(offset);
+    //     m_configuration.getConfigOffset(offset_type_lx5_dram_bank1, &offset);
+    //     writeConfigBlock(offset);
 
-//     m_configuration.getConfigOffset(offset_type_lx5_dram_bank2, &offset);
-//     writeConfigBlock(offset);
+    //     m_configuration.getConfigOffset(offset_type_lx5_dram_bank2, &offset);
+    //     writeConfigBlock(offset);
 
-//     m_configuration.getConfigOffset(offset_type_lx5_dram_bank3, &offset);
-//     writeConfigBlock(offset);
+    //     m_configuration.getConfigOffset(offset_type_lx5_dram_bank3, &offset);
+    //     writeConfigBlock(offset);
 
-//     m_configuration.getConfigOffset(offset_type_seqram, &offset);
-//     writeConfigBlock(offset);
+    //     m_configuration.getConfigOffset(offset_type_seqram, &offset);
+    //     writeConfigBlock(offset);
 
-//     m_configuration.getConfigOffset(offset_type_mapram, &offset);
-//     writeConfigBlock(offset);
+    //     m_configuration.getConfigOffset(offset_type_mapram, &offset);
+    //     writeConfigBlock(offset);
 
-//     m_configuration.getConfigOffset(offset_type_wavram, &offset);
-//     writeConfigBlock(offset);
+    //     m_configuration.getConfigOffset(offset_type_wavram, &offset);
+    //     writeConfigBlock(offset);
 
-//     m_configuration.getConfigOffset(offset_type_misc_register, &offset);
-//     writeConfigBlock(offset);
+    //     m_configuration.getConfigOffset(offset_type_misc_register, &offset);
+    //     writeConfigBlock(offset);
 
-//     /* TODO : REMOVE ONCE WE CAN GET THIS FROM EFUSE */
-//     uint16_t DataPast = 0x00;
-//     uint16_t AddrPast = 0x00;
-//     char buf[1024];
+    //     /* TODO : REMOVE ONCE WE CAN GET THIS FROM EFUSE */
+    //     uint16_t DataPast = 0x00;
+    //     uint16_t AddrPast = 0x00;
+    //     char buf[1024];
 
-//     FILE *fp;
-//     fp = fopen("raw_calibration","r");
-//     uint32_t nSize = 25754;
-//     for (uint32_t i = 0; i < nSize; i++)
-//     {
-//          fread(buf,4 ,1, fp);
-//          buf[4]='\0';
-//          nAddr = (uint16_t)strtol(&buf[0], NULL, 16); 
+    //     FILE *fp;
+    //     fp = fopen("raw_calibration","r");
+    //     uint32_t nSize = 25754;
+    //     for (uint32_t i = 0; i < nSize; i++)
+    //     {
+    //          fread(buf,4 ,1, fp);
+    //          buf[4]='\0';
+    //          nAddr = (uint16_t)strtol(&buf[0], NULL, 16);
 
-//          fread(buf,1 ,1, fp);
-//          fread(buf,4 ,1, fp);
-//          buf[4]='\0';
-//          nData = (uint16_t)strtol(&buf[0], NULL, 16); 
-//          fread(buf,2 ,1, fp);
-//         if((nData == DataPast) && (AddrPast == nAddr))
-//         {
-//             uint16_t dummyRead[2u];
-//             dummyRead[0] = 0x112u;
-//             dummyRead[1] = 0x0u;
-//             Adsd3100Sensor::writeRegisters(&dummyRead[0], &dummyRead[1], 1);
-//         }
-//          Adsd3100Sensor::writeRegisters(&nAddr, &nData, 1);
+    //          fread(buf,1 ,1, fp);
+    //          fread(buf,4 ,1, fp);
+    //          buf[4]='\0';
+    //          nData = (uint16_t)strtol(&buf[0], NULL, 16);
+    //          fread(buf,2 ,1, fp);
+    //         if((nData == DataPast) && (AddrPast == nAddr))
+    //         {
+    //             uint16_t dummyRead[2u];
+    //             dummyRead[0] = 0x112u;
+    //             dummyRead[1] = 0x0u;
+    //             Adsd3100Sensor::writeRegisters(&dummyRead[0], &dummyRead[1], 1);
+    //         }
+    //          Adsd3100Sensor::writeRegisters(&nAddr, &nData, 1);
 
-//         DataPast = nData;
-//         AddrPast = nAddr;
-//     }
+    //         DataPast = nData;
+    //         AddrPast = nAddr;
+    //     }
 
-// #if ADI_DEBUG
-//     /* Verify data */
-//     fseek(fp, 0, SEEK_SET);
-//     for (uint32_t i = 0; i < nSize; i++)
-//     {
-//          uint16_t Data2;
-//          fread(buf,4 ,1, fp);
-//          buf[4]='\0';
-//          nAddr = (uint16_t)strtol(&buf[0], NULL, 16); 
+    // #if ADI_DEBUG
+    //     /* Verify data */
+    //     fseek(fp, 0, SEEK_SET);
+    //     for (uint32_t i = 0; i < nSize; i++)
+    //     {
+    //          uint16_t Data2;
+    //          fread(buf,4 ,1, fp);
+    //          buf[4]='\0';
+    //          nAddr = (uint16_t)strtol(&buf[0], NULL, 16);
 
-//          fread(buf,1 ,1, fp);
-//          fread(buf,4 ,1, fp);
-//          buf[4]='\0';
-//          Data2 = (uint16_t)strtol(&buf[0], NULL, 16); 
-//          fread(buf,2 ,1, fp);
+    //          fread(buf,1 ,1, fp);
+    //          fread(buf,4 ,1, fp);
+    //          buf[4]='\0';
+    //          Data2 = (uint16_t)strtol(&buf[0], NULL, 16);
+    //          fread(buf,2 ,1, fp);
 
-//          if(nAddr == 0x0)
-//          {
-//             uint16_t tmp = 4;
-//             Adsd3100Sensor::writeRegisters(&tmp, &Data2, 1);
-//          }
-//          else if(nAddr == 0x500)
-//          {
-//             Adsd3100Sensor::writeRegisters(&nAddr, &Data2, 1);
-//          }
-//          else if(nAddr == 0x502)
-//          {
-//             Adsd3100Sensor::writeRegisters(&nAddr, &Data2, 1);
-//          }
-//          else if(nAddr == 0xE04)
-//          {
-//             Adsd3100Sensor::writeRegisters(&nAddr, &Data2, 1);
-//          }
-//          else if(nAddr == 0xE06)
-//          {
-//             Adsd3100Sensor::writeRegisters(&nAddr, &Data2, 1);
-//          }
-//          else if(nAddr == 0x80C)
-//          {
-//             /* VDMA address read/write offset*/
-//             Adsd3100Sensor::writeRegisters(&nAddr, &Data2, 1);
-//          }
-//          else if(nAddr == 0x14)
-//          {
-//             /* Skip digital clock gating because this changes throughout */
-//             continue;
-//          }
-//          else if(nAddr == 0x132)
-//          {
-//             /* Skip latched writes */
-//             continue;
-//          }
-//          else if(nAddr == 0x126)
-//          {
-//             /* Skip latched writes */
-//             continue;
-//          }
-//          else if(nAddr == 0x528)
-//          {
-//             /* Changes throughout boot process */
-//             continue;
-//          }
-//          else if(nAddr == 0x4)
-//          {
-//             /* Skip setup writes for a read */
-//             continue;
-//          }
-//          else
-//          {
-//             if(nAddr == 0x2)
-//             {
-//                 /* Read instead of write*/
-//                 nAddr = 0x6;
-//             }
-//             if(nAddr == 0x504)
-//             {
-//                 /* Read instead of write*/
-//                 nAddr = 0x506;
-//             }
-//             if(nAddr == 0xE08)
-//             {
-//                 /* Read instead of write*/
-//                 nAddr = 0xE0A;
-//             }
-//             if(AddrPast == nAddr)
-//             {
-//                 uint16_t dummyRead[2];
-//                 dummyRead[0] = 0x112;
-//                 Adsd3100Sensor::readRegisters(&dummyRead[0], &dummyRead[1], 1);
-//             }
-//              Adsd3100Sensor::readRegisters(&nAddr, &DataPast, 1);
-//              if(DataPast != Data2)
-//              {
-//                 printf("FAILURE: Read Data2 %.4X != Expected data %.4X at address %.4X\n", DataPast, Data2, nAddr);
-//                 return Status::GENERIC_ERROR;
-//              }          
-//              DataPast = Data2;
-//              AddrPast = nAddr;
-//          }
-//     }
-// #endif
-//     fclose(fp);
+    //          if(nAddr == 0x0)
+    //          {
+    //             uint16_t tmp = 4;
+    //             Adsd3100Sensor::writeRegisters(&tmp, &Data2, 1);
+    //          }
+    //          else if(nAddr == 0x500)
+    //          {
+    //             Adsd3100Sensor::writeRegisters(&nAddr, &Data2, 1);
+    //          }
+    //          else if(nAddr == 0x502)
+    //          {
+    //             Adsd3100Sensor::writeRegisters(&nAddr, &Data2, 1);
+    //          }
+    //          else if(nAddr == 0xE04)
+    //          {
+    //             Adsd3100Sensor::writeRegisters(&nAddr, &Data2, 1);
+    //          }
+    //          else if(nAddr == 0xE06)
+    //          {
+    //             Adsd3100Sensor::writeRegisters(&nAddr, &Data2, 1);
+    //          }
+    //          else if(nAddr == 0x80C)
+    //          {
+    //             /* VDMA address read/write offset*/
+    //             Adsd3100Sensor::writeRegisters(&nAddr, &Data2, 1);
+    //          }
+    //          else if(nAddr == 0x14)
+    //          {
+    //             /* Skip digital clock gating because this changes throughout */
+    //             continue;
+    //          }
+    //          else if(nAddr == 0x132)
+    //          {
+    //             /* Skip latched writes */
+    //             continue;
+    //          }
+    //          else if(nAddr == 0x126)
+    //          {
+    //             /* Skip latched writes */
+    //             continue;
+    //          }
+    //          else if(nAddr == 0x528)
+    //          {
+    //             /* Changes throughout boot process */
+    //             continue;
+    //          }
+    //          else if(nAddr == 0x4)
+    //          {
+    //             /* Skip setup writes for a read */
+    //             continue;
+    //          }
+    //          else
+    //          {
+    //             if(nAddr == 0x2)
+    //             {
+    //                 /* Read instead of write*/
+    //                 nAddr = 0x6;
+    //             }
+    //             if(nAddr == 0x504)
+    //             {
+    //                 /* Read instead of write*/
+    //                 nAddr = 0x506;
+    //             }
+    //             if(nAddr == 0xE08)
+    //             {
+    //                 /* Read instead of write*/
+    //                 nAddr = 0xE0A;
+    //             }
+    //             if(AddrPast == nAddr)
+    //             {
+    //                 uint16_t dummyRead[2];
+    //                 dummyRead[0] = 0x112;
+    //                 Adsd3100Sensor::readRegisters(&dummyRead[0], &dummyRead[1], 1);
+    //             }
+    //              Adsd3100Sensor::readRegisters(&nAddr, &DataPast, 1);
+    //              if(DataPast != Data2)
+    //              {
+    //                 printf("FAILURE: Read Data2 %.4X != Expected data %.4X at address %.4X\n", DataPast, Data2, nAddr);
+    //                 return Status::GENERIC_ERROR;
+    //              }
+    //              DataPast = Data2;
+    //              AddrPast = nAddr;
+    //          }
+    //     }
+    // #endif
+    //     fclose(fp);
 
     return status;
 }
 
-void saveFrame(std::string id, char* data, size_t size){
+void saveFrame(std::string id, char *data, size_t size) {
     std::ofstream g("out" + id + ".bin", std::ios::binary);
     g.write(data, size);
     g.close();
 }
 
 aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
-     using namespace aditof;
+    using namespace aditof;
     struct v4l2_buffer buf[MAX_SUBFRAMES_COUNT];
     struct VideoDev *dev;
     Status status;
     unsigned int buf_data_len;
     uint8_t *pdata;
-    
+
     dev = &m_implData->videoDevs[0];
 
     for (int idx = 0; idx < m_capturesPerFrame; idx++) {
@@ -712,29 +716,29 @@ aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
         if (status != Status::OK) {
             return status;
         }
-        #ifdef SAVE_RAW_FRAMES
-	    saveFrame(std::to_string(idx), (char*)pdata, buf[idx].bytesused);
-        #endif
+#ifdef SAVE_RAW_FRAMES
+        saveFrame(std::to_string(idx), (char *)pdata, buf[idx].bytesused);
+#endif
 
-	    memcpy(buffer + (buf_data_len / sizeof(uint16_t)) * idx, pdata, buf[idx].bytesused);
+        memcpy(buffer + (buf_data_len / sizeof(uint16_t)) * idx, pdata,
+               buf[idx].bytesused);
 
         status = enqueueInternalBufferPrivate(buf[idx], dev);
         if (status != Status::OK) {
             return status;
         }
     }
-    
-    #ifdef SAVE_RAW_FRAMES
-    saveFrame("_full_raw", (char*)buffer, buf_data_len * m_capturesPerFrame);
-    #endif
-    
+
+#ifdef SAVE_RAW_FRAMES
+    saveFrame("_full_raw", (char *)buffer, buf_data_len * m_capturesPerFrame);
+#endif
+
     return status;
 }
 
-
-
 aditof::Status Adsd3100Sensor::readRegisters(const uint16_t *address,
-                                                uint16_t *data, size_t length, bool burst /*= true*/) {
+                                             uint16_t *data, size_t length,
+                                             bool burst /*= true*/) {
     using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
     Status status = Status::OK;
@@ -759,22 +763,24 @@ aditof::Status Adsd3100Sensor::readRegisters(const uint16_t *address,
 
     buf[0] = burst;
     buf[1] = (uint16_t)length;
-	memcpy(&buf[length + 2], address, burst ? sizeof(uint16_t) : length * sizeof(uint16_t));
+    memcpy(&buf[length + 2], address,
+           burst ? sizeof(uint16_t) : length * sizeof(uint16_t));
     extCtrl.p_u16 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Reading ADSD3100 error "
-                         << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
-        }
-        memcpy(data, extCtrl.p_u16 + 2, length * sizeof(uint16_t));
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return Status::GENERIC_ERROR;
+    }
+    memcpy(data, extCtrl.p_u16 + 2, length * sizeof(uint16_t));
 
     return status;
 }
 
 aditof::Status Adsd3100Sensor::writeRegisters(const uint16_t *address,
-                                                 const uint16_t *data,
-                                                 size_t length, bool burst /*= true*/) {
+                                              const uint16_t *data,
+                                              size_t length,
+                                              bool burst /*= true*/) {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -800,13 +806,16 @@ aditof::Status Adsd3100Sensor::writeRegisters(const uint16_t *address,
 
     buf[0] = burst;
     buf[1] = (uint16_t)length;
-    memcpy(&buf[2], data, (length > 32768) ? (32768 * sizeof(uint16_t)) : length * sizeof(uint16_t));
-    memcpy(&buf[length + 2], address, burst ? sizeof(uint16_t) : length * sizeof(uint16_t));
+    memcpy(&buf[2], data,
+           (length > 32768) ? (32768 * sizeof(uint16_t))
+                            : length * sizeof(uint16_t));
+    memcpy(&buf[length + 2], address,
+           burst ? sizeof(uint16_t) : length * sizeof(uint16_t));
     buf[length + 2] |= 0x8000;
     extCtrl.p_u16 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Writing ADSD3100 error " 
+        LOG(WARNING) << "Writing ADSD3100 error "
                      << "errno: " << errno << " error: " << strerror(errno);
         return Status::GENERIC_ERROR;
     }
@@ -814,14 +823,13 @@ aditof::Status Adsd3100Sensor::writeRegisters(const uint16_t *address,
     return status;
 }
 
-aditof::Status Adsd3100Sensor::getAvailableControls(std::vector<std::string> &controls) const
-{
+aditof::Status
+Adsd3100Sensor::getAvailableControls(std::vector<std::string> &controls) const {
     return aditof::Status::OK;
 }
 
 aditof::Status Adsd3100Sensor::setControl(const std::string &control,
-                               const std::string &value)
-{
+                                          const std::string &value) {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -832,14 +840,14 @@ aditof::Status Adsd3100Sensor::setControl(const std::string &control,
 
     struct VideoDev *dev = &m_implData->videoDevs[0];
 
-    if(control == "fps") {
+    if (control == "fps") {
         struct v4l2_streamparm fpsControl;
         memset(&fpsControl, 0, sizeof(struct v4l2_streamparm));
-    
+
         fpsControl.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         fpsControl.parm.capture.timeperframe.numerator = 1;
         fpsControl.parm.capture.timeperframe.denominator = std::stoi(value);
-    
+
         if (xioctl(dev->fd, VIDIOC_S_PARM, &fpsControl) == -1) {
             LOG(WARNING) << "Failed to set control: " << control << " "
                          << "errno: " << errno << " error: " << strerror(errno);
@@ -851,8 +859,7 @@ aditof::Status Adsd3100Sensor::setControl(const std::string &control,
 }
 
 aditof::Status Adsd3100Sensor::getControl(const std::string &control,
-                               std::string &value) const
-{
+                                          std::string &value) const {
     return aditof::Status::UNAVAILABLE;
 }
 
@@ -872,7 +879,7 @@ aditof::Status Adsd3100Sensor::getName(std::string &name) const {
     return aditof::Status::OK;
 }
 
-aditof::Status Adsd3100Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data){
+aditof::Status Adsd3100Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data) {
     LOG(INFO) << "Adsd3500 is not connected to this sensor type!";
     return aditof::Status::UNAVAILABLE;
 }
@@ -882,26 +889,31 @@ aditof::Status Adsd3100Sensor::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
     return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status Adsd3100Sensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) {
+aditof::Status Adsd3100Sensor::adsd3500_read_payload_cmd(uint32_t cmd,
+                                                         uint8_t *readback_data,
+                                                         uint16_t payload_len) {
     LOG(INFO) << "Adsd3500 is not connected to this sensor type!";
     return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status Adsd3100Sensor::adsd3500_read_payload(uint8_t* payload, uint16_t payload_len) {
+aditof::Status Adsd3100Sensor::adsd3500_read_payload(uint8_t *payload,
+                                                     uint16_t payload_len) {
     LOG(INFO) << "Adsd3500 is not connected to this sensor type!";
     return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status Adsd3100Sensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
+aditof::Status
+Adsd3100Sensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload,
+                                           uint16_t payload_len) {
     LOG(INFO) << "Adsd3500 is not connected to this sensor type!";
     return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status Adsd3100Sensor::adsd3500_write_payload(uint8_t* payload, uint16_t payload_len) {
+aditof::Status Adsd3100Sensor::adsd3500_write_payload(uint8_t *payload,
+                                                      uint16_t payload_len) {
     LOG(INFO) << "Adsd3500 is not connected to this sensor type!";
     return aditof::Status::UNAVAILABLE;
 }
-
 
 aditof::Status Adsd3100Sensor::waitForBufferPrivate(struct VideoDev *dev) {
     fd_set fds;
@@ -1023,17 +1035,17 @@ aditof::Status Adsd3100Sensor::enqueueInternalBuffer(struct v4l2_buffer &buf) {
     return enqueueInternalBufferPrivate(buf);
 }
 
-#define  DEFAULT_CONFIG_FILE_NAME "TODO"
-aditof::Status Adsd3100Sensor::writeConfigBlock(const uint32_t offset){
+#define DEFAULT_CONFIG_FILE_NAME "TODO"
+aditof::Status Adsd3100Sensor::writeConfigBlock(const uint32_t offset) {
     FILE *fid;
     ConfigurationData configuration_data;
     static struct v4l2_ext_control extCtrl;
     static struct v4l2_ext_controls extCtrls;
     static uint16_t tempBuf[2];
-    
+
     /* Open configuration file */
     fid = fopen(DEFAULT_CONFIG_FILE_NAME, "r");
-    
+
     fseek(fid, offset, SEEK_SET);
 
     /* Read blocks*/
@@ -1044,42 +1056,37 @@ aditof::Status Adsd3100Sensor::writeConfigBlock(const uint32_t offset){
     fread(&configuration_data.burst_num, sizeof(uint16_t), 1u, fid);
     fread(configuration_data.burst_setup, sizeof(uint16_t), 4u, fid);
     /* Write setup values */
-    for(uint32_t i = 0u; i < configuration_data.burst_num*2u; i+=2u)
-    {
-        Adsd3100Sensor::writeRegisters(&configuration_data.burst_setup[i], &configuration_data.burst_setup[i+1u], 1);
+    for (uint32_t i = 0u; i < configuration_data.burst_num * 2u; i += 2u) {
+        Adsd3100Sensor::writeRegisters(&configuration_data.burst_setup[i],
+                                       &configuration_data.burst_setup[i + 1u],
+                                       1);
     }
     fread(&configuration_data.start_address, sizeof(uint16_t), 1u, fid);
     fread(&configuration_data.rsvd, sizeof(uint16_t), 1u, fid);
     fread(&configuration_data.values, sizeof(uint32_t), 1u, fid);
     static uint16_t Data[16400u];
-    if(configuration_data.burst_layout == 1)
-    {
+    if (configuration_data.burst_layout == 1) {
         /* Burst Write */
         fread(Data, sizeof(uint16_t), configuration_data.values, fid);
-        for(uint32_t i = 0u; i < configuration_data.values; i++)
-        {
-            Adsd3100Sensor::writeRegisters(&configuration_data.start_address, &Data[i], 1);
-            
+        for (uint32_t i = 0u; i < configuration_data.values; i++) {
+            Adsd3100Sensor::writeRegisters(&configuration_data.start_address,
+                                           &Data[i], 1);
+
             tempBuf[0] = 0x112u;
             tempBuf[1] = 0xABCD;
-            Adsd3100Sensor::writeRegisters(&tempBuf[0], &tempBuf[1], 1);  
+            Adsd3100Sensor::writeRegisters(&tempBuf[0], &tempBuf[1], 1);
         }
-    }
-    else
-    {
+    } else {
         uint16_t nAddrLast = 0;
         /* Address data pairs */
-        for(uint32_t i = 0u; i < configuration_data.values; i+=2)
-        {
+        for (uint32_t i = 0u; i < configuration_data.values; i += 2) {
             uint16_t nAddr;
             uint16_t nData;
-            
+
             fread(&nAddr, sizeof(uint16_t), 1u, fid);
             fread(&nData, sizeof(uint16_t), 1u, fid);
-            
 
-            if(nAddrLast == nAddr)
-            {
+            if (nAddrLast == nAddr) {
                 tempBuf[0] = 0x112u;
                 tempBuf[1] = 0xABCD;
                 Adsd3100Sensor::writeRegisters(&tempBuf[0], &tempBuf[1], 1);
@@ -1087,15 +1094,14 @@ aditof::Status Adsd3100Sensor::writeConfigBlock(const uint32_t offset){
             tempBuf[0] = nAddr;
             tempBuf[1] = nData;
             Adsd3100Sensor::writeRegisters(&tempBuf[0], &tempBuf[1], 1);
-            
+
             nAddrLast = nAddr;
-        }  
+        }
     }
 
     fclose(fid);
 
 #if ADI_DEBUG
-
 
     /* Verify writes */
     uint16_t DataPast = 0;
@@ -1113,290 +1119,205 @@ aditof::Status Adsd3100Sensor::writeConfigBlock(const uint32_t offset){
     fread(&configuration_data.burst_num, sizeof(uint16_t), 1u, fid);
     fread(configuration_data.burst_setup, sizeof(uint16_t), 4u, fid);
     /* read setup values */
-    for(uint32_t i = 0u; i < configuration_data.burst_num*2u; i+=2u)
-    {
-         nAddr = configuration_data.burst_setup[i];
-         DataNew = configuration_data.burst_setup[i+1u];
-         if(nAddr == 0x0)
-         {
+    for (uint32_t i = 0u; i < configuration_data.burst_num * 2u; i += 2u) {
+        nAddr = configuration_data.burst_setup[i];
+        DataNew = configuration_data.burst_setup[i + 1u];
+        if (nAddr == 0x0) {
             uint16_t tmp = 4;
             Adsd3100Sensor::writeRegisters(&tmp, &DataNew, 1);
-         }
-         else if(nAddr == 0x500)
-         {
+        } else if (nAddr == 0x500) {
             Adsd3100Sensor::writeRegisters(&nAddr, &DataNew, 1);
-         }
-         else if(nAddr == 0x502)
-         {
+        } else if (nAddr == 0x502) {
             Adsd3100Sensor::writeRegisters(&nAddr, &DataNew, 1);
-         }
-         else if(nAddr == 0xE04)
-         {
+        } else if (nAddr == 0xE04) {
             Adsd3100Sensor::writeRegisters(&nAddr, &DataNew, 1);
-         }
-         else if(nAddr == 0xE06)
-         {
+        } else if (nAddr == 0xE06) {
             Adsd3100Sensor::writeRegisters(&nAddr, &DataNew, 1);
-         }
-         else if(nAddr == 0x80C)
-         {
+        } else if (nAddr == 0x80C) {
             /* VDMA address read/write offset*/
             Adsd3100Sensor::writeRegisters(&nAddr, &DataNew, 1);
-         }
-         else if(nAddr == 0x14)
-         {
+        } else if (nAddr == 0x14) {
             /* Update digital clock gating because this changes throughout */
             Adsd3100Sensor::writeRegisters(&nAddr, &DataNew, 1);
-         }
-         else if(nAddr == 0x132)
-         {
+        } else if (nAddr == 0x132) {
             /* Skip latched writes */
             continue;
-         }
-         else if(nAddr == 0x126)
-         {
+        } else if (nAddr == 0x126) {
             /* Skip latched writes */
             continue;
-         }
-         else if(nAddr == 0x528)
-         {
+        } else if (nAddr == 0x528) {
             /* Changes throughout boot process */
             continue;
-         }
-         else if(nAddr == 0x4)
-         {
+        } else if (nAddr == 0x4) {
             /* Skip setup writes for a read */
             continue;
-         }
-         else
-         {
-            if(nAddr == 0x2)
-            {
+        } else {
+            if (nAddr == 0x2) {
                 /* Read instead of write*/
                 nAddr = 0x6;
             }
-            if(nAddr == 0x504)
-            {
+            if (nAddr == 0x504) {
                 /* Read instead of write*/
                 nAddr = 0x506;
             }
-            if(nAddr == 0xE08)
-            {
+            if (nAddr == 0xE08) {
                 /* Read instead of write*/
                 nAddr = 0xE0A;
             }
-            if(AddrPast == nAddr)
-            {
+            if (AddrPast == nAddr) {
                 uint16_t dummyRead[2];
                 dummyRead[0] = 0x112;
                 Adsd3100Sensor::readRegisters(&dummyRead[0], &dummyRead[1], 1);
             }
-             Adsd3100Sensor::readRegisters(&nAddr, &DataPast, 1);
-             if(DataPast != DataNew)
-             {
-                printf("FAILURE: Read Data %.4X != Expected data %.4X at address %.4X\n", DataPast, DataNew, nAddr);
+            Adsd3100Sensor::readRegisters(&nAddr, &DataPast, 1);
+            if (DataPast != DataNew) {
+                printf("FAILURE: Read Data %.4X != Expected data %.4X at "
+                       "address %.4X\n",
+                       DataPast, DataNew, nAddr);
                 return aditof::Status::GENERIC_ERROR;
-             }          
-             DataPast = DataNew;
-             AddrPast = nAddr;
-         }
+            }
+            DataPast = DataNew;
+            AddrPast = nAddr;
+        }
     }
     fread(&configuration_data.start_address, sizeof(uint16_t), 1u, fid);
     fread(&configuration_data.rsvd, sizeof(uint16_t), 1u, fid);
     fread(&configuration_data.values, sizeof(uint32_t), 1u, fid);
-    if(configuration_data.burst_layout == 1)
-    {
+    if (configuration_data.burst_layout == 1) {
         /* Burst Write */
         fread(Data, sizeof(uint16_t), configuration_data.values, fid);
-        for(uint32_t i = 0u; i < configuration_data.values; i++)
-        {
-             nAddr = configuration_data.start_address; 
-             DataNew = Data[i];
-             if(nAddr == 0x0)
-             {
+        for (uint32_t i = 0u; i < configuration_data.values; i++) {
+            nAddr = configuration_data.start_address;
+            DataNew = Data[i];
+            if (nAddr == 0x0) {
                 uint16_t tmp = 4;
                 Adsd3100Sensor::writeRegisters(&tmp, &DataNew, 1);
-             }
-             else if(nAddr == 0x500)
-             {
+            } else if (nAddr == 0x500) {
                 Adsd3100Sensor::writeRegisters(&nAddr, &DataNew, 1);
-             }
-             else if(nAddr == 0x502)
-             {
+            } else if (nAddr == 0x502) {
                 Adsd3100Sensor::writeRegisters(&nAddr, &DataNew, 1);
-             }
-             else if(nAddr == 0xE04)
-             {
+            } else if (nAddr == 0xE04) {
                 Adsd3100Sensor::writeRegisters(&nAddr, &DataNew, 1);
-             }
-             else if(nAddr == 0xE06)
-             {
+            } else if (nAddr == 0xE06) {
                 Adsd3100Sensor::writeRegisters(&nAddr, &DataNew, 1);
-             }
-             else if(nAddr == 0x80C)
-             {
+            } else if (nAddr == 0x80C) {
                 /* VDMA address read/write offset*/
                 Adsd3100Sensor::writeRegisters(&nAddr, &DataNew, 1);
-             }
-             else if(nAddr == 0x14)
-             {
+            } else if (nAddr == 0x14) {
                 /* Update digital clock gating because this changes throughout */
                 Adsd3100Sensor::writeRegisters(&nAddr, &DataNew, 1);
-             }
-             else if(nAddr == 0x132)
-             {
+            } else if (nAddr == 0x132) {
                 /* Skip latched writes */
                 continue;
-             }
-             else if(nAddr == 0x126)
-             {
+            } else if (nAddr == 0x126) {
                 /* Skip latched writes */
                 continue;
-             }
-             else if(nAddr == 0x528)
-             {
+            } else if (nAddr == 0x528) {
                 /* Changes throughout boot process */
                 continue;
-             }
-             else if(nAddr == 0x4)
-             {
+            } else if (nAddr == 0x4) {
                 /* Skip setup writes for a read */
                 continue;
-             }
-             else
-             {
-                if(nAddr == 0x2)
-                {
+            } else {
+                if (nAddr == 0x2) {
                     /* Read instead of write*/
                     nAddr = 0x6;
                 }
-                if(nAddr == 0x504)
-                {
+                if (nAddr == 0x504) {
                     /* Read instead of write*/
                     nAddr = 0x506;
                 }
-                if(nAddr == 0xE08)
-                {
+                if (nAddr == 0xE08) {
                     /* Read instead of write*/
                     nAddr = 0xE0A;
                 }
-                if(AddrPast == nAddr)
-                {
+                if (AddrPast == nAddr) {
                     uint16_t dummyRead[2];
                     dummyRead[0] = 0x112;
-                    Adsd3100Sensor::readRegisters(&dummyRead[0], &dummyRead[1], 1);
+                    Adsd3100Sensor::readRegisters(&dummyRead[0], &dummyRead[1],
+                                                  1);
                 }
-                 Adsd3100Sensor::readRegisters(&nAddr, &DataPast, 1);
-                 if(DataPast != DataNew)
-                 {
-                    printf("FAILURE: Read Data %.4X != Expected data %.4X at address %.4X\n", DataPast, DataNew, nAddr);
+                Adsd3100Sensor::readRegisters(&nAddr, &DataPast, 1);
+                if (DataPast != DataNew) {
+                    printf("FAILURE: Read Data %.4X != Expected data %.4X at "
+                           "address %.4X\n",
+                           DataPast, DataNew, nAddr);
                     return aditof::Status::GENERIC_ERROR;
-                 }          
-                 DataPast = DataNew;
-                 AddrPast = nAddr;
-             }
+                }
+                DataPast = DataNew;
+                AddrPast = nAddr;
+            }
         }
-    }
-    else
-    {
+    } else {
         /* Address data pairs */
-        for(uint32_t i = 0u; i < configuration_data.values; i+=2)
-        {
+        for (uint32_t i = 0u; i < configuration_data.values; i += 2) {
             fread(&nAddr, sizeof(uint16_t), 1u, fid);
             fread(&DataNew, sizeof(uint16_t), 1u, fid);
-            
-             if(nAddr == 0x0)
-             {
+
+            if (nAddr == 0x0) {
                 uint16_t tmp = 4;
                 Adsd3100Sensor::writeRegisters(&tmp, &DataNew, 1);
-             }
-             else if(nAddr == 0x500)
-             {
+            } else if (nAddr == 0x500) {
                 Adsd3100Sensor::writeRegisters(&nAddr, &DataNew, 1);
-             }
-             else if(nAddr == 0x502)
-             {
+            } else if (nAddr == 0x502) {
                 Adsd3100Sensor::writeRegisters(&nAddr, &DataNew, 1);
-             }
-             else if(nAddr == 0xE04)
-             {
+            } else if (nAddr == 0xE04) {
                 Adsd3100Sensor::writeRegisters(&nAddr, &DataNew, 1);
-             }
-             else if(nAddr == 0xE06)
-             {
+            } else if (nAddr == 0xE06) {
                 Adsd3100Sensor::writeRegisters(&nAddr, &DataNew, 1);
-             }
-             else if(nAddr == 0x80C)
-             {
+            } else if (nAddr == 0x80C) {
                 /* VDMA address read/write offset*/
                 Adsd3100Sensor::writeRegisters(&nAddr, &DataNew, 1);
-             }
-             else if(nAddr == 0x14)
-             {
+            } else if (nAddr == 0x14) {
                 /* Update digital clock gating because this changes throughout */
                 Adsd3100Sensor::writeRegisters(&nAddr, &DataNew, 1);
-             }
-             else if(nAddr == 0x132)
-             {
+            } else if (nAddr == 0x132) {
                 /* Skip latched writes */
                 continue;
-             }
-             else if(nAddr == 0x126)
-             {
+            } else if (nAddr == 0x126) {
                 /* Skip latched writes */
                 continue;
-             }
-             else if(nAddr == 0x528)
-             {
+            } else if (nAddr == 0x528) {
                 /* Changes throughout boot process */
                 continue;
-             }
-             else if(nAddr == 0x4)
-             {
+            } else if (nAddr == 0x4) {
                 /* Skip setup writes for a read */
                 continue;
-             }
-             else
-             {
-                if(nAddr == 0x2)
-                {
+            } else {
+                if (nAddr == 0x2) {
                     /* Read instead of write*/
                     nAddr = 0x6;
                 }
-                if(nAddr == 0x504)
-                {
+                if (nAddr == 0x504) {
                     /* Read instead of write*/
                     nAddr = 0x506;
                 }
-                if(nAddr == 0xE08)
-                {
+                if (nAddr == 0xE08) {
                     /* Read instead of write*/
                     nAddr = 0xE0A;
                 }
-                if(AddrPast == nAddr)
-                {
+                if (AddrPast == nAddr) {
                     uint16_t dummyRead[2];
                     dummyRead[0] = 0x112;
-                    Adsd3100Sensor::readRegisters(&dummyRead[0], &dummyRead[1], 1);
+                    Adsd3100Sensor::readRegisters(&dummyRead[0], &dummyRead[1],
+                                                  1);
                 }
-                 Adsd3100Sensor::readRegisters(&nAddr, &DataPast, 1);
-                 if(DataPast != DataNew)
-                 {
-                    printf("FAILURE: Read Data %.4X != Expected data %.4X at address %.4X\n", DataPast, DataNew, nAddr);
+                Adsd3100Sensor::readRegisters(&nAddr, &DataPast, 1);
+                if (DataPast != DataNew) {
+                    printf("FAILURE: Read Data %.4X != Expected data %.4X at "
+                           "address %.4X\n",
+                           DataPast, DataNew, nAddr);
                     return aditof::Status::GENERIC_ERROR;
-                 }          
-                 DataPast = DataNew;
-                 AddrPast = nAddr;
-             }
-        }  
+                }
+                DataPast = DataNew;
+                AddrPast = nAddr;
+            }
+        }
     }
 
     fclose(fid);
 #endif
-    return aditof::Status::OK;   
+    return aditof::Status::OK;
 }
 
-
-std::string Adsd3100Sensor::getDriverPath(){
-    return m_driverPath;
-}
+std::string Adsd3100Sensor::getDriverPath() { return m_driverPath; }
