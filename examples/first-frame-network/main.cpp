@@ -79,6 +79,13 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+    aditof::CameraDetails cameraDetails;
+	camera->getDetails(cameraDetails);
+
+	LOG(INFO) << "SD card image version: " << cameraDetails.sdCardImageVersion;
+	LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
+	LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
+
     std::vector<std::string> frameTypes;
     camera->getAvailableFrameTypes(frameTypes);
     if (frameTypes.empty()) {
