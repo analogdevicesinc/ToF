@@ -51,7 +51,8 @@ void UsbUtils::protoMsgToDepthSensorFrameTypes(
         depthSensorFrameType.width = frameTypeMsg.width();
         depthSensorFrameType.height = frameTypeMsg.height();
 
-        for (const auto &frameContentMsg : frameTypeMsg.depthsensorframecontent()) {
+        for (const auto &frameContentMsg :
+             frameTypeMsg.depthsensorframecontent()) {
             DepthSensorFrameContent depthSensorFrameContent;
 
             depthSensorFrameContent.width = frameContentMsg.width();

@@ -21,17 +21,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+#include <ccb.h>
 #include <cstdio>
 #include <fstream>
-#include <iomanip>
-#include <ccb.h>
 #include <glog/logging.h>
+#include <iomanip>
 
-#include "configuration.h"
 #include "aditof_common.h"
-#include "temporary_filename.h"
-#include "module_memory.h"
+#include "configuration.h"
 #include "crc.h"
+#include "module_memory.h"
+#include "temporary_filename.h"
 
 namespace aditof {
 
@@ -42,27 +42,34 @@ std::string escapePathBackslash(const std::string &path) {
     while (std::string::npos != (index = pathstring.find("\\", index + 4))) {
         pathstring.insert(index, "\\");
     }
-	return pathstring;
+    return pathstring;
 }
 
-bool ModuleMemory::verifyChunkHeader(const TOF_ChunkHeader_t *const pChunkHeader) {
+bool ModuleMemory::verifyChunkHeader(
+    const TOF_ChunkHeader_t *const pChunkHeader) {
 
     if (NULL == pChunkHeader) {
         return (false);
     }
 
-    LOG(INFO) << "Reading chunk id: " << std::hex << (int)pChunkHeader->revision.chunkid << (int)pChunkHeader->revision.chunktype;
-    LOG(INFO) << "Reading chunk revision: " << (int)pChunkHeader->revision.major << "." << (int)pChunkHeader->revision.minor;
+    LOG(INFO) << "Reading chunk id: " << std::hex
+              << (int)pChunkHeader->revision.chunkid
+              << (int)pChunkHeader->revision.chunktype;
+    LOG(INFO) << "Reading chunk revision: " << (int)pChunkHeader->revision.major
+              << "." << (int)pChunkHeader->revision.minor;
 
     // version 1.0 chunk header
-    if (pChunkHeader->revision.major == 1 && pChunkHeader->revision.minor == 0) {
+    if (pChunkHeader->revision.major == 1 &&
+        pChunkHeader->revision.minor == 0) {
 
         if (pChunkHeader->headerSizeBytes != sizeof(TOF_ChunkHeader_t)) {
             LOG(WARNING) << "Module data header invalid size";
             return (false);
         }
         // Check chunk header CRC by mirroring bytes
-        if (crcFast(reinterpret_cast<const uint8_t *>(pChunkHeader), (pChunkHeader->headerSizeBytes - sizeof(uint32_t)), true) != // Hdr size - CRC in bytes
+        if (crcFast(reinterpret_cast<const uint8_t *>(pChunkHeader),
+                    (pChunkHeader->headerSizeBytes - sizeof(uint32_t)),
+                    true) != // Hdr size - CRC in bytes
             pChunkHeader->chunkHeaderCRC) {
             //Use non adsd3500 CRC calculation
             if (crcFast(reinterpret_cast<const uint8_t *>(pChunkHeader),
@@ -81,15 +88,18 @@ bool ModuleMemory::verifyChunkHeader(const TOF_ChunkHeader_t *const pChunkHeader
     return (true);
 }
 
-Status ModuleMemory::readChunkHeader( uint8_t *const buffer, int32_t chunkDataAddr) {
+Status ModuleMemory::readChunkHeader(uint8_t *const buffer,
+                                     int32_t chunkDataAddr) {
 
-    Status status = m_eeprom->read(chunkDataAddr, buffer, sizeof(TOF_ChunkHeader_t));
+    Status status =
+        m_eeprom->read(chunkDataAddr, buffer, sizeof(TOF_ChunkHeader_t));
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to read module memory";
         return Status::GENERIC_ERROR;
     }
 
-    TOF_ChunkHeader_t *pChunkHeader = reinterpret_cast<TOF_ChunkHeader_t *>(buffer);
+    TOF_ChunkHeader_t *pChunkHeader =
+        reinterpret_cast<TOF_ChunkHeader_t *>(buffer);
     if (!verifyChunkHeader(pChunkHeader)) {
         LOG(WARNING) << "Invalid module memory chunk header";
         return Status::GENERIC_ERROR;
@@ -98,7 +108,8 @@ Status ModuleMemory::readChunkHeader( uint8_t *const buffer, int32_t chunkDataAd
     return Status::OK;
 }
 
-std::string ModuleMemory::writeTempJSON(const std::string ccbFilename, const std::string cfgFilename) {
+std::string ModuleMemory::writeTempJSON(const std::string ccbFilename,
+                                        const std::string cfgFilename) {
 
     std::string tempFileName = getTempFilename(std::string("adi_tof_cfgjson"));
 
@@ -110,7 +121,7 @@ std::string ModuleMemory::writeTempJSON(const std::string ccbFilename, const std
     }
 
     std::stringstream ss;
-    ss << "{" << std::endl;  
+    ss << "{" << std::endl;
     /***************************************************/
     // Create JSON file when both CFG and CCB exist
     if (!ccbFilename.empty() && !cfgFilename.empty()) {
@@ -144,9 +155,12 @@ std::string ModuleMemory::writeTempJSON(const std::string ccbFilename, const std
     return tempFileName;
 }
 
-std::string ModuleMemory::writeToTempFile(const uint8_t *const dataBuffer, const uint32_t length, std::string fileTag) {
+std::string ModuleMemory::writeToTempFile(const uint8_t *const dataBuffer,
+                                          const uint32_t length,
+                                          std::string fileTag) {
 
-    std::string tempFileName = getTempFilename(std::string("adi_tof_") + fileTag);
+    std::string tempFileName =
+        getTempFilename(std::string("adi_tof_") + fileTag);
 
     FILE *file = NULL;
     fopen_s(&file, tempFileName.c_str(), "wb");
@@ -156,12 +170,14 @@ std::string ModuleMemory::writeToTempFile(const uint8_t *const dataBuffer, const
     }
 
     LOG(INFO) << "Writing temporary " << fileTag << " file : " << tempFileName;
-    fwrite(reinterpret_cast<const void *>(dataBuffer), sizeof(char), length, file);
+    fwrite(reinterpret_cast<const void *>(dataBuffer), sizeof(char), length,
+           file);
     fclose(file);
     return tempFileName;
 }
 
-uint32_t ModuleMemory::loadfileData(const std::string filename, uint8_t **dataBufferOut) {
+uint32_t ModuleMemory::loadfileData(const std::string filename,
+                                    uint8_t **dataBufferOut) {
 
     FILE *file = NULL;
     uint8_t *dataBuffer = NULL;
@@ -197,7 +213,8 @@ uint32_t ModuleMemory::loadfileData(const std::string filename, uint8_t **dataBu
     return size;
 }
 
-std::string ModuleMemory::writeTempCCB(const uint8_t *const ccbFileData, const uint32_t length) {
+std::string ModuleMemory::writeTempCCB(const uint8_t *const ccbFileData,
+                                       const uint32_t length) {
 
     if (NULL == ccbFileData || 0 == length) {
         return (std::string());
@@ -209,67 +226,84 @@ std::string ModuleMemory::writeTempCCB(const uint8_t *const ccbFileData, const u
         return std::string();
     }
 
-    LOG(INFO) << "CCB file version: " << std::hex << std::setfill('0') << std::setw(2) << std::right << ccbHeader->CalibFileVersion;
-    LOG(INFO) << "CCB calibration version: " << std::hex << std::setfill('0') << std::setw(2) << std::right << ccbHeader->CalibVersion;
+    LOG(INFO) << "CCB file version: " << std::hex << std::setfill('0')
+              << std::setw(2) << std::right << ccbHeader->CalibFileVersion;
+    LOG(INFO) << "CCB calibration version: " << std::hex << std::setfill('0')
+              << std::setw(2) << std::right << ccbHeader->CalibVersion;
 
-    const struct CAL_HEADER_BLOCK_V3 *header_block = ccb_read_header_block(&ccb_data);
+    const struct CAL_HEADER_BLOCK_V3 *header_block =
+        ccb_read_header_block(&ccb_data);
     if (NULL == header_block) {
         return std::string();
     }
 
-    LOG(INFO) << "CCB file date: " << header_block->BlockInfo.CalibrationYear << "-" << header_block->BlockInfo.CalibrationMonth << "-"
+    LOG(INFO) << "CCB file date: " << header_block->BlockInfo.CalibrationYear
+              << "-" << header_block->BlockInfo.CalibrationMonth << "-"
               << header_block->BlockInfo.CalibrationDay;
     LOG(INFO) << "CCB chip ID: " << std::hex << header_block->ChipID;
-    LOG(INFO) << "CCB serial number: " << std::hex << header_block->SerialNumber;
+    LOG(INFO) << "CCB serial number: " << std::hex
+              << header_block->SerialNumber;
 
     m_serialNumber = header_block->SerialNumber;
 
     return writeToTempFile(ccbFileData, length, "ccb");
 }
 
-std::string ModuleMemory::writeTempCFG(const uint8_t *const cfgFileData, const uint32_t length) {
+std::string ModuleMemory::writeTempCFG(const uint8_t *const cfgFileData,
+                                       const uint32_t length) {
 
     if (NULL == cfgFileData || length < sizeof(ccb_data_t)) {
         return (std::string());
     }
 
     const file_header_struct *cfgfile = (const file_header_struct *)cfgFileData;
-    std::string fileSignature(reinterpret_cast<const char *>(cfgfile->FileSignature));
+    std::string fileSignature(
+        reinterpret_cast<const char *>(cfgfile->FileSignature));
     if (fileSignature != "CFG") {
         return (std::string());
     }
 
     LOG(INFO) << "CFG file version: " << cfgfile->header.FileFormatVersion;
-    LOG(INFO) << "CFG configuration version: " << cfgfile->header.ConfigVerMajor << "." << cfgfile->header.ConfigVerMinor;
+    LOG(INFO) << "CFG configuration version: " << cfgfile->header.ConfigVerMajor
+              << "." << cfgfile->header.ConfigVerMinor;
     LOG(INFO) << "CFG chip ID: " << std::hex << cfgfile->header.ChipId;
     LOG(INFO) << "CFG system ID: " << std::hex << cfgfile->header.SystemId;
 
     return writeToTempFile(cfgFileData, length, "cfg");
 }
 
-Status ModuleMemory::readLegacyModuleCCB( std::string &tempJsonFile, TOF_ModuleFiles_t &tempFiles, std::string &ccbSerialNumber) {
+Status ModuleMemory::readLegacyModuleCCB(std::string &tempJsonFile,
+                                         TOF_ModuleFiles_t &tempFiles,
+                                         std::string &ccbSerialNumber) {
     // legacy module ccb data offset 1 sector
-    uint32_t chunkDataAddr = 4096; 
+    uint32_t chunkDataAddr = 4096;
 
     // Read file header
     uint8_t memoryBuffer[sizeof(CAL_FILE_HEADER_V1)] = {0};
     CAL_FILE_HEADER_V1 *fileheader = (CAL_FILE_HEADER_V1 *)memoryBuffer;
-    Status status = m_eeprom->read(chunkDataAddr, memoryBuffer, sizeof(CAL_FILE_HEADER_V1));
+    Status status =
+        m_eeprom->read(chunkDataAddr, memoryBuffer, sizeof(CAL_FILE_HEADER_V1));
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to read module memory";
         return Status::GENERIC_ERROR;
     }
-    
-    if (fileheader->CalibFileVersion != 0x0303 || fileheader->CalibVersion != 0x0301) {
+
+    if (fileheader->CalibFileVersion != 0x0303 ||
+        fileheader->CalibVersion != 0x0301) {
         LOG(WARNING) << "Invalid CCB header";
-        return Status::GENERIC_ERROR;        
+        return Status::GENERIC_ERROR;
     }
 
-    LOG(INFO) << "CCB file version: " << std::hex << std::setfill('0') << std::setw(2) << std::right << fileheader->CalibFileVersion;
-    LOG(INFO) << "CCB calibration version: " << std::hex << std::setfill('0') << std::setw(2) << std::right << fileheader->CalibVersion;
-    LOG(INFO) << "CCB HDR size: " << std::hex << std::setfill('0') << std::setw(2) << std::right << fileheader->CalibHdrSize;
-    LOG(INFO) << "CCB File HDR size: " << std::hex << std::setfill('0') << std::setw(2) << std::right << fileheader->CalibFileHdrSize;
-    LOG(INFO) << "CCB file size: " << std::hex << std::setfill('0') << std::setw(2) << std::right << fileheader->CalibFileSize;
+    LOG(INFO) << "CCB file version: " << std::hex << std::setfill('0')
+              << std::setw(2) << std::right << fileheader->CalibFileVersion;
+    LOG(INFO) << "CCB calibration version: " << std::hex << std::setfill('0')
+              << std::setw(2) << std::right << fileheader->CalibVersion;
+    LOG(INFO) << "CCB HDR size: " << std::hex << std::setfill('0')
+              << std::setw(2) << std::right << fileheader->CalibHdrSize;
+    LOG(INFO) << "CCB File HDR size: " << std::hex << std::setfill('0')
+              << std::setw(2) << std::right << fileheader->CalibFileHdrSize;
+    LOG(INFO) << "CCB file size: " << std::hex << std::setfill('0')
+              << std::setw(2) << std::right << fileheader->CalibFileSize;
 
     uint8_t *pccbdata = (uint8_t *)malloc(fileheader->CalibFileSize);
     if (0 == pccbdata) {
@@ -279,7 +313,8 @@ Status ModuleMemory::readLegacyModuleCCB( std::string &tempJsonFile, TOF_ModuleF
 
     status = m_eeprom->read(chunkDataAddr, pccbdata, fileheader->CalibFileSize);
     if (status == Status::OK) {
-        std::string ccbFilename = writeTempCCB(pccbdata, fileheader->CalibFileSize);
+        std::string ccbFilename =
+            writeTempCCB(pccbdata, fileheader->CalibFileSize);
         if (!ccbFilename.empty()) {
             // Create temporary json configuration file
             tempJsonFile = writeTempJSON(ccbFilename, "");
@@ -289,13 +324,18 @@ Status ModuleMemory::readLegacyModuleCCB( std::string &tempJsonFile, TOF_ModuleF
         }
     }
 
-    ccb_data_t ccb_data = {(const unsigned char *const)pccbdata, fileheader->CalibFileSize};
-    const struct CAL_HEADER_BLOCK_V3 *header_block = ccb_read_header_block(&ccb_data);
+    ccb_data_t ccb_data = {(const unsigned char *const)pccbdata,
+                           fileheader->CalibFileSize};
+    const struct CAL_HEADER_BLOCK_V3 *header_block =
+        ccb_read_header_block(&ccb_data);
     if (NULL != header_block) {
-        LOG(INFO) << "CCB file date: " << header_block->BlockInfo.CalibrationYear << "-" << header_block->BlockInfo.CalibrationMonth << "-"
-                    << header_block->BlockInfo.CalibrationDay;
+        LOG(INFO) << "CCB file date: "
+                  << header_block->BlockInfo.CalibrationYear << "-"
+                  << header_block->BlockInfo.CalibrationMonth << "-"
+                  << header_block->BlockInfo.CalibrationDay;
         LOG(INFO) << "CCB chip ID: " << std::hex << header_block->ChipID;
-        LOG(INFO) << "CCB serial number: " << std::hex << header_block->SerialNumber;
+        LOG(INFO) << "CCB serial number: " << std::hex
+                  << header_block->SerialNumber;
         ccbSerialNumber = header_block->SerialNumber;
     }
 
@@ -303,7 +343,8 @@ Status ModuleMemory::readLegacyModuleCCB( std::string &tempJsonFile, TOF_ModuleF
     return status;
 }
 
-Status ModuleMemory::readModuleData( std::string &tempJsonFile, TOF_ModuleFiles_t &tempFiles) {
+Status ModuleMemory::readModuleData(std::string &tempJsonFile,
+                                    TOF_ModuleFiles_t &tempFiles) {
     // module data is always starts at address 0
     uint32_t chunkDataAddr = 0x0000;
 
@@ -311,7 +352,9 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, TOF_ModuleFiles_
     uint8_t memoryBuffer[sizeof(TOF_ChunkHeader_t)] = {0};
     TOF_ChunkHeader_t *pChunkHeader = (TOF_ChunkHeader_t *)memoryBuffer;
     Status status = readChunkHeader(memoryBuffer, chunkDataAddr);
-    if (status != Status::OK || pChunkHeader->revision.chunktype != CHUNK_TYPE_FILE_HEADER || pChunkHeader->nextChunkAddress == 0) {
+    if (status != Status::OK ||
+        pChunkHeader->revision.chunktype != CHUNK_TYPE_FILE_HEADER ||
+        pChunkHeader->nextChunkAddress == 0) {
         LOG(WARNING) << "Invalid ADI module memory file header";
         return Status::GENERIC_ERROR;
     }
@@ -326,7 +369,8 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, TOF_ModuleFiles_
             break;
         }
 
-        if (pChunkHeader->headerSizeBytes != sizeof(TOF_ChunkHeader_t) || 0 == pChunkHeader->chunkSizeBytes) {
+        if (pChunkHeader->headerSizeBytes != sizeof(TOF_ChunkHeader_t) ||
+            0 == pChunkHeader->chunkSizeBytes) {
             isBadChunk = true;
             break;
         }
@@ -347,17 +391,22 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, TOF_ModuleFiles_
             continue;
         }
 
-        if (Status::OK == m_eeprom->read(chunkDataAddr, pChunkData, pChunkHeader->chunkSizeBytes)) {
-            int payloadSize = pChunkHeader->chunkSizeBytes - sizeof(uint32_t); // data size - CRC in bytes
+        if (Status::OK == m_eeprom->read(chunkDataAddr, pChunkData,
+                                         pChunkHeader->chunkSizeBytes)) {
+            int payloadSize = pChunkHeader->chunkSizeBytes -
+                              sizeof(uint32_t); // data size - CRC in bytes
             uint32_t blockCRC = *((uint32_t *)(pChunkData + payloadSize));
             //Use mirrored CRC first, if it fails, try non mirrored
             if (crcFast(pChunkData, payloadSize, true) == blockCRC) {
-                if (processNVMFirmware(pChunkHeader->revision.chunktype, pChunkData, payloadSize) != Status::OK) {
+                if (processNVMFirmware(pChunkHeader->revision.chunktype,
+                                       pChunkData, payloadSize) != Status::OK) {
                     isBadChunk = true;
                 }
 
-            } else if (crcFast(pChunkData, payloadSize, false) == blockCRC) {//Try using non mirrored CRC
-                if (processNVMFirmware(pChunkHeader->revision.chunktype, pChunkData, payloadSize) != Status::OK) {
+            } else if (crcFast(pChunkData, payloadSize, false) ==
+                       blockCRC) { //Try using non mirrored CRC
+                if (processNVMFirmware(pChunkHeader->revision.chunktype,
+                                       pChunkData, payloadSize) != Status::OK) {
                     isBadChunk = true;
                 }
 
@@ -365,13 +414,15 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, TOF_ModuleFiles_
                 isBadChunk = true;
             }
 
-            if(isBadChunk){
-                if(pChunkHeader->revision.chunktype != CHUNK_TYPE_ADSD3500_FIRMWARE_FACTORY_HEADER && 
-                    pChunkHeader->revision.chunktype != CHUNK_TYPE_ADSD3500_FIRMWARE_UPGRADE_HEADER) {
+            if (isBadChunk) {
+                if (pChunkHeader->revision.chunktype !=
+                        CHUNK_TYPE_ADSD3500_FIRMWARE_FACTORY_HEADER &&
+                    pChunkHeader->revision.chunktype !=
+                        CHUNK_TYPE_ADSD3500_FIRMWARE_UPGRADE_HEADER) {
                     displayCRCError(pChunkHeader->revision.chunktype);
                 } else {
                     isBadChunk = false;
-                }    
+                }
             }
 
         } else {
@@ -399,12 +450,12 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, TOF_ModuleFiles_
         } else if (_badCCB) {
             LOG(WARNING) << "Failed to load CCB data from module!";
             std::remove(ccbFilename.c_str());
-        }else {
+        } else {
             LOG(WARNING) << "Failed to load module data!";
             std::remove(ccbFilename.c_str());
             std::remove(cfgFilename.c_str());
             return Status::GENERIC_ERROR;
-        }        
+        }
     }
 
     tempFiles = {};
@@ -420,7 +471,8 @@ Status ModuleMemory::readModuleData( std::string &tempJsonFile, TOF_ModuleFiles_
     return Status::OK;
 }
 
-Status ModuleMemory::processNVMFirmware(uint8_t chunkType, uint8_t *pChunkData, int payloadSize) {
+Status ModuleMemory::processNVMFirmware(uint8_t chunkType, uint8_t *pChunkData,
+                                        int payloadSize) {
     switch (chunkType) {
     case CHUNK_TYPE_CCB:
         LOG(INFO) << "Found module memory CCB chunk, parsing...";
@@ -505,7 +557,10 @@ void ModuleMemory::displayCRCError(uint8_t chunkType) {
     }
 }
 
-TOF_ChunkHeader_t ModuleMemory::initChunckHeader(TOF_ChunkType_t type, uint32_t address, uint32_t dataSize, bool isLastChunk) {
+TOF_ChunkHeader_t ModuleMemory::initChunckHeader(TOF_ChunkType_t type,
+                                                 uint32_t address,
+                                                 uint32_t dataSize,
+                                                 bool isLastChunk) {
 
     TOF_ChunkVersion_t fileVersion = {};
     fileVersion.chunkid = CHUNK_ID_ANALOG_DEVICES;
@@ -516,29 +571,36 @@ TOF_ChunkHeader_t ModuleMemory::initChunckHeader(TOF_ChunkType_t type, uint32_t 
     TOF_ChunkHeader_t header = {};
     header.revision = fileVersion;
     header.headerSizeBytes = sizeof(TOF_ChunkHeader_t);
-    header.chunkSizeBytes = (dataSize == 0) ? 0 : (dataSize + sizeof(header.chunkHeaderCRC));
+    header.chunkSizeBytes =
+        (dataSize == 0) ? 0 : (dataSize + sizeof(header.chunkHeaderCRC));
     if (isLastChunk) {
         header.nextChunkAddress = 0;
     } else {
-        header.nextChunkAddress = address + header.headerSizeBytes + header.chunkSizeBytes;
+        header.nextChunkAddress =
+            address + header.headerSizeBytes + header.chunkSizeBytes;
     }
     //header.chunkHeaderCRC = crcFast(reinterpret_cast<const uint8_t *>(&header), sizeof(TOF_ChunkHeader_t) - sizeof(header.chunkHeaderCRC));
     //TODO: Define when mirrored CRC is being used
     header.chunkHeaderCRC =
         crcFast(reinterpret_cast<const uint8_t *>(&header),
-                sizeof(TOF_ChunkHeader_t) - sizeof(header.chunkHeaderCRC), true);// Using Mirrored CRC (default)
+                sizeof(TOF_ChunkHeader_t) - sizeof(header.chunkHeaderCRC),
+                true); // Using Mirrored CRC (default)
     return header;
 }
 
-Status ModuleMemory::createModuleImage(const uint8_t *ccbData, uint32_t ccbSize, const uint8_t *cfgData, uint32_t cfgSize) {
+Status ModuleMemory::createModuleImage(const uint8_t *ccbData, uint32_t ccbSize,
+                                       const uint8_t *cfgData,
+                                       uint32_t cfgSize) {
 
-    if ((ccbData == NULL && cfgData == NULL) || (ccbSize == 0 && cfgSize == 0)) {
+    if ((ccbData == NULL && cfgData == NULL) ||
+        (ccbSize == 0 && cfgSize == 0)) {
         LOG(WARNING) << "Aborting write to Module flash, no data found";
         return Status::GENERIC_ERROR;
     }
 
     // create memory header chunk
-    TOF_ChunkHeader_t memoryHeader = initChunckHeader(CHUNK_TYPE_FILE_HEADER, 0, 0, false);
+    TOF_ChunkHeader_t memoryHeader =
+        initChunckHeader(CHUNK_TYPE_FILE_HEADER, 0, 0, false);
     uint32_t nextAddress = memoryHeader.nextChunkAddress;
     uint32_t imageSize = memoryHeader.headerSizeBytes;
 
@@ -546,11 +608,13 @@ Status ModuleMemory::createModuleImage(const uint8_t *ccbData, uint32_t ccbSize,
     TOF_ChunkHeader_t ccbHeader = {0};
     uint32_t ccbCRC = 0;
     if (ccbData && 0 != ccbSize) {
-        ccbHeader = initChunckHeader(CHUNK_TYPE_CCB, nextAddress, ccbSize, cfgData == NULL);
+        ccbHeader = initChunckHeader(CHUNK_TYPE_CCB, nextAddress, ccbSize,
+                                     cfgData == NULL);
         nextAddress = ccbHeader.nextChunkAddress;
         //ccbCRC = crcFast(ccbData, ccbSize);
         //TODO: Define when mirrored CRC is being used
-        ccbCRC = crcFast(ccbData, ccbSize, true);// Using Mirrored CRC (default)
+        ccbCRC =
+            crcFast(ccbData, ccbSize, true); // Using Mirrored CRC (default)
         imageSize += ccbHeader.headerSizeBytes + ccbHeader.chunkSizeBytes;
     }
 
@@ -558,10 +622,12 @@ Status ModuleMemory::createModuleImage(const uint8_t *ccbData, uint32_t ccbSize,
     TOF_ChunkHeader_t cfgHeader = {0};
     uint32_t cfgCRC = 0;
     if (cfgData && 0 != cfgSize) {
-        cfgHeader = initChunckHeader(CHUNK_TYPE_CFG, nextAddress, cfgSize, true);
+        cfgHeader =
+            initChunckHeader(CHUNK_TYPE_CFG, nextAddress, cfgSize, true);
         //cfgCRC = crcFast(cfgData, cfgSize);
         //TODO: Define when mirrored CRC is being used
-        cfgCRC = crcFast(cfgData, cfgSize, true);// Using Mirrored CRC (default)
+        cfgCRC =
+            crcFast(cfgData, cfgSize, true); // Using Mirrored CRC (default)
         imageSize += cfgHeader.headerSizeBytes + cfgHeader.chunkSizeBytes;
     }
 
@@ -609,7 +675,8 @@ Status ModuleMemory::createModuleImage(const uint8_t *ccbData, uint32_t ccbSize,
     return aditof::Status::OK;
 }
 
-Status ModuleMemory::writeModuleData(const std::string &ccbFileName, const std::string &cfgFileName) {
+Status ModuleMemory::writeModuleData(const std::string &ccbFileName,
+                                     const std::string &cfgFileName) {
 
     if (!m_eeprom) {
         LOG(INFO) << "Write failed, cannot connect to module flash.";
@@ -637,8 +704,7 @@ Status ModuleMemory::writeModuleData(const std::string &ccbFileName, const std::
     return status;
 }
 
-Status ModuleMemory::getSerialNumber(std::string &serialNumber)
-{
+Status ModuleMemory::getSerialNumber(std::string &serialNumber) {
     serialNumber = m_serialNumber;
 
     return aditof::Status::OK;

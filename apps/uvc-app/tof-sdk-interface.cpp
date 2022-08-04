@@ -1,6 +1,6 @@
 #include "tof-sdk-interface.h"
-#include <glog/logging.h>
 #include "buffer.pb.h"
+#include <glog/logging.h>
 
 #include <aditof/depth_sensor_interface.h>
 #include <aditof/sensor_definitions.h>
@@ -21,7 +21,7 @@ std::string kernelversion;
 std::string ubootversion;
 std::string sdversion;
 
-int init_tof_sdk(char* cap_dev_path) {
+int init_tof_sdk(char *cap_dev_path) {
     auto sensorsEnumerator =
         aditof::SensorEnumeratorFactory::buildTargetSensorEnumerator();
     if (!sensorsEnumerator) {
@@ -97,7 +97,8 @@ void convertProtoMsgToDepthSensorFrameType(
     }
 }
 
-void handleClientRequest(const char *in_buf, const size_t in_len, char **out_buf, size_t *out_len) {
+void handleClientRequest(const char *in_buf, const size_t in_len,
+                         char **out_buf, size_t *out_len) {
     uvc_payload::ClientRequest request;
     uvc_payload::ServerResponse response;
     std::string serverResponseBlob;
@@ -149,11 +150,11 @@ void handleClientRequest(const char *in_buf, const size_t in_len, char **out_buf
             ++temp_sensor_id;
         }
 
-		auto cardVersion = response.mutable_card_image_version();
+        auto cardVersion = response.mutable_card_image_version();
 
-		cardVersion->set_kernelversion(kernelversion);
-		cardVersion->set_ubootversion(ubootversion);
-		cardVersion->set_sdversion(sdversion);
+        cardVersion->set_kernelversion(kernelversion);
+        cardVersion->set_ubootversion(ubootversion);
+        cardVersion->set_sdversion(sdversion);
 
         response.set_status(
             static_cast<::uvc_payload::Status>(aditof::Status::OK));
@@ -220,8 +221,7 @@ void handleClientRequest(const char *in_buf, const size_t in_len, char **out_buf
     }
     case uvc_payload::FunctionName::GET_AVAILABLE_CONTROLS: {
         std::vector<std::string> controls;
-        aditof::Status status =
-            camDepthSensor->getAvailableControls(controls);
+        aditof::Status status = camDepthSensor->getAvailableControls(controls);
         for (const auto &control : controls) {
             response.add_strings_payload(control);
         }

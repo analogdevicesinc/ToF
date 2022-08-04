@@ -85,5 +85,4 @@ Status Frame::getAttribute(const std::string &attribute,
     return m_impl->getAttribute(attribute, value);
 }
 
-
 } // namespace aditof

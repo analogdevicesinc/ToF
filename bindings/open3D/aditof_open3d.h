@@ -32,9 +32,9 @@
 #ifndef ADITOF_OPEN3D_H
 #define ADITOF_OPEN3D_H
 
-#include <open3d/Open3D.h>
 #include <aditof/frame.h>
 #include <aditof/status_definitions.h>
+#include <open3d/Open3D.h>
 
 using namespace open3d;
 
@@ -42,7 +42,7 @@ namespace aditof {
 Status fromFrameToDepthImg(Frame &frame, int camera_rangeMin,
                            int camera_rangeMax, geometry::Image &image) {
     FrameDataDetails frameDetails;
-    frame.getDataDetails("depth",frameDetails);
+    frame.getDataDetails("depth", frameDetails);
 
     const int frameHeight = static_cast<int>(frameDetails.height);
     const int frameWidth = static_cast<int>(frameDetails.width);
@@ -72,7 +72,7 @@ Status fromFrameToDepthImg(Frame &frame, int camera_rangeMin,
 
 Status fromFrameTo16bitsDepth(Frame &frame, geometry::Image &image) {
     FrameDataDetails frameDetails;
-    frame.getDataDetails("depth",frameDetails);
+    frame.getDataDetails("depth", frameDetails);
 
     const int frameHeight = static_cast<int>(frameDetails.height);
     const int frameWidth = static_cast<int>(frameDetails.width);
@@ -95,7 +95,7 @@ Status fromFrameTo16bitsDepth(Frame &frame, geometry::Image &image) {
 
 Status fromFrameToIRImg(Frame &frame, int bitCount, geometry::Image &image) {
     FrameDataDetails frameDetails;
-    frame.getDataDetails("ir",frameDetails);
+    frame.getDataDetails("ir", frameDetails);
 
     const int frameHeight = static_cast<int>(frameDetails.height);
     const int frameWidth = static_cast<int>(frameDetails.width);

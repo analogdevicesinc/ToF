@@ -198,9 +198,9 @@ Status UsbSensorEnumerator::searchSensors() {
                 std::make_pair(tempSensor.name(), tempSensor.id()));
         }
 
-		m_kernelVersion = responseMsg.card_image_version().kernelversion();
-		m_sdVersion = responseMsg.card_image_version().sdversion();
-		m_uBootVersion = responseMsg.card_image_version().ubootversion();
+        m_kernelVersion = responseMsg.card_image_version().kernelversion();
+        m_sdVersion = responseMsg.card_image_version().sdversion();
+        m_uBootVersion = responseMsg.card_image_version().ubootversion();
     }
 
     closedir(d);
@@ -214,7 +214,8 @@ Status UsbSensorEnumerator::getDepthSensors(
     depthSensors.clear();
 
     for (const auto &sInfo : m_sensorsInfo) {
-        auto sensor = std::make_shared<UsbDepthSensor>(m_sensorName, sInfo.driverPath);
+        auto sensor =
+            std::make_shared<UsbDepthSensor>(m_sensorName, sInfo.driverPath);
         depthSensors.emplace_back(sensor);
     }
 
@@ -250,20 +251,19 @@ Status UsbSensorEnumerator::getTemperatureSensors(
     return Status::OK;
 }
 
-aditof::Status UsbSensorEnumerator::getUbootVersion(
-    std::string &uBootVersion) const {
+aditof::Status
+UsbSensorEnumerator::getUbootVersion(std::string &uBootVersion) const {
     uBootVersion = m_uBootVersion;
     return aditof::Status::OK;
 }
 
-aditof::Status UsbSensorEnumerator::getKernelVersion(
-    std::string &kernelVersion) const {
+aditof::Status
+UsbSensorEnumerator::getKernelVersion(std::string &kernelVersion) const {
     kernelVersion = m_kernelVersion;
     return aditof::Status::OK;
 }
 
-aditof::Status UsbSensorEnumerator::getSdVersion(
-    std::string &sdVersion) const {
+aditof::Status UsbSensorEnumerator::getSdVersion(std::string &sdVersion) const {
     sdVersion = m_sdVersion;
     return aditof::Status::OK;
 }

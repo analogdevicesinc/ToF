@@ -4,11 +4,11 @@
 #include "aditof/sensor_enumerator_interface.h"
 
 class OfflineSensorEnumerator : public aditof::SensorEnumeratorInterface {
-public:
+  public:
     OfflineSensorEnumerator();
     ~OfflineSensorEnumerator() = default;
 
-public:
+  public:
     virtual aditof::Status searchSensors() override;
     virtual aditof::Status
     getDepthSensors(std::vector<std::shared_ptr<aditof::DepthSensorInterface>>
@@ -19,14 +19,13 @@ public:
     virtual aditof::Status getTemperatureSensors(
         std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
             &temperatureSensors) override;
-    virtual aditof::Status getUbootVersion(
-        std::string &uBootVersion) const override;
-	virtual aditof::Status getKernelVersion(
-        std::string &kernelVersion) const override;
-	virtual aditof::Status getSdVersion(
-        std::string &sdVersion) const override;
+    virtual aditof::Status
+    getUbootVersion(std::string &uBootVersion) const override;
+    virtual aditof::Status
+    getKernelVersion(std::string &kernelVersion) const override;
+    virtual aditof::Status getSdVersion(std::string &sdVersion) const override;
 
-private:
+  private:
     std::vector<std::string> m_sensorsInfo;
 };
 

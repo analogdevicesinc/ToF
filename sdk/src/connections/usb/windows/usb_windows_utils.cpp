@@ -31,8 +31,8 @@
  */
 
 #include <glog/logging.h>
-#include <usb_windows_utils.h>
 #include <memory>
+#include <usb_windows_utils.h>
 
 HRESULT
 UsbWindowsUtils::UvcFindNodeAndGetControl(ExUnitHandle *handle,
@@ -158,7 +158,8 @@ HRESULT UsbWindowsUtils::UvcExUnitReadBuffer(IBaseFilter *pVideoInputFilter,
         if (id > -1) {
             packet[0] = static_cast<uint8_t>(id);
         }
-        *(reinterpret_cast<uint32_t *>(&packet[posAddrInPacket])) = static_cast<uint32_t>(addr);
+        *(reinterpret_cast<uint32_t *>(&packet[posAddrInPacket])) =
+            static_cast<uint32_t>(addr);
         readlength = bufferLength - readBytes < MAX_BUF_SIZE
                          ? bufferLength - readBytes
                          : MAX_BUF_SIZE;
@@ -234,16 +235,17 @@ HRESULT UsbWindowsUtils::UvcExUnitWriteBuffer(IBaseFilter *pVideoInputFilter,
     return S_OK;
 }
 
-aditof::Status UsbWindowsUtils::uvcExUnitGetString(IBaseFilter *pVideoInputFilter, int uvcControlId,
-                                          std::string &outStr) {
+aditof::Status
+UsbWindowsUtils::uvcExUnitGetString(IBaseFilter *pVideoInputFilter,
+                                    int uvcControlId, std::string &outStr) {
     using namespace aditof;
 
-	HRESULT hr;
-	uint16_t bufferLength;
+    HRESULT hr;
+    uint16_t bufferLength;
 
     hr = UsbWindowsUtils::UvcExUnitReadBuffer(
-        pVideoInputFilter, uvcControlId, -1, 0, reinterpret_cast<uint8_t *>(&bufferLength),
-        sizeof(bufferLength));
+        pVideoInputFilter, uvcControlId, -1, 0,
+        reinterpret_cast<uint8_t *>(&bufferLength), sizeof(bufferLength));
     if (FAILED(hr)) {
         pVideoInputFilter->Release();
         LOG(WARNING)
@@ -253,9 +255,9 @@ aditof::Status UsbWindowsUtils::uvcExUnitGetString(IBaseFilter *pVideoInputFilte
     }
 
     std::unique_ptr<uint8_t[]> data(new uint8_t[bufferLength + 1]);
-    hr = UsbWindowsUtils::UvcExUnitReadBuffer(pVideoInputFilter, uvcControlId, -1,
-                                              sizeof(bufferLength), data.get(),
-                                              bufferLength);
+    hr = UsbWindowsUtils::UvcExUnitReadBuffer(pVideoInputFilter, uvcControlId,
+                                              -1, sizeof(bufferLength),
+                                              data.get(), bufferLength);
     if (FAILED(hr)) {
         pVideoInputFilter->Release();
         LOG(WARNING) << "Failed to read the content of buffer holding sensors "
@@ -272,9 +274,9 @@ aditof::Status UsbWindowsUtils::uvcExUnitGetString(IBaseFilter *pVideoInputFilte
     return Status::OK;
 }
 
-
-aditof::Status UsbWindowsUtils::uvcExUnitSendRequest(IBaseFilter *pVideoInputFilter, const std::string &requestStr)
-{
+aditof::Status
+UsbWindowsUtils::uvcExUnitSendRequest(IBaseFilter *pVideoInputFilter,
+                                      const std::string &requestStr) {
     using namespace aditof;
 
     const ULONG uvcSendRequestControl = 1;
@@ -289,9 +291,13 @@ aditof::Status UsbWindowsUtils::uvcExUnitSendRequest(IBaseFilter *pVideoInputFil
 
     // Send the size of the string we're about to send so that UVC gadget knows how many bytes to expect
     size_t stringLength = requestStr.size();
-    hr = UvcExUnitSetProperty(&handle, uvcSendRequestControl, reinterpret_cast<uint8_t *>(&stringLength), MAX_BUF_SIZE);
+    hr = UvcExUnitSetProperty(&handle, uvcSendRequestControl,
+                              reinterpret_cast<uint8_t *>(&stringLength),
+                              MAX_BUF_SIZE);
     if (FAILED(hr)) {
-        LOG(WARNING) << "Failed to write the length of the request string. Error: " << hr;
+        LOG(WARNING)
+            << "Failed to write the length of the request string. Error: "
+            << hr;
         return Status::GENERIC_ERROR;
     }
 
@@ -303,13 +309,16 @@ aditof::Status UsbWindowsUtils::uvcExUnitSendRequest(IBaseFilter *pVideoInputFil
 
     while (writtenBytes < stringLength) {
         writeLen = stringLength - writtenBytes > MAX_BUF_SIZE
-                ? MAX_BUF_SIZE
-                : stringLength - writtenBytes;
+                       ? MAX_BUF_SIZE
+                       : stringLength - writtenBytes;
         memcpy(&packet, data + writtenBytes, writeLen);
 
-        hr = UvcExUnitSetProperty(&handle, uvcSendRequestControl, packet, MAX_BUF_SIZE);
+        hr = UvcExUnitSetProperty(&handle, uvcSendRequestControl, packet,
+                                  MAX_BUF_SIZE);
         if (FAILED(hr)) {
-            LOG(WARNING) << "Failed to write a packet of the send request string. Error: " << hr;
+            LOG(WARNING) << "Failed to write a packet of the send request "
+                            "string. Error: "
+                         << hr;
             return Status::GENERIC_ERROR;
         }
         writtenBytes += writeLen;
@@ -318,8 +327,9 @@ aditof::Status UsbWindowsUtils::uvcExUnitSendRequest(IBaseFilter *pVideoInputFil
     return Status::OK;
 }
 
-aditof::Status UsbWindowsUtils::uvcExUnitGetResponse(IBaseFilter *pVideoInputFilter, std::string &responseStr)
-{
+aditof::Status
+UsbWindowsUtils::uvcExUnitGetResponse(IBaseFilter *pVideoInputFilter,
+                                      std::string &responseStr) {
     using namespace aditof;
 
     const ULONG uvcGetRequestControl = 2;
@@ -335,9 +345,12 @@ aditof::Status UsbWindowsUtils::uvcExUnitGetResponse(IBaseFilter *pVideoInputFil
     uint8_t packet[MAX_BUF_SIZE];
 
     // Read the length of the string we're about to read next from the UVC gadget
-    hr = UvcExUnitGetProperty(&handle, uvcGetRequestControl, packet, MAX_BUF_SIZE);
+    hr = UvcExUnitGetProperty(&handle, uvcGetRequestControl, packet,
+                              MAX_BUF_SIZE);
     if (FAILED(hr)) {
-        LOG(WARNING) << "Failed to read the length of the response string. Error: " << hr;
+        LOG(WARNING)
+            << "Failed to read the length of the response string. Error: "
+            << hr;
         return Status::GENERIC_ERROR;
     }
     size_t stringLength = reinterpret_cast<size_t *>(packet)[0];
@@ -352,9 +365,12 @@ aditof::Status UsbWindowsUtils::uvcExUnitGetResponse(IBaseFilter *pVideoInputFil
                          ? MAX_BUF_SIZE
                          : stringLength - readBytes;
 
-        hr = UvcExUnitGetProperty(&handle, uvcGetRequestControl, packet, MAX_BUF_SIZE);
+        hr = UvcExUnitGetProperty(&handle, uvcGetRequestControl, packet,
+                                  MAX_BUF_SIZE);
         if (FAILED(hr)) {
-            LOG(WARNING) << "Failed to read a packet of the response string. Error: " << hr;
+            LOG(WARNING)
+                << "Failed to read a packet of the response string. Error: "
+                << hr;
             return Status::GENERIC_ERROR;
         }
         responseStr.append(reinterpret_cast<const char *>(packet), readlength);

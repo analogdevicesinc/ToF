@@ -50,11 +50,14 @@ class TargetSensorEnumerator : public aditof::SensorEnumeratorInterface {
     virtual aditof::Status getTemperatureSensors(
         std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
             &temperatureSensors) override;
-	virtual aditof::Status getUbootVersion(std::string &uBootVersion) const override;
-	virtual aditof::Status getKernelVersion(std::string &kernelVersion) const override;
-	virtual aditof::Status getSdVersion(std::string &sdVersion) const override;
+    virtual aditof::Status
+    getUbootVersion(std::string &uBootVersion) const override;
+    virtual aditof::Status
+    getKernelVersion(std::string &kernelVersion) const override;
+    virtual aditof::Status getSdVersion(std::string &sdVersion) const override;
+
   private:
-	std::string getVersionOfComponent(const std::string &component) const;
+    std::string getVersionOfComponent(const std::string &component) const;
 
   private:
     enum class SensorType {
@@ -83,20 +86,20 @@ class TargetSensorEnumerator : public aditof::SensorEnumeratorInterface {
         std::string name;
     };
 
-	struct SoftwareVersions {
-		std::string cardVersion;
-		std::string kernelVersion;
-		std::string uBootVersion;
-	};
+    struct SoftwareVersions {
+        std::string cardVersion;
+        std::string kernelVersion;
+        std::string uBootVersion;
+    };
 
     std::vector<SensorInfo> m_sensorsInfo;
     std::vector<StorageInfo> m_storagesInfo;
     std::vector<TemperatureSensorInfo> m_temperatureSensorsInfo;
     std::string m_cardImageVersion;
-	std::string m_uBootVersion;
-	std::string m_kernelVersion;
-	std::string m_rfsVersion;
-	std::string m_sdkVersion;
+    std::string m_uBootVersion;
+    std::string m_kernelVersion;
+    std::string m_rfsVersion;
+    std::string m_sdkVersion;
 };
 
 #endif // TARGET_SENSOR_ENUMERATOR_H

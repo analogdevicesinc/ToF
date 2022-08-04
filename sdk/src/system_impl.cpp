@@ -52,9 +52,9 @@ buildCameras(std::unique_ptr<SensorEnumeratorInterface> enumerator) {
     std::vector<std::shared_ptr<DepthSensorInterface>> depthSensors;
     std::vector<std::shared_ptr<StorageInterface>> storages;
     std::vector<std::shared_ptr<TemperatureSensorInterface>> temperatureSensors;
-	std::string uboot;
+    std::string uboot;
     std::string kernel;
-	std::string sd_ver;
+    std::string sd_ver;
 
     enumerator->getDepthSensors(depthSensors);
     enumerator->getStorages(storages);
@@ -62,7 +62,7 @@ buildCameras(std::unique_ptr<SensorEnumeratorInterface> enumerator) {
 
     enumerator->getUbootVersion(uboot);
     enumerator->getKernelVersion(kernel);
-	enumerator->getSdVersion(sd_ver);
+    enumerator->getSdVersion(sd_ver);
 
     for (const auto &dSensor : depthSensors) {
         std::shared_ptr<Camera> camera = std::make_shared<CameraItof>(
@@ -99,8 +99,7 @@ Status SystemImpl::getCameraList(
         return Status::GENERIC_ERROR;
     }
 #elif defined(NXP)
-    sensorEnumerator =
-        SensorEnumeratorFactory::buildTargetSensorEnumerator();
+    sensorEnumerator = SensorEnumeratorFactory::buildTargetSensorEnumerator();
     if (!sensorEnumerator) {
         LOG(ERROR) << "Could not create TargetSensorEnumerator";
         return Status::GENERIC_ERROR;

@@ -89,7 +89,8 @@ Status NetworkStorage::open(void *handle) {
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff[m_storageIndex].status());
+    Status status =
+        static_cast<Status>(net->recv_buff[m_storageIndex].status());
 
     return status;
 }
@@ -106,7 +107,8 @@ Status NetworkStorage::read(const uint32_t address, uint8_t *data,
 
     net->send_buff[m_storageIndex].set_func_name("StorageRead");
     net->send_buff[m_storageIndex].add_func_int32_param(m_implData->id);
-    net->send_buff[m_storageIndex].add_func_int32_param(static_cast<::google::int32>(address));
+    net->send_buff[m_storageIndex].add_func_int32_param(
+        static_cast<::google::int32>(address));
     net->send_buff[m_storageIndex].add_func_int32_param(
         static_cast<::google::int32>(bytesCount));
     net->send_buff[m_storageIndex].set_expect_reply(true);
@@ -127,7 +129,8 @@ Status NetworkStorage::read(const uint32_t address, uint8_t *data,
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff[m_storageIndex].status());
+    Status status =
+        static_cast<Status>(net->recv_buff[m_storageIndex].status());
 
     if (status == Status::OK) {
         memcpy(data, net->recv_buff[m_storageIndex].bytes_payload(0).c_str(),
@@ -149,7 +152,8 @@ Status NetworkStorage::write(const uint32_t address, const uint8_t *data,
 
     net->send_buff[m_storageIndex].set_func_name("StorageWrite");
     net->send_buff[m_storageIndex].add_func_int32_param(m_implData->id);
-    net->send_buff[m_storageIndex].add_func_int32_param(static_cast<::google::int32>(address));
+    net->send_buff[m_storageIndex].add_func_int32_param(
+        static_cast<::google::int32>(address));
     net->send_buff[m_storageIndex].add_func_int32_param(
         static_cast<::google::int32>(bytesCount));
     net->send_buff[m_storageIndex].add_func_bytes_param(data, bytesCount);
@@ -171,13 +175,13 @@ Status NetworkStorage::write(const uint32_t address, const uint8_t *data,
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff[m_storageIndex].status());
+    Status status =
+        static_cast<Status>(net->recv_buff[m_storageIndex].status());
 
     return status;
 }
 
-Status NetworkStorage::getCapacity(size_t &nbBytes) const
-{
+Status NetworkStorage::getCapacity(size_t &nbBytes) const {
     // TO DO: implement
     return aditof::Status::UNAVAILABLE;
 }
@@ -211,7 +215,8 @@ Status NetworkStorage::close() {
         return Status::GENERIC_ERROR;
     }
 
-    Status status = static_cast<Status>(net->recv_buff[m_storageIndex].status());
+    Status status =
+        static_cast<Status>(net->recv_buff[m_storageIndex].status());
 
     if (status == Status::OK) {
         m_implData->handle = nullptr;

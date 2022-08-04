@@ -35,16 +35,16 @@
 #include <aditof/camera.h>
 #include <glog/logging.h>
 
-class AbstractPublisherFactory{
-    public:
-        ros::Publisher publisher;
-        virtual AditofSensorMsg *msg = MessageFactory::create() const = 0;
-        virtual publish_local() const = 0;
+class AbstractPublisherFactory {
+  public:
+    ros::Publisher publisher;
+    virtual AditofSensorMsg *msg = MessageFactory::create() const = 0;
+    virtual publish_local() const = 0;
 };
 
-class pclPublisherFactory : public AbstractPublisherFactory{
-    public:
-        publisher = nHandle.advertise<sensor_msgs::PointCloud2>("aditof_pcloud", 5);
+class pclPublisherFactory : public AbstractPublisherFactory {
+  public:
+    publisher = nHandle.advertise<sensor_msgs::PointCloud2>("aditof_pcloud", 5);
 }
 
 #endif

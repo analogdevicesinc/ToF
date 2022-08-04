@@ -8,33 +8,33 @@
 
 // ADIToFTest.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
-#include <cctype>
-#include <iostream>
-#include <algorithm>
 #include <aditof/system.h>
 #include <aditof/version.h>
+#include <algorithm>
+#include <cctype>
 #include <glog/logging.h>
+#include <iostream>
 
 #include "ADIMainWindow.h"
 
-
 #if defined(__APPLE__) && defined(__MACH__)
 class GOOGLE_GLOG_DLL_DECL glogLogSink : public google::LogSink {
- public:
-    glogLogSink(AppLog *log) : applog(log) {} 
+  public:
+    glogLogSink(AppLog *log) : applog(log) {}
     ~glogLogSink() = default;
-   virtual void send(google::LogSeverity severity, const char* full_filename,
-                    const char* base_filename, int line,
-                    const struct ::tm* tm_time,
-                    const char* message, size_t message_len)  {
-                        if (applog){
-                            std::string msg(message, message_len);
-                            msg += "\n";
-                            applog->AddLog( msg.c_str(), nullptr );
-                        }
-                    };
-private:
-AppLog *applog = nullptr;
+    virtual void send(google::LogSeverity severity, const char *full_filename,
+                      const char *base_filename, int line,
+                      const struct ::tm *tm_time, const char *message,
+                      size_t message_len) {
+        if (applog) {
+            std::string msg(message, message_len);
+            msg += "\n";
+            applog->AddLog(msg.c_str(), nullptr);
+        }
+    };
+
+  private:
+    AppLog *applog = nullptr;
 };
 #endif
 
@@ -61,11 +61,11 @@ void ProcessArgs(int argc, char **argv, ADIViewerArgs &args) {
     }
 }
 
-int main(int argc, char **argv)
-{
-	FLAGS_logtostderr = 1;
-		
-	auto view = std::make_shared<adiMainWindow::ADIMainWindow>();//Create a new instance
+int main(int argc, char **argv) {
+    FLAGS_logtostderr = 1;
+
+    auto view = std::make_shared<
+        adiMainWindow::ADIMainWindow>(); //Create a new instance
 
 #if defined(__APPLE__) && defined(__MACH__)
     //forward glog messages to GUI log windows
@@ -73,16 +73,15 @@ int main(int argc, char **argv)
     google::AddLogSink(sink);
 #endif
 
-	LOG(INFO) << "SDK version: " << aditof::getApiVersion()
+    LOG(INFO) << "SDK version: " << aditof::getApiVersion()
               << " | branch: " << aditof::getBranchVersion()
               << " | commit: " << aditof::getCommitVersion();
 
     ADIViewerArgs args;
 
     ProcessArgs(argc, argv, args);
-	if (view->startImGUI(args))
-	{
-		view->render();
-	}
-	return 0; 
+    if (view->startImGUI(args)) {
+        view->render();
+    }
+    return 0;
 }

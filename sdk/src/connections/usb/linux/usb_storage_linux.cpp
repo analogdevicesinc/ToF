@@ -29,8 +29,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "usb_buffer.pb.h"
 #include "connections/usb/usb_storage.h"
+#include "usb_buffer.pb.h"
 #include "usb_linux_utils.h"
 #include "utils.h"
 
@@ -83,13 +83,15 @@ Status UsbStorage::open(void *handle) {
     std::string responseStr;
     status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Failed to get response of the request to open flash memory";
+        LOG(ERROR)
+            << "Failed to get response of the request to open flash memory";
         return status;
     }
     usb_payload::ServerResponse responseMsg;
     bool parsed = responseMsg.ParseFromString(responseStr);
     if (!parsed) {
-        LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
         return aditof::Status::INVALID_ARGUMENT;
     }
 
@@ -139,7 +141,8 @@ Status UsbStorage::read(const uint32_t address, uint8_t *data,
     usb_payload::ServerResponse responseMsg;
     bool parsed = responseMsg.ParseFromString(responseStr);
     if (!parsed) {
-        LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
         return aditof::Status::INVALID_ARGUMENT;
     }
 
@@ -147,8 +150,9 @@ Status UsbStorage::read(const uint32_t address, uint8_t *data,
         LOG(ERROR) << "Read registers operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
     }
-   
-    memcpy(data, responseMsg.bytes_payload(0).c_str(), responseMsg.bytes_payload(0).length());
+
+    memcpy(data, responseMsg.bytes_payload(0).c_str(),
+           responseMsg.bytes_payload(0).length());
 
     return Status::OK;
 }
@@ -187,13 +191,15 @@ Status UsbStorage::write(const uint32_t address, const uint8_t *data,
     std::string responseStr;
     status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Failed to get response of the request to write registers";
+        LOG(ERROR)
+            << "Failed to get response of the request to write registers";
         return status;
     }
     usb_payload::ServerResponse responseMsg;
     bool parsed = responseMsg.ParseFromString(responseStr);
     if (!parsed) {
-        LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
         return aditof::Status::INVALID_ARGUMENT;
     }
 
@@ -205,8 +211,7 @@ Status UsbStorage::write(const uint32_t address, const uint8_t *data,
     return Status::OK;
 }
 
-Status UsbStorage::getCapacity(size_t &nbBytes) const
-{
+Status UsbStorage::getCapacity(size_t &nbBytes) const {
     if (!m_implData->fd) {
         LOG(ERROR) << "Cannot read! EEPROM is not opened.";
         return Status::GENERIC_ERROR;
@@ -234,13 +239,15 @@ Status UsbStorage::getCapacity(size_t &nbBytes) const
     std::string responseStr;
     status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Failed to get response of the request to read memory size";
+        LOG(ERROR)
+            << "Failed to get response of the request to read memory size";
         return status;
     }
     usb_payload::ServerResponse responseMsg;
     bool parsed = responseMsg.ParseFromString(responseStr);
     if (!parsed) {
-        LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
         return aditof::Status::INVALID_ARGUMENT;
     }
 
@@ -248,7 +255,7 @@ Status UsbStorage::getCapacity(size_t &nbBytes) const
         LOG(ERROR) << "Read memory size operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
     }
-   
+
     nbBytes = responseMsg.int32_payload(0);
 
     return Status::OK;
@@ -263,7 +270,7 @@ Status UsbStorage::close() {
     usb_payload::ClientRequest requestMsg;
     requestMsg.set_func_name(usb_payload::FunctionName::STORAGE_CLOSE);
 
-        // Send request
+    // Send request
     std::string requestStr;
     requestMsg.SerializeToString(&requestStr);
     status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
@@ -276,13 +283,15 @@ Status UsbStorage::close() {
     std::string responseStr;
     status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Failed to get response of the request to close flash memory";
+        LOG(ERROR)
+            << "Failed to get response of the request to close flash memory";
         return status;
     }
     usb_payload::ServerResponse responseMsg;
     bool parsed = responseMsg.ParseFromString(responseStr);
     if (!parsed) {
-        LOG(ERROR) << "Failed to deserialize string containing UVC gadget response";
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
         return aditof::Status::INVALID_ARGUMENT;
     }
 

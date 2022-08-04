@@ -37,8 +37,8 @@
 #include <aditof/status_definitions.h>
 
 #include <cstddef>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace aditof {
 
@@ -117,7 +117,8 @@ class DepthSensorInterface {
      * @return Status
      */
     virtual aditof::Status readRegisters(const uint16_t *address,
-                                            uint16_t *data, size_t length, bool burst = true) = 0;
+                                         uint16_t *data, size_t length,
+                                         bool burst = true) = 0;
 
     /**
      * @brief Write to multiple AFE registers.
@@ -130,8 +131,8 @@ class DepthSensorInterface {
      * @return Status
      */
     virtual aditof::Status writeRegisters(const uint16_t *address,
-                                             const uint16_t *data,
-                                             size_t length, bool burst = true) = 0;
+                                          const uint16_t *data, size_t length,
+                                          bool burst = true) = 0;
 
     /**
      * @brief Send a read command to adsd3500.
@@ -157,16 +158,19 @@ class DepthSensorInterface {
      * @param payload_len - the number of bytes to read
      * @return Status
      */
-    virtual aditof::Status adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) = 0;
+    virtual aditof::Status adsd3500_read_payload_cmd(uint32_t cmd,
+                                                     uint8_t *readback_data,
+                                                     uint16_t payload_len) = 0;
 
-        /**
+    /**
      * @brief Reads a chunk of data from adsd3500. This will perform a burst read making it
      *        useful for reading chunks of data.
      * @param payload - the location from where to take the data chunk and read it
      * @param payload_len - the number of bytes to read
      * @return Status
      */
-    virtual aditof::Status adsd3500_read_payload(uint8_t* payload, uint16_t payload_len) = 0;
+    virtual aditof::Status adsd3500_read_payload(uint8_t *payload,
+                                                 uint16_t payload_len) = 0;
 
     /**
      * @brief Send a write command to adsd3500. This will perform a burst write making it
@@ -176,7 +180,9 @@ class DepthSensorInterface {
      * @param payload_len - the number of bytes to write
      * @return Status
      */
-    virtual aditof::Status adsd3500_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) = 0;
+    virtual aditof::Status adsd3500_write_payload_cmd(uint32_t cmd,
+                                                      uint8_t *payload,
+                                                      uint16_t payload_len) = 0;
 
     /**
      * @brief Send a chunk of data (payload) to adsd3500. This will perform a burst write making it
@@ -185,7 +191,8 @@ class DepthSensorInterface {
      * @param payload_len - the number of bytes to write
      * @return Status
      */
-    virtual aditof::Status adsd3500_write_payload(uint8_t* payload, uint16_t payload_len) = 0;
+    virtual aditof::Status adsd3500_write_payload(uint8_t *payload,
+                                                  uint16_t payload_len) = 0;
 
     /**
      * @brief Gets the sensors's list of controls

@@ -106,8 +106,10 @@ class CameraItof : public aditof::Camera {
     CameraItof(std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
                std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms,
                std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
-                   &tSensors, const std::string &ubootVersion, const std::string &kernelVersion,
-                   const std::string &sdCardImageVersion);
+                   &tSensors,
+               const std::string &ubootVersion,
+               const std::string &kernelVersion,
+               const std::string &sdCardImageVersion);
     ~CameraItof();
 
   public: // implements Camera
@@ -332,7 +334,7 @@ class CameraItof : public aditof::Camera {
      */
     aditof::Status updateAdsd3500Firmware(const std::string &filePath);
 
-        /**
+    /**
      * @brief Read the ccb from adsd3500 memory and store it in m_tempFiles.ccbFile
      *
      * @return Status
@@ -349,13 +351,13 @@ class CameraItof : public aditof::Camera {
      * @param[in] key - the key to be search and get its value
      * @return the value of the key
     */
-    std::string iniFileContentFindKeyAndGetValue(std::ifstream &iniContent, const std::string &key);
+    std::string iniFileContentFindKeyAndGetValue(std::ifstream &iniContent,
+                                                 const std::string &key);
 
     /**
      * Configure the sensor with various settings that affect the frame type.
      */
     void configureSensorFrameType();
-
 
     /**
      * Reads the content of json file and populates the parameters
@@ -379,7 +381,7 @@ class CameraItof : public aditof::Camera {
 
     FileData m_calData;
     FileData m_depthINIData;
-    std::map <std::string, FileData> m_depthINIDataMap;
+    std::map<std::string, FileData> m_depthINIDataMap;
     uint8_t *m_jconfigData = NULL;
     TofiConfig *m_tofi_config = NULL;
     TofiComputeContext *m_tofi_compute_context = NULL;
@@ -391,7 +393,7 @@ class CameraItof : public aditof::Camera {
     std::string m_sensorFirmwareFile;
     std::string m_ccb_calibrationFile;
     std::string m_ini_depth;
-    std::map <std::string, std::string> m_ini_depth_map;
+    std::map<std::string, std::string> m_ini_depth_map;
     bool m_abEnabled;
     bool m_xyzEnabled;
     bool m_xyzSetViaControl;

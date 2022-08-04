@@ -24,9 +24,9 @@ SOFTWARE.
 #ifndef TOF_MODULE_MEMORY_H
 #define TOF_MODULE_MEMORY_H
 
+#include "aditof/storage_interface.h"
 #include <cstdint>
 #include <memory>
-#include "aditof/storage_interface.h"
 
 /**
  * @brief Namespace aditof
@@ -37,7 +37,7 @@ namespace aditof {
  * @enum Flash_Image_Version
  * @brief Defines flash image verison for writing
  */
-enum Flash_Image_Version : uint8_t { 
+enum Flash_Image_Version : uint8_t {
     FLASH_MAJOR_VERSION = 1, ///< major version of flash format
     FLASH_MINOR_VERSION = 0  ///< minor version of flash format
 };
@@ -47,7 +47,7 @@ enum Flash_Image_Version : uint8_t {
  * @brief Identifies manufacturer ID
  */
 typedef enum {
-    CHUNK_ID_ANALOG_DEVICES = 0xAD, ///< Analog Devices MFG Identifier 
+    CHUNK_ID_ANALOG_DEVICES = 0xAD, ///< Analog Devices MFG Identifier
 } TOF_ChunkID_t;
 
 /**
@@ -57,15 +57,24 @@ typedef enum {
 typedef enum {
     CHUNK_TYPE_CCB = 1, ///< chunk is CCB (calibration) format
     CHUNK_TYPE_CFG = 2, ///< chunk is CFG (configuration) format
-    CHUNK_TYPE_CAP_STRUCTURE_HEADER = 0x50, ///< Flash Capabilities Structure Header
-    CHUNK_TYPE_DEBUG_INFO_HEADER = 0x51, ///< Debug/Diagnostic logging area header
-    CHUNK_TYPE_INIT_FIRMWARE_HEADER = 0x52, ///< Init firmware (boot rom extension)
-    CHUNK_TYPE_ADSD3500_FIRMWARE_FACTORY_HEADER = 0x53, ///< Adsd3500 firmware factory default header
-    CHUNK_TYPE_ADSD3500_FIRMWARE_CURRENT_HEADER = 0x54, ///< Adsd3500 firmware current header
-    CHUNK_TYPE_ADSD3500_FIRMWARE_UPGRADE_HEADER = 0x55, ///< Adsd3500 upgrade firmware header
-    CHUNK_TYPE_IMAGER_FIRMWARE_FACTORY_HEADER = 0x56, ///< Imager firmware factory default header
-    CHUNK_TYPE_IMAGER_FIRMWARE_CURRENT_HEADER = 0x57, ///< Imager firmware current header
-    CHUNK_TYPE_IMAGER_FIRMWARE_UPGRADE_HEADER = 0x58, ///< Imager upgrade firmware header
+    CHUNK_TYPE_CAP_STRUCTURE_HEADER =
+        0x50, ///< Flash Capabilities Structure Header
+    CHUNK_TYPE_DEBUG_INFO_HEADER =
+        0x51, ///< Debug/Diagnostic logging area header
+    CHUNK_TYPE_INIT_FIRMWARE_HEADER =
+        0x52, ///< Init firmware (boot rom extension)
+    CHUNK_TYPE_ADSD3500_FIRMWARE_FACTORY_HEADER =
+        0x53, ///< Adsd3500 firmware factory default header
+    CHUNK_TYPE_ADSD3500_FIRMWARE_CURRENT_HEADER =
+        0x54, ///< Adsd3500 firmware current header
+    CHUNK_TYPE_ADSD3500_FIRMWARE_UPGRADE_HEADER =
+        0x55, ///< Adsd3500 upgrade firmware header
+    CHUNK_TYPE_IMAGER_FIRMWARE_FACTORY_HEADER =
+        0x56, ///< Imager firmware factory default header
+    CHUNK_TYPE_IMAGER_FIRMWARE_CURRENT_HEADER =
+        0x57, ///< Imager firmware current header
+    CHUNK_TYPE_IMAGER_FIRMWARE_UPGRADE_HEADER =
+        0x58,                     ///< Imager upgrade firmware header
     CHUNK_TYPE_FILE_HEADER = 0x3D ///< file header chunk
 } TOF_ChunkType_t;
 
@@ -74,10 +83,10 @@ typedef enum {
  * @brief Describes chunk type and version
  */
 typedef struct {
-        uint8_t chunkid; ///< TOF_ChunkID_t value            
-        uint8_t chunktype; ///< TOF_ChunkType_t value
-        uint8_t major; ///< major version of chunk
-        uint8_t minor; ///< minor version of chunk
+    uint8_t chunkid;   ///< TOF_ChunkID_t value
+    uint8_t chunktype; ///< TOF_ChunkType_t value
+    uint8_t major;     ///< major version of chunk
+    uint8_t minor;     ///< minor version of chunk
 } TOF_ChunkVersion_t;
 
 /**
@@ -85,11 +94,14 @@ typedef struct {
  * @brief Header for each memory chunk
  */
 typedef struct tag_chunkHeader {
-    TOF_ChunkVersion_t revision;         ///< chunk id type and version
-    uint32_t          headerSizeBytes;  ///< chunk header size, i.e. sizeof(TOF_ChunkHeader_t)                                    
-    uint32_t          chunkSizeBytes;   ///< chunk data size + 4bytes CRC, does not include chunk header
-    uint32_t          nextChunkAddress; ///< memory start address of next chunk, chucks can be non-continguous
-    uint32_t          chunkHeaderCRC;  ///< crc of the chunk header
+    TOF_ChunkVersion_t revision; ///< chunk id type and version
+    uint32_t
+        headerSizeBytes; ///< chunk header size, i.e. sizeof(TOF_ChunkHeader_t)
+    uint32_t
+        chunkSizeBytes; ///< chunk data size + 4bytes CRC, does not include chunk header
+    uint32_t
+        nextChunkAddress; ///< memory start address of next chunk, chucks can be non-continguous
+    uint32_t chunkHeaderCRC; ///< crc of the chunk header
 } TOF_ChunkHeader_t;
 
 typedef struct moduleFiles {
@@ -103,14 +115,14 @@ typedef struct moduleFiles {
  * @brief Helper class to read/write, generate and parse a camera module eeprom/flash image 
  */
 class ModuleMemory {
-public:
+  public:
     /**
      * @brief Constructor
      * @param[in] - module memory device specific implementataion (eeprom/flash)
      * @see StorageInterface
      */
-    ModuleMemory(std::shared_ptr<StorageInterface> eeprom) :m_eeprom(eeprom) {}
-    
+    ModuleMemory(std::shared_ptr<StorageInterface> eeprom) : m_eeprom(eeprom) {}
+
     /**
      * @brief Destructor
      */
@@ -127,7 +139,8 @@ public:
      * @return aditof::Status no temporary files are created or returned on an error
      * @see aditof::Status
      */
-    Status readModuleData(std::string &tempJsonFile, TOF_ModuleFiles_t &tempFiles );
+    Status readModuleData(std::string &tempJsonFile,
+                          TOF_ModuleFiles_t &tempFiles);
 
     /**
      * @brief Write calibration (CCB file) and optionally configuration data (CFG file) to camera module Flash.
@@ -137,8 +150,9 @@ public:
      * @param[in] cfgFileName - optional filename for configuration cfg file, pass an empty string if not defined.
      * @return aditof::Status
      * @see aditof::Status
-     */    
-    Status writeModuleData(const std::string &ccbFileName, const std::string &cfgFileName );
+     */
+    Status writeModuleData(const std::string &ccbFileName,
+                           const std::string &cfgFileName);
 
     /**
      * @brief Read calibration data from camera module memory, writes to temporary file.
@@ -152,7 +166,9 @@ public:
      * @return aditof::Status no temporary files are created or returned on an error
      * @see aditof::Status
      */
-    Status readLegacyModuleCCB(std::string &tempJsonFile, TOF_ModuleFiles_t &tempFiles, std::string &ccbSerialNumber);
+    Status readLegacyModuleCCB(std::string &tempJsonFile,
+                               TOF_ModuleFiles_t &tempFiles,
+                               std::string &ccbSerialNumber);
 
     /**
      * @brief Returns the serial number stored in the camera module memory.
@@ -170,15 +186,16 @@ public:
      * @return aditof::Status whether the operation succeeded or an error has occurred
      * @see aditof::Status
      */
-    Status processNVMFirmware(uint8_t chunkType, uint8_t *pChunkData, int payloadSize);
+    Status processNVMFirmware(uint8_t chunkType, uint8_t *pChunkData,
+                              int payloadSize);
 
-     /**
+    /**
      * @brief Displays CRC error according to chunk type
      * @param[in] chunkType - NVM header chunk type
      */
     void displayCRCError(uint8_t chunkType);
 
-private:
+  private:
     std::string ccbFilename;
     std::string cfgFilename;
     std::string jsonFilename;
@@ -188,16 +205,23 @@ private:
 
   protected:
     bool verifyChunkHeader(const TOF_ChunkHeader_t *const pChunkHeader);
-    Status readChunkHeader(uint8_t *const buffer, int32_t chunkDataAddr );
-    Status writeData(uint32_t address, const uint8_t *const data, uint32_t length);
+    Status readChunkHeader(uint8_t *const buffer, int32_t chunkDataAddr);
+    Status writeData(uint32_t address, const uint8_t *const data,
+                     uint32_t length);
     uint32_t loadfileData(const std::string filename, uint8_t **dataBufferOut);
-    TOF_ChunkHeader_t initChunckHeader(TOF_ChunkType_t type, uint32_t address, uint32_t dataSize, bool isLastChunk );
-    Status createModuleImage(const uint8_t *ccbData, uint32_t ccbSize, const uint8_t *cfgData, uint32_t cfgSize);
+    TOF_ChunkHeader_t initChunckHeader(TOF_ChunkType_t type, uint32_t address,
+                                       uint32_t dataSize, bool isLastChunk);
+    Status createModuleImage(const uint8_t *ccbData, uint32_t ccbSize,
+                             const uint8_t *cfgData, uint32_t cfgSize);
 
-    std::string writeToTempFile(const uint8_t *const dataBuffer, const uint32_t length, std::string fileTag);
-    std::string writeTempCCB(const uint8_t *const ccbFileData, const uint32_t length);
-    std::string writeTempCFG(const uint8_t *const cfgFileData, const uint32_t length);
-    std::string writeTempJSON(const std::string ccbFilename, const std::string cfgFilename);
+    std::string writeToTempFile(const uint8_t *const dataBuffer,
+                                const uint32_t length, std::string fileTag);
+    std::string writeTempCCB(const uint8_t *const ccbFileData,
+                             const uint32_t length);
+    std::string writeTempCFG(const uint8_t *const cfgFileData,
+                             const uint32_t length);
+    std::string writeTempJSON(const std::string ccbFilename,
+                              const std::string cfgFilename);
 
     std::shared_ptr<StorageInterface> m_eeprom;
     std::string m_serialNumber;

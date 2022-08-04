@@ -64,26 +64,26 @@ Status UsbSensorEnumerator::getTemperatureSensors(
     return Status::OK;
 }
 
-aditof::Status UsbSensorEnumerator::getUbootVersion(
-    std::string &uBootVersion) const {
+aditof::Status
+UsbSensorEnumerator::getUbootVersion(std::string &uBootVersion) const {
     uBootVersion = m_uBootVersion;
     return aditof::Status::OK;
 }
 
-aditof::Status UsbSensorEnumerator::getKernelVersion(
-    std::string &kernelVersion) const {
+aditof::Status
+UsbSensorEnumerator::getKernelVersion(std::string &kernelVersion) const {
     kernelVersion = m_kernelVersion;
     return aditof::Status::OK;
 }
 
-aditof::Status UsbSensorEnumerator::getRfsVersion(
-    std::string &rfsVersion) const {
+aditof::Status
+UsbSensorEnumerator::getRfsVersion(std::string &rfsVersion) const {
     rfsVersion = m_rfsVersion;
     return aditof::Status::OK;
 }
 
-aditof::Status UsbSensorEnumerator::getSdkVersion(
-    std::string &sdkVersion) const {
+aditof::Status
+UsbSensorEnumerator::getSdkVersion(std::string &sdkVersion) const {
     sdkVersion = m_sdkVersion;
     return aditof::Status::OK;
 }

@@ -14,9 +14,7 @@
 #define ADI_FSF_OPTIONS_H_FUNC static inline
 #endif
 
-
-
-aditof::FSF* OptionspFsfRead;
+aditof::FSF *OptionspFsfRead;
 aditof::FileHeader optfileHeader;
 aditof::StreamInfo optstreamInfo;
 FSFStreamEnable checkAvailability;
@@ -24,36 +22,40 @@ FSFStreamEnable checkAvailability;
 /**
 *@brief Returns the proper boolean logic to enable/disable point cloud data
 */
-ADI_FSF_OPTIONS_H_FUNC void pointCloudEnable(bool _isX, bool _isY, bool _isDepth, bool& xEnable, bool& yEnable, bool& depthEnable);
+ADI_FSF_OPTIONS_H_FUNC void pointCloudEnable(bool _isX, bool _isY,
+                                             bool _isDepth, bool &xEnable,
+                                             bool &yEnable, bool &depthEnable);
 
 /**
 * @brief Write FSF file, set stream options
 */
-ADI_FSF_OPTIONS_H_FUNC void SetFSFStreamInfo(int mainWindowWidth, int mainWindowHeight, bool& showWindow,
-											 bool& startFSFRec, FSFStreamEnable& _streamEnable)
-{
-	//Set FSF Options window current position. This is in fucntion of the main window height and width
-	ImGui::SetNextWindowPos({ (float)mainWindowWidth / 4 , (float)mainWindowHeight / 4 });
-	//This is known widow size with nStreams = 19
-	//ImVec2 winSize = { 550.0, 650.0 };//For full option spectrum
-	ImVec2 winSize = { 550.0, (float)(200.0 + 80.0 * 2) };
-	ImGui::SetNextWindowSize(winSize);
-	ImGui::Begin("FSF Options", NULL, ImGuiWindowFlags_NoResize);
-	bool _isX;
-	bool _isY;
-	bool _isDepth;
-	ImGui::SetNextTreeNodeOpen(true, ImGuiCond_FirstUseEver);
+ADI_FSF_OPTIONS_H_FUNC void
+SetFSFStreamInfo(int mainWindowWidth, int mainWindowHeight, bool &showWindow,
+                 bool &startFSFRec, FSFStreamEnable &_streamEnable) {
+    //Set FSF Options window current position. This is in fucntion of the main window height and width
+    ImGui::SetNextWindowPos(
+        {(float)mainWindowWidth / 4, (float)mainWindowHeight / 4});
+    //This is known widow size with nStreams = 19
+    //ImVec2 winSize = { 550.0, 650.0 };//For full option spectrum
+    ImVec2 winSize = {550.0, (float)(200.0 + 80.0 * 2)};
+    ImGui::SetNextWindowSize(winSize);
+    ImGui::Begin("FSF Options", NULL, ImGuiWindowFlags_NoResize);
+    bool _isX;
+    bool _isY;
+    bool _isDepth;
+    ImGui::SetNextTreeNodeOpen(true, ImGuiCond_FirstUseEver);
 
-	if (ImGui::TreeNode("FSF Stream Type Options"))
-	{
-		ImGui::NewLine();
-		ImGui::SameLine();
-		adiMainWindow::ImGuiExtensions::ADICheckbox("ACTIVE_BR", &_streamEnable.active_br, true);
-		ImGui::SameLine();
-		_isDepth = adiMainWindow::ImGuiExtensions::ADICheckbox("DEPTH", &_streamEnable.depth, true);
-		ImGui::NewLine();
-		ImGui::SameLine();
-		/*adiMainWindow::ImGuiExtensions::ADICheckbox("COMMON_MODE", &_streamEnable.common_mode, false);
+    if (ImGui::TreeNode("FSF Stream Type Options")) {
+        ImGui::NewLine();
+        ImGui::SameLine();
+        adiMainWindow::ImGuiExtensions::ADICheckbox(
+            "ACTIVE_BR", &_streamEnable.active_br, true);
+        ImGui::SameLine();
+        _isDepth = adiMainWindow::ImGuiExtensions::ADICheckbox(
+            "DEPTH", &_streamEnable.depth, true);
+        ImGui::NewLine();
+        ImGui::SameLine();
+        /*adiMainWindow::ImGuiExtensions::ADICheckbox("COMMON_MODE", &_streamEnable.common_mode, false);
 		ImGui::SameLine();
 		adiMainWindow::ImGuiExtensions::ADICheckbox("CONF", &_streamEnable.conf, false);
 		ImGui::NewLine();
@@ -87,72 +89,73 @@ ADI_FSF_OPTIONS_H_FUNC void SetFSFStreamInfo(int mainWindowWidth, int mainWindow
 		ImGui::SameLine();
 		adiMainWindow::ImGuiExtensions::ADICheckbox("VARIANCE", &_streamEnable.variance, false);
 		ImGui::NewLine();
-		ImGui::SameLine();	*/	
-		_isX = adiMainWindow::ImGuiExtensions::ADICheckbox("X", &_streamEnable.x, true);
-		ImGui::SameLine();
-		_isY = adiMainWindow::ImGuiExtensions::ADICheckbox("Y", &_streamEnable.y, true);
-		ImGui::NewLine();
-		ImGui::SameLine();
-		/*adiMainWindow::ImGuiExtensions::ADICheckbox("UNKNOWN", &_streamEnable.unknown, false);
+		ImGui::SameLine();	*/
+        _isX = adiMainWindow::ImGuiExtensions::ADICheckbox(
+            "X", &_streamEnable.x, true);
+        ImGui::SameLine();
+        _isY = adiMainWindow::ImGuiExtensions::ADICheckbox(
+            "Y", &_streamEnable.y, true);
+        ImGui::NewLine();
+        ImGui::SameLine();
+        /*adiMainWindow::ImGuiExtensions::ADICheckbox("UNKNOWN", &_streamEnable.unknown, false);
 		ImGui::NewLine();*/
-		ImGui::TreePop();
-		pointCloudEnable(_isX, _isY, _isDepth, _streamEnable.x, _streamEnable.y, _streamEnable.depth);
-	}
-	ImGui::Separator();
-	if (adiMainWindow::ImGuiExtensions::ADIButton("Ok", true))
-	{
-		showWindow = false;
-		startFSFRec = true;
-	}
-	ImGui::SameLine();
-	if (adiMainWindow::ImGuiExtensions::ADIButton("Cancel", true))
-	{
-		FSFStreamEnable resetStream;
-		_streamEnable = resetStream;
-		showWindow = false;
-		startFSFRec = false;
-	}
+        ImGui::TreePop();
+        pointCloudEnable(_isX, _isY, _isDepth, _streamEnable.x, _streamEnable.y,
+                         _streamEnable.depth);
+    }
+    ImGui::Separator();
+    if (adiMainWindow::ImGuiExtensions::ADIButton("Ok", true)) {
+        showWindow = false;
+        startFSFRec = true;
+    }
+    ImGui::SameLine();
+    if (adiMainWindow::ImGuiExtensions::ADIButton("Cancel", true)) {
+        FSFStreamEnable resetStream;
+        _streamEnable = resetStream;
+        showWindow = false;
+        startFSFRec = false;
+    }
 
-	ImGui::End();
+    ImGui::End();
 }
 
 /**
 * @brief Read from FSF file, will fetch the options from a given file.
 */
-ADI_FSF_OPTIONS_H_FUNC void GetFSFInfo(const char* pFilename, FSFStreamEnable _checkAvailability)
-{
-	OptionspFsfRead = new aditof::FSF_Common{ aditof::FsfMode::READ, FSF_CUSTOM_MAX_NUM_FRAMES };
-	OptionspFsfRead->OpenFile(pFilename);
-	//Get File Header
-	OptionspFsfRead->GetFileHeader(optfileHeader);
-	checkAvailability = _checkAvailability;
+ADI_FSF_OPTIONS_H_FUNC void GetFSFInfo(const char *pFilename,
+                                       FSFStreamEnable _checkAvailability) {
+    OptionspFsfRead = new aditof::FSF_Common{aditof::FsfMode::READ,
+                                             FSF_CUSTOM_MAX_NUM_FRAMES};
+    OptionspFsfRead->OpenFile(pFilename);
+    //Get File Header
+    OptionspFsfRead->GetFileHeader(optfileHeader);
+    checkAvailability = _checkAvailability;
 }
 
 /**
 *@brief Read from FSF file, will show the options the read file has to offer
 */
-ADI_FSF_OPTIONS_H_FUNC void ShowFSFOptionsGUI(int mainWindowWidth, int mainWindowHeight, bool &showWindow, bool &startFSFPb, 
-											  FSFStreamEnable &_streamEnable)
-{	
-	////Set FSF Options window current position. This is in fucntion of the main window height and width
-	//ImGui::SetNextWindowPos({ (float)mainWindowWidth / 4 , (float)mainWindowHeight / 4 });
-	////Dynamic window size in fucntion of nStreams value. The larger nStreams is, the bigger the window will be
-	//ImVec2 winSize = { 550.0, (float)(200.0 + 80.0 * (optfileHeader.nStreams / 2) )};
-	//ImGui::SetNextWindowSize(winSize);
-	//ImGui::Begin("FSF Options", NULL, ImGuiWindowFlags_NoResize);
-	//ImGui::SetNextTreeNodeOpen(true, ImGuiCond_FirstUseEver);
-	bool _isX;
-	bool _isY;
-	bool _isDepth;
-	//if (ImGui::TreeNode("FSF Stream Type Options"))
-	{
-		if (OptionspFsfRead != nullptr)
-		{
-			for (uint32_t strCtr = 0; strCtr < optfileHeader.nStreams; strCtr++)
-			{
-				OptionspFsfRead->GetStreamInfo(strCtr, optstreamInfo);
+ADI_FSF_OPTIONS_H_FUNC void
+ShowFSFOptionsGUI(int mainWindowWidth, int mainWindowHeight, bool &showWindow,
+                  bool &startFSFPb, FSFStreamEnable &_streamEnable) {
+    ////Set FSF Options window current position. This is in fucntion of the main window height and width
+    //ImGui::SetNextWindowPos({ (float)mainWindowWidth / 4 , (float)mainWindowHeight / 4 });
+    ////Dynamic window size in fucntion of nStreams value. The larger nStreams is, the bigger the window will be
+    //ImVec2 winSize = { 550.0, (float)(200.0 + 80.0 * (optfileHeader.nStreams / 2) )};
+    //ImGui::SetNextWindowSize(winSize);
+    //ImGui::Begin("FSF Options", NULL, ImGuiWindowFlags_NoResize);
+    //ImGui::SetNextTreeNodeOpen(true, ImGuiCond_FirstUseEver);
+    bool _isX;
+    bool _isY;
+    bool _isDepth;
+    //if (ImGui::TreeNode("FSF Stream Type Options"))
+    {
+        if (OptionspFsfRead != nullptr) {
+            for (uint32_t strCtr = 0; strCtr < optfileHeader.nStreams;
+                 strCtr++) {
+                OptionspFsfRead->GetStreamInfo(strCtr, optstreamInfo);
 
-				/*aditof::StreamType sTyp = (aditof::StreamType)optstreamInfo.StreamType;
+                /*aditof::StreamType sTyp = (aditof::StreamType)optstreamInfo.StreamType;
 				switch (sTyp)
 				{
 					case aditof::StreamType::STREAM_TYPE_ACTIVE_BR:
@@ -237,64 +240,59 @@ ADI_FSF_OPTIONS_H_FUNC void ShowFSFOptionsGUI(int mainWindowWidth, int mainWindo
 						adiMainWindow::ImGuiExtensions::ADICheckbox("UNKNOWN", &_streamEnable.unknown, true);
 						break;
 				}*/
-				
-				//if(strCtr %2 == 0)//Make two columns
-				//{ 
-				//	ImGui::SameLine();
-				//}
-				//else
-				//{
-				//	ImGui::NewLine();
-				//}
-			}
-			//ImGui::NewLine();
-		}
-		
-		//ImGui::TreePop();
-	}
-	//ImGui::Separator();	
-	//if (adiMainWindow::ImGuiExtensions::ADIButton("Ok", true))
-	//{
-		showWindow = false;
-		OptionspFsfRead->CloseFile();
-		startFSFPb = true;
-	//}
-	//ImGui::SameLine();
-	//if (adiMainWindow::ImGuiExtensions::ADIButton("Cancel", true))
-	//{
-	//	showWindow = false;
-	//	startFSFPb = false;
-	//	OptionspFsfRead->CloseFile();
-	//}
-	//ImGui::End();
+
+                //if(strCtr %2 == 0)//Make two columns
+                //{
+                //	ImGui::SameLine();
+                //}
+                //else
+                //{
+                //	ImGui::NewLine();
+                //}
+            }
+            //ImGui::NewLine();
+        }
+
+        //ImGui::TreePop();
+    }
+    //ImGui::Separator();
+    //if (adiMainWindow::ImGuiExtensions::ADIButton("Ok", true))
+    //{
+    showWindow = false;
+    OptionspFsfRead->CloseFile();
+    startFSFPb = true;
+    //}
+    //ImGui::SameLine();
+    //if (adiMainWindow::ImGuiExtensions::ADIButton("Cancel", true))
+    //{
+    //	showWindow = false;
+    //	startFSFPb = false;
+    //	OptionspFsfRead->CloseFile();
+    //}
+    //ImGui::End();
 }
 
-ADI_FSF_OPTIONS_H_FUNC void pointCloudEnable(bool _isX, bool _isY, bool _isDepth, bool& xEnable, bool& yEnable, bool& depthEnable)
-{
-	if (_isX)
-	{
-		yEnable = xEnable;
-		if (xEnable && !depthEnable)
-		{
-			depthEnable = true;
-		}
-	}
-	if (_isY)
-	{
-		xEnable = yEnable;
-		if (yEnable && !depthEnable)
-		{
-			depthEnable = true;
-		}
-	}
-	if (_isDepth)
-	{
-		if (!depthEnable && (xEnable || yEnable))
-		{
-			xEnable = false;
-			yEnable = false;
-		}
-	}
+ADI_FSF_OPTIONS_H_FUNC void pointCloudEnable(bool _isX, bool _isY,
+                                             bool _isDepth, bool &xEnable,
+                                             bool &yEnable, bool &depthEnable) {
+    if (_isX) {
+        yEnable = xEnable;
+        if (xEnable && !depthEnable) {
+            depthEnable = true;
+        }
+    }
+    if (_isY) {
+        xEnable = yEnable;
+        if (yEnable && !depthEnable) {
+            depthEnable = true;
+        }
+    }
+    if (_isDepth) {
+        if (!depthEnable && (xEnable || yEnable)) {
+            xEnable = false;
+            yEnable = false;
+        }
+    }
 }
 
 #endif // ADI_FSF_OPTIONS_H
