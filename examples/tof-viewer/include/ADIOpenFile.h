@@ -4,11 +4,12 @@
 /* This software is proprietary to Analog Devices, Inc. and its licensors.      */
 /*                                                                              */
 /********************************************************************************/
-#include <string>
-#include <vector>
-
 #ifndef ADI_OPEN_FILE
 #define ADI_OPEN_FILE
+
+#include <iostream>
+#include <string>
+#include <vector>
 
 extern std::string customFilter;
 extern std::vector<std::string> customFilters;

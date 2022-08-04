@@ -5,15 +5,15 @@
 /*                                                                              */
 /********************************************************************************/
 #include "ADIOpenFile.h"
-#include <iostream>
 
 std::string customFilter("All Files (*.*)\0*.*\0\0", 21);
 std::vector<std::string> customFilters;
 
 #ifdef _WIN32
-#include <Commdlg.h>
 #include <codecvt>
 #include <windows.h>
+
+#include <Commdlg.h>
 
 using namespace std;
 
