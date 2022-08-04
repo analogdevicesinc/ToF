@@ -50,7 +50,8 @@ struct NetworkDepthSensor::ImplData {
     bool opened;
 };
 
-NetworkDepthSensor::NetworkDepthSensor(const std::string &name, const std::string &ip)
+NetworkDepthSensor::NetworkDepthSensor(const std::string &name,
+                                       const std::string &ip)
     : m_implData(new NetworkDepthSensor::ImplData) {
 
     static int m_sensorCounter = 0;
@@ -74,8 +75,10 @@ NetworkDepthSensor::~NetworkDepthSensor() {
             LOG(WARNING) << "Not connected to server";
         }
 
-        m_implData->handle.net->send_buff[m_sensorIndex].set_func_name("HangUp");
-        m_implData->handle.net->send_buff[m_sensorIndex].set_expect_reply(false);
+        m_implData->handle.net->send_buff[m_sensorIndex].set_func_name(
+            "HangUp");
+        m_implData->handle.net->send_buff[m_sensorIndex].set_expect_reply(
+            false);
 
         if (m_implData->handle.net->SendCommand() != 0) {
             LOG(WARNING) << "Send Command Failed";
@@ -243,7 +246,8 @@ aditof::Status NetworkDepthSensor::getAvailableFrameTypes(
         types.clear();
     }
 
-    for (int i = 0; i < net->recv_buff[m_sensorIndex].available_frame_types_size(); i++) {
+    for (int i = 0;
+         i < net->recv_buff[m_sensorIndex].available_frame_types_size(); i++) {
         payload::DepthSensorFrameType protoFrameType =
             net->recv_buff[m_sensorIndex].available_frame_types(i);
         aditof::DepthSensorFrameType aditofFrameType;
@@ -288,8 +292,9 @@ NetworkDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     net->send_buff[m_sensorIndex].mutable_frame_type()->set_height(type.height);
     net->send_buff[m_sensorIndex].mutable_frame_type()->set_type(type.type);
     for (const auto &content : type.content) {
-        auto protoFameContent =
-            net->send_buff[m_sensorIndex].mutable_frame_type()->add_depthsensorframecontent();
+        auto protoFameContent = net->send_buff[m_sensorIndex]
+                                    .mutable_frame_type()
+                                    ->add_depthsensorframecontent();
 
         protoFameContent->set_type(content.type);
         protoFameContent->set_width(content.width);
@@ -335,7 +340,8 @@ aditof::Status NetworkDepthSensor::program(const uint8_t *firmware,
     }
 
     net->send_buff[m_sensorIndex].set_func_name("Program");
-    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(size));
+    net->send_buff[m_sensorIndex].add_func_int32_param(
+        static_cast<::google::int32>(size));
     net->send_buff[m_sensorIndex].add_func_bytes_param(firmware, size);
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 
@@ -395,16 +401,17 @@ aditof::Status NetworkDepthSensor::getFrame(uint16_t *buffer) {
         LOG(WARNING) << "getFrame() failed on target";
         return status;
     }
-    
-//when using ITOF camera the data is already deinterleaved, so a simple copy is enough
-    memcpy(buffer, net->recv_buff[m_sensorIndex].bytes_payload(0).c_str(), net->recv_buff[m_sensorIndex].bytes_payload(0).length());
+
+    //when using ITOF camera the data is already deinterleaved, so a simple copy is enough
+    memcpy(buffer, net->recv_buff[m_sensorIndex].bytes_payload(0).c_str(),
+           net->recv_buff[m_sensorIndex].bytes_payload(0).length());
 
     return status;
 }
 
 aditof::Status NetworkDepthSensor::readRegisters(const uint16_t *address,
-                                                    uint16_t *data,
-                                                    size_t length, bool burst /*=true*/) {
+                                                 uint16_t *data, size_t length,
+                                                 bool burst /*=true*/) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -416,10 +423,14 @@ aditof::Status NetworkDepthSensor::readRegisters(const uint16_t *address,
     }
 
     net->send_buff[m_sensorIndex].set_func_name("ReadRegisters");
-    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(length));
-    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(burst));
-    net->send_buff[m_sensorIndex].add_func_bytes_param(address, burst ? 2 : length * sizeof(uint16_t));
-    net->send_buff[m_sensorIndex].add_func_bytes_param(data, length * sizeof(uint16_t));
+    net->send_buff[m_sensorIndex].add_func_int32_param(
+        static_cast<::google::int32>(length));
+    net->send_buff[m_sensorIndex].add_func_int32_param(
+        static_cast<::google::int32>(burst));
+    net->send_buff[m_sensorIndex].add_func_bytes_param(
+        address, burst ? 2 : length * sizeof(uint16_t));
+    net->send_buff[m_sensorIndex].add_func_bytes_param(
+        data, length * sizeof(uint16_t));
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
@@ -449,8 +460,9 @@ aditof::Status NetworkDepthSensor::readRegisters(const uint16_t *address,
 }
 
 aditof::Status NetworkDepthSensor::writeRegisters(const uint16_t *address,
-                                                     const uint16_t *data,
-                                                     size_t length, bool burst /*=true*/) {
+                                                  const uint16_t *data,
+                                                  size_t length,
+                                                  bool burst /*=true*/) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -462,10 +474,14 @@ aditof::Status NetworkDepthSensor::writeRegisters(const uint16_t *address,
     }
 
     net->send_buff[m_sensorIndex].set_func_name("WriteRegisters");
-    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(length));
-    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(burst));
-    net->send_buff[m_sensorIndex].add_func_bytes_param(address, burst ? 2 : length * sizeof(uint16_t));
-    net->send_buff[m_sensorIndex].add_func_bytes_param(data, length * sizeof(uint16_t));
+    net->send_buff[m_sensorIndex].add_func_int32_param(
+        static_cast<::google::int32>(length));
+    net->send_buff[m_sensorIndex].add_func_int32_param(
+        static_cast<::google::int32>(burst));
+    net->send_buff[m_sensorIndex].add_func_bytes_param(
+        address, burst ? 2 : length * sizeof(uint16_t));
+    net->send_buff[m_sensorIndex].add_func_bytes_param(
+        data, length * sizeof(uint16_t));
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
@@ -489,8 +505,8 @@ aditof::Status NetworkDepthSensor::writeRegisters(const uint16_t *address,
     return status;
 }
 
-aditof::Status NetworkDepthSensor::getAvailableControls(std::vector<std::string> &controls) const
-{
+aditof::Status NetworkDepthSensor::getAvailableControls(
+    std::vector<std::string> &controls) const {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -525,8 +541,10 @@ aditof::Status NetworkDepthSensor::getAvailableControls(std::vector<std::string>
     if (status == Status::OK) {
         controls.clear();
 
-        for (int i = 0; i < net->recv_buff[m_sensorIndex].strings_payload_size(); i++) {
-            std::string controlName = net->recv_buff[m_sensorIndex].strings_payload(i);
+        for (int i = 0;
+             i < net->recv_buff[m_sensorIndex].strings_payload_size(); i++) {
+            std::string controlName =
+                net->recv_buff[m_sensorIndex].strings_payload(i);
             controls.push_back(controlName);
         }
     }
@@ -535,8 +553,7 @@ aditof::Status NetworkDepthSensor::getAvailableControls(std::vector<std::string>
 }
 
 aditof::Status NetworkDepthSensor::setControl(const std::string &control,
-                               const std::string &value)
-{
+                                              const std::string &value) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -574,8 +591,7 @@ aditof::Status NetworkDepthSensor::setControl(const std::string &control,
 }
 
 aditof::Status NetworkDepthSensor::getControl(const std::string &control,
-                               std::string &value) const
-{
+                                              std::string &value) const {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -638,7 +654,8 @@ aditof::Status NetworkDepthSensor::getName(std::string &name) const {
     return aditof::Status::OK;
 }
 
-aditof::Status NetworkDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data){
+aditof::Status NetworkDepthSensor::adsd3500_read_cmd(uint16_t cmd,
+                                                     uint16_t *data) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -650,7 +667,8 @@ aditof::Status NetworkDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *dat
     }
 
     net->send_buff[m_sensorIndex].set_func_name("Adsd3500ReadCmd");
-    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(cmd));
+    net->send_buff[m_sensorIndex].add_func_int32_param(
+        static_cast<::google::int32>(cmd));
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
@@ -671,14 +689,16 @@ aditof::Status NetworkDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *dat
 
     Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
-    if(status == Status::OK) {
-        *data = static_cast<uint16_t>(net->recv_buff[m_sensorIndex].int32_payload(0));
+    if (status == Status::OK) {
+        *data = static_cast<uint16_t>(
+            net->recv_buff[m_sensorIndex].int32_payload(0));
     }
 
     return status;
 }
 
-aditof::Status NetworkDepthSensor::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
+aditof::Status NetworkDepthSensor::adsd3500_write_cmd(uint16_t cmd,
+                                                      uint16_t data) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -690,8 +710,10 @@ aditof::Status NetworkDepthSensor::adsd3500_write_cmd(uint16_t cmd, uint16_t dat
     }
 
     net->send_buff[m_sensorIndex].set_func_name("Adsd3500WriteCmd");
-    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(cmd));
-    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(data));
+    net->send_buff[m_sensorIndex].add_func_int32_param(
+        static_cast<::google::int32>(cmd));
+    net->send_buff[m_sensorIndex].add_func_int32_param(
+        static_cast<::google::int32>(data));
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
@@ -715,7 +737,8 @@ aditof::Status NetworkDepthSensor::adsd3500_write_cmd(uint16_t cmd, uint16_t dat
     return status;
 }
 
-aditof::Status NetworkDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) {
+aditof::Status NetworkDepthSensor::adsd3500_read_payload_cmd(
+    uint32_t cmd, uint8_t *readback_data, uint16_t payload_len) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -727,9 +750,12 @@ aditof::Status NetworkDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8
     }
 
     net->send_buff[m_sensorIndex].set_func_name("Adsd3500ReadPayloadCmd");
-    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(cmd));
-    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(payload_len));
-    net->send_buff[m_sensorIndex].add_func_bytes_param(readback_data, 4 * sizeof (uint8_t));
+    net->send_buff[m_sensorIndex].add_func_int32_param(
+        static_cast<::google::int32>(cmd));
+    net->send_buff[m_sensorIndex].add_func_int32_param(
+        static_cast<::google::int32>(payload_len));
+    net->send_buff[m_sensorIndex].add_func_bytes_param(readback_data,
+                                                       4 * sizeof(uint8_t));
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
@@ -750,14 +776,17 @@ aditof::Status NetworkDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8
 
     Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
-    if(status == Status::OK) {     
-        memcpy(readback_data, net->recv_buff[m_sensorIndex].bytes_payload(0).c_str(), net->recv_buff[m_sensorIndex].bytes_payload(0).length());
+    if (status == Status::OK) {
+        memcpy(readback_data,
+               net->recv_buff[m_sensorIndex].bytes_payload(0).c_str(),
+               net->recv_buff[m_sensorIndex].bytes_payload(0).length());
     }
-    
+
     return status;
 }
 
-aditof::Status NetworkDepthSensor::adsd3500_read_payload(uint8_t* payload, uint16_t payload_len) {
+aditof::Status NetworkDepthSensor::adsd3500_read_payload(uint8_t *payload,
+                                                         uint16_t payload_len) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -769,7 +798,8 @@ aditof::Status NetworkDepthSensor::adsd3500_read_payload(uint8_t* payload, uint1
     }
 
     net->send_buff[m_sensorIndex].set_func_name("Adsd3500ReadPayload");
-    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(payload_len));
+    net->send_buff[m_sensorIndex].add_func_int32_param(
+        static_cast<::google::int32>(payload_len));
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
@@ -789,15 +819,18 @@ aditof::Status NetworkDepthSensor::adsd3500_read_payload(uint8_t* payload, uint1
     }
 
     Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
-    
-    if(status == Status::OK) {     
-        memcpy(payload, net->recv_buff[m_sensorIndex].bytes_payload(0).c_str(), net->recv_buff[m_sensorIndex].bytes_payload(0).length());
+
+    if (status == Status::OK) {
+        memcpy(payload, net->recv_buff[m_sensorIndex].bytes_payload(0).c_str(),
+               net->recv_buff[m_sensorIndex].bytes_payload(0).length());
     }
 
     return status;
 }
 
-aditof::Status NetworkDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
+aditof::Status
+NetworkDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload,
+                                               uint16_t payload_len) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -809,8 +842,10 @@ aditof::Status NetworkDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint
     }
 
     net->send_buff[m_sensorIndex].set_func_name("Adsd3500WritePayloadCmd");
-    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(cmd));
-    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(payload_len));
+    net->send_buff[m_sensorIndex].add_func_int32_param(
+        static_cast<::google::int32>(cmd));
+    net->send_buff[m_sensorIndex].add_func_int32_param(
+        static_cast<::google::int32>(payload_len));
     net->send_buff[m_sensorIndex].add_func_bytes_param(payload, payload_len);
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 
@@ -835,7 +870,9 @@ aditof::Status NetworkDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint
     return status;
 }
 
-aditof::Status NetworkDepthSensor::adsd3500_write_payload(uint8_t* payload, uint16_t payload_len) {
+aditof::Status
+NetworkDepthSensor::adsd3500_write_payload(uint8_t *payload,
+                                           uint16_t payload_len) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -847,7 +884,8 @@ aditof::Status NetworkDepthSensor::adsd3500_write_payload(uint8_t* payload, uint
     }
 
     net->send_buff[m_sensorIndex].set_func_name("Adsd3500WritePayload");
-    net->send_buff[m_sensorIndex].add_func_int32_param(static_cast<::google::int32>(payload_len));
+    net->send_buff[m_sensorIndex].add_func_int32_param(
+        static_cast<::google::int32>(payload_len));
     net->send_buff[m_sensorIndex].add_func_bytes_param(payload, payload_len);
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 

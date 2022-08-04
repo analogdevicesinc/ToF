@@ -2,13 +2,16 @@
 #include "offline_depth_sensor.h"
 
 OfflineSensorEnumerator::OfflineSensorEnumerator() {
-    m_sensorsInfo.emplace_back(std::string(std::string(RESOURCES) + "/offline/mode3_raw.bin"));
+    m_sensorsInfo.emplace_back(
+        std::string(std::string(RESOURCES) + "/offline/mode3_raw.bin"));
 }
 
-aditof::Status OfflineSensorEnumerator::getDepthSensors(std::vector<std::shared_ptr<aditof::DepthSensorInterface> > &depthSensors) {
+aditof::Status OfflineSensorEnumerator::getDepthSensors(
+    std::vector<std::shared_ptr<aditof::DepthSensorInterface>> &depthSensors) {
     depthSensors.clear();
 
-    depthSensors.emplace_back(std::make_shared<OfflineDepthSensor>(m_sensorsInfo.front()));
+    depthSensors.emplace_back(
+        std::make_shared<OfflineDepthSensor>(m_sensorsInfo.front()));
     return aditof::Status::OK;
 }
 
@@ -17,7 +20,7 @@ aditof::Status OfflineSensorEnumerator::searchSensors() {
 }
 
 aditof::Status OfflineSensorEnumerator::getStorages(
-        std::vector<std::shared_ptr<aditof::StorageInterface>> &storages) {
+    std::vector<std::shared_ptr<aditof::StorageInterface>> &storages) {
     return aditof::Status::UNAVAILABLE;
 }
 
@@ -27,17 +30,17 @@ aditof::Status OfflineSensorEnumerator::getTemperatureSensors(
     return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status OfflineSensorEnumerator::getUbootVersion(
-    std::string &uBootVersion) const {
+aditof::Status
+OfflineSensorEnumerator::getUbootVersion(std::string &uBootVersion) const {
     return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status OfflineSensorEnumerator::getKernelVersion(
-    std::string &kernelVersion) const {
+aditof::Status
+OfflineSensorEnumerator::getKernelVersion(std::string &kernelVersion) const {
     return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status OfflineSensorEnumerator::getSdVersion(
-    std::string &sdVersion) const {
+aditof::Status
+OfflineSensorEnumerator::getSdVersion(std::string &sdVersion) const {
     return aditof::Status::UNAVAILABLE;
 }

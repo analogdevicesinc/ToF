@@ -29,48 +29,49 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdint>
-#include <string>
 #include <cstdio>
 #include <glog/logging.h>
+#include <string>
 
 #if _WIN32
-# include <windows.h>
-# include <io.h>
 #include <fcntl.h>
+#include <io.h>
+#include <windows.h>
 #else
-# include <unistd.h>
-#endif  // _WIN32
+#include <unistd.h>
+#endif // _WIN32
 
 std::string getTempFilename(std::string prefix) {
     int fhandle = -1;
 #ifdef _WIN32
-    char temp_dir_path[MAX_PATH + 1] = { '\0' };  // NOLINT
-    char temp_file_path[MAX_PATH + 1] = { '\0' };  // NOLINT
+    char temp_dir_path[MAX_PATH + 1] = {'\0'};  // NOLINT
+    char temp_file_path[MAX_PATH + 1] = {'\0'}; // NOLINT
     ::GetTempPathA(sizeof(temp_dir_path), temp_dir_path);
-    const UINT success = ::GetTempFileNameA(temp_dir_path,
-                                            prefix.c_str(),
-                                            0,  // Generate unique file name.
+    const UINT success = ::GetTempFileNameA(temp_dir_path, prefix.c_str(),
+                                            0, // Generate unique file name.
                                             temp_file_path);
-    if(success == 0) {
-      LOG(ERROR) << "Unable to create a temporary file in " << temp_dir_path;
+    if (success == 0) {
+        LOG(ERROR) << "Unable to create a temporary file in " << temp_dir_path;
     }
-    errno_t  err = _sopen_s(&fhandle,temp_file_path,_O_BINARY,_SH_DENYNO,_S_IREAD|_S_IWRITE);
-    if(err == 0) {
-      _close( fhandle );
+    errno_t err = _sopen_s(&fhandle, temp_file_path, _O_BINARY, _SH_DENYNO,
+                           _S_IREAD | _S_IWRITE);
+    if (err == 0) {
+        _close(fhandle);
     }
-# else
+#else
     const int max_path = 4096;
     char temp_file_path[max_path] = {0};
-    if (prefix.length()>=512){
-      LOG(ERROR) << "Unable to create a temporary file with prefix " << prefix;
-      return "";
+    if (prefix.length() >= 512) {
+        LOG(ERROR) << "Unable to create a temporary file with prefix "
+                   << prefix;
+        return "";
     }
 
     // There's no guarantee that a test has write access to the current
     // directory, so we create the temporary file in the /tmp directory
     // instead. We use /tmp on most systems, and /sdcard on Android.
     // That's because Android doesn't have /tmp.
-#  if OS_LINUX_ANDROID
+#if OS_LINUX_ANDROID
     // Note: Android applications are expected to call the framework's
     // Context.getExternalStorageDirectory() method through JNI to get
     // the location of the world-writable SD Card directory. However,
@@ -86,26 +87,24 @@ std::string getTempFilename(std::string prefix) {
     // other OEM-customized locations. Never rely on these, and always
     // use /sdcard.
     strcat(temp_file_path, "/sdcard/");
-#  else
+#else
     strcat(temp_file_path, "/tmp/");
     //char temp_file_path[] = "/tmp/adi_tofcam_.XXXXXX";
-#  endif  // OS_LINUX_ANDROID
+#endif // OS_LINUX_ANDROID
     strcat(temp_file_path, prefix.c_str());
     strcat(temp_file_path, ".XXXXXX");
     fhandle = mkstemp(temp_file_path);
-    if(fhandle == -1) {
+    if (fhandle == -1) {
         close(fhandle);
     }
-# endif
+#endif
 
     std::string filename = "";
-    if(fhandle == -1) {
+    if (fhandle == -1) {
         LOG(ERROR) << "Unable to open temporary file " << temp_file_path;
-    }
-    else  {
+    } else {
         filename = temp_file_path;
     }
 
     return filename;
 }
-

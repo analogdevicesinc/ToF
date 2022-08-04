@@ -30,25 +30,25 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "camera_itof.h"
-#include "calibration_itof.h"
 #include "aditof/frame.h"
-#include "aditof_internal.h"
 #include "aditof/frame_operations.h"
-#include "module_memory.h"
-#include <algorithm>
-#include <array>
-#include <fstream>
-#include <glog/logging.h>
-#include "cJSON/cJSON.h"
+#include "aditof_internal.h"
+#include "adsd3500/crc/include/compute_crc.h"
 #include "cJSON/cJSON.c"
+#include "cJSON/cJSON.h"
+#include "calibration_itof.h"
+#include "module_memory.h"
 #include "tofi/floatTolin.h"
 #include "tofi/tofi_config.h"
+#include "utils.h"
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <fstream>
+#include <glog/logging.h>
 #include <iostream>
 #include <iterator>
 #include <vector>
-#include <cstdint>
-#include "adsd3500/crc/include/compute_crc.h"
-#include "utils.h"
 
 CameraItof::CameraItof(
     std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
@@ -56,9 +56,11 @@ CameraItof::CameraItof(
     std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &tSensors,
     const std::string &ubootVersion, const std::string &kernelVersion,
     const std::string &sdCardImageVersion)
-    : m_depthSensor(depthSensor), m_devStarted(false), m_eepromInitialized(false),
-      m_modechange_framedrop_count(0), m_xyzEnabled(false), m_xyzSetViaControl(false), m_loadedConfigData(false), m_tempFiles{},
-      m_adsd3500Enabled(false), m_cameraFps(0) {
+    : m_depthSensor(depthSensor), m_devStarted(false),
+      m_eepromInitialized(false), m_modechange_framedrop_count(0),
+      m_xyzEnabled(false), m_xyzSetViaControl(false),
+      m_loadedConfigData(false), m_tempFiles{}, m_adsd3500Enabled(false),
+      m_cameraFps(0) {
     m_details.mode = "qmp";
     m_details.cameraId = "";
     m_details.uBootVersion = ubootVersion;
@@ -98,13 +100,13 @@ CameraItof::CameraItof(
     // Look for EEPROM
     auto eeprom_iter =
         std::find_if(eeproms.begin(), eeproms.end(),
-                [this](std::shared_ptr<aditof::StorageInterface> e) {
-                        std::string name;
-                        e->getName(name);
-                        return name == m_eepromDeviceName;
-                 });
+                     [this](std::shared_ptr<aditof::StorageInterface> e) {
+                         std::string name;
+                         e->getName(name);
+                         return name == m_eepromDeviceName;
+                     });
     if (eeprom_iter == eeproms.end()) {
-        if(!m_adsd3500Enabled){
+        if (!m_adsd3500Enabled) {
             LOG(WARNING) << "Could not find " << m_eepromDeviceName
                          << " while looking for storage";
         }
@@ -148,34 +150,40 @@ aditof::Status CameraItof::initialize() {
     m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
 
     //get intrinsics for adsd3500 TO DO: check endianess of intrinsics
-    if(m_adsd3500Enabled){
+    if (m_adsd3500Enabled) {
         for (auto availableFrameTypes : m_availableSensorFrameTypes) {
             uint8_t intrinsics[56] = {0};
             uint8_t dealiasParams[32] = {0};
             TofiXYZDealiasData dealiasStruct;
             //the first element of readback_data for adsd3500_read_payload is used for the custom command
             //it will be overwritten by the returned data
-            uint8_t mode = ModeInfo::getInstance()->getModeInfo(availableFrameTypes.type).mode;
+            uint8_t mode = ModeInfo::getInstance()
+                               ->getModeInfo(availableFrameTypes.type)
+                               .mode;
             intrinsics[0] = mode;
             dealiasParams[0] = mode;
 
             //hardcoded function values to return intrinsics
-            status = m_depthSensor->adsd3500_read_payload_cmd(0x01, intrinsics, 56);
+            status =
+                m_depthSensor->adsd3500_read_payload_cmd(0x01, intrinsics, 56);
             if (status != Status::OK) {
                 LOG(ERROR) << "Failed to read intrinsics for adsd3500!";
                 return status;
             }
 
             //hardcoded function values to return dealias parameters
-            status = m_depthSensor->adsd3500_read_payload_cmd(0x02, dealiasParams, 32);
-            if(status != Status::OK){
+            status = m_depthSensor->adsd3500_read_payload_cmd(
+                0x02, dealiasParams, 32);
+            if (status != Status::OK) {
                 LOG(ERROR) << "Failed to read dealias parameters for adsd3500!";
                 return status;
             }
 
-            memcpy(&dealiasStruct, dealiasParams, sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
-            memcpy(&dealiasStruct.camera_intrinsics, intrinsics, sizeof(CameraIntrinsics));
-            
+            memcpy(&dealiasStruct, dealiasParams,
+                   sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
+            memcpy(&dealiasStruct.camera_intrinsics, intrinsics,
+                   sizeof(CameraIntrinsics));
+
             m_xyz_dealias_data[mode] = dealiasStruct;
         }
 
@@ -184,7 +192,8 @@ aditof::Status CameraItof::initialize() {
 
         status = m_depthSensor->adsd3500_read_payload_cmd(0x05, fwData, 44);
         if (status != Status::OK) {
-            LOG(INFO) << "Failed to retrieve fw version and git hash for adsd3500!";
+            LOG(INFO)
+                << "Failed to retrieve fw version and git hash for adsd3500!";
             return status;
         }
         std::string fwVersion((char *)(fwData), 4);
@@ -192,10 +201,12 @@ aditof::Status CameraItof::initialize() {
         m_adsd3500FwGitHash = std::make_pair(fwVersion, fwHash);
 
         LOG(INFO) << "Current adsd3500 firmware version is: " << int(fwData[0])
-                  << "." << int(fwData[1]) << "." << int(fwData[2]) << "." << int(fwData[3]);
-        LOG(INFO) << "Current adsd3500 firmware git hash is: " << m_adsd3500FwGitHash.second;
+                  << "." << int(fwData[1]) << "." << int(fwData[2]) << "."
+                  << int(fwData[3]);
+        LOG(INFO) << "Current adsd3500 firmware git hash is: "
+                  << m_adsd3500FwGitHash.second;
     }
-    
+
     if (m_eeprom) {
         void *handle;
         status = m_depthSensor->getHandle(&handle);
@@ -216,7 +227,7 @@ aditof::Status CameraItof::initialize() {
 
     //Populate the data from the json file provided
     status = parseJsonFileContent();
-    if(status != Status::OK){
+    if (status != Status::OK) {
         LOG(ERROR) << "Failed to parse Json file!";
         return status;
     }
@@ -224,12 +235,13 @@ aditof::Status CameraItof::initialize() {
     status = loadModuleData();
     if (status != Status::OK) {
         LOG(INFO) << "No CCB/CFG data found in camera module,";
-        LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data from JSON config file...";
+        LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data "
+                     "from JSON config file...";
     } else {
         //CCB and CFG files will be taken from module memory if
         //they are not passed in the initialization_config json file
         status = parseJsonFileContent();
-        if(status != Status::OK){
+        if (status != Status::OK) {
             LOG(ERROR) << "Failed to parse Json file!";
             return status;
         }
@@ -244,8 +256,8 @@ aditof::Status CameraItof::initialize() {
     }
 
     //Set FPS
-    if(m_cameraFps != 0){
-        status = m_depthSensor->setControl("fps",std::to_string(m_cameraFps));
+    if (m_cameraFps != 0) {
+        status = m_depthSensor->setControl("fps", std::to_string(m_cameraFps));
         if (status != Status::OK) {
             LOG(INFO) << "Failed to set fps!";
             return Status::GENERIC_ERROR;
@@ -305,13 +317,13 @@ aditof::Status CameraItof::start() {
             return status;
         }
 
-       m_CameraProgrammed = true;
+        m_CameraProgrammed = true;
     }
 
     status = m_depthSensor->start();
     if (Status::OK != status) {
-       LOG(ERROR) << "Error starting image sensor.";
-       return Status::GENERIC_ERROR;
+        LOG(ERROR) << "Error starting image sensor.";
+        return Status::GENERIC_ERROR;
     }
 
     return aditof::Status::OK;
@@ -346,19 +358,19 @@ CameraItof::getAvailableModes(std::vector<std::string> &availableModes) const {
     return status;
 }
 
-aditof::Status CameraItof::setFrameType(const std::string& frameType) {
+aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     using namespace aditof;
     Status status = Status::OK;
 
     auto frameTypeIt = std::find_if(
         m_availableSensorFrameTypes.begin(), m_availableSensorFrameTypes.end(),
-        [&frameType](const DepthSensorFrameType& d) {
+        [&frameType](const DepthSensorFrameType &d) {
             return (d.type == frameType);
         });
 
     if (frameTypeIt == m_availableSensorFrameTypes.end()) {
         LOG(WARNING) << "Frame type: " << frameType
-            << " not supported by camera";
+                     << " not supported by camera";
         return Status::INVALID_ARGUMENT;
     }
 
@@ -367,7 +379,7 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
     }
     configureSensorFrameType();
     setMode(frameType);
-    
+
     status = m_depthSensor->setFrameType(*frameTypeIt);
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to set frame type";
@@ -381,10 +393,13 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
     // Store the frame details in camera details
     m_details.frameType.type = (*frameTypeIt).type;
     // TO DO: m_details.frameType.cameraMode =
-    m_details.frameType.width = ModeInfo::getInstance()->getModeInfo(frameType).width;
-    m_details.frameType.height = ModeInfo::getInstance()->getModeInfo(frameType).height;
-    if(!m_adsd3500Enabled){
-        m_details.frameType.totalCaptures = ModeInfo::getInstance()->getModeInfo(frameType).subframes;
+    m_details.frameType.width =
+        ModeInfo::getInstance()->getModeInfo(frameType).width;
+    m_details.frameType.height =
+        ModeInfo::getInstance()->getModeInfo(frameType).height;
+    if (!m_adsd3500Enabled) {
+        m_details.frameType.totalCaptures =
+            ModeInfo::getInstance()->getModeInfo(frameType).subframes;
     } else {
         m_details.frameType.totalCaptures = 1;
     }
@@ -401,21 +416,21 @@ aditof::Status CameraItof::setFrameType(const std::string& frameType) {
         fDataDetails.subelementSize = sizeof(uint16_t);
         fDataDetails.subelementsPerElement = 1;
 
-        if (item.type == "xyz"){
+        if (item.type == "xyz") {
             fDataDetails.subelementsPerElement = 3;
         }
 
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
     }
 
-    if (m_controls["enableDepthCompute"] == "on" && ((m_details.frameType.totalCaptures > 1) || m_adsd3500Enabled)){
+    if (m_controls["enableDepthCompute"] == "on" &&
+        ((m_details.frameType.totalCaptures > 1) || m_adsd3500Enabled)) {
         status = initComputeLibrary();
         if (Status::OK != status) {
             LOG(ERROR) << "Initializing compute libraries failed.";
             return Status::GENERIC_ERROR;
         }
-    }
-    else {
+    } else {
         freeComputeLibrary();
     }
 
@@ -435,7 +450,8 @@ aditof::Status CameraItof::getAvailableFrameTypes(
     return status;
 }
 
-aditof::Status setAttributesByMode(aditof::Frame& frame, const ModeInfo::modeInfo& modeInfo){
+aditof::Status setAttributesByMode(aditof::Frame &frame,
+                                   const ModeInfo::modeInfo &modeInfo) {
     aditof::Status status = aditof::Status::OK;
 
     frame.setAttribute("embed_hdr_length", std::to_string(EMBED_HDR_LENGTH));
@@ -458,7 +474,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     uint8_t totalCaptures;
     ModeInfo::modeInfo aModeInfo;
 
-    if (frame == nullptr){
+    if (frame == nullptr) {
         return Status::INVALID_ARGUMENT;
     }
 
@@ -477,7 +493,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         frame->setDetails(m_details.frameType);
     }
 
-    if(!m_adsd3500Enabled){
+    if (!m_adsd3500Enabled) {
         frame->getAttribute("total_captures", totalCapturesStr);
         totalCaptures = std::atoi(totalCapturesStr.c_str());
     } else {
@@ -485,35 +501,39 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     }
 
     uint16_t *frameDataLocation = nullptr;
-    if ((m_details.frameType.type == "pcm")){
+    if ((m_details.frameType.type == "pcm")) {
         frame->getData("ir", &frameDataLocation);
     } else if (m_details.frameType.type == "") {
         LOG(ERROR) << "Frame type not found!";
-            return Status::INVALID_ARGUMENT;
-    }
-    else {
+        return Status::INVALID_ARGUMENT;
+    } else {
         frame->getData("raw", &frameDataLocation);
     }
 
     status = m_depthSensor->getFrame(frameDataLocation);
-    if(status != Status::OK){
+    if (status != Status::OK) {
         LOG(WARNING) << "Failed to get frame from device";
     }
 
-    if(!m_adsd3500Enabled){
-        for (unsigned int i = 0; i < (m_details.frameType.height * m_details.frameType.width * totalCaptures); ++i) {
+    if (!m_adsd3500Enabled) {
+        for (unsigned int i = 0;
+             i < (m_details.frameType.height * m_details.frameType.width *
+                  totalCaptures);
+             ++i) {
             frameDataLocation[i] = frameDataLocation[i] >> 4;
-            frameDataLocation[i] = Convert11bitFloat2LinearVal(frameDataLocation[i]);
+            frameDataLocation[i] =
+                Convert11bitFloat2LinearVal(frameDataLocation[i]);
         }
     }
-    
+
     if (!frameDataLocation /*&& !header*/) {
         LOG(WARNING) << "getframe failed to allocated valid frame";
         return status;
     }
 
-    if((m_controls["enableDepthCompute"] == "on") && ((totalCaptures > 1) || m_adsd3500Enabled)) {
- 
+    if ((m_controls["enableDepthCompute"] == "on") &&
+        ((totalCaptures > 1) || m_adsd3500Enabled)) {
+
         if (NULL == m_tofi_compute_context) {
             LOG(ERROR) << "Depth compute libray not initialized";
             return Status::GENERIC_ERROR;
@@ -521,18 +541,20 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
 
         uint16_t *tempDepthFrame = m_tofi_compute_context->p_depth_frame;
         uint16_t *tempAbFrame = m_tofi_compute_context->p_ab_frame;
-        uint16_t *tempXyzFrame = (uint16_t*)m_tofi_compute_context->p_xyz_frame;
-        
+        uint16_t *tempXyzFrame =
+            (uint16_t *)m_tofi_compute_context->p_xyz_frame;
+
         frame->getData("depth", &m_tofi_compute_context->p_depth_frame);
         frame->getData("ir", &m_tofi_compute_context->p_ab_frame);
 
         if (m_xyzEnabled) {
             uint16_t *xyzFrame;
             frame->getData("xyz", &xyzFrame);
-            m_tofi_compute_context->p_xyz_frame = (int16_t*)xyzFrame;
+            m_tofi_compute_context->p_xyz_frame = (int16_t *)xyzFrame;
         }
 
-        uint32_t ret = TofiCompute(frameDataLocation, m_tofi_compute_context, NULL);
+        uint32_t ret =
+            TofiCompute(frameDataLocation, m_tofi_compute_context, NULL);
 
         if (ret != ADI_TOFI_SUCCESS) {
             LOG(ERROR) << "TofiCompute failed";
@@ -541,17 +563,21 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
 
         m_tofi_compute_context->p_depth_frame = tempDepthFrame;
         m_tofi_compute_context->p_ab_frame = tempAbFrame;
-        m_tofi_compute_context->p_xyz_frame = (int16_t*)tempXyzFrame;
+        m_tofi_compute_context->p_xyz_frame = (int16_t *)tempXyzFrame;
 
         if (m_adsd3500Enabled && m_abEnabled &&
             m_details.frameType.type == "mp") {
             uint16_t *mpAbFrame;
             frame->getData("ir", &mpAbFrame);
-            memcpy(mpAbFrame, frameDataLocation + m_details.frameType.height *
-                   m_details.frameType.width * 3, m_details.frameType.height * m_details.frameType.width *
+            memcpy(mpAbFrame,
+                   frameDataLocation + m_details.frameType.height *
+                                           m_details.frameType.width * 3,
+                   m_details.frameType.height * m_details.frameType.width *
                        sizeof(uint16_t));
-	    //TO DO: shift with 4 because we use only 12 bits
-            for (unsigned int i = 0; i < (m_details.frameType.height * m_details.frameType.width); ++i) {
+            //TO DO: shift with 4 because we use only 12 bits
+            for (unsigned int i = 0;
+                 i < (m_details.frameType.height * m_details.frameType.width);
+                 ++i) {
                 mpAbFrame[i] = mpAbFrame[i] >> 4;
             }
         }
@@ -617,15 +643,15 @@ aditof::Status CameraItof::setControl(const std::string &control,
             uint8_t level = 0;
             return setCameraSyncMode(mode, level);
         } else if (control == "saveModuleCCB") {
-            if(m_adsd3500Enabled) {
+            if (m_adsd3500Enabled) {
                 status = readAdsd3500CCB();
-                if(status != Status::OK){
+                if (status != Status::OK) {
                     LOG(ERROR) << "Failed to load ccb from adsd3500 module!";
                     return Status::GENERIC_ERROR;
                 }
             }
             return saveCCBToFile(value);
-        } else if (control == "saveModuleCFG"){
+        } else if (control == "saveModuleCFG") {
             return saveCFGToFile(value);
         } else if (control == "enableXYZframe") {
             if (value == "on")
@@ -696,38 +722,42 @@ aditof::Status CameraItof::initComputeLibrary(void) {
             ConfigFileData depth_ini = {tempDataParser, dataSize};
 
             if (m_adsd3500Enabled) {
-                m_tofi_config = InitTofiConfig_isp(
-                    (ConfigFileData *)&depth_ini, convertedMode,
-                        &status, m_xyz_dealias_data);
+                m_tofi_config = InitTofiConfig_isp((ConfigFileData *)&depth_ini,
+                                                   convertedMode, &status,
+                                                   m_xyz_dealias_data);
             } else {
                 if (calData.p_data != NULL) {
                     m_tofi_config = InitTofiConfig(&calData, NULL, &depth_ini,
                                                    convertedMode, &status);
-            } else {
+                } else {
                     LOG(ERROR) << "Failed to get calibration data";
                 }
-                   
             }
 
             delete[] tempDataParser;
 
         } else {
-            m_tofi_config = InitTofiConfig(&calData, NULL, NULL, convertedMode, &status);
+            m_tofi_config =
+                InitTofiConfig(&calData, NULL, NULL, convertedMode, &status);
         }
 
-        if ((m_tofi_config == NULL) || (m_tofi_config->p_tofi_cal_config == NULL) || (status != ADI_TOFI_SUCCESS)) {
+        if ((m_tofi_config == NULL) ||
+            (m_tofi_config->p_tofi_cal_config == NULL) ||
+            (status != ADI_TOFI_SUCCESS)) {
             LOG(ERROR) << "InitTofiConfig failed";
             return aditof::Status::GENERIC_ERROR;
 
         } else {
-            m_tofi_compute_context = InitTofiCompute(m_tofi_config->p_tofi_cal_config, &status);
+            m_tofi_compute_context =
+                InitTofiCompute(m_tofi_config->p_tofi_cal_config, &status);
             if (m_tofi_compute_context == NULL || status != ADI_TOFI_SUCCESS) {
                 LOG(ERROR) << "InitTofiCompute failed";
                 return aditof::Status::GENERIC_ERROR;
             }
         }
     } else {
-        LOG(ERROR) << "Could not initialize compute library because config data hasn't been loaded";
+        LOG(ERROR) << "Could not initialize compute library because config "
+                      "data hasn't been loaded";
         return aditof::Status::GENERIC_ERROR;
     }
 
@@ -742,7 +772,7 @@ aditof::Status CameraItof::freeComputeLibrary(void) {
     freeConfigData();
 
     if (NULL != m_tofi_compute_context) {
-        LOG(INFO) << "freeComputeLibrary";        
+        LOG(INFO) << "freeComputeLibrary";
         FreeTofiCompute(m_tofi_compute_context);
         m_tofi_compute_context = NULL;
     }
@@ -754,8 +784,9 @@ aditof::Status CameraItof::freeComputeLibrary(void) {
     return aditof::Status::OK;
 }
 
-std::string CameraItof::iniFileContentFindKeyAndGetValue(std::ifstream &iniContent, const std::string &key)
-{
+std::string
+CameraItof::iniFileContentFindKeyAndGetValue(std::ifstream &iniContent,
+                                             const std::string &key) {
     iniContent.clear();
     iniContent.seekg(0, std::ios::beg);
 
@@ -782,17 +813,22 @@ aditof::Status CameraItof::loadConfigData(void) {
     aditof::Status retErr = aditof::Status::GENERIC_ERROR;
 
     if (m_ini_depth_map.size() > 0) {
-        for (auto it = m_ini_depth_map.begin(); it != m_ini_depth_map.end(); ++it) {
-            m_depthINIDataMap.emplace(it->second, LoadFileContents(const_cast<char *>(it->second.c_str())));
+        for (auto it = m_ini_depth_map.begin(); it != m_ini_depth_map.end();
+             ++it) {
+            m_depthINIDataMap.emplace(
+                it->second,
+                LoadFileContents(const_cast<char *>(it->second.c_str())));
         }
     } else {
         if (!m_ini_depth.empty()) {
-            m_depthINIData = LoadFileContents(const_cast<char *>(m_ini_depth.c_str()));
+            m_depthINIData =
+                LoadFileContents(const_cast<char *>(m_ini_depth.c_str()));
         }
     }
 
     if (!m_ccb_calibrationFile.empty()) {
-        m_calData = LoadFileContents(const_cast<char*>(m_ccb_calibrationFile.c_str()));
+        m_calData =
+            LoadFileContents(const_cast<char *>(m_ccb_calibrationFile.c_str()));
     } else {
         m_calData.p_data = NULL;
         m_calData.size = 0;
@@ -803,8 +839,7 @@ aditof::Status CameraItof::loadConfigData(void) {
     return aditof::Status::OK;
 }
 
-void CameraItof::freeConfigData(void)
-{
+void CameraItof::freeConfigData(void) {
     // TO DO:
 }
 
@@ -824,7 +859,7 @@ aditof::Status CameraItof::isValidFrame(const int numTotalFrames) {
 }
 
 aditof::Status CameraItof::isValidMode(const uint8_t /*hdr_mode*/) {
-  /*  using namespace aditof;
+    /*  using namespace aditof;
     unsigned int mode = 0;
     m_depthSensor->getMode(mode);
 
@@ -836,11 +871,11 @@ aditof::Status CameraItof::isValidMode(const uint8_t /*hdr_mode*/) {
     return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status
-CameraItof::processFrame(uint8_t *rawFrame, uint16_t *captureData,
-                         uint8_t *head, const uint16_t embed_height,
-                         const uint16_t embed_width,
-                         aditof::Frame *frame) {
+aditof::Status CameraItof::processFrame(uint8_t *rawFrame,
+                                        uint16_t *captureData, uint8_t *head,
+                                        const uint16_t embed_height,
+                                        const uint16_t embed_width,
+                                        aditof::Frame *frame) {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -899,11 +934,13 @@ CameraItof::processFrame(uint8_t *rawFrame, uint16_t *captureData,
     }
 
     // Ex: for Mode=5, rawSubFrameSize will (12289 * 640 * 2)/(9 + 1) - 128
-    uint64_t rawSubFrameSize = ((embed_height * embed_width * 2) / (totalCaptures + 1)) - 128;
-    uint64_t subFrameSize = FrameWidth * FrameHeight; // capture size without header
-    uint16_t *p = (uint16_t*) rawFrame;
+    uint64_t rawSubFrameSize =
+        ((embed_height * embed_width * 2) / (totalCaptures + 1)) - 128;
+    uint64_t subFrameSize =
+        FrameWidth * FrameHeight; // capture size without header
+    uint16_t *p = (uint16_t *)rawFrame;
 
-    for (int i = 0; i < FrameNum * FrameWidth * FrameHeight; ++ i) {
+    for (int i = 0; i < FrameNum * FrameWidth * FrameHeight; ++i) {
         captureData[i] = p[i] >> 4;
     }
 
@@ -987,7 +1024,7 @@ aditof::Status CameraItof::cleanupTempFiles() {
 
     std::string filename = m_tempFiles.jsonFile;
     if (!filename.empty()) {
-        if( std::remove(filename.c_str()) != 0 ) {
+        if (std::remove(filename.c_str()) != 0) {
             LOG(WARNING) << "Failed temp file delete: " << filename;
             status = Status::GENERIC_ERROR;
         }
@@ -995,7 +1032,7 @@ aditof::Status CameraItof::cleanupTempFiles() {
 
     filename = m_tempFiles.ccbFile;
     if (!filename.empty()) {
-        if( std::remove(filename.c_str()) != 0 ) {
+        if (std::remove(filename.c_str()) != 0) {
             LOG(WARNING) << "Failed temp file delete: " << filename;
             status = Status::GENERIC_ERROR;
         }
@@ -1003,7 +1040,7 @@ aditof::Status CameraItof::cleanupTempFiles() {
 
     filename = m_tempFiles.cfgFile;
     if (!filename.empty()) {
-        if( std::remove(filename.c_str()) != 0 ) {
+        if (std::remove(filename.c_str()) != 0) {
             LOG(WARNING) << "Failed temp file delete: " << filename;
             status = Status::GENERIC_ERROR;
         }
@@ -1038,10 +1075,10 @@ aditof::Status CameraItof::loadModuleData() {
         return status;
     }
 
-    if(m_adsd3500Enabled) {
+    if (m_adsd3500Enabled) {
         return status;
     }
-    
+
     cleanupTempFiles();
     if (!m_eepromInitialized) {
         LOG(ERROR) << "Memory interface can't be accessed";
@@ -1054,12 +1091,15 @@ aditof::Status CameraItof::loadModuleData() {
 
     std::string serialNumber;
     flashLoader.getSerialNumber(serialNumber);
-    int prefixCount = 2;// I'm asuming the first 2 characters are "D:" which we don't need
+    int prefixCount =
+        2; // I'm asuming the first 2 characters are "D:" which we don't need
     std::string shortName = "";
     if (serialNumber != "")
-        shortName = serialNumber.substr(prefixCount,serialNumber.find(" ") - prefixCount);
+        shortName = serialNumber.substr(prefixCount,
+                                        serialNumber.find(" ") - prefixCount);
     else
-        shortName = "default";//This name is given when there has been an error on CRC
+        shortName =
+            "default"; //This name is given when there has been an error on CRC
     m_details.cameraId = shortName;
 
     // m_depthSensor->cameraReset(); TO DO: figure out if this is required or how to do the reset since there is currenlty no cameraReset() in DepthSensorInterface
@@ -1073,7 +1113,8 @@ aditof::Status CameraItof::loadModuleData() {
     }
 }
 
-aditof::Status CameraItof::applyCalibrationToFrame(uint16_t *frame, const unsigned int mode) {
+aditof::Status CameraItof::applyCalibrationToFrame(uint16_t *frame,
+                                                   const unsigned int mode) {
     return aditof::Status::UNAVAILABLE;
 }
 
@@ -1084,7 +1125,8 @@ aditof::Status CameraItof::saveCCBToFile(const std::string &filePath) const {
     }
 
     if (m_tempFiles.ccbFile.empty()) {
-        LOG(ERROR) << "CCB files is unavailable. Perhaps CCB content was not read from module.";
+        LOG(ERROR) << "CCB files is unavailable. Perhaps CCB content was not "
+                      "read from module.";
         return aditof::Status::UNAVAILABLE;
     }
 
@@ -1122,13 +1164,12 @@ aditof::Status CameraItof::enableXYZframe(bool en) {
 }
 
 /* Seed value for CRC computation */
-#define ADI_ROM_CFG_CRC_SEED_VALUE                      (0xFFFFFFFFu)
+#define ADI_ROM_CFG_CRC_SEED_VALUE (0xFFFFFFFFu)
 
 /* CRC32 Polynomial to be used for CRC computation */
-#define ADI_ROM_CFG_CRC_POLYNOMIAL                      (0x04C11DB7u)
-#pragma pack(push,1)
-typedef union
-{
+#define ADI_ROM_CFG_CRC_POLYNOMIAL (0x04C11DB7u)
+#pragma pack(push, 1)
+typedef union {
     uint8_t cmd_header_byte[16];
     struct {
         uint8_t id8;                // 0xAD
@@ -1142,15 +1183,14 @@ typedef union
 #pragma pack(pop)
 uint32_t nResidualCRC = ADI_ROM_CFG_CRC_SEED_VALUE;
 
-aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath)
-{
+aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath) {
     using namespace aditof;
     Status status = Status::OK;
 
     // Read Chip ID in STANDARD mode
     uint16_t chip_id;
     status = m_depthSensor->adsd3500_read_cmd(0x0112, &chip_id);
-    if(status != Status::OK) {
+    if (status != Status::OK) {
         LOG(ERROR) << "Failed to read adsd3500 chip id!";
         return status;
     }
@@ -1159,7 +1199,7 @@ aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath)
 
     // Switch to BURST mode.
     status = m_depthSensor->adsd3500_write_cmd(0x0019, 0x0000);
-    if(status != Status::OK){
+    if (status != Status::OK) {
         LOG(ERROR) << "Failed to switch to burst mode!";
         return status;
     }
@@ -1175,16 +1215,17 @@ aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath)
     std::vector<uint8_t> buffer(std::istreambuf_iterator<char>(fw_file), {});
 
     uint32_t fw_len = buffer.size();
-    uint8_t* fw_content = buffer.data();
+    uint8_t *fw_content = buffer.data();
     cmd_header_t fw_upgrade_header;
     fw_upgrade_header.id8 = 0xAD;
-    fw_upgrade_header.chunk_size16 = 0x0100;    // 256=0x100
-    fw_upgrade_header.cmd8 = 0x04;              // FW Upgrade CMD = 0x04
+    fw_upgrade_header.chunk_size16 = 0x0100; // 256=0x100
+    fw_upgrade_header.cmd8 = 0x04;           // FW Upgrade CMD = 0x04
     fw_upgrade_header.total_size_fw32 = fw_len;
     fw_upgrade_header.header_checksum32 = 0;
-    
-    for(int i = 1;i < 8;i ++){
-        fw_upgrade_header.header_checksum32 += fw_upgrade_header.cmd_header_byte[i];
+
+    for (int i = 1; i < 8; i++) {
+        fw_upgrade_header.header_checksum32 +=
+            fw_upgrade_header.cmd_header_byte[i];
     }
 
     crc_parameters_t crc_params;
@@ -1198,55 +1239,57 @@ aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath)
 
     fw_upgrade_header.crc_of_fw32 = ~nResidualCRC;
 
-    status = m_depthSensor->adsd3500_write_payload(fw_upgrade_header.cmd_header_byte, 16);
-    if(status != Status::OK){
+    status = m_depthSensor->adsd3500_write_payload(
+        fw_upgrade_header.cmd_header_byte, 16);
+    if (status != Status::OK) {
         LOG(ERROR) << "Failed to send fw upgrade header";
         return status;
     }
 
     int packetsToSend;
     if ((fw_len % flashPageSize) != 0) {
-        packetsToSend = (fw_len/flashPageSize + 1);
-    }
-    else {
-        packetsToSend = (fw_len/flashPageSize);
+        packetsToSend = (fw_len / flashPageSize + 1);
+    } else {
+        packetsToSend = (fw_len / flashPageSize);
     }
 
     uint8_t data_out[flashPageSize];
 
-    for (int i=0; i<packetsToSend; i++) {
+    for (int i = 0; i < packetsToSend; i++) {
         int start = flashPageSize * i;
-        int end = flashPageSize * (i+1);
+        int end = flashPageSize * (i + 1);
 
-        for (int j=start; j<end; j++){
+        for (int j = start; j < end; j++) {
             if (j < fw_len) {
-                data_out[j-start] = fw_content[j];
-            }
-            else {
+                data_out[j - start] = fw_content[j];
+            } else {
                 // padding with 0x00
-                data_out[j-start] = 0x00;
+                data_out[j - start] = 0x00;
             }
         }
         status = m_depthSensor->adsd3500_write_payload(data_out, flashPageSize);
-        if(status != Status::OK){
-            LOG(ERROR) << "Failed to send packet number " << i << " out of " << packetsToSend << " packets!";
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to send packet number " << i << " out of "
+                       << packetsToSend << " packets!";
             return status;
         }
-       
-       if(i % 25 == 0){
-           LOG(INFO) << "Succesfully sent " << i << " out of " << packetsToSend << " packets";
-       }
+
+        if (i % 25 == 0) {
+            LOG(INFO) << "Succesfully sent " << i << " out of " << packetsToSend
+                      << " packets";
+        }
     }
 
     //Commands to switch back to standard mode
-    uint8_t switchBuf[] = {0xAD, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 
-                           0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    status = m_depthSensor->adsd3500_write_payload(switchBuf, sizeof(switchBuf)/sizeof(switchBuf[0]));
-    if(status != Status::OK){
+    uint8_t switchBuf[] = {0xAD, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00,
+                           0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    status = m_depthSensor->adsd3500_write_payload(
+        switchBuf, sizeof(switchBuf) / sizeof(switchBuf[0]));
+    if (status != Status::OK) {
         LOG(ERROR) << "Failed to switch adsd3500 to standard mode!";
         return status;
     }
-    
+
     LOG(INFO) << "Adsd3500 firmware updated succesfully!";
 
     return aditof::Status::OK;
@@ -1262,7 +1305,7 @@ aditof::Status CameraItof::readAdsd3500CCB() {
     //For this case adsd3500 will remain in burst mode
     //A manuall switch to standard mode will be required at the end of the function
     status = m_depthSensor->adsd3500_read_payload_cmd(0x13, ccbHeader, 16);
-    if(status != Status::OK){
+    if (status != Status::OK) {
         LOG(ERROR) << "Failed to get ccb command header";
         return status;
     }
@@ -1277,37 +1320,41 @@ aditof::Status CameraItof::readAdsd3500CCB() {
     memcpy(&crcOfCCB, ccbHeader + 12, 4);
 
     numOfChunks = ccbFileSize / chunkSize;
-    uint8_t* ccbContent = new uint8_t[ccbFileSize];
+    uint8_t *ccbContent = new uint8_t[ccbFileSize];
 
-    for(int i = 0; i < numOfChunks; i++){
-        status = m_depthSensor->adsd3500_read_payload(ccbContent + i * chunkSize, chunkSize);
-        if(status != Status::OK){
-            LOG(ERROR) << "Failed to read chunk number " << i << " out of " << numOfChunks + 1
-                            << " chunks for adsd3500!";
+    for (int i = 0; i < numOfChunks; i++) {
+        status = m_depthSensor->adsd3500_read_payload(
+            ccbContent + i * chunkSize, chunkSize);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to read chunk number " << i << " out of "
+                       << numOfChunks + 1 << " chunks for adsd3500!";
             return status;
         }
 
-        if(i % 20 == 0){
-            LOG(INFO) << "Succesfully read chunk number " << i << " out of " << numOfChunks + 1
-                            << " chunks for adsd3500!";
+        if (i % 20 == 0) {
+            LOG(INFO) << "Succesfully read chunk number " << i << " out of "
+                      << numOfChunks + 1 << " chunks for adsd3500!";
         }
     }
 
     //read last chunk. smaller size than the rest
-    if(ccbFileSize % chunkSize != 0){
-        status = m_depthSensor->adsd3500_read_payload(ccbContent + numOfChunks * chunkSize, ccbFileSize % chunkSize);
-        if(status != Status::OK){
-            LOG(ERROR) << "Failed to read chunk number " << numOfChunks + 1 << " out of " << numOfChunks + 1
-                            << " chunks for adsd3500!";
+    if (ccbFileSize % chunkSize != 0) {
+        status = m_depthSensor->adsd3500_read_payload(
+            ccbContent + numOfChunks * chunkSize, ccbFileSize % chunkSize);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to read chunk number " << numOfChunks + 1
+                       << " out of " << numOfChunks + 1
+                       << " chunks for adsd3500!";
             return status;
         }
     }
 
     //Commands to switch back to standard mode
-    uint8_t switchBuf[] = {0xAD, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 
-                           0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-    status = m_depthSensor->adsd3500_write_payload(switchBuf, sizeof(switchBuf)/sizeof(switchBuf[0]));
-    if(status != Status::OK){
+    uint8_t switchBuf[] = {0xAD, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00,
+                           0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    status = m_depthSensor->adsd3500_write_payload(
+        switchBuf, sizeof(switchBuf) / sizeof(switchBuf[0]));
+    if (status != Status::OK) {
         LOG(ERROR) << "Failed to switch adsd3500 to standard mode!";
         return status;
     }
@@ -1323,7 +1370,7 @@ aditof::Status CameraItof::readAdsd3500CCB() {
     crc_output_t res = compute_crc(&crc_params, ccbContent, ccbFileSize - 4);
     uint32_t computedCrc = res.crc_32bit;
 
-    if(crcOfCCB != ~computedCrc){
+    if (crcOfCCB != ~computedCrc) {
         LOG(ERROR) << "Invalid crc for ccb read from memory!";
         return Status::GENERIC_ERROR;
     } else {
@@ -1332,10 +1379,10 @@ aditof::Status CameraItof::readAdsd3500CCB() {
 
     std::ofstream tempFile;
     std::string fileName = "temp_ccb.ccb";
-    
+
     //remove the trailling 4 bytes containing the crc
-    std::string fileContent = std::string((char*)ccbContent, ccbFileSize - 4);
-    tempFile.open (fileName, std::ios::binary);
+    std::string fileContent = std::string((char *)ccbContent, ccbFileSize - 4);
+    tempFile.open(fileName, std::ios::binary);
 
     tempFile << fileContent;
 
@@ -1346,15 +1393,15 @@ aditof::Status CameraItof::readAdsd3500CCB() {
     return status;
 }
 
-void CameraItof::configureSensorFrameType()
-{
+void CameraItof::configureSensorFrameType() {
     std::ifstream depthIniStream(m_ini_depth);
     if (depthIniStream.is_open()) {
         std::string value;
 
         // TO DO: Do we need to read here whether depth is enabled or not and also the AB averaging?
 
-        value = iniFileContentFindKeyAndGetValue(depthIniStream, "bitsInPhaseOrDepth");
+        value = iniFileContentFindKeyAndGetValue(depthIniStream,
+                                                 "bitsInPhaseOrDepth");
         if (!value.empty()) {
             if (value == "16")
                 value = "6";
@@ -1400,7 +1447,8 @@ void CameraItof::configureSensorFrameType()
             m_depthSensor->setControl("abBits", value);
         }
 
-        value = iniFileContentFindKeyAndGetValue(depthIniStream, "partialDepthEnable");
+        value = iniFileContentFindKeyAndGetValue(depthIniStream,
+                                                 "partialDepthEnable");
         if (!value.empty()) {
             std::string en = (value == "0") ? "1" : "0";
             m_depthSensor->setControl("depthEnable", en);
@@ -1409,7 +1457,8 @@ void CameraItof::configureSensorFrameType()
 
         // XYZ set through camera control takes precedence over the setting from .ini file
         if (!m_xyzSetViaControl) {
-            m_xyzEnabled = iniFileContentFindKeyAndGetValue(depthIniStream, "xyzEnable") == "1";
+            m_xyzEnabled = iniFileContentFindKeyAndGetValue(depthIniStream,
+                                                            "xyzEnable") == "1";
         }
 
         depthIniStream.close();
@@ -1418,75 +1467,92 @@ void CameraItof::configureSensorFrameType()
     }
 }
 
-aditof::Status CameraItof::parseJsonFileContent(){
+aditof::Status CameraItof::parseJsonFileContent() {
     using namespace aditof;
     Status status = Status::OK;
 
     // Parse config.json
     std::string config = m_controls["initialization_config"];
     std::ifstream ifs(config.c_str());
-    std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
+    std::string content((std::istreambuf_iterator<char>(ifs)),
+                        (std::istreambuf_iterator<char>()));
 
     cJSON *config_json = cJSON_Parse(content.c_str());
     if (config_json != NULL) {
         // Get sensorfirmware file location
-        const cJSON *json_sensorFirmware_file = cJSON_GetObjectItemCaseSensitive(config_json, "sensorFirmware");
-        if (cJSON_IsString(json_sensorFirmware_file) && (json_sensorFirmware_file->valuestring != NULL)) {
+        const cJSON *json_sensorFirmware_file =
+            cJSON_GetObjectItemCaseSensitive(config_json, "sensorFirmware");
+        if (cJSON_IsString(json_sensorFirmware_file) &&
+            (json_sensorFirmware_file->valuestring != NULL)) {
             if (m_sensorFirmwareFile.empty()) {
                 // save firmware file location
-                m_sensorFirmwareFile = std::string(json_sensorFirmware_file->valuestring);
+                m_sensorFirmwareFile =
+                    std::string(json_sensorFirmware_file->valuestring);
                 LOG(INFO) << "Current sensor firmware is: "
                           << m_sensorFirmwareFile;
             } else {
-                LOG(WARNING) << "Duplicate firmware file ignored: " << json_sensorFirmware_file->valuestring;
+                LOG(WARNING) << "Duplicate firmware file ignored: "
+                             << json_sensorFirmware_file->valuestring;
             }
         }
 
         // Get calibration file location
-        const cJSON *json_ccb_calibration_file = cJSON_GetObjectItemCaseSensitive(config_json, "CCB_Calibration");
-        if (cJSON_IsString(json_ccb_calibration_file) && (json_ccb_calibration_file->valuestring != NULL)) {
+        const cJSON *json_ccb_calibration_file =
+            cJSON_GetObjectItemCaseSensitive(config_json, "CCB_Calibration");
+        if (cJSON_IsString(json_ccb_calibration_file) &&
+            (json_ccb_calibration_file->valuestring != NULL)) {
             if (m_ccb_calibrationFile.empty()) {
                 // save calibration file location
-                m_ccb_calibrationFile = std::string(json_ccb_calibration_file->valuestring);
+                m_ccb_calibrationFile =
+                    std::string(json_ccb_calibration_file->valuestring);
                 LOG(INFO) << "Current calibration file is: "
                           << m_ccb_calibrationFile;
             } else {
-                LOG(WARNING) << "Duplicate calibration file ignored: " << json_ccb_calibration_file->valuestring;
+                LOG(WARNING) << "Duplicate calibration file ignored: "
+                             << json_ccb_calibration_file->valuestring;
             }
         }
 
         // Get optional eeprom type name
-        const cJSON *eeprom_type_name = cJSON_GetObjectItemCaseSensitive(config_json, "MODULE_EEPROM_TYPE");
-        if (cJSON_IsString(eeprom_type_name) && (eeprom_type_name->valuestring != NULL)) {
+        const cJSON *eeprom_type_name =
+            cJSON_GetObjectItemCaseSensitive(config_json, "MODULE_EEPROM_TYPE");
+        if (cJSON_IsString(eeprom_type_name) &&
+            (eeprom_type_name->valuestring != NULL)) {
             m_eepromDeviceName = eeprom_type_name->valuestring;
         }
 
         // Get depth ini file location
-        const cJSON *json_depth_ini_file = cJSON_GetObjectItemCaseSensitive(config_json, "DEPTH_INI");
-        if (cJSON_IsString(json_depth_ini_file) && (json_depth_ini_file->valuestring != NULL)) {
+        const cJSON *json_depth_ini_file =
+            cJSON_GetObjectItemCaseSensitive(config_json, "DEPTH_INI");
+        if (cJSON_IsString(json_depth_ini_file) &&
+            (json_depth_ini_file->valuestring != NULL)) {
             // store depth ini file location
             std::string mode;
             std::vector<std::string> iniFiles;
 
-            if(m_ini_depth.empty()){
-                Utils::splitIntoTokens(std::string(json_depth_ini_file->valuestring), ';', iniFiles);
+            if (m_ini_depth.empty()) {
+                Utils::splitIntoTokens(
+                    std::string(json_depth_ini_file->valuestring), ';',
+                    iniFiles);
                 if (iniFiles.size() > 1) {
-                    for (const std::string& file : iniFiles) {
+                    for (const std::string &file : iniFiles) {
                         //extract last string that is after last underscore (e.g. 'mp' will be extracted from ini_file_mp)
                         size_t lastUnderscorePos = file.find_last_of("_");
                         if (lastUnderscorePos == std::string::npos) {
-                            LOG(WARNING) << "File: " << file << " has no suffix that can be used to identify the mode";
+                            LOG(WARNING) << "File: " << file
+                                         << " has no suffix that can be used "
+                                            "to identify the mode";
                             continue;
                         }
 
                         size_t dotPos = file.find_last_of(".");
-                        mode = file.substr(lastUnderscorePos + 1,dotPos - lastUnderscorePos - 1);
+                        mode = file.substr(lastUnderscorePos + 1,
+                                           dotPos - lastUnderscorePos - 1);
                         // TO DO: check is mode is supported by the camera
 
                         LOG(INFO) << "Found Depth ini file: " << file;
                         // Create map with mode name as key and path as value
                         m_ini_depth_map.emplace(mode, file);
-
                     }
                     // Set m_ini_depth to first map element
                     auto it = m_ini_depth_map.begin();
@@ -1500,19 +1566,27 @@ aditof::Status CameraItof::parseJsonFileContent(){
         }
 
         // Get optional power config
-        const cJSON *json_vaux_pwr = cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_ENABLE");
-        if (cJSON_IsString(json_vaux_pwr) && (json_vaux_pwr->valuestring != NULL)) {
-            m_sensor_settings.push_back(std::make_pair(json_vaux_pwr->string, atoi(json_vaux_pwr->valuestring)));
+        const cJSON *json_vaux_pwr =
+            cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_ENABLE");
+        if (cJSON_IsString(json_vaux_pwr) &&
+            (json_vaux_pwr->valuestring != NULL)) {
+            m_sensor_settings.push_back(std::make_pair(
+                json_vaux_pwr->string, atoi(json_vaux_pwr->valuestring)));
         }
 
         // Get optional power config
-        const cJSON *json_vaux_voltage = cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_VOLTAGE");
-        if (cJSON_IsString(json_vaux_voltage) && (json_vaux_voltage->valuestring != NULL)) {
-            m_sensor_settings.push_back(std::make_pair(json_vaux_voltage->string, atoi(json_vaux_voltage->valuestring)));
+        const cJSON *json_vaux_voltage =
+            cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_VOLTAGE");
+        if (cJSON_IsString(json_vaux_voltage) &&
+            (json_vaux_voltage->valuestring != NULL)) {
+            m_sensor_settings.push_back(
+                std::make_pair(json_vaux_voltage->string,
+                               atoi(json_vaux_voltage->valuestring)));
         }
 
         // Get fps from config
-        const cJSON *json_fps = cJSON_GetObjectItemCaseSensitive(config_json, "FPS");
+        const cJSON *json_fps =
+            cJSON_GetObjectItemCaseSensitive(config_json, "FPS");
         if (cJSON_IsString(json_fps) && (json_fps->valuestring != NULL)) {
             m_cameraFps = atoi(json_fps->valuestring);
         }

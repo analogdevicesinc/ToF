@@ -103,11 +103,11 @@ static int xioctl(int fh, unsigned int request, void *arg) {
 }
 
 Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
-                                 const std::string &driverSubPath,
-                                 const std::string &captureDev)
+                               const std::string &driverSubPath,
+                               const std::string &captureDev)
     : m_driverPath(driverPath), m_driverSubPath(driverSubPath),
       m_captureDev(captureDev), m_implData(new Adsd3500Sensor::ImplData) {
-          m_sensorName = "adsd3500";
+    m_sensorName = "adsd3500";
 
     // Define the controls that this sensor has available
     m_controls.emplace("abAveraging", "0");
@@ -115,7 +115,7 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     m_controls.emplace("phaseDepthBits", "0");
     m_controls.emplace("abBits", "0");
     m_controls.emplace("confidenceBits", "0");
-    m_controls.emplace("fps","0");
+    m_controls.emplace("fps", "0");
 
     // Define the commands that correspond to the sensor controls
     m_implData->controlsCommands["abAveraging"] = 0x9819e5;
@@ -160,7 +160,7 @@ Adsd3500Sensor::~Adsd3500Sensor() {
     }
 }
 
-aditof::Status Adsd3500Sensor::open() { 
+aditof::Status Adsd3500Sensor::open() {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -267,9 +267,9 @@ aditof::Status Adsd3500Sensor::open() {
     }
 
     return status;
- }
+}
 
-aditof::Status Adsd3500Sensor::start() { 
+aditof::Status Adsd3500Sensor::start() {
     using namespace aditof;
     Status status = Status::OK;
     struct VideoDev *dev;
@@ -309,9 +309,9 @@ aditof::Status Adsd3500Sensor::start() {
     }
 
     return status;
- }
+}
 
-aditof::Status Adsd3500Sensor::stop() { 
+aditof::Status Adsd3500Sensor::stop() {
     using namespace aditof;
     Status status = Status::OK;
     struct VideoDev *dev;
@@ -334,7 +334,7 @@ aditof::Status Adsd3500Sensor::stop() {
         dev->started = false;
     }
     return status;
- }
+}
 
 aditof::Status Adsd3500Sensor::getAvailableFrameTypes(
     std::vector<aditof::DepthSensorFrameType> &types) {
@@ -479,7 +479,8 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         } else if (type.type == "mp") {
             pixelFormat = V4L2_PIX_FMT_SBGGR12;
         } else {
-            LOG(ERROR) << "frame type: " << type.type << " " << "is unhandled";
+            LOG(ERROR) << "frame type: " << type.type << " "
+                       << "is unhandled";
             return Status::GENERIC_ERROR;
         }
 
@@ -603,21 +604,21 @@ aditof::Status Adsd3500Sensor::getFrame(uint16_t *buffer) {
 }
 
 aditof::Status Adsd3500Sensor::readRegisters(const uint16_t *address,
-                                              uint16_t *data, size_t length,
-                                              bool burst /*= true*/) {
+                                             uint16_t *data, size_t length,
+                                             bool burst /*= true*/) {
 
     return aditof::Status::OK;
 }
 
 aditof::Status Adsd3500Sensor::writeRegisters(const uint16_t *address,
-                                               const uint16_t *data,
-                                               size_t length,
-                                               bool burst /*= true*/) {
+                                              const uint16_t *data,
+                                              size_t length,
+                                              bool burst /*= true*/) {
     return aditof::Status::OK;
 }
 
-aditof::Status Adsd3500Sensor::getAvailableControls(std::vector<std::string> &controls) const
-{
+aditof::Status
+Adsd3500Sensor::getAvailableControls(std::vector<std::string> &controls) const {
     controls.clear();
     controls.reserve(m_controls.size());
     for (const auto &item : m_controls) {
@@ -628,8 +629,7 @@ aditof::Status Adsd3500Sensor::getAvailableControls(std::vector<std::string> &co
 }
 
 aditof::Status Adsd3500Sensor::setControl(const std::string &control,
-                               const std::string &value)
-{
+                                          const std::string &value) {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -640,7 +640,7 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
 
     struct VideoDev *dev = &m_implData->videoDevs[0];
 
-    if(control!= "fps") {
+    if (control != "fps") {
         // Send the command that sets the control value
         struct v4l2_control ctrl;
         memset(&ctrl, 0, sizeof(ctrl));
@@ -656,11 +656,11 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
     } else {
         struct v4l2_streamparm fpsControl;
         memset(&fpsControl, 0, sizeof(struct v4l2_streamparm));
-    
+
         fpsControl.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         fpsControl.parm.capture.timeperframe.numerator = 1;
         fpsControl.parm.capture.timeperframe.denominator = std::stoi(value);
-    
+
         if (xioctl(dev->fd, VIDIOC_S_PARM, &fpsControl) == -1) {
             LOG(WARNING) << "Failed to set control: " << control << " "
                          << "errno: " << errno << " error: " << strerror(errno);
@@ -672,8 +672,7 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
 }
 
 aditof::Status Adsd3500Sensor::getControl(const std::string &control,
-                               std::string &value) const
-{
+                                          std::string &value) const {
     using namespace aditof;
 
     if (m_controls.count(control) > 0) {
@@ -683,11 +682,11 @@ aditof::Status Adsd3500Sensor::getControl(const std::string &control,
 
         ctrl.id = m_implData->controlsCommands[control];
 
-	struct VideoDev *dev = &m_implData->videoDevs[0];
+        struct VideoDev *dev = &m_implData->videoDevs[0];
 
         if (xioctl(dev->sfd, VIDIOC_G_CTRL, &ctrl) == -1) {
             LOG(WARNING) << "Failed to get control: " << control << " "
-                     << "errno: " << errno << " error: " << strerror(errno);
+                         << "errno: " << errno << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
         }
         value = std::to_string(ctrl.value);
@@ -712,11 +711,11 @@ aditof::Status Adsd3500Sensor::getHandle(void **handle) {
 
 aditof::Status Adsd3500Sensor::getName(std::string &name) const {
     name = m_sensorName;
-    
+
     return aditof::Status::OK;
 }
 
-aditof::Status Adsd3500Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data){
+aditof::Status Adsd3500Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data) {
     using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
     Status status = Status::OK;
@@ -740,9 +739,9 @@ aditof::Status Adsd3500Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data){
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Reading Adsd3500 error "
-                         << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
-        }
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return Status::GENERIC_ERROR;
+    }
 
     buf[0] = 0;
     buf[1] = 0;
@@ -750,15 +749,15 @@ aditof::Status Adsd3500Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data){
 
     extCtrl.p_u8 = buf;
 
-    if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1){ 
+    if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Reading Adsd3500 error "
-                         << "errno: " << errno << " error: " << strerror(errno);
+                     << "errno: " << errno << " error: " << strerror(errno);
         return Status::GENERIC_ERROR;
     }
 
-    if (xioctl(dev->sfd, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1){ 
+    if (xioctl(dev->sfd, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Reading Adsd3500 error "
-                         << "errno: " << errno << " error: " << strerror(errno);
+                     << "errno: " << errno << " error: " << strerror(errno);
         return Status::GENERIC_ERROR;
     }
 
@@ -768,7 +767,7 @@ aditof::Status Adsd3500Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data){
 }
 
 aditof::Status Adsd3500Sensor::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
-        using namespace aditof;
+    using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
     Status status = Status::OK;
 
@@ -793,15 +792,17 @@ aditof::Status Adsd3500Sensor::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Reading Adsd3500 error "
-                         << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
-        }
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return Status::GENERIC_ERROR;
+    }
     return status;
 }
 
 // TO DO: Verify mechanism for read/write burst
 
-aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) {
+aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd,
+                                                         uint8_t *readback_data,
+                                                         uint16_t payload_len) {
     using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
     Status status = Status::OK;
@@ -811,7 +812,7 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* 
     uint16_t switchPayload = 0x0000;
 
     status = adsd3500_write_cmd(switchCmd, switchPayload);
-    if(status != Status::OK){
+    if (status != Status::OK) {
         LOG(INFO) << "Failed to switch to burst mode!";
         return status;
     }
@@ -833,23 +834,23 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* 
     buf[2] = 0x10;
 
     buf[3] = 0xAD;
-    buf[6] = uint8_t(cmd & 0xFF);   
+    buf[6] = uint8_t(cmd & 0xFF);
 
     uint32_t checksum = 0;
-    for (int i = 0; i < 7; i++){
-        checksum += buf[i+4];
-     }
+    for (int i = 0; i < 7; i++) {
+        checksum += buf[i + 4];
+    }
     memcpy(buf + 11, &checksum, 4);
     memcpy(buf + 15, readback_data, 4);
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Reading Adsd3500 error "
-                         << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
-        }
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return Status::GENERIC_ERROR;
+    }
 
-    if(cmd == 0x13){
+    if (cmd == 0x13) {
         usleep(1000);
     }
 
@@ -865,19 +866,19 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* 
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Reading Adsd3500 error "
-                         << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
-        }
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return Status::GENERIC_ERROR;
+    }
 
     if (xioctl(dev->sfd, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1) {
-		LOG(WARNING) << "Failed to get ctrl with id " << extCtrl.id;
-			return Status::GENERIC_ERROR;
-	}
+        LOG(WARNING) << "Failed to get ctrl with id " << extCtrl.id;
+        return Status::GENERIC_ERROR;
+    }
 
     memcpy(readback_data, extCtrl.p_u8 + 3, payload_len);
 
     //If we use the read ccb command we need to keep adsd3500 in burst mode
-    if(cmd == 0x13){
+    if (cmd == 0x13) {
         return status;
     }
 
@@ -886,21 +887,23 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* 
     extCtrls.controls = &extCtrl;
     extCtrls.count = 1;
 
-    uint8_t switchBuf[] = {0x01, 0x00, 0x10, 0xAD, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
-                           0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    uint8_t switchBuf[] = {0x01, 0x00, 0x10, 0xAD, 0x00, 0x00, 0x10,
+                           0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00,
+                           0x00, 0x00, 0x00, 0x00, 0x00};
 
     extCtrl.p_u8 = switchBuf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Switch Adsd3500 to standard mode error "
-                         << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
-        }
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return Status::GENERIC_ERROR;
+    }
 
     return status;
 }
 
-aditof::Status Adsd3500Sensor::adsd3500_read_payload(uint8_t* payload, uint16_t payload_len) {
+aditof::Status Adsd3500Sensor::adsd3500_read_payload(uint8_t *payload,
+                                                     uint16_t payload_len) {
     using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
     Status status = Status::OK;
@@ -927,21 +930,23 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload(uint8_t* payload, uint16_t 
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Reading Adsd3500 error "
-                         << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return Status::GENERIC_ERROR;
     }
 
     if (xioctl(dev->sfd, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1) {
-		LOG(WARNING) << "Failed to get ctrl with id " << extCtrl.id;
-			return Status::GENERIC_ERROR;
-	}
+        LOG(WARNING) << "Failed to get ctrl with id " << extCtrl.id;
+        return Status::GENERIC_ERROR;
+    }
 
     memcpy(payload, extCtrl.p_u8 + 3, payload_len);
 
     return status;
 }
 
-aditof::Status Adsd3500Sensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) {
+aditof::Status
+Adsd3500Sensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload,
+                                           uint16_t payload_len) {
     using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
     Status status = Status::OK;
@@ -951,7 +956,7 @@ aditof::Status Adsd3500Sensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t*
     uint16_t switchPayload = 0x0000;
 
     status = adsd3500_write_cmd(switchCmd, switchPayload);
-    if(status != Status::OK){
+    if (status != Status::OK) {
         LOG(INFO) << "Failed to switch to burst mode!";
     }
 
@@ -970,15 +975,15 @@ aditof::Status Adsd3500Sensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t*
     buf[1] = uint8_t(payload_len >> 8);
     buf[2] = uint8_t(payload_len & 0xFF);
 
-    payload_len -=16;
+    payload_len -= 16;
     buf[3] = 0xAD;
     buf[4] = uint8_t(payload_len >> 8);
     buf[5] = uint8_t(payload_len & 0xFF);
     buf[6] = uint8_t(cmd & 0xFF);
 
     uint32_t checksum = 0;
-    for (int i = 0; i < 7; i++){
-        checksum += buf[i+4];
+    for (int i = 0; i < 7; i++) {
+        checksum += buf[i + 4];
     }
     memcpy(buf + 11, &checksum, 4);
     memcpy(buf + 15, payload, payload_len);
@@ -986,30 +991,32 @@ aditof::Status Adsd3500Sensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t*
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Writing Adsd3500 error "
-                         << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
-        }
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return Status::GENERIC_ERROR;
+    }
 
     //switch to standard mode
     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
     extCtrls.controls = &extCtrl;
     extCtrls.count = 1;
 
-    uint8_t switchBuf[] = {0x01, 0x00, 0x10, 0xAD, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
-                           0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    uint8_t switchBuf[] = {0x01, 0x00, 0x10, 0xAD, 0x00, 0x00, 0x10,
+                           0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00,
+                           0x00, 0x00, 0x00, 0x00, 0x00};
 
     extCtrl.p_u8 = switchBuf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Switch Adsd3500 to standard mode error "
-                         << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
-        }
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return Status::GENERIC_ERROR;
+    }
 
     return status;
 }
 
-aditof::Status Adsd3500Sensor::adsd3500_write_payload(uint8_t* payload, uint16_t payload_len) {
+aditof::Status Adsd3500Sensor::adsd3500_write_payload(uint8_t *payload,
+                                                      uint16_t payload_len) {
     using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
     Status status = Status::OK;
@@ -1033,10 +1040,10 @@ aditof::Status Adsd3500Sensor::adsd3500_write_payload(uint8_t* payload, uint16_t
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Writing Adsd3500 error "
-                         << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
-        }
-    
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return Status::GENERIC_ERROR;
+    }
+
     usleep(100000);
 
     return status;
@@ -1071,7 +1078,7 @@ aditof::Status Adsd3500Sensor::waitForBufferPrivate(struct VideoDev *dev) {
 
 aditof::Status
 Adsd3500Sensor::dequeueInternalBufferPrivate(struct v4l2_buffer &buf,
-                                              struct VideoDev *dev) {
+                                             struct VideoDev *dev) {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -1118,9 +1125,9 @@ aditof::Status Adsd3500Sensor::getInternalBufferPrivate(
 
 aditof::Status
 Adsd3500Sensor::enqueueInternalBufferPrivate(struct v4l2_buffer &buf,
-                                              struct VideoDev *dev) {
-                                                   if (dev == nullptr)
-    dev = &m_implData->videoDevs[0];
+                                             struct VideoDev *dev) {
+    if (dev == nullptr)
+        dev = &m_implData->videoDevs[0];
 
     if (xioctl(dev->fd, VIDIOC_QBUF, &buf) == -1) {
         LOG(WARNING) << "VIDIOC_QBUF error "
@@ -1155,7 +1162,7 @@ aditof::Status Adsd3500Sensor::dequeueInternalBuffer(struct v4l2_buffer &buf) {
 
 aditof::Status
 Adsd3500Sensor::getInternalBuffer(uint8_t **buffer, uint32_t &buf_data_len,
-                                   const struct v4l2_buffer &buf) {
+                                  const struct v4l2_buffer &buf) {
 
     return getInternalBufferPrivate(buffer, buf_data_len, buf);
 }

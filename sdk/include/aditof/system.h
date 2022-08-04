@@ -89,8 +89,9 @@ class System {
      * @param ip - The IP of the remote target
      * @return Status
      */
-    SDK_API Status getCameraListAtIp(std::vector<std::shared_ptr<Camera>> &cameraList,
-                             const std::string &ip) const;
+    SDK_API Status
+    getCameraListAtIp(std::vector<std::shared_ptr<Camera>> &cameraList,
+                      const std::string &ip) const;
 
   private:
     std::unique_ptr<SystemImpl> m_impl;

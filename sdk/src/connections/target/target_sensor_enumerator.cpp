@@ -29,13 +29,13 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <fstream>
-#include <algorithm>
-#include <glog/logging.h>
 #include "connections/target/target_sensor_enumerator.h"
 #include "connections/target/adsd3100_sensor.h"
-#include "connections/target/eeprom.h"
 #include "connections/target/adsd3500_sensor.h"
+#include "connections/target/eeprom.h"
+#include <algorithm>
+#include <fstream>
+#include <glog/logging.h>
 
 using namespace aditof;
 
@@ -95,33 +95,34 @@ Status TargetSensorEnumerator::getTemperatureSensors(
     return Status::OK;
 }
 
-std::string TargetSensorEnumerator::getVersionOfComponent(const std::string &component) const
-{
+std::string TargetSensorEnumerator::getVersionOfComponent(
+    const std::string &component) const {
     std::string versionsFilePath = "/boot/sw-versions";
     std::ifstream fid;
-	std::string line;
+    std::string line;
     std::string version;
 
-	fid.open(versionsFilePath);
-	if (fid.is_open()) {
-		while(fid) {
-			std::getline(fid, line);
-			if (!line.compare(0, component.length(), component)) {
+    fid.open(versionsFilePath);
+    if (fid.is_open()) {
+        while (fid) {
+            std::getline(fid, line);
+            if (!line.compare(0, component.length(), component)) {
                 version = line.substr(component.length());
-                version.erase(std::remove(version.begin(), version.end(), '\t'), version.end());
+                version.erase(std::remove(version.begin(), version.end(), '\t'),
+                              version.end());
                 break;
             }
-		}
+        }
         fid.close();
-	} else {
+    } else {
         LOG(ERROR) << "Failed to open file" << versionsFilePath;
     }
 
     return version;
 }
 
-aditof::Status TargetSensorEnumerator::getUbootVersion(
-    std::string &uBootVersion) const {
+aditof::Status
+TargetSensorEnumerator::getUbootVersion(std::string &uBootVersion) const {
 
     uBootVersion = getVersionOfComponent("u-boot");
     if (uBootVersion.empty()) {
@@ -132,8 +133,8 @@ aditof::Status TargetSensorEnumerator::getUbootVersion(
     return aditof::Status::OK;
 }
 
-aditof::Status TargetSensorEnumerator::getKernelVersion(
-    std::string &kernelVersion) const {
+aditof::Status
+TargetSensorEnumerator::getKernelVersion(std::string &kernelVersion) const {
 
     kernelVersion = getVersionOfComponent("kernel");
     if (kernelVersion.empty()) {
@@ -144,8 +145,8 @@ aditof::Status TargetSensorEnumerator::getKernelVersion(
     return aditof::Status::OK;
 }
 
-aditof::Status TargetSensorEnumerator::getSdVersion(
-    std::string &sdVersion) const {
+aditof::Status
+TargetSensorEnumerator::getSdVersion(std::string &sdVersion) const {
 
     sdVersion = getVersionOfComponent("sd_img_ver");
     if (sdVersion.empty()) {
@@ -155,4 +156,3 @@ aditof::Status TargetSensorEnumerator::getSdVersion(
 
     return aditof::Status::OK;
 }
-

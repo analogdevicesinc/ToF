@@ -8,31 +8,29 @@
 #define ADIBINTOFSF_H
 
 #include "ADIToFRecorder.h"
-#include <glog/logging.h>
 #include <functional>
+#include <glog/logging.h>
 
-class ADIBinToFSF
-{
-public:
-
-	/**
+class ADIBinToFSF {
+  public:
+    /**
 	* @brief ADI BinToFSF constructor
 	*/
-	ADIBinToFSF();
+    ADIBinToFSF();
 
-	/**
+    /**
 	* @brief ADI BinToFSF destructor
 	*/
-	~ADIBinToFSF();
+    ~ADIBinToFSF();
 
-	/**
+    /**
 	* @brief Converts a point cloud ONLY file with *.bin extension
 	*        into an FSF file
 	*/
-	aditof::FSF* ConvertPointCloudToFSF(const std::string& fileName, int& frames, int& width, int& height);
+    aditof::FSF *ConvertPointCloudToFSF(const std::string &fileName,
+                                        int &frames, int &width, int &height);
 
-private:
-
+  private:
 };
 
 #endif // ADIBINTOFSF_H

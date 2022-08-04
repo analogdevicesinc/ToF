@@ -37,11 +37,11 @@
 #include <unordered_map>
 
 class Adsd3500Sensor : public aditof::DepthSensorInterface,
-                        public aditof::V4lBufferAccessInterface {
+                       public aditof::V4lBufferAccessInterface {
   public:
     Adsd3500Sensor(const std::string &driverPath,
-                    const std::string &driverSubPath,
-                    const std::string &captureDev);
+                   const std::string &driverSubPath,
+                   const std::string &captureDev);
     ~Adsd3500Sensor();
 
   public:
@@ -72,12 +72,20 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     virtual aditof::Status getHandle(void **handle) override;
     virtual aditof::Status getName(std::string &name) const override;
 
-    virtual aditof::Status adsd3500_read_cmd(uint16_t cmd, uint16_t *data) override;
-    virtual aditof::Status adsd3500_write_cmd(uint16_t cmd, uint16_t data) override;
-    virtual aditof::Status adsd3500_read_payload_cmd(uint32_t cmd, uint8_t* readback_data, uint16_t payload_len) override;
-    virtual aditof::Status adsd3500_read_payload(uint8_t* payload, uint16_t payload_len) override;
-    virtual aditof::Status adsd3500_write_payload_cmd(uint32_t cmd, uint8_t* payload, uint16_t payload_len) override;
-    virtual aditof::Status adsd3500_write_payload(uint8_t* payload, uint16_t payload_len) override;
+    virtual aditof::Status adsd3500_read_cmd(uint16_t cmd,
+                                             uint16_t *data) override;
+    virtual aditof::Status adsd3500_write_cmd(uint16_t cmd,
+                                              uint16_t data) override;
+    virtual aditof::Status
+    adsd3500_read_payload_cmd(uint32_t cmd, uint8_t *readback_data,
+                              uint16_t payload_len) override;
+    virtual aditof::Status adsd3500_read_payload(uint8_t *payload,
+                                                 uint16_t payload_len) override;
+    virtual aditof::Status
+    adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload,
+                               uint16_t payload_len) override;
+    virtual aditof::Status
+    adsd3500_write_payload(uint8_t *payload, uint16_t payload_len) override;
 
   public: // implements V4lBufferAccessInterface
     // Methods that give a finer control than getFrame()
@@ -118,26 +126,25 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     std::unordered_map<std::string, std::string> m_controls;
     std::unique_ptr<ImplData> m_implData;
     uint8_t m_capturesPerFrame;
-        const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {{
-        "qmp",
-        {{"raw", 2560, 512},
-         {"ir", 512, 512},
-         {"xyz", 512, 512},
-         {"depth", 512, 512},
-         {"embedded_header", 1, 128}},
-        2560,
-        512,
-    },
-    {"mp", 
-         {
-             {"raw", 1024, 4096},
+    const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
+        {
+            "qmp",
+            {{"raw", 2560, 512},
+             {"ir", 512, 512},
+             {"xyz", 512, 512},
+             {"depth", 512, 512},
+             {"embedded_header", 1, 128}},
+            2560,
+            512,
+        },
+        {
+            "mp",
+            {{"raw", 1024, 4096},
              {"ir", 1024, 1024},
              {"xyz", 1024, 1024},
              {"depth", 1024, 1024},
-             {"embedded_header", 1, 128}
-         },
-         1024,
-         4096,
-    }
-    };
+             {"embedded_header", 1, 128}},
+            1024,
+            4096,
+        }};
 };

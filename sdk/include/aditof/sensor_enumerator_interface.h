@@ -85,7 +85,6 @@ class SensorEnumeratorInterface {
         std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
             &temperatureSensors) = 0;
 
-
     /**
      * @brief Get the U-Boot version that is installed on the embedded system
      * that the camera is attached to.
@@ -100,7 +99,8 @@ class SensorEnumeratorInterface {
      * @param[out] kernelVersion - string containing data abouth the version.
      * @return Status
      */
-	  virtual aditof::Status getKernelVersion(std::string &kernelVersion) const = 0;
+    virtual aditof::Status
+    getKernelVersion(std::string &kernelVersion) const = 0;
 
     /**
      * @brief Get the SD card image version on the embedded system that the
@@ -108,7 +108,7 @@ class SensorEnumeratorInterface {
      * @param[out] sdVersion - string containing data abouth the version.
      * @return Status
      */
-	  virtual aditof::Status getSdVersion(std::string &sdVersion) const = 0;
+    virtual aditof::Status getSdVersion(std::string &sdVersion) const = 0;
 };
 
 } // namespace aditof

@@ -14,17 +14,17 @@
 #include <cstring>
 #else
 #include <inttypes.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
-#include <stdbool.h>
 #endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-	typedef enum {
-	/** Depth image type DEPTH16.
+typedef enum {
+    /** Depth image type DEPTH16.
 	 *
 	 * \details
 	 * Each pixel of DEPTH16 data is two bytes of little endian unsigned depth data. The unit of the data is in
@@ -34,9 +34,9 @@ extern "C" {
 	 * Stride indicates the length of each line in bytes and should be used to determine the start location of each
 	 * line of the image in memory.
 	 */
-		ADI_IMAGE_FORMAT_DEPTH16 = 0,
+    ADI_IMAGE_FORMAT_DEPTH16 = 0,
 
-	/** Image type IR16.
+    /** Image type IR16.
 	 *
 	 * \details
 	 * Each pixel of IR16 data is two bytes of little endian unsigned depth data. The value of the data represents
@@ -49,9 +49,9 @@ extern "C" {
 	 * Stride indicates the length of each line in bytes and should be used to determine the start location of each
 	 * line of the image in memory.
 	 */
-	 ADI_IMAGE_FORMAT_IR16,
+    ADI_IMAGE_FORMAT_IR16,
 
-	}ADI_Image_Format_t;
+} ADI_Image_Format_t;
 
 #ifdef __cplusplus
 }

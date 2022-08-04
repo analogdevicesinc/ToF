@@ -100,12 +100,12 @@ Status NetworkSensorEnumerator::searchSensors() {
             std::pair<std::string, unsigned int>(name, id));
     }
 
-	m_kernelVersion = msg.card_image_version().kernelversion();
-	m_sdVersion = msg.card_image_version().sdversion();
-	m_uBootVersion = msg.card_image_version().ubootversion();
+    m_kernelVersion = msg.card_image_version().kernelversion();
+    m_sdVersion = msg.card_image_version().sdversion();
+    m_uBootVersion = msg.card_image_version().ubootversion();
 
     status = static_cast<Status>(net->recv_buff[sensorIndex].status());
-	
+
     return status;
 }
 
@@ -114,7 +114,8 @@ Status NetworkSensorEnumerator::getDepthSensors(
 
     depthSensors.clear();
 
-    auto sensor = std::make_shared<NetworkDepthSensor>(m_imageSensorsInfo, m_ip);
+    auto sensor =
+        std::make_shared<NetworkDepthSensor>(m_imageSensorsInfo, m_ip);
     depthSensors.emplace_back(sensor);
 
     return Status::OK;
@@ -149,20 +150,20 @@ Status NetworkSensorEnumerator::getTemperatureSensors(
     return Status::OK;
 }
 
-aditof::Status NetworkSensorEnumerator::getUbootVersion(
-    std::string &uBootVersion) const {
+aditof::Status
+NetworkSensorEnumerator::getUbootVersion(std::string &uBootVersion) const {
     uBootVersion = m_uBootVersion;
     return aditof::Status::OK;
 }
 
-aditof::Status NetworkSensorEnumerator::getKernelVersion(
-    std::string &kernelVersion) const {
+aditof::Status
+NetworkSensorEnumerator::getKernelVersion(std::string &kernelVersion) const {
     kernelVersion = m_kernelVersion;
     return aditof::Status::OK;
 }
 
-aditof::Status NetworkSensorEnumerator::getSdVersion(
-    std::string &sdVersion) const {
+aditof::Status
+NetworkSensorEnumerator::getSdVersion(std::string &sdVersion) const {
     sdVersion = m_sdVersion;
     return aditof::Status::OK;
 }
