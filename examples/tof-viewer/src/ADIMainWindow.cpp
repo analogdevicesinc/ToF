@@ -1152,6 +1152,13 @@ void ADIMainWindow::InitCamera() {
         return;
     }
 
+	aditof::CameraDetails cameraDetails;
+	camera->getDetails(cameraDetails);
+
+	LOG(INFO) << "SD card image version: " << cameraDetails.sdCardImageVersion;
+	LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
+	LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
+
 	//Parse config.json
 	std::ifstream ifs(m_configFiles[configSelection].second);
 	std::string content((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
