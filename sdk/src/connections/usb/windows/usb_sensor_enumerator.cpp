@@ -35,7 +35,6 @@
 #include "connections/usb/usb_temperature_sensor.h"
 #include "connections/usb/usb_utils.h"
 #include "connections/usb/windows/usb_windows_utils.h"
-#include "usb_buffer.pb.h"
 #include "utils.h"
 
 #include <glog/logging.h>

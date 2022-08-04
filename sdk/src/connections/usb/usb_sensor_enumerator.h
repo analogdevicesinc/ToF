@@ -33,6 +33,7 @@
 #define USB_SENSOR_ENUMERATOR_H
 
 #include "aditof/sensor_enumerator_interface.h"
+#include "usb_buffer.pb.h"
 
 class UsbSensorEnumerator : public aditof::SensorEnumeratorInterface {
   public:
