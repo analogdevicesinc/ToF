@@ -40,10 +40,10 @@ jobs:
         DOCKER: "septimiuvana/tof-imx8-docker"
         EXTRA_CMAKE_FLAGS: "-DNXP=1"
 
-      ##code quality, TO DO: once entire code is formatted enable clang-format
-      #clang_format:
-      #  imageName: 'ubuntu-20.04'
-      #  BUILD_TYPE: "clang_format"
+      #code quality, TO DO: once entire code is formatted enable clang-format
+      clang_format:
+        imageName: 'ubuntu-20.04'
+        BUILD_TYPE: "clang_format"
 
       cppcheck:
         imageName: 'ubuntu-20.04'
