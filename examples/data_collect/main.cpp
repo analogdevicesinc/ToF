@@ -432,11 +432,18 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    status = camera->initialize();    
+    status = camera->initialize();
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
         return 0;
     }
+
+    aditof::CameraDetails cameraDetails;
+	camera->getDetails(cameraDetails);
+
+	LOG(INFO) << "SD card image version: " << cameraDetails.sdCardImageVersion;
+	LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
+	LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
 
     if(!firmware.empty()){
         status = camera->setControl("updateAdsd3500Firmware", firmware);
