@@ -3,5 +3,7 @@ apps/uvc-app/lib
 bindings/python/pybind11
 examples/data_collect/third_party
 examples/tof-viewer/external
+examples/tof-viewer/include/stb_image.h
+examples/tof-viewer/include/linmath.h
 sdk/common/adi/ccb
 sdk/src/cameras/itof-camera/tofi
