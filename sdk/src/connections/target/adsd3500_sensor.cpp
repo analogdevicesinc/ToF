@@ -106,7 +106,8 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
                                const std::string &driverSubPath,
                                const std::string &captureDev)
     : m_driverPath(driverPath), m_driverSubPath(driverSubPath),
-      m_captureDev(captureDev), m_implData(new Adsd3500Sensor::ImplData) {
+      m_captureDev(captureDev), m_implData(new Adsd3500Sensor::ImplData),
+      m_firstRun(true) {
     m_sensorName = "adsd3500";
 
     // Define the controls that this sensor has available
@@ -163,6 +164,15 @@ Adsd3500Sensor::~Adsd3500Sensor() {
 aditof::Status Adsd3500Sensor::open() {
     using namespace aditof;
     Status status = Status::OK;
+
+    //Reset device once before first open
+    if (m_firstRun) {
+        system("echo 0 > /sys/class/gpio/gpio122/value");
+        usleep(100000);
+        system("echo 1 > /sys/class/gpio/gpio122/value");
+        usleep(5000000);
+        m_firstRun = false;
+    }
 
     LOG(INFO) << "Opening device";
 
