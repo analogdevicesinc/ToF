@@ -126,6 +126,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     std::unordered_map<std::string, std::string> m_controls;
     std::unique_ptr<ImplData> m_implData;
     uint8_t m_capturesPerFrame;
+    bool m_firstRun;
     const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
         {
             "qmp",
