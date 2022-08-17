@@ -106,6 +106,9 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     enqueueInternalBuffer(struct v4l2_buffer &buf) override;
     virtual aditof::Status
     getDeviceFileDescriptor(int &fileDescriptor) override;
+    virtual aditof::Status
+    initTargetDepthCompute(uint8_t *iniFile, uint16_t iniFileLength,
+                           uint8_t *calData, uint16_t calDataLength) override;
 
   public:
     aditof::Status adsd3500InterruptHandler(int signalValue);

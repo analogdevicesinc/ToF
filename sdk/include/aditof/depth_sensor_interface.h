@@ -275,6 +275,11 @@ class DepthSensorInterface {
      */
     virtual aditof::Status
     setHostConnectionType(std::string &connectionType) = 0;
+    
+    virtual aditof::Status initTargetDepthCompute(uint8_t *iniFile,
+                                                  uint16_t iniFileLength,
+                                                  uint8_t *calData,
+                                                  uint16_t calDataLength) = 0;
 };
 
 } // namespace aditof
