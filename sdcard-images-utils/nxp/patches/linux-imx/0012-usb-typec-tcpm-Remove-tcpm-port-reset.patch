@@ -1,7 +1,7 @@
-From e42ddb2d9587356e7c5308b26ea21991ac464e11 Mon Sep 17 00:00:00 2001
+From 5469aebdcae5bb9de463024622f849346f4c5589 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Fri, 16 Apr 2021 09:01:34 +0300
-Subject: [PATCH 12/36] usb: typec: tcpm: Remove tcpm port reset
+Subject: [PATCH 12/40] usb: typec: tcpm: Remove tcpm port reset
 
 This patch is required to prevent VBUS turning off by the HOST when PD negociation is happening
 
@@ -163,5 +163,5 @@ index 023a36e16bd9..120d33e64544 100644
  
  static int tcpm_port_type_set(struct typec_port *p, enum typec_port_type type)
 -- 
-2.17.1
+2.37.1
 

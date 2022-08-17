@@ -1,7 +1,7 @@
-From fb051e3eb63a2790fd26cd8ffa017b15a1b1b180 Mon Sep 17 00:00:00 2001
+From 92e3400cb387b1136d52c05839d2278fffbefb18 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Wed, 13 Jul 2022 10:54:29 +0300
-Subject: [PATCH 36/36] media: i2c: adsd3500: Implement SET/GET framerate
+Subject: [PATCH 36/40] media: i2c: adsd3500: Implement SET/GET framerate
  control
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
@@ -65,5 +65,5 @@ index 358a68fa47d6..c498ec7857d1 100644
  
  static int adsd3500_link_setup(struct media_entity *entity,
 -- 
-2.17.1
+2.37.1
 

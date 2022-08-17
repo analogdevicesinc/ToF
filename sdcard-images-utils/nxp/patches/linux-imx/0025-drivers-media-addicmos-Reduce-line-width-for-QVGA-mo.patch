@@ -1,7 +1,7 @@
-From 04dc42a587217ae3b0b9c824891f342f4f845970 Mon Sep 17 00:00:00 2001
+From 9e56c27c0371fba6c8ae7218c274d6484f98d715 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Tue, 8 Feb 2022 14:46:37 +0200
-Subject: [PATCH 25/36] drivers: media: addicmos: Reduce line width for QVGA
+Subject: [PATCH 25/40] drivers: media: addicmos: Reduce line width for QVGA
  mode
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
@@ -26,5 +26,5 @@ index 1b22f075b845..f93c97e9ee07 100644
  
  	ret = pwm_enable(addicmos->pwm_fsync);
 -- 
-2.17.1
+2.37.1
 
