@@ -1,7 +1,7 @@
-From 5bdb4f57458b859fd3901b96ca230d5cf9117387 Mon Sep 17 00:00:00 2001
+From c54963daf552775797706101e25971187999af7e Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Thu, 5 May 2022 11:36:40 +0300
-Subject: [PATCH 33/36] Rename addicmos to adsd3100
+Subject: [PATCH 33/40] Rename addicmos to adsd3100
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
@@ -18,7 +18,7 @@ diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts b/arch/arm64
 index 87d81263e6a1..e8a81ab5e80d 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
-@@ -85,7 +85,8 @@
+@@ -85,7 +85,8 @@ reg_v5v0: regulator-v5v0 {
  		regulator-max-microvolt = <5000000>;
  		gpio = <&gpio4 30 GPIO_ACTIVE_HIGH>;
  		enable-active-high;
@@ -28,7 +28,7 @@ index 87d81263e6a1..e8a81ab5e80d 100644
  	};
  
  	reg_vmain: regulator-vmain {
-@@ -97,7 +98,7 @@
+@@ -97,7 +98,7 @@ reg_vmain: regulator-vmain {
  		regulator-max-microvolt = <5000000>;
  		gpio = <&gpio5 0 GPIO_ACTIVE_HIGH>;
  		enable-active-high;
@@ -37,7 +37,7 @@ index 87d81263e6a1..e8a81ab5e80d 100644
  	};
  
  	reg_vsys: regulator-vsys {
-@@ -111,7 +112,8 @@
+@@ -111,7 +112,8 @@ reg_vsys: regulator-vsys {
  		gpio = <&gpio5 1 GPIO_ACTIVE_HIGH>;
  		startup-delay-us = <70000>;
  		enable-active-high;
@@ -47,7 +47,7 @@ index 87d81263e6a1..e8a81ab5e80d 100644
  	};
  
  	reg_vaux: regulator-vaux {
-@@ -125,7 +127,8 @@
+@@ -125,7 +127,8 @@ reg_vaux: regulator-vaux {
  		gpio = <&gpio4 31 GPIO_ACTIVE_HIGH>;
  		startup-delay-us = <100000>;
  		enable-active-high;
@@ -57,7 +57,7 @@ index 87d81263e6a1..e8a81ab5e80d 100644
  	};
  
  	reg_vcc_3p3: regulator-vcc-3p3 {
-@@ -139,7 +142,7 @@
+@@ -139,7 +142,7 @@ reg_vcc_3p3: regulator-vcc-3p3 {
  		startup-delay-us = <7000>;
  		enable-active-high;
  		regulator-always-on;
@@ -66,7 +66,7 @@ index 87d81263e6a1..e8a81ab5e80d 100644
  	};
  
  	reg_can1_stby: regulator-can1-stby {
-@@ -443,7 +446,7 @@
+@@ -443,7 +446,7 @@ &mipi_csi_0 {
  	port@0 {
  		reg = <0>;
  		mipi_csi0_ep: endpoint {
@@ -75,7 +75,7 @@ index 87d81263e6a1..e8a81ab5e80d 100644
  			data-lanes = <4>;
  			csis-hs-settle = <32>;
  			csis-clk-settle = <0>;
-@@ -458,21 +461,21 @@
+@@ -458,21 +461,21 @@ &ecspi2 {
  	cs-gpios = <&gpio5 13 GPIO_ACTIVE_LOW>, <&gpio3 9 GPIO_ACTIVE_LOW>;
  	status = "okay";
  
@@ -102,7 +102,7 @@ index 87d81263e6a1..e8a81ab5e80d 100644
  				remote-endpoint = <&mipi_csi0_ep>;
  				data-lanes = <1 2 3 4>;
  				clock-lanes = <0>;
-@@ -717,6 +720,8 @@
+@@ -717,6 +720,8 @@ &usdhc1 {
  	vmmc-supply = <&reg_sd1_vmmc>;
  	reset-gpio = <&gpio2 11 GPIO_ACTIVE_LOW>;
  	status = "okay";
@@ -111,7 +111,7 @@ index 87d81263e6a1..e8a81ab5e80d 100644
  	brcmf: brcmf@1 {
  		reg = <1>;
  		compatible = "brcm,bcm4329-fmac";
-@@ -1115,13 +1120,13 @@
+@@ -1115,13 +1120,13 @@ MX8MP_IOMUXC_ECSPI2_MISO__ECSPI2_MISO		0x82 /* MISO: spi master-in-slave-out */
  		>;
  	};
  
@@ -2414,5 +2414,5 @@ index 000000000000..2c04599266e0
 +MODULE_AUTHOR("Bogdan Togorean");
 +MODULE_LICENSE("GPL v2");
 -- 
-2.17.1
+2.37.1
 

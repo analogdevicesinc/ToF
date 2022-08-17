@@ -1,7 +1,7 @@
-From 1ffb9d168af9e135df78ea6e81e6ba0656c52547 Mon Sep 17 00:00:00 2001
+From f1de2abac96cd3007a50a6422f2d6cb45a8d890a Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Thu, 5 May 2022 11:48:14 +0300
-Subject: [PATCH 30/36] Rename control to ADSD
+Subject: [PATCH 30/40] Rename control to ADSD
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
@@ -22,5 +22,5 @@ index 21e3b433856a..9119621a92fb 100644
  /* MPEG-class control IDs */
  /* The MPEG controls are applicable to all codec controls
 -- 
-2.17.1
+2.37.1
 

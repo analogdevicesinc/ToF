@@ -1,7 +1,7 @@
-From 933d93f969b404e124b1711a595ccd6c24d96115 Mon Sep 17 00:00:00 2001
+From 60d0c95390e25d5d4d825ab1320f640b2eef9228 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Thu, 15 Apr 2021 11:26:07 +0300
-Subject: [PATCH 01/36] Enable I2C in PMIC
+Subject: [PATCH 01/40] Enable I2C in PMIC
 
 Signed-off-by: TalPilo <tal.pilo@solid-run.com>
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
@@ -28,5 +28,5 @@ index d59305a6dd41..fe4f8d73b594 100644
  		const struct regulator_desc *desc;
  		struct regulator_dev *rdev;
 -- 
-2.17.1
+2.37.1
 

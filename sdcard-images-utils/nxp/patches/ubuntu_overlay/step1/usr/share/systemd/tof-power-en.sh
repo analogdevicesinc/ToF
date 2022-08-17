@@ -1,22 +1,10 @@
 #!/bin/bash
 
-#mount -t devtmpfs /dev /dev
-
-#i2cset -f -y 2 0x50 0x2e 0x0 # Sink role
-#i2cset -f -y 2 0x50 0x2f 0x21 # Enable RX
-
-#V5V0 
 #V5V0 enable GPIO - GPIO4 / IO30 - Linux GPIO 126
 #VMAIN enable GPIO - GPIO5 / IO00 - Linux GPIO 128
 #VSYS enable GPIO - GPIO5 / IO01 - Linux GPIO 129
 #VAUX enable GPIO - GPIO4 / IO31 - Linux GPIO 127
 #VDAC enable GPIO - GPIO5 / IO02 - Linux GPIO 130
-
-#DAC reset deassert - GPIO5 / IO4 - Linux GPIO 132 (Linux /dev/i2c1)
-#ADC internal reference is 2.5v and requires to be enabled
-
-#Vaux = 3.271v
-#Vsys = 3.3v
 
 BOARD=$(strings /proc/device-tree/model)
 
@@ -67,10 +55,21 @@ if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier + ADSD3500" ]]; then
 	echo out > /sys/class/gpio/gpio503/direction
 	echo 1 > /sys/class/gpio/gpio503/value
 
+	# Boot strap MAX7320
 	#U0
 	echo 507 > /sys/class/gpio/export
 	echo out > /sys/class/gpio/gpio507/direction
 	echo 0 > /sys/class/gpio/gpio507/value
+
+	#EN_1P8
+	echo 510 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio510/direction
+	echo 1 > /sys/class/gpio/gpio510/value
+
+	#EN_0P8
+	echo 511 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio511/direction
+	echo 1 > /sys/class/gpio/gpio511/value
 
 	# Pull reset high
 	echo 1 > /sys/class/gpio/gpio122/value

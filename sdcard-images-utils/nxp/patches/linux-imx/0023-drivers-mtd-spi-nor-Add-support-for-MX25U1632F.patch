@@ -1,7 +1,7 @@
-From ab3ac63c49a327b18135a3b8153ee79d38d6b0d4 Mon Sep 17 00:00:00 2001
+From 4cd5eaa77b7a824d5a1f393be01142f9748070ec Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Fri, 4 Feb 2022 10:17:58 +0200
-Subject: [PATCH 23/36] drivers: mtd: spi-nor: Add support for MX25U1632F
+Subject: [PATCH 23/40] drivers: mtd: spi-nor: Add support for MX25U1632F
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
@@ -21,5 +21,5 @@ index c145a09cecd1..62ba71c0e15d 100644
  			      SECT_4K | SPI_NOR_DUAL_READ |
  			      SPI_NOR_QUAD_READ) },
 -- 
-2.17.1
+2.37.1
 

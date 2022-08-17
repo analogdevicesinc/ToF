@@ -1,7 +1,7 @@
-From 4ce2ad1d5901f9d576637ebc2b17f67dc3aa9235 Mon Sep 17 00:00:00 2001
+From 700b993ed16f277980db92fcfb3b0913e53024c3 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Wed, 7 Jul 2021 12:08:46 +0300
-Subject: [PATCH 15/36] drivers: media: spi: addicmos: Add custom control for
+Subject: [PATCH 15/40] drivers: media: spi: addicmos: Add custom control for
  config/claib writing
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
@@ -142,5 +142,5 @@ index 94a37e3bdd07..14faf522d39f 100644
  	if (ret) {
  		dev_err(dev, "%s: control initialization error %d\n",
 -- 
-2.17.1
+2.37.1
 
