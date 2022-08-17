@@ -945,6 +945,13 @@ aditof::Status Adsd3100Sensor::adsd3500_reset() {
     return aditof::Status::UNAVAILABLE;
 }
 
+aditof::Status Adsd3100Sensor::initTargetDepthCompute(uint8_t *iniFile,
+                                                      uint16_t iniFileLength,
+                                                      uint8_t *calData,
+                                                      uint16_t calDataLength) {
+    return aditof::Status::OK;
+}
+
 aditof::Status Adsd3100Sensor::waitForBufferPrivate(struct VideoDev *dev) {
     fd_set fds;
     struct timeval tv;
