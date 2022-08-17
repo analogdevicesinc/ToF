@@ -1251,3 +1251,10 @@ aditof::Status UsbDepthSensor::adsd3500_register_interrupt_callback(
                     "is not supported yet!";
     return aditof::Status::UNAVAILABLE;
 }
+
+aditof::Status UsbDepthSensor::initTargetDepthCompute(uint8_t *iniFile,
+                                                      uint16_t iniFileLength,
+                                                      uint8_t *calData,
+                                                      uint16_t calDataLength) {
+    return aditof::Status::OK;
+}
