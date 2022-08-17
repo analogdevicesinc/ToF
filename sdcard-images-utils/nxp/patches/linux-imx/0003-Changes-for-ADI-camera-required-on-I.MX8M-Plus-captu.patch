@@ -1,7 +1,7 @@
-From 1235069b6f9c4e337af42c6463d6540f90328a08 Mon Sep 17 00:00:00 2001
+From 4b3d5d6c60ce55424eb9bc8754c272c614640c02 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Thu, 11 Mar 2021 11:35:17 +0200
-Subject: [PATCH 03/36] Changes for ADI camera required on I.MX8M Plus capture
+Subject: [PATCH 03/40] Changes for ADI camera required on I.MX8M Plus capture
  driver
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
@@ -93,5 +93,5 @@ index 928c64d3be49..b187fa5f4e09 100644
  	return 0;
  }
 -- 
-2.17.1
+2.37.1
 

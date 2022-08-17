@@ -1,0 +1,187 @@
+From fd98d8ab40312f092f90a64b6c6523979a915d6a Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Tue, 2 Aug 2022 17:12:18 +0300
+Subject: [PATCH 37/40] drivers: media: adsd: Remove duplicate link_freqs
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ drivers/media/i2c/adsd3500.c | 36 ++++++++++++------------------------
+ drivers/media/spi/adsd3100.c | 15 +++++----------
+ 2 files changed, 17 insertions(+), 34 deletions(-)
+
+diff --git a/drivers/media/i2c/adsd3500.c b/drivers/media/i2c/adsd3500.c
+index c498ec7857d1..22e7f5e11f86 100644
+--- a/drivers/media/i2c/adsd3500.c
++++ b/drivers/media/i2c/adsd3500.c
+@@ -87,18 +87,6 @@ static const struct reg_sequence adsd3500_standby_setting[] = {
+ };
+ 
+ static const s64 link_freq_tbl[] = {
+-	732000000,
+-	732000000,
+-	732000000,
+-	732000000,
+-	732000000,
+-	732000000,
+-	732000000,
+-	732000000,
+-	732000000,
+-	732000000,
+-	732000000,
+-	732000000,
+ 	732000000
+ };
+ 
+@@ -116,84 +104,84 @@ static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
+ 		.height = 512,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+-		.link_freq_idx = 1 /* an index in link_freq_tbl[] */
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 	{ //RAW8 20BPP
+ 		.width = 1280,
+ 		.height = 512,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+-		.link_freq_idx = 2 /* an index in link_freq_tbl[] */
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 	{ //RAW8 24BPP
+ 		.width = 1536,
+ 		.height = 512,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+-		.link_freq_idx = 3 /* an index in link_freq_tbl[] */
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 	{ //RAW8 28BPP
+ 		.width = 1792,
+ 		.height = 512,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+-		.link_freq_idx = 4 /* an index in link_freq_tbl[] */
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 	{ //RAW8 32BPP
+ 		.width = 2048,
+ 		.height = 512,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+-		.link_freq_idx = 5 /* an index in link_freq_tbl[] */
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 	{ //RAW8 36BPP
+ 		.width = 2304,
+ 		.height = 512,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+-		.link_freq_idx = 6 /* an index in link_freq_tbl[] */
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 	{ //RAW8 40BPP
+ 		.width = 2560,
+ 		.height = 512,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+-		.link_freq_idx = 7 /* an index in link_freq_tbl[] */
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 	{ //RAW12 12BPP Depth only
+ 		.width = 512,
+ 		.height = 512,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+-		.link_freq_idx = 8 /* an index in link_freq_tbl[] */
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 	{ //RAW12 1 Phase / Frame
+ 		.width = 1024,
+ 		.height = 1024,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+-		.link_freq_idx = 9 /* an index in link_freq_tbl[] */
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 	{ //RAW12 12BPP * 3 phase
+ 		.width = 1024,
+ 		.height = 3072,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+-		.link_freq_idx = 10 /* an index in link_freq_tbl[] */
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 	{ //RAW12 12BPP * 3 phase
+ 		.width = 1024,
+ 		.height = 4096,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+-		.link_freq_idx = 11 /* an index in link_freq_tbl[] */
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 	{ //RAW16 16BPP * 3 phase
+ 		.width = 1024,
+ 		.height = 3072,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR16_1X16,
+-		.link_freq_idx = 12 /* an index in link_freq_tbl[] */
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	}
+ };
+ 
+diff --git a/drivers/media/spi/adsd3100.c b/drivers/media/spi/adsd3100.c
+index 2c04599266e0..d2cc706e0b5d 100644
+--- a/drivers/media/spi/adsd3100.c
++++ b/drivers/media/spi/adsd3100.c
+@@ -161,11 +161,6 @@ static const struct reg_sequence adsd3100_standby_setting[] = {
+ };
+ 
+ static const s64 link_freq_tbl[] = {
+-	732000000,
+-	732000000,
+-	732000000,
+-	732000000,
+-	732000000,
+ 	732000000
+ };
+ 
+@@ -181,31 +176,31 @@ static const struct adsd3100_mode_info adsd3100_mode_info_data[] = {
+ 		.width = 4096,
+ 		.height = 64,
+ 		.pixel_rate = 488000000,
+-		.link_freq_idx = 1 /* an index in link_freq_tbl[] */
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 	{
+ 		.width = 4096,
+ 		.height = 256,
+ 		.pixel_rate = 488000000,
+-		.link_freq_idx = 2 /* an index in link_freq_tbl[] */
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 	{
+ 		.width = 4096,
+ 		.height = 640,
+ 		.pixel_rate = 488000000,
+-		.link_freq_idx = 3 /* an index in link_freq_tbl[] */
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 	{
+ 		.width = 4096,
+ 		.height = 2304,
+ 		.pixel_rate = 488000000,
+-		.link_freq_idx = 4 /* an index in link_freq_tbl[] */
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 	{
+ 		.width = 4096,
+ 		.height = 2560,
+ 		.pixel_rate = 488000000,
+-		.link_freq_idx = 5 /* an index in link_freq_tbl[] */
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	}
+ };
+ 
+-- 
+2.37.1
+

@@ -1,7 +1,7 @@
-From a4aa04b943e98be048db2da5776825c79fa4e337 Mon Sep 17 00:00:00 2001
+From 5dc8caa6146d7b98602c6eadb9c0a4fbe4f047ff Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Mon, 8 Nov 2021 11:01:37 +0200
-Subject: [PATCH 21/36] arch: arm64: imx8mp-adi-tof-noreg: Increase CMA size
+Subject: [PATCH 21/40] arch: arm64: imx8mp-adi-tof-noreg: Increase CMA size
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
@@ -12,7 +12,7 @@ diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts b/arch/arm64
 index a7521545f245..87d81263e6a1 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
-@@ -229,6 +229,16 @@
+@@ -229,6 +229,16 @@ pwm: pwm-gpio {
  	};
  };
  
@@ -30,5 +30,5 @@ index a7521545f245..87d81263e6a1 100644
  	init-on-array = <IMX8MP_CLK_HSIO_ROOT>;
  };
 -- 
-2.17.1
+2.37.1
 

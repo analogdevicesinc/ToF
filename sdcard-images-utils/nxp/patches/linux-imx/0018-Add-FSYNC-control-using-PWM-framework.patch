@@ -1,7 +1,7 @@
-From f6cb594a9ceeb8f64b72103b88fa186971e5dbe5 Mon Sep 17 00:00:00 2001
+From e33ec63827f63780b4cc96282239c63d4811f7e8 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Fri, 17 Sep 2021 11:52:08 +0300
-Subject: [PATCH 18/36] Add FSYNC control using PWM framework
+Subject: [PATCH 18/40] Add FSYNC control using PWM framework
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
@@ -13,7 +13,7 @@ diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts b/arch/arm64
 index 06332e91004a..a7521545f245 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
-@@ -221,6 +221,12 @@
+@@ -221,6 +221,12 @@ mpcie {
  		status = "okay";
  		enable-active-high;
  	};
@@ -26,7 +26,7 @@ index 06332e91004a..a7521545f245 100644
  };
  
  &clk {
-@@ -452,6 +458,8 @@
+@@ -452,6 +458,8 @@ addicmos@0 {
  		pinctrl-names = "spi", "gpio";
  		pinctrl-0 = <&pinctrl_addicmos_spi>;
  		pinctrl-1 = <&pinctrl_addicmos_gpio>;
@@ -235,5 +235,5 @@ index 24ce8e03988f..66a2bbf48cec 100644
  
  	addicmos->pixel_rate = v4l2_ctrl_new_std(&addicmos->ctrls,
 -- 
-2.17.1
+2.37.1
 

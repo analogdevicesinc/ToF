@@ -1,7 +1,7 @@
-From d10c9ba238dbc5b5c1740148ae3b4cc8accbd978 Mon Sep 17 00:00:00 2001
+From 2397aaf108af3252944b4916f3436e8a899dadb1 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Fri, 21 May 2021 12:10:33 +0300
-Subject: [PATCH 11/36] arch: arm64: dts: imx8mp-aditof-noreg: Allow PD up to
+Subject: [PATCH 11/40] arch: arm64: dts: imx8mp-aditof-noreg: Allow PD up to
  20V and add SPI flash
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
@@ -13,7 +13,7 @@ diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts b/arch/arm64
 index ae0e5bb9eeae..28924e4bc0f9 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
-@@ -215,7 +215,7 @@
+@@ -215,7 +215,7 @@ usb3_data_ss: endpoint {
  
  	mpcie {
  		pinctrl-names = "default";
@@ -22,7 +22,7 @@ index ae0e5bb9eeae..28924e4bc0f9 100644
  		gpio-0 = <&gpio1 1 GPIO_ACTIVE_HIGH>;
  		gpio-1 = <&gpio1 5 GPIO_ACTIVE_HIGH>;
  		status = "okay";
-@@ -239,23 +239,23 @@
+@@ -239,23 +239,23 @@ &snvs_rtc{
  
  /*eth0*/
  &eqos {
@@ -63,7 +63,7 @@ index ae0e5bb9eeae..28924e4bc0f9 100644
  };
  
  &i2c1 {
-@@ -265,10 +265,10 @@
+@@ -265,10 +265,10 @@ &i2c1 {
  	status = "okay";
  
  	eeprom: eeprom@50{
@@ -78,7 +78,7 @@ index ae0e5bb9eeae..28924e4bc0f9 100644
  
  	pmic: pca9450@25 {
  		reg = <0x25>;
-@@ -437,20 +437,21 @@
+@@ -437,20 +437,21 @@ mipi_csi0_ep: endpoint {
  };
  
  &ecspi2 {
@@ -106,7 +106,7 @@ index ae0e5bb9eeae..28924e4bc0f9 100644
  
  		port {
  			addicmos_ep: endpoint {
-@@ -461,6 +462,18 @@
+@@ -461,6 +462,18 @@ addicmos_ep: endpoint {
  			};
  		};
  	};
@@ -125,7 +125,7 @@ index ae0e5bb9eeae..28924e4bc0f9 100644
  };
  
  &isp_0 {
-@@ -499,9 +512,9 @@
+@@ -499,9 +512,9 @@ usb_con: connector {
  			compatible = "usb-c-connector";
  			label = "USB-C";
  			power-role = "sink";
@@ -137,7 +137,7 @@ index ae0e5bb9eeae..28924e4bc0f9 100644
  			op-sink-microwatt = <15000000>;
  
  			ports {
-@@ -712,7 +725,7 @@
+@@ -712,7 +725,7 @@ &usdhc3 {
  	pinctrl-2 = <&pinctrl_usdhc3_200mhz>;
  	bus-width = <8>;
  	non-removable;
@@ -146,7 +146,7 @@ index ae0e5bb9eeae..28924e4bc0f9 100644
  };
  
  &wdog1 {
-@@ -1077,19 +1090,31 @@
+@@ -1077,19 +1090,31 @@ MX8MP_IOMUXC_GPIO1_IO06__GPIO1_IO06		0x19
  
  	pinctrl_ecspi2: ecspi2grp {
  		fsl,pins = <
@@ -181,5 +181,5 @@ index ae0e5bb9eeae..28924e4bc0f9 100644
  		fsl,pins = <
  			MX8MP_IOMUXC_SPDIF_RX__GPIO5_IO04		0x140
 -- 
-2.17.1
+2.37.1
 
