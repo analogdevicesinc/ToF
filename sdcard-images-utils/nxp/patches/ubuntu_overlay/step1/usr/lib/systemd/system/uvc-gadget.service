@@ -5,7 +5,7 @@ ConditionPathExists=/sys/kernel/config/usb_gadget/g1/functions/uvc.0
 
 [Service]
 Type=exec
-ExecStart=/usr/share/systemd/uvc-gadget
+ExecStart=/usr/share/systemd/uvc-app
 Restart=on-failure
 RestartSec=1
 
