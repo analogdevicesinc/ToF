@@ -14,7 +14,7 @@ extern "C" {
 int main(int argc, char *argv[]) {
     char *function = NULL;
     char *cap_device_1 = NULL;
-    const char *cap_device = "/dev/video0";
+    const char *cap_device = "/dev/video1";
     struct uvc_function_config *fc;
     struct uvc_stream *stream = NULL;
     struct video_source *src = NULL;
