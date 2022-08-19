@@ -1,0 +1,55 @@
+#!/bin/bash
+#
+# Support parameters (via command line or kernel parameter):
+# ------------------------------------------------------------------------------
+# reinit.mountsrc=<source_device>
+# todo: maybe support reinit.dir (use a sub-directory in the mounted filesystem)
+# todo: maybe support mounttype when an explicit mountsrc is supplied
+# todo: add support for reinit.init=...
+
+onfail() {
+    echo Error occurred, dropping to bash
+    /bin/bash
+    exit 1
+}
+trap onfail ERR
+
+echorun() {
+    echo "$@"
+    "$@"
+}
+mount -t proc none /proc
+
+# process kernel and passed in command-line parameters
+set -- $(cat /proc/cmdline) "$@"
+for arg in "$@"; do
+  case "$arg" in
+    reinit.mountsrc=*)
+      mountsrc="${arg#reinit.mountsrc=}"
+      ;;
+    reinit.dir=*)
+      dir="${arg#reinit.dir=}"
+      echo Error: reinit.dir not supported yet
+      onfail
+      ;;
+  esac
+done
+
+echo "reinit.mountsrc='$mountsrc'"
+
+if [[ -z "$mountsrc" ]]; then
+  mount -t tmpfs none /media
+else
+  # todo: maybe support an explicit mount type
+  mount $mountsrc /media
+fi
+
+mkdir -p /media/rootfs /media/rootfs_upper /media/rootfs_work
+echorun mount -t overlay overlay /media/rootfs -o lowerdir=/,upperdir=/media/rootfs_upper,workdir=/media/rootfs_work
+
+mkdir -p /media/rootfs/oldroot
+cd /media/rootfs
+pivot_root . oldroot
+exec /sbin/init
+echo Error: reinit: exec /sbin/init failed
+onfail 
