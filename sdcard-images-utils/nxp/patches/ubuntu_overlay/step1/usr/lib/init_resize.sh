@@ -102,7 +102,7 @@ mkdir -p /run/systemd
 mount /dev/mmcblk1p1 /boot
 mount / -o remount,ro
 
-sed -i 's| init=/usr/lib/init_resize\.sh||' /boot/extlinux/extlinux.conf
+sed -i 's| init=/usr/lib/init_resize\.sh| init=/sbin/reinit|' /boot/extlinux/extlinux.conf
 
 mount /boot -o remount,ro
 sync
