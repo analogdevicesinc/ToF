@@ -154,7 +154,6 @@ create_uvc() {
 			create_frame $FUNCTION 2304 512 uncompressed u1 1
 			create_frame $FUNCTION 2560 512 uncompressed u1 1
 			echo 8 > functions/$FUNCTION/streaming/uncompressed/u1/bBitsPerPixel
-			#echo -n -e '\x42\x41\x38\x31\x00\x00\x10\x00\x80\x00\x00\xaa\x00\x38\x9b\x71' > $GADGET/g1/functions/$FUNCTION/streaming/uncompressed/u1/guidFormat
 			echo -n -e '\x32\x00\x00\x00\x00\x00\x10\x00\x80\x00\x00\xaa\x00\x38\x9b\x71' > $GADGET/g1/functions/$FUNCTION/streaming/uncompressed/u1/guidFormat
 			;;
 
@@ -164,7 +163,7 @@ create_uvc() {
 			;;
 	esac
 
-	echo -n -e '\x42\x47\x31\x36\x00\x00\x10\x00\x80\x00\x00\xaa\x00\x38\x9b\x71' > $GADGET/g1/functions/$FUNCTION/streaming/uncompressed/u/guidFormat
+	echo -n -e '\x59\x55\x59\x32\x00\x00\x10\x00\x80\x00\x00\xaa\x00\x38\x9b\x71' > $GADGET/g1/functions/$FUNCTION/streaming/uncompressed/u/guidFormat
 
 	mkdir functions/$FUNCTION/streaming/header/h
 	cd functions/$FUNCTION/streaming/header/h
