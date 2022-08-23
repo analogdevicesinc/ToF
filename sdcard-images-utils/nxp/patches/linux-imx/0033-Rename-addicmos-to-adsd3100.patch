@@ -1,7 +1,7 @@
 From c54963daf552775797706101e25971187999af7e Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Thu, 5 May 2022 11:36:40 +0300
-Subject: [PATCH 33/40] Rename addicmos to adsd3100
+Subject: [PATCH 33/41] Rename addicmos to adsd3100
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
@@ -2414,5 +2414,5 @@ index 000000000000..2c04599266e0
 +MODULE_AUTHOR("Bogdan Togorean");
 +MODULE_LICENSE("GPL v2");
 -- 
-2.37.1
+2.37.2
 
