@@ -58,17 +58,14 @@ if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier + ADSD3500" ]]; then
 	# Boot strap MAX7320
 	#U0
 	echo 507 > /sys/class/gpio/export
-	echo out > /sys/class/gpio/gpio507/direction
 	echo 0 > /sys/class/gpio/gpio507/value
 
 	#EN_1P8
 	echo 510 > /sys/class/gpio/export
-	echo out > /sys/class/gpio/gpio510/direction
 	echo 1 > /sys/class/gpio/gpio510/value
 
 	#EN_0P8
 	echo 511 > /sys/class/gpio/export
-	echo out > /sys/class/gpio/gpio511/direction
 	echo 1 > /sys/class/gpio/gpio511/value
 
 	# Pull reset high
