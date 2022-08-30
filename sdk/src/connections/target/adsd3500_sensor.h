@@ -31,10 +31,14 @@
  */
 
 #include "aditof/depth_sensor_interface.h"
-#include "cameras/itof-camera/mode_info.h"
 #include "connections/target/v4l_buffer_access_interface.h"
 #include <memory>
 #include <unordered_map>
+
+#include "../../cameras/itof-camera/mode_info.h"
+#include "../../cameras/itof-camera/tofi/tofi_compute.h"
+#include "../../cameras/itof-camera/tofi/tofi_config.h"
+#include "../../cameras/itof-camera/tofi/tofi_util.h"
 
 class Adsd3500Sensor : public aditof::DepthSensorInterface,
                        public aditof::V4lBufferAccessInterface,
