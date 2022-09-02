@@ -98,10 +98,10 @@ if __name__ == "__main__":
 
     # Get intrinsic parameters from camera
     intrinsicParameters = camDetails.intrinsics
-    fx = intrinsicParameters.cameraMatrix[0]
-    fy = intrinsicParameters.cameraMatrix[4]
-    cx = intrinsicParameters.cameraMatrix[2]
-    cy = intrinsicParameters.cameraMatrix[5]
+    fx = intrinsicParameters.fx
+    fy = intrinsicParameters.fy
+    cx = intrinsicParameters.cx
+    cy = intrinsicParameters.cy
     cameraIntrinsics = o3d.camera.PinholeCameraIntrinsic(width, height, fx, fy, cx, cy)
 
     # Get camera details for frame correction

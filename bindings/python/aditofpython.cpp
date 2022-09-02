@@ -77,13 +77,30 @@ PYBIND11_MODULE(aditofpython, m) {
         .value("Network", aditof::ConnectionType::NETWORK)
         .value("OnTarget", aditof::ConnectionType::ON_TARGET);
 
+    py::class_<aditof::IntrinsicParameters>(m, "IntrinsicParameters")
+        .def(py::init<>())
+        .def_readwrite("fx",&aditof::IntrinsicParameters::fx)
+        .def_readwrite("fy",&aditof::IntrinsicParameters::fy)
+        .def_readwrite("cx",&aditof::IntrinsicParameters::cx)
+        .def_readwrite("cy",&aditof::IntrinsicParameters::cy)
+        .def_readwrite("codx",&aditof::IntrinsicParameters::codx)
+        .def_readwrite("cody",&aditof::IntrinsicParameters::cody)
+        .def_readwrite("k1",&aditof::IntrinsicParameters::k1)
+        .def_readwrite("k2",&aditof::IntrinsicParameters::k2)
+        .def_readwrite("k3",&aditof::IntrinsicParameters::k3)
+        .def_readwrite("k4",&aditof::IntrinsicParameters::k4)
+        .def_readwrite("k5",&aditof::IntrinsicParameters::k5)
+        .def_readwrite("k6",&aditof::IntrinsicParameters::k6)
+        .def_readwrite("p2",&aditof::IntrinsicParameters::p2)
+        .def_readwrite("p1",&aditof::IntrinsicParameters::p1);
+
     py::class_<aditof::CameraDetails>(m, "CameraDetails")
         .def(py::init<>())
         .def_readwrite("cameraId", &aditof::CameraDetails::cameraId)
         .def_readwrite("mode", &aditof::CameraDetails::mode)
         .def_readwrite("frameType", &aditof::CameraDetails::frameType)
         .def_readwrite("connection", &aditof::CameraDetails::connection)
-        .def_readwrite("intrinsics", &aditof::CameraDetails::cameraIntrinsics)
+        .def_readwrite("intrinsics", &aditof::CameraDetails::intrinsics)
         .def_readwrite("minDepth", &aditof::CameraDetails::minDepth)
         .def_readwrite("maxDepth", &aditof::CameraDetails::maxDepth)
         .def_readwrite("bitCount", &aditof::CameraDetails::bitCount);
