@@ -185,6 +185,7 @@ aditof::Status CameraItof::initialize() {
                    sizeof(CameraIntrinsics));
 
             m_xyz_dealias_data[mode] = dealiasStruct;
+            m_details.cameraIntrinsics = dealiasStruct.camera_intrinsics;
         }
 
         uint8_t fwData[44] = {0};
