@@ -59,10 +59,8 @@ void CameraInfoMsg::setMembers(const std::shared_ptr<Camera> &camera, int width,
 
     IntrinsicParameters intr = getIntrinsics(camera);
 
-    msg.D = std::vector<double>(intr.distCoeffs.begin(), intr.distCoeffs.end());
-    float *ptr = intr.cameraMatrix.data();
-    msg.K = {ptr[0], ptr[1], ptr[2], ptr[3], ptr[4],
-             ptr[5], ptr[6], ptr[7], ptr[8]};
+    msg.D = {intr.k1, intr.k2, intr.p1, intr.p2, intr.k3};
+    msg.K = {intr.fx, 0.0, intr.cx, 0.0, intr.fy, intr.cy, 0.0, 0.0, 1.0};
     msg.R = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
     msg.P = {msg.K[0], msg.K[1], msg.K[2], 0.0f,     msg.K[3], msg.K[4],
              msg.K[5], 0.0f,     msg.K[6], msg.K[7], msg.K[8], 0.0f};
