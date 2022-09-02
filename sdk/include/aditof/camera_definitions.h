@@ -36,6 +36,8 @@
 #include "frame_definitions.h"
 #include "status_definitions.h"
 
+#include "../../sdk/src/cameras/itof-camera/tofi/tofi_camera_intrinsics.h"
+
 #include <functional>
 #include <memory>
 #include <string>
@@ -52,33 +54,6 @@ class Frame;
  * @brief Callback for frame updates
  */
 typedef std::function<void(Status, Frame *)> FrameUpdateCallback;
-
-/**
- * @struct IntrinsicParameters
- * @brief Describes the intrinsic parameters of a camera.
- */
-struct IntrinsicParameters {
-    /**
-     * @brief The 3x3 intrinsic parameter matrix (a.k.a K matrix) with values
-     * specified in pixel units.
-     */
-    std::vector<float> cameraMatrix;
-
-    /**
-     * @brief The distortion coefficients
-     */
-    std::vector<float> distCoeffs;
-
-    /**
-     * @brief The width of a sensor unit cell specified in mm.
-     */
-    float pixelWidth;
-
-    /**
-     * @brief The height of a sensor unit cell specified in mm.
-     */
-    float pixelHeight;
-};
 
 /**
  * @struct CameraDetails
@@ -106,9 +81,9 @@ struct CameraDetails {
     ConnectionType connection;
 
     /**
-     * @brief Details about the intrinsic parameters of the camera
+     * @brief Structure for the camera intrinsic data.
      */
-    IntrinsicParameters intrinsics;
+    CameraIntrinsics cameraIntrinsics;
 
     /**
      * @brief The maximum distance (in millimeters) the camera can measure in
