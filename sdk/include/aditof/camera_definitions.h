@@ -58,19 +58,74 @@ typedef std::function<void(Status, Frame *)> FrameUpdateCallback;
  * @brief Describes the intrinsic parameters of a camera.
  */
 struct IntrinsicParameters {
+    /**
+     * @brief fx
+     */
     float fx;
+
+    /**
+     * @brief fy
+     */
     float fy;
+
+    /**
+     * @brief cx
+     */
     float cx;
+
+    /**
+     * @brief cy
+     */
     float cy;
+
+    /**
+     * @brief codx
+     */
     float codx;
+
+    /**
+     * @brief cody
+     */
     float cody;
+
+    /**
+     * @brief k1
+     */
     float k1;
+
+    /**
+     * @brief k2
+     */
     float k2;
+
+    /**
+     * @brief k3
+     */
     float k3;
+
+    /**
+     * @brief k4
+     */
     float k4;
+
+    /**
+     * @brief k5
+     */
     float k5;
+
+    /**
+     * @brief k6
+     */
     float k6;
+
+    /**
+     * @brief p2
+     */
     float p2;
+
+    /**
+     * @brief p1
+     */
     float p1;
 };
 
