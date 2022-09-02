@@ -36,8 +36,6 @@
 #include "frame_definitions.h"
 #include "status_definitions.h"
 
-#include "../../sdk/src/cameras/itof-camera/tofi/tofi_camera_intrinsics.h"
-
 #include <functional>
 #include <memory>
 #include <string>
@@ -54,6 +52,27 @@ class Frame;
  * @brief Callback for frame updates
  */
 typedef std::function<void(Status, Frame *)> FrameUpdateCallback;
+
+/**
+ * @struct IntrinsicParameters
+ * @brief Describes the intrinsic parameters of a camera.
+ */
+struct IntrinsicParameters {
+    float fx;
+    float fy;
+    float cx;
+    float cy;
+    float codx;
+    float cody;
+    float k1;
+    float k2;
+    float k3;
+    float k4;
+    float k5;
+    float k6;
+    float p2;
+    float p1;
+};
 
 /**
  * @struct CameraDetails
@@ -81,9 +100,9 @@ struct CameraDetails {
     ConnectionType connection;
 
     /**
-     * @brief Structure for the camera intrinsic data.
+     * @brief Details about the intrinsic parameters of the camera
      */
-    CameraIntrinsics cameraIntrinsics;
+    IntrinsicParameters intrinsics;
 
     /**
      * @brief The maximum distance (in millimeters) the camera can measure in

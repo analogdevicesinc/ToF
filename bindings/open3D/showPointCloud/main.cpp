@@ -100,10 +100,10 @@ int main(int argc, char *argv[]) {
     int bitCount = cameraDetails.bitCount;
 
     aditof::IntrinsicParameters intrinsics = cameraDetails.intrinsics;
-    double fx = intrinsics.cameraMatrix.at(0);
-    double fy = intrinsics.cameraMatrix.at(4);
-    double cx = intrinsics.cameraMatrix.at(2);
-    double cy = intrinsics.cameraMatrix.at(5);
+    double fx = intrinsics.fx;
+    double fy = intrinsics.fy;
+    double cx = intrinsics.cx;
+    double cy = intrinsics.cy;
 
     /* Enable noise reduction for better results */
     const int smallSignalThreshold = 100;
