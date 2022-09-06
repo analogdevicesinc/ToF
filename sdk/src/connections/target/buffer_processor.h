@@ -39,9 +39,23 @@
 
 #define OUTPUT_DEVICE "/dev/video1"
 
+struct VideoDev {
+    int fd;
+    int sfd;
+    struct buffer *videoBuffers;
+    unsigned int nVideoBuffers;
+    struct v4l2_plane planes[8];
+    enum v4l2_buf_type videoBuffersType;
+    bool started;
+
+    VideoDev()
+        : fd(-1), sfd(-1), videoBuffers(nullptr), nVideoBuffers(0),
+          started(false) {}
+};
+
 class BufferProcessor : public aditof::V4lBufferAccessInterface {
   public:
-    BufferProcessor();
+    BufferProcessor(VideoDev *inputVideoDev);
     ~BufferProcessor();
 
   public:
@@ -78,7 +92,8 @@ class BufferProcessor : public aditof::V4lBufferAccessInterface {
 
     struct v4l2_capability m_videoCapabilities;
     struct v4l2_format m_videoFormat;
-    const char *m_videoDevice = OUTPUT_DEVICE;
+    const char *m_videoDeviceName = OUTPUT_DEVICE;
 
-    struct VideoDev *m_videoDev;
+    struct VideoDev *m_outputVideoDev;
+    struct VideoDev *m_inputVideoDev;
 };

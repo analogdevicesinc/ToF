@@ -58,27 +58,13 @@ static int xioctl(int fh, unsigned int request, void *arg) {
     return r;
 }
 
-struct VideoDev {
-    int fd;
-    int sfd;
-    struct buffer *videoBuffers;
-    unsigned int nVideoBuffers;
-    struct v4l2_plane planes[8];
-    enum v4l2_buf_type videoBuffersType;
-    bool started;
+BufferProcessor::BufferProcessor(VideoDev *inputVideoDev)
+    : m_inputVideoDev(inputVideoDev), m_outputFrameWidth(0),
+      m_outputFrameHeight(0), m_tofiConfig(nullptr),
+      m_tofiComputeContext(nullptr), m_vidPropSet(false),
+      m_processorPropSet(false) {}
 
-    VideoDev()
-        : fd(-1), sfd(-1), videoBuffers(nullptr), nVideoBuffers(0),
-          started(false) {}
-};
-
-BufferProcessor::BufferProcessor() : {
-    m_outputFrameWitdh(0), m_outputFrameHeight(0), m_tofiConfig(nullptr),
-        m_tofiComputeContext(nullptr), m_vidPropSet(false),
-        m_processorPropSet(false), m_videoDev(nullptr)
-}
-
-~BufferProcessor::BufferProcessor() {
+BufferProcessor::~BufferProcessor() {
     if (NULL != m_tofiComputeContext) {
         LOG(INFO) << "freeComputeLibrary";
         FreeTofiCompute(m_tofiComputeContext);
@@ -94,12 +80,10 @@ BufferProcessor::BufferProcessor() : {
 
     if (m_fd != 0) {
         if (::close(m_fd) == -1) {
-            LOG(ERROR) << "Failed to close " << m_videoDevice
+            LOG(ERROR) << "Failed to close " << m_videoDeviceName
                        << " error: " << strerror(errno);
         }
     }
-
-    return aditof::Status::OK;
 }
 
 aditof::Status BufferProcessor::open() {
@@ -114,15 +98,17 @@ aditof::Status BufferProcessor::open() {
     }
 
     if (xioctl(m_videoDev->fd, VIDIOC_QUERYCAP, &m_videoCapabilities) == -1) {
-        LOG(ERROR) << devName << " VIDIOC_QUERYCAP error";
+        LOG(ERROR) << m_videoDeviceName << " VIDIOC_QUERYCAP error";
         return Status::GENERIC_ERROR;
     }
 
     memset(&m_videoFormat, 0, sizeof(m_videoFormat));
     if (xioctl(m_videoDev->fd, VIDIOC_G_FMT, &m_videoFormat) == -1) {
-        LOG(ERROR) << devName << " VIDIOC_G_FMT error";
+        LOG(ERROR) << m_videoDeviceName << " VIDIOC_G_FMT error";
         return Status::GENERIC_ERROR;
     }
+
+    delete m_outputVideoDev;
 
     return status;
 }
@@ -139,9 +125,9 @@ aditof::Status BufferProcessor::setVideoProperties(int frameWidth,
     m_videoFormat.fmt.pix.width = frameWidth;
     m_videoFormat.fmt.pix.height = frameHeight;
     m_videoFormat.fmt.pix.pixelformat = V4L2_PIX_FMT_SBGGR12;
-    m_videoFormat.fmt.pix.sizeimage = frameWitdh * frameHeight;
+    m_videoFormat.fmt.pix.sizeimage = frameWidth * frameHeight;
     m_videoFormat.fmt.pix.field = V4L2_FIELD_NONE;
-    m_videoFormat.fmt.pix.bytesperline = framewidth;
+    m_videoFormat.fmt.pix.bytesperline = frameWidth;
     m_videoFormat.fmt.pix.colorspace = V4L2_COLORSPACE_SRGB;
 
     if (xioctl(m_videoDev->fd, VIDIOC_S_FMT, &m_videoFormat) == -1) {
@@ -160,25 +146,25 @@ aditof::Status BufferProcessor::setProcessorProperties(
         uint32_t status = ADI_TOFI_SUCCESS;
 
         if (iniFile != nullptr) {
-            ConfigFileData depth_ini = {pData, iniFileLength};
-
+            ConfigFileData depth_ini = {iniFile, iniFileLength};
+            ConfigFileData calDataStruct = {calData, calDataLength};
             if (ispEnabled) {
                 memcpy(m_xyzDealiasData, calData, calDataLength);
                 m_tofiConfig =
                     InitTofiConfig_isp((ConfigFileData *)&depth_ini, mode,
                                        &status, m_xyzDealiasData);
             } else {
-                ConfigFileData calData = {calData, calDataLength};
-                if (calData.p_data != NULL) {
-                    m_tofiConfig = InitTofiConfig(&calData, NULL, &depth_ini,
-                                                  mode, &status);
+                if (calDataStruct.p_data != NULL) {
+                    m_tofiConfig = InitTofiConfig(&calDataStruct, NULL,
+                                                  &depth_ini, mode, &status);
                 } else {
                     LOG(ERROR) << "Failed to get calibration data";
                 }
             }
 
         } else {
-            m_tofiConfig = InitTofiConfig(&calData, NULL, NULL, mode, &status);
+            m_tofiConfig =
+                InitTofiConfig(&calDataStruct, NULL, NULL, mode, &status);
         }
 
         if ((m_tofiConfig == NULL) ||
@@ -203,7 +189,7 @@ aditof::Status BufferProcessor::setProcessorProperties(
 }
 
 aditof::Status BufferProcessor::processFrame(uint16_t *buffer = nullptr) {
-
+    return aditof::Status::OK;
 }
 
 aditof::Status BufferProcessor::waitForBufferPrivate(struct VideoDev *dev) {
@@ -212,7 +198,7 @@ aditof::Status BufferProcessor::waitForBufferPrivate(struct VideoDev *dev) {
     int r;
 
     if (dev == nullptr)
-        dev = &m_implData->videoDevs[0];
+        dev = m_inputVideoDev;
 
     FD_ZERO(&fds);
     FD_SET(dev->fd, &fds);
@@ -235,12 +221,12 @@ aditof::Status BufferProcessor::waitForBufferPrivate(struct VideoDev *dev) {
 
 aditof::Status
 BufferProcessor::dequeueInternalBufferPrivate(struct v4l2_buffer &buf,
-                                             struct VideoDev *dev) {
+                                              struct VideoDev *dev) {
     using namespace aditof;
     Status status = Status::OK;
 
     if (dev == nullptr)
-        dev = &m_implData->videoDevs[0];
+        dev = m_inputVideoDev;
 
     CLEAR(buf);
     buf.type = dev->videoBuffersType;
@@ -272,7 +258,7 @@ aditof::Status BufferProcessor::getInternalBufferPrivate(
     uint8_t **buffer, uint32_t &buf_data_len, const struct v4l2_buffer &buf,
     struct VideoDev *dev) {
     if (dev == nullptr)
-        dev = &m_implData->videoDevs[0];
+        dev = m_inputVideoDev;
 
     *buffer = static_cast<uint8_t *>(dev->videoBuffers[buf.index].start);
     buf_data_len = buf.bytesused;
@@ -282,9 +268,9 @@ aditof::Status BufferProcessor::getInternalBufferPrivate(
 
 aditof::Status
 BufferProcessor::enqueueInternalBufferPrivate(struct v4l2_buffer &buf,
-                                             struct VideoDev *dev) {
+                                              struct VideoDev *dev) {
     if (dev == nullptr)
-        dev = &m_implData->videoDevs[0];
+        dev = m_inputVideoDev;
 
     if (xioctl(dev->fd, VIDIOC_QBUF, &buf) == -1) {
         LOG(WARNING) << "VIDIOC_QBUF error "
