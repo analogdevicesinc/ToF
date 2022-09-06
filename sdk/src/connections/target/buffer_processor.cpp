@@ -40,6 +40,7 @@
 #include <fstream>
 #include <glog/logging.h>
 #include <linux/videodev2.h>
+#include <memory>
 #include <sstream>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -47,6 +48,8 @@
 #include <unordered_map>
 
 #include "buffer_processor.h"
+
+#define CLEAR(x) memset(&(x), 0, sizeof(x))
 
 static int xioctl(int fh, unsigned int request, void *arg) {
     int r;
@@ -76,10 +79,8 @@ BufferProcessor::~BufferProcessor() {
         m_tofiConfig = NULL;
     }
 
-    freeConfigData();
-
-    if (m_fd != 0) {
-        if (::close(m_fd) == -1) {
+    if (m_outputVideoDev->fd != 0) {
+        if (::close(m_outputVideoDev->fd) == -1) {
             LOG(ERROR) << "Failed to close " << m_videoDeviceName
                        << " error: " << strerror(errno);
         }
@@ -90,25 +91,23 @@ aditof::Status BufferProcessor::open() {
     using namespace aditof;
     Status status = Status::OK;
 
-    m_videoDev->fd = ::open(m_videoDevice, O_RDWR);
-    if (m_videoDev->fd == -1) {
+    m_outputVideoDev->fd = ::open(m_videoDeviceName, O_RDWR);
+    if (m_outputVideoDev->fd == -1) {
         LOG(ERROR) << "Cannot open " << OUTPUT_DEVICE << "errno: " << errno
                    << "error: " << strerror(errno);
         return Status::GENERIC_ERROR;
     }
 
-    if (xioctl(m_videoDev->fd, VIDIOC_QUERYCAP, &m_videoCapabilities) == -1) {
+    if (xioctl(m_outputVideoDev->fd, VIDIOC_QUERYCAP, &m_videoCap) == -1) {
         LOG(ERROR) << m_videoDeviceName << " VIDIOC_QUERYCAP error";
         return Status::GENERIC_ERROR;
     }
 
     memset(&m_videoFormat, 0, sizeof(m_videoFormat));
-    if (xioctl(m_videoDev->fd, VIDIOC_G_FMT, &m_videoFormat) == -1) {
+    if (xioctl(m_outputVideoDev->fd, VIDIOC_G_FMT, &m_videoFormat) == -1) {
         LOG(ERROR) << m_videoDeviceName << " VIDIOC_G_FMT error";
         return Status::GENERIC_ERROR;
     }
-
-    delete m_outputVideoDev;
 
     return status;
 }
@@ -130,7 +129,7 @@ aditof::Status BufferProcessor::setVideoProperties(int frameWidth,
     m_videoFormat.fmt.pix.bytesperline = frameWidth;
     m_videoFormat.fmt.pix.colorspace = V4L2_COLORSPACE_SRGB;
 
-    if (xioctl(m_videoDev->fd, VIDIOC_S_FMT, &m_videoFormat) == -1) {
+    if (xioctl(m_outputVideoDev->fd, VIDIOC_S_FMT, &m_videoFormat) == -1) {
         LOG(ERROR) << "Failed to set format!";
         return Status::GENERIC_ERROR;
     }
@@ -144,10 +143,9 @@ aditof::Status BufferProcessor::setProcessorProperties(
 
     if (ispEnabled) {
         uint32_t status = ADI_TOFI_SUCCESS;
-
+        ConfigFileData calDataStruct = {calData, calDataLength};
         if (iniFile != nullptr) {
             ConfigFileData depth_ini = {iniFile, iniFileLength};
-            ConfigFileData calDataStruct = {calData, calDataLength};
             if (ispEnabled) {
                 memcpy(m_xyzDealiasData, calData, calDataLength);
                 m_tofiConfig =
@@ -186,6 +184,8 @@ aditof::Status BufferProcessor::setProcessorProperties(
                       "data hasn't been loaded";
         return aditof::Status::GENERIC_ERROR;
     }
+
+    return aditof::Status::OK;
 }
 
 aditof::Status BufferProcessor::processFrame(uint16_t *buffer = nullptr) {
