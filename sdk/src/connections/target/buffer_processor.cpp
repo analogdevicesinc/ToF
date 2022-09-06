@@ -33,6 +33,19 @@
 // TO DO: This exists in linux_utils.h which is not included on Dragoboard.
 // Should not have duplicated code if possible.
 
+#include <algorithm>
+#include <arm_neon.h>
+#include <cmath>
+#include <fcntl.h>
+#include <fstream>
+#include <glog/logging.h>
+#include <linux/videodev2.h>
+#include <sstream>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unordered_map>
+
 #include "buffer_processor.h"
 
 static int xioctl(int fh, unsigned int request, void *arg) {
