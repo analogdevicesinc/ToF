@@ -29,3 +29,47 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+// TO DO: This exists in linux_utils.h which is not included on Dragoboard.
+// Should not have duplicated code if possible.
+
+#include "buffer_processor.h"
+
+static int xioctl(int fh, unsigned int request, void *arg) {
+    int r;
+
+    do {
+        r = ioctl(fh, request, arg);
+    } while (-1 == r && EINTR == errno && errno != 0);
+
+    return r;
+}
+
+BufferProcessor::BufferProcessor() : {
+    m_outputFrameWitdh(0), m_outputFrameHeight(0), m_tofiConfig(nullptr),
+        m_tofiComputeContext(nullptr) {}
+
+~BufferProcessor::BufferProcessor() {}
+
+aditof::Status BufferProcessor::open(){
+    using namespace aditof;
+    Status status = Status::OK;
+
+    m_fd = ::open(m_videoDevice, O_RDWR);
+    if (m_fd == -1) {
+        LOG(WARNING) << "Cannot open " << OUTPUT_DEVICE << "errno: " << errno
+                     << "error: " << strerror(errno);
+        return Status::GENERIC_ERROR;
+    }
+
+    if(xioctl(m_fd, VIDIOC_QUERYCAP, &m_videoCapabilities) == -1)
+        LOG(WARNING) << devName << " VIDIOC_QUERYCAP error";
+        return Status::GENERIC_ERROR;
+    }
+
+	memset(&m_videoFormat, 0, sizeof(m_videoFormat));
+    if(xioctl(m_fd, VIDIOC_G_FMT, &m_videoFormat) == -1)
+        LOG(WARNING) << devName << " VIDIOC_G_FMT error";
+        return Status::GENERIC_ERROR;
+    }
+}
