@@ -37,7 +37,7 @@
 #include "../../cameras/itof-camera/tofi/tofi_config.h"
 #include "../../cameras/itof-camera/tofi/tofi_util.h"
 
-#define outputDevice "/dev/video1"
+#define OUTPUT_DEVICE "/dev/video1"
 
 class BufferProcessor : public aditof::V4lBufferAccessInterface {
     public:
@@ -55,7 +55,12 @@ class BufferProcessor : public aditof::V4lBufferAccessInterface {
     uint16_t m_outputFrameWidth;
     uint16_t m_outputFrameHeight;
 
-    TofiConfig *m_tofi_config = NULL;
-    TofiComputeContext *m_tofi_compute_context = NULL;
-    TofiXYZDealiasData m_xyz_dealias_data[11];
+    TofiConfig *m_tofiConfig;
+    TofiComputeContext *m_tofiComputeContext;
+    TofiXYZDealiasData m_xyzDealiasData[11];
+
+    struct v4l2_capability m_videoCapabilities;
+	struct v4l2_format m_videoFormat;
+    const char* m_videoDevice = OUTPUT_DEVICE;
+    int m_fd = 0;
 }
