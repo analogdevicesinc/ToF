@@ -39,6 +39,11 @@
 
 #define OUTPUT_DEVICE "/dev/video1"
 
+struct buffer {
+    void *start;
+    size_t length;
+};
+
 struct VideoDev {
     int fd;
     int sfd;
@@ -66,7 +71,7 @@ class BufferProcessor : public aditof::V4lBufferAccessInterface {
                                           uint8_t *calData,
                                           uint16_t calDataLength, uint16_t mode,
                                           bool ispEnabled);
-    aditof::Status processFrame(uint16_t *buffer = nullptr);
+    aditof::Status processFrame(uint16_t *buffer);
 
   private:
     aditof::Status waitForBufferPrivate(struct VideoDev *dev = nullptr);
@@ -90,7 +95,7 @@ class BufferProcessor : public aditof::V4lBufferAccessInterface {
     TofiComputeContext *m_tofiComputeContext;
     TofiXYZDealiasData m_xyzDealiasData[11];
 
-    struct v4l2_capability m_videoCapabilities;
+    struct v4l2_capability m_videoCap;
     struct v4l2_format m_videoFormat;
     const char *m_videoDeviceName = OUTPUT_DEVICE;
 
