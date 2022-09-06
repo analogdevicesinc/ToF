@@ -67,7 +67,7 @@ class BufferProcessor : public aditof::V4lBufferAccessInterface {
 
   private:
     bool m_vidPropSet;
-    boot m_processorPropSet;
+    bool m_processorPropSet;
 
     uint16_t m_outputFrameWidth;
     uint16_t m_outputFrameHeight;
@@ -81,4 +81,4 @@ class BufferProcessor : public aditof::V4lBufferAccessInterface {
     const char *m_videoDevice = OUTPUT_DEVICE;
 
     struct VideoDev *m_videoDev;
-}
+};
