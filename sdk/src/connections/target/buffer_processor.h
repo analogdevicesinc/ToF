@@ -71,7 +71,7 @@ class BufferProcessor : public aditof::V4lBufferAccessInterface {
                                           uint8_t *calData,
                                           uint16_t calDataLength, uint16_t mode,
                                           bool ispEnabled);
-    aditof::Status processFrame(uint16_t *buffer);
+    aditof::Status processBuffer(uint16_t *buffer);
 
   private:
     aditof::Status waitForBufferPrivate(struct VideoDev *dev = nullptr);
