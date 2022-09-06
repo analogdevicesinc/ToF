@@ -188,8 +188,71 @@ aditof::Status BufferProcessor::setProcessorProperties(
     return aditof::Status::OK;
 }
 
-aditof::Status BufferProcessor::processFrame(uint16_t *buffer = nullptr) {
-    return aditof::Status::OK;
+aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
+    using namespace aditof;
+    struct v4l2_buffer buf[MAX_SUBFRAMES_COUNT];
+    struct VideoDev *dev;
+    Status status;
+    unsigned int buf_data_len;
+    uint8_t *pdata;
+    dev = m_inputVideoDev;
+
+    status = waitForBufferPrivate(dev);
+    if (status != Status::OK) {
+        return status;
+    }
+
+    status = dequeueInternalBufferPrivate(buf[0], dev);
+    if (status != Status::OK) {
+        return status;
+    }
+
+    status = getInternalBufferPrivate(&pdata, buf_data_len, buf[0], dev);
+    if (status != Status::OK) {
+        return status;
+    }
+
+    if (buffer != nullptr) {
+
+        uint16_t *tempDepthFrame = m_tofi_compute_context->p_depth_frame;
+        uint16_t *tempAbFrame = m_tofi_compute_context->p_ab_frame;
+
+        m_tofi_compute_context->p_depth_frame = buffer;
+        m_tofi_compute_context->p_ab_frame =
+            buffer + m_outputFrameWidth * m_outputFrameHeight;
+
+        uint32_t ret =
+            TofiCompute(frameDataLocation, m_tofi_compute_context, NULL);
+
+        if (ret != ADI_TOFI_SUCCESS) {
+            LOG(ERROR) << "TofiCompute failed";
+            return Status::GENERIC_ERROR;
+        }
+
+        m_tofi_compute_context->p_depth_frame = tempDepthFrame;
+        m_tofi_compute_context->p_ab_frame = tempAbFrame;
+    } else {
+
+        uint32_t ret =
+            TofiCompute(frameDataLocation, m_tofi_compute_context, NULL);
+
+        if (ret != ADI_TOFI_SUCCESS) {
+            LOG(ERROR) << "TofiCompute failed";
+            return Status::GENERIC_ERROR;
+        }
+
+        ::write(m_outputVideoDev->fd, m_tofi_compute_context->p_depth_frame,
+                m_outputFrameWidth * m_outputFrameHeight * 2);
+        ::write(m_outputVideoDev->fd, m_tofi_compute_context->p_ab_frame,
+                m_outputFrameWidth * m_outputFrameHeight * 2);
+    }
+
+    status = enqueueInternalBufferPrivate(buf[0], dev);
+    if (status != Status::OK) {
+        return status;
+    }
+
+    return status;
 }
 
 aditof::Status BufferProcessor::waitForBufferPrivate(struct VideoDev *dev) {
