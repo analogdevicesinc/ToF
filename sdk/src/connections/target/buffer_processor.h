@@ -46,12 +46,15 @@ class BufferProcessor : public aditof::V4lBufferAccessInterface {
 
   public:
     aditof::Status open();
-    aditof::Status setProperties();
-    aditof::Status processFrame();
-    aditof::Status processFrame(uint16_t *buffer);
-    aditof::Status close();
+    aditof::Status setVideoProperties(int frameWidth, int frameHeight);
+    aditof::Status setProcessorProperties(uint8_t *iniFile, uint16_t iniFileLength,
+                           uint8_t *calData, uint16_t calDataLength);
+    aditof::Status processFrame(uint16_t *buffer = nullptr);
 
     private:
+    bool m_vidPropSet;
+    boot m_processorPropSet;
+
     uint16_t m_outputFrameWidth;
     uint16_t m_outputFrameHeight;
 
