@@ -1292,32 +1292,14 @@ aditof::Status Adsd3500Sensor::initTargetDepthCompute(uint8_t *iniFile,
                                                       uint8_t *calData,
                                                       uint16_t calDataLength) {
     using namespace aditof;
-    Status status = status::OK;
+    Status status = Status::OK;
 
-    int converterMode;
+    uint8_t convertedMode;
     status = convertCameraMode(m_implData->frameType.type, convertedMode);
     ConfigFileData depth_ini = {iniFile, iniFileLength};
 
     memcpy(m_xyz_dealias_data, calData, calDataLength);
 
-    m_tofi_config =
-        InitTofiConfig_isp((ConfigFileData *)&depth_ini, convertedMode, &status,
-                           m_xyz_dealias_data);
-
-    if ((m_tofi_config == NULL) || (m_tofi_config->p_tofi_cal_config == NULL) ||
-        (status != ADI_TOFI_SUCCESS)) {
-        LOG(ERROR) << "InitTofiConfig failed";
-        return aditof::Status::GENERIC_ERROR;
-
-    } else {
-        m_tofi_compute_context =
-            InitTofiCompute(m_tofi_config->p_tofi_cal_config, &status);
-        if (m_tofi_compute_context == NULL || status != ADI_TOFI_SUCCESS) {
-            LOG(ERROR) << "InitTofiCompute failed";
-            return aditof::Status::GENERIC_ERROR;
-        }
-    }
-    
     return aditof::Status::OK;
 }
 
