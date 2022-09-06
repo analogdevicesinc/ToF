@@ -45,39 +45,68 @@ static int xioctl(int fh, unsigned int request, void *arg) {
     return r;
 }
 
+struct VideoDev {
+    int fd;
+    int sfd;
+    struct buffer *videoBuffers;
+    unsigned int nVideoBuffers;
+    struct v4l2_plane planes[8];
+    enum v4l2_buf_type videoBuffersType;
+    bool started;
+
+    VideoDev()
+        : fd(-1), sfd(-1), videoBuffers(nullptr), nVideoBuffers(0),
+          started(false) {}
+};
+
 BufferProcessor::BufferProcessor() : {
     m_outputFrameWitdh(0), m_outputFrameHeight(0), m_tofiConfig(nullptr),
         m_tofiComputeContext(nullptr), m_vidPropSet(false),
-        m_processorPropSet(false), m_fd(0)
+        m_processorPropSet(false), m_videoDev(nullptr)
 }
 
 ~BufferProcessor::BufferProcessor() {
+    if (NULL != m_tofiComputeContext) {
+        LOG(INFO) << "freeComputeLibrary";
+        FreeTofiCompute(m_tofiComputeContext);
+        m_tofiComputeContext = NULL;
+    }
+
+    if (m_tofiConfig != NULL) {
+        FreeTofiConfig(m_tofiConfig);
+        m_tofiConfig = NULL;
+    }
+
+    freeConfigData();
+
     if (m_fd != 0) {
         if (::close(m_fd) == -1) {
             LOG(ERROR) << "Failed to close " << m_videoDevice
                        << " error: " << strerror(errno);
         }
     }
+
+    return aditof::Status::OK;
 }
 
 aditof::Status BufferProcessor::open() {
     using namespace aditof;
     Status status = Status::OK;
 
-    m_fd = ::open(m_videoDevice, O_RDWR);
-    if (m_fd == -1) {
+    m_videoDev->fd = ::open(m_videoDevice, O_RDWR);
+    if (m_videoDev->fd == -1) {
         LOG(ERROR) << "Cannot open " << OUTPUT_DEVICE << "errno: " << errno
                    << "error: " << strerror(errno);
         return Status::GENERIC_ERROR;
     }
 
-    if (xioctl(m_fd, VIDIOC_QUERYCAP, &m_videoCapabilities) == -1) {
+    if (xioctl(m_videoDev->fd, VIDIOC_QUERYCAP, &m_videoCapabilities) == -1) {
         LOG(ERROR) << devName << " VIDIOC_QUERYCAP error";
         return Status::GENERIC_ERROR;
     }
 
     memset(&m_videoFormat, 0, sizeof(m_videoFormat));
-    if (xioctl(m_fd, VIDIOC_G_FMT, &m_videoFormat) == -1) {
+    if (xioctl(m_videoDev->fd, VIDIOC_G_FMT, &m_videoFormat) == -1) {
         LOG(ERROR) << devName << " VIDIOC_G_FMT error";
         return Status::GENERIC_ERROR;
     }
@@ -102,7 +131,7 @@ aditof::Status BufferProcessor::setVideoProperties(int frameWidth,
     m_videoFormat.fmt.pix.bytesperline = framewidth;
     m_videoFormat.fmt.pix.colorspace = V4L2_COLORSPACE_SRGB;
 
-    if (xioctl(m_fd, VIDIOC_S_FMT, &m_videoFormat) == -1) {
+    if (xioctl(m_videoDev->fd, VIDIOC_S_FMT, &m_videoFormat) == -1) {
         LOG(ERROR) << "Failed to set format!";
         return Status::GENERIC_ERROR;
     }
@@ -110,10 +139,145 @@ aditof::Status BufferProcessor::setVideoProperties(int frameWidth,
     return status;
 }
 
-aditof::Status BufferProcessor::setProcessorProperties(uint8_t *iniFile,
-                                                       uint16_t iniFileLength,
-                                                       uint8_t *calData,
-                                                       uint16_t calDataLength) {
+aditof::Status BufferProcessor::setProcessorProperties(
+    uint8_t *iniFile, uint16_t iniFileLength, uint8_t *calData,
+    uint16_t calDataLength, uint16_t mode, bool ispEnabled) {
+
+    if (ispEnabled) {
+        uint32_t status = ADI_TOFI_SUCCESS;
+
+        if (iniFile != nullptr) {
+            ConfigFileData depth_ini = {pData, iniFileLength};
+
+            if (ispEnabled) {
+                memcpy(m_xyzDealiasData, calData, calDataLength);
+                m_tofiConfig =
+                    InitTofiConfig_isp((ConfigFileData *)&depth_ini, mode,
+                                       &status, m_xyzDealiasData);
+            } else {
+                ConfigFileData calData = {calData, calDataLength};
+                if (calData.p_data != NULL) {
+                    m_tofiConfig = InitTofiConfig(&calData, NULL, &depth_ini,
+                                                  mode, &status);
+                } else {
+                    LOG(ERROR) << "Failed to get calibration data";
+                }
+            }
+
+        } else {
+            m_tofiConfig = InitTofiConfig(&calData, NULL, NULL, mode, &status);
+        }
+
+        if ((m_tofiConfig == NULL) ||
+            (m_tofiConfig->p_tofi_cal_config == NULL) ||
+            (status != ADI_TOFI_SUCCESS)) {
+            LOG(ERROR) << "InitTofiConfig failed";
+            return aditof::Status::GENERIC_ERROR;
+
+        } else {
+            m_tofiComputeContext =
+                InitTofiCompute(m_tofiConfig->p_tofi_cal_config, &status);
+            if (m_tofiComputeContext == NULL || status != ADI_TOFI_SUCCESS) {
+                LOG(ERROR) << "InitTofiCompute failed";
+                return aditof::Status::GENERIC_ERROR;
+            }
+        }
+    } else {
+        LOG(ERROR) << "Could not initialize compute library because config "
+                      "data hasn't been loaded";
+        return aditof::Status::GENERIC_ERROR;
+    }
 }
 
-aditof::Status BufferProcessor::processFrame(uint16_t *buffer = nullptr) {}
+aditof::Status BufferProcessor::processFrame(uint16_t *buffer = nullptr) {
+
+}
+
+aditof::Status BufferProcessor::waitForBufferPrivate(struct VideoDev *dev) {
+    fd_set fds;
+    struct timeval tv;
+    int r;
+
+    if (dev == nullptr)
+        dev = &m_implData->videoDevs[0];
+
+    FD_ZERO(&fds);
+    FD_SET(dev->fd, &fds);
+
+    tv.tv_sec = 20;
+    tv.tv_usec = 0;
+
+    r = select(dev->fd + 1, &fds, NULL, NULL, &tv);
+
+    if (r == -1) {
+        LOG(WARNING) << "select error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return aditof::Status::GENERIC_ERROR;
+    } else if (r == 0) {
+        LOG(WARNING) << "select timeout";
+        return aditof::Status::GENERIC_ERROR;
+    }
+    return aditof ::Status::OK;
+}
+
+aditof::Status
+BufferProcessor::dequeueInternalBufferPrivate(struct v4l2_buffer &buf,
+                                             struct VideoDev *dev) {
+    using namespace aditof;
+    Status status = Status::OK;
+
+    if (dev == nullptr)
+        dev = &m_implData->videoDevs[0];
+
+    CLEAR(buf);
+    buf.type = dev->videoBuffersType;
+    buf.memory = V4L2_MEMORY_MMAP;
+    buf.length = 1;
+    buf.m.planes = dev->planes;
+
+    if (xioctl(dev->fd, VIDIOC_DQBUF, &buf) == -1) {
+        LOG(WARNING) << "VIDIOC_DQBUF error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        switch (errno) {
+        case EAGAIN:
+        case EIO:
+            break;
+        default:
+            return Status::GENERIC_ERROR;
+        }
+    }
+
+    if (buf.index >= dev->nVideoBuffers) {
+        LOG(WARNING) << "Not enough buffers avaialable";
+        return Status::GENERIC_ERROR;
+    }
+
+    return status;
+}
+
+aditof::Status BufferProcessor::getInternalBufferPrivate(
+    uint8_t **buffer, uint32_t &buf_data_len, const struct v4l2_buffer &buf,
+    struct VideoDev *dev) {
+    if (dev == nullptr)
+        dev = &m_implData->videoDevs[0];
+
+    *buffer = static_cast<uint8_t *>(dev->videoBuffers[buf.index].start);
+    buf_data_len = buf.bytesused;
+
+    return aditof::Status::OK;
+}
+
+aditof::Status
+BufferProcessor::enqueueInternalBufferPrivate(struct v4l2_buffer &buf,
+                                             struct VideoDev *dev) {
+    if (dev == nullptr)
+        dev = &m_implData->videoDevs[0];
+
+    if (xioctl(dev->fd, VIDIOC_QBUF, &buf) == -1) {
+        LOG(WARNING) << "VIDIOC_QBUF error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    return aditof::Status::OK;
+}
