@@ -40,18 +40,32 @@
 #define OUTPUT_DEVICE "/dev/video1"
 
 class BufferProcessor : public aditof::V4lBufferAccessInterface {
-    public:
+  public:
     BufferProcessor();
     ~BufferProcessor();
 
   public:
     aditof::Status open();
     aditof::Status setVideoProperties(int frameWidth, int frameHeight);
-    aditof::Status setProcessorProperties(uint8_t *iniFile, uint16_t iniFileLength,
-                           uint8_t *calData, uint16_t calDataLength);
+    aditof::Status setProcessorProperties(uint8_t *iniFile,
+                                          uint16_t iniFileLength,
+                                          uint8_t *calData,
+                                          uint16_t calDataLength, uint16_t mode,
+                                          bool ispEnabled);
     aditof::Status processFrame(uint16_t *buffer = nullptr);
 
-    private:
+  private:
+    aditof::Status waitForBufferPrivate(struct VideoDev *dev = nullptr);
+    aditof::Status dequeueInternalBufferPrivate(struct v4l2_buffer &buf,
+                                                struct VideoDev *dev = nullptr);
+    aditof::Status getInternalBufferPrivate(uint8_t **buffer,
+                                            uint32_t &buf_data_len,
+                                            const struct v4l2_buffer &buf,
+                                            struct VideoDev *dev = nullptr);
+    aditof::Status enqueueInternalBufferPrivate(struct v4l2_buffer &buf,
+                                                struct VideoDev *dev = nullptr);
+
+  private:
     bool m_vidPropSet;
     boot m_processorPropSet;
 
@@ -63,7 +77,8 @@ class BufferProcessor : public aditof::V4lBufferAccessInterface {
     TofiXYZDealiasData m_xyzDealiasData[11];
 
     struct v4l2_capability m_videoCapabilities;
-	struct v4l2_format m_videoFormat;
-    const char* m_videoDevice = OUTPUT_DEVICE;
-    int m_fd = 0;
+    struct v4l2_format m_videoFormat;
+    const char *m_videoDevice = OUTPUT_DEVICE;
+
+    struct VideoDev *m_videoDev;
 }
