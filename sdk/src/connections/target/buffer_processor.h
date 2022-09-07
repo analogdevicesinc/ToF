@@ -60,11 +60,12 @@ struct VideoDev {
 
 class BufferProcessor : public aditof::V4lBufferAccessInterface {
   public:
-    BufferProcessor(VideoDev *inputVideoDev);
+    BufferProcessor();
     ~BufferProcessor();
 
   public:
     aditof::Status open();
+    aditof::Status setInputDevice(VideoDev *inputVideoDev);
     aditof::Status setVideoProperties(int frameWidth, int frameHeight);
     aditof::Status setProcessorProperties(uint8_t *iniFile,
                                           uint16_t iniFileLength,
@@ -72,6 +73,18 @@ class BufferProcessor : public aditof::V4lBufferAccessInterface {
                                           uint16_t calDataLength, uint16_t mode,
                                           bool ispEnabled);
     aditof::Status processBuffer(uint16_t *buffer);
+
+  public:
+    virtual aditof::Status waitForBuffer() override;
+    virtual aditof::Status
+    dequeueInternalBuffer(struct v4l2_buffer &buf) override;
+    virtual aditof::Status
+    getInternalBuffer(uint8_t **buffer, uint32_t &buf_data_len,
+                      const struct v4l2_buffer &buf) override;
+    virtual aditof::Status
+    enqueueInternalBuffer(struct v4l2_buffer &buf) override;
+    virtual aditof::Status
+    getDeviceFileDescriptor(int &fileDescriptor) override;
 
   private:
     aditof::Status waitForBufferPrivate(struct VideoDev *dev = nullptr);
