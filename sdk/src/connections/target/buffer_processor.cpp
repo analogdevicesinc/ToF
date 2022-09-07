@@ -61,9 +61,8 @@ static int xioctl(int fh, unsigned int request, void *arg) {
     return r;
 }
 
-BufferProcessor::BufferProcessor(VideoDev *inputVideoDev)
-    : m_inputVideoDev(inputVideoDev), m_outputFrameWidth(0),
-      m_outputFrameHeight(0), m_tofiConfig(nullptr),
+BufferProcessor::BufferProcessor()
+    : m_outputFrameWidth(0), m_outputFrameHeight(0), m_tofiConfig(nullptr),
       m_tofiComputeContext(nullptr), m_vidPropSet(false),
       m_processorPropSet(false) {}
 
@@ -110,6 +109,12 @@ aditof::Status BufferProcessor::open() {
     }
 
     return status;
+}
+
+aditof::Status BufferProcessor::setInputDevice(VideoDev *inputVideoDev) {
+    m_inputVideoDev = inputVideoDev;
+
+    return aditof::Status::OK;
 }
 
 aditof::Status BufferProcessor::setVideoProperties(int frameWidth,
@@ -190,7 +195,7 @@ aditof::Status BufferProcessor::setProcessorProperties(
 
 aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
     using namespace aditof;
-    struct v4l2_buffer buf[MAX_SUBFRAMES_COUNT];
+    struct v4l2_buffer buf[4];
     struct VideoDev *dev;
     Status status;
     unsigned int buf_data_len;
@@ -214,36 +219,36 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
 
     if (buffer != nullptr) {
 
-        uint16_t *tempDepthFrame = m_tofi_compute_context->p_depth_frame;
-        uint16_t *tempAbFrame = m_tofi_compute_context->p_ab_frame;
+        uint16_t *tempDepthFrame = m_tofiComputeContext->p_depth_frame;
+        uint16_t *tempAbFrame = m_tofiComputeContext->p_ab_frame;
 
-        m_tofi_compute_context->p_depth_frame = buffer;
-        m_tofi_compute_context->p_ab_frame =
+        m_tofiComputeContext->p_depth_frame = buffer;
+        m_tofiComputeContext->p_ab_frame =
             buffer + m_outputFrameWidth * m_outputFrameHeight;
 
         uint32_t ret =
-            TofiCompute(frameDataLocation, m_tofi_compute_context, NULL);
+            TofiCompute((uint16_t *)pdata, m_tofiComputeContext, NULL);
 
         if (ret != ADI_TOFI_SUCCESS) {
             LOG(ERROR) << "TofiCompute failed";
             return Status::GENERIC_ERROR;
         }
 
-        m_tofi_compute_context->p_depth_frame = tempDepthFrame;
-        m_tofi_compute_context->p_ab_frame = tempAbFrame;
+        m_tofiComputeContext->p_depth_frame = tempDepthFrame;
+        m_tofiComputeContext->p_ab_frame = tempAbFrame;
     } else {
 
         uint32_t ret =
-            TofiCompute(frameDataLocation, m_tofi_compute_context, NULL);
+            TofiCompute((uint16_t *)pdata, m_tofiComputeContext, NULL);
 
         if (ret != ADI_TOFI_SUCCESS) {
             LOG(ERROR) << "TofiCompute failed";
             return Status::GENERIC_ERROR;
         }
 
-        ::write(m_outputVideoDev->fd, m_tofi_compute_context->p_depth_frame,
+        ::write(m_outputVideoDev->fd, m_tofiComputeContext->p_depth_frame,
                 m_outputFrameWidth * m_outputFrameHeight * 2);
-        ::write(m_outputVideoDev->fd, m_tofi_compute_context->p_ab_frame,
+        ::write(m_outputVideoDev->fd, m_tofiComputeContext->p_ab_frame,
                 m_outputFrameWidth * m_outputFrameHeight * 2);
     }
 
@@ -342,4 +347,31 @@ BufferProcessor::enqueueInternalBufferPrivate(struct v4l2_buffer &buf,
     }
 
     return aditof::Status::OK;
+}
+
+aditof::Status BufferProcessor::getDeviceFileDescriptor(int &fileDescriptor) {
+    fileDescriptor = m_outputVideoDev->fd;
+    return aditof::Status::OK;
+}
+
+aditof::Status BufferProcessor::waitForBuffer() {
+
+    return waitForBufferPrivate();
+}
+
+aditof::Status BufferProcessor::dequeueInternalBuffer(struct v4l2_buffer &buf) {
+
+    return dequeueInternalBufferPrivate(buf);
+}
+
+aditof::Status
+BufferProcessor::getInternalBuffer(uint8_t **buffer, uint32_t &buf_data_len,
+                                   const struct v4l2_buffer &buf) {
+
+    return getInternalBufferPrivate(buffer, buf_data_len, buf);
+}
+
+aditof::Status BufferProcessor::enqueueInternalBuffer(struct v4l2_buffer &buf) {
+
+    return enqueueInternalBufferPrivate(buf);
 }

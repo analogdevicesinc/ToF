@@ -59,11 +59,10 @@
 
 #define ADI_DEBUG 1
 #define REQ_COUNT 10
-
-struct buffer {
-    void *start;
-    size_t length;
-};
+//struct buffer {
+//    void *start;
+//    size_t length;
+//};
 
 struct CalibrationData {
     std::string mode;
@@ -84,19 +83,19 @@ struct ConfigurationData {
     uint32_t values;
 };
 
-struct VideoDev {
-    int fd;
-    int sfd;
-    struct buffer *videoBuffers;
-    unsigned int nVideoBuffers;
-    struct v4l2_plane planes[8];
-    enum v4l2_buf_type videoBuffersType;
-    bool started;
-
-    VideoDev()
-        : fd(-1), sfd(-1), videoBuffers(nullptr), nVideoBuffers(0),
-          started(false) {}
-};
+//struct VideoDev {
+//    int fd;
+//    int sfd;
+//    struct buffer *videoBuffers;
+//    unsigned int nVideoBuffers;
+//    struct v4l2_plane planes[8];
+//    enum v4l2_buf_type videoBuffersType;
+//    bool started;
+//
+//    VideoDev()
+//        : fd(-1), sfd(-1), videoBuffers(nullptr), nVideoBuffers(0),
+//          started(false) {}
+//};
 
 enum class ImagerType { IMAGER_UNKNOWN, IMAGER_ADSD3100, IMAGER_ADSD3030 };
 enum class CCBVersion { CCB_UNKNOWN, CCB_VERSION0, CCB_VERSION1 };
@@ -134,7 +133,7 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
                                const std::string &captureDev)
     : m_driverPath(driverPath), m_driverSubPath(driverSubPath),
       m_captureDev(captureDev), m_implData(new Adsd3500Sensor::ImplData),
-      m_firstRun(true), m_adsd3500Queried(false) {
+      m_firstRun(true), m_adsd3500Queried(false), m_depthComputeOnTarget(true) {
     m_sensorName = "adsd3500";
 
     // Define the controls that this sensor has available
@@ -360,6 +359,8 @@ aditof::Status Adsd3500Sensor::open() {
         status = queryAdsd3500();
         m_adsd3500Queried = true;
     }
+
+    status = m_bufferProcessor->setInputDevice(m_implData->videoDevs);
 
     return status;
 }
@@ -672,6 +673,12 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     }
 
     m_implData->frameType = type;
+    m_bufferProcessor = new BufferProcessor();
+    status = m_bufferProcessor->setVideoProperties(512 * 4, 512);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to set bufferProcessor properties!";
+        return status;
+    }
 
     return status;
 }
@@ -684,9 +691,19 @@ aditof::Status Adsd3500Sensor::program(const uint8_t *firmware, size_t size) {
 aditof::Status Adsd3500Sensor::getFrame(uint16_t *buffer) {
 
     using namespace aditof;
+    Status status;
+
+    if (m_depthComputeOnTarget) {
+        status = m_bufferProcessor->processBuffer(buffer);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to process buffer!";
+            return status;
+        }
+        return status;
+    }
+
     struct v4l2_buffer buf[MAX_SUBFRAMES_COUNT];
     struct VideoDev *dev;
-    Status status;
     unsigned int buf_data_len;
     uint8_t *pdata;
     dev = &m_implData->videoDevs[0];
@@ -1296,9 +1313,13 @@ aditof::Status Adsd3500Sensor::initTargetDepthCompute(uint8_t *iniFile,
 
     uint8_t convertedMode;
     status = convertCameraMode(m_implData->frameType.type, convertedMode);
-    ConfigFileData depth_ini = {iniFile, iniFileLength};
 
-    memcpy(m_xyz_dealias_data, calData, calDataLength);
+    status = m_bufferProcessor->setProcessorProperties(
+        iniFile, iniFileLength, calData, calDataLength, convertedMode, true);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to initialize depth compute on target!";
+        return status;
+    }
 
     return aditof::Status::OK;
 }
