@@ -64,7 +64,9 @@ static int xioctl(int fh, unsigned int request, void *arg) {
 BufferProcessor::BufferProcessor()
     : m_outputFrameWidth(0), m_outputFrameHeight(0), m_tofiConfig(nullptr),
       m_tofiComputeContext(nullptr), m_vidPropSet(false),
-      m_processorPropSet(false) {}
+      m_processorPropSet(false), m_inputVideoDev(nullptr) {
+        m_outputVideoDev = new VideoDev();
+      }
 
 BufferProcessor::~BufferProcessor() {
     if (NULL != m_tofiComputeContext) {
@@ -104,8 +106,8 @@ aditof::Status BufferProcessor::open() {
 
     memset(&m_videoFormat, 0, sizeof(m_videoFormat));
     if (xioctl(m_outputVideoDev->fd, VIDIOC_G_FMT, &m_videoFormat) == -1) {
-        LOG(ERROR) << m_videoDeviceName << " VIDIOC_G_FMT error";
-        return Status::GENERIC_ERROR;
+       // LOG(ERROR) << m_videoDeviceName << " VIDIOC_G_FMT error";
+       // return Status::GENERIC_ERROR;
     }
 
     return status;
@@ -224,7 +226,7 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
 
         m_tofiComputeContext->p_depth_frame = buffer;
         m_tofiComputeContext->p_ab_frame =
-            buffer + m_outputFrameWidth * m_outputFrameHeight;
+            buffer + 512 * 512;
 
         uint32_t ret =
             TofiCompute((uint16_t *)pdata, m_tofiComputeContext, NULL);
