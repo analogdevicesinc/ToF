@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
     }
     
 
-    p_xyz_frame = (int16_t*)malloc(sizeof(int16_t) * n_cols * n_rows * ccb_data.n_freqs);
+    p_xyz_frame = (int16_t*)malloc(sizeof(int16_t) * n_cols * n_rows * 3);
 
     float* p_x_table = NULL;
     float* p_y_table = NULL;
@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
         printf("\n Unable to compute XYZ !!");
     }
 
-    fret = fwrite(p_xyz_frame, sizeof(int16_t) * n_cols * n_rows * ccb_data.n_freqs,1, fXYZ);
+    fret = fwrite(p_xyz_frame, sizeof(int16_t) * n_cols * n_rows * 3,1, fXYZ);
     if (fret != 1) {
         printf("\n Failed to write XYZ output");
         return 1;
