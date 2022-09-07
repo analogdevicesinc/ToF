@@ -153,6 +153,8 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     m_implData->controlsCommands["phaseDepthBits"] = 0x9819e2;
     m_implData->controlsCommands["abBits"] = 0x9819e3;
     m_implData->controlsCommands["confidenceBits"] = 0x9819e4;
+
+    m_bufferProcessor = new BufferProcessor();
 }
 
 Adsd3500Sensor::~Adsd3500Sensor() {
@@ -361,6 +363,16 @@ aditof::Status Adsd3500Sensor::open() {
     }
 
     status = m_bufferProcessor->setInputDevice(m_implData->videoDevs);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to set input video device!";
+        return status;
+    }
+
+    status = m_bufferProcessor->open();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to open output video device!";
+        return status;
+    }
 
     return status;
 }
@@ -673,7 +685,7 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     }
 
     m_implData->frameType = type;
-    m_bufferProcessor = new BufferProcessor();
+
     status = m_bufferProcessor->setVideoProperties(512 * 4, 512);
     if (status != Status::OK) {
         LOG(ERROR) << "Failed to set bufferProcessor properties!";
