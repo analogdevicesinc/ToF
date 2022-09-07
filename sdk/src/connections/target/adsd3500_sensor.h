@@ -31,6 +31,7 @@
  */
 
 #include "aditof/depth_sensor_interface.h"
+#include "buffer_processor.h"
 #include "connections/target/v4l_buffer_access_interface.h"
 #include <memory>
 #include <unordered_map>
@@ -150,6 +151,8 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     bool m_adsd3500Queried;
     aditof::SensorInterruptCallback m_interruptCallback;
     std::vector<aditof::DepthSensorFrameType> m_availableFrameTypes;
+    BufferProcessor *m_bufferProcessor;
+    bool m_depthComputeOnTarget;
 
     const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
         {
