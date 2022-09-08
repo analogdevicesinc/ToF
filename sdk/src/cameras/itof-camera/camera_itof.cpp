@@ -149,7 +149,7 @@ aditof::Status CameraItof::initialize() {
         // Get calibration file location
         const cJSON *json_ccb_calibration_file = cJSON_GetObjectItemCaseSensitive(config_json, "CCB_Calibration");
         if (cJSON_IsString(json_ccb_calibration_file) && (json_ccb_calibration_file->valuestring != NULL)) {
-            if (m_ccb_calibrationFile.empty()) {
+            if (1) { //(m_ccb_calibrationFile.empty()) { // Modified to allow .json ccb file overwriting with FLASH ccb
                 // save calibration file location
                 m_ccb_calibrationFile = std::string(json_ccb_calibration_file->valuestring);
                 LOG(INFO) << "Current calibration file is: "
@@ -260,7 +260,7 @@ aditof::Status CameraItof::start() {
        m_CameraProgrammed = true;
     }
 
-    status = m_depthSensor->start();
+    //status = m_depthSensor->start(); //Commented to avoid uvc-gadget app to automatically start streaimg without request
     if (Status::OK != status) {
        LOG(ERROR) << "Error starting image sensor.";
        return Status::GENERIC_ERROR;

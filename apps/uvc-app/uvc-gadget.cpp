@@ -27,6 +27,11 @@
 #include <aditof/sensor_enumerator_interface.h>
 #include <aditof/storage_interface.h>
 #include <aditof/temperature_sensor_interface.h>
+#include <aditof/camera.h>
+#include <aditof/floatTolin.h>
+#include <aditof/frame.h>
+#include <aditof/system.h>
+#include <aditof/status_definitions.h>
 #include <aditof/version.h>
 #include <atomic>
 #include <errno.h>
@@ -51,6 +56,7 @@
 #include <unistd.h>
 
 using namespace google::protobuf::io;
+using namespace aditof;
 
 #define MAX_PACKET_SIZE 60
 #define MAX_BUFF_SIZE 60
@@ -1025,6 +1031,7 @@ static void uvc_fill_streaming_control(struct uvc_device *dev,
     break;
   }
 
+  ctrl->dwMaxPayloadTransferSize = 3072; //This is required by the uvc app. Without this the app will crash
   ctrl->bmFramingInfo = 3;
   ctrl->bPreferedVersion = 1;
   ctrl->bMaxVersion = 1;
@@ -1684,7 +1691,7 @@ int main(int argc, char *argv[]) {
   fd_set fdsv, fdsu;
   int ret, opt, nfds;
   /* Frame format/resolution related params. */
-  int nbufs = 4;              /* Ping-Pong buffers */
+  int nbufs = 2;//4;          /* Ping-Pong buffers. Reduced it from 4 to 2 to reduce the lag in preview*/
   int mode = 0;               /* Camera operating mode */
   enum io_method uvc_io_method = IO_METHOD_USERPTR;
 
@@ -1806,6 +1813,50 @@ int main(int argc, char *argv[]) {
     sensor->open(handle);
   }
 
+  /***************************************************************************/
+  /*
+  Following section of code is added to load the ccb file from module Flash
+  */
+  System system;
+  std::vector<std::shared_ptr<Camera>> cameras;
+  Status status = Status::OK;
+ 
+  system.getCameraList(cameras); 
+  if (cameras.empty()) {
+    LOG(WARNING) << "No cameras found";
+    return 0;
+  }
+      
+  auto camera = cameras.front();
+        
+  // The config files should be aong with UVC-gadget executable
+  status = camera->setControl("initialization_config", "/usr/share/systemd/config/config_walden_nxp.json");
+  if (status != Status::OK) {
+    LOG(ERROR) << "Could not set the initialization config file!";
+    return 0;
+  }
+                    
+  status = camera->initialize();    
+  if (status != Status::OK) {
+    LOG(ERROR) << "Could not initialize camera!";
+    return 0;
+  }                                     
+                                                       
+  // optionally load configuration data from module memory
+  status = camera->setControl("loadModuleData", "call");
+  if (status != Status::OK) {
+    LOG(INFO) << "No CCB/CFG data found in camera module,";
+    LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data from JSON config file...";
+  }
+ 
+  status = camera->start();
+  if(status != Status::OK) {
+    LOG(ERROR) << "camera start failed";
+    return 0;
+  }
+
+  /***************************************************************************/
+  
   /* Open the UVC device. */
   ret = uvc_open(&udev, uvc_devname);
   if (udev == NULL || ret < 0)
@@ -1836,8 +1887,10 @@ int main(int argc, char *argv[]) {
     printf("Failed to set format for UVC\n");
   }
 
+  //aditof::Status status;
   /* Set default frame type */
-  aditof::Status status = camDepthSensor->setFrameType(depthSensorFrameTypes[mode]);
+  status = camDepthSensor->setFrameType(depthSensorFrameTypes[mode]);
+  
   if (status != aditof::Status::OK) {
     printf("Failed to set frame type\n");
   }

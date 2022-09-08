@@ -86,6 +86,7 @@ static const char kUsagePublic[] =
     Valid mode (--m) options are:
         0: QMpixel short range (512x512)
         1: QVGA LT (320x288)
+        2: QMpixel one phase (512x512)
         3: Passive IR (1024x1024)
         5: 1Mpixel with passive IR (1024x1024)
         7: QMpixel (512x512)
@@ -248,7 +249,7 @@ int main(int argc, char *argv[]) {
 
     Status status = Status::OK;
 
-    std::map<int, int> modeIndexMap = {{1, 0}, {3, 1}, {5, 2}, {7, 3}, {10, 4}};
+    std::map<int, int> modeIndexMap = {{1, 0}, {2, 1}, {3, 2}, {5, 3}, {7, 4}, {10, 5}};
 
     std::map<std::string, docopt::value> args = docopt::docopt_private(kUsagePublic, kUsageInternal, {argv + 1, argv + argc}, true);
 
@@ -304,9 +305,9 @@ int main(int argc, char *argv[]) {
     // Parsing mode type
     if (args["--m"]) {
         mode = args["--m"].asLong();
-        modeIsValid = (mode == 1 || mode == 3 || mode == 5 || mode == 7 || mode == 10);
+        modeIsValid = (mode == 1 || mode == 2 || mode == 3 || mode == 5 || mode == 7 || mode == 10);
         if (!modeIsValid) {
-            LOG(ERROR) << "Invalid Mode.." << mode << "The accepted values for mode are: 1, 3, 5, 7, 10";
+            LOG(ERROR) << "Invalid Mode.." << mode << "The accepted values for mode are: 1, 2, 3, 5, 7, 10";
             return 0;
         }
     }
@@ -435,7 +436,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (!modeIsValid) {
-        LOG(ERROR) << "Camera mode: " << mode << "is incorrect. The accepted values for mode are: 1, 3, 5, 7, 10";
+        LOG(ERROR) << "Camera mode: " << mode << "is incorrect. The accepted values for mode are: 1, 2, 3, 5, 7, 10";
         return 0;
     }  
 
