@@ -65,6 +65,8 @@ std::unique_ptr<aditof::SensorEnumeratorInterface> sensorsEnumerator;
 /* Server only works with one depth sensor */
 std::shared_ptr<aditof::DepthSensorInterface> camDepthSensor;
 std::shared_ptr<aditof::V4lBufferAccessInterface> sensorV4lBufAccess;
+uint16_t* processedFrameBuffer = nullptr;
+int processedFrameSize;
 
 static payload::ClientRequest buff_recv;
 static payload::ServerResponse buff_send;
@@ -465,7 +467,16 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             aditofFrameType.content.emplace_back(aditofFrameContent);
         }
 
+
         aditof::Status status = camDepthSensor->setFrameType(aditofFrameType);
+        if(status == aditof::Status::OK){
+            //width * height * 2 bytes/pixel * 2 frames(depth/ir)
+            processedFrameSize = aditofFrameType.width * aditofFrameType.height * sizeof(uint16_t) * 2;
+            if(processedFrameBuffer != nullptr){
+                delete[] processedFrameBuffer;
+            } 
+            processedFrameBuffer = new uint16_t[processedFrameSize];
+        }
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
@@ -480,7 +491,24 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
 
     case GET_FRAME: {
-        aditof::Status status = sensorV4lBufAccess->waitForBuffer();
+        aditof::Status status = aditof::Status::OK;
+
+        //to do: get value of m_depthComputeOnTarget from sensor
+        if(1){
+            status = camDepthSensor->getFrame(tempBuffer);
+            if(status != aditof::Status::OK){
+                LOG(ERROR) << "Failed to get frame!";
+                buff_send.set_status(static_cast<::payload::Status>(status));
+                break;
+            }
+
+            buff_send.add_bytes_payload(processedFrameBuffer, processedFrameSize);
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        }
+
+        status = sensorV4lBufAccess->waitForBuffer();
+
         if (status != aditof::Status::OK) {
             buff_send.set_status(static_cast<::payload::Status>(status));
             break;
@@ -582,6 +610,27 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         aditof::Status status =
             camDepthSensor->getControl(controlName, controlValue);
         buff_send.add_strings_payload(controlValue);
+        buff_send.set_status(static_cast<::payload::Status>(status));
+        break;
+    }
+
+    case INIT_TARGET_DEPTH_COMPUTE: {
+        uint16_t iniFileLength =
+            static_cast<uint16_t>(buff_recv.func_int32_param(0));
+        uint16_t calDataLength =
+            static_cast<uint16_t>(buff_recv.func_int32_param(1));
+        uint8_t *iniFile = new uint8_t[iniFileLength];
+        uint8_t *calData = new uint8_t[calDataLength];
+
+        memcpy(iniFile, buff_recv.func_bytes_param(0).c_str(), iniFileLength);
+        memcpy(calData, buff_recv.func_bytes_param(1).c_str(), calDataLength);
+
+        aditof::Status status = camDepthSensor->initTargetDepthCompute(
+            iniFile, iniFileLength, calData, calDataLength);
+
+        delete[] iniFile;
+        delete[] calData;
+
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
@@ -858,6 +907,7 @@ void Initialize() {
     s_map_api_Values["GetAvailableControls"] = GET_AVAILABLE_CONTROLS;
     s_map_api_Values["SetControl"] = SET_CONTROL;
     s_map_api_Values["GetControl"] = GET_CONTROL;
+    s_map_api_Values["InitTargetDepthCompute"] = INIT_TARGET_DEPTH_COMPUTE;
     s_map_api_Values["Adsd3500ReadCmd"] = ADSD3500_READ_CMD;
     s_map_api_Values["Adsd3500WriteCmd"] = ADSD3500_WRITE_CMD;
     s_map_api_Values["Adsd3500ReadPayloadCmd"] = ADSD3500_READ_PAYLOAD_CMD;
