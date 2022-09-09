@@ -41,11 +41,14 @@
 #ifdef TARGET
 #include "connections/target/target_sensor_enumerator.h"
 #else
-#include "connections/offline/offline_sensor_enumerator.h"
 #include "connections/usb/usb_sensor_enumerator.h"
 #ifdef HAS_NETWORK
 #include "connections/network/network_sensor_enumerator.h"
 #endif
+#endif
+
+#ifdef HAS_OFFLINE
+#include "connections/offline/offline_sensor_enumerator.h"
 #endif
 
 using namespace aditof;
