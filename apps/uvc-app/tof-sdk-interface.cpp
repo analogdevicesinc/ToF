@@ -349,6 +349,26 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
         response.set_status(
             static_cast<::uvc_payload::Status>(aditof::Status::OK));
         break;
+
+    case uvc_payload::FunctionName::INIT_TARGET_DEPTH_COMPUTE: {
+        uint16_t iniFileLength =
+            static_cast<uint16_t>(request.func_int32_param(0));
+        uint16_t calDataLength =
+            static_cast<uint16_t>(request.func_int32_param(1));
+        uint8_t *iniFile = new uint8_t[iniFileLength];
+        uint8_t *calData = new uint8_t[calDataLength];
+
+        memcpy(iniFile, request.func_bytes_param(0).c_str(), iniFileLength);
+        memcpy(calData, request.func_bytes_param(1).c_str(), calDataLength);
+
+        aditof::Status status = camDepthSensor->initTargetDepthCompute(
+            iniFile, iniFileLength, calData, calDataLength);
+        response.set_status(static_cast<::uvc_payload::Status>(status));
+
+        delete[] iniFile;
+        delete[] calData;
+
+        break;
     }
 
     case uvc_payload::FunctionName::STORAGE_OPEN: {

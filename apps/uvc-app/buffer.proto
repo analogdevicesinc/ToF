@@ -34,6 +34,7 @@ enum FunctionName
   STORAGE_WRITE = 17;
   STORAGE_CLOSE = 18;
   STORAGE_READ_CAPACITY = 19;
+  INIT_TARGET_DEPTH_COMPUTE = 20;
 }
 
 message CardImageVersion
