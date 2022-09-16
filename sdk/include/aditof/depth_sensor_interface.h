@@ -276,6 +276,14 @@ class DepthSensorInterface {
     virtual aditof::Status
     setHostConnectionType(std::string &connectionType) = 0;
     
+    /**
+     * @brief Get the name of the sensor
+     * @param[in] iniFile - iniFile content parsed as uint8_t*
+     * @param[in] iniFileLength - iniFile content length
+     * @param[in] calData - calibration data parsed as uint8_t*
+     * @param[in] calDataLength - calibration data content length
+     * @return Status
+     */
     virtual aditof::Status initTargetDepthCompute(uint8_t *iniFile,
                                                   uint16_t iniFileLength,
                                                   uint8_t *calData,
