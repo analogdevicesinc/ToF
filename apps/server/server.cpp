@@ -65,7 +65,7 @@ std::unique_ptr<aditof::SensorEnumeratorInterface> sensorsEnumerator;
 /* Server only works with one depth sensor */
 std::shared_ptr<aditof::DepthSensorInterface> camDepthSensor;
 std::shared_ptr<aditof::V4lBufferAccessInterface> sensorV4lBufAccess;
-uint16_t* processedFrameBuffer = nullptr;
+uint16_t *processedFrameBuffer = nullptr;
 int processedFrameSize;
 
 static payload::ClientRequest buff_recv;
@@ -467,14 +467,14 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             aditofFrameType.content.emplace_back(aditofFrameContent);
         }
 
-
         aditof::Status status = camDepthSensor->setFrameType(aditofFrameType);
-        if(status == aditof::Status::OK){
+        if (status == aditof::Status::OK) {
             //width * height * 2 bytes/pixel * 2 frames(depth/ir)
-            processedFrameSize = aditofFrameType.width * aditofFrameType.height * sizeof(uint16_t) * 2;
-            if(processedFrameBuffer != nullptr){
+            processedFrameSize = aditofFrameType.width *
+                                 aditofFrameType.height * sizeof(uint16_t) * 2;
+            if (processedFrameBuffer != nullptr) {
                 delete[] processedFrameBuffer;
-            } 
+            }
             processedFrameBuffer = new uint16_t[processedFrameSize];
         }
         buff_send.set_status(static_cast<::payload::Status>(status));
@@ -494,15 +494,16 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         aditof::Status status = aditof::Status::OK;
 
         //to do: get value of m_depthComputeOnTarget from sensor
-        if(1){
-            status = camDepthSensor->getFrame(tempBuffer);
-            if(status != aditof::Status::OK){
+        if (1) {
+            status = camDepthSensor->getFrame(processedFrameBuffer);
+            if (status != aditof::Status::OK) {
                 LOG(ERROR) << "Failed to get frame!";
                 buff_send.set_status(static_cast<::payload::Status>(status));
                 break;
             }
 
-            buff_send.add_bytes_payload(processedFrameBuffer, processedFrameSize);
+            buff_send.add_bytes_payload(processedFrameBuffer,
+                                        processedFrameSize);
             buff_send.set_status(static_cast<::payload::Status>(status));
             break;
         }
