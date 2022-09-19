@@ -1,7 +1,0 @@
-{
-"sensorFirmware": "./config/camera_configuration_walden.cfg",
-"CCB_Calibration": "./config/camera_calibration.ccb",
-"VAUX_POWER_ENABLE": "1",
-"VAUX_POWER_VOLTAGE": "27",
-"DEPTH_INI": "./config/RawToDepth.ini"
-}
