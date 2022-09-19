@@ -2,14 +2,12 @@
 
 ## ROS2 Installation
 
-- Install the recommended [ROS2 distribution](https://docs.ros.org/en/rolling/Releases.html) for your operating system**
-  - [ROS Install page](https://docs.ros.org/en/foxy/Installation.html)
-
-- In order to prepare the system to run the ROS wrapper in the general catkin workspace make sure to install correctly the following libraries:
-
+- Install the recommended [ROS2 distribution](https://docs.ros.org/en/rolling/Releases.html) for your operating system: 
+  - [ROS2 Install page](https://docs.ros.org/en/foxy/Installation.html)
+- Install colcon libraries: 
+  -  [Colcon Install page](https://docs.ros.org/en/foxy/Tutorials/Beginner-Client-Libraries/Colcon-Tutorial.html)
 ## Library prerequisits
 
-* Building ToF SDK:
 - **Install the ADI ToF SDK library**
   - [Install SDK dependencies](https://github.com/analogdevicesinc/ToF/blob/master/doc/itof/linux_build_instructions.md)
   - Download and build the SDK, as well as enable ROS package building and specify the path towards the ROS HOME directory
@@ -28,11 +26,11 @@ sudo cmake --build . --target tof_ros2_package
 ## Starting camera node
 - In the general ROS2 workspace run the following code:
 ```console
-    cd ros2_ws
-    source ./install/setup.bash
-    ros2 run tof_ros2cpp tof_camera_node ip="10.42.0.1" config_file="config/config_walden_3500_nxp.json" use_depthCompute="true" mode=1
+cd ros2_ws
+source ./install/setup.bash
+ros2 run tof_ros2cpp tof_camera_node ip="10.42.0.1" config_file="config/config_walden_3500_nxp.json" use_depthCompute="true" mode=1
 ```
-### Parameters
+### Parameters:
  [config_file:"<<b>path></b>"]
 * Crosby with Pulsatrix: "```config/config_walden_3500_nxp.json```"
 * Crosby: "```config/config_crosby_nxp.json```"
