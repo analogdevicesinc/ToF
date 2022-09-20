@@ -1,7 +1,0 @@
-{
-"sensorFirmware": "./config/NXP_MIPI4kSuperframe.cfg",
-"CCB_Calibration": "./config/camera_calibration_walden.ccb",
-"VAUX_POWER_VOLTAGE": "18",
-"DEPTH_INI": "./config/RawToDepth.ini",
-"FPS": "10"
-}
