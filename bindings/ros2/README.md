@@ -15,7 +15,17 @@
 git clone https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
-cmake -DWITH_NETWORK=1 -DWITH_ROS2=on -DROS_HOME_DIR="/home/${USER}/.ros" -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
+```
+* In case you habe the Depth-Compute library for the SDK, use the following command:
+```console
+cmake -DWITH_NETWORK=1 -DWITH_ROS2=on -DROS_HOME_DIR="/home/${USER}/.ros" -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" -DUSE_DEPTH_COMPUTE_STUBS=0 ..
+```
+* Otherwise, if the Depth-Compute library is not added, plese use the following command:
+```console
+cmake -DWITH_NETWORK=1 -DWITH_ROS2=on -DROS_HOME_DIR="/home/${USER}/.ros" -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" -DUSE_DEPTH_COMPUTE_STUBS=1 ..
+```
+
+```console
 sudo cmake --build . --target install
 ```
 - **Build the aditof_roscpp package**
