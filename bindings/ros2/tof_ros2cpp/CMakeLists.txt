@@ -11,16 +11,16 @@ endif()
 #Finding Glog, Libwebsocket, Protobuf, Aditof and Tofi_compute libraries
 list(APPEND CMAKE_PREFIX_PATH ${ADITOF_CMAKE_INSTALL_PREFIX}
      ${ADITOF_CMAKE_PREFIX_PATH})
-list(APPEND CMAKE_PREFIX_PATH "/usr/local;/opt/glog;/opt/protobuf;/opt/websockets" ${ADITOF_CMAKE_PREFIX_PATH})
 
+# finding required packages
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(example_interfaces REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(image_transport REQUIRED)
-
 find_package(aditof REQUIRED)
+
 find_library(TOFI_COMPUTE
   NAMES tofi_compute
   PATHS /usr/lib)
@@ -43,9 +43,11 @@ tof_camera_node
 
 ament_package()
 
+message("LIBTOFI_LIBDIR_PATH: ${LIBTOFI_LIBDIR_PATH}")
 
 # Copying config files and depth compute libraries from sdk/config, sdk/lib folders to build/examples/first-frame and build/first-frame/Debug or Release folders    
 add_custom_command( TARGET tof_camera_node POST_BUILD
-COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/config ${CMAKE_CURRENT_SOURCE_DIR}/../../config
+COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../../../sdk/src/cameras/itof-camera/config ${ROS_HOME}/
     COMMENT "Copying cfgs and libs to build config "
 )
+  
