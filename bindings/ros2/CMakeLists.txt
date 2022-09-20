@@ -24,10 +24,16 @@ if(UNIX)
    file(COPY ${CMAKE_BINARY_DIR}/../sdk/src/cameras/itof-camera/config DESTINATION "${ROS_HOME_DIR}")
   endif()
 
-  add_custom_command(
-    TARGET tof_ros2_package
-    COMMAND ${CMAKE_BINARY_DIR}/ros2_setup.bash "${OLD_CMAKE_INSTALL_PREFIX}"
-            "${OLD_CMAKE_PREFIX_PATH}" "${LIBTOFI_LIBDIR_PATH}" ${VERSION} DEPENDS aditof)
-  
+  if (${USE_DEPTH_COMPUTE_STUBS})
+    add_custom_command(
+      TARGET tof_ros2_package
+      COMMAND ${CMAKE_BINARY_DIR}/ros2_setup.bash "${OLD_CMAKE_INSTALL_PREFIX}"
+              "${OLD_CMAKE_PREFIX_PATH}" "-" ${VERSION} DEPENDS aditof)
+  else()
+    add_custom_command(
+      TARGET tof_ros2_package
+      COMMAND ${CMAKE_BINARY_DIR}/ros2_setup.bash "${OLD_CMAKE_INSTALL_PREFIX}"
+              "${OLD_CMAKE_PREFIX_PATH}" "${LIBTOFI_LIBDIR_PATH}" ${VERSION} DEPENDS aditof)
+  endif()
 endif()
 
