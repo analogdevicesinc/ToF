@@ -68,6 +68,7 @@ class RAWImageMsg : public AditofSensorMsg {
     // void publishMsg(const ros::Publisher &pub);
 
     sensor_msgs::msg::Image getMessage();
+
   private:
     RAWImageMsg();
 };

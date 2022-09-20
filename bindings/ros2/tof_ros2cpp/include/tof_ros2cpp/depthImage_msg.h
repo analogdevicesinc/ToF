@@ -32,8 +32,8 @@
 #ifndef DEPTHIMAGE_MSG_H
 #define DEPTHIMAGE_MSG_H
 
-#include <aditof/frame.h>
 #include "aditof_utils.h"
+#include <aditof/frame.h>
 #include <aditof_sensor_msg.h>
 
 //rainbow color map

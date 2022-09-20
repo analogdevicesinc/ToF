@@ -29,12 +29,12 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <aditof_utils.h>
-#include <rclcpp/rclcpp.hpp>
-#include <chrono>
 #include "aditof/camera.h"
 #include <aditof_sensor_msg.h>
+#include <aditof_utils.h>
+#include <chrono>
 #include <publisher_factory.h>
+#include <rclcpp/rclcpp.hpp>
 
 // #include "image_transport/image_transport.hpp"
 // #include "rclcpp/rclcpp.hpp"
@@ -46,8 +46,7 @@ std::mutex m_mtxDynamicRec2;
 
 using namespace std::chrono_literals;
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     /*
     pos 0 - ip
     pos 1 - config_path
@@ -59,8 +58,10 @@ int main(int argc, char **argv)
     // Initializing camera and establishing connection
     std::shared_ptr<Camera> camera = initCamera(arguments);
     // Setting camera parameters
-    (arguments[2] == "true") ? enableCameraDepthCompute(camera, true) : enableCameraDepthCompute(camera, false);
-    (arguments[3] == "1") ? setFrameType(camera, "qmp") : setFrameType(camera, "mp");
+    (arguments[2] == "true") ? enableCameraDepthCompute(camera, true)
+                             : enableCameraDepthCompute(camera, false);
+    (arguments[3] == "1") ? setFrameType(camera, "qmp")
+                          : setFrameType(camera, "mp");
 
     // Creating camera frame for the API
     auto tmp = new Frame;
@@ -70,18 +71,18 @@ int main(int argc, char **argv)
     // Creating camera node
     rclcpp::init(argc, argv);
     rclcpp::NodeOptions options;
-    rclcpp::Node::SharedPtr node = rclcpp::Node::make_shared("tof_camera_publisher", options);
+    rclcpp::Node::SharedPtr node =
+        rclcpp::Node::make_shared("tof_camera_publisher", options);
 
     // Creating Image transporter
     image_transport::ImageTransport it(node);
 
     // Creating publisher
     PublisherFactory publishers;
-    publishers.createNew(node, it, camera, frame, (arguments[2] == "true") ? true : false);
+    publishers.createNew(node, it, camera, frame,
+                         (arguments[2] == "true") ? true : false);
 
-
-    while (rclcpp::ok())
-    {
+    while (rclcpp::ok()) {
         getNewFrame(camera, frame);
         publishers.updatePublishers(camera, frame);
         rclcpp::spin_some(node);

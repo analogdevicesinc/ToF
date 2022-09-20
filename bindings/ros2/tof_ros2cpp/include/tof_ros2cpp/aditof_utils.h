@@ -33,10 +33,10 @@
 #define ADITOF_UTILS_H
 
 #include <aditof/camera.h>
+#include <aditof/frame.h>
 #include <glog/logging.h>
 #include <mutex>
 #include <rclcpp/time.hpp>
-#include <aditof/frame.h>
 
 enum class ModeTypes { NONE, mode3, mode7, mode10 };
 
