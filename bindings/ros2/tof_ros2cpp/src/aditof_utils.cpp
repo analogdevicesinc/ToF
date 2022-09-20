@@ -31,7 +31,6 @@
  */
 #include "aditof_utils.h"
 
-
 #include <aditof/system.h>
 #include <regex>
 // #include <ros/package.h>

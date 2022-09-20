@@ -36,32 +36,32 @@
 #include <aditof_utils.h>
 #include <memory>
 
-#include <rclcpp/rclcpp.hpp>
 #include "image_transport/image_transport.hpp"
+#include <rclcpp/rclcpp.hpp>
 
+#include <aditof_sensor_msg.h>
 #include <depthImage_msg.h>
 #include <irImage_msg.h>
 #include <rawImage_msg.h>
-#include <aditof_sensor_msg.h>
 
 #include <typeinfo>
 #include <vector>
 
-class PublisherFactory
-{
-public:
-  PublisherFactory();
-  void createNew(const rclcpp::Node::SharedPtr &node, image_transport::ImageTransport &it,
-                 const std::shared_ptr<aditof::Camera> &camera,
-                 aditof::Frame **frame, bool enableDepthCompute);
-  void updatePublishers(const std::shared_ptr<aditof::Camera> &camera,
-                        aditof::Frame **frame);
-  void deletePublishers(const std::shared_ptr<aditof::Camera> &camera);
-  void setDepthFormat(const int val);
+class PublisherFactory {
+  public:
+    PublisherFactory();
+    void createNew(const rclcpp::Node::SharedPtr &node,
+                   image_transport::ImageTransport &it,
+                   const std::shared_ptr<aditof::Camera> &camera,
+                   aditof::Frame **frame, bool enableDepthCompute);
+    void updatePublishers(const std::shared_ptr<aditof::Camera> &camera,
+                          aditof::Frame **frame);
+    void deletePublishers(const std::shared_ptr<aditof::Camera> &camera);
+    void setDepthFormat(const int val);
 
-private:
-  std::vector<image_transport::Publisher> img_publishers;
-  std::vector<std::shared_ptr<AditofSensorMsg>> imgMsgs;
+  private:
+    std::vector<image_transport::Publisher> img_publishers;
+    std::vector<std::shared_ptr<AditofSensorMsg>> imgMsgs;
 };
 
 #endif // PUBLISHER_FACTORY_H

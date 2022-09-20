@@ -36,9 +36,8 @@
 #include <rcl/publisher.h>
 #include <rcl/time.h>
 #include <rclcpp/rclcpp.hpp>
-#include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/image_encodings.hpp>
-
+#include <sensor_msgs/msg/image.hpp>
 
 class AditofSensorMsg {
   public:
