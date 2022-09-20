@@ -34,30 +34,29 @@
 
 PublisherFactory::PublisherFactory(){};
 
-void PublisherFactory::createNew(const rclcpp::Node::SharedPtr &node, image_transport::ImageTransport &it,
+void PublisherFactory::createNew(const rclcpp::Node::SharedPtr &node,
+                                 image_transport::ImageTransport &it,
                                  const std::shared_ptr<aditof::Camera> &camera,
-                                 aditof::Frame **frame, bool enableDepthCompute)
-{
+                                 aditof::Frame **frame,
+                                 bool enableDepthCompute) {
     // Get frame types
     aditof::CameraDetails *details_tmp = new aditof::CameraDetails;
     getCameraDataDetails(camera, *details_tmp);
 
-    for (auto iter : (*details_tmp).frameType.dataDetails)
-    {
-        if (!strcmp(iter.type.c_str(), "ir") && enableDepthCompute == true)
-        {
+    for (auto iter : (*details_tmp).frameType.dataDetails) {
+        if (!strcmp(iter.type.c_str(), "ir") && enableDepthCompute == true) {
             img_publishers.emplace_back(it.advertise("tof_camera/ir", 2));
-            imgMsgs.emplace_back(new IRImageMsg(camera, frame, sensor_msgs::image_encodings::MONO16));
+            imgMsgs.emplace_back(new IRImageMsg(
+                camera, frame, sensor_msgs::image_encodings::MONO16));
             LOG(INFO) << "Added ir publisher";
-        }
-        else if (!strcmp(iter.type.c_str(), "depth") && enableDepthCompute == true)
-        {
+        } else if (!strcmp(iter.type.c_str(), "depth") &&
+                   enableDepthCompute == true) {
             img_publishers.emplace_back(it.advertise("tof_camera/depth", 2));
-            imgMsgs.emplace_back(new DepthImageMsg(camera, frame, sensor_msgs::image_encodings::RGBA8));
+            imgMsgs.emplace_back(new DepthImageMsg(
+                camera, frame, sensor_msgs::image_encodings::RGBA8));
             LOG(INFO) << "Added depth publisher";
-        }
-        else if (!strcmp(iter.type.c_str(), "raw") && enableDepthCompute == false)
-        {
+        } else if (!strcmp(iter.type.c_str(), "raw") &&
+                   enableDepthCompute == false) {
             img_publishers.emplace_back(it.advertise("tof_camera/raw", 2));
             imgMsgs.emplace_back(new RAWImageMsg(
                 camera, frame, sensor_msgs::image_encodings::MONO16));
@@ -67,27 +66,21 @@ void PublisherFactory::createNew(const rclcpp::Node::SharedPtr &node, image_tran
     startCamera(camera);
 }
 void PublisherFactory::updatePublishers(
-    const std::shared_ptr<aditof::Camera> &camera, aditof::Frame **frame)
-{
-    for (unsigned int i = 0; i < imgMsgs.size(); ++i)
-    {
+    const std::shared_ptr<aditof::Camera> &camera, aditof::Frame **frame) {
+    for (unsigned int i = 0; i < imgMsgs.size(); ++i) {
         imgMsgs.at(i)->FrameDataToMsg(camera, frame);
         img_publishers.at(i).publish(imgMsgs.at(i)->getMessage());
     }
 }
 void PublisherFactory::deletePublishers(
-    const std::shared_ptr<aditof::Camera> &camera)
-{
+    const std::shared_ptr<aditof::Camera> &camera) {
     stopCamera(camera);
     img_publishers.clear();
     imgMsgs.clear();
 }
-void PublisherFactory::setDepthFormat(const int val)
-{
-    for (unsigned int i = 0; i < imgMsgs.size(); ++i)
-    {
-        if (std::dynamic_pointer_cast<DepthImageMsg>(imgMsgs[i]))
-        {
+void PublisherFactory::setDepthFormat(const int val) {
+    for (unsigned int i = 0; i < imgMsgs.size(); ++i) {
+        if (std::dynamic_pointer_cast<DepthImageMsg>(imgMsgs[i])) {
             std::dynamic_pointer_cast<DepthImageMsg>(imgMsgs[i])
                 .get()
                 ->setDepthDataFormat(val);

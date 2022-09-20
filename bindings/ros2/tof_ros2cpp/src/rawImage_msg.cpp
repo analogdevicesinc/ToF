@@ -35,23 +35,19 @@ using namespace aditof;
 RAWImageMsg::RAWImageMsg() {}
 
 RAWImageMsg::RAWImageMsg(const std::shared_ptr<aditof::Camera> &camera,
-                         aditof::Frame **frame, std::string encoding)
-{
+                         aditof::Frame **frame, std::string encoding) {
 
     message.encoding = encoding;
     FrameDataToMsg(camera, frame);
 }
 
 void RAWImageMsg::FrameDataToMsg(const std::shared_ptr<Camera> &camera,
-                                 aditof::Frame **frame)
-{
+                                 aditof::Frame **frame) {
 
     aditof::CameraDetails *details_tmp = new aditof::CameraDetails;
     getCameraDataDetails(camera, *details_tmp);
-    for (auto iter : (*details_tmp).frameType.dataDetails)
-    {
-        if (!strcmp(iter.type.c_str(), "raw"))
-        {
+    for (auto iter : (*details_tmp).frameType.dataDetails) {
+        if (!strcmp(iter.type.c_str(), "raw")) {
             message.width = iter.width;
             message.height = iter.height;
         }
@@ -59,8 +55,7 @@ void RAWImageMsg::FrameDataToMsg(const std::shared_ptr<Camera> &camera,
     setMetadataMembers(message.width, message.height);
 
     uint16_t *frameData = getFrameData(frame, "raw");
-    if (!frameData)
-    {
+    if (!frameData) {
         LOG(ERROR) << "getFrameData call failed";
         return;
     }
@@ -68,37 +63,30 @@ void RAWImageMsg::FrameDataToMsg(const std::shared_ptr<Camera> &camera,
     setDataMembers(camera, frameData);
 }
 
-void RAWImageMsg::setMetadataMembers(int width, int height)
-{
+void RAWImageMsg::setMetadataMembers(int width, int height) {
     // message.header.stamp = tStamp;
     message.header.frame_id = "aditof_raw_img";
 
     message.encoding = message.encoding;
     message.is_bigendian = false;
 
-    int pixelByteCnt = sensor_msgs::image_encodings::bitDepth(message.encoding) /
-                       8 *
-                       sensor_msgs::image_encodings::numChannels(message.encoding);
+    int pixelByteCnt =
+        sensor_msgs::image_encodings::bitDepth(message.encoding) / 8 *
+        sensor_msgs::image_encodings::numChannels(message.encoding);
     message.step = width * pixelByteCnt;
 
     message.data.resize(message.step * height);
 }
 
 void RAWImageMsg::setDataMembers(const std::shared_ptr<Camera> &camera,
-                                 uint16_t *frameData)
-{
-    if (message.encoding.compare(sensor_msgs::image_encodings::MONO16) == 0)
-    {
+                                 uint16_t *frameData) {
+    if (message.encoding.compare(sensor_msgs::image_encodings::MONO16) == 0) {
 
         uint8_t *msgDataPtr = message.data.data();
         memcpy(msgDataPtr, frameData, message.step * message.height);
-    }
-    else
+    } else
         LOG(ERROR) << "Image encoding invalid or not available";
 }
 
-sensor_msgs::msg::Image RAWImageMsg::getMessage()
-{
-    return message;
-}
+sensor_msgs::msg::Image RAWImageMsg::getMessage() { return message; }
 // void RAWImageMsg::publishMsg(const ros::Publisher &pub) { pub.publish(msg); }
