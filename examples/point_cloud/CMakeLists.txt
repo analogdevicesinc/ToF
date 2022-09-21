@@ -13,13 +13,10 @@ endif(MSVC)
 
 
 
-set(SRC_DIR point_cloud)
-set(DOCOPT_SRC ./third_party/doc_opt/)
-set(TOFI_CCB ./ccb/)
-set(CMAKE_CURR_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR}/bin/)
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_BINARY_DIR}/bin/)
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin/)
+set(SRC_DIR ./)
+set(DOCOPT_SRC ../data_collect/third_party/doc_opt/)
+set(TOFI_CCB ../../sdk/common/adi/ccb)
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY $<CONFIG>/)
 
 set(THIRD_PARTY_SRC 
 	${DOCOPT_SRC}/docopt.cpp
@@ -43,8 +40,6 @@ add_executable(point_cloud ${THIRD_PARTY_SRC} ${SRC_FILES})
 target_include_directories(point_cloud PRIVATE
 	    ${TOFI_CCB}/include/
         ${SRC_DIR}/
-        ${DOCOPT_SRC}/
-        ${DEPTH_COMPUTE_COMMON}
+        ${DOCOPT_SRC}
 )
 
-file(MAKE_DIRECTORY ${CMAKE_CURR_BUILD_DIR}/bin/)
