@@ -10,6 +10,7 @@ endif()
 if (WITH_NETWORK)
     add_subdirectory(first-frame-network)
 endif()
+add_subdirectory(point_cloud)
 
 include(GNUInstallDirs)
 
