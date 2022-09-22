@@ -12,11 +12,9 @@ if (MSVC)
 endif(MSVC)
 
 
-
-set(SRC_DIR ./)
-set(DOCOPT_SRC ../data_collect/third_party/doc_opt/)
-set(TOFI_CCB ../../sdk/common/adi/ccb)
-set (CMAKE_RUNTIME_OUTPUT_DIRECTORY $<CONFIG>/)
+set(SRC_DIR ${CMAKE_SOURCE_DIR}/examples/point_cloud)
+set(DOCOPT_SRC ${CMAKE_SOURCE_DIR}/examples/data_collect/third_party/doc_opt/)
+set(TOFI_CCB ${CMAKE_SOURCE_DIR}/sdk/common/adi/ccb)
 
 set(THIRD_PARTY_SRC 
 	${DOCOPT_SRC}/docopt.cpp
