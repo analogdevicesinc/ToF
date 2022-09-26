@@ -60,6 +60,10 @@ add_definitions(-DADITOFSDK_GIT_BRANCH="${ADITOFSDK_GIT_BRANCH}")
 
 ############################## Rest of cmake ##################################
 
+if (USE_ADSD3030)
+        add_definitions(-DADSD3030)
+endif()
+
 if (WITH_NETWORK)
         add_definitions(-DHAS_NETWORK)
 endif()
