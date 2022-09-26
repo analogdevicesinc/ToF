@@ -9,12 +9,18 @@
 #include <iostream>
 
 // TODO: load this information from camera module EEPROM
+#ifndef ADSD3030
 ModeInfo::modeInfo ModeInfo::g_modeInfoData[] = {
     {1, 320, 288, 9, 2162, 288, 0},
     {3, 1024, 1024, 1, 12289, 64, 1},
     {7, 512, 512, 10, 2195, 896, 1},
     {10, 1024, 1024, 9, 12289, 576, 0},
 };
+#else
+ModeInfo::modeInfo ModeInfo::g_modeInfoData[] = {
+    {5, 512, 640, 10, 1670, 1472, 1},
+};
+#endif
 
 //Define the static Singleton pointer
 ModeInfo *ModeInfo::m_instance = NULL;
