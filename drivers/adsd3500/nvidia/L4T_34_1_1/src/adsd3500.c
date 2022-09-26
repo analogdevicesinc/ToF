@@ -29,7 +29,7 @@
 #define ADSD3500_DEFAULT_DATAFMT	MEDIA_BUS_FMT_SRGGB12_1X12
 #define ADSD3500_DEFAULT_WIDTH		512
 #define ADSD3500_DEFAULT_HEIGHT		512
-#define ADSD3500_DEFAULT_CLK_FREQ	37125000
+#define ADSD3500_DEFAULT_CLK_FREQ	104250000
 
 struct adsd3500_mode_info {
 	uint32_t width;
@@ -89,10 +89,32 @@ static const struct reg_sequence adsd3500_standby_setting[] = {
 
 static const s64 link_freq_tbl[] = {
 	732000000,
+	1250000000,
 };
 
 /* Elements of the structure must be ordered ascending by width & height */
 static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
+	{ //RAW12 12BPP ADSD3030
+		.width = 256,
+		.height = 320,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SRGGB12_1X12,
+		.link_freq_idx = 1 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 32BPP ADSD3030
+		.width = 1024,
+		.height = 320,
+		.pixel_rate = 625000000,
+		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
+		.link_freq_idx = 1 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 32BPP ADSD3030
+		.width = 1024,
+		.height = 320,
+		.pixel_rate = 625000000,
+		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
+		.link_freq_idx = 1 /* an index in link_freq_tbl[] */
+	},
 	{ //RAW12 12BPP
 		.width = 512,
 		.height = 512,
@@ -103,49 +125,49 @@ static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
 	{ //RAW8 16BPP
 		.width = 1024,
 		.height = 512,
-		.pixel_rate = 488000000,
+		.pixel_rate = 625000000,
 		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
 	},
 	{ //RAW8 20BPP
 		.width = 1280,
 		.height = 512,
-		.pixel_rate = 488000000,
+		.pixel_rate = 625000000,
 		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
 	},
 	{ //RAW8 24BPP
 		.width = 1536,
 		.height = 512,
-		.pixel_rate = 488000000,
+		.pixel_rate = 625000000,
 		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
 	},
 	{ //RAW8 28BPP
 		.width = 1792,
 		.height = 512,
-		.pixel_rate = 488000000,
+		.pixel_rate = 625000000,
 		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
 	},
 	{ //RAW8 32BPP
 		.width = 2048,
 		.height = 512,
-		.pixel_rate = 488000000,
+		.pixel_rate = 625000000,
 		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
 	},
 	{ //RAW8 36BPP
 		.width = 2304,
 		.height = 512,
-		.pixel_rate = 488000000,
+		.pixel_rate = 625000000,
 		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
 	},
 	{ //RAW8 40BPP
 		.width = 2560,
 		.height = 512,
-		.pixel_rate = 488000000,
+		.pixel_rate = 625000000,
 		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
 	},
@@ -154,32 +176,46 @@ static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
 		.height = 640,
 		.pixel_rate = 488000000,
 		.code = MEDIA_BUS_FMT_SRGGB12_1X12,
-		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+		.link_freq_idx = 1 /* an index in link_freq_tbl[] */
 	},
 	{ //RAW8 16BPP ADSD3030
 		.width = 1024,
 		.height = 640,
-		.pixel_rate = 488000000,
+		.pixel_rate = 625000000,
 		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
-		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+		.link_freq_idx = 1 /* an index in link_freq_tbl[] */
 	},
 	{ //RAW8 24BPP ADSD3030
 		.width = 1536,
 		.height = 640,
-		.pixel_rate = 488000000,
+		.pixel_rate = 625000000,
 		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
-		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+		.link_freq_idx = 1 /* an index in link_freq_tbl[] */
 	},
 	{ //RAW8 32BPP ADSD3030
 		.width = 2048,
 		.height = 640,
-		.pixel_rate = 488000000,
+		.pixel_rate = 625000000,
 		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
-		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+		.link_freq_idx = 1 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 40BPP ADSD3030
+		.width = 2560,
+		.height = 640,
+		.pixel_rate = 625000000,
+		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
+		.link_freq_idx = 1 /* an index in link_freq_tbl[] */
 	},
 	{ //RAW12 12BPP * 3 phase
-		.width = 3072,
-		.height = 1024,
+		.width = 1024,
+		.height = 3072,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SRGGB12_1X12,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW12 12BPP * 3 phase + 1 AB
+		.width = 1024,
+		.height = 4096,
 		.pixel_rate = 488000000,
 		.code = MEDIA_BUS_FMT_SRGGB12_1X12,
 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
@@ -864,7 +900,7 @@ static int adsd3500_probe(struct i2c_client *client,
 	common_data->ops = &adsd3500_common_ops;
 	common_data->ctrl_handler = &priv->ctrl_handler;
 	common_data->dev = &client->dev;
-	common_data->frmfmt = &adsd3500_frmfmt[0];
+	common_data->frmfmt = &adsd3500_frmfmt[2];
 	common_data->colorfmt = camera_common_find_datafmt(
 					  ADSD3500_DEFAULT_DATAFMT);
 	common_data->numctrls = 0;
