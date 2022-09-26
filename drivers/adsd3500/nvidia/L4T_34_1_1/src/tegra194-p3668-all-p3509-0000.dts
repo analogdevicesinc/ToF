@@ -68,6 +68,7 @@
 	};
 	
 	i2c@31e0000 {
+		clock-frequency = <100000>;
 		adsd3500@38 {
 			compatible = "adi,adsd3500";
 
@@ -175,11 +176,11 @@
 			*/
 
 			mode0 {
-				mclk_khz = "37125";
+				mclk_khz = "104250";
 				num_lanes = "2";
 				tegra_sinterface = "serial_a";
 				phy_mode = "DPHY";
-				discontinuous_clk = "no";
+				discontinuous_clk = "yes";
 				dpcm_enable = "false";
 				cil_settletime = "0";
 				dynamic_pixel_bit_depth = "12";
@@ -187,27 +188,27 @@
 				mode_type = "bayer";
 				pixel_phase = "bggr";
 
-				active_w = "512";
-				active_h = "512";
+				active_w = "256";
+				active_h = "320";
 				readout_orientation = "0";
-				line_length = "512";
+				line_length = "256";
 				inherent_gain = "1";
 				mclk_multiplier = "4";
-				pix_clk_hz = "125000000";
+				pix_clk_hz = "417000000";
 
 				min_gain_val = "0"; /* dB */
 				max_gain_val = "48"; /* dB */
 				gain_step_pitch = "0.3";
 				min_hdr_ratio = "1";
 				max_hdr_ratio = "1";
-				min_framerate = "1.5";
+				min_framerate = "1";
 				max_framerate = "30";
 				min_exp_time = "30";
 				max_exp_time = "660000";
 				embedded_metadata_height = "1";
 			};
 			mode1 {
-				mclk_khz = "37125";
+				mclk_khz = "104250";
 				num_lanes = "2";
 				tegra_sinterface = "serial_a";
 				phy_mode = "DPHY";
@@ -219,13 +220,13 @@
 				mode_type = "bayer";
 				pixel_phase = "bggr";
 
-				active_w = "1024";
-				active_h = "512";
+				active_w = "1280";
+				active_h = "320";
 				readout_orientation = "0";
-				line_length = "1024";
+				line_length = "1280";
 				inherent_gain = "1";
 				mclk_multiplier = "4";
-				pix_clk_hz = "125000000";
+				pix_clk_hz = "417000000";
 
 				min_gain_val = "0";
 				max_gain_val = "48";
@@ -239,25 +240,25 @@
 				embedded_metadata_height = "1";
 			};
 			mode2 {
-				mclk_khz = "37125";
+				mclk_khz = "104250";
 				num_lanes = "2";
 				tegra_sinterface = "serial_a";
 				phy_mode = "DPHY";
 				discontinuous_clk = "yes";
 				dpcm_enable = "false";
 				cil_settletime = "0";
-				dynamic_pixel_bit_depth = "8";
-				csi_pixel_bit_depth = "8";
+				dynamic_pixel_bit_depth = "12";
+				csi_pixel_bit_depth = "12";
 				mode_type = "bayer";
 				pixel_phase = "bggr";
 
-				active_w = "1280";
+				active_w = "512";
 				active_h = "512";
 				readout_orientation = "0";
-				line_length = "1280";
+				line_length = "512";
 				inherent_gain = "1";
 				mclk_multiplier = "4";
-				pix_clk_hz = "125000000";
+				pix_clk_hz = "417000000";
 
 				min_gain_val = "0";
 				max_gain_val = "48";
@@ -271,7 +272,7 @@
 				embedded_metadata_height = "1";
 			};
 			mode3 {
-				mclk_khz = "37125";
+				mclk_khz = "104250";
 				num_lanes = "2";
 				tegra_sinterface = "serial_a";
 				phy_mode = "DPHY";
@@ -283,13 +284,13 @@
 				mode_type = "bayer";
 				pixel_phase = "bggr";
 
-				active_w = "1536";
+				active_w = "2560";
 				active_h = "512";
 				readout_orientation = "0";
-				line_length = "1536";
+				line_length = "2560";
 				inherent_gain = "1";
 				mclk_multiplier = "4";
-				pix_clk_hz = "125000000";
+				pix_clk_hz = "417000000";
 
 				min_gain_val = "0";
 				max_gain_val = "48";
@@ -303,25 +304,25 @@
 				embedded_metadata_height = "1";
 			};
 			mode4 {
-				mclk_khz = "37125";
+				mclk_khz = "104250";
 				num_lanes = "2";
 				tegra_sinterface = "serial_a";
 				phy_mode = "DPHY";
 				discontinuous_clk = "yes";
 				dpcm_enable = "false";
 				cil_settletime = "0";
-				dynamic_pixel_bit_depth = "8";
-				csi_pixel_bit_depth = "8";
+				dynamic_pixel_bit_depth = "12";
+				csi_pixel_bit_depth = "12";
 				mode_type = "bayer";
 				pixel_phase = "bggr";
 
-				active_w = "1792";
-				active_h = "512";
+				active_w = "512";
+				active_h = "640";
 				readout_orientation = "0";
-				line_length = "1792";
+				line_length = "512";
 				inherent_gain = "1";
 				mclk_multiplier = "4";
-				pix_clk_hz = "125000000";
+				pix_clk_hz = "417000000";
 
 				min_gain_val = "0";
 				max_gain_val = "48";
@@ -335,7 +336,7 @@
 				embedded_metadata_height = "1";
 			};
 			mode5 {
-				mclk_khz = "37125";
+				mclk_khz = "104250";
 				num_lanes = "2";
 				tegra_sinterface = "serial_a";
 				phy_mode = "DPHY";
@@ -348,12 +349,12 @@
 				pixel_phase = "bggr";
 
 				active_w = "2048";
-				active_h = "512";
+				active_h = "640";
 				readout_orientation = "0";
 				line_length = "2048";
 				inherent_gain = "1";
 				mclk_multiplier = "4";
-				pix_clk_hz = "125000000";
+				pix_clk_hz = "417000000";
 
 				min_gain_val = "0";
 				max_gain_val = "48";
@@ -367,7 +368,7 @@
 				embedded_metadata_height = "1";
 			};
 			mode6 {
-				mclk_khz = "37125";
+				mclk_khz = "104250";
 				num_lanes = "2";
 				tegra_sinterface = "serial_a";
 				phy_mode = "DPHY";
@@ -379,77 +380,13 @@
 				mode_type = "bayer";
 				pixel_phase = "bggr";
 
-				active_w = "2304";
-				active_h = "512";
-				readout_orientation = "0";
-				line_length = "2304";
-				inherent_gain = "1";
-				mclk_multiplier = "4";
-				pix_clk_hz = "125000000";
-
-				min_gain_val = "0";
-				max_gain_val = "48";
-				gain_step_pitch = "0.3";
-				min_hdr_ratio = "1";
-				max_hdr_ratio = "1";
-				min_framerate = "1.5";
-				max_framerate = "30";
-				min_exp_time = "30";
-				max_exp_time = "660000";
-				embedded_metadata_height = "1";
-			};
-			mode7 {
-				mclk_khz = "37125";
-				num_lanes = "2";
-				tegra_sinterface = "serial_a";
-				phy_mode = "DPHY";
-				discontinuous_clk = "yes";
-				dpcm_enable = "false";
-				cil_settletime = "0";
-				dynamic_pixel_bit_depth = "8";
-				csi_pixel_bit_depth = "8";
-				mode_type = "bayer";
-				pixel_phase = "bggr";
-
-				active_w = "2650";
-				active_h = "512";
+				active_w = "2560";
+				active_h = "640";
 				readout_orientation = "0";
 				line_length = "2560";
 				inherent_gain = "1";
 				mclk_multiplier = "4";
-				pix_clk_hz = "125000000";
-
-				min_gain_val = "0";
-				max_gain_val = "48";
-				gain_step_pitch = "0.3";
-				min_hdr_ratio = "1";
-				max_hdr_ratio = "1";
-				min_framerate = "1.5";
-				max_framerate = "30";
-				min_exp_time = "30";
-				max_exp_time = "660000";
-				embedded_metadata_height = "1";
-			};
-			mode8 {
-				mclk_khz = "37125";
-				num_lanes = "2";
-				tegra_sinterface = "serial_a";
-				phy_mode = "DPHY";
-				discontinuous_clk = "yes";
-				dpcm_enable = "false";
-				cil_settletime = "0";
-				dynamic_pixel_bit_depth = "12";
-				csi_pixel_bit_depth = "12";
-				mode_type = "bayer";
-				pixel_phase = "bggr";
-
-				active_w = "3072";
-				active_h = "1024";
-				readout_orientation = "0";
-				line_length = "3072";
-				inherent_gain = "1";
-				mclk_multiplier = "4";
-				pix_clk_hz = "125000000";
+				pix_clk_hz = "417000000";
 
 				min_gain_val = "0";
 				max_gain_val = "48";
