@@ -49,6 +49,8 @@ unsigned int ModeInfo::getNumModes() {
 
 aditof::Status convertCameraMode(const std::string &mode,
                                  uint8_t &convertedMode) {
+
+#ifndef ADSD3030
     if (mode == "lt_bin") {
         convertedMode = 1;
     } else if (mode == "pcm") {
@@ -60,6 +62,13 @@ aditof::Status convertCameraMode(const std::string &mode,
     } else {
         return aditof::Status::INVALID_ARGUMENT;
     }
+#else
+    if (mode == "vga") {
+        convertedMode = 5;
+    } else {
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+#endif
 
     return aditof::Status::OK;
 }

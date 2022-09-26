@@ -154,8 +154,8 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
         }};
 #else
     const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {{
-      //TO DO: to be renamed
-        "mp_pcm",
+        //TO DO: to be renamed
+        "vga",
         {{"raw", 2560, 640},
          {"ir", 512, 640},
          {"xyz", 512, 640},
