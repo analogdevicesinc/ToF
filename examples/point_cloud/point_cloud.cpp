@@ -10,20 +10,17 @@
 
 /********************************************************************************/
 
-
 #include "point_cloud.h"
 #include <ctype.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
-
-
 
 int MapCcbGeometricsCameraInstrinsics(
-    const struct CAL_GEOMETRIC_BLOCK_V3* geometrics,
-    CameraIntrinsics* camera_intrinsics) {
+    const struct CAL_GEOMETRIC_BLOCK_V3 *geometrics,
+    CameraIntrinsics *camera_intrinsics) {
     if (geometrics != NULL && camera_intrinsics != NULL) {
         camera_intrinsics->fx = geometrics->Fc1;
         camera_intrinsics->fy = geometrics->Fc2;
@@ -40,26 +37,28 @@ int MapCcbGeometricsCameraInstrinsics(
         camera_intrinsics->codx = geometrics->Cx;
         camera_intrinsics->cody = geometrics->Cy;
         return 0;
-    }
-    else
+    } else
         return -1;
 }
 
-uint32_t GetCameraIntrinsics(FileData* ccb_data, TofiCCBData* p_ccb_data, uint16_t mode) {
+uint32_t GetCameraIntrinsics(FileData *ccb_data, TofiCCBData *p_ccb_data,
+                             uint16_t mode) {
     if (p_ccb_data == NULL || ccb_data == NULL)
         return -1;
     uint32_t status = 0;
 
-    ccb_mode_data p0_block = ccb_get_mode_block_p0((ccb_data_t*)ccb_data, mode);
-    if (p0_block.no_of_blocks == 0 || p0_block.p_block_list_head->block_node
-        == NULL) {
+    ccb_mode_data p0_block =
+        ccb_get_mode_block_p0((ccb_data_t *)ccb_data, mode);
+    if (p0_block.no_of_blocks == 0 ||
+        p0_block.p_block_list_head->block_node == NULL) {
         return -1;
     }
     if ((p0_block.no_of_blocks != 0) &&
         (p0_block.p_block_list_head->block_node != NULL)) {
-        mode_block_list* p_block_node = p0_block.p_block_list_head;
-        const struct CAL_P0BLOCK_V4* p_p0_block =
-            (const struct CAL_P0BLOCK_V4*)p0_block.p_block_list_head->block_node;
+        mode_block_list *p_block_node = p0_block.p_block_list_head;
+        const struct CAL_P0BLOCK_V4 *p_p0_block =
+            (const struct CAL_P0BLOCK_V4 *)
+                p0_block.p_block_list_head->block_node;
 
         p_ccb_data->n_freqs = (uint8_t)p0_block.no_of_blocks;
 
@@ -77,54 +76,57 @@ uint32_t GetCameraIntrinsics(FileData* ccb_data, TofiCCBData* p_ccb_data, uint16
 
         p_ccb_data->n_offset_cols = p_p0_block->OffsetCols;
 
-        mode_block_list* temp_node = p_block_node;
-        p_block_node = (mode_block_list*)p_block_node->prev;
-        if (p_block_node != NULL) p_p0_block = (const struct CAL_P0BLOCK_V4*)p_block_node->block_node;
+        mode_block_list *temp_node = p_block_node;
+        p_block_node = (mode_block_list *)p_block_node->prev;
+        if (p_block_node != NULL)
+            p_p0_block =
+                (const struct CAL_P0BLOCK_V4 *)p_block_node->block_node;
         free(temp_node);
         free(p_block_node);
 
-        const struct CAL_HEADER_BLOCK_V3* header_block =
-            ccb_read_header_block((const ccb_data_t*)ccb_data);
+        const struct CAL_HEADER_BLOCK_V3 *header_block =
+            ccb_read_header_block((const ccb_data_t *)ccb_data);
         p_ccb_data->n_sensor_rows = header_block ? header_block->nRows : 1024;
         p_ccb_data->n_sensor_cols = header_block ? header_block->nCols : 1024;
 
         // Read geometric intrinsics
-        const struct CAL_GEOMETRIC_BLOCK_V3* geometric;
-        geometric = ccb_get_cal_block_geometric((ccb_data_t*)ccb_data, 0);
-        if (geometric == NULL) return -1;
+        const struct CAL_GEOMETRIC_BLOCK_V3 *geometric;
+        geometric = ccb_get_cal_block_geometric((ccb_data_t *)ccb_data, 0);
+        if (geometric == NULL)
+            return -1;
 
         status = MapCcbGeometricsCameraInstrinsics(
             geometric, &(p_ccb_data->camera_intrinsics));
-        if (status != 0) return status;
+        if (status != 0)
+            return status;
     }
 
     return status;
 }
 
-
- uint32_t GenerateXYZTables(float** pp_x_table, float** pp_y_table,
-        float** pp_z_table, CameraIntrinsics* p_intr_data,
-        uint32_t n_sensor_rows, uint32_t n_sensor_cols,
-        uint32_t n_out_rows, uint32_t n_out_cols,
-        uint32_t n_offset_rows, uint32_t n_offset_cols,
-        uint8_t row_bin_factor, uint8_t col_bin_factor,
-        uint8_t iter)
-{
+uint32_t GenerateXYZTables(float **pp_x_table, float **pp_y_table,
+                           float **pp_z_table, CameraIntrinsics *p_intr_data,
+                           uint32_t n_sensor_rows, uint32_t n_sensor_cols,
+                           uint32_t n_out_rows, uint32_t n_out_cols,
+                           uint32_t n_offset_rows, uint32_t n_offset_cols,
+                           uint8_t row_bin_factor, uint8_t col_bin_factor,
+                           uint8_t iter) {
     uint32_t n_cols = n_sensor_cols / col_bin_factor;
     uint32_t n_rows = n_sensor_rows / row_bin_factor;
 
-    float* p_xp = (float*)malloc(n_rows * n_cols * sizeof(float));
-    float* p_yp = (float*)malloc(n_rows * n_cols * sizeof(float));
-    float* p_z = (float*)malloc(n_rows * n_cols * sizeof(float));
-
+    float *p_xp = (float *)malloc(n_rows * n_cols * sizeof(float));
+    float *p_yp = (float *)malloc(n_rows * n_cols * sizeof(float));
+    float *p_z = (float *)malloc(n_rows * n_cols * sizeof(float));
 
     if ((p_xp == NULL) || (p_yp == NULL) || ((p_z == NULL))) {
-        if (p_xp) free(p_xp);
-        if (p_yp) free(p_yp);
-        if (p_z) free(p_z);
+        if (p_xp)
+            free(p_xp);
+        if (p_yp)
+            free(p_yp);
+        if (p_z)
+            free(p_z);
         return -1;
     }
-
 
     // Adjust values based on optical center and focal length
     float cx = p_intr_data->cx / row_bin_factor;
@@ -132,14 +134,13 @@ uint32_t GetCameraIntrinsics(FileData* ccb_data, TofiCCBData* p_ccb_data, uint16
     float fx = p_intr_data->fx / row_bin_factor;
     float fy = p_intr_data->fy / col_bin_factor;
     // float codx = p_intr_data->codx;
-     //float cody = p_intr_data->cody;
+    //float cody = p_intr_data->cody;
 
-   
     float r_min = sqrt((float)(n_rows * n_rows + n_cols * n_cols));
 
     // Generate the initial x,y tables using the positional
-  // index and crop the unused pixels from the maximum in
-  // each dimension
+    // index and crop the unused pixels from the maximum in
+    // each dimension
     for (uint32_t i = 0; i < n_cols; i++) {
         // Each value in a row increments by one
         p_xp[i] = (float)i;
@@ -159,7 +160,7 @@ uint32_t GetCameraIntrinsics(FileData* ccb_data, TofiCCBData* p_ccb_data, uint16
     }
 
     UndistortPoints(p_xp, p_yp, p_xp, p_yp, p_intr_data, iter, n_rows, n_cols,
-        row_bin_factor, col_bin_factor);
+                    row_bin_factor, col_bin_factor);
 
     for (uint32_t j = 0; j < n_rows; j++) {
         for (uint32_t i = 0; i < n_cols; i++) {
@@ -202,17 +203,13 @@ uint32_t GetCameraIntrinsics(FileData* ccb_data, TofiCCBData* p_ccb_data, uint16
     // Add a 2 pixel buffer
     r_min -= 2;
 
+    float *p_xfull = p_xp;
+    float *p_yfull = p_yp;
+    float *p_zfull = p_z;
 
-    float* p_xfull = p_xp;
-    float* p_yfull = p_yp;
-    float* p_zfull = p_z;
-
-
-
-    p_xp = (float*)malloc(n_out_rows * n_out_cols * sizeof(float));
-    p_yp = (float*)malloc(n_out_rows * n_out_cols * sizeof(float));
-    p_z = (float*)malloc(n_out_rows * n_out_cols * sizeof(float));
-
+    p_xp = (float *)malloc(n_out_rows * n_out_cols * sizeof(float));
+    p_yp = (float *)malloc(n_out_rows * n_out_cols * sizeof(float));
+    p_z = (float *)malloc(n_out_rows * n_out_cols * sizeof(float));
 
     for (uint32_t j = 0; j < n_out_rows; j++) {
         for (uint32_t i = 0; i < n_out_cols; i++) {
@@ -227,7 +224,7 @@ uint32_t GetCameraIntrinsics(FileData* ccb_data, TofiCCBData* p_ccb_data, uint16
                 p_z[crop_idx] = 1 / z;
             }
         }
-    }  
+    }
 
     free(p_xfull);
     free(p_yfull);
@@ -238,41 +235,30 @@ uint32_t GetCameraIntrinsics(FileData* ccb_data, TofiCCBData* p_ccb_data, uint16
     *pp_y_table = p_yp;
     *pp_z_table = p_z;
 
-    
     return 0;
 }
 
+uint32_t ComputeXYZ(uint16_t *p_depth, XYZData *p_xyz_data,
+                    int16_t *p_xyz_image) {
 
-uint32_t ComputeXYZ(uint16_t* p_depth, XYZData* p_xyz_data,
-    int16_t* p_xyz_image) {
-
-  
     const uint32_t n_rows = p_xyz_data->n_rows;
     const uint32_t n_cols = p_xyz_data->n_cols;
-    
-        for (uint32_t pixel_id = 0; pixel_id < n_rows * n_cols; pixel_id++) {
-            p_xyz_image[3 * pixel_id + 0] = (int16_t)(floorf(
-                p_xyz_data->p_x_table[pixel_id] * (float)p_depth[pixel_id] +
-                0.5f));
 
-            p_xyz_image[3 * pixel_id + 1] = (int16_t)(floorf(
-                p_xyz_data->p_y_table[pixel_id] * (float)p_depth[pixel_id] +
-                0.5f));
+    for (uint32_t pixel_id = 0; pixel_id < n_rows * n_cols; pixel_id++) {
+        p_xyz_image[3 * pixel_id + 0] = (int16_t)(floorf(
+            p_xyz_data->p_x_table[pixel_id] * (float)p_depth[pixel_id] + 0.5f));
 
-            p_xyz_image[3 * pixel_id + 2] =
-                (int16_t)((p_xyz_data->p_z_table[pixel_id] *
-                    (float)p_depth[pixel_id] +
-                    0.5f));
+        p_xyz_image[3 * pixel_id + 1] = (int16_t)(floorf(
+            p_xyz_data->p_y_table[pixel_id] * (float)p_depth[pixel_id] + 0.5f));
 
-        }
-    
-
+        p_xyz_image[3 * pixel_id + 2] = (int16_t)((
+            p_xyz_data->p_z_table[pixel_id] * (float)p_depth[pixel_id] + 0.5f));
+    }
 
     return 0;
 }
 
-
-void FreeXYZTables(float* p_x_table, float* p_y_table, float* p_z_table) {
+void FreeXYZTables(float *p_x_table, float *p_y_table, float *p_z_table) {
     if (p_x_table) {
 
         free(p_x_table);
