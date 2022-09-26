@@ -167,10 +167,17 @@ aditof::Status Adsd3500Sensor::open() {
 
     //Reset device once before first open
     if (m_firstRun) {
+#ifndef ADSD3030
         system("echo 0 > /sys/class/gpio/gpio122/value");
         usleep(100000);
         system("echo 1 > /sys/class/gpio/gpio122/value");
         usleep(5000000);
+#else
+        system("echo 0 > /sys/class/gpio/PP.04/value");
+        usleep(100000);
+        system("echo 1 > /sys/class/gpio/PP.04/value");
+        usleep(5000000);
+#endif
         m_firstRun = false;
     }
 
@@ -484,6 +491,7 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         }
 
         __u32 pixelFormat = 0;
+#ifndef ADSD3030
         if (type.type == "qmp") {
             pixelFormat = V4L2_PIX_FMT_SBGGR8;
         } else if (type.type == "mp") {
@@ -493,6 +501,15 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
                        << "is unhandled";
             return Status::GENERIC_ERROR;
         }
+#else
+        if (type.type == "vga") {
+            pixelFormat = V4L2_PIX_FMT_SRGGB8;
+        } else {
+            LOG(ERROR) << "frame type: " << type.type << " "
+                       << "is unhandled";
+            return Status::GENERIC_ERROR;
+        }
+#endif
 
         /* Set the frame format in the driver */
         CLEAR(fmt);
