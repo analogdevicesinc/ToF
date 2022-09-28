@@ -27,6 +27,7 @@ option(WITH_ROS2 "Build ros2 bindings?" OFF)
 option(WITH_NETWORK "Build network interface?" OFF)
 option(WITH_OFFLINE "Build offline interface?" OFF)
 option(USE_DEPTH_COMPUTE_STUBS "Use empty generated libs?" OFF)
+option(USE_DEPTH_COMPUTE_OPENSOURCE "Use an open source implementation?" OFF)
 
 ################################## Git ########################################
 include(FindGit OPTIONAL)
@@ -57,6 +58,11 @@ endif()
 
 add_definitions(-DADITOFSDK_GIT_COMMIT="${ADITOFSDK_GIT_COMMIT}")
 add_definitions(-DADITOFSDK_GIT_BRANCH="${ADITOFSDK_GIT_BRANCH}")
+
+########################## Checks and validations #############################
+if (${USE_DEPTH_COMPUTE_STUBS} AND ${USE_DEPTH_COMPUTE_OPENSOURCE})
+        message(FATAL_ERROR "Choose only one type of depth compute. CMake will exit.")
+endif()
 
 ############################## Rest of cmake ##################################
 

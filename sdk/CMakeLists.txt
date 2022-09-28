@@ -6,7 +6,9 @@ if(UNIX)
 endif()
 
 if(USE_DEPTH_COMPUTE_STUBS)
-    add_subdirectory(common/adi/depth-compute-stub)	
+    add_subdirectory(common/adi/depth-compute-stub)
+elseif(USE_DEPTH_COMPUTE_OPENSOURCE)
+    add_subdirectory(common/adi/depth-compute-opensource)
 endif()
 add_subdirectory(common/adi/ccb)
 
@@ -152,7 +154,7 @@ endif()
 
 #LIBTOFI_LIBDIR_PATH - path to libtofi_config.so and libtofi_compute.so folder	
 if ( UNIX )
-	if (NOT USE_DEPTH_COMPUTE_STUBS)
+	if (NOT USE_DEPTH_COMPUTE_STUBS AND NOT USE_DEPTH_COMPUTE_OPENSOURCE)
 			add_library(libtofi_compute SHARED IMPORTED)
 			set_target_properties(libtofi_compute PROPERTIES
  			IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_compute.so"
@@ -166,7 +168,7 @@ if ( UNIX )
 		)
     endif()
 elseif( WIN32 )
-    if (NOT USE_DEPTH_COMPUTE_STUBS)
+    if (NOT USE_DEPTH_COMPUTE_STUBS AND NOT USE_DEPTH_COMPUTE_OPENSOURCE)
    		add_library(libtofi_compute SHARED IMPORTED)
    		set_target_properties(libtofi_compute PROPERTIES
  		IMPORTED_IMPLIB "${LIBTOFI_LIBDIR_PATH}/tofi_compute.lib"
@@ -181,7 +183,7 @@ else()
 	message( FATAL_ERROR "Unsupported platform for libtofi_compute and libtofi_config. CMake will exit." )
 endif()	
 
-if (NOT USE_DEPTH_COMPUTE_STUBS)
+if (NOT USE_DEPTH_COMPUTE_STUBS AND NOT USE_DEPTH_COMPUTE_OPENSOURCE)
     target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_compute)
     target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_config)
 else()
@@ -216,7 +218,7 @@ include(GNUInstallDirs)
 set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/aditof)
 
 # export targets for the config cmake to use
-if (NOT USE_DEPTH_COMPUTE_STUBS)
+if (NOT USE_DEPTH_COMPUTE_STUBS AND NOT USE_DEPTH_COMPUTE_OPENSOURCE)
     install(TARGETS aditof
         EXPORT aditof-targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
