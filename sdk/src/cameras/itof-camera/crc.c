@@ -8,7 +8,6 @@
 // Portions Copyright (c) 2022 Analog Devices, Inc.
 
 #include "crc.h"
-#include "bit_manipulation.h"
 
 /**
 * @brief Legacy crc Table
@@ -73,7 +72,7 @@ uint32_t crcFast(uint8_t const message[], int nBytes, bool isMirrored) {
         }
     } else {
         for (byte = 0; byte < nBytes; ++byte) {
-            data = reflect8(message[byte]) ^ (remainder >> (WIDTH - 8));
+            data = reflect(message[byte], 8) ^ (remainder >> (WIDTH - 8));
             remainder = crcTable[data] ^ (remainder << 8);
         }
     }
@@ -85,3 +84,29 @@ uint32_t crcFast(uint8_t const message[], int nBytes, bool isMirrored) {
     return (remainder ^ 0xFFFFFFFF);
     
 }   /* crcFast() */
+
+uint8_t reflect(uint8_t data, unsigned char nBits)
+{
+	uint8_t reflection = 0x00;
+	unsigned char bit;
+
+	/*
+	 * Reflect the data about the center bit.
+	 */
+
+	for (bit = 0; bit < nBits; ++bit)
+	{
+		/*
+		 * If the LSB bit is set, set the reflection of it.
+		 */
+		if (data & 0x01)
+		{
+			reflection |= (1 << ((nBits - 1) - bit));
+		}
+
+		data = (data >> 1);
+	}
+
+	return (reflection);
+
+}	/* reflect() */
