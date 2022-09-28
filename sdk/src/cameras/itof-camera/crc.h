@@ -18,6 +18,7 @@ extern "C" {
 
 //Calculates a CRC of a block of memory using same algorithm as in the fuse table.
 uint32_t crcFast(uint8_t const message[], int nBytes, bool isMirrored);
+uint8_t reflect(uint8_t data, unsigned char nBits);
 
 #ifdef __cplusplus
 }
