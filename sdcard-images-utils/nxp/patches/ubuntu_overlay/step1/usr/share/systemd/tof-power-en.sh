@@ -64,6 +64,8 @@ if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier + ADSD3500" ]]; then
 	echo 510 > /sys/class/gpio/export
 	echo 1 > /sys/class/gpio/gpio510/value
 
+	sleep 1
+
 	#EN_0P8
 	echo 511 > /sys/class/gpio/export
 	echo 1 > /sys/class/gpio/gpio511/value
