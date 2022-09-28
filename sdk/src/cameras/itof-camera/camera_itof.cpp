@@ -261,10 +261,9 @@ aditof::Status CameraItof::initialize() {
     if (m_cameraFps != 0) {
         status = m_depthSensor->setControl("fps", std::to_string(m_cameraFps));
         if (status != Status::OK) {
-            LOG(INFO) << "Failed to set fps!";
-            return Status::GENERIC_ERROR;
+            LOG(ERROR) << "Failed to set fps at: !" << m_cameraFps;
         } else {
-            LOG(INFO) << "Camera FPS set from Json file: " << m_cameraFps;
+            LOG(INFO) << "Camera FPS set from Json file at: " << m_cameraFps;
         }
     }
 
