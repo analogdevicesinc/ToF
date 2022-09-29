@@ -707,6 +707,10 @@ int main(int argc, char *argv[]) {
             } else if (mode == 10) {
                 // 4 x 16 bit subframes =>> 8 x 8 bit subframes
                 subFrames = 8;
+            } else if (fDetails.type == "vga") {
+                //one 16bit depth, one 16bit ab, one 8bit confidence
+                // =>> 5 * 8 bit subframes
+                subFrames = 5;
             }
         } else {
             std::string attrVal;
@@ -724,8 +728,7 @@ int main(int argc, char *argv[]) {
             frameType = "depth";
         } else if (frame_type == "raw") {
             frame_size = height * width * subFrames;
-            frameType =
-                "frameData"; // TO DO: change this to "raw" when it gets done
+            frameType = "raw";
         } else {
             LOG(WARNING) << "Can't recognize frame data type!";
         }
