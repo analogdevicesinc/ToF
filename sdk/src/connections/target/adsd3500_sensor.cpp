@@ -503,7 +503,12 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         }
 #else
         if (type.type == "vga") {
+#ifdef NXP
+            pixelFormat =
+                V4L2_PIX_FMT_SBGGR8; // TO DO: Add implementation to automatically find pixel format based on resolution instead of all this harcoding
+#else
             pixelFormat = V4L2_PIX_FMT_SRGGB8;
+#endif
         } else {
             LOG(ERROR) << "frame type: " << type.type << " "
                        << "is unhandled";
