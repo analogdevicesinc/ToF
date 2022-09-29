@@ -70,9 +70,26 @@ class ModeInfo {
      */
     unsigned int getNumModes();
 
+    /**
+     * @brief Set mode version
+     * param[in] version - 1 if new ModeInfo table/ 0 for old table
+     * @return aditof::Status
+     */
+    aditof::Status setModeVersion(int version);
+
+    /**
+     * @brief Set mode version
+     * @return 1 if new ModeInfo table/ 0 for old table
+     */
+    int getModeVersion();
+
   private:
-    static modeInfo g_modeInfoData[]; //static array of all modes supported
-    static ModeInfo *m_instance;      //single instance
+    static modeInfo *g_modeInfoData;   //static array of all modes supported
+    static modeInfo g_oldModes[];      //static array of old modes supported
+    static modeInfo g_newModes[];      //static array of new modes supported
+    static modeInfo g_adsd3030Modes[]; // static array of adsd3030 modes
+    static ModeInfo *m_instance;       //single instance
+
     ModeInfo() {
     } // private so that it can not be called, always access through getInstance()
     ModeInfo(const ModeInfo &);            // copy constructor is private
