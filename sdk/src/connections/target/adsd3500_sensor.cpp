@@ -167,12 +167,12 @@ aditof::Status Adsd3500Sensor::open() {
 
     //Reset device once before first open
     if (m_firstRun) {
-#ifndef ADSD3030
+#if defined(NXP)
         system("echo 0 > /sys/class/gpio/gpio122/value");
         usleep(100000);
         system("echo 1 > /sys/class/gpio/gpio122/value");
         usleep(5000000);
-#else
+#elif defined(NVIDIA)
         system("echo 0 > /sys/class/gpio/PP.04/value");
         usleep(100000);
         system("echo 1 > /sys/class/gpio/PP.04/value");
