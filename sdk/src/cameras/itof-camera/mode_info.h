@@ -84,12 +84,12 @@ class ModeInfo {
     int getModeVersion();
 
   private:
-    static modeInfo *g_modeInfoData;   //static array of all modes supported
-    static modeInfo g_oldModes[];      //static array of old modes supported
-    static modeInfo g_newModesAdsd3100[];      //static array of new modes supported
-    static modeInfo g_newModesAdsd3500[];      //static array of new modes supported
-    static modeInfo g_adsd3030Modes[]; // static array of adsd3030 modes
-    static ModeInfo *m_instance;       //single instance
+    static modeInfo *g_modeInfoData;      //static array of all modes supported
+    static modeInfo g_oldModes[];         //static array of old modes supported
+    static modeInfo g_newModesAdsd3100[]; //static array of new modes supported
+    static modeInfo g_newModesAdsd3500[]; //static array of new modes supported
+    static modeInfo g_adsd3030Modes[];    //static array of adsd3030 modes
+    static ModeInfo *m_instance;          //single instance
 
     ModeInfo() {
     } // private so that it can not be called, always access through getInstance()
