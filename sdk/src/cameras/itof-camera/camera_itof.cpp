@@ -153,9 +153,11 @@ aditof::Status CameraItof::initialize() {
     if (m_adsd3500Enabled) {
         //check first mode to set ModeInfo table version for adsd3500
         uint8_t tempDealiasParams[32] = {0};
+        tempDealiasParams[0] = 1;
+
         TofiXYZDealiasData tempDealiasStruct;
-        uint16_t width = ModeInfo::getInstance()->getModeInfo(0).width;
-        uint16_t height = ModeInfo::getInstance()->getModeInfo(0).height;
+        uint16_t width = ModeInfo::getInstance()->getModeInfo(1).width;
+        uint16_t height = ModeInfo::getInstance()->getModeInfo(1).height;
 
         status = m_depthSensor->adsd3500_read_payload_cmd(
             0x02, tempDealiasParams, 32);
@@ -170,6 +172,8 @@ aditof::Status CameraItof::initialize() {
         if (tempDealiasStruct.n_rows != width &&
             tempDealiasStruct.n_cols != height) {
             ModeInfo::getInstance()->setModeVersion(0);
+        } else {
+            ModeInfo::getInstance()->setModeVersion(2);
         }
 
         for (auto availableFrameTypes : m_availableSensorFrameTypes) {
@@ -281,8 +285,8 @@ aditof::Status CameraItof::initialize() {
     ////check first mode to set ModeInfo table version for non adsd3500
     if (m_loadedConfigData && !m_adsd3500Enabled) {
         TofiXYZDealiasData tempDealiasStruct[11];
-        uint16_t width = ModeInfo::getInstance()->getModeInfo(0).width;
-        uint16_t height = ModeInfo::getInstance()->getModeInfo(0).height;
+        uint16_t width = ModeInfo::getInstance()->getModeInfo(1).width;
+        uint16_t height = ModeInfo::getInstance()->getModeInfo(1).height;
 
         uint32_t err =
             GetXYZ_DealiasData((ConfigFileData *)&m_calData, tempDealiasStruct);
@@ -291,9 +295,11 @@ aditof::Status CameraItof::initialize() {
             return Status::GENERIC_ERROR;
         }
 
-        if (tempDealiasStruct[0].n_rows != width &&
-            tempDealiasStruct[0].n_cols != height) {
+        if (tempDealiasStruct[1].n_rows != width &&
+            tempDealiasStruct[1].n_cols != height) {
             ModeInfo::getInstance()->setModeVersion(0);
+        } else {
+            ModeInfo::getInstance()->setModeVersion(1);
         }
     }
 
