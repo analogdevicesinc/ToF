@@ -11,7 +11,7 @@
 // TODO: load this information from camera module EEPROM
 #ifndef ADSD3030
 //use new modes by default
-ModeInfo::modeInfo *ModeInfo::g_modeInfoData = ModeInfo::g_newModes;
+ModeInfo::modeInfo *ModeInfo::g_modeInfoData = ModeInfo::g_newModesAdsd3500;
 
 ModeInfo::modeInfo ModeInfo::g_oldModes[] = {
     {1, 320, 288, 9, 2162, 288, 0},
@@ -21,11 +21,14 @@ ModeInfo::modeInfo ModeInfo::g_oldModes[] = {
 };
 
 //TO DO: update table with new values
-ModeInfo::modeInfo ModeInfo::g_newModes[] = {
-    {1, 320, 288, 9, 2162, 288, 0},
-    {3, 1024, 1024, 1, 12289, 64, 1},
-    {7, 512, 512, 10, 2195, 896, 1},
-    {10, 1024, 1024, 9, 12289, 576, 0},
+ModeInfo::modeInfo ModeInfo::g_newModesAdsd3100[] = {
+    {1, 1024, 1024, 9, 49156, 144, 0},
+    {3, 512, 512, 9, 18438, 96, 0},
+};
+
+ModeInfo::modeInfo ModeInfo::g_newModesAdsd3500[] = {
+    {1, 512, 512, 1, 2731, 192, 0},
+    {2, 1024, 1024, 3, 3511, 1344, 0},
 };
 #else
 ModeInfo::modeInfo *ModeInfo::g_modeInfoData = ModeInfo::g_adsd3030Modes;
@@ -65,9 +68,18 @@ aditof::Status convertCameraMode(const std::string &mode,
 
 #ifndef ADSD3030
     int modeVersion = ModeInfo::getInstance()->getModeVersion();
-    if (modeVersion) {
-        //complete names for each mode
-        return aditof::Status::UNAVAILABLE;
+    if (modeVersion == 1) {
+        if (mode == "mp") {
+            convertedMode = 1;
+        } else if (mode == "qmp") {
+            convertedMode = 3;
+        }
+    } else if (modeVersion == 2) {
+        if (mode == "qmp") {
+            convertedMode = 1;
+        } else if (mode == "mp") {
+            convertedMode = 2;
+        }
     } else {
         if (mode == "lt_bin") {
             convertedMode = 1;
@@ -105,8 +117,10 @@ aditof::Status ModeInfo::setModeVersion(int version) {
     Status status = Status::OK;
 
 #ifndef ADSD3030
-    if (version) {
-        g_modeInfoData = g_newModes;
+    if (version == 1) {
+        g_modeInfoData = g_newModesAdsd3100;
+    } else if (version == 2) {
+        g_modeInfoData = g_newModesAdsd3500;
     } else {
         g_modeInfoData = g_oldModes;
     }
@@ -117,8 +131,10 @@ aditof::Status ModeInfo::setModeVersion(int version) {
 
 int ModeInfo::getModeVersion() {
 #ifndef ADSD3030
-    if (g_modeInfoData == g_newModes) {
+    if (g_modeInfoData == g_newModesAdsd3100) {
         return 1;
+    } else if (g_modeInfoData == g_newModesAdsd3500) {
+        return 2;
     }
 #endif
     return 0;
