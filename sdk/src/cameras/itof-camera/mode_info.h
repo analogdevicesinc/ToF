@@ -72,7 +72,7 @@ class ModeInfo {
 
     /**
      * @brief Set mode version
-     * param[in] version - 1 if new ModeInfo table/ 0 for old table
+     * param[in] version - 0 Old table, 1 new adsd3100 table, 2 new adsd3500 table
      * @return aditof::Status
      */
     aditof::Status setModeVersion(int version);
@@ -86,7 +86,8 @@ class ModeInfo {
   private:
     static modeInfo *g_modeInfoData;   //static array of all modes supported
     static modeInfo g_oldModes[];      //static array of old modes supported
-    static modeInfo g_newModes[];      //static array of new modes supported
+    static modeInfo g_newModesAdsd3100[];      //static array of new modes supported
+    static modeInfo g_newModesAdsd3500[];      //static array of new modes supported
     static modeInfo g_adsd3030Modes[]; // static array of adsd3030 modes
     static ModeInfo *m_instance;       //single instance
 
