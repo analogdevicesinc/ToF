@@ -59,8 +59,20 @@ ModeInfo::modeInfo ModeInfo::getModeInfo(unsigned int mode) {
 }
 
 unsigned int ModeInfo::getNumModes() {
-    return sizeof(ModeInfo::g_modeInfoData) /
-           sizeof(ModeInfo::g_modeInfoData[0]);
+#ifndef ADSD3030
+    int modeVersion = ModeInfo::getInstance()->getModeVersion();
+    if (modeVersion == 0) {
+        return sizeof(ModeInfo::g_oldModes) / sizeof(ModeInfo::g_oldModes[0]);
+    } else if (modeVersion == 1) {
+        return sizeof(ModeInfo::g_newModesAdsd3100) /
+               sizeof(ModeInfo::g_newModesAdsd3100[0]);
+    }
+    return sizeof(ModeInfo::g_newModesAdsd3500) /
+           sizeof(ModeInfo::g_newModesAdsd3500[0]);
+#else
+    return sizeof(ModeInfo::g_adsd3030Modes) /
+           sizeof(ModeInfo::g_adsd3030Modes[0]);
+#endif
 }
 
 aditof::Status convertCameraMode(const std::string &mode,
