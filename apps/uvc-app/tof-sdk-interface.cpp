@@ -371,6 +371,15 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
         break;
     }
 
+    case uvc_payload::FunctionName::PROCESS_FRAME: {
+
+        aditof::Status status = aditof::Status::OK;
+        status = camDepthSensor->getFrame(nullptr);
+        response.set_status(static_cast<::uvc_payload::Status>(status));
+
+        break;
+    }
+
     case uvc_payload::FunctionName::STORAGE_OPEN: {
 
         aditof::Status status = aditof::Status::OK;

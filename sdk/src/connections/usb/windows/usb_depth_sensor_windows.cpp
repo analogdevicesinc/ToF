@@ -673,6 +673,18 @@ aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
     int retryCount = 0;
     HRESULT hr;
 
+    usb_payload::ClientRequest requestMsg;
+    // Send request
+    requestMsg.set_func_name(usb_payload::FunctionName::PROCESS_FRAME);
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbWindowsUtils::uvcExUnitSendRequest(
+        m_implData->handle.pVideoInputFilter, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to process frame on target!";
+        return status;
+    }
+
     VIDEOINFOHEADER *pVi = reinterpret_cast<VIDEOINFOHEADER *>(
         m_implData->handle.pAmMediaType->pbFormat);
     int currentWidth = HEADER(pVi)->biWidth;
