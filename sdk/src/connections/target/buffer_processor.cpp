@@ -64,7 +64,8 @@ static int xioctl(int fh, unsigned int request, void *arg) {
 BufferProcessor::BufferProcessor()
     : m_outputFrameWidth(0), m_outputFrameHeight(0), m_tofiConfig(nullptr),
       m_tofiComputeContext(nullptr), m_vidPropSet(false),
-      m_processorPropSet(false), m_inputVideoDev(nullptr) {
+      m_processorPropSet(false), m_inputVideoDev(nullptr),
+      m_processedBuffer(nullptr) {
     m_outputVideoDev = new VideoDev();
 }
 
@@ -140,6 +141,11 @@ aditof::Status BufferProcessor::setVideoProperties(int frameWidth,
         LOG(ERROR) << "Failed to set format!";
         return Status::GENERIC_ERROR;
     }
+
+    if (m_processedBuffer != nullptr) {
+        delete m_processedBuffer;
+    }
+    m_processedBuffer = new uint16_t[m_outputFrameWidth * m_outputFrameHeight];
 
     return status;
 }
@@ -219,11 +225,10 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
         return status;
     }
 
+    uint16_t *tempDepthFrame = m_tofiComputeContext->p_depth_frame;
+    uint16_t *tempAbFrame = m_tofiComputeContext->p_ab_frame;
+
     if (buffer != nullptr) {
-
-        uint16_t *tempDepthFrame = m_tofiComputeContext->p_depth_frame;
-        uint16_t *tempAbFrame = m_tofiComputeContext->p_ab_frame;
-
         m_tofiComputeContext->p_depth_frame = buffer;
         m_tofiComputeContext->p_ab_frame =
             buffer + m_outputFrameWidth * m_outputFrameHeight / 2;
@@ -236,9 +241,11 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
             return Status::GENERIC_ERROR;
         }
 
-        m_tofiComputeContext->p_depth_frame = tempDepthFrame;
-        m_tofiComputeContext->p_ab_frame = tempAbFrame;
     } else {
+
+        m_tofiComputeContext->p_depth_frame = m_processedBuffer;
+        m_tofiComputeContext->p_ab_frame =
+            m_processedBuffer + m_outputFrameWidth * m_outputFrameHeight / 2;
 
         uint32_t ret =
             TofiCompute((uint16_t *)pdata, m_tofiComputeContext, NULL);
@@ -248,11 +255,12 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
             return Status::GENERIC_ERROR;
         }
 
-        ::write(m_outputVideoDev->fd, m_tofiComputeContext->p_depth_frame,
-                m_outputFrameWidth * m_outputFrameHeight / 2);
-        ::write(m_outputVideoDev->fd, m_tofiComputeContext->p_ab_frame,
-                m_outputFrameWidth * m_outputFrameHeight / 2);
+        ::write(m_outputVideoDev->fd, m_processedBuffer,
+                m_outputFrameWidth * m_outputFrameHeight);
     }
+
+    m_tofiComputeContext->p_depth_frame = tempDepthFrame;
+    m_tofiComputeContext->p_ab_frame = tempAbFrame;
 
     status = enqueueInternalBufferPrivate(buf[0], dev);
     if (status != Status::OK) {
