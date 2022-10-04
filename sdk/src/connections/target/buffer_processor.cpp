@@ -131,7 +131,7 @@ aditof::Status BufferProcessor::setVideoProperties(int frameWidth,
     m_videoFormat.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
     m_videoFormat.fmt.pix.width = frameWidth;
     m_videoFormat.fmt.pix.height = frameHeight;
-    m_videoFormat.fmt.pix.pixelformat = V4L2_PIX_FMT_SBGGR12;
+    m_videoFormat.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
     m_videoFormat.fmt.pix.sizeimage = frameWidth * frameHeight;
     m_videoFormat.fmt.pix.field = V4L2_FIELD_NONE;
     m_videoFormat.fmt.pix.bytesperline = frameWidth;
