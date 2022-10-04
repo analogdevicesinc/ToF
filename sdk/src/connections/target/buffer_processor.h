@@ -104,6 +104,8 @@ class BufferProcessor : public aditof::V4lBufferAccessInterface {
     uint16_t m_outputFrameWidth;
     uint16_t m_outputFrameHeight;
 
+    uint16_t *m_processedBuffer;
+
     TofiConfig *m_tofiConfig;
     TofiComputeContext *m_tofiComputeContext;
     TofiXYZDealiasData m_xyzDealiasData[11];
