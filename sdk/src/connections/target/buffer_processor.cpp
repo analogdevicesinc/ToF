@@ -129,7 +129,7 @@ aditof::Status BufferProcessor::setVideoProperties(int frameWidth,
     m_outputFrameHeight = frameHeight;
 
     m_videoFormat.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
-    m_videoFormat.fmt.pix.width = frameWidth;
+    m_videoFormat.fmt.pix.width = frameWidth / 2;
     m_videoFormat.fmt.pix.height = frameHeight;
     m_videoFormat.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
     m_videoFormat.fmt.pix.sizeimage = frameWidth * frameHeight;
@@ -143,7 +143,7 @@ aditof::Status BufferProcessor::setVideoProperties(int frameWidth,
     }
 
     if (m_processedBuffer != nullptr) {
-        delete m_processedBuffer;
+        delete[] m_processedBuffer;
     }
     m_processedBuffer = new uint16_t[m_outputFrameWidth * m_outputFrameHeight];
 
@@ -231,7 +231,7 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
     if (buffer != nullptr) {
         m_tofiComputeContext->p_depth_frame = buffer;
         m_tofiComputeContext->p_ab_frame =
-            buffer + m_outputFrameWidth * m_outputFrameHeight / 2;
+            buffer + m_outputFrameWidth * m_outputFrameHeight / 4;
 
         uint32_t ret =
             TofiCompute((uint16_t *)pdata, m_tofiComputeContext, NULL);
@@ -245,7 +245,7 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
 
         m_tofiComputeContext->p_depth_frame = m_processedBuffer;
         m_tofiComputeContext->p_ab_frame =
-            m_processedBuffer + m_outputFrameWidth * m_outputFrameHeight / 2;
+            m_processedBuffer + m_outputFrameWidth * m_outputFrameHeight / 4;
 
         uint32_t ret =
             TofiCompute((uint16_t *)pdata, m_tofiComputeContext, NULL);
