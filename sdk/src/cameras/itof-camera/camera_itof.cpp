@@ -1052,7 +1052,18 @@ aditof::Status CameraItof::initComputeLibrary(void) {
             memcpy(tempDataParser, pData, dataSize);
             ConfigFileData depth_ini = {tempDataParser, dataSize};
 
-            if (m_adsd3500Enabled || m_isOffline) {
+            //TO DO: Change this after set status of dc on target
+            if (1) {
+                aditof::Status localStatus;
+                localStatus = m_depthSensor->initTargetDepthCompute(
+                    (uint8_t*)tempDataParser, dataSize, (uint8_t *)m_xyz_dealias_data,
+                    sizeof(TofiXYZDealiasData) * 10);
+                if (localStatus != aditof::Status::OK) {
+                    LOG(ERROR)
+                        << "Failed to initialize depth compute on target!";
+                    return localStatus;
+                }
+            } else if (m_adsd3500Enabled || m_isOffline) {
                 m_tofi_config = InitTofiConfig_isp((ConfigFileData *)&depth_ini,
                                                    convertedMode, &status,
                                                    m_xyz_dealias_data);
@@ -1071,19 +1082,22 @@ aditof::Status CameraItof::initComputeLibrary(void) {
             m_tofi_config =
                 InitTofiConfig(&calData, NULL, NULL, convertedMode, &status);
         }
-
-        if ((m_tofi_config == NULL) ||
-            (m_tofi_config->p_tofi_cal_config == NULL) ||
-            (status != ADI_TOFI_SUCCESS)) {
-            LOG(ERROR) << "InitTofiConfig failed";
-            return aditof::Status::GENERIC_ERROR;
-
-        } else {
-            m_tofi_compute_context =
-                InitTofiCompute(m_tofi_config->p_tofi_cal_config, &status);
-            if (m_tofi_compute_context == NULL || status != ADI_TOFI_SUCCESS) {
-                LOG(ERROR) << "InitTofiCompute failed";
+        //TO DO: Change this after set status of dc on target
+        if (0) {
+            if ((m_tofi_config == NULL) ||
+                (m_tofi_config->p_tofi_cal_config == NULL) ||
+                (status != ADI_TOFI_SUCCESS)) {
+                LOG(ERROR) << "InitTofiConfig failed";
                 return aditof::Status::GENERIC_ERROR;
+
+            } else {
+                m_tofi_compute_context =
+                    InitTofiCompute(m_tofi_config->p_tofi_cal_config, &status);
+                if (m_tofi_compute_context == NULL ||
+                    status != ADI_TOFI_SUCCESS) {
+                    LOG(ERROR) << "InitTofiCompute failed";
+                    return aditof::Status::GENERIC_ERROR;
+                }
             }
         }
     } else {
