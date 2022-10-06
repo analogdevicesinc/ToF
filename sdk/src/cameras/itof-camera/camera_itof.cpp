@@ -119,6 +119,8 @@ CameraItof::CameraItof(
     if (m_adsd3500Enabled) {
         m_controls.emplace("updateAdsd3500Firmware", "");
     }
+
+    m_adsd3500_master = true;
 }
 
 CameraItof::~CameraItof() {
@@ -1595,6 +1597,44 @@ aditof::Status CameraItof::parseJsonFileContent() {
     } else if (!config.empty()) {
         LOG(ERROR) << "Couldn't parse config file: " << config.c_str();
         return Status::GENERIC_ERROR;
+    }
+
+    return status;
+}
+
+aditof::Status CameraItof::adsd3500_set_toggle_mode(int mode) {
+    /*mode = 2, adsd3500 fsync does not automatically toggle - Pin set as input (Slave)*/
+    /*mode = 1, adsd3500 fsync automatically toggles at user specified framerate*/
+    /*mode = 0, adsd3500 fsync does not automatically toggle*/
+    using namespace aditof;
+    Status status = Status::OK;
+
+    status = m_depthSensor->adsd3500_write_cmd(0x0025, mode);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Unable to set FSYNC Toggle mode!";
+        return status;
+    }
+
+    if (mode == 2) {
+        m_adsd3500_master = false;
+    }
+
+    return status;
+}
+
+aditof::Status CameraItof::adsd3500_toggle_fsync() {
+    using namespace aditof;
+    Status status = Status::OK;
+
+    if (!m_adsd3500_master) {
+        LOG(ERROR) << "ADSD3500 not set as master - cannot toggle FSYNC";
+    } else {
+        // Toggle Fsync
+        status = m_depthSensor->adsd3500_write_cmd(0x0026, 0x0000);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Unable to Toggle FSYNC!";
+            return status;
+        }
     }
 
     return status;
