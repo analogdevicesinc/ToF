@@ -277,7 +277,10 @@ PYBIND11_MODULE(aditofpython, m) {
 
                 return status;
             },
-            py::arg("tempSensors"));
+            py::arg("tempSensors"))
+        .def("adsd3500_set_toggle_mode",
+             &aditof::Camera::adsd3500_set_toggle_mode, py::arg("mode"))
+        .def("adsd3500_toggle_fsync", &aditof::Camera::adsd3500_toggle_fsync);
 
     // Frame
     py::class_<aditof::Frame>(m, "Frame")
