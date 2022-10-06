@@ -182,6 +182,19 @@ class SDK_API Camera {
      */
     virtual Status getTemperatureSensors(
         std::vector<std::shared_ptr<TemperatureSensorInterface>> &sensors) = 0;
+
+    /**
+     * @brief Enables or disables FSYNC toggle for ADSD3500
+     * @param[in] mode - 2 = Fsync pin set as HiZ ; 1 = Toggle at user specified framerate ; 0 = Toggle controlled via adsd3500_toggle_fsync ; 
+     * @return Status
+     */
+    virtual Status adsd3500_set_toggle_mode(int mode) = 0;
+
+    /**
+     * @brief Toggles ADSD3500 FSYNC once if automated FSYNC is disabled
+     * @return Status
+     */
+    virtual Status adsd3500_toggle_fsync() = 0;
 };
 
 } // namespace aditof

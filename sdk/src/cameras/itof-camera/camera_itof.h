@@ -139,6 +139,8 @@ class CameraItof : public aditof::Camera {
     aditof::Status getTemperatureSensors(
         std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
             &sensors) override;
+    aditof::Status CameraItof::adsd3500_set_toggle_mode(int mode);
+    aditof::Status CameraItof::adsd3500_toggle_fsync();
 
     // TO DO - The methods bellow need to be converted somehow to be covered by setControl()
     // in order to not go beyond Camera API
@@ -378,6 +380,7 @@ class CameraItof : public aditof::Camera {
     bool m_eepromInitialized;
     bool m_tempSensorInitialized;
     bool m_adsd3500Enabled;
+    bool m_adsd3500_master;
 
     FileData m_calData;
     FileData m_depthINIData;
