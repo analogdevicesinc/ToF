@@ -178,12 +178,50 @@ TofiComputeContext *InitTofiCompute(const void *p_tofi_cal_config,
     return Obj;
 };
 
+#define NUM_BITS(Input, n_pos, n_bits) (((1 << n_bits) - 1) & (Input >> n_pos))
+
+static uint32_t
+DeInterleaveDepth(uint8_t *p_frame_data, uint32_t n_bits_in_depth,
+                  uint32_t n_bits_in_conf, uint32_t n_bits_in_ab,
+                  uint32_t n_bytes, uint32_t width, uint32_t height,
+                  uint16_t *p_depth, uint16_t *p_conf, uint16_t *p_ab) {
+    uint8_t *input_buffer = p_frame_data;
+
+    uint16_t *out_depth = p_depth;
+    uint16_t *out_conf = p_conf;
+    uint16_t *out_ab = p_ab;
+
+    uint32_t n_pos_conf = (16 - n_bits_in_depth) ? 16 - n_bits_in_depth : 8;
+    uint32_t n_depth_conf = n_bits_in_depth + n_bits_in_conf;
+    uint32_t div = n_depth_conf % 8;
+    uint32_t n_count_conf = n_bits_in_ab ? n_depth_conf / 8 : 0;
+    uint32_t n_pos_ab = div ? 4 : 0;
+    uint32_t is_conf = n_depth_conf == 16 ? 0 : 2;
+    uint32_t n_ab_count = n_bits_in_ab == 8 ? 0 : n_count_conf + 1;
+
+    uint32_t n_pixels = width * height;
+
+    for (uint32_t pix_id = 0; pix_id < n_pixels; pix_id++) {
+        input_buffer = p_frame_data + pix_id * n_bytes;
+
+        uint16_t temp = input_buffer[0] | (uint16_t)(input_buffer[1] << 8);
+        out_depth[pix_id] = NUM_BITS(temp, 0, n_bits_in_depth);
+
+        // temp = input_buffer[1] | (uint16_t)(input_buffer[is_conf] << 8);
+        // out_conf[pix_id] = NUM_BITS(temp, n_pos_conf, n_bits_in_conf);
+
+        temp = input_buffer[n_count_conf] |
+               (uint16_t)(input_buffer[n_ab_count] << 8);
+        out_ab[pix_id] = NUM_BITS(temp, n_pos_ab, n_bits_in_ab);
+    }
+    return 0;
+}
+
 int TofiCompute(const uint16_t *const input_frame,
                 TofiComputeContext *const p_tofi_compute_context,
                 TemperatureInfo *p_temperature) {
 
     int status = 0;
-    uint16_t *input_buffer = nullptr;
     TofiXYZDealiasData *ccb_data =
         (TofiXYZDealiasData *)p_tofi_compute_context->p_cal_config;
     int n_cols = ccb_data->n_cols;
@@ -192,6 +230,12 @@ int TofiCompute(const uint16_t *const input_frame,
     float *p_x_table = nullptr;
     float *p_y_table = nullptr;
     float *p_z_table = nullptr;
+
+    status = DeInterleaveDepth((uint8_t *)input_frame, 16, 8, 16,
+                               n_cols * n_rows * 2, n_cols, n_rows,
+                               p_tofi_compute_context->p_depth_frame,
+                               (uint16_t *)p_tofi_compute_context->p_conf_frame,
+                               p_tofi_compute_context->p_ab_frame);
 
     status = GenerateXYZTables(
         &p_x_table, &p_y_table, &p_z_table, &(ccb_data->camera_intrinsics),
@@ -214,8 +258,8 @@ int TofiCompute(const uint16_t *const input_frame,
     }
 
     // Compute Point cloud
-    ComputeXYZ(input_frame, &p_xyz_data, p_tofi_compute_context->p_xyz_frame,
-               n_rows, n_cols);
+    ComputeXYZ(p_tofi_compute_context->p_depth_frame, &p_xyz_data,
+               p_tofi_compute_context->p_xyz_frame, n_rows, n_cols);
 
     if (status != 0) {
         std::cout << "Unable to compute XYZ !" << std::endl;
