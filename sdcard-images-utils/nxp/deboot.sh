@@ -207,7 +207,9 @@ echo aditof > /etc/hostname
 
 # create user and passwd
 useradd -m -d /home/${USERNAME} -s /bin/bash ${USERNAME}
-usermod -a -G sudo,video,disk,i2c ${USERNAME}
+groupadd i2c
+groupadd gpio
+usermod -a -G sudo,video,disk,i2c,gpio ${USERNAME}
 echo -e "${PASSWORD}\n${PASSWORD}\n" | passwd ${USERNAME}
 
 # overwrite apt source list
