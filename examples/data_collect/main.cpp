@@ -7,7 +7,6 @@
 
 #include <aditof/camera.h>
 #include <aditof/depth_sensor_interface.h>
-#include <aditof/floatTolin.h>
 #include <aditof/frame.h>
 #include <aditof/system.h>
 #include <aditof/version.h>
