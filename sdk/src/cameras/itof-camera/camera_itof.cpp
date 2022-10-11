@@ -33,7 +33,7 @@
 #include "aditof/frame.h"
 #include "aditof/frame_operations.h"
 #include "aditof_internal.h"
-#include "adsd3500/crc/include/compute_crc.h"
+#include "crc.h"
 #include "cJSON/cJSON.c"
 #include "cJSON/cJSON.h"
 #include "calibration_itof.h"
@@ -61,6 +61,9 @@ CameraItof::CameraItof(
       m_xyzEnabled(false), m_xyzSetViaControl(false),
       m_loadedConfigData(false), m_tempFiles{}, m_adsd3500Enabled(false),
       m_cameraFps(0) {
+
+    FloatToLinGenerateTable();
+
     m_details.mode = "qmp";
     m_details.cameraId = "";
     m_details.uBootVersion = ubootVersion;
@@ -1218,11 +1221,6 @@ aditof::Status CameraItof::enableXYZframe(bool en) {
     return aditof::Status::OK;
 }
 
-/* Seed value for CRC computation */
-#define ADI_ROM_CFG_CRC_SEED_VALUE (0xFFFFFFFFu)
-
-/* CRC32 Polynomial to be used for CRC computation */
-#define ADI_ROM_CFG_CRC_POLYNOMIAL (0x04C11DB7u)
 #pragma pack(push, 1)
 typedef union {
     uint8_t cmd_header_byte[16];
@@ -1236,7 +1234,6 @@ typedef union {
     };
 } cmd_header_t;
 #pragma pack(pop)
-uint32_t nResidualCRC = ADI_ROM_CFG_CRC_SEED_VALUE;
 
 aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath) {
     using namespace aditof;
@@ -1283,16 +1280,8 @@ aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath) {
             fw_upgrade_header.cmd_header_byte[i];
     }
 
-    crc_parameters_t crc_params;
-    crc_params.type = CRC_32bit;
-    crc_params.polynomial.polynomial_crc32_bit = ADI_ROM_CFG_CRC_POLYNOMIAL;
-    crc_params.initial_crc.crc_32bit = nResidualCRC;
-    crc_params.crc_compute_flags = IS_CRC_MIRROR;
-
-    crc_output_t res = compute_crc(&crc_params, fw_content, fw_len);
-    nResidualCRC = res.crc_32bit;
-
-    fw_upgrade_header.crc_of_fw32 = ~nResidualCRC;
+    uint32_t res = crcFast(fw_content, fw_len, true) ^ 0xFFFFFFFF;
+    fw_upgrade_header.crc_of_fw32 = ~res;
 
     status = m_depthSensor->adsd3500_write_payload(
         fw_upgrade_header.cmd_header_byte, 16);
@@ -1416,15 +1405,8 @@ aditof::Status CameraItof::readAdsd3500CCB() {
 
     LOG(INFO) << "Succesfully read ccb from adsd3500. Checking crc...";
 
-    crc_parameters_t crc_params;
-    crc_params.type = CRC_32bit;
-    crc_params.polynomial.polynomial_crc32_bit = ADI_ROM_CFG_CRC_POLYNOMIAL;
-    crc_params.initial_crc.crc_32bit = nResidualCRC;
-    crc_params.crc_compute_flags = IS_CRC_MIRROR;
-
-    crc_output_t res = compute_crc(&crc_params, ccbContent, ccbFileSize - 4);
-    uint32_t computedCrc = res.crc_32bit;
-
+    uint32_t computedCrc = crcFast(ccbContent, ccbFileSize - 4, true) ^ 0xFFFFFFFF;
+    
     if (crcOfCCB != ~computedCrc) {
         LOG(ERROR) << "Invalid crc for ccb read from memory!";
         return Status::GENERIC_ERROR;
