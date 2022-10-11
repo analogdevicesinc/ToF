@@ -34,6 +34,7 @@ import numpy as np
 import cv2 as cv
 import open3d as o3d
 from enum import Enum
+import sys
 
 WINDOW_NAME_DEPTH = "Display Depth"
 WINDOW_NAME_COLOR = "Display Color"
@@ -50,47 +51,58 @@ def transform_image(np_image):
 
 
 if __name__ == "__main__":
-    system = tof.System()
 
+    if len(sys.argv) < 2  or sys.argv[1] == "--help" or sys.argv[1] == "-h" :
+        print("showPointCloud.py usage:")
+        print("USB / Local connection: showPointCloud.py <config>")
+        print("Network connection: showPointCloud.py <ip> <config>")
+        exit(1)
+
+    system = tof.System()
+    
     cameras = []
-    status = system.getCameraList(cameras)
-    if not status:
-        print("system.getCameraList() failed with status: ", status)
+    if len(sys.argv) == 3 :
+        status = system.getCameraListAtIp(cameras,sys.argv[1])
+        config = sys.argv[2]
+    elif len(sys.argv) == 2 :
+        status = system.getCameraList(cameras)
+        config = sys.argv[1]
+    else :
+        print("Too many arguments provided!")
+        exit(1)
+        
+    print("system.getCameraList()", status)
+
+    camera1 = cameras[0]
+
+    status = camera1.setControl("initialization_config", config)
+    print("camera1.setControl()", status)
 
     status = cameras[0].initialize()
     if not status:
         print("cameras[0].initialize() failed with status: ", status)
-
-    modes = []
-    status = cameras[0].getAvailableModes(modes)
-    if not status:
-        print("system.getAvailableModes() failed with status: ", status)
 
     types = []
     status = cameras[0].getAvailableFrameTypes(types)
     if not status:
         print("system.getAvailableFrameTypes() failed with status: ", status)
 
-    status = cameras[0].setFrameType(types[0])
+    status = cameras[0].setFrameType("qmp")
     if not status:
         print("cameras[0].setFrameType() failed with status:", status)
-
-    status = cameras[0].setMode(modes[ModesEnum.MODE_NEAR.value])
-    if not status:
-        print("cameras[0].setMode() failed with status: ", status)
 
     camDetails = tof.CameraDetails()
     status = cameras[0].getDetails(camDetails)
     if not status:
         print("system.getDetails() failed with status: ", status)
 
-    # Enable noise reduction for better results
-    smallSignalThreshold = 100
-    cameras[0].setControl("noise_reduction_threshold", str(smallSignalThreshold))
+    status = camera1.start()
+    print("camera1.start()", status)
 
     # Get the first frame for details
     frame = tof.Frame()
     status = cameras[0].requestFrame(frame)
+
     frameDataDetails = tof.FrameDataDetails()
     status = frame.getDataDetails("depth", frameDataDetails)
     width = frameDataDetails.width
@@ -105,8 +117,9 @@ if __name__ == "__main__":
     cameraIntrinsics = o3d.camera.PinholeCameraIntrinsic(width, height, fx, fy, cx, cy)
 
     # Get camera details for frame correction
-    camera_range = camDetails.maxDepth
-    bitCount = camDetails.bitCount
+    # TO DO: Get the range from camera details when it will be defined
+    camera_range = 4096
+    bitCount = 12
     max_value_of_IR_pixel = 2 ** bitCount - 1
     distance_scale_ir = 255.0 / max_value_of_IR_pixel
     distance_scale = 255.0 / camera_range
@@ -129,12 +142,12 @@ if __name__ == "__main__":
         status = cameras[0].requestFrame(frame)
         if not status:
             print("cameras[0].requestFrame() failed with status: ", status)
-
+            
         depth_map = np.array(frame.getData("depth"), dtype="uint16", copy=False)
         ir_map = np.array(frame.getData("ir"), dtype="uint16", copy=False)
 
         # Create the IR image
-        ir_map = ir_map[0: int(ir_map.shape[0] / 2), :]
+        ir_map = ir_map[0: int(ir_map.shape[0]), :]
         ir_map = distance_scale_ir * ir_map
         ir_map = np.uint8(ir_map)
         ir_map = cv.cvtColor(ir_map, cv.COLOR_GRAY2RGB)
@@ -144,8 +157,9 @@ if __name__ == "__main__":
         vis_ir.poll_events()
 
         # Create the Depth image
-        new_shape = (int(depth_map.shape[0] / 2), depth_map.shape[1])
+        new_shape = (int(depth_map.shape[0]), depth_map.shape[1])
         depth16bits_map = depth_map = np.resize(depth_map, new_shape)
+        depth_map = depth_map[0: int(depth_map.shape[0]), :]
         depth_map = distance_scale * depth_map
         depth_map = np.uint8(depth_map)
         depth_map = cv.applyColorMap(depth_map, cv.COLORMAP_RAINBOW)
@@ -172,7 +186,7 @@ if __name__ == "__main__":
         if first_time_render_pc:
             vis.add_geometry(point_cloud)
             first_time_render_pc = 0
-        vis.update_geometry()
+        vis.update_geometry(point_cloud)
         vis.poll_events()
         vis.update_renderer()
 

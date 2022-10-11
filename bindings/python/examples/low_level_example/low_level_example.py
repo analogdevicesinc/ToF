@@ -31,20 +31,33 @@
 #
 import aditofpython as tof
 import numpy as np
+import sys
 
-
-# Find a camera
+if len(sys.argv) < 2  or sys.argv[1] == "--help" or sys.argv[1] == "-h" :
+    print("low_level_example.py usage:")
+    print("USB / Local connection: low_level_example.py <config>")
+    print("Network connection: low_level_example.py <ip> <config>")
+    exit(1)
 
 system = tof.System()
 
 cameras = []
-status = system.getCameraList(cameras)
+if len(sys.argv) == 3 :
+    status = system.getCameraListAtIp(cameras,sys.argv[1])
+    config = sys.argv[2]
+elif len(sys.argv) == 2 :
+    status = system.getCameraList(cameras)
+    config = sys.argv[1]
+else :
+    print("Too many arguments provided!")
+    exit(1)
+    
 print("system.getCameraList()", status)
 
-
-# Setup the camera to get it up and running
-
 camera1 = cameras[0]
+
+status = camera1.setControl("initialization_config", config)
+print("camera1.setControl()", status)
 
 status = camera1.initialize()
 print("camera1.initialize()", status)

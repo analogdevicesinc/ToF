@@ -32,14 +32,33 @@
 import aditofpython as tof
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
+
+if len(sys.argv) < 2  or sys.argv[1] == "--help" or sys.argv[1] == "-h" :
+    print("first_frame.py usage:")
+    print("USB / Local connection: first_frame.py <config>")
+    print("Network connection: first_frame.py <ip> <config>")
+    exit(1)
 
 system = tof.System()
 
 cameras = []
-status = system.getCameraList(cameras)
+if len(sys.argv) == 3 :
+    status = system.getCameraListAtIp(cameras,sys.argv[1])
+    config = sys.argv[2]
+elif len(sys.argv) == 2 :
+    status = system.getCameraList(cameras)
+    config = sys.argv[1]
+else :
+    print("Too many arguments provided!")
+    exit(1)
+
 print("system.getCameraList()", status)
 
 camera1 = cameras[0]
+
+status = camera1.setControl("initialization_config", config)
+print("camera1.setControl()", status)
 
 status = camera1.initialize()
 print("camera1.initialize()", status)
