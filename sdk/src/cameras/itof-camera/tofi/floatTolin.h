@@ -1,7 +1,3 @@
-// Copyright (C) Microsoft Corporation. All rights reserved.
-// Portions Copyright (c) 2020 Analog Devices, Inc.
-
-
 #ifndef FLOAT_TO_LIN_H
 #define FLOAT_TO_LIN_H
 
