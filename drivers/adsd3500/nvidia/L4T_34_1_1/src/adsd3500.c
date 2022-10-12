@@ -108,8 +108,8 @@ static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
 		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
 		.link_freq_idx = 1 /* an index in link_freq_tbl[] */
 	},
-	{ //RAW8 32BPP ADSD3030
-		.width = 1024,
+	{ //RAW8 40BPP ADSD3030
+		.width = 1280,
 		.height = 320,
 		.pixel_rate = 625000000,
 		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
@@ -221,6 +221,8 @@ static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
 	}
 };
+
+static int adsd3500_set_frame_rate(struct adsd3500 *priv, s64 val);
 
 static bool adsd3500_regmap_accessible_reg(struct device *dev, unsigned int reg)
 {
@@ -400,8 +402,8 @@ static int adsd3500_s_ctrl(struct v4l2_ctrl *ctrl)
 	int ret = 0;
 
 	switch (ctrl->id) {
-	case V4L2_CID_ADSD3500_OPERATING_MODE:
 	case TEGRA_CAMERA_CID_SENSOR_MODE_ID:
+	case V4L2_CID_ADSD3500_OPERATING_MODE:
 	case V4L2_CID_ADSD3500_AB_AVG:
 	case V4L2_CID_ADSD3500_DEPTH_EN:
 	case V4L2_CID_PIXEL_RATE:
@@ -414,6 +416,9 @@ static int adsd3500_s_ctrl(struct v4l2_ctrl *ctrl)
 	case V4L2_CID_ADSD3500_AB_BITS:
 	case V4L2_CID_ADSD3500_CONFIDENCE_BITS:
 		ret = adsd3500_bpp_config(adsd3500, ctrl);
+		break;
+	case TEGRA_CAMERA_CID_FRAME_RATE:
+		ret = adsd3500_set_frame_rate(adsd3500, *ctrl->p_new.p_s64);
 		break;
 	default:
 		dev_err(adsd3500->dev, "%s > Unhandled: %x  param=%x\n",
@@ -437,7 +442,7 @@ static const s64 nr_bits_qmenu[] = {
 static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
 	{
 		.ops		= &adsd3500_ctrl_ops,
-		.id			= TEGRA_CAMERA_CID_SENSOR_MODE_ID,
+		.id		= TEGRA_CAMERA_CID_SENSOR_MODE_ID,
 		.name		= "Sensor Mode",
 		.type		= V4L2_CTRL_TYPE_INTEGER64,
 		.flags		= V4L2_CTRL_FLAG_SLIDER,
@@ -460,7 +465,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
 	{
 		/* Should always be third control in list*/
 		.ops		= &adsd3500_ctrl_ops,
-		.id			= V4L2_CID_ADSD3500_AB_AVG,
+		.id		= V4L2_CID_ADSD3500_AB_AVG,
 		.name		= "AB Averaging",
 		.type		= V4L2_CTRL_TYPE_BOOLEAN,
 		.def		= 1,
@@ -471,7 +476,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
 	{
 		/* Should always be fourth control in list*/
 		.ops		= &adsd3500_ctrl_ops,
-		.id			= V4L2_CID_ADSD3500_DEPTH_EN,
+		.id		= V4L2_CID_ADSD3500_DEPTH_EN,
 		.name		= "Depth enable",
 		.type		= V4L2_CTRL_TYPE_BOOLEAN,
 		.def		= 1,
@@ -481,7 +486,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
 	},
 	{
 		.ops		= &adsd3500_ctrl_ops,
-		.id			= V4L2_CID_ADSD3500_CHIP_CONFIG,
+		.id		= V4L2_CID_ADSD3500_CHIP_CONFIG,
 		.name		= "Chip Config",
 		.type		= V4L2_CTRL_TYPE_U8,
 		.def		= 0x00,
@@ -492,7 +497,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
 	},
 	{
 		.ops		= &adsd3500_ctrl_ops,
-		.id			= V4L2_CID_ADSD3500_DEPTH_BITS,
+		.id		= V4L2_CID_ADSD3500_DEPTH_BITS,
 		.name		= "Phase / Depth Bits",
 		.type		= V4L2_CTRL_TYPE_INTEGER_MENU,
 		.def		= 2,
@@ -521,7 +526,18 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
 		.min		= 0,
 		.max		= 2,
 		.qmenu_int	= nr_bits_qmenu,
-	}
+	},
+	{
+		.ops 		= &adsd3500_ctrl_ops,
+		.id 		= TEGRA_CAMERA_CID_FRAME_RATE,
+		.name 		= "Frame Rate",
+		.type 		= V4L2_CTRL_TYPE_INTEGER64,
+		.flags 		= V4L2_CTRL_FLAG_SLIDER,
+		.min 		= 1,
+		.max 		= 90,
+		.def 		= 10,
+		.step		= 1,
+	},
 };
 
 static int adsd3500_enum_mbus_code(struct v4l2_subdev *sd,
@@ -658,46 +674,16 @@ err_unlock:
 	return ret;
 }
 
-static int adsd3500_g_frame_interval(struct v4l2_subdev *subdev,
-				     struct v4l2_subdev_frame_interval *fi)
+static int adsd3500_set_frame_rate(struct adsd3500 *priv, s64 val)
 {
-	struct i2c_client *client = v4l2_get_subdevdata(subdev);
-	struct device *dev = &client->dev;
-	struct camera_common_data *s_data = to_camera_common_data(dev);
-	struct adsd3500 *adsd3500 = (struct adsd3500 *)s_data->priv;
-	uint32_t val;
+	struct device *dev = &priv->i2c_client->dev;
 	int ret;
-	
-	fi->interval.numerator = 1;
-	fi->interval.denominator = 10;
-	
-	ret = regmap_read(adsd3500->regmap, GET_FRAMERATE_CMD, &val);
+
+	ret = regmap_write(priv->regmap, SET_FRAMERATE_CMD, val);
 	if (ret < 0)
-		dev_err(adsd3500->dev, "Get FRAMERATE COMMAND failed.\n");
-	else
-		fi->interval.denominator = val;
+		dev_err(dev, "Set FRAMERATE COMMAND failed.\n");
 
-	return 0;
-}
-
-static int adsd3500_s_frame_interval(struct v4l2_subdev *subdev,
-				     struct v4l2_subdev_frame_interval *fi)
-{
-	struct i2c_client *client = v4l2_get_subdevdata(subdev);
-	struct device *dev = &client->dev;
-	struct camera_common_data *s_data = to_camera_common_data(dev);
-	struct adsd3500 *adsd3500 = (struct adsd3500 *)s_data->priv;
-	uint32_t val;
-	int ret;
-	
-	val = DIV_ROUND_UP(fi->interval.denominator,  fi->interval.numerator);
-
-	ret = regmap_write(adsd3500->regmap, SET_FRAMERATE_CMD, val);
-	if (ret < 0)
-		dev_err(adsd3500->dev, "Set FRAMERATE COMMAND failed.\n");
-
-	dev_dbg(adsd3500->dev, "Set frame interval to %u / %u\n",
-		fi->interval.numerator, fi->interval.denominator);
+	dev_dbg(dev, "Set frame rate to %lld\n", val);
 
 	return ret;
 }
@@ -830,8 +816,6 @@ static const struct v4l2_subdev_core_ops adsd3500_core_ops = {
 
 static const struct v4l2_subdev_video_ops adsd3500_video_ops = {
 	.s_stream = adsd3500_s_stream,
-	.g_frame_interval = adsd3500_g_frame_interval,
-	.s_frame_interval = adsd3500_s_frame_interval,
 #if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0)
 	.g_mbus_config	= camera_common_g_mbus_config,
 #endif
@@ -842,6 +826,7 @@ static const struct v4l2_subdev_pad_ops adsd3500_subdev_pad_ops = {
 	.enum_frame_size = adsd3500_enum_frame_size,
 	.get_fmt = adsd3500_get_format,
 	.set_fmt = adsd3500_set_format,
+	.enum_frame_interval = camera_common_enum_frameintervals,
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 10, 0)
 	.get_mbus_config	= camera_common_get_mbus_config,
 #endif
