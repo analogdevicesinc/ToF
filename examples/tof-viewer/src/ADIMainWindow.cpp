@@ -1342,30 +1342,6 @@ void ADIMainWindow::prepareCamera(std::string mode) {
     cameraWorkerDone = true;
 }
 
-bool ADIMainWindow::waitForCameraReady() {
-    aditof::Status status = aditof::Status::OK;
-    aditof::Frame temp_frame;
-
-    aditof::FrameDetails frameDetails;
-    // If the frames received are for previous MP mode, discard it and request after 2s( this value is app dependent)
-    // Once got the proper frame, stop requesting
-    while (1) {
-        status = getActiveCamera()->requestFrame(&temp_frame);
-
-        if (status == aditof::Status::BUSY) {
-            LOG(INFO) << "Mode is changing. Waiting for new valid frames !";
-        } else if (status != aditof::Status::OK) {
-            LOG(ERROR) << "Could not request frame!";
-            return false;
-        } else {
-            LOG(INFO) << "succesfully requested frame!";
-            return true;
-        }
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-}
-
 void ADIMainWindow::InitCCDCamera() {
     std::string version = aditof::getApiVersion();
     my_log.AddLog("Preparing camera. Please wait...\n");
@@ -1406,10 +1382,6 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect) {
             captureSeparateEnabled = false;
             modeSelectChanged = modeSelect;
 
-            if (!waitForCameraReady()) {
-                stopPlayCCD();
-                return;
-            }
         } else if (viewSelectionChanged != viewSelect) {
             viewSelectionChanged = viewSelect;
             openGLCleanUp();
