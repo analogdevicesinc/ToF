@@ -33,10 +33,10 @@
 #include "aditof/frame.h"
 #include "aditof/frame_operations.h"
 #include "aditof_internal.h"
-#include "crc.h"
 #include "cJSON/cJSON.c"
 #include "cJSON/cJSON.h"
 #include "calibration_itof.h"
+#include "crc.h"
 #include "module_memory.h"
 #include "tofi/floatTolin.h"
 #include "tofi/tofi_config.h"
@@ -1405,8 +1405,9 @@ aditof::Status CameraItof::readAdsd3500CCB() {
 
     LOG(INFO) << "Succesfully read ccb from adsd3500. Checking crc...";
 
-    uint32_t computedCrc = crcFast(ccbContent, ccbFileSize - 4, true) ^ 0xFFFFFFFF;
-    
+    uint32_t computedCrc =
+        crcFast(ccbContent, ccbFileSize - 4, true) ^ 0xFFFFFFFF;
+
     if (crcOfCCB != ~computedCrc) {
         LOG(ERROR) << "Invalid crc for ccb read from memory!";
         return Status::GENERIC_ERROR;
