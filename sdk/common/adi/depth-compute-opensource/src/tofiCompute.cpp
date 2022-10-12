@@ -13,6 +13,12 @@
 
 #define GEN_XYZ_ITERATIONS 20
 
+typedef struct {
+    int n_depth;
+    int n_ab;
+    int n_conf;
+} PrivateData;
+
 uint32_t GenerateXYZTables(float **pp_x_table, float **pp_y_table,
                            float **pp_z_table, CameraIntrinsics *p_intr_data,
                            uint32_t n_sensor_rows, uint32_t n_sensor_cols,
@@ -166,6 +172,15 @@ uint32_t ComputeXYZ(const uint16_t *p_depth, XYZTable *p_xyz_data,
 TofiComputeContext *InitTofiCompute(const void *p_tofi_cal_config,
                                     uint32_t *p_status) {
     TofiComputeContext *Obj = new TofiComputeContext;
+    PrivateData *privDataObj = new PrivateData;
+
+    // Extract the number of bits for: Depth, AB, Confidence
+    TofiXYZDealiasData *p = (TofiXYZDealiasData *)p_tofi_cal_config;
+    uint16_t bits = p->Freq[0];
+    privDataObj->n_depth = bits & 0x001F;
+    privDataObj->n_ab = (bits & 0x03E0) >> 5;
+    privDataObj->n_conf = (bits & 0x3C00) >> 10;
+
     Obj->n_cols = 0;
     Obj->n_rows = 0;
     Obj->p_ab_frame = 0;
@@ -173,7 +188,7 @@ TofiComputeContext *InitTofiCompute(const void *p_tofi_cal_config,
     Obj->p_conf_frame = 0;
     Obj->p_depth16_frame = 0;
     Obj->p_depth_frame = 0;
-    Obj->p_tofi_processor_config = 0;
+    Obj->p_tofi_processor_config = (void *)privDataObj;
     Obj->p_xyz_frame = 0;
     return Obj;
 };
@@ -231,8 +246,16 @@ int TofiCompute(const uint16_t *const input_frame,
     float *p_y_table = nullptr;
     float *p_z_table = nullptr;
 
-    status = DeInterleaveDepth((uint8_t *)input_frame, 16, 8, 16,
-                               n_cols * n_rows * 2, n_cols, n_rows,
+    PrivateData *p =
+        (PrivateData *)p_tofi_compute_context->p_tofi_processor_config;
+    int n_depth = p->n_depth;
+    int n_ab = p->n_ab;
+    int n_conf = p->n_conf;
+    int n_sum_bits = n_depth + n_conf + n_ab;
+    int n_bytes = n_sum_bits / 8;
+
+    status = DeInterleaveDepth((uint8_t *)input_frame, n_depth, n_conf, n_ab,
+                               n_bytes, n_cols, n_rows,
                                p_tofi_compute_context->p_depth_frame,
                                (uint16_t *)p_tofi_compute_context->p_conf_frame,
                                p_tofi_compute_context->p_ab_frame);
@@ -280,5 +303,8 @@ int TofiCompute(const uint16_t *const input_frame,
 };
 
 void FreeTofiCompute(TofiComputeContext *p_tofi_compute_context) {
+    PrivateData *p =
+        (PrivateData *)p_tofi_compute_context->p_tofi_processor_config;
+    delete p;
     delete p_tofi_compute_context;
 };
