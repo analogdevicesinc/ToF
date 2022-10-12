@@ -486,13 +486,6 @@ class ADIMainWindow {
     void prepareCamera(std::string mode);
 
     /**
-		* @brief	Waits until current camera is not in the 
-		*			BUSY status, and changes to OK. If an error
-		*			is detected, will return false, else true.
-		*/
-    bool waitForCameraReady();
-
-    /**
 		* @brief Displays the Information Window
 		*/
     void displayInfoWindow(ImGuiWindowFlags overlayFlags);
