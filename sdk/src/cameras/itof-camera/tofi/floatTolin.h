@@ -7,13 +7,13 @@ static int16_t lookup[CNT] = {0};
 
 static int16_t getRange(uint16_t idx) {
 
-	bool neg = false;
+    bool neg = false;
     if (idx > (CNT / 2)) {
-            idx = idx - (CNT / 2);
+        idx = idx - (CNT / 2);
         neg = true;
     }
 
-	int16_t value = 0;
+    int16_t value = 0;
     if (idx < 256)
         value = idx;
     else if (idx < 384)
@@ -30,25 +30,21 @@ static int16_t getRange(uint16_t idx) {
         value = ((idx - 896) << 6) + 8192;
     else if (idx == 1024)
         value = 32767;
-     
-	if (neg == true)
+
+    if (neg == true)
         value = -value;
 
-	return value;
+    return value;
 }
 
-void FloatToLinGenerateTable() { 
-	for (uint16_t idx = 0; idx < CNT; idx++) {
-		lookup[idx] = getRange(idx);
-	}
+void FloatToLinGenerateTable() {
+    for (uint16_t idx = 0; idx < CNT; idx++) {
+        lookup[idx] = getRange(idx);
+    }
 }
 
 int16_t Convert11bitFloat2LinearVal(uint16_t input) {
     return ((input < 2048) ? lookup[input] : 0);
 }
 
-
-
-
-
-#endif   //FLOAT_TO_LIN_H
+#endif //FLOAT_TO_LIN_H
