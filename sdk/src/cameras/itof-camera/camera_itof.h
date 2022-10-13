@@ -405,6 +405,7 @@ class CameraItof : public aditof::Camera {
     std::vector<aditof::DepthSensorFrameType> m_availableSensorFrameTypes;
     std::vector<std::pair<std::string, int32_t>> m_sensor_settings;
     int m_cameraFps;
+    int m_fsyncMode;
 
     //pair between firmware version and git hash
     std::pair<std::string, std::string> m_adsd3500FwGitHash;
