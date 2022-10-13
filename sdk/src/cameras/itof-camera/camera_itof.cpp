@@ -60,7 +60,7 @@ CameraItof::CameraItof(
       m_eepromInitialized(false), m_modechange_framedrop_count(0),
       m_xyzEnabled(false), m_xyzSetViaControl(false),
       m_loadedConfigData(false), m_tempFiles{}, m_adsd3500Enabled(false),
-      m_cameraFps(0) {
+      m_cameraFps(0), m_fsyncMode(1) {
 
     FloatToLinGenerateTable();
 
@@ -321,6 +321,14 @@ aditof::Status CameraItof::initialize() {
             LOG(ERROR) << "Failed to set fps at: " << m_cameraFps << "!";
         } else {
             LOG(INFO) << "Camera FPS set from Json file at: " << m_cameraFps;
+        }
+    }
+
+    if (m_adsd3500Enabled) {
+        status = adsd3500_set_toggle_mode(m_fsyncMode);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to set fsync mode";
+            return status;
         }
     }
 
@@ -1627,6 +1635,14 @@ aditof::Status CameraItof::parseJsonFileContent() {
             cJSON_GetObjectItemCaseSensitive(config_json, "FPS");
         if (cJSON_IsString(json_fps) && (json_fps->valuestring != NULL)) {
             m_cameraFps = atoi(json_fps->valuestring);
+        }
+
+        // Get fsync mode from config
+        const cJSON *json_fsync_mode =
+            cJSON_GetObjectItemCaseSensitive(config_json, "FSYNC_MODE");
+        if (cJSON_IsString(json_fsync_mode) &&
+            (json_fsync_mode->valuestring != NULL)) {
+            m_fsyncMode = atoi(json_fsync_mode->valuestring);
         }
 
     } else if (!config.empty()) {
