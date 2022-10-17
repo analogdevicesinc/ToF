@@ -27,52 +27,48 @@ sudo cmake --build . --target install
  - **Build the aditof_roscpp package**
   ```console
   sudo cmake --build . --target aditof_ros_package
-  ```
+```
+
+
 
 
 ## Usage
 ### Starting camera node
-* For <b>USB</b> type camera connections with RQT dynamic reconfigure GUI use the following commands:
-    ```console
-    cd catkin_ws
-    source devel/setup.bash
-    roslaunch aditof_roscpp camera_node_gui.launch config_file:="<path>"
-    ```
-    
-The path should point towards the appropriate config file for the cameras. 
-* For <b>Ethernet\Wi-Fi</b> connections, you should specify the camera's IP address, using the ip parameter, as shown below:
 
-    ```console
+Before starting the camera node please run the following code-snippet: 
+```console
     cd catkin_ws
     source devel/setup.bash
-    roslaunch aditof_roscpp camera_node_gui.launch ip:="124.0.0.0" config_file:="<path>"
-    ```
+```
+
+
+|                                 |          |   |
+|---------------------------------|----------|---|
+| With RQT Dynamic reconfigure    | USB      |`roslaunch aditof_roscpp camera_node_gui.launch config_file:="<path>"`   |
+|                                 | Ethernet |`roslaunch aditof_roscpp camera_node_gui.launch ip:="10.42.0.1" config_file:="<path>"`   |
+| Without RQT Dynamic reconfigure | USB      |`roslaunch aditof_roscpp camera_node.launch config_file:="<path>" mode:="1" use_depthCompute:="false"`   |
+|                                 | Ethernet |`roslaunch aditof_roscpp camera_node.launch ip:="10.42.0.1" config_file:="<path>  mode:="1" use_depthCompute:="false"`   |
+
+
+### Parameters:
+ [config_file:"<<b>path></b>"]
+* Crosby with Pulsatrix: "```config/config_walden_3500_nxp.json```"
+* Crosby: "```config/config_crosby_nxp.json```"
+* Walden: "```config/config_walden_nxp.json```"
+
+ [use_depthCompute] 
+ - `true` for enabling Depth Compute libraries
+ - `false` for disabling Depth Compute libraries 
+
+ [mode]:
+* `1` -> QMP mode of the camera
+* `2` -> MP mode of the camera
+
+###  Dynamic reconfigure window:
+
     
  <p align="center"><img src="../../doc/img/ros_dynamic_reconfigure.png" /></p>
  
-### Without RQT Reconfigure
-* For <b>USB</b> type camera connections witouth RQT dynamic reconfigure GUI use the following commands:
-    ```console
-    cd catkin_ws
-    source devel/setup.bash
-    roslaunch aditof_roscpp camera_node.launch config_file:="<path>" mode:="1" use_depthCompute:="false"
-    ```
-The path should point towards the appropriate config file for the cameras, mode should be selected as follows:
-  - mode: pcm = 0
-  - mode: qmp = 1 
-  - mode: mp = 2 </br>
-The use of depthCompute libraries can be modified by setting the ```use_depthCompute``` variable to ```true```/```false```
-* For <b>Ethernet\Wi-Fi</b> connections, you should specify the camera's IP address, using the ip parameter, as shown below:
-    ```console
-        cd catkin_ws
-    source devel/setup.bash
-    roslaunch aditof_roscpp camera_node.launch ip:="124.0.0.0" config_file:="<path>  mode:="1" use_depthCompute:="false"
-    ```
-The path should point towards the appropriate config file for the cameras, mode should be selected as follows:
-  - mode: pcm = 0
-  - mode: qmp = 1 
-  - mode: mp = 2 </br>
-The use of depthCompute libraries can be modified by setting the ```use_depthCompute``` variable to ```true```/```false```
 
 ### Examples
   - Visualize point cloud in rviz
@@ -82,18 +78,7 @@ The use of depthCompute libraries can be modified by setting the ```use_depthCom
     roslaunch aditof_roscpp rviz_publisher.launch
     ```
 
- ### ***Note:***
- *In case you wish to launch nodes using the rosrun command instead of roslaunch, you should run each node specified in the launchfile in a different terminal. For example, this line*
-```console
-roslaunch aditof_roscpp camera_node.launch ip:="127.0.0.1"
-```
-*will be replaced with these lines*
 
-```console
-roscore
-rosrun aditof_roscpp aditof_camera_node 127.0.0.1
-rosrun rqt_reconfigure rqt_reconfigure
-```
 ## Published Topics
 The aditof_camera_node publishes messages defined by the [sensor_msgs](http://wiki.ros.org/sensor_msgs) package on the following topics
 - /aditof_roscpp/aditof_camera_info
