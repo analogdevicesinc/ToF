@@ -145,6 +145,7 @@ if __name__ == "__main__":
             
         depth_map = np.array(frame.getData("depth"), dtype="uint16", copy=False)
         ir_map = np.array(frame.getData("ir"), dtype="uint16", copy=False)
+        xyz_map = np.array(frame.getData("xyz"), dtype="int16", copy=False)
 
         # Create the IR image
         ir_map = ir_map[0: int(ir_map.shape[0]), :]
@@ -157,32 +158,19 @@ if __name__ == "__main__":
         vis_ir.poll_events()
 
         # Create the Depth image
-        new_shape = (int(depth_map.shape[0]), depth_map.shape[1])
-        depth16bits_map = depth_map = np.resize(depth_map, new_shape)
+        xyz_points = np.resize(xyz_map, (int(depth_map.shape[0]) * depth_map.shape[1], 3))
         depth_map = depth_map[0: int(depth_map.shape[0]), :]
         depth_map = distance_scale * depth_map
         depth_map = np.uint8(depth_map)
-        depth_map = cv.applyColorMap(depth_map, cv.COLORMAP_RAINBOW)
+        depth_map = cv.applyColorMap(depth_map, cv.COLORMAP_WINTER)
 
         # Show depth image
         vis_depth.add_geometry(transform_image(depth_map))
         vis_depth.poll_events()
 
-        # Create color image
-        img_color = cv.addWeighted(ir_map, 0.4, depth_map, 0.6, 0)
-
-        color_image = o3d.geometry.Image(img_color)
-        depth16bits_image = o3d.geometry.Image(depth16bits_map)
-
-        rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(color_image, depth16bits_image, 1000.0, 3.0, False)
-        pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd_image, cameraIntrinsics)
-
-        # Flip it, otherwise the point cloud will be upside down
-        pcd.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
-
         # Show the point cloud
-        point_cloud.points = pcd.points
-        point_cloud.colors = pcd.colors
+        point_cloud.points = o3d.utility.Vector3dVector(xyz_points)
+        point_cloud.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
         if first_time_render_pc:
             vis.add_geometry(point_cloud)
             first_time_render_pc = 0
