@@ -337,6 +337,8 @@ aditof::Status Adsd3100Sensor::setModeByIndex(uint8_t modeIndex){
     memset(&ctrl, 0, sizeof(ctrl));
     
     ctrl.id = CTRL_SET_MODE;
+    if(modeIndex == 2)
+        modeIndex = 7;
     ctrl.value = modeIndex;
 
     if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
