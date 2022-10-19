@@ -1,7 +1,7 @@
-From ffb2cb20802e6609cac17fe87d7e1864bdd0d12d Mon Sep 17 00:00:00 2001
+From fbe2c9fb8b119a43d9fed40b0569b5ed6fbe3d0a Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Wed, 17 Aug 2022 10:04:07 +0300
-Subject: [PATCH 39/41] drivers: media: adsd3100: Revert adsd3100 to YUYV
+Subject: [PATCH 39/44] drivers: media: adsd3100: Revert adsd3100 to YUYV
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
@@ -87,5 +87,5 @@ index e95ae0ab7525..667eaa473638 100644
  		.name		= "ADI_RAW16 (CUSTOM)",
  		.fourcc		= V4L2_PIX_FMT_SBGGR16,
 -- 
-2.37.2
+2.17.1
 

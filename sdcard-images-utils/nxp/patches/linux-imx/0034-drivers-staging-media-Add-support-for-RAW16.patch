@@ -1,7 +1,7 @@
-From 9273701d1e767805457e0d86afc8d8078fb4c04d Mon Sep 17 00:00:00 2001
+From c98dd0b9175a6eecbc9db5c7c74a97c025a3e30a Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Thu, 19 May 2022 11:54:21 +0300
-Subject: [PATCH 34/41] drivers/staging/media: Add support for RAW16
+Subject: [PATCH 34/44] drivers/staging/media: Add support for RAW16
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
@@ -120,5 +120,5 @@ index 132768c03f41..e95ae0ab7525 100644
  		index = 0;
  	return &mxc_isi_src_formats[index];
 -- 
-2.37.2
+2.17.1
 
