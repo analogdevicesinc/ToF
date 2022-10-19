@@ -130,7 +130,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
 #ifndef ADSD3030
     const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
         {
-            "qmp",
+            "lrqmp",
             {{"raw", 2560, 512},
              {"ir", 512, 512},
              {"xyz", 512, 512},
@@ -141,7 +141,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
             2560,
             512,
         },
-        { "mp",
+        { "lrmp",
           {{"raw", 1024, 4096},
            {"ir", 1024, 1024},
            {"xyz", 1024, 1024},

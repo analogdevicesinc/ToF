@@ -13,7 +13,8 @@
 #include <string>
 #include <vector>
 
-const std::vector<std::string> g_availableModes = {"pcm", "qmp", "mp"};
+const std::vector<std::string> g_availableModes = {"pcmmp", "srqmp", "lrqmp",
+                                                   "srmp", "lrmp"};
 
 aditof::Status convertCameraMode(const std::string &modes,
                                  uint8_t &convertedMode);
