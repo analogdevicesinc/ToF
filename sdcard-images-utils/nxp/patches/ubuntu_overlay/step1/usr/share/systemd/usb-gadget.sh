@@ -140,6 +140,7 @@ create_uvc() {
 			create_frame $FUNCTION 4096 2304 uncompressed u 2
 			create_frame $FUNCTION 4096 640 uncompressed u 2
 			create_frame $FUNCTION 4096 256 uncompressed u 2
+			create_frame $FUNCTION 4096 192 uncompressed u 2
 			create_frame $FUNCTION 3840 216 uncompressed u 2
 			;;
 
