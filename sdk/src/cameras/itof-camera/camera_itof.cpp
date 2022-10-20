@@ -64,7 +64,7 @@ CameraItof::CameraItof(
 
     FloatToLinGenerateTable();
 
-    m_details.mode = "qmp";
+    m_details.mode = "lrqmp";
     m_details.cameraId = "";
     m_details.uBootVersion = ubootVersion;
     m_details.kernelVersion = kernelVersion;
