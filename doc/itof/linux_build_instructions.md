@@ -1,19 +1,47 @@
 # Linux Build Instructions
 
+Please note, the following has been tested on Unbuntu 20.04 LTS
+
+Before starting it is useful to execute the following commands:
+```console
+sudo apt update
+sudo apt upgrade
+```
+
+# Depth Compute Pre-requisites
+
+
+
+## Install OpenCL Run-times
+
+```console
+sudo apt install clinfo
+sudo apt install mesa-utils
+sudo apt install -y gpg-agent wget
+wget -qO - https://repositories.intel.com/graphics/intel-graphics.key |   sudo apt-key add -
+sudo apt-add-repository   'deb [arch=amd64] https://repositories.intel.com/graphics/ubuntu focal main'
+sudo apt update
+sudo apt install   intel-opencl-icd
+```
+
+## Obtain Depth Compute Libraries
+
 
 ## Building the SDK only
 
 ### Pre-requisites
 * CMake
+* G++
+* Git
 * OpenGL
 * Glog v0.6.0
 * Libwebsockets v3.1
 * Protocol Buffers v3.9.0
 
 ### Installing the dependencies
-* CMake:
+* CMake, G++, Git:
 ```console
-sudo apt install cmake
+sudo apt install cmake g++ git
 ```
 
 * OpenGL:
@@ -50,8 +78,11 @@ sudo cmake --build . --target install
 
 
 ### Download and build SDK only
+
+Note, this uses tag **v3.2.0**.
+
 ```console
-git clone https://github.com/analogdevicesinc/ToF
+git clone --branch v3.2.0 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
 cmake -DWITH_EXAMPLES=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
@@ -71,7 +102,11 @@ sudo apt install libopencv-dev
 ```
 
 ### Build SDK with examples
+
+Note, this uses tag **v3.2.0**.
+
 ```console
+git clone --branch v3.2.0 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
 cmake -DWITH_EXAMPLES=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
