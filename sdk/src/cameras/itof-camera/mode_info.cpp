@@ -140,10 +140,13 @@ aditof::Status ModeInfo::setModeVersion(int version) {
 #ifndef ADSD3030
     if (version == 1) {
         g_modeInfoData = g_newModesAdsd3100;
+        LOG(INFO) << "Using new modes table for adsd3100.";
     } else if (version == 2) {
         g_modeInfoData = g_newModesAdsd3500;
+        LOG(INFO) << "Using new modes table for adsd3500.";
     } else {
         g_modeInfoData = g_oldModes;
+        LOG(INFO) << "Using old modes table.";
     }
 #endif
 

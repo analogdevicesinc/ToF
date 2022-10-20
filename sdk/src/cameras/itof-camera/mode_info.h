@@ -9,6 +9,7 @@
 
 #include <aditof/status_definitions.h>
 #include <cstdint>
+#include <glog/logging.h>
 #include <ostream>
 #include <string>
 #include <vector>
