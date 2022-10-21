@@ -177,8 +177,18 @@ aditof::Status CameraItof::initialize() {
         if (tempDealiasStruct.n_rows != width &&
             tempDealiasStruct.n_cols != height) {
             ModeInfo::getInstance()->setModeVersion(0);
+            status = m_depthSensor->setControl("modeInfoVersion", "0");
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to set target mode info for adsd3500!";
+                return status;
+            }
         } else {
             ModeInfo::getInstance()->setModeVersion(2);
+            status = m_depthSensor->setControl("modeInfoVersion", "2");
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to set target mode info for adsd3500!";
+                return status;
+            }
         }
 
         for (auto availableFrameTypes : m_availableSensorFrameTypes) {
@@ -303,8 +313,18 @@ aditof::Status CameraItof::initialize() {
         if (tempDealiasStruct[1].n_rows != width &&
             tempDealiasStruct[1].n_cols != height) {
             ModeInfo::getInstance()->setModeVersion(0);
+            status = m_depthSensor->setControl("modeInfoVersion", "0");
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to set target mode info for adsd3100!";
+                return status;
+            }
         } else {
             ModeInfo::getInstance()->setModeVersion(1);
+            status = m_depthSensor->setControl("modeInfoVersion", "1");
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to set target mode info for adsd3100!";
+                return status;
+            }
         }
     }
 
