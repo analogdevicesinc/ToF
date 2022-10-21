@@ -104,6 +104,7 @@ Adsd3100Sensor::Adsd3100Sensor(const std::string &driverPath,
     m_sensorName = "adsd3100";
 
     m_controls.emplace("fps", "0");
+    m_controls.emplace("modeInfoVersion", "0");
 }
 
 Adsd3100Sensor::~Adsd3100Sensor() {
@@ -836,6 +837,11 @@ aditof::Status Adsd3100Sensor::setControl(const std::string &control,
     if (m_controls.count(control) == 0) {
         LOG(WARNING) << "Unsupported control";
         return Status::INVALID_ARGUMENT;
+    }
+
+    if (control == "modeInfoVersion") {
+        ModeInfo::getInstance()->setModeVersion(std::stoi(value));
+        return status;
     }
 
     struct VideoDev *dev = &m_implData->videoDevs[0];
