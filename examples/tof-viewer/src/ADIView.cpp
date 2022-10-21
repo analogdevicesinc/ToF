@@ -135,7 +135,7 @@ void ADIView::render() {
                     if (captureEnabled) {
                         // TODO: set camera mode here
                         int selectedMode = 0;
-                        m_ctrl->setMode("mp");
+                        m_ctrl->setMode("lrmp");
 
                         m_ctrl->StartCapture();
                         m_ctrl->requestFrame();
