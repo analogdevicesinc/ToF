@@ -61,19 +61,19 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
 
     const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
         {
-            "pcm",
+            "pcmmp",
             {{"ir", 4096, 256}, {"embedded_header", 1, 128}},
             4096,
             256, //TODO header size not counted here
         },
         {
-            "qmp",
+            "lrqmp",
             {{"ir", 4096, 256}, {"embedded_header", 1, 128}},
             4096,
             256,
         },
         {
-            "mp",
+            "lrmp",
             {{"ir", 4096, 256}, {"embedded_header", 1, 128}},
             4096,
             256,
