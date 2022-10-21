@@ -652,7 +652,8 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         m_tofi_compute_context->p_xyz_frame = (int16_t *)tempXyzFrame;
 
         if (m_adsd3500Enabled && m_abEnabled &&
-            m_details.frameType.type == "mp") {
+                (m_details.frameType.type == "lrmp") ||
+            (m_details.frameType.type == "srmp")) {
             uint16_t *mpAbFrame;
             frame->getData("ir", &mpAbFrame);
             memcpy(mpAbFrame,
