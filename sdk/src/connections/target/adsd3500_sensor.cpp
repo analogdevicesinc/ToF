@@ -116,6 +116,7 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     m_controls.emplace("phaseDepthBits", "0");
     m_controls.emplace("abBits", "0");
     m_controls.emplace("confidenceBits", "0");
+    m_controls.emplace("modeInfoVersion", "0");
 
     // Define the commands that correspond to the sensor controls
     m_implData->controlsCommands["abAveraging"] = 0x9819e5;
@@ -667,6 +668,11 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
     if (m_controls.count(control) == 0) {
         LOG(WARNING) << "Unsupported control";
         return Status::INVALID_ARGUMENT;
+    }
+
+    if (control == "modeInfoVersion") {
+        ModeInfo::getInstance()->setModeVersion(std::stoi(value));
+        return status;
     }
 
     struct VideoDev *dev = &m_implData->videoDevs[0];
