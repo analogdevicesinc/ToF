@@ -285,7 +285,7 @@ int main(int argc, char *argv[]) {
     Status status = Status::OK;
 
     std::map<int, std::string> modeIndexMap = {
-        {1, "lt_bin"}, {3, "pcm"}, {5, "vga"}, {7, "qmp"}, {10, "mp"}};
+        {1, "lt_bin"}, {3, "pcmmp"}, {5, "vga"}, {7, "lrqmp"}, {10, "lrmp"}};
 
     std::map<std::string, docopt::value> args = docopt::docopt_private(
         kUsagePublic, kUsageInternal, {argv + 1, argv + argc}, true);

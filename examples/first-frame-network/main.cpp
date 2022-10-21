@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
         std::cout << "no frame type available!";
         return 0;
     }
-    status = camera->setFrameType("qmp");
+    status = camera->setFrameType("lrqmp");
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 0;
