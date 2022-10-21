@@ -21,6 +21,8 @@ print_help() {
         echo "        Specify the directory where the dependencies will be installed."
         echo "-j|--jobs"
         echo "        Specify the number of jobs to run in parallel when building dependencies and the SDK"
+        echo "-o|--opt"
+        echo "        Specify a list of CMAKE arguments to be added to the default ones"
         echo ""
 }
 
@@ -73,6 +75,11 @@ setup() {
                 ;;
                 -j|--jobs)
                 NUM_JOBS=$2
+                shift # next argument
+                shift # next value
+                ;;
+                -o|--opt)
+                CMAKE_OPTIONS=$2
                 shift # next argument
                 shift # next value
                 ;;
@@ -129,7 +136,7 @@ setup() {
         build_and_install_protobuf ${deps_dir}/protobuf ${deps_install_dir}/protobuf
         build_and_install_websockets ${deps_dir}/libwebsockets ${deps_install_dir}/websockets
 
-        CMAKE_OPTIONS="-DUSE_ITOF=1 -DNXP=1"
+        CMAKE_OPTIONS="-DUSE_ITOF=1 -DNXP=1 ${CMAKE_OPTIONS}"
         PREFIX_PATH="${deps_install_dir}/glog;${deps_install_dir}/protobuf;${deps_install_dir}/websockets;"
 
         pushd "${build_dir}"
