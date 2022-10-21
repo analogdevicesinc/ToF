@@ -87,7 +87,7 @@ if __name__ == "__main__":
     if not status:
         print("system.getAvailableFrameTypes() failed with status: ", status)
 
-    status = cameras[0].setFrameType("qmp")
+    status = cameras[0].setFrameType("lrqmp")
     if not status:
         print("cameras[0].setFrameType() failed with status:", status)
 

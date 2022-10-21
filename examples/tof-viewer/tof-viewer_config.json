@@ -1,8 +1,8 @@
 {
-"VAUX_POWER_VOLTAGE": "18",
-"skip_network_cameras": "off",
-"camera_ip": "10.42.0.1",
-"DEPTH_INI": "./config/RawToDepthAdsd3500_lrmp.ini;./config/RawToDepthAdsd3500_lrqmp.ini;./config/RawToDepthAdsd3500_srmp.ini;./config/RawToDepthAdsd3500_srqmp.ini",
-"FPS": "10",
-"FSYNC_MODE:": "1"
+    "VAUX_POWER_VOLTAGE": "18",
+    "skip_network_cameras": "off",
+    "camera_ip": "10.42.0.1",
+    "DEPTH_INI": "./config/RawToDepthAdsd3500_lrmp.ini;./config/RawToDepthAdsd3500_lrqmp.ini;./config/RawToDepthAdsd3500_srmp.ini;./config/RawToDepthAdsd3500_srqmp.ini",
+    "FPS": "10",
+    "FSYNC_MODE:": "1"
 }
