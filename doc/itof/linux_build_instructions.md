@@ -85,7 +85,7 @@ Note, this uses tag **v3.2.0**.
 git clone --branch v3.2.0 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
-cmake -DWITH_EXAMPLES=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
+cmake -DWITH_EXAMPLES=off -DWITH_NETWORK=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
 make
 ```
 
@@ -109,7 +109,7 @@ Note, this uses tag **v3.2.0**.
 git clone --branch v3.2.0 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
-cmake -DWITH_EXAMPLES=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
+cmake -DWITH_EXAMPLES=on -DWITH_NETWORK=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
 make
 ```
 
