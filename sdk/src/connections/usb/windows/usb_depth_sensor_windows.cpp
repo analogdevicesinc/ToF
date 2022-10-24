@@ -538,6 +538,42 @@ aditof::Status UsbDepthSensor::start() {
     using namespace aditof;
     Status status = Status::OK;
 
+     // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::START);
+
+    // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbWindowsUtils::uvcExUnitSendRequest(
+        m_implData->handle.pVideoInputFilter, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to write registers failed";
+        return status;
+    }
+
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbWindowsUtils::uvcExUnitGetResponse(
+        m_implData->handle.pVideoInputFilter, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR)
+            << "Failed to get response of the request to write registers";
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Read registers operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
+
     if (nullptr == m_implData->handle.pControl) {
         LOG(WARNING) << "USB interface not active";
         return Status::UNAVAILABLE;
@@ -609,14 +645,14 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     }
     VIDEOINFOHEADER *pVih = reinterpret_cast<VIDEOINFOHEADER *>(
         m_implData->handle.pAmMediaType->pbFormat);
-    HEADER(pVih)->biWidth = type.width;
-    HEADER(pVih)->biHeight = type.height;
-    hr = m_implData->handle.streamConf->SetFormat(
-        m_implData->handle.pAmMediaType);
-    if (FAILED(hr)) {
-        LOG(WARNING) << "Could not set requested resolution (Frame Index)\n";
-        return Status::GENERIC_ERROR;
-    }
+    //HEADER(pVih)->biWidth = type.width * 2;
+    //HEADER(pVih)->biHeight = type.height;
+    //hr = m_implData->handle.streamConf->SetFormat(
+    //    m_implData->handle.pAmMediaType);
+    //if (FAILED(hr)) {
+    //    LOG(WARNING) << "Could not set requested resolution (Frame Index)\n";
+    //    return Status::GENERIC_ERROR;
+    //}
     return status;
 }
 
@@ -687,8 +723,8 @@ aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
 
     VIDEOINFOHEADER *pVi = reinterpret_cast<VIDEOINFOHEADER *>(
         m_implData->handle.pAmMediaType->pbFormat);
-    int currentWidth = HEADER(pVi)->biWidth;
-    int currentHeight = HEADER(pVi)->biHeight;
+    int currentWidth = HEADER(pVi)->biWidth * 2;
+    int currentHeight = HEADER(pVi)->biHeight * 2;
 
     while (retryCount < 1000) {
         if (m_implData->handle.pCB->newFrame == 1) {
@@ -1140,7 +1176,8 @@ aditof::Status UsbDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd,
         LOG(ERROR) << "Read registers operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
     }
-
+    LOG(ERROR) << "MESSAGE LENGTH: <<<<< "
+               << responseMsg.bytes_payload(0).length();
     // If request and response went well, extract data from response
     memcpy(readback_data, responseMsg.bytes_payload(0).c_str(),
            responseMsg.bytes_payload(0).length());
@@ -1325,9 +1362,11 @@ aditof::Status UsbDepthSensor::initTargetDepthCompute(uint8_t *iniFile,
     requestMsg.add_func_bytes_param(iniFile, iniFileLength);
     requestMsg.add_func_bytes_param(calData, calDataLength);
 
+
     // Send request
     std::string requestStr;
     requestMsg.SerializeToString(&requestStr);
+
     status = UsbWindowsUtils::uvcExUnitSendRequest(
         m_implData->handle.pVideoInputFilter, requestStr);
     if (status != aditof::Status::OK) {
