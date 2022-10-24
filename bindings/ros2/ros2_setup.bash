@@ -7,13 +7,15 @@ if [ $DISTRO_CODENAME = "bionic" ]
 then
     ROS_DISTRO="crystal"
     #     echo crystal
-    
 elif [ $DISTRO_CODENAME = "focal" ]
 then
     ROS_DISTRO="foxy"
     #     echo foxy
-    
 elif [ $DISTRO_CODENAME = "buster" ]
+then
+    ROS_DISTRO="humble"
+    #     echo humble
+elif [ $DISTRO_CODENAME = "jammy" ]
 then
     ROS_DISTRO="humble"
     #     echo humble
@@ -21,7 +23,7 @@ fi
 
 mkdir -p ${COLCON_WS}/src
 cd ${COLCON_WS}/src
-ln -sf ${ROS2_SRC_DIR}/tof_ros2cpp/ .
+git clone https://github.com/rbudai98/tof_ros2cpp.git
 
 cd ${COLCON_WS}
 source /opt/ros/$ROS_DISTRO/setup.sh
