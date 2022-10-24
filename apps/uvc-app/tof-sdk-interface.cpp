@@ -255,6 +255,13 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
         break;
     }
 
+    case uvc_payload::FunctionName::START: {
+        aditof::Status status = camDepthSensor->start();
+        response.set_status(static_cast<::uvc_payload::Status>(status));
+
+        break;
+    }
+
     case uvc_payload::FunctionName::ADSD3500_READ_CMD: {
         uint16_t cmd = static_cast<uint32_t>(request.func_int32_param(0));
         uint16_t *data = new uint16_t;
