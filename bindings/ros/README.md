@@ -1,13 +1,15 @@
 
-# ROS Wrapper for the ADI ToF library
+# ROS Wrapper for Time of Flight SDK of Analog Devices
 
-## Overview
-This ROS package facilitates depth and IR data acquisition and processing for the Analog Devices depth cameras.
+## ROS Wrapper exists in an external repository for general package implementations: [External repository](https://github.com/rbudai98/tof_roscpp)
 
-## Installation
+# 1. Install ROS
 
-- **Install the recommended [ROS distribution](http://wiki.ros.org/Distributions) for your operating system**
+Install the recommended [ROS distribution](http://wiki.ros.org/Distributions) for your operating system**
   - [ROS Install page](http://wiki.ros.org/ROS/Installation)
+
+# 2. ToF dependency
+
 - **Make sure you have these ROS packages installed before building and running the examples**
   - [rviz](http://wiki.ros.org/rviz)\
     Run the command below for each package, replacing ROSDISTRO with the name of the ROS distribution you are using and PACKAGE with the name of the needed package.
@@ -29,50 +31,50 @@ sudo cmake --build . --target install
   sudo cmake --build . --target aditof_ros_package
   ```
 
+# 3. Usage
 
-## Usage
-### Starting camera node
-* For <b>USB</b> type camera connections with RQT dynamic reconfigure GUI use the following commands:
-    ```console
-    cd catkin_ws
-    source devel/setup.bash
-    roslaunch aditof_roscpp camera_node_gui.launch config_file:="<path>"
-    ```
-    
-The path should point towards the appropriate config file for the cameras. 
-* For <b>Ethernet\Wi-Fi</b> connections, you should specify the camera's IP address, using the ip parameter, as shown below:
+In directory ```catkin_ws/src/``` clone the repository:
 
-    ```console
-    cd catkin_ws
-    source devel/setup.bash
-    roslaunch aditof_roscpp camera_node_gui.launch ip:="124.0.0.0" config_file:="<path>"
-    ```
+```console
+git clone https://github.com/rbudai98/tof_roscpp.git
+```
+
+After cloning the repository in the ``catkin_ws/ run the following command:
+ 
+```console
+catkin_make
+source devel/setup.bash
+```
+
+### Starting the camera node 
+
+|                                 |          |   |
+|---------------------------------|----------|---|
+| With RQT Dynamic reconfigure    | USB      |`roslaunch aditof_roscpp camera_node_gui.launch config_file:="<path>"`   |
+|                                 | Ethernet |`roslaunch aditof_roscpp camera_node_gui.launch ip:="10.42.0.1" config_file:="<path>"`   |
+| Without RQT Dynamic reconfigure | USB      |`roslaunch aditof_roscpp camera_node.launch config_file:="<path>" mode:="1" use_depthCompute:="false"`   |
+|                                 | Ethernet |`roslaunch aditof_roscpp camera_node.launch ip:="10.42.0.1" config_file:="<path>  mode:="1" use_depthCompute:="false"`   |
+
+
+### Parameters:
+ [config_file:"<<b>path></b>"]
+* Crosby with Pulsatrix: "```config/config_walden_3500_nxp.json```"
+* Crosby: "```config/config_crosby_nxp.json```"
+* Walden: "```config/config_walden_nxp.json```"
+
+ [use_depthCompute] 
+ - `true` for enabling Depth Compute libraries
+ - `false` for disabling Depth Compute libraries 
+
+ [mode]:
+* `1` -> QMP mode of the camera
+* `2` -> MP mode of the camera
+
+###  Dynamic reconfigure window:
+
     
  <p align="center"><img src="../../doc/img/ros_dynamic_reconfigure.png" /></p>
  
-### Without RQT Reconfigure
-* For <b>USB</b> type camera connections witouth RQT dynamic reconfigure GUI use the following commands:
-    ```console
-    cd catkin_ws
-    source devel/setup.bash
-    roslaunch aditof_roscpp camera_node.launch config_file:="<path>" mode:="1" use_depthCompute:="false"
-    ```
-The path should point towards the appropriate config file for the cameras, mode should be selected as follows:
-  - mode: pcm = 0
-  - mode: qmp = 1 
-  - mode: mp = 2 </br>
-The use of depthCompute libraries can be modified by setting the ```use_depthCompute``` variable to ```true```/```false```
-* For <b>Ethernet\Wi-Fi</b> connections, you should specify the camera's IP address, using the ip parameter, as shown below:
-    ```console
-        cd catkin_ws
-    source devel/setup.bash
-    roslaunch aditof_roscpp camera_node.launch ip:="124.0.0.0" config_file:="<path>  mode:="1" use_depthCompute:="false"
-    ```
-The path should point towards the appropriate config file for the cameras, mode should be selected as follows:
-  - mode: pcm = 0
-  - mode: qmp = 1 
-  - mode: mp = 2 </br>
-The use of depthCompute libraries can be modified by setting the ```use_depthCompute``` variable to ```true```/```false```
 
 ### Examples
   - Visualize point cloud in rviz
@@ -82,25 +84,13 @@ The use of depthCompute libraries can be modified by setting the ```use_depthCom
     roslaunch aditof_roscpp rviz_publisher.launch
     ```
 
- ### ***Note:***
- *In case you wish to launch nodes using the rosrun command instead of roslaunch, you should run each node specified in the launchfile in a different terminal. For example, this line*
-```console
-roslaunch aditof_roscpp camera_node.launch ip:="127.0.0.1"
-```
-*will be replaced with these lines*
 
-```console
-roscore
-rosrun aditof_roscpp aditof_camera_node 127.0.0.1
-rosrun rqt_reconfigure rqt_reconfigure
-```
-## Published Topics
+### Published Topics
 The aditof_camera_node publishes messages defined by the [sensor_msgs](http://wiki.ros.org/sensor_msgs) package on the following topics
 - /aditof_roscpp/aditof_camera_info
 - /aditof_roscpp/aditof_depth
 - /aditof_roscpp/aditof_ir
 - /aditof_roscpp/aditof_pcloud
 
-## Update parameters at runtime using
+### Update parameters at runtime using
 Using the [dynamic_reconfigure](http://wiki.ros.org/dynamic_reconfigure) package, the aditof_ros_package offers the users the possibility to update the camera parameters
-
