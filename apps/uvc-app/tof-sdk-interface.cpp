@@ -251,6 +251,30 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
         break;
     }
 
+    case uvc_payload::FunctionName::ADSD3500_READ_CMD: {
+        break;
+    }
+
+    case uvc_payload::FunctionName::ADSD3500_WRITE_CMD: {
+        break;
+    }
+
+    case uvc_payload::FunctionName::ADSD3500_READ_PAYLOAD_CMD: {
+        break;
+    }
+
+    case uvc_payload::FunctionName::ADSD3500_READ_PAYLOAD: {
+        break;
+    }
+
+    case uvc_payload::FunctionName::ADSD3500_WRITE_PAYLOAD_CMD: {
+        break;
+    }
+
+    case uvc_payload::FunctionName::ADSD3500_WRITE_PAYLOAD: {
+        break;
+    }
+
     case uvc_payload::FunctionName::STORAGE_OPEN: {
 
         aditof::Status status = aditof::Status::OK;
