@@ -612,7 +612,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         }
     }
 
-    if (!frameDataLocation /*&& !header*/) {
+    if (!frameDataLocation) {
         LOG(WARNING) << "getframe failed to allocated valid frame";
         return status;
     }
