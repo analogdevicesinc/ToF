@@ -789,7 +789,7 @@ aditof::Status UsbDepthSensor::getName(std::string &name) const {
     name = m_sensorName;
     return aditof::Status::OK;
 }
-// ############################################################################
+
 
 aditof::Status UsbDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data) {
     using namespace aditof;
@@ -831,6 +831,9 @@ aditof::Status UsbDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data) {
                    << " operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
     }
+
+    // If request and response went well, extract data from response
+    memcpy(data, responseMsg.bytes_payload(0), sizeof(uint16_t));
 
     return Status::OK;
 }
@@ -920,6 +923,8 @@ aditof::Status UsbDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd,
                    << " operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
     }
+    // If request and response went well, extract data from response
+    memcpy(readback_data, responseMsg.bytes_payload(0), payload_len*sizeof(uint8_t));
 
     return Status::OK;
 }
@@ -963,6 +968,8 @@ aditof::Status UsbDepthSensor::adsd3500_read_payload(uint8_t *payload,
                    << " operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
     }
+    // If request and response went well, extract data from response
+    memcpy(payload, responseMsg.bytes_payload(0), payload_len*sizeof(uint8_t));
 
     return Status::OK;
 }
