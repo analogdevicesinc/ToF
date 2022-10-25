@@ -336,7 +336,6 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
         aditof::Status status = aditof::Status::OK;
         response.set_status(static_cast<::uvc_payload::Status>(status));
 
-        aditof::Status status = camDepthSensor->
         break;
     }
 
