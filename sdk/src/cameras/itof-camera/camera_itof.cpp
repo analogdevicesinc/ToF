@@ -595,6 +595,10 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     } else {
         frame->getData("raw", &frameDataLocation);
     }
+    if (!frameDataLocation) {
+        LOG(WARNING) << "getframe failed to allocated valid frame";
+        return status;
+    }
 
     status = m_depthSensor->getFrame(frameDataLocation);
     if (status != Status::OK) {
@@ -610,11 +614,6 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
             frameDataLocation[i] =
                 Convert11bitFloat2LinearVal(frameDataLocation[i]);
         }
-    }
-
-    if (!frameDataLocation) {
-        LOG(WARNING) << "getframe failed to allocated valid frame";
-        return status;
     }
 
     if ((m_controls["enableDepthCompute"] == "on") &&
