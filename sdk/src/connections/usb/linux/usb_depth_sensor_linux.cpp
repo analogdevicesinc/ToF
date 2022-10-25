@@ -805,17 +805,15 @@ aditof::Status UsbDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data) {
     requestMsg.SerializeToString(&requestStr);
     status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Request to get control: " << control << " failed";
+        LOG(ERROR) << "Request to read " << cmd << " adsd3500 command failed";
         return status;
     }
-
 
     // Read UVC gadget response
     std::string responseStr;
     status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Failed to get response of the request to set control: "
-                   << control;
+        LOG(ERROR) << "Failes to get respode to " << cmd << " adsd3500 command";
         return status;
     }
     usb_payload::ServerResponse responseMsg;
@@ -827,7 +825,7 @@ aditof::Status UsbDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data) {
     }
 
     if (responseMsg.status() != usb_payload::Status::OK) {
-        LOG(ERROR) << "Get control:" << control
+        LOG(ERROR) << "Adsd3500 command read:" << cmd
                    << " operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
     }
@@ -852,7 +850,7 @@ aditof::Status UsbDepthSensor::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
     requestMsg.SerializeToString(&requestStr);
     status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Request to get control: " << control << " failed";
+        LOG(ERROR) << "Request to write " << cmd << " adsd3500 command failed";
         return status;
     }
 
@@ -861,8 +859,7 @@ aditof::Status UsbDepthSensor::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
     std::string responseStr;
     status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Failed to get response of the request to set control: "
-                   << control;
+        LOG(ERROR) << "Failes to get respode to " << cmd << " adsd3500 command";
         return status;
     }
     usb_payload::ServerResponse responseMsg;
@@ -874,7 +871,7 @@ aditof::Status UsbDepthSensor::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
     }
 
     if (responseMsg.status() != usb_payload::Status::OK) {
-        LOG(ERROR) << "Get control:" << control
+        LOG(ERROR) << "Adsd3500 command write:" << cmd
                    << " operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
     }
@@ -898,7 +895,7 @@ aditof::Status UsbDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd,
     requestMsg.SerializeToString(&requestStr);
     status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Request to get control: " << control << " failed";
+        LOG(ERROR) << "Request to read " << cmd << " adsd3500 payload command failed";
         return status;
     }
 
@@ -906,8 +903,7 @@ aditof::Status UsbDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd,
     std::string responseStr;
     status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Failed to get response of the request to set control: "
-                   << control;
+        LOG(ERROR) << "Failes to get respode to " << cmd << " adsd3500 payload read command";
         return status;
     }
     usb_payload::ServerResponse responseMsg;
@@ -919,7 +915,7 @@ aditof::Status UsbDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd,
     }
 
     if (responseMsg.status() != usb_payload::Status::OK) {
-        LOG(ERROR) << "Get control:" << control
+        LOG(ERROR) << "Adsd3500 payload command read:" << cmd
                    << " operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
     }
@@ -943,7 +939,7 @@ aditof::Status UsbDepthSensor::adsd3500_read_payload(uint8_t *payload,
     requestMsg.SerializeToString(&requestStr);
     status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Request to get control: " << control << " failed";
+        LOG(ERROR) << "Request to read adsd3500 payload failed";
         return status;
     }
 
@@ -951,8 +947,7 @@ aditof::Status UsbDepthSensor::adsd3500_read_payload(uint8_t *payload,
     std::string responseStr;
     status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Failed to get response of the request to set control: "
-                   << control;
+        LOG(ERROR) << "Failes to get respode to adsd3500 payload";
         return status;
     }
     usb_payload::ServerResponse responseMsg;
@@ -964,8 +959,7 @@ aditof::Status UsbDepthSensor::adsd3500_read_payload(uint8_t *payload,
     }
 
     if (responseMsg.status() != usb_payload::Status::OK) {
-        LOG(ERROR) << "Get control:" << control
-                   << " operation failed on UVC gadget";
+        LOG(ERROR)  << "Adsd3500 payload read: operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
     }
     // If request and response went well, extract data from response
@@ -990,7 +984,7 @@ UsbDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload,
     requestMsg.SerializeToString(&requestStr);
     status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Request to get control: " << control << " failed";
+        LOG(ERROR) << "Request to write " << cmd << " adsd3500 payload command failed";
         return status;
     }
 
@@ -998,8 +992,7 @@ UsbDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload,
     std::string responseStr;
     status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Failed to get response of the request to set control: "
-                   << control;
+        LOG(ERROR) << "Failes to get respode to " << cmd << " adsd3500 payload write command";
         return status;
     }
     usb_payload::ServerResponse responseMsg;
@@ -1011,7 +1004,7 @@ UsbDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload,
     }
 
     if (responseMsg.status() != usb_payload::Status::OK) {
-        LOG(ERROR) << "Get control:" << control
+        LOG(ERROR) << "Adsd3500 payload command write:" << cmd
                    << " operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
     }
@@ -1034,7 +1027,7 @@ aditof::Status UsbDepthSensor::adsd3500_write_payload(uint8_t *payload,
     requestMsg.SerializeToString(&requestStr);
     status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Request to get control: " << control << " failed";
+        LOG(ERROR) << "Request to write adsd3500 payload failed";
         return status;
     }
 
@@ -1042,8 +1035,8 @@ aditof::Status UsbDepthSensor::adsd3500_write_payload(uint8_t *payload,
     std::string responseStr;
     status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Failed to get response of the request to set control: "
-                   << control;
+        LOG(ERROR) << "Failes to get respode to adsd3500 payload write";
+
         return status;
     }
     usb_payload::ServerResponse responseMsg;
@@ -1055,8 +1048,7 @@ aditof::Status UsbDepthSensor::adsd3500_write_payload(uint8_t *payload,
     }
 
     if (responseMsg.status() != usb_payload::Status::OK) {
-        LOG(ERROR) << "Get control:" << control
-                   << " operation failed on UVC gadget";
+        LOG(ERROR) << "Adsd3500 payload write: operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
     }
 
