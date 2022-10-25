@@ -791,31 +791,266 @@ aditof::Status UsbDepthSensor::getName(std::string &name) const {
 }
 
 aditof::Status UsbDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data) {
-    return aditof::Status::OK;
+    using namespace aditof;
+    Status status = Status::OK;
+
+    // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_READ_CMD);
+    requestMsg.add_func_int32_param(static_cast<::google::int32>(cmd));
+
+    // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to get control: " << control << " failed";
+        return status;
+    }
+
+
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to get response of the request to set control: "
+                   << control;
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Get control:" << control
+                   << " operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
+
+    return Status::OK;
 }
 
 aditof::Status UsbDepthSensor::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
-    return aditof::Status::OK;
+    using namespace aditof;
+    Status status = Status::OK;
+
+    // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_WRITE_CMD);
+    requestMsg.add_func_int32_param(static_cast<::google::int32>(cmd));
+
+    // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to get control: " << control << " failed";
+        return status;
+    }
+
+
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to get response of the request to set control: "
+                   << control;
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Get control:" << control
+                   << " operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
+
+    return Status::OK;
 }
 
 aditof::Status UsbDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd,
                                                          uint8_t *readback_data,
                                                          uint16_t payload_len) {
-    return aditof::Status::OK;
+    using namespace aditof;
+    Status status = Status::OK;
+
+    // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_READ_PAYLOAD_CMD);
+    requestMsg.add_func_int32_param(static_cast<::google::int32>(cmd));
+
+    // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to get control: " << control << " failed";
+        return status;
+    }
+
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to get response of the request to set control: "
+                   << control;
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Get control:" << control
+                   << " operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
+
+    return Status::OK;
 }
 
 aditof::Status UsbDepthSensor::adsd3500_read_payload(uint8_t *payload,
                                                      uint16_t payload_len) {
-    return aditof::Status::OK;
+    using namespace aditof;
+    Status status = Status::OK;
+
+    // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_WRITE_PAYLOAD);
+
+    // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to get control: " << control << " failed";
+        return status;
+    }
+
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to get response of the request to set control: "
+                   << control;
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Get control:" << control
+                   << " operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
+
+    return Status::OK;
 }
 
 aditof::Status
 UsbDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload,
                                            uint16_t payload_len) {
-    return aditof::Status::OK;
+    using namespace aditof;
+    Status status = Status::OK;
+
+    // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_WRITE_PAYLOAD_CMD);
+    requestMsg.add_func_int32_param(static_cast<::google::int32>(cmd));
+
+    // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to get control: " << control << " failed";
+        return status;
+    }
+
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to get response of the request to set control: "
+                   << control;
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Get control:" << control
+                   << " operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
+
+    return Status::OK;
 }
 
 aditof::Status UsbDepthSensor::adsd3500_write_payload(uint8_t *payload,
                                                       uint16_t payload_len) {
-    return aditof::Status::OK;
+    using namespace aditof;
+    Status status = Status::OK;
+
+    // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_WRITE_PAYLOAD);
+    requestMsg.add_func_strings_param(control);
+
+    // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to get control: " << control << " failed";
+        return status;
+    }
+
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to get response of the request to set control: "
+                   << control;
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Get control:" << control
+                   << " operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
+
+    return Status::OK;
 }
