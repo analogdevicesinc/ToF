@@ -102,13 +102,6 @@ add_definitions(-DRESOURCES="${RESOURCES_DIR}")
 add_subdirectory(apps)
 add_subdirectory(sdk)
 
-
-if(WITH_TOOLS)
-        # if (MSVC)
-        #         add_subdirectory(tools/deps/wingetopt)
-        # endif(MSVC)
-        # add_subdirectory(tools/eeprom-tool)
-endif()
 if (WITH_EXAMPLES)
         add_subdirectory(examples)
 endif()
