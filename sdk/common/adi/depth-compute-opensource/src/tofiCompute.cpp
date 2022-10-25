@@ -17,10 +17,12 @@ typedef struct {
     int n_depth;
     int n_ab;
     int n_conf;
+    XYZTable xyz_table;
 } PrivateData;
 
-uint32_t GenerateXYZTables(float **pp_x_table, float **pp_y_table,
-                           float **pp_z_table, CameraIntrinsics *p_intr_data,
+uint32_t GenerateXYZTables(const float **pp_x_table, const float **pp_y_table,
+                           const float **pp_z_table,
+                           CameraIntrinsics *p_intr_data,
                            uint32_t n_sensor_rows, uint32_t n_sensor_cols,
                            uint32_t n_out_rows, uint32_t n_out_cols,
                            uint32_t n_offset_rows, uint32_t n_offset_cols,
@@ -155,6 +157,7 @@ uint32_t GenerateXYZTables(float **pp_x_table, float **pp_y_table,
 
 uint32_t ComputeXYZ(const uint16_t *p_depth, XYZTable *p_xyz_data,
                     int16_t *p_xyz_image, uint32_t n_rows, uint32_t n_cols) {
+
     for (uint32_t pixel_id = 0; pixel_id < n_rows * n_cols; pixel_id++) {
         p_xyz_image[3 * pixel_id + 0] = (int16_t)(floorf(
             p_xyz_data->p_x_table[pixel_id] * (float)p_depth[pixel_id] + 0.5f));
@@ -175,12 +178,29 @@ TofiComputeContext *InitTofiCompute(const void *p_tofi_cal_config,
     PrivateData *privDataObj = new PrivateData;
 
     // Extract the number of bits for: Depth, AB, Confidence
-    TofiXYZDealiasData *p = (TofiXYZDealiasData *)p_tofi_cal_config;
-    uint16_t bits = p->Freq[0];
+    TofiXYZDealiasData *ccb_data = (TofiXYZDealiasData *)p_tofi_cal_config;
+    uint16_t bits = ccb_data->Freq[0];
     privDataObj->n_depth = bits & 0x001F;
     privDataObj->n_ab = (bits & 0x03E0) >> 5;
     privDataObj->n_conf = (bits & 0x3C00) >> 10;
 
+    // Generate the X, Y, Z tables
+    memset(&privDataObj->xyz_table, 0, sizeof(privDataObj->xyz_table));
+
+    int n_cols = ccb_data->n_cols;
+    int n_rows = ccb_data->n_rows;
+
+    int status = GenerateXYZTables(
+        &privDataObj->xyz_table.p_x_table, &privDataObj->xyz_table.p_y_table,
+        &privDataObj->xyz_table.p_z_table, &(ccb_data->camera_intrinsics),
+        ccb_data->n_sensor_rows, ccb_data->n_sensor_cols, n_rows, n_cols,
+        ccb_data->n_offset_rows, ccb_data->n_offset_cols,
+        ccb_data->row_bin_factor, ccb_data->col_bin_factor, GEN_XYZ_ITERATIONS);
+    if (status != 0 || !privDataObj->xyz_table.p_x_table ||
+        !privDataObj->xyz_table.p_y_table || !privDataObj->xyz_table.p_z_table)
+        return nullptr;
+
+    // Set context
     Obj->n_cols = 0;
     Obj->n_rows = 0;
     Obj->p_ab_frame = 0;
@@ -236,15 +256,10 @@ int TofiCompute(const uint16_t *const input_frame,
                 TofiComputeContext *const p_tofi_compute_context,
                 TemperatureInfo *p_temperature) {
 
-    int status = 0;
     TofiXYZDealiasData *ccb_data =
         (TofiXYZDealiasData *)p_tofi_compute_context->p_cal_config;
     int n_cols = ccb_data->n_cols;
     int n_rows = ccb_data->n_rows;
-
-    float *p_x_table = nullptr;
-    float *p_y_table = nullptr;
-    float *p_z_table = nullptr;
 
     PrivateData *p =
         (PrivateData *)p_tofi_compute_context->p_tofi_processor_config;
@@ -254,49 +269,18 @@ int TofiCompute(const uint16_t *const input_frame,
     int n_sum_bits = n_depth + n_conf + n_ab;
     int n_bytes = n_sum_bits / 8;
 
-    status = DeInterleaveDepth((uint8_t *)input_frame, n_depth, n_conf, n_ab,
-                               n_bytes, n_cols, n_rows,
-                               p_tofi_compute_context->p_depth_frame,
-                               (uint16_t *)p_tofi_compute_context->p_conf_frame,
-                               p_tofi_compute_context->p_ab_frame);
-
-    status = GenerateXYZTables(
-        &p_x_table, &p_y_table, &p_z_table, &(ccb_data->camera_intrinsics),
-        ccb_data->n_sensor_rows, ccb_data->n_sensor_cols, n_rows, n_cols,
-        ccb_data->n_offset_rows, ccb_data->n_offset_cols,
-        ccb_data->row_bin_factor, ccb_data->col_bin_factor, GEN_XYZ_ITERATIONS);
-
-    if (status != 0)
-        return status;
-
-    XYZTable p_xyz_data;
-    memset(&p_xyz_data, 0, sizeof(p_xyz_data));
-
-    if (p_x_table != nullptr && p_y_table != nullptr && p_z_table != nullptr) {
-        p_xyz_data.p_x_table = p_x_table;
-        p_xyz_data.p_y_table = p_y_table;
-        p_xyz_data.p_z_table = p_z_table;
-    } else {
-        status = -1;
-    }
+    int status = DeInterleaveDepth(
+        (uint8_t *)input_frame, n_depth, n_conf, n_ab, n_bytes, n_cols, n_rows,
+        p_tofi_compute_context->p_depth_frame,
+        (uint16_t *)p_tofi_compute_context->p_conf_frame,
+        p_tofi_compute_context->p_ab_frame);
 
     // Compute Point cloud
-    ComputeXYZ(p_tofi_compute_context->p_depth_frame, &p_xyz_data,
+    ComputeXYZ(p_tofi_compute_context->p_depth_frame, &p->xyz_table,
                p_tofi_compute_context->p_xyz_frame, n_rows, n_cols);
 
     if (status != 0) {
         std::cout << "Unable to compute XYZ !" << std::endl;
-    }
-
-    // Free tabels x, y, z
-    if (p_x_table) {
-        free(p_x_table);
-    }
-    if (p_y_table) {
-        free(p_y_table);
-    }
-    if (p_z_table) {
-        free(p_z_table);
     }
 
     return 0;
@@ -305,6 +289,16 @@ int TofiCompute(const uint16_t *const input_frame,
 void FreeTofiCompute(TofiComputeContext *p_tofi_compute_context) {
     PrivateData *p =
         (PrivateData *)p_tofi_compute_context->p_tofi_processor_config;
+    // Free tabels x, y, z
+    if (p->xyz_table.p_x_table) {
+        free((void *)p->xyz_table.p_x_table);
+    }
+    if (p->xyz_table.p_y_table) {
+        free((void *)p->xyz_table.p_y_table);
+    }
+    if (p->xyz_table.p_z_table) {
+        free((void *)p->xyz_table.p_z_table);
+    }
     delete p;
     delete p_tofi_compute_context;
 };
