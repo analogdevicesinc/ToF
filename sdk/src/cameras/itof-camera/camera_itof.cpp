@@ -781,8 +781,6 @@ aditof::Status CameraItof::initComputeLibrary(void) {
     //freeComputeLibrary();
     uint8_t convertedMode;
 
-    size_t jsonFileSize = m_jsonFileSize;
-
     status = convertCameraMode(m_details.mode, convertedMode);
 
     if (status != aditof::Status::OK) {
@@ -890,13 +888,7 @@ CameraItof::iniFileContentFindKeyAndGetValue(std::ifstream &iniContent,
 }
 
 aditof::Status CameraItof::loadConfigData(void) {
-    uint32_t status = 0;
-    uint32_t calFileSize = 0;
-    uint32_t jsonFileSize = 0;
-    uint32_t iniFileSize = 0;
     freeConfigData();
-
-    aditof::Status retErr = aditof::Status::GENERIC_ERROR;
 
     if (m_ini_depth_map.size() > 0) {
         for (auto it = m_ini_depth_map.begin(); it != m_ini_depth_map.end();
@@ -919,8 +911,6 @@ aditof::Status CameraItof::loadConfigData(void) {
         m_calData.p_data = NULL;
         m_calData.size = 0;
     }
-
-    m_jsonFileSize = jsonFileSize;
 
     return aditof::Status::OK;
 }
@@ -966,15 +956,15 @@ aditof::Status CameraItof::processFrame(uint8_t *rawFrame,
     Status status = Status::OK;
 
     // Read header data and process image
-    uint16_t REG_CAPTURE_ID = 0;
+    // uint16_t REG_CAPTURE_ID = 0;
     uint16_t FrameWidth = 0;
     uint16_t FrameHeight = 0;
     uint16_t FrameNum = 0;
-    uint8_t totalCaptures = 0;
+    // uint8_t totalCaptures = 0;
     uint8_t captureID = 0;
-    uint16_t chipID = 0;
-    uint16_t REG_MODE_ID_CURR = 0;
-    uint8_t Mode = 0;
+    // uint16_t chipID = 0;
+    // uint16_t REG_MODE_ID_CURR = 0;
+    // uint8_t Mode = 0;
 
     /*chipID = (rawFrame[0] | (rawFrame[1] << 8)) >> 4; // header[0]: [15:0] Chip ID register
     if (chipID != CHIPID) {
@@ -1020,10 +1010,10 @@ aditof::Status CameraItof::processFrame(uint8_t *rawFrame,
     }
 
     // Ex: for Mode=5, rawSubFrameSize will (12289 * 640 * 2)/(9 + 1) - 128
-    uint64_t rawSubFrameSize =
-        ((embed_height * embed_width * 2) / (totalCaptures + 1)) - 128;
-    uint64_t subFrameSize =
-        FrameWidth * FrameHeight; // capture size without header
+    // uint64_t rawSubFrameSize =
+    //     ((embed_height * embed_width * 2) / (totalCaptures + 1)) - 128;
+    // uint64_t subFrameSize =
+    //     FrameWidth * FrameHeight; // capture size without header
     uint16_t *p = (uint16_t *)rawFrame;
 
     for (int i = 0; i < FrameNum * FrameWidth * FrameHeight; ++i) {
@@ -1286,8 +1276,6 @@ aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath) {
 
     // Send FW content, each chunk is 256 bytes
     const int flashPageSize = 256;
-    int packetStart = 0;
-    int packetEnd = flashPageSize;
 
     // Read the firmware binary file
     std::ifstream fw_file(filePath, std::ios::binary);

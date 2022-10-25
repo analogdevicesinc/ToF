@@ -389,7 +389,6 @@ class CameraItof : public aditof::Camera {
     TofiConfig *m_tofi_config = NULL;
     TofiComputeContext *m_tofi_compute_context = NULL;
     TofiXYZDealiasData m_xyz_dealias_data[MAX_N_MODES + 1];
-    int m_jsonFileSize;
     bool m_loadedConfigData;
 
     bool m_CameraProgrammed = false;
