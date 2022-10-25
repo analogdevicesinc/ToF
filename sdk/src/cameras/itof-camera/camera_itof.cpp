@@ -57,10 +57,10 @@ CameraItof::CameraItof(
     const std::string &ubootVersion, const std::string &kernelVersion,
     const std::string &sdCardImageVersion)
     : m_depthSensor(depthSensor), m_devStarted(false),
-      m_eepromInitialized(false), m_modechange_framedrop_count(0),
-      m_xyzEnabled(false), m_xyzSetViaControl(false),
-      m_loadedConfigData(false), m_tempFiles{}, m_adsd3500Enabled(false),
-      m_cameraFps(0), m_fsyncMode(1) {
+      m_eepromInitialized(false), m_adsd3500Enabled(false),
+      m_loadedConfigData(false), m_xyzEnabled(false), m_xyzSetViaControl(false),
+      m_modechange_framedrop_count(0), m_tempFiles{}, m_cameraFps(0),
+      m_fsyncMode(1) {
 
     FloatToLinGenerateTable();
 
