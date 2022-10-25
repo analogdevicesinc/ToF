@@ -490,7 +490,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         m_details.frameType.totalCaptures = 1;
     }
     m_details.frameType.dataDetails.clear();
-    for (const auto item : (*frameTypeIt).content) {
+    for (const auto &item : (*frameTypeIt).content) {
         if (item.type == "xyz" && !m_xyzEnabled) {
             continue;
         }

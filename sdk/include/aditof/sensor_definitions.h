@@ -123,7 +123,7 @@ inline std::ostream &operator<<(std::ostream &o,
                                 const DepthSensorFrameType &a) {
     o << "DepthSensorFrame: T: " << a.type << "\tW: " << a.width
       << "\tH: " << a.height << " contains:\n";
-    for (const DepthSensorFrameContent content : a.content) {
+    for (const DepthSensorFrameContent &content : a.content) {
         o << "\t" << content;
     }
     return o;
