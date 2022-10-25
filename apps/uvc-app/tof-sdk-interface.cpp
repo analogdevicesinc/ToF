@@ -252,26 +252,82 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
     }
 
     case uvc_payload::FunctionName::ADSD3500_READ_CMD: {
+        std::string controlName = request.func_strings_param(0);
+        uint16_t cmd = static_cast<uint32_t>(request.func_int32_param(0));
+        uint16_t *data;
+
+        aditof::Status status = camDepthSensor->adsd3500_read_cmd(cmd, data)
+
+        if (status == aditof::Status::OK) {
+            response.add_bytes_payload(data, sizeof(uint16_t));
+        }
+        response.set_status(static_cast<::uvc_payload::Status>(status));
         break;
     }
 
     case uvc_payload::FunctionName::ADSD3500_WRITE_CMD: {
+        std::string controlName = request.func_strings_param(0);
+        uint16_t cmd = static_cast<uint16_t>(request.func_int32_param(0));
+        uint16_t data = static_cast<uint16_t>(request.func_int32_param(1));
+
+        aditof::Status status = camDepthSensor->adsd3500_write_cmd(cmd, data)
+
+        response.set_status(static_cast<::uvc_payload::Status>(status));
         break;
     }
 
     case uvc_payload::FunctionName::ADSD3500_READ_PAYLOAD_CMD: {
+        std::string controlName = request.func_strings_param(0);
+        uint32_t cmd = static_cast<uint32_t>(request.func_int32_param(0));
+        uint16_t payload_len = static_cast<uint16_t>(request.func_int32_param(1));
+        uint8_t *data = new uint8_t[payload_len];
+        
+        aditof::Status status = camDepthSensor->adsd3500_read_payload_cmd(cmd, &data, payload_len)
+        if (status == aditof::Status::OK) {
+            response.add_bytes_payload(data, payload_len*sizeof(uint8_t));
+        }
+        delete[] data;
+        response.set_status(static_cast<::uvc_payload::Status>(status));
         break;
     }
 
     case uvc_payload::FunctionName::ADSD3500_READ_PAYLOAD: {
+        std::string controlName = request.func_strings_param(0);
+        uint16_t payload_len = static_cast<uint16_t>(request.func_int32_param(0));
+        uint8_t *data = new uint8_t[payload_len];
+        
+        aditof::Status status = camDepthSensor->adsd3500_read_payload(&data, payload_len)
+        if (status == aditof::Status::OK) {
+            response.add_bytes_payload(data, payload_len*sizeof(uint8_t));
+        }
+        delete[] data;
+
+        response.set_status(static_cast<::uvc_payload::Status>(status));
         break;
     }
 
     case uvc_payload::FunctionName::ADSD3500_WRITE_PAYLOAD_CMD: {
+        std::string controlName = request.func_strings_param(0);
+        uint32_t cmd = static_cast<uint32_t>(request.func_int32_param(0));
+        uint16_t payload_len = static_cast<uint16_t>(request.func_int32_param(1));
+        const uint8_t *data = reinterpret_cast<const uint8_t *>(
+            request.func_bytes_param(0).c_str());
+         aditof::Status status =
+            camDepthSensor->adsd3500_write_payload_cmd(cmd, data, payload_len);
+
+        response.set_status(static_cast<::uvc_payload::Status>(status));
         break;
     }
 
     case uvc_payload::FunctionName::ADSD3500_WRITE_PAYLOAD: {
+        std::string controlName = request.func_strings_param(0);
+        uint16_t payload_len = static_cast<uint16_t>(request.func_int32_param(0));
+        const uint8_t *data = reinterpret_cast<const uint8_t *>(
+            request.func_bytes_param(0).c_str());
+        aditof::Status status =
+            camDepthSensor->adsd3500_write_payload(data, payload_len);
+
+        response.set_status(static_cast<::uvc_payload::Status>(status));
         break;
     }
 
@@ -280,6 +336,7 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
         aditof::Status status = aditof::Status::OK;
         response.set_status(static_cast<::uvc_payload::Status>(status));
 
+        aditof::Status status = camDepthSensor->
         break;
     }
 
