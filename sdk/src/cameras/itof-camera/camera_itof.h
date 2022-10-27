@@ -141,6 +141,18 @@ class CameraItof : public aditof::Camera {
             &sensors) override;
     aditof::Status adsd3500_set_toggle_mode(int mode);
     aditof::Status adsd3500_toggle_fsync();
+    aditof::Status adsd3500SetABinvalidationThreshold(int threshold) override;
+    aditof::Status adsd3500GetABinvalidationThreshold(int &threshold) override;
+    aditof::Status adsd3500SetConfidenceThreshold(int threshold) override;
+    aditof::Status adsd3500GetConfidenceThreshold(int &threshold) override;
+    aditof::Status adsd3500SetJBLFfilterEnableState(bool enable) override;
+    aditof::Status adsd3500GetJBLFfilterEnableState(bool &enabled) override;
+    aditof::Status adsd3500SetJBLFfilterSize(int size) override;
+    aditof::Status adsd3500GetJBLFfilterSize(int &size) override;
+    aditof::Status adsd3500SetRadialThresholdMin(int threshold) override;
+    aditof::Status adsd3500GetRadialThresholdMin(int &threshold) override;
+    aditof::Status adsd3500SetRadialThresholdMax(int threshold) override;
+    aditof::Status adsd3500GetRadialThresholdMax(int &threshold) override;
 
     // TO DO - The methods bellow need to be converted somehow to be covered by setControl()
     // in order to not go beyond Camera API
