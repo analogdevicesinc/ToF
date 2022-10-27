@@ -245,11 +245,13 @@ echo "Clone ToF source code from: $TOF_GIT_LOCATION"
 git clone ${TOF_GIT_LOCATION}
 pushd ToF/scripts/nxp/
 chmod +x setup.sh
-# ./setup.sh -y -b ../../build -d ../../deps -i /opt -j4
+./setup.sh -y -b ../../build -d ../../deps -i /opt -j4
+popd
+cp ToF/build/apps/uvc-app/uvc-app /usr/share/systemd/
+cp ToF/build/apps/server/aditof-server /usr/share/systemd/
+popd
+popd
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace
-popd
-popd
-popd
 
 #generate licences file
 tail -n 10000 /usr/share/doc/*/copyright > /licenses.txt
