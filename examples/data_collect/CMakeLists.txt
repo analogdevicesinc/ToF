@@ -28,6 +28,15 @@ add_custom_command( TARGET ${PROJECT_NAME} POST_BUILD
     COMMENT "Copying cfgs and libs to build examples "
 )
 
+if (NOT WIN32)
+    find_library(PTHREAD_LIBRARIES pthread)
+    if (PTHREAD_LIBRARIES)
+       target_link_libraries(${PROJECT_NAME} PRIVATE ${PTHREAD_LIBRARIES})
+    else()
+       message(FATAL_ERROR "pthread libraries not found!")
+    endif()
+endif()
+
 if( WIN32 )
 add_custom_command( TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${LIBTOFI_LIBDIR_PATH} $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
