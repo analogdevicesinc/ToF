@@ -67,7 +67,7 @@ function setup_config() {
   TZ_CITY=UTC
   LOCALE_LANG=en_US.UTF-8
   ADD_LIST='git build-essential gcc autoconf nano vim parted'
-  ADD_LIST_ST_3='i2c-tools v4l-utils rfkill wpasupplicant libtool libconfig-dev avahi-daemon htpdate openssh-server bc python3-pip'
+  ADD_LIST_ST_3='i2c-tools v4l-utils rfkill wpasupplicant libtool libconfig-dev avahi-daemon htpdate openssh-server bc python3-dev python3-pip python3-matplotlib'
 
   # output example of the config file
 #  cat <<EOF>config-example
@@ -232,6 +232,9 @@ systemctl enable avahi-daemon.service
 systemctl enable usb-gadget.service
 systemctl enable network-gadget.path
 systemctl enable uvc-gadget.path
+
+#set default python3
+update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 
 #sdk install
 pushd /home/${USERNAME}
