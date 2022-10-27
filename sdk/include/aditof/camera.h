@@ -195,6 +195,90 @@ class SDK_API Camera {
      * @return Status
      */
     virtual Status adsd3500_toggle_fsync() = 0;
+
+    /**
+     * @brief Set the AB invalidation threshold
+     * @param[in] threshold
+     * @return Status
+     */
+    virtual Status adsd3500SetABinvalidationThreshold(int threshold) = 0;
+
+    /**
+     * @brief Get the AB invalidation threshold
+     * @param[out] threshold
+     * @return Status
+     */
+    virtual Status adsd3500GetABinvalidationThreshold(int &threshold) = 0;
+
+    /**
+     * @brief Set the confidence threshold
+     * @param[in] threshold
+     * @return Status
+     */
+    virtual Status adsd3500SetConfidenceThreshold(int threshold) = 0;
+
+    /**
+     * @brief Get the confidence threshold
+     * @param[out] threshold
+     * @return Status
+     */
+    virtual Status adsd3500GetConfidenceThreshold(int &threshold) = 0;
+
+    /**
+     * @brief Enable/disable the JBLF filter
+     * @param[in] enable
+     * @return Status
+     */
+    virtual Status adsd3500SetJBLFfilterEnableState(bool enable) = 0;
+
+    /**
+     * @brief Get the JBLF enabled state
+     * @param[out] enabled
+     * @return Status
+     */
+    virtual Status adsd3500GetJBLFfilterEnableState(bool &enabled) = 0;
+
+    /**
+     * @brief Set the JBLF filter size
+     * @param[in] size - Supported sizes are: 3, 5, 7
+     * @return Status
+     */
+    virtual Status adsd3500SetJBLFfilterSize(int size) = 0;
+
+    /**
+     * @brief Get the JBLF filter size
+     * @param[out] size
+     * @return Status
+     */
+    virtual Status adsd3500GetJBLFfilterSize(int &size) = 0;
+
+    /**
+     * @brief Set the radial threshold min
+     * @param[in] threshold
+     * @return Status
+     */
+    virtual Status adsd3500SetRadialThresholdMin(int threshold) = 0;
+
+    /**
+     * @brief Get the radial threshold min
+     * @param[out] threshold
+     * @return Status
+     */
+    virtual Status adsd3500GetRadialThresholdMin(int &threshold) = 0;
+
+    /**
+     * @brief Set the radial threshold max
+     * @param[in] threshold
+     * @return Status
+     */
+    virtual Status adsd3500SetRadialThresholdMax(int threshold) = 0;
+
+    /**
+     * @brief Get the radial threshold max
+     * @param[out] threshold
+     * @return Status
+     */
+    virtual Status adsd3500GetRadialThresholdMax(int &threshold) = 0;
 };
 
 } // namespace aditof
