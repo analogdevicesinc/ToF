@@ -32,6 +32,8 @@
 #ifndef CAMERA_ITOF_H
 #define CAMERA_ITOF_H
 
+#include "mode_info.h"
+#include "module_memory.h"
 #include "tofi/tofi_compute.h"
 #include "tofi/tofi_config.h"
 #include "tofi/tofi_util.h"
@@ -41,9 +43,7 @@
 #include <aditof/temperature_sensor_interface.h>
 #include <map>
 #include <unordered_map>
-// #include "aditof_internal.h"
-#include "mode_info.h"
-#include "module_memory.h"
+
 
 /* Camera controls
  *
