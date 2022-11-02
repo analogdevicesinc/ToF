@@ -72,15 +72,9 @@ CameraItof::CameraItof(
 
     // Define some of the controls of this camera
     m_controls.emplace("initialization_config", "");
-    m_controls.emplace("powerUp", "call");
-    m_controls.emplace("powerDown", "call");
     m_controls.emplace("syncMode", "0, 0");
     m_controls.emplace("saveModuleCCB", "");
     m_controls.emplace("saveModuleCFG", "");
-
-    m_noArgCallables.emplace("powerUp", std::bind(&CameraItof::powerUp, this));
-    m_noArgCallables.emplace("powerDown",
-                             std::bind(&CameraItof::powerUp, this));
     m_controls.emplace("enableDepthCompute", "on");
     m_controls.emplace("enableXYZframe", "off");
 
@@ -1127,16 +1121,6 @@ aditof::Status CameraItof::cleanupTempFiles() {
     m_tempFiles = {};
 
     return status;
-}
-
-aditof::Status CameraItof::powerUp() {
-    // TO DO: decide if we need to keep this method
-    return aditof::Status::OK;
-}
-
-aditof::Status CameraItof::powerDown() {
-    // TO DO: decide if we need to keep this method
-    return aditof::Status::OK;
 }
 
 aditof::Status CameraItof::setCameraSyncMode(uint8_t mode, uint8_t level) {

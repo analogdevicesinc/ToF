@@ -1287,12 +1287,6 @@ void ADIMainWindow::InitCamera() {
         ifs.close();
     }
 
-    status = camera->setControl("powerUp", "call");
-    if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Could not PowerUp camera!";
-        return;
-    }
-
     if (!_usesExternalModeDefinition)
         camera->getAvailableFrameTypes(_cameraModes);
 
