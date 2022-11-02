@@ -154,22 +154,6 @@ class CameraItof : public aditof::Camera {
     aditof::Status adsd3500SetRadialThresholdMax(int threshold) override;
     aditof::Status adsd3500GetRadialThresholdMax(int &threshold) override;
 
-    // TO DO - The methods bellow need to be converted somehow to be covered by setControl()
-    // in order to not go beyond Camera API
-
-    /**
-     * @brief Write data to  camera module memory
-     *
-     * This will attempt to write to module Flash/Eeprom memory and will
-     * permanently overwrite any existing data.
-     *
-     * @param[in] ccbFileName - calibration data to write to module memory
-     * @param[in] cfgFileName - configuration data to write to module memory
-     * @return Status
-     * @see Status
-     */
-    //aditof::Status writeModuleEeprom(const std::string &ccbFileName, const std::string &cfgFileName);
-
   private:
     /**
      * @brief Default ADI module flash memory is Macronix MX25U6435F.
