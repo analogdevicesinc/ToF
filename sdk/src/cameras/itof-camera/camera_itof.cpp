@@ -864,25 +864,6 @@ aditof::Status CameraItof::freeComputeLibrary(void) {
     return aditof::Status::OK;
 }
 
-std::string
-CameraItof::iniFileContentFindKeyAndGetValue(std::ifstream &iniContent,
-                                             const std::string &key) {
-    iniContent.clear();
-    iniContent.seekg(0, std::ios::beg);
-
-    std::string line;
-    while (getline(iniContent, line)) {
-        if (line.compare(0, key.length(), key) == 0) {
-            size_t equalPos = line.find('=');
-            if (equalPos != std::string::npos) {
-                return line.substr(equalPos + 1);
-            }
-        }
-    }
-
-    return "";
-}
-
 aditof::Status CameraItof::loadConfigData(void) {
     freeConfigData();
 

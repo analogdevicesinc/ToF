@@ -316,18 +316,6 @@ class CameraItof : public aditof::Camera {
     aditof::Status readAdsd3500CCB();
 
     /**
-     * INI files have key value pairs like this:
-     * enableSomething = 1
-     * someThresholdValue = 200.5
-     * The content of the INI files is expected to be stored the variable given as parameter.
-     * @param[in] iniContent - the content of an INI file
-     * @param[in] key - the key to be search and get its value
-     * @return the value of the key
-    */
-    std::string iniFileContentFindKeyAndGetValue(std::ifstream &iniContent,
-                                                 const std::string &key);
-
-    /**
      * Configure the sensor with various settings that affect the frame type.
      */
     void configureSensorFrameType();
