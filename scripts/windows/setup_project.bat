@@ -10,6 +10,7 @@ set /a answer_yes=0
 set /a set_build=0
 set /a set_deps=0
 set /a set_deps_install=0
+set /a use_depth_compute_stubs=0
 
 set build_dire=""
 set deps_dir=""
@@ -114,6 +115,12 @@ if "%1" neq "" (
    shift
    goto :interpret_arg
    )
+   if /I "%1" EQU "--use_depth_compute_stubs" (
+   set /a use_depth_compute_stubs=1
+   shift
+   shift
+   goto :interpret_arg
+   )
    shift
    goto :interpret_arg
 )
@@ -205,7 +212,11 @@ CALL :install_websockets %config_type% %generator%
 
 ::build the project with the selected options
 pushd %build_dire%
-cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir%
+if %use_depth_compute_stubs%==1 (
+   cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir% -DUSE_DEPTH_COMPUTE_STUBS=ON
+   ) else (
+   cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir%
+)
 cmake --build . --config %config_type%
 popd
 EXIT /B %ERRORLEVEL%
@@ -229,6 +240,8 @@ ECHO        Visual Studio 14 2015 Win64 = Generates Visual Studio 2015 project f
 ECHO -c^|--configuration
 ECHO        Release = Configuration for Release build.
 ECHO        Debug   = Configuration for Debug build.
+ECHO --use_depth_compute_stubs
+ECHO        Used when building with stubs in place of the depth compute libraries.
 EXIT /B 0
 
 :yes_or_exit
