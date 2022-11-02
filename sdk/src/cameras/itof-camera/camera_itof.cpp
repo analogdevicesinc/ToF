@@ -463,6 +463,8 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     if (m_ini_depth_map.size() > 1) {
         m_ini_depth = m_ini_depth_map[frameType];
     }
+    getKeyValuePairsFromIni(m_ini_depth, m_iniKeyValPairs);
+    setAdsd3500WithIniParams(m_iniKeyValPairs);
     configureSensorFrameType();
     setMode(frameType);
 
@@ -1448,76 +1450,80 @@ aditof::Status CameraItof::readAdsd3500CCB() {
 }
 
 void CameraItof::configureSensorFrameType() {
-    std::ifstream depthIniStream(m_ini_depth);
-    if (depthIniStream.is_open()) {
-        std::string value;
+    std::string value;
 
-        // TO DO: Do we need to read here whether depth is enabled or not and also the AB averaging?
-
-        value = iniFileContentFindKeyAndGetValue(depthIniStream,
-                                                 "bitsInPhaseOrDepth");
-        if (!value.empty()) {
-            if (value == "16")
-                value = "6";
-            else if (value == "14")
-                value = "5";
-            else if (value == "12")
-                value = "4";
-            else if (value == "10")
-                value = "3";
-            else
-                value = "2";
-            m_depthSensor->setControl("phaseDepthBits", value);
-        }
-
-        value = iniFileContentFindKeyAndGetValue(depthIniStream, "bitsInConf");
-        if (!value.empty()) {
-            if (value == "8")
-                value = "2";
-            else if (value == "4")
-                value = "1";
-            else
-                value = "0";
-            m_depthSensor->setControl("confidenceBits", value);
-        }
-
-        value = iniFileContentFindKeyAndGetValue(depthIniStream, "bitsInAB");
-        if (!value.empty()) {
-            m_abEnabled = 1;
-            if (value == "16")
-                value = "6";
-            else if (value == "14")
-                value = "5";
-            else if (value == "12")
-                value = "4";
-            else if (value == "10")
-                value = "3";
-            else if (value == "8")
-                value = "2";
-            else {
-                value = "0";
-                m_abEnabled = 0;
-            }
-            m_depthSensor->setControl("abBits", value);
-        }
-
-        value = iniFileContentFindKeyAndGetValue(depthIniStream,
-                                                 "partialDepthEnable");
-        if (!value.empty()) {
-            std::string en = (value == "0") ? "1" : "0";
-            m_depthSensor->setControl("depthEnable", en);
-            m_depthSensor->setControl("abAveraging", en);
-        }
-
-        // XYZ set through camera control takes precedence over the setting from .ini file
-        if (!m_xyzSetViaControl) {
-            m_xyzEnabled = iniFileContentFindKeyAndGetValue(depthIniStream,
-                                                            "xyzEnable") == "1";
-        }
-
-        depthIniStream.close();
+    auto it = m_iniKeyValPairs.find("bitsInPhaseOrDepth");
+    if (it != m_iniKeyValPairs.end()) {
+        value = it->second;
+        if (value == "16")
+            value = "6";
+        else if (value == "14")
+            value = "5";
+        else if (value == "12")
+            value = "4";
+        else if (value == "10")
+            value = "3";
+        else
+            value = "2";
+        m_depthSensor->setControl("phaseDepthBits", value);
     } else {
-        LOG(ERROR) << "Unable to open file: " << m_ini_depth;
+        LOG(WARNING) << "bitsInPhaseOrDepth was not found in .ini file";
+    }
+
+    it = m_iniKeyValPairs.find("bitsInConf");
+    if (it != m_iniKeyValPairs.end()) {
+        value = it->second;
+        if (value == "8")
+            value = "2";
+        else if (value == "4")
+            value = "1";
+        else
+            value = "0";
+        m_depthSensor->setControl("confidenceBits", value);
+    } else {
+        LOG(WARNING) << "bitsInConf was not found in .ini file";
+    }
+
+    it = m_iniKeyValPairs.find("bitsInAB");
+    if (it != m_iniKeyValPairs.end()) {
+        value = it->second;
+        m_abEnabled = 1;
+        if (value == "16")
+            value = "6";
+        else if (value == "14")
+            value = "5";
+        else if (value == "12")
+            value = "4";
+        else if (value == "10")
+            value = "3";
+        else if (value == "8")
+            value = "2";
+        else {
+            value = "0";
+            m_abEnabled = 0;
+        }
+        m_depthSensor->setControl("abBits", value);
+    } else {
+        LOG(WARNING) << "bitsInAB was not found in .ini file";
+    }
+
+    it = m_iniKeyValPairs.find("partialDepthEnable");
+    if (it != m_iniKeyValPairs.end()) {
+        std::string en = (it->second == "0") ? "1" : "0";
+        m_depthSensor->setControl("depthEnable", en);
+        m_depthSensor->setControl("abAveraging", en);
+    } else {
+        LOG(WARNING) << "partialDepthEnable was not found in .ini file";
+    }
+
+    // XYZ set through camera control takes precedence over the setting from .ini file
+    if (!m_xyzSetViaControl) {
+        it = m_iniKeyValPairs.find("xyzEnable");
+        if (it != m_iniKeyValPairs.end()) {
+            m_xyzEnabled = !(value == "0");
+        } else {
+            LOG(WARNING) << "xyzEnable was not found in .ini file";
+        }
     }
 }
 
@@ -1746,4 +1752,80 @@ aditof::Status CameraItof::adsd3500SetRadialThresholdMax(int threshold) {
 aditof::Status CameraItof::adsd3500GetRadialThresholdMax(int &threshold) {
     return m_depthSensor->adsd3500_read_cmd(
         0x0030, reinterpret_cast<uint16_t *>(&threshold));
+}
+
+aditof::Status CameraItof::getKeyValuePairsFromIni(
+    const std::string &iniFileName,
+    std::map<std::string, std::string> &iniKeyValPairs) {
+    using namespace aditof;
+
+    std::ifstream iniStream(iniFileName);
+    if (!iniStream.is_open()) {
+        LOG(ERROR) << "Failed to open: " << iniFileName;
+        return Status::UNREACHABLE;
+    }
+
+    std::string line;
+    while (getline(iniStream, line)) {
+        size_t equalPos = line.find('=');
+        if (equalPos == std::string::npos) {
+            LOG(WARNING) << "Unexpected format on this line:\n"
+                         << line << "\nExpecting 'key=value' format";
+            continue;
+        }
+        std::string key = line.substr(0, equalPos);
+        std::string value = line.substr(equalPos + 1);
+        m_iniKeyValPairs.emplace(key, value);
+    }
+
+    iniStream.close();
+
+    return Status::OK;
+}
+
+void CameraItof::setAdsd3500WithIniParams(
+    const std::map<std::string, std::string> &iniKeyValPairs) {
+
+    auto it = iniKeyValPairs.find("abThreshMin");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500SetABinvalidationThreshold(std::stoi(it->second));
+    } else {
+        LOG(WARNING) << "abThreshMin was not found in .ini file";
+    }
+
+    it = iniKeyValPairs.find("confThresh");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500SetConfidenceThreshold(std::stoi(it->second));
+    } else {
+        LOG(WARNING) << "confThresh was not found in .ini file";
+    }
+
+    it = iniKeyValPairs.find("radialThreshMin");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500SetRadialThresholdMin(std::stoi(it->second));
+    } else {
+        LOG(WARNING) << "radialThreshMin was not found in .ini file";
+    }
+
+    it = iniKeyValPairs.find("radialThreshMax");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500SetRadialThresholdMax(std::stoi(it->second));
+    } else {
+        LOG(WARNING) << "radialThreshMax was not found in .ini file";
+    }
+
+    it = iniKeyValPairs.find("jblfApplyFlag");
+    if (it != iniKeyValPairs.end()) {
+        bool en = !(it->second == "0");
+        adsd3500SetJBLFfilterEnableState(en);
+    } else {
+        LOG(WARNING) << "jblfApplyFlag was not found in .ini file";
+    }
+
+    it = iniKeyValPairs.find("jblfWindowSize");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500SetJBLFfilterSize(std::stoi(it->second));
+    } else {
+        LOG(WARNING) << "jblfWindowSize was not found in .ini file";
+    }
 }
