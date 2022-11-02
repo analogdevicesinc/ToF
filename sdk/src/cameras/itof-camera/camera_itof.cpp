@@ -1520,7 +1520,7 @@ void CameraItof::configureSensorFrameType() {
     if (!m_xyzSetViaControl) {
         it = m_iniKeyValPairs.find("xyzEnable");
         if (it != m_iniKeyValPairs.end()) {
-            m_xyzEnabled = !(value == "0");
+            m_xyzEnabled = !(it->second == "0");
         } else {
             LOG(WARNING) << "xyzEnable was not found in .ini file";
         }
