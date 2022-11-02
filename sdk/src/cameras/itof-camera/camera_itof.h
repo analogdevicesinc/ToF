@@ -44,7 +44,6 @@
 #include <map>
 #include <unordered_map>
 
-
 /* Camera controls
  *
  * initialization_config
@@ -53,15 +52,6 @@
  *                    before calling initialize().
  *   Accepted values: A file name, including extension.
  *
- * powerUp
- *   Description:     PowerUp the camera, it performs power monitoring on different power registers.
- *                    This is required before performing any operation on the camera.
- *   Accepted values: A string with this exact value: 'call'
- *
- * powerDown
- *   Description:     PowerDown the camera, this is required for shutting down the camera module.
- *   Accepted values: A string with this exact value: 'call'.
- *
  * syncMode
  *   Description:     Setting frame sync, either internal or external (default is internal)
  *   Accepted values: A string containing two integer values. E.g. '1, 2'
@@ -69,7 +59,7 @@
  *                    external. Second integer is level. Set to TDB!!!
  * loadModuleData
  *   Description:     Read camera module memory and initialize camera with loaded data.
- *                    Must be called after initialize() and powerUp(). Calibration or Firmware
+ *                    Must be called after initialize(). Calibration or Firmware
  *                    data are NOT loaded if already defined by initialize() config file.
  *   Accepted values: A string with this exact value: 'call'
  *
@@ -243,21 +233,6 @@ class CameraItof : public aditof::Camera {
      * @see m_tempFiles
      */
     aditof::Status cleanupTempFiles();
-
-    /**
-     * @brief PowerUp the camera, it performs power monitoring on different power registers.
-     * This is required before performing any operation on the camera.
-     * @return aditof::Status
-     * @see aditof::Status
-     */
-    aditof::Status powerUp();
-
-    /**
-     * @brief PowerDown the camera, this is required for shutting down the camera module
-     * @return aditof::Status
-     * @see aditof::Status
-     */
-    aditof::Status powerDown();
 
     /**
      * @brief Setting frame sync, either internal or external (default is internal)
