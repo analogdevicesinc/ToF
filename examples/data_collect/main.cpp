@@ -486,12 +486,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    status = camera->setControl("powerUp", "call");
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not PowerUp camera!";
-        return 0;
-    }
-
     // Get frame types
     std::vector<std::string> frameTypes;
     status = camera->getAvailableFrameTypes(frameTypes);
