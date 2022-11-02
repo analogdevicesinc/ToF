@@ -30,8 +30,10 @@ ModeInfo::modeInfo ModeInfo::g_newModesAdsd3100[] = {
 };
 
 ModeInfo::modeInfo ModeInfo::g_newModesAdsd3500[] = {
-    {1, 512, 512, 1, 2731, 192, 0},
-    {2, 1024, 1024, 3, 3511, 1344, 0},
+    {0, 1024, 1024, 2, 49156, 96, 0},  // SRMP
+    {1, 1024, 1024, 3, 49156, 144, 0}, // LRMP
+    {2, 512, 512, 1, 12292, 96, 0},    // SRQMP
+    {3, 512, 512, 1, 18438, 96, 0},    // SRQMP
 };
 #else
 ModeInfo::modeInfo *ModeInfo::g_modeInfoData = ModeInfo::g_adsd3030Modes;
@@ -83,7 +85,7 @@ aditof::Status convertCameraMode(const std::string &mode,
 
 #ifndef ADSD3030
     int modeVersion = ModeInfo::getInstance()->getModeVersion();
-    if (modeVersion == 1) {
+    if (modeVersion == 1 || modeVersion == 2) {
         if (mode == "srmp") {
             convertedMode = 0;
         } else if (mode == "lrmp") {
@@ -94,12 +96,6 @@ aditof::Status convertCameraMode(const std::string &mode,
             convertedMode = 3;
         } else if (mode == "pcmmp") {
             convertedMode = 4;
-        }
-    } else if (modeVersion == 2) {
-        if (mode == "lrqmp") {
-            convertedMode = 1;
-        } else if (mode == "lrmp") {
-            convertedMode = 2;
         }
     } else {
         if (mode == "lt_bin") {
