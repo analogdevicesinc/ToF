@@ -378,6 +378,24 @@ class CameraItof : public aditof::Camera {
      */
     aditof::Status parseJsonFileContent();
 
+    /**
+     * Get key-value pairs from ini file
+     * @param[in] iniFileName - the name of the ini file to be opened and parsed
+     * @param[out] iniKeyValPairs - map with parameter names and their values extracted from ini file
+     * @return Status
+     * @see Status
+    */
+    aditof::Status
+    getKeyValuePairsFromIni(const std::string &iniFileName,
+                            std::map<std::string, std::string> &iniKeyValPairs);
+
+    /**
+     * Configure ADSD3500 with ini parameters
+     * @param[in] iniKeyValPairs - ini parameteres to use
+    */
+    void setAdsd3500WithIniParams(
+        const std::map<std::string, std::string> &iniKeyValPairs);
+
   private:
     using noArgCallable = std::function<aditof::Status()>;
 
@@ -417,7 +435,7 @@ class CameraItof : public aditof::Camera {
     std::vector<std::pair<std::string, int32_t>> m_sensor_settings;
     int m_cameraFps;
     int m_fsyncMode;
-
+    std::map<std::string, std::string> m_iniKeyValPairs;
     //pair between firmware version and git hash
     std::pair<std::string, std::string> m_adsd3500FwGitHash;
 };
