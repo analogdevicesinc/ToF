@@ -66,6 +66,7 @@ struct adsd3500 {
 
 	struct mutex lock;
 	bool streaming;
+	s64 framerate;
 
 	struct v4l2_ctrl *ctrls[];
 };
@@ -281,7 +282,11 @@ static int _adsd3500_power_on(struct camera_common_data *s_data)
 		dev_err(adsd3500->dev, "Could not set mode register\n");
 		return ret;
 	}
-	
+
+	ret = regmap_write(adsd3500->regmap, SET_FRAMERATE_CMD, adsd3500->framerate);
+	if (ret < 0)
+		dev_err(adsd3500->dev, "SET_FRAMERATE command failed.\n");
+
 	return 0;
 }
 
@@ -442,7 +447,7 @@ static const s64 nr_bits_qmenu[] = {
 static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
 	{
 		.ops		= &adsd3500_ctrl_ops,
-		.id		= TEGRA_CAMERA_CID_SENSOR_MODE_ID,
+		.id			= TEGRA_CAMERA_CID_SENSOR_MODE_ID,
 		.name		= "Sensor Mode",
 		.type		= V4L2_CTRL_TYPE_INTEGER64,
 		.flags		= V4L2_CTRL_FLAG_SLIDER,
@@ -454,7 +459,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
 	{
 		/* Should always be second control in list*/
 		.ops		= &adsd3500_ctrl_ops,
-		.id		= V4L2_CID_ADSD3500_OPERATING_MODE,
+		.id			= V4L2_CID_ADSD3500_OPERATING_MODE,
 		.name		= "Operating Mode",
 		.type		= V4L2_CTRL_TYPE_INTEGER,
 		.def		= 7,
@@ -465,7 +470,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
 	{
 		/* Should always be third control in list*/
 		.ops		= &adsd3500_ctrl_ops,
-		.id		= V4L2_CID_ADSD3500_AB_AVG,
+		.id			= V4L2_CID_ADSD3500_AB_AVG,
 		.name		= "AB Averaging",
 		.type		= V4L2_CTRL_TYPE_BOOLEAN,
 		.def		= 1,
@@ -476,7 +481,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
 	{
 		/* Should always be fourth control in list*/
 		.ops		= &adsd3500_ctrl_ops,
-		.id		= V4L2_CID_ADSD3500_DEPTH_EN,
+		.id			= V4L2_CID_ADSD3500_DEPTH_EN,
 		.name		= "Depth enable",
 		.type		= V4L2_CTRL_TYPE_BOOLEAN,
 		.def		= 1,
@@ -486,7 +491,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
 	},
 	{
 		.ops		= &adsd3500_ctrl_ops,
-		.id		= V4L2_CID_ADSD3500_CHIP_CONFIG,
+		.id			= V4L2_CID_ADSD3500_CHIP_CONFIG,
 		.name		= "Chip Config",
 		.type		= V4L2_CTRL_TYPE_U8,
 		.def		= 0x00,
@@ -497,7 +502,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
 	},
 	{
 		.ops		= &adsd3500_ctrl_ops,
-		.id		= V4L2_CID_ADSD3500_DEPTH_BITS,
+		.id			= V4L2_CID_ADSD3500_DEPTH_BITS,
 		.name		= "Phase / Depth Bits",
 		.type		= V4L2_CTRL_TYPE_INTEGER_MENU,
 		.def		= 2,
@@ -508,7 +513,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
 	},
 	{
 		.ops		= &adsd3500_ctrl_ops,
-		.id		= V4L2_CID_ADSD3500_AB_BITS,
+		.id			= V4L2_CID_ADSD3500_AB_BITS,
 		.name		= "AB Bits",
 		.type		= V4L2_CTRL_TYPE_INTEGER_MENU,
 		.def		= 0,
@@ -519,7 +524,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
 	},
 	{
 		.ops		= &adsd3500_ctrl_ops,
-		.id		= V4L2_CID_ADSD3500_CONFIDENCE_BITS,
+		.id			= V4L2_CID_ADSD3500_CONFIDENCE_BITS,
 		.name		= "Confidence Bits",
 		.type		= V4L2_CTRL_TYPE_INTEGER_MENU,
 		.def		= 0,
@@ -678,6 +683,8 @@ static int adsd3500_set_frame_rate(struct adsd3500 *priv, s64 val)
 {
 	struct device *dev = &priv->i2c_client->dev;
 	int ret;
+
+	priv->framerate = val;
 
 	ret = regmap_write(priv->regmap, SET_FRAMERATE_CMD, val);
 	if (ret < 0)
