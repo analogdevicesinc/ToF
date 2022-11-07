@@ -34,6 +34,9 @@ jobs:
       ubuntu_20_04_x86_64:
         imageName: 'ubuntu-20.04'
 
+      ubuntu_22_04_x86_64:
+        imageName: 'ubuntu-22.04'
+
       #IMX
       ubuntu_20_04_imx:
         imageName: 'ubuntu-20.04'
