@@ -42,7 +42,7 @@ jobs:
 
       #code quality, TO DO: once entire code is formatted enable clang-format
       clang_format:
-        imageName: 'ubuntu-20.04' # TO DO: change version to ubuntu 22, where clang format 14 exists
+        imageName: 'ubuntu-22.04'
         BUILD_TYPE: "clang_format"
 
       cppcheck:
