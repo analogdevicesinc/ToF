@@ -1,6 +1,6 @@
 # ROS2 Wrapper for Time of Flight SDK of Analog Devices
 
-## ROS 2 Wrapper exists in an external repository for general package implementations: [External repository](https://github.com/rbudai98/tof_ros2cpp)
+## ROS 2 Wrapper exists in an external repository for general package implementations: [External repository](https://github.com/analogdevicesinc/tof-ros2)
 
 # 1. Install ROS2
 
@@ -41,7 +41,7 @@ sudo cmake --build . --target tof_ros2_package
 In directory ```ros2_ws/src/``` clone the repository:
 
 ```console
-git clone https://github.com/rbudai98/tof_ros2cpp.git
+git clone https://github.com/analogdevicesinc/tof-ros2.git
 ```
 
 After cloning the repository in the ``ros2_ws/ run the following command:

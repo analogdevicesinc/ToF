@@ -1,7 +1,7 @@
 
 # ROS Wrapper for Time of Flight SDK of Analog Devices
 
-## ROS Wrapper exists in an external repository for general package implementations: [External repository](https://github.com/rbudai98/tof_roscpp)
+## ROS Wrapper exists in an external repository for general package implementations: [External repository](https://https://github.com/analogdevicesinc/tof-ros
 
 # 1. Install ROS
 
@@ -36,7 +36,7 @@ sudo cmake --build . --target install
 In directory ```catkin_ws/src/``` clone the repository:
 
 ```console
-git clone https://github.com/rbudai98/tof_roscpp.git
+git clone https://https://github.com/analogdevicesinc/tof-ros
 ```
 
 After cloning the repository in the ``catkin_ws/ run the following command:
