@@ -31,8 +31,8 @@ deps_cppcheck() {
 }
 
 deps_clang_format() {
-    sudo apt-get install clang-format-6.0
-    echo_green "Clang-format version: " `/usr/bin/clang-format-6.0 --version`
+    sudo apt-get install clang-format
+    echo_green "Clang-format version: " `/usr/bin/clang-format --version`
 }
 
 deps_deploy_doxygen() {
