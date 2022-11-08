@@ -1292,15 +1292,16 @@ void resetRenderingBuffer(cvui_block_t &theScreen);
 
 template <
     typename T> // T can be any floating point type (float, double, long double)
-TrackbarParams
-makeTrackbarParams(T min, T max, int theDecimals = 1, int theSegments = 1,
-                   T theStep = -1., unsigned int theOptions = 0,
-                   const char *theFormat = "%.1Lf");
+TrackbarParams makeTrackbarParams(T min, T max, int theDecimals = 1,
+                                  int theSegments = 1, T theStep = -1.,
+                                  unsigned int theOptions = 0,
+                                  const char *theFormat = "%.1Lf");
 
 template <typename T>
 bool trackbar(T *theValue, const TrackbarParams &theParams);
 
-template <typename T> // T can be any numeric type (int, double, unsigned int, etc)
+template <
+    typename T> // T can be any numeric type (int, double, unsigned int, etc)
 bool trackbar(cv::Mat &theWhere, int theX, int theY, int theWidth, T *theValue,
               const TrackbarParams &theParams);
 
