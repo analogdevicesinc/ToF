@@ -190,7 +190,7 @@ build_and_install_websockets() {
     
     pushd ${LIB_BUILD_DIR}
      
-    cmake .. -DLWS_STATIC_PIC=ON -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}" ${EXTRA_CMAKE_OPTIONS}
+    cmake .. -DLWS_WITH_SSL=OFF -DLWS_STATIC_PIC=ON -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}" ${EXTRA_CMAKE_OPTIONS}
     make -j${NUM_JOBS}
     make install
 
