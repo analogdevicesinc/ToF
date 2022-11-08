@@ -171,7 +171,7 @@ aditof::Status Adsd3500Sensor::open() {
         system("echo 0 > /sys/class/gpio/gpio122/value");
         usleep(100000);
         system("echo 1 > /sys/class/gpio/gpio122/value");
-        usleep(5000000);
+        usleep(7000000);
 #elif defined(NVIDIA)
         system("echo 0 > /sys/class/gpio/PP.04/value");
         usleep(100000);
@@ -492,9 +492,9 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
         __u32 pixelFormat = 0;
 #ifndef ADSD3030
-        if (type.type == "lrqmp") {
+        if (type.type == "lrqmp" || type.type == "srqmp") {
             pixelFormat = V4L2_PIX_FMT_SBGGR8;
-        } else if (type.type == "lrmp") {
+        } else if (type.type == "lrmp" || type.type == "srmp") {
             pixelFormat = V4L2_PIX_FMT_SBGGR12;
         } else {
             LOG(ERROR) << "frame type: " << type.type << " "
