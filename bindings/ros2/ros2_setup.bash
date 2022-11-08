@@ -23,7 +23,7 @@ fi
 
 mkdir -p ${COLCON_WS}/src
 cd ${COLCON_WS}/src
-git clone https://github.com/rbudai98/tof_ros2cpp.git
+git clone https://github.com/analogdevicesinc/tof-ros2.git
 
 cd ${COLCON_WS}
 source /opt/ros/$ROS_DISTRO/setup.sh
