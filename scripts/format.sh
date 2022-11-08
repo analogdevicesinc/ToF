@@ -59,7 +59,7 @@ format_all() {
 		while read -r file; do
         		if is_source_file "$file" && is_not_ignored "$file"
       			then
-            			/usr/bin/clang-format-6.0 -i "$file"
+            			/usr/bin/clang-format -i "$file"
 			fi
 	
 			done;
