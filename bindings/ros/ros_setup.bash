@@ -19,7 +19,7 @@ fi
 
 mkdir -p ${CATKIN_WS}/src
 cd ${CATKIN_WS}/src
-git clone https://github.com/rbudai98/tof_roscpp.git
+git clone https://github.com/analogdevicesinc/tof-ros.git
 
 cd ${CATKIN_WS}
 source /opt/ros/$ROS_DISTRO/setup.sh
