@@ -39,7 +39,7 @@ ModeInfo::modeInfo ModeInfo::g_newModesAdsd3500[] = {
 ModeInfo::modeInfo *ModeInfo::g_modeInfoData = ModeInfo::g_adsd3030Modes;
 
 ModeInfo::modeInfo ModeInfo::g_adsd3030Modes[] = {
-    {5, 512, 640, 10, 1670, 1472, 1},
+    {1, 512, 640, 10, 1670, 1472, 1},
 };
 #endif
 
