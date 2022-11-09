@@ -74,6 +74,91 @@ if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier + ADSD3500" ]]; then
 	echo 1 > /sys/class/gpio/gpio122/value
 fi
 
+if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier + ADSD3030" ]]; then
+	#ADSD3500 Reset Pin
+	echo 122 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio122/direction
+	echo 0 > /sys/class/gpio/gpio122/value
+
+#U13	#U0 1 - INTERPOSER FLASH / 0 - TEMBIN FLASH
+	echo 492 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio492/direction
+	echo 0 > /sys/class/gpio/gpio492/value
+
+#U5		#EN_AVDD
+	echo 508 > /sys/class/gpio/export
+	echo 1 > /sys/class/gpio/gpio508/value
+
+#U12	#OC0
+	echo 496 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio496/direction
+	echo 0 > /sys/class/gpio/gpio496/value
+
+#U12	#OC1
+	echo 497 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio497/direction
+	echo 0 > /sys/class/gpio/gpio497/value
+
+#U12	#OC2
+	echo 498 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio498/direction
+	echo 0 > /sys/class/gpio/gpio498/value
+
+#U12	#OC3
+	echo 499 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio499/direction
+	echo 0 > /sys/class/gpio/gpio499/value
+
+#U12	#OC4
+	echo 500 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio500/direction
+	echo 0 > /sys/class/gpio/gpio500/value
+
+#U12	#OC5
+	echo 501 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio501/direction
+	echo 0 > /sys/class/gpio/gpio501/value
+
+#U12	#OC6
+	echo 502 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio502/direction
+	echo 0 > /sys/class/gpio/gpio502/value
+
+#U12	#FLASH_WP
+	echo 503 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio503/direction
+	echo 1 > /sys/class/gpio/gpio503/value
+
+
+#U13	#DS2_ON
+	echo 493 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio493/direction
+	echo 0 > /sys/class/gpio/gpio493/value
+
+#U5	#EN_3V3
+	echo 504 > /sys/class/gpio/export
+	echo 1 > /sys/class/gpio/gpio504/value
+
+#U5	#EN_1V2
+	echo 505 > /sys/class/gpio/export
+	echo 1 > /sys/class/gpio/gpio505/value
+
+#U5	#EN_1V8
+	echo 506 > /sys/class/gpio/export
+	echo 1 > /sys/class/gpio/gpio506/value
+
+#U5	#EN_VLDD
+	echo 507 > /sys/class/gpio/export
+	echo 1 > /sys/class/gpio/gpio507/value
+
+#U5	#EN_0V8
+	echo 509 > /sys/class/gpio/export
+	echo 1 > /sys/class/gpio/gpio509/value
+
+	# Pull reset high
+	echo 1 > /sys/class/gpio/gpio122/value
+fi
+
 # Deassert ADC reset - will pop on /dev/i2c1 address 0x10
 echo 132 > /sys/class/gpio/export
 echo out > /sys/class/gpio/gpio132/direction
@@ -89,11 +174,6 @@ i2cset -y 2 0x10 0x10 0x008a w # Vsys = 4.3V
 #i2cset -y 2 0x10 0x11 0x0091 w # Vaux = 27V
 i2cset -y 2 0x10 0x11 0x0594 w # Vaux = 22V
 i2cset -y 2 0x10 0x12 0x00a3 w # V5v0 = 4.7V
-
-# VDAC (3.3v / 1.8v IOs)
-echo 130 > /sys/class/gpio/export
-echo out > /sys/class/gpio/gpio130/direction
-echo 1 > /sys/class/gpio/gpio130/value
 
 i2cset -y 2 0x10 0x04 0xff00 w; i2cset -y 2 0x10 0x02 0xff03 w
 for i in {0..8}; do 

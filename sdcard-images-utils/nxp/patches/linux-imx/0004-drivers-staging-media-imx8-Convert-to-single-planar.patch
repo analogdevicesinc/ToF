@@ -1,7 +1,7 @@
-From f8f739e1a4dd5e3f10ad6f217498fbd4c7543182 Mon Sep 17 00:00:00 2001
+From d688743cc5f2f72b566d6c1bf8bce9b713cc4df0 Mon Sep 17 00:00:00 2001
 From: btogorean <bogdan.togorean@analog.com>
 Date: Wed, 7 Apr 2021 11:44:38 +0300
-Subject: [PATCH 04/44] drivers: staging: media: imx8: Convert to single planar
+Subject: [PATCH 04/45] drivers: staging: media: imx8: Convert to single planar
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
@@ -389,5 +389,5 @@ index 5796deda3df8..9d51ff0cf60d 100644
  
  	val = readl(mxc_isi->regs + CHNL_OUT_BUF_CTRL);
 -- 
-2.17.1
+2.38.1
 

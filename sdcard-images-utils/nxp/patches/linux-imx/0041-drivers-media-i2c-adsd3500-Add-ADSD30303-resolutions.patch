@@ -1,7 +1,7 @@
-From 198150207319e5d53c355a751e162cc0405b44fd Mon Sep 17 00:00:00 2001
+From c8d8865fa8b9d2b54f6e760f2e068d7119fe46ae Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Tue, 23 Aug 2022 16:39:27 +0300
-Subject: [PATCH 41/44] drivers: media: i2c: adsd3500: Add ADSD30303
+Subject: [PATCH 41/45] drivers: media: i2c: adsd3500: Add ADSD30303
  resolutions
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
@@ -49,5 +49,5 @@ index 5668975bc436..e6931320a871 100644
  		.width = 1024,
  		.height = 1024,
 -- 
-2.17.1
+2.38.1
 
