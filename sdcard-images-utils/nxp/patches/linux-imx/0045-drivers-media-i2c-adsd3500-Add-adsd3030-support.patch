@@ -1,35 +1,35 @@
-From 30a732a9b88473a43cb9f93e7a798aa60a8341b0 Mon Sep 17 00:00:00 2001
+From 32e7a7c9563b0593ece46ca4400150b13ea2a009 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
-Date: Fri, 16 Apr 2021 09:03:47 +0300
-Subject: [PATCH 06/45] arch: arm64: dts: ADI TOF dt
+Date: Wed, 9 Nov 2022 14:39:43 +0200
+Subject: [PATCH 45/45] drivers: media: i2c: adsd3500: Add adsd3030 support
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
- arch/arm64/boot/dts/freescale/Makefile        |    3 +-
- .../dts/freescale/imx8mp-adi-tof-noreg.dts    | 1199 +++++++++++++++++
- 2 files changed, 1201 insertions(+), 1 deletion(-)
- create mode 100644 arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
+ arch/arm64/boot/dts/freescale/Makefile        |    2 +-
+ .../dts/freescale/imx8mp-adi-tof-adsd3030.dts | 1183 +++++++++++++++++
+ drivers/media/i2c/adsd3500.c                  |   35 +-
+ 3 files changed, 1212 insertions(+), 8 deletions(-)
+ create mode 100644 arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030.dts
 
 diff --git a/arch/arm64/boot/dts/freescale/Makefile b/arch/arm64/boot/dts/freescale/Makefile
-index 49642e6f35b5..45eb94278be2 100644
+index 250cd1e0cd9d..bb0f9e828717 100644
 --- a/arch/arm64/boot/dts/freescale/Makefile
 +++ b/arch/arm64/boot/dts/freescale/Makefile
-@@ -102,7 +102,8 @@ dtb-$(CONFIG_ARCH_MXC) += imx8mp-evk.dtb imx8mp-evk-rm67191.dtb imx8mp-evk-it626
- 			  imx8mp-evk-dual-ov2775.dtb imx8mp-evk-spdif-lb.dtb \
+@@ -103,7 +103,7 @@ dtb-$(CONFIG_ARCH_MXC) += imx8mp-evk.dtb imx8mp-evk-rm67191.dtb imx8mp-evk-it626
  			  imx8mp-evk-sof-wm8960.dtb imx8mp-evk-dsp.dtb\
  			  imx8mp-evk-iqaudio-dacplus.dtb imx8mp-evk-iqaudio-dacpro.dtb imx8mp-evk-hifiberry-dacplus.dtb \
--			  imx8mp-evk-usdhc1-m2.dtb imx8mp-evk-rm67199.dtb
-+			  imx8mp-evk-usdhc1-m2.dtb imx8mp-evk-rm67199.dtb \
-+			  imx8mp-adi-tof-noreg.dtb
+ 			  imx8mp-evk-usdhc1-m2.dtb imx8mp-evk-rm67199.dtb \
+-			  imx8mp-adi-tof-noreg.dtb imx8mp-adi-tof-adsd3500.dtb
++			  imx8mp-adi-tof-noreg.dtb imx8mp-adi-tof-adsd3500.dtb imx8mp-adi-tof-adsd3030.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mq-evk.dtb imx8mq-evk-rpmsg.dtb imx8mp-ab2.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mp-ddr4-evk.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mp-evk-ndm.dtb
-diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
+diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030.dts b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030.dts
 new file mode 100644
-index 000000000000..ae0e5bb9eeae
+index 000000000000..603ccf4a3b04
 --- /dev/null
-+++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-noreg.dts
-@@ -0,0 +1,1199 @@
++++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030.dts
+@@ -0,0 +1,1183 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright 2019 NXP
@@ -42,7 +42,7 @@ index 000000000000..ae0e5bb9eeae
 +#include "imx8mp.dtsi"
 +
 +/ {
-+	model = "NXP i.MX8MPlus ADI TOF board";
++	model = "NXP i.MX8MPlus ADI TOF carrier + ADSD3030";
 +	compatible = "fsl,imx8mp-solidrun", "fsl,imx8mp";
 +
 +	reserved-memory {
@@ -117,7 +117,8 @@ index 000000000000..ae0e5bb9eeae
 +		regulator-max-microvolt = <5000000>;
 +		gpio = <&gpio4 30 GPIO_ACTIVE_HIGH>;
 +		enable-active-high;
-+		status = "disabled";
++		status = "okay";
++		regulator-always-on;
 +	};
 +
 +	reg_vmain: regulator-vmain {
@@ -129,7 +130,7 @@ index 000000000000..ae0e5bb9eeae
 +		regulator-max-microvolt = <5000000>;
 +		gpio = <&gpio5 0 GPIO_ACTIVE_HIGH>;
 +		enable-active-high;
-+		status = "disabled";
++		status = "okay";
 +	};
 +
 +	reg_vsys: regulator-vsys {
@@ -143,7 +144,8 @@ index 000000000000..ae0e5bb9eeae
 +		gpio = <&gpio5 1 GPIO_ACTIVE_HIGH>;
 +		startup-delay-us = <70000>;
 +		enable-active-high;
-+		status = "disabled";
++		status = "okay";
++		regulator-always-on;
 +	};
 +
 +	reg_vaux: regulator-vaux {
@@ -157,7 +159,8 @@ index 000000000000..ae0e5bb9eeae
 +		gpio = <&gpio4 31 GPIO_ACTIVE_HIGH>;
 +		startup-delay-us = <100000>;
 +		enable-active-high;
-+		status = "disabled";
++		status = "okay";
++		regulator-always-on;
 +	};
 +
 +	reg_vcc_3p3: regulator-vcc-3p3 {
@@ -171,7 +174,7 @@ index 000000000000..ae0e5bb9eeae
 +		startup-delay-us = <7000>;
 +		enable-active-high;
 +		regulator-always-on;
-+		status = "disabled";
++		status = "okay";
 +	};
 +
 +	reg_can1_stby: regulator-can1-stby {
@@ -247,12 +250,22 @@ index 000000000000..ae0e5bb9eeae
 +
 +	mpcie {
 +		pinctrl-names = "default";
-+                pinctrl-0 = <&pinctrl_mpcie>;
++		pinctrl-0 = <&pinctrl_mpcie>;
 +		gpio-0 = <&gpio1 1 GPIO_ACTIVE_HIGH>;
 +		gpio-1 = <&gpio1 5 GPIO_ACTIVE_HIGH>;
 +		status = "okay";
 +		enable-active-high;
 +	};
++};
++
++&resmem {
++	linux,cma {
++			compatible = "shared-dma-pool";
++			reusable;
++			size = <0 0x20000000>;
++			alloc-ranges = <0 0x40000000 0 0xC0000000>;
++			linux,cma-default;
++		};
 +};
 +
 +&clk {
@@ -262,7 +275,7 @@ index 000000000000..ae0e5bb9eeae
 +&pwm4 {
 +	pinctrl-names = "default";
 +	pinctrl-0 = <&pinctrl_pwm4>;
-+	status = "okay";
++	status = "disabled";
 +};
 +
 +&snvs_rtc{
@@ -271,23 +284,23 @@ index 000000000000..ae0e5bb9eeae
 +
 +/*eth0*/
 +&eqos {
-+        pinctrl-names = "default";
-+        pinctrl-0 = <&pinctrl_eqos>;
-+        phy-mode = "rgmii-id";
-+        phy-handle = <&ethphy0>;
-+        status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_eqos>;
++	phy-mode = "rgmii-id";
++	phy-handle = <&ethphy0>;
++	status = "okay";
 +
-+        mdio {
-+                compatible = "snps,dwmac-mdio";
-+                #address-cells = <1>;
-+                #size-cells = <0>;
++	mdio {
++		compatible = "snps,dwmac-mdio";
++		#address-cells = <1>;
++		#size-cells = <0>;
 +
-+                ethphy0: ethernet-phy@0 {
-+                        compatible = "ethernet-phy-ieee802.3-c22";
-+                        reg = <0>;
-+                        eee-broken-1000t;
-+                };
-+        };
++		ethphy0: ethernet-phy@0 {
++			compatible = "ethernet-phy-ieee802.3-c22";
++			reg = <0>;
++			eee-broken-1000t;
++		};
++	};
 +};
 +
 +&i2c1 {
@@ -297,10 +310,10 @@ index 000000000000..ae0e5bb9eeae
 +	status = "okay";
 +
 +	eeprom: eeprom@50{
-+                compatible = "st,24c02", "atmel,24c02";
-+                reg = <0x50>;
-+                pagesize = <16>;
-+        };
++		compatible = "st,24c02", "atmel,24c02";
++		reg = <0x50>;
++		pagesize = <16>;
++	};
 +
 +	pmic: pca9450@25 {
 +		reg = <0x25>;
@@ -402,52 +415,48 @@ index 000000000000..ae0e5bb9eeae
 +	pinctrl-0 = <&pinctrl_i2c2>;
 +	status = "okay";
 +
-+	ad5593r@10 {
-+		compatible = "adi,ad5593r";
-+		#size-cells = <0>;
-+		#address-cells = <1>;
-+		reg = <0x10>;
++	adsd3500@38 {
++		compatible = "adi,adsd3500";
++		reg = <0x38>;
++		reset-gpios = <&gpio3 0 GPIO_ACTIVE_LOW>;
++		port {
++			adsd3500_ep: endpoint {
++				remote-endpoint = <&mipi_csi0_ep>;
++				data-lanes = <1 2>;
++				clock-lanes = <0>;
++				link-frequencies = /bits/ 64 <732000000>;
++			};
++		};
++	};
 +
-+		channel@0 {
-+			reg = <0>;
-+			adi,mode = <CH_MODE_DAC>;
-+			adi,off-state = <CH_OFFSTATE_OUT_TRISTATE>;
-+		};
-+		channel@1 {
-+			reg = <1>;
-+			adi,mode = <CH_MODE_DAC>;
-+			adi,off-state = <CH_OFFSTATE_OUT_TRISTATE>;
-+		};
-+		channel@2 {
-+			reg = <2>;
-+			adi,mode = <CH_MODE_DAC>;
-+			adi,off-state = <CH_OFFSTATE_OUT_TRISTATE>;
-+		};
-+		channel@3 {
-+			reg = <3>;
-+			adi,mode = <CH_MODE_ADC>;
-+			adi,off-state = <CH_OFFSTATE_OUT_TRISTATE>;
-+		};
-+		channel@4 {
-+			reg = <4>;
-+			adi,mode = <CH_MODE_ADC>;
-+			adi,off-state = <CH_OFFSTATE_OUT_TRISTATE>;
-+		};
-+		channel@5 {
-+			reg = <5>;
-+			adi,mode = <CH_MODE_ADC>;
-+			adi,off-state = <CH_OFFSTATE_OUT_TRISTATE>;
-+		};
-+		channel@6 {
-+			reg = <6>;
-+			adi,mode = <CH_MODE_ADC>;
-+			adi,off-state = <CH_OFFSTATE_OUT_TRISTATE>;
-+		};
-+		channel@7 {
-+			reg = <7>;
-+			adi,mode = <CH_MODE_ADC>;
-+			adi,off-state = <CH_OFFSTATE_OUT_TRISTATE>;
-+		};
++	gpio_exp_1: gpio@58 {
++		compatible = "maxim,max7320";
++		reg = <0x58>;
++		vcc-supply = <&reg_v5v0>;
++		gpio-controller;
++		#gpio-cells = <2>;
++		gpio-line-names = "ENB_3V3", "ENB_1V2", "ENB_1V8", "ENB_VLDD",
++				  "ENB_AVDD", "ENB_0V8", "SHDWN_SEL", "DUMMY0";
++	};
++
++	gpio_exp_2: gpio@68 {
++		compatible = "maxim,max7321";
++		reg = <0x68>;
++		vcc-supply = <&reg_v5v0>;
++		gpio-controller;
++		#gpio-cells = <2>;
++		gpio-line-names = "OC0", "OC1", "OC2", "OC3",
++				  "OC4", "OC5", "OC6", "OC7";
++	};
++
++	gpio_exp_3: gpio@6d {
++		compatible = "maxim,max7321";
++		reg = <0x6d>;
++		vcc-supply = <&reg_v5v0>;
++		gpio-controller;
++		#gpio-cells = <2>;
++		gpio-line-names = "M0", "M1", "SI0", "IDSEL",
++				  "U0", "DS2", "U1", "DUMMY0";
 +	};
 +};
 +
@@ -459,8 +468,8 @@ index 000000000000..ae0e5bb9eeae
 +	port@0 {
 +		reg = <0>;
 +		mipi_csi0_ep: endpoint {
-+			remote-endpoint = <&addicmos_ep>;
-+			data-lanes = <4>;
++			remote-endpoint = <&adsd3500_ep>;
++			data-lanes = <2>;
 +			csis-hs-settle = <32>;
 +			csis-clk-settle = <0>;
 +			csis-wclk;
@@ -469,30 +478,9 @@ index 000000000000..ae0e5bb9eeae
 +};
 +
 +&ecspi2 {
-+	cs-gpios = <&gpio5 13 GPIO_ACTIVE_LOW>;
-+	status = "okay";
-+	spi-cpol;
-+	spi-cpha;
-+
-+	addicmos@0 {
-+		compatible = "adi,addicmos";
-+		reg = <0x0>;
-+		spi-max-frequency = <16000000>;
-+
-+		reset-gpios = <&gpio3 0 GPIO_ACTIVE_LOW>;
-+		pinctrl-names = "spi", "gpio";
-+		pinctrl-0 = <&pinctrl_ecspi2>;
-+		pinctrl-1 = <&pinctrl_ecspi2_gpio>;
-+
-+		port {
-+			addicmos_ep: endpoint {
-+				remote-endpoint = <&mipi_csi0_ep>;
-+				data-lanes = <1 2 3 4>;
-+				clock-lanes = <0>;
-+				link-frequencies = /bits/ 64 <732000000>;
-+			};
-+		};
-+	};
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_ecspi2>;
++	status = "disabled";
 +};
 +
 +&isp_0 {
@@ -531,9 +519,9 @@ index 000000000000..ae0e5bb9eeae
 +			compatible = "usb-c-connector";
 +			label = "USB-C";
 +			power-role = "sink";
-+			data-role = "dual";
++			data-role = "device";
 +			sink-pdos = <PDO_FIXED(5000, 3000, PDO_FIXED_USB_COMM)
-+						 PDO_VAR(5000, 12000, 3000)>;
++						 PDO_VAR(5000, 20000, 3000)>;
 +			op-sink-microwatt = <15000000>;
 +
 +			ports {
@@ -718,6 +706,8 @@ index 000000000000..ae0e5bb9eeae
 +	vmmc-supply = <&reg_sd1_vmmc>;
 +	reset-gpio = <&gpio2 11 GPIO_ACTIVE_LOW>;
 +	status = "okay";
++	#address-cells = <1>;
++	#size-cells = <0>;
 +	brcmf: brcmf@1 {
 +		reg = <1>;
 +		compatible = "brcm,bcm4329-fmac";
@@ -744,7 +734,7 @@ index 000000000000..ae0e5bb9eeae
 +	pinctrl-2 = <&pinctrl_usdhc3_200mhz>;
 +	bus-width = <8>;
 +	non-removable;
-+	status = "disabled";
++	status = "okay";
 +};
 +
 +&wdog1 {
@@ -1109,16 +1099,10 @@ index 000000000000..ae0e5bb9eeae
 +
 +	pinctrl_ecspi2: ecspi2grp {
 +		fsl,pins = <
-+			MX8MP_IOMUXC_ECSPI2_SS0__GPIO5_IO13		0x140 /* CS: spi chip-select */
-+			MX8MP_IOMUXC_ECSPI2_SCLK__ECSPI2_SCLK		0x82 /* SCK: spi clock */
-+			MX8MP_IOMUXC_ECSPI2_MISO__ECSPI2_MISO		0x82 /* MISO: spi master-in-slave-out */
-+			MX8MP_IOMUXC_ECSPI2_MOSI__ECSPI2_MOSI		0x82 /* MOSI: spi master-out-slave-in */
-+		>;
-+	};
-+
-+	pinctrl_ecspi2_gpio: ecspi2-gpio-grp {
-+		fsl,pins = <
-+			MX8MP_IOMUXC_ECSPI2_MOSI__GPIO5_IO11		0x100 /* MOSI pin as GPIO with pull-down */
++			MX8MP_IOMUXC_ECSPI2_SS0__GPIO5_IO13		0x82 /* ADICMOS CS */
++			MX8MP_IOMUXC_NAND_DATA03__GPIO3_IO09		0x82 /* ADICMOS NVRAM CS */
++			MX8MP_IOMUXC_ECSPI2_SCLK__ECSPI2_SCLK		0x82 /* SCK: SPI clock */
++			MX8MP_IOMUXC_ECSPI2_MISO__ECSPI2_MISO		0x82 /* MISO: SPI master-in-slave-out */
 +		>;
 +	};
 +
@@ -1229,6 +1213,72 @@ index 000000000000..ae0e5bb9eeae
 +&dsp {
 +	status = "okay";
 +};
+\ No newline at end of file
+diff --git a/drivers/media/i2c/adsd3500.c b/drivers/media/i2c/adsd3500.c
+index e6931320a871..b6a7892bb34c 100644
+--- a/drivers/media/i2c/adsd3500.c
++++ b/drivers/media/i2c/adsd3500.c
+@@ -190,6 +190,13 @@ static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
++	{ //RAW8 40BPP ADSD3030
++		.width = 2560,
++		.height = 640,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
+ 	{ //RAW12 1 Phase / Frame
+ 		.width = 1024,
+ 		.height = 1024,
+@@ -197,25 +204,39 @@ static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
+ 		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW12 12BPP * 3 phase
++	{ //RAW12 12BPP ADSD3030
++		.width = 512,
++		.height = 640,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_Y12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{ //RAW12 12BPP * 3 subframes ADSD3030 512x640x3
+ 		.width = 1024,
+-		.height = 3072,
++		.height = 960,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.code = MEDIA_BUS_FMT_Y12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{ //RAW12 12BPP * 9 subframes ADSD3030 512x640x9
++		.width = 1024,
++		.height = 2880,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_Y12_1X12,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 	{ //RAW12 12BPP * 3 phase
+ 		.width = 1024,
+-		.height = 4096,
++		.height = 3072,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW16 16BPP * 3 phase
++	{ //RAW12 12BPP * 3 phase
+ 		.width = 1024,
+-		.height = 3072,
++		.height = 4096,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_SBGGR16_1X16,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	}
+ };
 -- 
 2.38.1
 

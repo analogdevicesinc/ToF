@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 set -e
-#set -x
 
 CONFIGFS="/sys/kernel/config"
 GADGET="$CONFIGFS/usb_gadget"
@@ -13,11 +12,8 @@ PRODUCT="ADI TOF USB Gadget"
 SERIAL="12345678"
 
 USBFILE=/dev/mmcblk1p1
-
 BOARD=$(strings /proc/device-tree/model)
-
 UDC=`ls /sys/class/udc` # will identify the 'first' UDC
-UDC_ROLE=/dev/null # Not generic
 
 echo "Detecting platform:"
 echo "  board : $BOARD"
@@ -46,19 +42,6 @@ create_rndis() {
 	ln -s $CONFIG os_desc
 }
 
-delete_rndis() {
-	# Example usage:
-	#	delete_rndis <target config> <function name>
-       	#	delete_rndis config/c.1 rndis.usb0
-	CONFIG=$1
-	FUNCTION=$2
-
-        echo "Removing RNDIS interface : $FUNCTION"
-        rm -f $CONFIG/$FUNCTION
-        rmdir functions/$FUNCTION
-        echo "OK"
-}
-
 create_msd() {
 	# Example usage:
 	#	create_msd <target config> <function name> <image file>
@@ -83,19 +66,6 @@ create_msd() {
 
         ln -s functions/$FUNCTION $CONFIG
 
-        echo "OK"
-}
-
-delete_msd() {
-	# Example usage:
-	#	delete_msd <target config> <function name>
-       	#	delete_msd config/c.1 uvc.0
-	CONFIG=$1
-	FUNCTION=$2
-
-        echo "Removing Mass Storage interface : $FUNCTION"
-        rm -f $CONFIG/$FUNCTION
-        rmdir functions/$FUNCTION
         echo "OK"
 }
 
@@ -146,7 +116,8 @@ create_uvc() {
 
 		"NXP i.MX8MPlus ADI TOF carrier + ADSD3500")
 			create_frame $FUNCTION 512 512 uncompressed u 2
-			create_frame $FUNCTION 3072 1024 uncompressed u 2
+			create_frame $FUNCTION 1024 3072 uncompressed u 2
+			create_frame $FUNCTION 1024 4096 uncompressed u 2
 			create_frame $FUNCTION 1024 512 uncompressed u1 1
 			create_frame $FUNCTION 1280 512 uncompressed u1 1
 			create_frame $FUNCTION 1536 512 uncompressed u1 1
@@ -155,7 +126,22 @@ create_uvc() {
 			create_frame $FUNCTION 2304 512 uncompressed u1 1
 			create_frame $FUNCTION 2560 512 uncompressed u1 1
 			echo 8 > functions/$FUNCTION/streaming/uncompressed/u1/bBitsPerPixel
-			echo -n -e '\x32\x00\x00\x00\x00\x00\x10\x00\x80\x00\x00\xaa\x00\x38\x9b\x71' > $GADGET/g1/functions/$FUNCTION/streaming/uncompressed/u1/guidFormat
+			echo -n -e '\x42\x41\x38\x31\x00\x00\x10\x00\x80\x00\x00\xaa\x00\x38\x9b\x71' > $GADGET/g1/functions/$FUNCTION/streaming/uncompressed/u1/guidFormat
+			;;
+
+		"NXP i.MX8MPlus ADI TOF carrier + ADSD3030")
+			create_frame $FUNCTION 512 640 uncompressed u 2
+			create_frame $FUNCTION 1024 960 uncompressed u 2
+			create_frame $FUNCTION 1024 2880 uncompressed u 2
+			create_frame $FUNCTION 1024 640 uncompressed u1 1
+			create_frame $FUNCTION 1280 640 uncompressed u1 1
+			create_frame $FUNCTION 1536 640 uncompressed u1 1
+			create_frame $FUNCTION 1792 640 uncompressed u1 1
+			create_frame $FUNCTION 2048 640 uncompressed u1 1
+			create_frame $FUNCTION 2304 640 uncompressed u1 1
+			create_frame $FUNCTION 2560 640 uncompressed u1 1
+			echo 8 > functions/$FUNCTION/streaming/uncompressed/u1/bBitsPerPixel
+			echo -n -e '\x42\x41\x38\x31\x00\x00\x10\x00\x80\x00\x00\xaa\x00\x38\x9b\x71' > $GADGET/g1/functions/$FUNCTION/streaming/uncompressed/u1/guidFormat
 			;;
 
 		*)
@@ -169,7 +155,7 @@ create_uvc() {
 	mkdir functions/$FUNCTION/streaming/header/h
 	cd functions/$FUNCTION/streaming/header/h
 	ln -s ../../uncompressed/u
-	if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier + ADSD3500" ]]; then
+	if [[ $BOARD != "NXP i.MX8MPlus ADI TOF board" ]]; then
 		ln -s ../../uncompressed/u1
 	fi
 	cd ../../class/fs
@@ -192,27 +178,7 @@ create_uvc() {
 	echo 15 > functions/$FUNCTION/streaming_maxburst
 	echo 3 > functions/$FUNCTION/streaming_interval
 
-	ln -s functions/$FUNCTION configs/c.1
-}
-
-delete_uvc() {
-	# Example usage:
-	#	delete_uvc <target config> <function name>
-	#	delete_uvc config/c.1 uvc.0
-	CONFIG=$1
-	FUNCTION=$2
-
-	echo "	Deleting UVC gadget functionality : $FUNCTION"
-	rm $CONFIG/$FUNCTION
-
-	rm functions/$FUNCTION/control/class/*/h
-	rm functions/$FUNCTION/streaming/class/*/h
-	rm functions/$FUNCTION/streaming/header/h/u*
-	rmdir functions/$FUNCTION/streaming/uncompressed/u*/*/
-	rmdir functions/$FUNCTION/streaming/uncompressed/u*
-	rmdir functions/$FUNCTION/streaming/header/h
-	rmdir functions/$FUNCTION/control/header/h
-	rmdir functions/$FUNCTION
+	ln -s functions/$FUNCTION $CONFIG
 }
 
 case "$1" in
@@ -241,6 +207,7 @@ case "$1" in
 	echo $MANUF > strings/0x409/manufacturer
 	echo $PRODUCT > strings/0x409/product
 
+	#Set things for Windows rndis
 	echo 0xEF > bDeviceClass
 	echo 0x02 > bDeviceSubClass
 	echo 0x01 > bDeviceProtocol
@@ -261,6 +228,13 @@ case "$1" in
 			;;
 
 		"NXP i.MX8MPlus ADI TOF carrier + ADSD3500")
+			#create_uvc configs/c.1 uvc.0
+			create_rndis configs/c.1 rndis.0
+			create_msd configs/c.1 mass_storage.0 /dev/mmcblk1p1
+			;;
+
+		"NXP i.MX8MPlus ADI TOF carrier + ADSD3030")
+			#create_uvc configs/c.1 uvc.0
 			create_rndis configs/c.1 rndis.0
 			create_msd configs/c.1 mass_storage.0 /dev/mmcblk1p1
 			;;
@@ -276,54 +250,6 @@ case "$1" in
 	echo $UDC > UDC
 	echo "OK"
 	;;
-
-    stop)
-	echo "Stopping the USB gadget"
-
-	set +e # Ignore all errors here on a best effort
-
-	cd $GADGET/g1
-
-	if [ $? -ne 0 ]; then
-	    echo "Error: no configfs gadget found"
-	    exit 1;
-	fi
-
-	echo "Unbinding USB Device Controller"
-	grep $UDC UDC && echo "" > UDC
-	echo "OK"
-
-	case $BOARD in
-		"NXP i.MX8MPlus ADI TOF board")
-			delete_uvc configs/c.1 uvc.0
-			;;
-
-		"NXP i.MX8MPlus ADI TOF carrier + ADSD3500")
-			delete_rndis configs/c.1 rndis.0
-			delete_msd configs/c.1 mass_storage.0
-			;;
-
-		*)
-			echo "Board model not valid"
-			exit 1
-			;;
-	esac
-
-	echo "Clearing English strings"
-	rmdir strings/0x409
-	echo "OK"
-
-	echo "Cleaning up configuration"
-	rmdir configs/c.1/strings/0x409
-	rmdir configs/c.1
-	echo "OK"
-
-	echo "Removing gadget directory"
-	cd $GADGET
-	rmdir --ignore-fail-on-non-empty g1
-	cd /
-	echo "OK"
-	;;
     *)
-	echo "Usage : $0 {start|stop}"
+	echo "Usage : $0 {start}"
 esac
