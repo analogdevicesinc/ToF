@@ -285,7 +285,7 @@ int main(int argc, char *argv[]) {
     Status status = Status::OK;
 
     std::map<int, std::string> modeIndexMap = {
-        {1, "lt_bin"}, {3, "pcmmp"}, {5, "vga"}, {7, "lrqmp"}, {10, "lrmp"}};
+        {1, "lr-native"}, {3, "pcmmp"}, {5, "vga-obsolete"}, {7, "lrqmp"}, {10, "lrmp"}};
 
     std::map<std::string, docopt::value> args = docopt::docopt_private(
         kUsagePublic, kUsageInternal, {argv + 1, argv + argc}, true);
@@ -700,7 +700,7 @@ int main(int argc, char *argv[]) {
             } else if (mode == 10) {
                 // 4 x 16 bit subframes =>> 8 x 8 bit subframes
                 subFrames = 8;
-            } else if (fDetails.type == "vga") {
+            } else if (fDetails.type == "lr-native") {
                 //one 16bit depth, one 16bit ab, one 8bit confidence
                 // =>> 5 * 8 bit subframes
                 subFrames = 5;
