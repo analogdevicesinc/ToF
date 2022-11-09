@@ -111,8 +111,8 @@ aditof::Status convertCameraMode(const std::string &mode,
         }
     }
 #else
-    if (mode == "vga") {
-        convertedMode = 5;
+    if (mode == "lr-native") {
+        convertedMode = 1;
     } else {
         return aditof::Status::INVALID_ARGUMENT;
     }
