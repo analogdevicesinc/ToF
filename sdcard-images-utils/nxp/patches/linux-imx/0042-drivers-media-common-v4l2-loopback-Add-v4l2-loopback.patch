@@ -1,7 +1,7 @@
-From 907c35d87b07a4fa471ab9112321788be6e7f76e Mon Sep 17 00:00:00 2001
+From b733d15ef79f74df4703c8a1c858fbe380d479d3 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Thu, 29 Sep 2022 13:27:06 +0300
-Subject: [PATCH 42/44] drivers: media: common: v4l2-loopback: Add
+Subject: [PATCH 42/45] drivers: media: common: v4l2-loopback: Add
  v4l2-loopback driver
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
@@ -3578,5 +3578,5 @@ index 000000000000..d855a3796554
 +#endif /* V4L2_PIX_FMT_HEVC */
 +};
 -- 
-2.17.1
+2.38.1
 
