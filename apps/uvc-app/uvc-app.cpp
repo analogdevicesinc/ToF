@@ -9,6 +9,17 @@ extern "C" {
 #include "events.h"
 #include "stream.h"
 #include "v4l2-source.h"
+#include <signal.h>
+}
+
+/* Necessary for and only used by signal handler. */
+static struct events *sigint_events;
+bool stop_app;
+
+static void sigint_handler(int signal) {
+    /* Stop the main loop */
+    events_stop(sigint_events);
+    stop_app = true;
 }
 
 int main(int argc, char *argv[]) {
@@ -45,6 +56,9 @@ int main(int argc, char *argv[]) {
 	 */
     events_init(&events);
 
+    sigint_events = &events;
+    signal(SIGINT, sigint_handler);
+
     /* Create and initialize a video source. */
     src = v4l2_video_source_create(cap_device);
     if (src == NULL) {
@@ -65,8 +79,10 @@ int main(int argc, char *argv[]) {
     uvc_stream_set_video_source(stream, src);
     uvc_stream_init_uvc(stream, fc);
 
-    /* Main capture loop */
-    events_loop(&events);
+    while (!stop_app) {
+        /* Main capture loop */
+        events_loop(&events);
+    }
 
 done:
     /* Cleanup */

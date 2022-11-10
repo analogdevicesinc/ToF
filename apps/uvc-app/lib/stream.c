@@ -121,6 +121,8 @@ static int uvc_stream_stop(struct uvc_stream *stream)
 
 	printf("Stopping video stream.\n");
 
+	events_stop(stream->events);
+
 	events_unwatch_fd(stream->events, sink->fd, EVENT_WRITE);
 
 	v4l2_stream_off(sink);
