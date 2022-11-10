@@ -646,16 +646,24 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         m_tofi_compute_context->p_ab_frame = tempAbFrame;
         m_tofi_compute_context->p_xyz_frame = (int16_t *)tempXyzFrame;
 
-        if (m_adsd3500Enabled && m_abEnabled &&
-                (m_details.frameType.type == "lrmp") ||
-            (m_details.frameType.type == "srmp")) {
+        if (m_adsd3500Enabled && m_abEnabled) {
             uint16_t *mpAbFrame;
             frame->getData("ir", &mpAbFrame);
-            memcpy(mpAbFrame,
-                   frameDataLocation + m_details.frameType.height *
-                                           m_details.frameType.width * 3,
-                   m_details.frameType.height * m_details.frameType.width *
-                       sizeof(uint16_t));
+
+            if (m_details.frameType.type == "lrmp") {
+                memcpy(mpAbFrame,
+                       frameDataLocation + m_details.frameType.height *
+                                               m_details.frameType.width * 3,
+                       m_details.frameType.height * m_details.frameType.width *
+                           sizeof(uint16_t));
+            } else {
+                memcpy(mpAbFrame,
+                       frameDataLocation + m_details.frameType.height *
+                                               m_details.frameType.width * 2,
+                       m_details.frameType.height * m_details.frameType.width *
+                           sizeof(uint16_t));
+            }
+
             //TO DO: shift with 4 because we use only 12 bits
             for (unsigned int i = 0;
                  i < (m_details.frameType.height * m_details.frameType.width);
