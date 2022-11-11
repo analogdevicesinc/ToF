@@ -506,7 +506,8 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
             return Status::GENERIC_ERROR;
         }
 #else
-        if (type.type == "lr-native") {
+        if (type.type == "sr-native" || type.type == "lr-native" ||
+            type.type == "sr-qnative" || type.type == "lr-qnative") {
 #ifdef NXP
             pixelFormat =
                 V4L2_PIX_FMT_SBGGR8; // TO DO: Add implementation to automatically find pixel format based on resolution instead of all this harcoding
