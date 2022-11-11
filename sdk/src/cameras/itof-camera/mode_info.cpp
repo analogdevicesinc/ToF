@@ -39,7 +39,10 @@ ModeInfo::modeInfo ModeInfo::g_newModesAdsd3500[] = {
 ModeInfo::modeInfo *ModeInfo::g_modeInfoData = ModeInfo::g_adsd3030Modes;
 
 ModeInfo::modeInfo ModeInfo::g_adsd3030Modes[] = {
+    {0, 512, 640, 10, 1670, 1472, 1},
     {1, 512, 640, 10, 1670, 1472, 1},
+    {2, 256, 320, 10, 1670, 1472, 1},
+    {3, 256, 320, 10, 1670, 1472, 1},
 };
 #endif
 
@@ -111,8 +114,14 @@ aditof::Status convertCameraMode(const std::string &mode,
         }
     }
 #else
-    if (mode == "lr-native") {
+    if (mode == "sr-native") {
+        convertedMode = 0;
+    } else if (mode == "lr-native") {
         convertedMode = 1;
+    } else if (mode == "st-qnative") {
+        convertedMode = 2;
+    } else if (mode == "lr-qnative") {
+        convertedMode = 3;
     } else {
         return aditof::Status::INVALID_ARGUMENT;
     }
