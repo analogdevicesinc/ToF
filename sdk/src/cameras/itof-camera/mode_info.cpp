@@ -118,7 +118,7 @@ aditof::Status convertCameraMode(const std::string &mode,
         convertedMode = 0;
     } else if (mode == "lr-native") {
         convertedMode = 1;
-    } else if (mode == "st-qnative") {
+    } else if (mode == "sr-qnative") {
         convertedMode = 2;
     } else if (mode == "lr-qnative") {
         convertedMode = 3;
