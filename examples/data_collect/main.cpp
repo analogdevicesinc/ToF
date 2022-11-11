@@ -78,7 +78,7 @@ static const char kUsagePublic[] =
       -h --help          Show this screen.
       --f <folder>       Output folder (max name 512) [default: ./]
       --n <ncapture>     Capture frame num. [default: 1]
-      --m <mode>         Mode to capture data in. [default: 10]
+      --m <mode>         Mode to capture data in. [default: 0]
       --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
       --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
       --wt <warmup>      Warmup Time (sec) [default: 0]
@@ -87,11 +87,10 @@ static const char kUsagePublic[] =
       --fw <firmware>    Adsd3500 fw file
 
     Valid mode (--m) options are:
-        1: QVGA LT (320x288)
-        3: Passive IR (1024x1024)
-        5: 1Mpixel with passive IR (1024x1024)
-        7: QMpixel (512x512)
-       10: 1Mpixel (1024x1024)
+        0: st/sr native
+        1: lt/lr native
+        2: st/sr Qnative
+        3: lt/lr Qnative
 
     Valid mode (--m) options for adsd3500: 
         7: QMpixel (512x512)
@@ -112,7 +111,7 @@ static const char kUsageInternal[] =
       -h --help          Show this screen.
       --f <folder>       Input folder to save data to. Max folder name size is 512. [default: ./]
       --n <ncapture>     Number of frames to capture. [default: 1]
-      --m <mode>         Mode to capture data in. [default: 10]
+      --m <mode>         Mode to capture data in. [default: 0]
       --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
       --ft <frame_type>  Type of frame to be captured [default: raw]
       --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
@@ -283,9 +282,15 @@ int main(int argc, char *argv[]) {
               << " | commit: " << aditof::getCommitVersion();
 
     Status status = Status::OK;
-
+#ifndef ADSD303
     std::map<int, std::string> modeIndexMap = {
-        {1, "lr-native"}, {3, "pcmmp"}, {5, "vga-obsolete"}, {7, "lrqmp"}, {10, "lrmp"}};
+        {0, "stmp"}, {1, "ltmp"}, {2, "stqmp"}, {3, "ltqmp"}};
+#else
+    std::map<int, std::string> modeIndexMap = {{0, "sr-native"},
+                                               {1, "lr-native"},
+                                               {2, "sr-qnative"},
+                                               {3, "lr-qnative"}};
+#endif
 
     std::map<std::string, docopt::value> args = docopt::docopt_private(
         kUsagePublic, kUsageInternal, {argv + 1, argv + argc}, true);
@@ -344,11 +349,10 @@ int main(int argc, char *argv[]) {
     // Parsing mode type
     if (args["--m"]) {
         mode = args["--m"].asLong();
-        modeIsValid =
-            (mode == 1 || mode == 3 || mode == 5 || mode == 7 || mode == 10);
+        modeIsValid = (mode == 0 || mode == 1 || mode == 2 || mode == 3);
         if (!modeIsValid) {
             LOG(ERROR) << "Invalid Mode: " << mode
-                       << " The accepted values for mode are: 1, 3, 5, 7, 10";
+                       << " The accepted values for mode are: 0, 1, 2, 3";
             return 0;
         }
     }
@@ -693,14 +697,17 @@ int main(int argc, char *argv[]) {
 
         // We have both 8bit and 16bit pixels, compute the size in 8bit
         if (sensorName == "adsd3500") {
-            if (mode == 7) {
+            if (mode == 2 || mode == 3) {
                 //one 16bit depth, one 16bit ab, one 8bit confidence
                 // =>> 5 * 8 bit subframes
                 subFrames = 5;
-            } else if (mode == 10) {
+            } else if (mode == 0 || mode == 1) {
                 // 4 x 16 bit subframes =>> 8 x 8 bit subframes
                 subFrames = 8;
-            } else if (fDetails.type == "lr-native") {
+            } else if (fDetails.type == "sr-native" ||
+                       fDetails.type == "lr-native" ||
+                       fDetails.type == "sr-qnative" ||
+                       fDetails.type == "lr-qnative") {
                 //one 16bit depth, one 16bit ab, one 8bit confidence
                 // =>> 5 * 8 bit subframes
                 subFrames = 5;
