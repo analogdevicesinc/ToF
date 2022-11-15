@@ -1,4 +1,0 @@
-./linux/newton_control.exe load efuse ../../efuse/hsp_fuse_file.vhx 
-./linux/newton_control.exe verify hsp_efuse ../../efuse/hsp_fuse_file.vhx 
-./linux/newton_control.exe load hsp_rom ../../firmware/0.7/riscv-hspfw-analog-0_7_1_release.vhx
-./linux/newton_control.exe reset_hsp

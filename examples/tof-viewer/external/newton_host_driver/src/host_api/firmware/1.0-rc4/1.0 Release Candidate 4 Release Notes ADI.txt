@@ -1,7 +1,0 @@
-1.0 RC4 Release Notes
-
-Updates:
-	1) Lift AEB/PMP restrictions in TEST mode
-
-Production Flows:
-    No changes.
