@@ -1,9 +1,0 @@
-[Load ROM firmware]
-[ADI Prodution 1sp sequence - ADI Production 1sp Sequence.txt]
-
-./newtown reset_hsp
-./Retest_utility/Enable_Retest_Trans_in_Secure_via_Jtag_adi
-./newton load cmd_file ./test_files/operating_sequences/adi_prod_1sp_operating_seq.txt
-./newton load cmd_file ./test_files/adi_keys/adi_public_key_hkms624.txt
-./newton load cmd_file ./test_files/adi_retest1sp/release/adi_signed_group_prod_1sp_retest_test_key_enc.txt
-./newtown reset_hsp

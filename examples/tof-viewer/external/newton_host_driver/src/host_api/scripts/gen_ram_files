@@ -1,8 +1,0 @@
-./generateBootImage.py useq_seq_ram ../../dataFiles/useq_seq_ram.txt 1 --count=1024
-./generateBootImage.py useq_wave_ram ../../dataFiles/useq_wave_ram.txt 1 --count=1024
-./generateBootImage.py useq_map_ram ../../dataFiles/useq_map_ram.txt 1 --count=128
-./generateBootImage.py datapath_ram ../../dataFiles/datapath_ram.txt 1 --count=1024
-./generateBootImage.py de_ram ../../dataFiles/de_ram.txt 1 --count=256
-./generateBootImage.py lps1_ram ../../dataFiles/lps1_ram.txt 1 --count=256
-./generateBootImage.py lps2_ram ../../dataFiles/lps2_ram.txt 1 --count=256
-./generateBootImage.py grouped ../../dataFiles/grouped.txt 1 --count=32

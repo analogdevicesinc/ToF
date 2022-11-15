@@ -1,8 +1,0 @@
-[Load ROM firmware]
-[ADI Prodution Encrypted 1sp sequence - ADI Production Encrypted 1sp Sequence.txt]
-
-./newtown reset_hsp
-./newton load_cmd ./test_files_1_0_integration/operating_sequences/adi_retail_1sp_operating_seq.txt
-./newton load_cmd ./test_files_1_0_integration/adi_keys/adi_public_key_hkms624.txt
-./newton load_cmd ./test_files_1_0_integration/test_payloads/ADI/adi_signed_group_packet_correct_order_with_retail_1sp_test_key_enc.txt
-
