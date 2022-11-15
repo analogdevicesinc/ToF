@@ -391,6 +391,7 @@ aditof::Status Adsd3500Sensor::setMode(const std::string &mode) {
     if (status != aditof::Status::OK) {
         return status;
     }
+
     //get register value by mode index - nothing to do, the value corresponds to the index
     //set register / control
     status = setModeByIndex(modeIndex);
@@ -863,7 +864,7 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd,
         checksum += buf[i + 4];
     }
     memcpy(buf + 11, &checksum, 4);
-    memcpy(buf + 15, readback_data, 4);
+    memcpy(buf + 15, readback_data, 1);
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {

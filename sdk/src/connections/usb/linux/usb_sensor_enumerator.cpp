@@ -112,7 +112,7 @@ Status UsbSensorEnumerator::searchSensors() {
             continue;
         }
 
-        std::string devName("ADI CMOS TOF UVC Gadget");
+        std::string devName("ADI TOF USB Gadget");
 
         if (strncmp(reinterpret_cast<const char *>(cap.card), devName.c_str(),
                     devName.length()) != 0) {
