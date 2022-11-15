@@ -3,10 +3,10 @@
  @tableofcontents
  
  @section license License
- Aditof SDK is licensed under the GNU General Public License v2.0.
+ ToF SDK is licensed under the MIT License.
 
  @section architecture Architecture
- The Aditof SDK consist of two layers.
+ The ToF SDK consist of two layers.
    
  A high level API allows clients to easily grab a camera object, configure it and request frames.
  There are three main interfaces to accomplish this. The **System** object is responsible for detecting cameras that are connected and for the construction and owning of **Camera** objects.
@@ -17,8 +17,8 @@
  For example one can read or write the internal registers of the hardware or read it's internal temperature.
  
  @subsection top-level-diagram Top Level Diagram
- A top level overview of the Aditof SDK consisting of the high level API and low level API:
- ![Aditof SDK Top Level Diagram](img/sdk_top_level_diagram.png)
+ A top level overview of the ToF SDK consisting of the high level API and low level API:
+ ![ToF SDK Top Level Diagram](img/sdk_top_level_diagram.png)
  
  @subsection class-diagram Class Diagram
  The class diagram add more details on top of what the top level diagram describes.
@@ -26,23 +26,23 @@
  The **System**, **Camera** and **Frame** use the pimpl (pointer to implementation) idiom which provides some advantages such as helping achieve binary compatibility.
  The **DepthSensorInterface**, **StorageInterface**, **TemperatureSensorInterface** and **SensorEnumeratorInterface** mark the invisible line between high level and low level API.
  The **DepthSensorInterface**, **StorageInterface** and **TemperatureSensorInterface** abstract over the connection type made with the hardware thus keeping the implementation specifics hidden from the client code (high level layer or external client code).
- The responsibility of the **SensorEnumeratorInterface** is to detect any hardware that is compatible with Aditof SDK.
+ The responsibility of the **SensorEnumeratorInterface** is to detect any hardware that is compatible with ToF SDK.
      
- ![Aditof SDK Class Diagram](img/sdk_class_diagram.png)
+ ![ToF SDK Class Diagram](img/sdk_class_diagram.png)
 
  @subsection sequence-diagrams Sequence Diagrams
  The sequence diagrams show the order in which calls need to be made to achieve a result and how the calls are propagated throughout the entire SDK.
 
  @subsubsection initialization-sequence Initialization Sequence
  The initialization sequence shows what needs to be done in order to initialize System and Camera before doing any other operation on them.
- ![Aditof SDK Initialization Sequence Diagram](img/sdk_initialization_sequence_diagram.png)
+ ![ToF SDK Initialization Sequence Diagram](img/sdk_initialization_sequence_diagram.png)
 
  @subsubsection acquire-frame-sequence Acquire Frame Sequence
  The acquire frame sequence shows how a frame is obtained and how the calls propagate down the stack towards the hardware.
- ![Aditof SDK Acquire Frame Sequence Diagram](img/sdk_acquire_frame_sequence_diagram.png)
+ ![ToF SDK Acquire Frame Sequence Diagram](img/sdk_acquire_frame_sequence_diagram.png)
  
  @section api API
- The below code snipped shows an example of how the Aditof SDK can be used to get a frame from one camera.
+ The below code snipped shows an example of how the ToF SDK can be used to get a frame from one camera.
 
 ~~~{.cpp}
  #include "aditof/aditof.h"
