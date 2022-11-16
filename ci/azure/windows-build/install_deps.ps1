@@ -20,14 +20,14 @@ cp -r C:/'Program Files'/OpenSSL-Win64 deps_installed
 #Install glog
 git clone --branch v0.6.0 --depth 1 https://github.com/google/glog
 cd glog
-mkdir build_0_3_5_Release
-mkdir build_0_3_5_Debug
+mkdir build_0_6_0_Release
+mkdir build_0_6_0_Debug
 
-cd build_0_3_5_Release
+cd build_0_6_0_Release
 cmake -DWITH_GFLAGS=off -DCMAKE_INSTALL_PREFIX="$local_path/deps_installed/Release/glog" -G $GENERATOR ..
 cmake --build . --target install --config Release -j 4
 
-cd ../build_0_3_5_Debug
+cd ../build_0_6_0_Debug
 cmake -DWITH_GFLAGS=off -DCMAKE_INSTALL_PREFIX="$local_path/deps_installed/Debug/glog" -G $GENERATOR ..
 cmake --build . --target install --config Debug -j 4
 
