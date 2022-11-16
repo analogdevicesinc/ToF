@@ -497,6 +497,8 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         return status;
     }
 
+    return status;
+
     dev = &m_implData->videoDevs[0];
 
 #if 1 // Don't request buffers & set fromat for UVC context. It is already done in uvc-app/lib/v4l2.c
