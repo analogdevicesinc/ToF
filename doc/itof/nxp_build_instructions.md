@@ -5,7 +5,7 @@
 
 ### Pre-requisites
 * CMake
-* Glog v0.3.5
+* Glog v0.6.0
 * Libwebsockets v3.1
 * Protocol Buffers v3.9.0
 
@@ -19,7 +19,7 @@ sudo apt install cmake
 ```console
 git clone --branch v0.6.0 --depth 1 https://github.com/google/glog
 cd glog
-mkdir build_0_3_5 && cd build_0_3_5
+mkdir build_0_6_0 && cd build_0_6_0
 cmake -DWITH_GFLAGS=off -DCMAKE_INSTALL_PREFIX=/opt/glog ..
 sudo cmake --build . --target install
 ```

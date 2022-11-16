@@ -7,7 +7,7 @@
 * Install MS Visual Studio 16 2019
 * Install MS .NET Framework 4.5
 * CMake
-* Glog v0.3.5
+* Glog v0.6.0
 * Libwebsockets v3.1
 * Protocol Buffers v3.9.0
 * Depth Compute
@@ -21,7 +21,7 @@ Windows installer can be downloaded from: https://cmake.org/download/
 ```console
 git clone --branch v0.6.0 --depth 1 https://github.com/google/glog
 cd glog
-mkdir build_0_3_5 && cd build_0_3_5
+mkdir build_0_6_0 && cd build_0_6_0
 cmake -DWITH_GFLAGS=off -DCMAKE_INSTALL_PREFIX=./local_path/glog -G "Visual Studio 16 2019" ..
 cmake --build . --target install --config Debug
 cmake --build . --target install --config Release
@@ -67,13 +67,13 @@ git clone https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build
 cd build
-cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_3_5\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=off ..
+cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_6_0\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=off ..
 cmake --build . --config Release
 ```
 
 * Or if you will be building the Depth Compute stubs the cmake command should be:
 ```console
-cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_3_5\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=off -DUSE_DEPTH_COMPUTE_STUBS=on ..
+cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_6_0\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=off -DUSE_DEPTH_COMPUTE_STUBS=on ..
 ```
 
 ## Building the SDK with examples
@@ -90,7 +90,7 @@ cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_3_5\local_path\glog
 cd ToF
 mkdir build
 cd build
-cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_3_5\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=on ..
+cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_6_0\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=on ..
 ```
 - Open 'adi_tof_project.sln' generated in 'ToF\build' in MS Visual Studio 2019
 - Select 'Release' build
@@ -132,7 +132,7 @@ Requirements:
 
 In order to generate the doxygen documentation you must compile the sdk in the following way:
 ```console
-cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_3_5\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets;C:\projects\ToF\opencv\build" -G "Visual Studio 16 2019" -DOPENSSL_INCLUDE_DIRS="C:\OpenSSL-Win64\include" -DWITH_DOC=on ..
+cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_6_0\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets;C:\projects\ToF\opencv\build" -G "Visual Studio 16 2019" -DOPENSSL_INCLUDE_DIRS="C:\OpenSSL-Win64\include" -DWITH_DOC=on ..
 cmake --build . --target doc -j 4
 ```
 After compilation, the documentation can be found at this path:
