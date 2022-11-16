@@ -259,9 +259,9 @@ echo "Installing glog with config=%configuration% and generator=%generator%"
 pushd %deps_dir%
 if not exist "glog" ( git clone --branch v0.6.0 --depth 1 https://github.com/google/glog )
 pushd glog
-git checkout tags/v0.3.5
-if not exist "build_0_3_5" ( mkdir build_0_3_5 )
-pushd build_0_3_5
+git checkout tags/v0.6.0
+if not exist "build_0_6_0" ( mkdir build_0_6_0 )
+pushd build_0_6_0
 cmake -DWITH_GFLAGS=off -DCMAKE_INSTALL_PREFIX=%deps_install_dir%\glog -G %generator% ..
 cmake --build . --target install --config %configuration%
 popd

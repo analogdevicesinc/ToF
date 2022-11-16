@@ -26,13 +26,13 @@ get_deps_source_code() {
 }
 
 ############################################################################
-# Build and install v0.3.5 of glog from the specified repository
+# Build and install v0.6.0 of glog from the specified repository
 ############################################################################
 build_and_install_glog() {
     REPO_DIR=$1
     INSTALL_DIR=$2
     EXTRA_CMAKE_OPTIONS=$3
-    BUILD_DIR=${REPO_DIR}/build_0_3_5
+    BUILD_DIR=${REPO_DIR}/build_0_6_0
 
     mkdir -p ${BUILD_DIR}
     pushd ${BUILD_DIR}
