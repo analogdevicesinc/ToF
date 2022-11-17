@@ -87,14 +87,10 @@ static const char kUsagePublic[] =
       --fw <firmware>    Adsd3500 fw file
 
     Valid mode (--m) options are:
-        0: st/sr native
-        1: lt/lr native
-        2: st/sr Qnative
-        3: lt/lr Qnative
-
-    Valid mode (--m) options for adsd3500: 
-        7: QMpixel (512x512)
-       10: 1Mpixel (1024x1024)
+        0: short-range native
+        1: long-range native
+        2: short-range Qnative
+        3: long-range Qnative
 )";
 // Hide 'ft' (frame_type) option from public doc string
 static const char kUsageInternal[] =
@@ -282,15 +278,11 @@ int main(int argc, char *argv[]) {
               << " | commit: " << aditof::getCommitVersion();
 
     Status status = Status::OK;
-#ifndef ADSD303
-    std::map<int, std::string> modeIndexMap = {
-        {0, "stmp"}, {1, "ltmp"}, {2, "stqmp"}, {3, "ltqmp"}};
-#else
+
     std::map<int, std::string> modeIndexMap = {{0, "sr-native"},
                                                {1, "lr-native"},
                                                {2, "sr-qnative"},
                                                {3, "lr-qnative"}};
-#endif
 
     std::map<std::string, docopt::value> args = docopt::docopt_private(
         kUsagePublic, kUsageInternal, {argv + 1, argv + argc}, true);
