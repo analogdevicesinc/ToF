@@ -1,6 +1,6 @@
 {
-"VAUX_POWER_VOLTAGE": "18",
-"DEPTH_INI": "./config/RawToDepthAdsd3030_sr-native.ini;./config/RawToDepthAdsd3030_lr-native.ini;./config/RawToDepthAdsd3030_sr-qnative.ini;./config/RawToDepthAdsd3030_lr-qnative.ini",
-"FPS": "10",
-"FSYNC_MODE": "1"
+    "VAUX_POWER_VOLTAGE": "18",
+    "DEPTH_INI": "./config/RawToDepthAdsd3500_sr-native.ini;./config/RawToDepthAdsd3500_lr-native.ini;./config/RawToDepthAdsd3500_sr-qnative.ini;./config/RawToDepthAdsd3500_lr-qnative.ini",
+    "FPS": "10",
+    "FSYNC_MODE": "1"
 }

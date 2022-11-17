@@ -492,9 +492,9 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
         __u32 pixelFormat = 0;
 #ifndef ADSD3030
-        if (type.type == "lrqmp" || type.type == "srqmp") {
+        if (type.type == "lr-qnative" || type.type == "sr-qnative") {
             pixelFormat = V4L2_PIX_FMT_SBGGR8;
-        } else if (type.type == "lrmp" || type.type == "srmp") {
+        } else if (type.type == "lr-native" || type.type == "sr-native") {
             pixelFormat = V4L2_PIX_FMT_SBGGR12;
         } else {
             LOG(ERROR) << "frame type: " << type.type << " "

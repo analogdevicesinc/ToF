@@ -86,19 +86,20 @@ unsigned int ModeInfo::getNumModes() {
 aditof::Status convertCameraMode(const std::string &mode,
                                  uint8_t &convertedMode) {
 
-#ifndef ADSD3030
     int modeVersion = ModeInfo::getInstance()->getModeVersion();
     if (modeVersion == 1 || modeVersion == 2) {
-        if (mode == "srmp") {
+        if (mode == "sr-native") {
             convertedMode = 0;
-        } else if (mode == "lrmp") {
+        } else if (mode == "lr-native") {
             convertedMode = 1;
-        } else if (mode == "srqmp") {
+        } else if (mode == "sr-qnative") {
             convertedMode = 2;
-        } else if (mode == "lrqmp") {
+        } else if (mode == "lr-native") {
             convertedMode = 3;
         } else if (mode == "pcmmp") {
             convertedMode = 4;
+        } else {
+            return aditof::Status::INVALID_ARGUMENT;
         }
     } else {
         if (mode == "lt_bin") {
@@ -113,19 +114,6 @@ aditof::Status convertCameraMode(const std::string &mode,
             return aditof::Status::INVALID_ARGUMENT;
         }
     }
-#else
-    if (mode == "sr-native") {
-        convertedMode = 0;
-    } else if (mode == "lr-native") {
-        convertedMode = 1;
-    } else if (mode == "sr-qnative") {
-        convertedMode = 2;
-    } else if (mode == "lr-qnative") {
-        convertedMode = 3;
-    } else {
-        return aditof::Status::INVALID_ARGUMENT;
-    }
-#endif
 
     return aditof::Status::OK;
 }
