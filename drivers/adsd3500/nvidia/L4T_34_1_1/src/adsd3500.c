@@ -910,6 +910,7 @@ static int adsd3500_probe(struct i2c_client *client,
 	priv->sd = &common_data->subdev;
 	priv->sd->dev = &client->dev;
 	priv->s_data->dev = &client->dev;
+	priv->framerate = 10;
 	mutex_init(&priv->lock);
 
 	ret = camera_common_initialize(common_data, "adsd3500");
