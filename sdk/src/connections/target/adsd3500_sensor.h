@@ -127,57 +127,48 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     std::unique_ptr<ImplData> m_implData;
     uint8_t m_capturesPerFrame;
     bool m_firstRun;
-#ifndef ADSD3030
-    const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
-        {
-            "sr-qnative",
-            {{"raw", 2560, 512},
-             {"ir", 512, 512},
-             {"xyz", 512, 512},
-             {"depth", 512, 512},
-             { "embedded_header",
-               1,
-               128 }},
-            2560,
-            512,
-        },
-        {
-            "sr-qnative",
-            {{"raw", 2560, 512},
-             {"ir", 512, 512},
-             {"xyz", 512, 512},
-             {"depth", 512, 512},
-             { "embedded_header",
-               1,
-               128 }},
-            2560,
-            512,
-        },
-        {
-            "lr-native",
-            {{"raw", 1024, 4096},
-             {"ir", 1024, 1024},
-             {"xyz", 1024, 1024},
-             {"depth", 1024, 1024},
-             { "embedded_header",
-               1,
-               128 }},
-            1024,
-            4096,
-        },
-        { "sr-native",
-          {{"raw", 1024, 4096},
-           {"ir", 1024, 1024},
-           {"xyz", 1024, 1024},
-           {"depth", 1024, 1024},
-           { "embedded_header",
-             1,
-             128 }},
-          1024,
-          4096,
-        }};
-#else
-    const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
+    const std::vector<aditof::DepthSensorFrameType>
+        availableFrameTypesAdsd3030 = {{
+                                           "sr-qnative",
+                                           {{"raw", 2560, 512},
+                                            {"ir", 512, 512},
+                                            {"xyz", 512, 512},
+                                            {"depth", 512, 512},
+                                            {"embedded_header", 1, 128}},
+                                           2560,
+                                           512,
+                                       },
+                                       {
+                                           "sr-qnative",
+                                           {{"raw", 2560, 512},
+                                            {"ir", 512, 512},
+                                            {"xyz", 512, 512},
+                                            {"depth", 512, 512},
+                                            {"embedded_header", 1, 128}},
+                                           2560,
+                                           512,
+                                       },
+                                       {
+                                           "lr-native",
+                                           {{"raw", 1024, 4096},
+                                            {"ir", 1024, 1024},
+                                            {"xyz", 1024, 1024},
+                                            {"depth", 1024, 1024},
+                                            {"embedded_header", 1, 128}},
+                                           1024,
+                                           4096,
+                                       },
+                                       {
+                                           "sr-native",
+                                           {{"raw", 1024, 4096},
+                                            {"ir", 1024, 1024},
+                                            {"xyz", 1024, 1024},
+                                            {"depth", 1024, 1024},
+                                            {"embedded_header", 1, 128}},
+                                           1024,
+                                           4096,
+                                       }};
+    std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
         {
             "sr-native",
             {{"raw", 2560, 640},
@@ -218,5 +209,4 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
             1280,
             320,
         }};
-#endif
 };
