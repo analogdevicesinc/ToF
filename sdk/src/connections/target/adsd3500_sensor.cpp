@@ -85,12 +85,22 @@ struct VideoDev {
         : fd(-1), sfd(-1), videoBuffers(nullptr), nVideoBuffers(0),
           started(false) {}
 };
+
+enum class ImagerType { IMAGER_UNKNOWN, IMAGER_ADSD3100, IMAGER_ADSD3030 };
+enum class CCBVersion { CCB_UNKNOWN, CCB_VERSION0, CCB_VERSION1 };
+
 struct Adsd3500Sensor::ImplData {
     uint8_t numVideoDevs;
     struct VideoDev *videoDevs;
     aditof::DepthSensorFrameType frameType;
     std::unordered_map<std::string, __u32> controlsCommands;
-    ImplData() : numVideoDevs(1), videoDevs(nullptr), frameType{"", {}, 0, 0} {}
+    ImagerType imagerType;
+    CCBVersion ccbVersion;
+
+    ImplData()
+        : numVideoDevs(1), videoDevs(nullptr), frameType{"", {}, 0, 0},
+          imagerType{ImagerType::IMAGER_UNKNOWN},
+          ccbVersion{CCBVersion::CCB_UNKNOWN} {}
 };
 
 // TO DO: This exists in linux_utils.h which is not included on Dragoboard.
@@ -285,6 +295,60 @@ aditof::Status Adsd3500Sensor::open() {
                          << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
         }
+    }
+
+    // Ask ADSD3500 what imager is being used and whether we're using the old or new modes (CCB version)
+    if (m_implData->imagerType == ImagerType::IMAGER_UNKNOWN ||
+        m_implData->ccbVersion == CCBVersion::CCB_UNKNOWN) {
+        uint16_t readValue;
+        status = adsd3500_read_cmd(0x0032, &readValue);
+        if (status == aditof::Status::OK) {
+            uint8_t ccb_version = readValue & 0x00FF;
+            switch (ccb_version) {
+            case 1: {
+                m_implData->ccbVersion = CCBVersion::CCB_VERSION0;
+                break;
+            }
+            case 2: {
+                m_implData->ccbVersion = CCBVersion::CCB_VERSION1;
+                break;
+            }
+            default: {
+                LOG(WARNING)
+                    << "Unknown CCB version read from ADSD3500: " << ccb_version
+                    << ". Assuming CCB version 1 (new modes)";
+                m_implData->ccbVersion = CCBVersion::CCB_VERSION1;
+            }
+            } // switch (ccb_version)
+
+            uint8_t imager_version = (readValue & 0xFF00) >> 8;
+            switch (imager_version) {
+            case 1: {
+                m_implData->imagerType = ImagerType::IMAGER_ADSD3100;
+                break;
+            }
+            case 2: {
+                m_implData->imagerType = ImagerType::IMAGER_ADSD3030;
+                break;
+            }
+            default: {
+                LOG(WARNING) << "Unknown imager type read from ADSD3500: "
+                             << imager_version << ". Assuming imager ADSD3100";
+                m_implData->imagerType = ImagerType::IMAGER_ADSD3100;
+            }
+            } // switch (imager_version)
+        } else {
+            LOG(WARNING)
+                << "Failed to read imager type and CCB version (command "
+                   "0x0032). "
+                   "Assuming imager ADSD3100 and CCB version 1 (new modes)";
+            m_implData->imagerType = ImagerType::IMAGER_ADSD3100;
+            m_implData->ccbVersion = CCBVersion::CCB_VERSION1;
+        }
+    }
+
+    if (m_implData->imagerType == ImagerType::IMAGER_ADSD3030) {
+        availableFrameTypes = availableFrameTypesAdsd3030;
     }
 
     return status;
@@ -495,31 +559,34 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         }
 
         __u32 pixelFormat = 0;
-#ifndef ADSD3030
-        if (type.type == "lr-qnative" || type.type == "sr-qnative") {
-            pixelFormat = V4L2_PIX_FMT_SBGGR8;
-        } else if (type.type == "lr-native" || type.type == "sr-native") {
-            pixelFormat = V4L2_PIX_FMT_SBGGR12;
-        } else {
-            LOG(ERROR) << "frame type: " << type.type << " "
-                       << "is unhandled";
-            return Status::GENERIC_ERROR;
-        }
-#else
-        if (type.type == "sr-native" || type.type == "lr-native" ||
-            type.type == "sr-qnative" || type.type == "lr-qnative") {
+
+        if (m_implData->imagerType == ImagerType::IMAGER_ADSD3100) {
+            if (type.type == "lr-qnative" || type.type == "sr-qnative") {
+                pixelFormat = V4L2_PIX_FMT_SBGGR8;
+            } else if (type.type == "lr-native" || type.type == "sr-native") {
+                pixelFormat = V4L2_PIX_FMT_SBGGR12;
+            } else {
+                LOG(ERROR) << "frame type: " << type.type << " "
+                           << "is unhandled";
+                return Status::GENERIC_ERROR;
+            }
+        } else if (m_implData->imagerType == ImagerType::IMAGER_ADSD3030) {
+            if (type.type == "sr-native" || type.type == "lr-native" ||
+                type.type == "sr-qnative" || type.type == "lr-qnative") {
 #ifdef NXP
-            pixelFormat =
-                V4L2_PIX_FMT_SBGGR8; // TO DO: Add implementation to automatically find pixel format based on resolution instead of all this harcoding
+                pixelFormat =
+                    V4L2_PIX_FMT_SBGGR8; // TO DO: Add implementation to automatically find pixel format based on resolution instead of all this harcoding
 #else
-            pixelFormat = V4L2_PIX_FMT_SRGGB8;
+                pixelFormat = V4L2_PIX_FMT_SRGGB8;
 #endif
+            } else {
+                LOG(ERROR) << "frame type: " << type.type << " "
+                           << "is unhandled";
+                return Status::GENERIC_ERROR;
+            }
         } else {
-            LOG(ERROR) << "frame type: " << type.type << " "
-                       << "is unhandled";
-            return Status::GENERIC_ERROR;
+            LOG(ERROR) << "Unknow imager type!";
         }
-#endif
 
         /* Set the frame format in the driver */
         CLEAR(fmt);
