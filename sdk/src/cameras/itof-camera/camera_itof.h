@@ -385,6 +385,7 @@ class CameraItof : public aditof::Camera {
     std::map<std::string, std::string> m_iniKeyValPairs;
     //pair between firmware version and git hash
     std::pair<std::string, std::string> m_adsd3500FwGitHash;
+    int m_imagerType;
 };
 
 #endif // CAMERA_ITOF_H
