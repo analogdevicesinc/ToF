@@ -5,6 +5,7 @@ Note, all actities below are assuming to be done in a base folder.
 ## Building the SDK only
 
 Download the latest Linux installer - as of writing v3.2.0.
+https://github.com/analogdevicesinc/ToF/releases
 
 * mkdir libs
 * cd libs
