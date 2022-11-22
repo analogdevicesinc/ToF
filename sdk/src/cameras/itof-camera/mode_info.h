@@ -9,20 +9,15 @@
 
 #include <aditof/status_definitions.h>
 #include <cstdint>
-#include <glog/logging.h>
-#include <ostream>
 #include <string>
 #include <vector>
 
 const std::vector<std::string> g_availableModes = {"pcmmp", "srqmp", "lrqmp",
                                                    "srmp", "lrmp"};
 
-aditof::Status convertCameraMode(const std::string &modes,
-                                 uint8_t &convertedMode);
-
 /**
  * @class ModeInfo
- * @brief Singleton definition of Mode details (width, height, total captures, embedded_width, embedded_height)
+ * @brief Singleton definition of Mode details (width, height, total captures, embedded_width, embedded_height, passive_ir, mode_name)
  * @note If low level USB objects or camera objects needs to get information of particular mode, they can use the single instance to get mode information
  */
 class ModeInfo {
@@ -40,6 +35,7 @@ class ModeInfo {
         uint16_t embed_width;
         uint16_t embed_height;
         uint8_t passive_ir;
+        std::string mode_name;
     } modeInfo;
 
     /**
@@ -67,31 +63,31 @@ class ModeInfo {
     modeInfo getModeInfo(const std::string &mode);
 
     /**
-     * @brief Get the number of modes supported
-     * @return int
-     */
-    unsigned int getNumModes();
-
-    /**
-     * @brief Set mode version
+     * @brief Set imager type. Set mode version.
+     * param[in] type - 1 ADSD3100, 2 ADSD3030
      * param[in] version - 0 Old table, 1 new adsd3100 table, 2 new adsd3500 table
      * @return aditof::Status
      */
-    aditof::Status setModeVersion(int version);
+    aditof::Status setImagerTypeAndModeVersion(int version, int type);
 
     /**
-     * @brief Set mode version
-     * @return 1 if new ModeInfo table/ 0 for old table
-     */
-    int getModeVersion();
+     * Get the id of the mode that corresponds to the name
+     * param[in] modes - the name of the mode (represented as a string)
+     * param[out] convertedMode - the id of the mode (represented as a number)
+     * @return aditof::Status
+    */
+    aditof::Status convertCameraMode(const std::string &modes,
+                                     uint8_t &convertedMode);
 
   private:
-    static modeInfo *g_modeInfoData;      //static array of all modes supported
-    static modeInfo g_oldModes[];         //static array of old modes supported
-    static modeInfo g_newModesAdsd3100[]; //static array of new modes supported
-    static modeInfo g_newModesAdsd3500[]; //static array of new modes supported
-    static modeInfo g_adsd3030Modes[];    //static array of adsd3030 modes
-    static ModeInfo *m_instance;          //single instance
+    static std::vector<modeInfo> g_modeInfoData;
+    static modeInfo g_oldModes[];
+    static modeInfo g_newModesAdsd3100[];
+    static modeInfo g_newModesAdsd3500[];
+    static modeInfo g_adsd3030Modes[];
+    static ModeInfo *m_instance; //single instance
+    static int g_imagerType;
+    static int g_modeVersion;
 
     ModeInfo() {
     } // private so that it can not be called, always access through getInstance()

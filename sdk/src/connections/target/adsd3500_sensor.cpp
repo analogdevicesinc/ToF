@@ -455,7 +455,7 @@ aditof::Status Adsd3500Sensor::setMode(const std::string &mode) {
     aditof::Status status = aditof::Status::OK;
     LOG(INFO) << "Setting camera mode to " << mode;
     //get mode index by name
-    status = convertCameraMode(mode, modeIndex);
+    status = ModeInfo::getInstance()->convertCameraMode(mode, modeIndex);
     if (status != aditof::Status::OK) {
         return status;
     }
@@ -744,7 +744,8 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
     }
 
     if (control == "modeInfoVersion") {
-        ModeInfo::getInstance()->setModeVersion(std::stoi(value));
+        ModeInfo::getInstance()->setImagerTypeAndModeVersion(
+            (int)m_implData->imagerType, std::stoi(value));
         return status;
     } else if (control == "fps") {
         int fps = std::stoi(value);
