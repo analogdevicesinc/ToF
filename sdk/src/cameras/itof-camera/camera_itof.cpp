@@ -60,7 +60,9 @@ CameraItof::CameraItof(
       m_eepromInitialized(false), m_adsd3500Enabled(false),
       m_loadedConfigData(false), m_xyzEnabled(false), m_xyzSetViaControl(false),
       m_modechange_framedrop_count(0), m_tempFiles{}, m_cameraFps(0),
-      m_fsyncMode(1) {
+      m_fsyncMode(1),
+      m_imagerType(
+          1) { // TO DO: read imager type via host commands when ADSD3500 available
 
     FloatToLinGenerateTable();
 
@@ -170,14 +172,16 @@ aditof::Status CameraItof::initialize() {
 
         if (tempDealiasStruct.n_rows != width &&
             tempDealiasStruct.n_cols != height) {
-            ModeInfo::getInstance()->setModeVersion(0);
+            ModeInfo::getInstance()->setImagerTypeAndModeVersion(m_imagerType,
+                                                                 0);
             status = m_depthSensor->setControl("modeInfoVersion", "0");
             if (status != Status::OK) {
                 LOG(ERROR) << "Failed to set target mode info for adsd3500!";
                 return status;
             }
         } else {
-            ModeInfo::getInstance()->setModeVersion(2);
+            ModeInfo::getInstance()->setImagerTypeAndModeVersion(m_imagerType,
+                                                                 2);
             status = m_depthSensor->setControl("modeInfoVersion", "2");
             if (status != Status::OK) {
                 LOG(ERROR) << "Failed to set target mode info for adsd3500!";
@@ -306,14 +310,16 @@ aditof::Status CameraItof::initialize() {
 
         if (tempDealiasStruct[1].n_rows != width &&
             tempDealiasStruct[1].n_cols != height) {
-            ModeInfo::getInstance()->setModeVersion(0);
+            ModeInfo::getInstance()->setImagerTypeAndModeVersion(m_imagerType,
+                                                                 0);
             status = m_depthSensor->setControl("modeInfoVersion", "0");
             if (status != Status::OK) {
                 LOG(ERROR) << "Failed to set target mode info for adsd3100!";
                 return status;
             }
         } else {
-            ModeInfo::getInstance()->setModeVersion(1);
+            ModeInfo::getInstance()->setImagerTypeAndModeVersion(m_imagerType,
+                                                                 1);
             status = m_depthSensor->setControl("modeInfoVersion", "1");
             if (status != Status::OK) {
                 LOG(ERROR) << "Failed to set target mode info for adsd3100!";
@@ -777,7 +783,8 @@ aditof::Status CameraItof::initComputeLibrary(void) {
     //freeComputeLibrary();
     uint8_t convertedMode;
 
-    status = convertCameraMode(m_details.mode, convertedMode);
+    status = ModeInfo::getInstance()->convertCameraMode(m_details.mode,
+                                                        convertedMode);
 
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Invalid mode!";
@@ -1055,16 +1062,15 @@ aditof::Status CameraItof::processFrame(uint8_t *rawFrame,
 aditof::Status CameraItof::getCurrentModeInfo(ModeInfo::modeInfo &info) {
     using namespace aditof;
     Status status = Status::OK;
-    uint8_t convertedMode;
-
-    status = convertCameraMode(m_details.mode, convertedMode);
-    if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Invalid mode!";
-        return aditof::Status::GENERIC_ERROR;
-    }
 
     ModeInfo *pModeInfo = ModeInfo::getInstance();
     if (pModeInfo) {
+        uint8_t convertedMode;
+        status = pModeInfo->convertCameraMode(m_details.mode, convertedMode);
+        if (status != aditof::Status::OK) {
+            LOG(ERROR) << "Invalid mode!";
+            return aditof::Status::GENERIC_ERROR;
+        }
         info = pModeInfo->getModeInfo(convertedMode);
         return Status::OK;
     }
