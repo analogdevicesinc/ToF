@@ -1,47 +1,26 @@
 # Linux Build Instructions
 
-Please note, the following has been tested on Unbuntu 20.04 LTS
-
-Before starting it is useful to execute the following commands:
-```console
-sudo apt update
-sudo apt upgrade
-```
-
-# Depth Compute Pre-requisites
-
-
-
-## Install OpenCL Run-times
-
-```console
-sudo apt install clinfo
-sudo apt install mesa-utils
-sudo apt install -y gpg-agent wget
-wget -qO - https://repositories.intel.com/graphics/intel-graphics.key |   sudo apt-key add -
-sudo apt-add-repository   'deb [arch=amd64] https://repositories.intel.com/graphics/ubuntu focal main'
-sudo apt update
-sudo apt install   intel-opencl-icd
-```
-
-## Obtain Depth Compute Libraries
-
+Note, all actities below are assuming to be done in a base folder.
 
 ## Building the SDK only
 
+Download the latest Linux installer - as of writing v3.2.0.
+
+* mkdir libs
+* cd libs
+* cp ~/Analog\ Devices/TOF_Evaluation_ADTF3175D-Rel3.2.0/bin/\*tofi\* .
+
 ### Pre-requisites
 * CMake
-* G++
-* Git
 * OpenGL
 * Glog v0.6.0
 * Libwebsockets v3.1
 * Protocol Buffers v3.9.0
 
 ### Installing the dependencies
-* CMake, G++, Git:
+* CMake:
 ```console
-sudo apt install cmake g++ git
+sudo apt install cmake
 ```
 
 * OpenGL:
@@ -78,14 +57,11 @@ sudo cmake --build . --target install
 
 
 ### Download and build SDK only
-
-Note, this uses tag **v3.2.0**.
-
 ```console
-git clone --branch v3.2.0 https://github.com/analogdevicesinc/ToF
+git clone --branch v3.2.0 --depth 1 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
-cmake -DWITH_EXAMPLES=off -DWITH_NETWORK=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
+cmake -DWITH_EXAMPLES=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
 make
 ```
 
@@ -102,14 +78,11 @@ sudo apt install libopencv-dev
 ```
 
 ### Build SDK with examples
-
-Note, this uses tag **v3.2.0**.
-
 ```console
-git clone --branch v3.2.0 https://github.com/analogdevicesinc/ToF
+git clone --branch v3.2.0 --depth 1 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
-cmake -DWITH_EXAMPLES=on -DWITH_NETWORK=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
+cmake -DWITH_EXAMPLES=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
 make
 ```
 
