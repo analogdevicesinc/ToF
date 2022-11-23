@@ -117,6 +117,7 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     m_controls.emplace("abBits", "0");
     m_controls.emplace("confidenceBits", "0");
     m_controls.emplace("modeInfoVersion", "0");
+    m_controls.emplace("fps", "0");
 
     // Define the commands that correspond to the sensor controls
     m_implData->controlsCommands["abAveraging"] = 0x9819e5;
@@ -664,6 +665,7 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
                                           const std::string &value) {
     using namespace aditof;
     Status status = Status::OK;
+    struct VideoDev *dev = &m_implData->videoDevs[0];
 
     if (m_controls.count(control) == 0) {
         LOG(WARNING) << "Unsupported control";
@@ -673,9 +675,28 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
     if (control == "modeInfoVersion") {
         ModeInfo::getInstance()->setModeVersion(std::stoi(value));
         return status;
-    }
+    } else if (control == "fps") {
+        int fps = std::stoi(value);
+        struct v4l2_streamparm fpsControl;
+        memset(&fpsControl, 0, sizeof(struct v4l2_streamparm));
 
-    struct VideoDev *dev = &m_implData->videoDevs[0];
+        fpsControl.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        fpsControl.parm.capture.timeperframe.numerator = 1;
+        fpsControl.parm.capture.timeperframe.denominator = fps;
+
+        if (xioctl(dev->fd, VIDIOC_S_PARM, &fpsControl) == -1) {
+            LOG(WARNING) << "Failed to set control: " << control << " "
+                         << "errno: " << errno << " error: " << strerror(errno);
+            status = Status::GENERIC_ERROR;
+        }
+
+        status = this->adsd3500_write_cmd(0x22, fps);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to set fps at: " << fps
+                       << "via host commands!";
+            return Status::GENERIC_ERROR;
+        }
+    }
 
     // Send the command that sets the control value
     struct v4l2_control ctrl;
