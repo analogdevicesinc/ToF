@@ -324,13 +324,7 @@ aditof::Status CameraItof::initialize() {
 
     //Set FPS
     if (m_cameraFps != 0) {
-        if (m_adsd3500Enabled) {
-            status = m_depthSensor->adsd3500_write_cmd(0x22, m_cameraFps);
-        } else {
-            status =
-                m_depthSensor->setControl("fps", std::to_string(m_cameraFps));
-        }
-
+        status = m_depthSensor->setControl("fps", std::to_string(m_cameraFps));
         if (status != Status::OK) {
             LOG(ERROR) << "Failed to set fps at: " << m_cameraFps << "!";
         } else {
