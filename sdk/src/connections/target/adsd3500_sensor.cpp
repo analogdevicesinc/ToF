@@ -38,7 +38,7 @@
 #define CTRL_AB_BITS (0x9819e3)
 #define CTRL_CONFIDENCE_BITS (0x9819e4)
 #ifdef NVIDIA
-#define CTRL_SET_FRAME_RATE(0x9a200b)
+#define CTRL_SET_FRAME_RATE (0x9a200b)
 #endif
 #define ADSD3500_CTRL_PACKET_SIZE 4099
 // Can be moved to target_definitions in "camera"/"platform"
@@ -681,13 +681,17 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
     } else if (control == "fps") {
         int fps = std::stoi(value);
 #ifdef NVIDIA
-        struct v4l2_control ctrl;
-        memset(&ctrl, 0, sizeof(ctrl));
+        struct v4l2_ext_control extCtrl;
+        struct v4l2_ext_controls extCtrls;
+        memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
+        memset(&extCtrl, 0, sizeof(struct v4l2_ext_control));
 
-        ctrl.id = CTRL_SET_RAME_RATE;
-        ctrl.value = fps;
+        extCtrls.count = 1;
+        extCtrls.controls = &extCtrl;
+        extCtrl.id = CTRL_SET_FRAME_RATE;
+        extCtrl.value = fps;
 
-        if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
+        if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
             LOG(WARNING) << "Failed to set control:  " << control << " "
                          << "errno: " << errno << " error: " << strerror(errno);
             status = Status::GENERIC_ERROR;
@@ -713,6 +717,8 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
                        << "via host commands!";
             return Status::GENERIC_ERROR;
         }
+
+        return status;
     }
 
     // Send the command that sets the control value
