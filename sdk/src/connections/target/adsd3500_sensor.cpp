@@ -127,6 +127,7 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     m_controls.emplace("abBits", "0");
     m_controls.emplace("confidenceBits", "0");
     m_controls.emplace("modeInfoVersion", "0");
+    m_controls.emplace("imagerType", "");
 
     // Define the commands that correspond to the sensor controls
     m_implData->controlsCommands["abAveraging"] = 0x9819e5;
@@ -296,6 +297,7 @@ aditof::Status Adsd3500Sensor::open() {
     // Ask ADSD3500 what imager is being used and whether we're using the old or new modes (CCB version)
     if (m_implData->imagerType == ImagerType::IMAGER_UNKNOWN ||
         m_implData->ccbVersion == CCBVersion::CCB_UNKNOWN) {
+
         uint16_t readValue;
         status = adsd3500_read_cmd(0x0032, &readValue);
         if (status == aditof::Status::OK) {
@@ -310,10 +312,8 @@ aditof::Status Adsd3500Sensor::open() {
                 break;
             }
             default: {
-                LOG(WARNING)
-                    << "Unknown CCB version read from ADSD3500: " << ccb_version
-                    << ". Assuming CCB version 1 (new modes)";
-                m_implData->ccbVersion = CCBVersion::CCB_VERSION1;
+                LOG(WARNING) << "Unknown CCB version read from ADSD3500: "
+                             << ccb_version;
             }
             } // switch (ccb_version)
 
@@ -329,18 +329,25 @@ aditof::Status Adsd3500Sensor::open() {
             }
             default: {
                 LOG(WARNING) << "Unknown imager type read from ADSD3500: "
-                             << imager_version << ". Assuming imager ADSD3100";
-                m_implData->imagerType = ImagerType::IMAGER_ADSD3100;
+                             << imager_version;
             }
             } // switch (imager_version)
         } else {
             LOG(WARNING)
                 << "Failed to read imager type and CCB version (command "
-                   "0x0032). "
-                   "Assuming imager ADSD3100 and CCB version 1 (new modes)";
-            m_implData->imagerType = ImagerType::IMAGER_ADSD3100;
-            m_implData->ccbVersion = CCBVersion::CCB_VERSION1;
+                   "0x0032). Possibly command is not implemented on the "
+                   "current adsd3500 firmware.";
         }
+    }
+
+    if (m_implData->imagerType == ImagerType::IMAGER_UNKNOWN) {
+        LOG(WARNING) << "Since the image type is unknown, fall back on compile "
+                        "flag to determine imager type";
+#ifdef ADSD3030 // TO DO: remove this fallback mechanism once we no longer support old firmwares that don't support command 0x32
+        m_implData->imagerType = ImagerType::IMAGER_ADSD3030;
+#else
+        m_implData->imagerType = ImagerType::IMAGER_ADSD3100;
+#endif;
     }
 
     if (m_implData->imagerType == ImagerType::IMAGER_ADSD3030) {
@@ -739,9 +746,20 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
     }
 
     if (control == "modeInfoVersion") {
+        int n = std::stoi(value);
+        if (n == 1) {
+            m_implData->ccbVersion = CCBVersion::CCB_VERSION0;
+        } else if (n == 2) {
+            m_implData->ccbVersion = CCBVersion::CCB_VERSION1;
+        }
         ModeInfo::getInstance()->setImagerTypeAndModeVersion(
             (int)m_implData->imagerType, std::stoi(value));
         return status;
+    }
+
+    if (control == "imagerType") {
+        LOG(WARNING) << "Control: " << control << " is read only!";
+        return Status::UNAVAILABLE;
     }
 
     struct VideoDev *dev = &m_implData->videoDevs[0];
@@ -767,6 +785,16 @@ aditof::Status Adsd3500Sensor::getControl(const std::string &control,
     using namespace aditof;
 
     if (m_controls.count(control) > 0) {
+        if (control == "imagerType") {
+            value = std::to_string((int)m_implData->imagerType);
+            return Status::OK;
+        }
+
+        if (control == "modeInfoVersion") {
+            value = std::to_string((int)m_implData->ccbVersion);
+            return Status::OK;
+        }
+
         // Send the command that reads the control value
         struct v4l2_control ctrl;
         memset(&ctrl, 0, sizeof(ctrl));
@@ -781,6 +809,7 @@ aditof::Status Adsd3500Sensor::getControl(const std::string &control,
             return Status::GENERIC_ERROR;
         }
         value = std::to_string(ctrl.value);
+
     } else {
         LOG(WARNING) << "Unsupported control";
         return Status::INVALID_ARGUMENT;
