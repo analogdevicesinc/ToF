@@ -37,9 +37,9 @@
 #define CTRL_PHASE_DEPTH_BITS (0x9819e2)
 #define CTRL_AB_BITS (0x9819e3)
 #define CTRL_CONFIDENCE_BITS (0x9819e4)
-#ifdef NVIDIA CTRL_SET_FRAME_RATE(0x9a200b)
+#ifdef NVIDIA
+#define CTRL_SET_FRAME_RATE(0x9a200b)
 #endif
-#define
 #define ADSD3500_CTRL_PACKET_SIZE 4099
 // Can be moved to target_definitions in "camera"/"platform"
 #define TEMP_SENSOR_DEV_PATH "/dev/i2c-1"
