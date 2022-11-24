@@ -60,7 +60,7 @@ CameraItof::CameraItof(
       m_eepromInitialized(false), m_adsd3500Enabled(false),
       m_loadedConfigData(false), m_xyzEnabled(false), m_xyzSetViaControl(false),
       m_modechange_framedrop_count(0), m_tempFiles{}, m_cameraFps(0),
-      m_fsyncMode(1), m_imagerType(0), m_modesVersion(0) {
+      m_fsyncMode(1), m_adsd3500ImagerType(0), m_modesVersion(0) {
 
     FloatToLinGenerateTable();
 
@@ -150,40 +150,83 @@ aditof::Status CameraItof::initialize() {
 
     //get intrinsics for adsd3500 TO DO: check endianess of intrinsics
     if (m_adsd3500Enabled) {
-        //check first mode to set ModeInfo table version for adsd3500
-        uint8_t tempDealiasParams[32] = {0};
-        tempDealiasParams[0] = 1;
 
-        TofiXYZDealiasData tempDealiasStruct;
-        uint16_t width = ModeInfo::getInstance()->getModeInfo(1).width;
-        uint16_t height = ModeInfo::getInstance()->getModeInfo(1).height;
-
-        status = m_depthSensor->adsd3500_read_payload_cmd(
-            0x02, tempDealiasParams, 32);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Failed to read dealias parameters for adsd3500!";
-            return status;
-        }
-
-        memcpy(&tempDealiasStruct, tempDealiasParams,
-               sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
-
-        if (tempDealiasStruct.n_rows != width &&
-            tempDealiasStruct.n_cols != height) {
-            ModeInfo::getInstance()->setImagerTypeAndModeVersion(m_imagerType,
-                                                                 0);
-            status = m_depthSensor->setControl("modeInfoVersion", "0");
-            if (status != Status::OK) {
-                LOG(ERROR) << "Failed to set target mode info for adsd3500!";
-                return status;
+        // get imager type that is used toghether with ADSD3500
+        std::string controlValue;
+        status = m_depthSensor->getControl("imagerType", controlValue);
+        if (status == Status::OK) {
+            if (controlValue == "1" || controlValue == "2") {
+                m_adsd3500ImagerType = std::stoi(controlValue);
+            } else {
+                LOG(ERROR) << "Unkown imager type: " << controlValue;
+                return Status::UNAVAILABLE;
             }
         } else {
-            ModeInfo::getInstance()->setImagerTypeAndModeVersion(m_imagerType,
-                                                                 2);
-            status = m_depthSensor->setControl("modeInfoVersion", "2");
+            LOG(ERROR) << "Failed to read the imager type";
+            return Status::UNAVAILABLE;
+        }
+
+        // get CCB version (this tells whether we're using old or new modes)
+        status = m_depthSensor->getControl("modeInfoVersion", controlValue);
+        if (status == Status::OK) {
+            if (controlValue == "0" || controlValue == "1" ||
+                controlValue == "2") {
+                m_modesVersion = std::stoi(controlValue);
+            } else {
+                LOG(ERROR) << "Unkown CCB version: " << controlValue;
+            }
+        } else {
+            LOG(ERROR) << "Failed to read the CCB version";
+        }
+
+        // If depth sensor knows the modes version, use it, otherwise fallback to old workaround
+        if (m_modesVersion != 0) {
+            if (m_adsd3500ImagerType == 1) {
+                if (m_modesVersion == 1) {
+                    ModeInfo::getInstance()->setImagerTypeAndModeVersion(1, 0);
+                } else if (m_modesVersion == 2) {
+                    ModeInfo::getInstance()->setImagerTypeAndModeVersion(1, 2);
+                }
+            } else if (m_adsd3500ImagerType == 2) {
+                ModeInfo::getInstance()->setImagerTypeAndModeVersion(2, 0);
+            }
+        } else { //check first mode to set ModeInfo table version for adsd3500
+            uint8_t tempDealiasParams[32] = {0};
+            tempDealiasParams[0] = 1;
+
+            TofiXYZDealiasData tempDealiasStruct;
+            uint16_t width = ModeInfo::getInstance()->getModeInfo(1).width;
+            uint16_t height = ModeInfo::getInstance()->getModeInfo(1).height;
+
+            status = m_depthSensor->adsd3500_read_payload_cmd(
+                0x02, tempDealiasParams, 32);
             if (status != Status::OK) {
-                LOG(ERROR) << "Failed to set target mode info for adsd3500!";
+                LOG(ERROR) << "Failed to read dealias parameters for adsd3500!";
                 return status;
+            }
+
+            memcpy(&tempDealiasStruct, tempDealiasParams,
+                   sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
+
+            if (tempDealiasStruct.n_rows != width &&
+                tempDealiasStruct.n_cols != height) {
+                ModeInfo::getInstance()->setImagerTypeAndModeVersion(
+                    m_adsd3500ImagerType, 0);
+                status = m_depthSensor->setControl("modeInfoVersion", "0");
+                if (status != Status::OK) {
+                    LOG(ERROR)
+                        << "Failed to set target mode info for adsd3500!";
+                    return status;
+                }
+            } else {
+                ModeInfo::getInstance()->setImagerTypeAndModeVersion(
+                    m_adsd3500ImagerType, 2);
+                status = m_depthSensor->setControl("modeInfoVersion", "2");
+                if (status != Status::OK) {
+                    LOG(ERROR)
+                        << "Failed to set target mode info for adsd3500!";
+                    return status;
+                }
             }
         }
 
@@ -230,8 +273,8 @@ aditof::Status CameraItof::initialize() {
 
         status = m_depthSensor->adsd3500_read_payload_cmd(0x05, fwData, 44);
         if (status != Status::OK) {
-            LOG(INFO)
-                << "Failed to retrieve fw version and git hash for adsd3500!";
+            LOG(INFO) << "Failed to retrieve fw version and git hash for "
+                         "adsd3500!";
             return status;
         }
         std::string fwVersion((char *)(fwData), 4);
