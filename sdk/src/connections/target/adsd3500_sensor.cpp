@@ -37,6 +37,9 @@
 #define CTRL_PHASE_DEPTH_BITS (0x9819e2)
 #define CTRL_AB_BITS (0x9819e3)
 #define CTRL_CONFIDENCE_BITS (0x9819e4)
+#ifdef NVIDIA CTRL_SET_FRAME_RATE(0x9a200b)
+#endif
+#define
 #define ADSD3500_CTRL_PACKET_SIZE 4099
 // Can be moved to target_definitions in "camera"/"platform"
 #define TEMP_SENSOR_DEV_PATH "/dev/i2c-1"
@@ -677,6 +680,19 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
         return status;
     } else if (control == "fps") {
         int fps = std::stoi(value);
+#ifdef NVIDIA
+        struct v4l2_control ctrl;
+        memset(&ctrl, 0, sizeof(ctrl));
+
+        ctrl.id = CTRL_SET_RAME_RATE;
+        ctrl.value = fps;
+
+        if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
+            LOG(WARNING) << "Failed to set control:  " << control << " "
+                         << "errno: " << errno << " error: " << strerror(errno);
+            status = Status::GENERIC_ERROR;
+        }
+#else // NXP
         struct v4l2_streamparm fpsControl;
         memset(&fpsControl, 0, sizeof(struct v4l2_streamparm));
 
@@ -689,6 +705,7 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
                          << "errno: " << errno << " error: " << strerror(errno);
             status = Status::GENERIC_ERROR;
         }
+#endif
 
         status = this->adsd3500_write_cmd(0x22, fps);
         if (status != Status::OK) {
