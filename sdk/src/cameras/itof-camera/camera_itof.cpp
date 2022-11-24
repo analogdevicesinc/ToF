@@ -60,9 +60,7 @@ CameraItof::CameraItof(
       m_eepromInitialized(false), m_adsd3500Enabled(false),
       m_loadedConfigData(false), m_xyzEnabled(false), m_xyzSetViaControl(false),
       m_modechange_framedrop_count(0), m_tempFiles{}, m_cameraFps(0),
-      m_fsyncMode(1),
-      m_imagerType(
-          1) { // TO DO: read imager type via host commands when ADSD3500 available
+      m_fsyncMode(1), m_imagerType(0), m_modesVersion(0) {
 
     FloatToLinGenerateTable();
 
@@ -310,16 +308,14 @@ aditof::Status CameraItof::initialize() {
 
         if (tempDealiasStruct[1].n_rows != width &&
             tempDealiasStruct[1].n_cols != height) {
-            ModeInfo::getInstance()->setImagerTypeAndModeVersion(m_imagerType,
-                                                                 0);
+            ModeInfo::getInstance()->setImagerTypeAndModeVersion(1, 0);
             status = m_depthSensor->setControl("modeInfoVersion", "0");
             if (status != Status::OK) {
                 LOG(ERROR) << "Failed to set target mode info for adsd3100!";
                 return status;
             }
         } else {
-            ModeInfo::getInstance()->setImagerTypeAndModeVersion(m_imagerType,
-                                                                 1);
+            ModeInfo::getInstance()->setImagerTypeAndModeVersion(1, 1);
             status = m_depthSensor->setControl("modeInfoVersion", "1");
             if (status != Status::OK) {
                 LOG(ERROR) << "Failed to set target mode info for adsd3100!";
