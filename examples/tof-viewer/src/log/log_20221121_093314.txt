@@ -1,0 +1,2 @@
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I1121 09:33:36.086428  6092 ADIToF.cpp:76] SDK version: 3.2.0 | branch: master | commit: 0331f61b
