@@ -1,7 +1,7 @@
 From 2a7644d1fc2330231a4e56e543ed0c2519873f1b Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Tue, 22 Jun 2021 17:08:26 +0300
-Subject: [PATCH 13/45] drivers: usb: gadget: function: uvc_configfs: Set guid
+Subject: [PATCH 13/47] drivers: usb: gadget: function: uvc_configfs: Set guid
  to "Y16"
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
