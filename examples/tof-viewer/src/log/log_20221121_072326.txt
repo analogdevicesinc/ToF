@@ -1,0 +1,8 @@
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I1121 07:23:26.398092  2584 ADIToF.cpp:76] SDK version: 3.2.0 | branch: master | commit: 0331f61b
+I1121 07:23:27.153589  2584 system_impl.cpp:86] SDK built with websockets version:3.1.0
+I1121 07:23:27.153700  2584 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 07:23:34.132305  2584 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 07:23:39.121227  2584 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 07:23:39.629174  2584 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 07:23:39.905222  2584 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors

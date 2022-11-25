@@ -1,0 +1,4 @@
+I1118 10:57:00.852977  6017 ADIToF.cpp:76] SDK version: 3.2.0 | branch: master | commit: 0331f61b
+I1118 10:57:01.367455  6017 system_impl.cpp:86] SDK built with websockets version:3.1.0
+I1118 10:57:01.367597  6017 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1118 10:57:14.690377  6017 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
