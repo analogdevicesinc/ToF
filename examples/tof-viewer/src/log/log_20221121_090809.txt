@@ -1,0 +1,25 @@
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I1121 09:08:09.973680  5514 ADIToF.cpp:76] SDK version: 3.2.0 | branch: master | commit: 0331f61b
+I1121 09:08:15.071502  5514 system_impl.cpp:86] SDK built with websockets version:3.1.0
+I1121 09:08:15.071696  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:14:33.955061  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:14:37.303668  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:14:38.135607  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:14:38.462965  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:15:07.168081  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:15:08.000924  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:15:08.187415  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:15:16.642334  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:15:17.118055  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:15:17.379724  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:15:17.605726  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:15:18.130394  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:15:18.819897  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:15:19.084188  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:15:19.281966  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:15:20.495600  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:15:20.774978  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:15:21.293802  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:15:24.748211  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:15:25.216372  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
+I1121 09:15:25.429241  5514 usb_sensor_enumerator.cpp:56] Looking for USB connected sensors
