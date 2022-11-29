@@ -529,6 +529,10 @@ void ADIMainWindow::showOpenDeviceWindow() {
         }
 
         if (ImGui::Button("Refresh Devices")) {
+            // isADICCD = false;
+            // isADIToF = false;
+            _isOpenDevice = false;
+            cameraWorkerDone = false;
             RefreshDevices();
         }
 
@@ -558,6 +562,7 @@ void ADIMainWindow::showOpenDeviceWindow() {
                                "ToF Camera")) {
                     //Init CMOS Device here
                     _isOpenDevice = false;
+                    initCameraWorker.~thread();
                     initCameraWorker = std::thread(
                         std::bind(&ADIMainWindow::InitCamera, this));
                     isADICCD = false;
