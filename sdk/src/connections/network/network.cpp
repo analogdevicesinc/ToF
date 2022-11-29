@@ -483,7 +483,7 @@ int Network::callback_function(struct lws *wsi,
         /*Set a flag to indicate server connection is closed abruptly*/
         std::lock_guard<std::recursive_mutex> guard(m_mutex[connectionId]);
         Server_Connected[connectionId] = false;
-        web_socket.at(connectionId) = NULL;
+        // web_socket.at(connectionId) = NULL;
         break;
     }
 
@@ -515,7 +515,10 @@ Network::Network(int connectionId) {
     Network::Thread_Detached[connectionId] = false;
 
     m_connectionId = connectionId;
-    context.emplace_back(nullptr);
+    while (context.size() <= m_connectionId)
+        context.emplace_back(nullptr);
+    context.at(m_connectionId) = nullptr;
+
 }
 
 /*
