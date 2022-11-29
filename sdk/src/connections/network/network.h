@@ -107,4 +107,6 @@ class Network {
 
     //! isServer_Connected() - APi to check if server is connected successfully
     bool isServer_Connected();
+
+    int getConnectionId();
 };

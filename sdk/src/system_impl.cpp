@@ -142,7 +142,7 @@ SystemImpl::getCameraListAtIp(std::vector<std::shared_ptr<Camera>> &cameraList,
         LOG(ERROR) << "Network interface is not enabled."
                       "Please rebuild the SDK "
                       "with the option WITH_NETWORK=on";
-        return Status::GENERIC_ERROR;
+        return Status::GENERIC_ERROR;   
     }
     Status status = sensorEnumerator->searchSensors();
     if (status == Status::OK) {
