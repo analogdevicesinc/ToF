@@ -1741,6 +1741,8 @@ aditof::Status CameraItof::getKeyValuePairsFromIni(
         return Status::UNREACHABLE;
     }
 
+    iniKeyValPairs.clear();
+
     std::string line;
     while (getline(iniStream, line)) {
         size_t equalPos = line.find('=');
