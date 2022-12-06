@@ -113,6 +113,13 @@ class SDK_API Camera {
         std::vector<std::string> &availableFrameTypes) const = 0;
 
     /**
+     * @brief Returns the name of the frame type for the given ID
+     * @param[out] name
+     * @return Status
+     */
+    virtual Status getFrameTypeNameFromId(int id, std::string &name) const = 0;
+
+    /**
      * @brief Captures data from the camera and assigns it to the given frame.
      * If cb parameter is not given this operation will be blocking. If a
      * callback is provided this operation will be unblocking and once the data
