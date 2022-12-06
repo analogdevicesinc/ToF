@@ -242,8 +242,8 @@ DeInterleaveDepth(uint8_t *p_frame_data, uint32_t n_bits_in_depth,
         uint16_t temp = input_buffer[0] | (uint16_t)(input_buffer[1] << 8);
         out_depth[pix_id] = NUM_BITS(temp, 0, n_bits_in_depth);
 
-        // temp = input_buffer[1] | (uint16_t)(input_buffer[is_conf] << 8);
-        // out_conf[pix_id] = NUM_BITS(temp, n_pos_conf, n_bits_in_conf);
+        temp = input_buffer[1] | (uint16_t)(input_buffer[is_conf] << 8);
+        out_conf[pix_id] = NUM_BITS(temp, n_pos_conf, n_bits_in_conf);
 
         temp = input_buffer[n_count_conf] |
                (uint16_t)(input_buffer[n_ab_count] << 8);
