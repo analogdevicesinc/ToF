@@ -333,6 +333,7 @@ aditof::Status Adsd3500Sensor::open() {
             }
             } // switch (imager_version)
         } else {
+            status = Status::OK;
             LOG(WARNING)
                 << "Failed to read imager type and CCB version (command "
                    "0x0032). Possibly command is not implemented on the "
