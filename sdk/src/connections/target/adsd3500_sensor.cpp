@@ -347,7 +347,7 @@ aditof::Status Adsd3500Sensor::open() {
         m_implData->imagerType = ImagerType::IMAGER_ADSD3030;
 #else
         m_implData->imagerType = ImagerType::IMAGER_ADSD3100;
-#endif;
+#endif
     }
 
     if (m_implData->imagerType == ImagerType::IMAGER_ADSD3030) {
