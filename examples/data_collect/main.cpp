@@ -91,6 +91,7 @@ static const char kUsagePublic[] =
         1: long-range native
         2: short-range Qnative
         3: long-range Qnative
+        5: vga
 )";
 // Hide 'ft' (frame_type) option from public doc string
 static const char kUsageInternal[] =
@@ -279,11 +280,6 @@ int main(int argc, char *argv[]) {
 
     Status status = Status::OK;
 
-    std::map<int, std::string> modeIndexMap = {{0, "sr-native"},
-                                               {1, "lr-native"},
-                                               {2, "sr-qnative"},
-                                               {3, "lr-qnative"}};
-
     std::map<std::string, docopt::value> args = docopt::docopt_private(
         kUsagePublic, kUsageInternal, {argv + 1, argv + argc}, true);
 
@@ -337,16 +333,9 @@ int main(int argc, char *argv[]) {
     }
     Fsfparams.n_frames = n_frames;
 
-    bool modeIsValid = false;
     // Parsing mode type
     if (args["--m"]) {
         mode = args["--m"].asLong();
-        modeIsValid = (mode == 0 || mode == 1 || mode == 2 || mode == 3);
-        if (!modeIsValid) {
-            LOG(ERROR) << "Invalid Mode: " << mode
-                       << " The accepted values for mode are: 0, 1, 2, 3";
-            return 0;
-        }
     }
 
     // Parsing ip
@@ -490,15 +479,9 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    modeIsValid = false;
-    std::string tempFrameTypesList = "";
-    for (auto frame_type : frameTypes) {
-        if (modeIndexMap[mode] == frame_type) {
-            modeIsValid = true;
-        }
-    }
-
-    if (!modeIsValid) {
+    std::string modeName;
+    status = camera->getFrameTypeNameFromId(mode, modeName);
+    if (status != Status::OK) {
         LOG(ERROR) << "Mode: " << mode
                    << " is invalid for this type of camera!";
         return 0;
@@ -513,8 +496,8 @@ int main(int argc, char *argv[]) {
         camera->setControl("enableDepthCompute", "off");
         Fsfparams.raw_frames = true;
     } else if ("depth" == frame_type) {
-        if (modeIndexMap[mode] == "pcm") {
-            LOG(ERROR) << modeIndexMap[mode]
+        if (modeName == "pcm") {
+            LOG(ERROR) << modeName
                        << " mode doesn't contain depth data, please set --ft "
                           "(frameType) to raw.";
             return 0;
@@ -527,7 +510,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    status = camera->setFrameType(modeIndexMap[mode]);
+    status = camera->setFrameType(modeName);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 0;
