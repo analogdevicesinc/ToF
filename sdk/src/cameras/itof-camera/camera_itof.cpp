@@ -571,6 +571,21 @@ aditof::Status CameraItof::getAvailableFrameTypes(
     return status;
 }
 
+aditof::Status CameraItof::getFrameTypeNameFromId(int id,
+                                                  std::string &name) const {
+    using namespace aditof;
+    Status status = Status::OK;
+
+    ModeInfo::modeInfo info = ModeInfo::getInstance()->getModeInfo(id);
+    if (!info.mode_name.empty()) {
+        name = info.mode_name;
+    } else {
+        status = Status::INVALID_ARGUMENT;
+    }
+
+    return status;
+}
+
 aditof::Status setAttributesByMode(aditof::Frame &frame,
                                    const ModeInfo::modeInfo &modeInfo) {
     aditof::Status status = aditof::Status::OK;
