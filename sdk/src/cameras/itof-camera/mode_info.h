@@ -82,9 +82,10 @@ class ModeInfo {
   private:
     static std::vector<modeInfo> g_modeInfoData;
     static modeInfo g_oldModes[];
+    static modeInfo g_oldModesAdsd3030[];
     static modeInfo g_newModesAdsd3100[];
     static modeInfo g_newModesAdsd3500[];
-    static modeInfo g_adsd3030Modes[];
+    static modeInfo g_newModesAdsd3030[];
     static ModeInfo *m_instance; //single instance
     static int g_imagerType;
     static int g_modeVersion;

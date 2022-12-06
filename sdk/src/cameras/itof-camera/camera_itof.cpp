@@ -188,7 +188,11 @@ aditof::Status CameraItof::initialize() {
                     ModeInfo::getInstance()->setImagerTypeAndModeVersion(1, 2);
                 }
             } else if (m_adsd3500ImagerType == 2) {
-                ModeInfo::getInstance()->setImagerTypeAndModeVersion(2, 0);
+                if (m_modesVersion == 1) {
+                    ModeInfo::getInstance()->setImagerTypeAndModeVersion(2, 0);
+                } else if (m_modesVersion == 2) {
+                    ModeInfo::getInstance()->setImagerTypeAndModeVersion(2, 2);
+                }
             }
         } else { //check first mode to set ModeInfo table version for adsd3500
             uint8_t tempDealiasParams[32] = {0};
