@@ -15,6 +15,10 @@ ModeInfo::modeInfo ModeInfo::g_oldModes[] = {
     {10, 1024, 1024, 9, 12289, 576, 0, "lrmp"},
 };
 
+ModeInfo::modeInfo ModeInfo::g_oldModesAdsd3030[] = {
+    {5, 512, 640, 10, 1670, 1472, 1, "vga"},
+};
+
 //TO DO: update table with new values
 ModeInfo::modeInfo ModeInfo::g_newModesAdsd3100[] = {
     {0, 1024, 1024, 6, 49156, 96, 0, "sr-native"},
@@ -31,7 +35,7 @@ ModeInfo::modeInfo ModeInfo::g_newModesAdsd3500[] = {
     {3, 512, 512, 1, 18438, 96, 0, "lr-native"},
 };
 
-ModeInfo::modeInfo ModeInfo::g_adsd3030Modes[] = {
+ModeInfo::modeInfo ModeInfo::g_newModesAdsd3030[] = {
     {0, 512, 640, 10, 1670, 1472, 1, "sr-native"},
     {1, 512, 640, 10, 1670, 1472, 1, "lr-native"},
     {2, 256, 320, 10, 1670, 1472, 1, "sr-qnative"},
@@ -124,9 +128,15 @@ aditof::Status ModeInfo::setImagerTypeAndModeVersion(int type, int version) {
         break;
     }
     case 2: {
-        g_modeInfoData.assign(std::begin(g_adsd3030Modes),
-                              std::end(g_adsd3030Modes));
-        LOG(INFO) << "Using new modes table for adsd3030.";
+        if (version == 2) {
+            g_modeInfoData.assign(std::begin(g_newModesAdsd3030),
+                                  std::end(g_newModesAdsd3030));
+            LOG(INFO) << "Using new modes table for adsd3030.";
+        } else {
+            g_modeInfoData.assign(std::begin(g_oldModesAdsd3030),
+                                  std::end(g_oldModesAdsd3030));
+            LOG(INFO) << "Using old modes table for adsd3030.";
+        }
         break;
     }
     default:
