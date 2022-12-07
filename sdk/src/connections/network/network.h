@@ -60,6 +60,7 @@ class Network {
     static bool Data_Received[MAX_CAMERA_NUM];
     static bool Server_Connected[MAX_CAMERA_NUM];
     static bool Thread_Detached[MAX_CAMERA_NUM];
+    bool Connection_Closed[MAX_CAMERA_NUM] = {false, false, false, false};
 
     int Thread_Running[MAX_CAMERA_NUM];
 
@@ -107,6 +108,4 @@ class Network {
 
     //! isServer_Connected() - APi to check if server is connected successfully
     bool isServer_Connected();
-
-    int getConnectionId();
 };

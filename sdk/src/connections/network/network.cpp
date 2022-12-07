@@ -353,6 +353,14 @@ void Network::call_lws_service() {
 #ifdef NW_DEBUG
         cout << ".";
 #endif
+        /*In case connection is broken, stop websocket service*/
+        if (Server_Connected[m_connectionId] == true) {
+            Connection_Closed[m_connectionId] = true;
+        } else if (Connection_Closed[m_connectionId] == true &&
+                   Server_Connected[m_connectionId] == false) {
+            Connection_Closed[m_connectionId] = false;
+            break;
+        }
         /*Complete the thread if destructor is called*/
         std::lock_guard<std::mutex> guard(thread_mutex[m_connectionId]);
 
@@ -518,7 +526,6 @@ Network::Network(int connectionId) {
     while (context.size() <= m_connectionId)
         context.emplace_back(nullptr);
     context.at(m_connectionId) = nullptr;
-
 }
 
 /*
