@@ -458,6 +458,16 @@ void ADIMainWindow::showMainMenu() {
 }
 
 void ADIMainWindow::RefreshDevices() {
+
+    isADICCD = false;
+    isADIToF = false;
+    cameraWorkerDone = false;
+    m_cameraModes.clear();
+    _cameraModes.clear();
+    if (initCameraWorker.joinable()) {
+        initCameraWorker.join();
+    }
+
     m_selectedDevice = -1;
     m_connectedDevices.clear();
     m_configFiles.clear();
@@ -529,8 +539,6 @@ void ADIMainWindow::showOpenDeviceWindow() {
         }
 
         if (ImGui::Button("Refresh Devices")) {
-            // isADICCD = false;
-            // isADIToF = false;
             _isOpenDevice = false;
             cameraWorkerDone = false;
             RefreshDevices();
@@ -562,7 +570,6 @@ void ADIMainWindow::showOpenDeviceWindow() {
                                "ToF Camera")) {
                     //Init CMOS Device here
                     _isOpenDevice = false;
-                    initCameraWorker.~thread();
                     initCameraWorker = std::thread(
                         std::bind(&ADIMainWindow::InitCamera, this));
                     isADICCD = false;
