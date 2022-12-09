@@ -355,8 +355,12 @@ aditof::Status Adsd3500Sensor::open() {
 #endif
     }
 
-    if (m_implData->imagerType == ImagerType::IMAGER_ADSD3030) {
-        availableFrameTypes = availableFrameTypesAdsd3030;
+    if (m_implData->ccbVersion != CCBVersion::CCB_UNKNOWN) {
+        if (m_implData->ccbVersion == CCBVersion::CCB_VERSION0) {
+            setControl("modeInfoVersion", "0");
+        } else if (m_implData->ccbVersion == CCBVersion::CCB_VERSION1) {
+            setControl("modeInfoVersion", "1");
+        }
     }
 
     return status;
