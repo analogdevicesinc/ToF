@@ -114,7 +114,8 @@ class SDK_API Camera {
 
     /**
      * @brief Returns the name of the frame type for the given ID
-     * @param[out] name
+     * @param id - the ID of the frame type
+     * @param[out] name - will be set with the name of the frame type in case of success
      * @return Status
      */
     virtual Status getFrameTypeNameFromId(int id, std::string &name) const = 0;
