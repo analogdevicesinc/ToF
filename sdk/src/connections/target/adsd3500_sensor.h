@@ -128,6 +128,19 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     uint8_t m_capturesPerFrame;
     bool m_firstRun;
     const std::vector<aditof::DepthSensorFrameType>
+        availableFrameTypesAdsd3030Old = {
+            {
+                "vga",
+                {{"raw", 2560, 640},
+                 {"ir", 512, 640},
+                 {"xyz", 512, 640},
+                 {"depth", 512, 640},
+                 {"embedded_header", 1, 128}},
+                2560,
+                640,
+            },
+        };
+    const std::vector<aditof::DepthSensorFrameType>
         availableFrameTypesAdsd3030 = {{
                                            "sr-qnative",
                                            {{"raw", 2560, 512},
@@ -208,5 +221,26 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
              {"embedded_header", 1, 128}},
             1280,
             320,
+        }};
+    std::vector<aditof::DepthSensorFrameType> availableFrameTypesOld = {
+        {
+            "qmp",
+            {{"raw", 2560, 512},
+             {"ir", 512, 512},
+             {"xyz", 512, 512},
+             {"depth", 512, 512},
+             {"embedded_header", 1, 128}},
+            2560,
+            512,
+        },
+        {
+            "mp",
+            {{"raw", 1024, 4096},
+             {"ir", 1024, 1024},
+             {"xyz", 1024, 1024},
+             {"depth", 1024, 1024},
+             {"embedded_header", 1, 128}},
+            1024,
+            4096,
         }};
 };
