@@ -437,7 +437,7 @@ aditof::Status Adsd3500Sensor::getAvailableFrameTypes(
     std::vector<aditof::DepthSensorFrameType> &types) {
 
     types =
-        availableFrameTypes; //TBD shall we copy / move vector instead of assign
+        m_availableFrameTypes; //TBD shall we copy / move vector instead of assign
     return aditof::Status::OK;
 }
 
@@ -760,7 +760,7 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
         if (n == 1) {
             m_implData->ccbVersion = CCBVersion::CCB_VERSION0;
             if (m_implData->imagerType == ImagerType::IMAGER_ADSD3100) {
-                availableFrameTypes = availableFrameTypesOld;
+                m_availableFrameTypes = availableFrameTypesOld;
             } else if (m_implData->imagerType == ImagerType::IMAGER_ADSD3030) {
                 m_availableFrameTypes = availableFrameTypesAdsd3030Old;
             } else {
@@ -772,7 +772,7 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
         } else if (n == 2) {
             m_implData->ccbVersion = CCBVersion::CCB_VERSION1;
             if (m_implData->imagerType == ImagerType::IMAGER_ADSD3100) {
-                availableFrameTypes = availableFrameTypes;
+                m_availableFrameTypes = availableFrameTypes;
             } else if (m_implData->imagerType == ImagerType::IMAGER_ADSD3030) {
                 m_availableFrameTypes = availableFrameTypesAdsd3030;
             } else {
