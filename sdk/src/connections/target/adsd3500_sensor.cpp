@@ -569,9 +569,11 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         __u32 pixelFormat = 0;
 
         if (m_implData->imagerType == ImagerType::IMAGER_ADSD3100) {
-            if (type.type == "lr-qnative" || type.type == "sr-qnative") {
+            if (type.type == "lr-qnative" || type.type == "sr-qnative" ||
+                type.type == "qmp") {
                 pixelFormat = V4L2_PIX_FMT_SBGGR8;
-            } else if (type.type == "lr-native" || type.type == "sr-native") {
+            } else if (type.type == "lr-native" || type.type == "sr-native" ||
+                       type.type == "mp") {
                 pixelFormat = V4L2_PIX_FMT_SBGGR12;
             } else {
                 LOG(ERROR) << "frame type: " << type.type << " "
@@ -580,7 +582,8 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
             }
         } else if (m_implData->imagerType == ImagerType::IMAGER_ADSD3030) {
             if (type.type == "sr-native" || type.type == "lr-native" ||
-                type.type == "sr-qnative" || type.type == "lr-qnative") {
+                type.type == "sr-qnative" || type.type == "lr-qnative" ||
+                type.type == "vga") {
 #ifdef NXP
                 pixelFormat =
                     V4L2_PIX_FMT_SBGGR8; // TO DO: Add implementation to automatically find pixel format based on resolution instead of all this harcoding
