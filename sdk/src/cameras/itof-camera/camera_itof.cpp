@@ -146,8 +146,6 @@ aditof::Status CameraItof::initialize() {
         m_devStarted = true;
     }
 
-    m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
-
     //get intrinsics for adsd3500 TO DO: check endianess of intrinsics
     if (m_adsd3500Enabled) {
 
@@ -233,6 +231,8 @@ aditof::Status CameraItof::initialize() {
                 }
             }
         }
+
+        m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
 
         for (auto availableFrameTypes : m_availableSensorFrameTypes) {
             uint8_t intrinsics[56] = {0};
@@ -369,6 +369,8 @@ aditof::Status CameraItof::initialize() {
                 return status;
             }
         }
+
+        m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
     }
 
     //Set FPS
