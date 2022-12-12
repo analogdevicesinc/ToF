@@ -775,7 +775,7 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
 
     if (control == "modeInfoVersion") {
         int n = std::stoi(value);
-        if (n == 1) {
+        if (n == 0) {
             m_implData->ccbVersion = CCBVersion::CCB_VERSION0;
             if (m_implData->imagerType == ImagerType::IMAGER_ADSD3100) {
                 m_availableFrameTypes = availableFrameTypesOld;
