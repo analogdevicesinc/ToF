@@ -96,6 +96,7 @@ struct Adsd3500Sensor::ImplData {
     std::unordered_map<std::string, __u32> controlsCommands;
     ImagerType imagerType;
     CCBVersion ccbVersion;
+    std::string fw_ver;
 
     ImplData()
         : numVideoDevs(1), videoDevs(nullptr), frameType{"", {}, 0, 0},
@@ -302,8 +303,22 @@ aditof::Status Adsd3500Sensor::open() {
     if (m_implData->imagerType == ImagerType::IMAGER_UNKNOWN ||
         m_implData->ccbVersion == CCBVersion::CCB_UNKNOWN) {
 
-        uint16_t readValue;
-        status = adsd3500_read_cmd(0x0032, &readValue);
+        uint8_t fwData[44] = {0};
+        fwData[0] = uint8_t(1);
+        adsd3500_read_payload_cmd(0x05, fwData, 44);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to retrieve fw version and git hash for "
+                          "adsd3500!";
+            return status;
+        }
+        m_implData->fw_ver = std::string((char *)(fwData), 4);
+
+        uint16_t readValue = 0;
+        if (m_implData->fw_ver.at(0) > '3') {
+            status = adsd3500_read_cmd(0x0032, &readValue);
+        } else {
+            status = Status::GENERIC_ERROR;
+        }
         if (status == aditof::Status::OK) {
             uint8_t ccb_version = readValue & 0x00FF;
             switch (ccb_version) {
