@@ -615,7 +615,6 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         }
 
         uint16_t *tempDepthFrame = m_tofi_compute_context->p_depth_frame;
-        float *tempConfFrame = m_tofi_compute_context->p_conf_frame;
         uint16_t *tempAbFrame = m_tofi_compute_context->p_ab_frame;
         uint16_t *tempXyzFrame =
             (uint16_t *)m_tofi_compute_context->p_xyz_frame;
@@ -623,17 +622,11 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
             (uint16_t *)m_tofi_compute_context->p_conf_frame;
 
         frame->getData("depth", &m_tofi_compute_context->p_depth_frame);
-        frame->getData("conf", (uint16_t **)&m_tofi_compute_context->p_conf_frame);
         frame->getData("ir", &m_tofi_compute_context->p_ab_frame);
 
         uint16_t *confFrame;
         frame->getData("conf", &confFrame);
         m_tofi_compute_context->p_conf_frame = (float *)confFrame;
-
-        //for(int i=0; i< 500 * 500; i++)
-        {
-           // LOG(INFO) << i << " " << confFrame[i];
-        }
 
         if (m_xyzEnabled) {
             uint16_t *xyzFrame;
