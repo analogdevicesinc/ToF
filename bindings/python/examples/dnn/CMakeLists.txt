@@ -21,3 +21,5 @@ if(NOT EXISTS "${MODEL_PATH}")
 	message("Downloading ${MODEL_FILE} into ${CMAKE_CURRENT_BINARY_DIR}")
     file(DOWNLOAD "${MODEL_URL}" "${MODEL_PATH}")
 endif()
+
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/dnn.py" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
