@@ -1,7 +1,7 @@
 From 30a732a9b88473a43cb9f93e7a798aa60a8341b0 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Fri, 16 Apr 2021 09:03:47 +0300
-Subject: [PATCH 06/47] arch: arm64: dts: ADI TOF dt
+Subject: [PATCH 06/48] arch: arm64: dts: ADI TOF dt
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
