@@ -1,7 +1,7 @@
 From 5452e2b99136868473c202b0ee59cc1f46e859ea Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Fri, 25 Nov 2022 16:32:48 +0200
-Subject: [PATCH 47/47] drivers: media: adsd3500: Add support fo 3F3P 3F2P VGA
+Subject: [PATCH 47/48] drivers: media: adsd3500: Add support fo 3F3P 3F2P VGA
  & QVGA RAW
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>

@@ -1,7 +1,7 @@
 From 25024fc7296e0e26f155dbcc806303c296947886 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Thu, 6 Jan 2022 13:45:38 +0200
-Subject: [PATCH 27/47] drivers: staging: media: imx8-isi-cap.c: Add RAW8
+Subject: [PATCH 27/48] drivers: staging: media: imx8-isi-cap.c: Add RAW8
  support
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>

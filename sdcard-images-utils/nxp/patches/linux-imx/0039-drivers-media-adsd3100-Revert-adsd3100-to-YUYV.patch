@@ -1,7 +1,7 @@
 From 99ff3626e2fe71520db79399a8a7f46cc825c3c4 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Wed, 17 Aug 2022 10:04:07 +0300
-Subject: [PATCH 39/47] drivers: media: adsd3100: Revert adsd3100 to YUYV
+Subject: [PATCH 39/48] drivers: media: adsd3100: Revert adsd3100 to YUYV
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---

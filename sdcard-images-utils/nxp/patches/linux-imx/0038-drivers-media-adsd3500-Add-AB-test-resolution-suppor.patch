@@ -1,7 +1,7 @@
 From 81bfba423f281026d269bf0ab81b159fa2f4cb57 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Wed, 17 Aug 2022 09:58:58 +0300
-Subject: [PATCH 38/47] drivers: media: adsd3500: Add AB test resolution
+Subject: [PATCH 38/48] drivers: media: adsd3500: Add AB test resolution
  support
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
