@@ -1,8 +1,6 @@
 {
-"sensorFirmware": "./config/NXP_MIPI4kSuperframe.cfg",
-"CCB_Calibration": "./config/camera_calibration_adsd3500.ccb",
 "VAUX_POWER_VOLTAGE": "18",
-"DEPTH_INI": "./config/RawToDepthAdsd3500_lrqmp.ini;./config/RawToDepthAdsd3500_lrmp.ini;./config/RawToDepthAdsd3500_srqmp.ini;./config/RawToDepthAdsd3500_srmp.ini",
+"DEPTH_INI": "./config/RawToDepthAdsd3500_lr-qnative.ini;./config/RawToDepthAdsd3500_lr-native.ini;./config/RawToDepthAdsd3500_sr-qnative.ini;./config/RawToDepthAdsd3500_sr-native.ini;./config/RawToDepthAdsd3500_mp.ini; ./config/RawToDepthAdsd3500_qmp.ini",
 "FPS": "10",
 "FSYNC_MODE": "1"
 }

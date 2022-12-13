@@ -11,12 +11,12 @@
 ModeInfo::modeInfo ModeInfo::g_oldModes[] = {
     {1, 320, 288, 9, 2162, 288, 0, "lt_bin"},
     {3, 1024, 1024, 1, 12289, 64, 1, "pcmmp"},
-    {7, 512, 512, 10, 2195, 896, 1, "lrqmp"},
-    {10, 1024, 1024, 9, 12289, 576, 0, "lrmp"},
+    {7, 512, 512, 10, 2195, 896, 1, "qmp"},
+    {10, 1024, 1024, 9, 12289, 576, 0, "mp"},
 };
 
 ModeInfo::modeInfo ModeInfo::g_oldModesAdsd3030[] = {
-    {5, 512, 640, 10, 1670, 1472, 1, "vga"},
+    {5, 512, 640, 1, 1670, 1472, 1, "vga"},
 };
 
 //TO DO: update table with new values
@@ -36,10 +36,10 @@ ModeInfo::modeInfo ModeInfo::g_newModesAdsd3500[] = {
 };
 
 ModeInfo::modeInfo ModeInfo::g_newModesAdsd3030[] = {
-    {0, 512, 640, 10, 1670, 1472, 1, "sr-native"},
-    {1, 512, 640, 10, 1670, 1472, 1, "lr-native"},
-    {2, 256, 320, 10, 1670, 1472, 1, "sr-qnative"},
-    {3, 256, 320, 10, 1670, 1472, 1, "lr-native"},
+    {0, 512, 640, 1, 1670, 1472, 1, "sr-native"},
+    {1, 512, 640, 1, 1670, 1472, 1, "lr-native"},
+    {2, 256, 320, 1, 1670, 1472, 1, "sr-qnative"},
+    {3, 256, 320, 1, 1670, 1472, 1, "lr-native"},
 };
 
 int ModeInfo::g_imagerType = 1;
