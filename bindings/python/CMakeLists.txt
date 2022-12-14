@@ -8,15 +8,22 @@ function(PopulateforPython targetdir)
     add_custom_command( TARGET aditofpython POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${LIBTOFI_LIBDIR_PATH} "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>"
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/sdk/$<CONFIG>" "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../../sdk/src/cameras/itof-camera/config "${CMAKE_CURRENT_BINARY_DIR}//${targetdir}/$<CONFIG>/config"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>" "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${glog_DIR}/../../../bin" "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../../sdk/src/cameras/itof-camera/config "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>/config"
         COMMAND ${CMAKE_COMMAND} -E copy ${PythonSources} "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>"
+        COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${TARGET_OUTPUT_NAME}" "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>"
     )
     
-    if (WITH_NETWORK)
-		add_custom_command(TARGET aditofpython POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${LWS_CMAKE_DIR}/../bin "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>")
+    if (WIN32)
+        add_custom_command( TARGET aditofpython POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${glog_DIR}/../../../bin" "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>"
+        )
+
+        if (WITH_NETWORK)
+            add_custom_command(TARGET aditofpython POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${LWS_CMAKE_DIR}/../bin "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>")
+        endif()
+    
     endif()
+
 endfunction()
 
 find_package(pybind11 REQUIRED PATHS ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
