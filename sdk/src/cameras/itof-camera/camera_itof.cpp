@@ -643,7 +643,6 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         }
 
         m_tofi_compute_context->p_depth_frame = tempDepthFrame;
-        m_tofi_compute_context->p_conf_frame = (float *)tempConfFrame;
         m_tofi_compute_context->p_ab_frame = tempAbFrame;
         m_tofi_compute_context->p_xyz_frame = (int16_t *)tempXyzFrame;
         m_tofi_compute_context->p_conf_frame = (float *)tempConfFrame;
