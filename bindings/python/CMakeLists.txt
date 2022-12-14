@@ -14,12 +14,16 @@ function(PopulateforPython targetdir)
     )
     
     if (WIN32)
-        add_custom_command( TARGET aditofpython POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory "${glog_DIR}/../../../bin" "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>"
-        )
+        if (EXISTS "${glog_DIR}/../../../bin")
+            add_custom_command( TARGET aditofpython POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_directory "${glog_DIR}/../../../bin" "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>"
+            )
+        endif()
 
-        if (WITH_NETWORK)
-            add_custom_command(TARGET aditofpython POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${LWS_CMAKE_DIR}/../bin "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>")
+        if (EXISTS "${LWS_CMAKE_DIR}/../bin")
+            if (WITH_NETWORK)
+                add_custom_command(TARGET aditofpython POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${LWS_CMAKE_DIR}/../bin "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>")
+            endif()
         endif()
     
     endif()
