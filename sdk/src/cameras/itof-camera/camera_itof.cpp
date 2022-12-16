@@ -192,42 +192,92 @@ aditof::Status CameraItof::initialize() {
                     ModeInfo::getInstance()->setImagerTypeAndModeVersion(2, 2);
                 }
             }
-        } else { //check first mode to set ModeInfo table version for adsd3500
-            uint8_t tempDealiasParams[32] = {0};
-            tempDealiasParams[0] = 1;
+        } else { // The depth sensor doesn't know the modes version. Use the dealias info from NVM to figure it out
+            if (m_adsd3500ImagerType == 1) { // Find for Crosby
+                uint8_t tempDealiasParams[32] = {0};
+                tempDealiasParams[0] = 1;
 
-            TofiXYZDealiasData tempDealiasStruct;
-            uint16_t width = ModeInfo::getInstance()->getModeInfo(1).width;
-            uint16_t height = ModeInfo::getInstance()->getModeInfo(1).height;
+                TofiXYZDealiasData tempDealiasStruct;
+                // We know by default getInstance points to new modes of ADSD3500
+                uint16_t width = ModeInfo::getInstance()->getModeInfo(1).width;
+                uint16_t height =
+                    ModeInfo::getInstance()->getModeInfo(1).height;
 
-            status = m_depthSensor->adsd3500_read_payload_cmd(
-                0x02, tempDealiasParams, 32);
-            if (status != Status::OK) {
-                LOG(ERROR) << "Failed to read dealias parameters for adsd3500!";
-                return status;
-            }
-
-            memcpy(&tempDealiasStruct, tempDealiasParams,
-                   sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
-
-            if (tempDealiasStruct.n_rows != width &&
-                tempDealiasStruct.n_cols != height) {
-                ModeInfo::getInstance()->setImagerTypeAndModeVersion(
-                    m_adsd3500ImagerType, 0);
-                status = m_depthSensor->setControl("modeInfoVersion", "0");
+                // We read dealias parameters to find out the width and height for mode 1
+                status = m_depthSensor->adsd3500_read_payload_cmd(
+                    0x02, tempDealiasParams, 32);
                 if (status != Status::OK) {
                     LOG(ERROR)
-                        << "Failed to set target mode info for adsd3500!";
+                        << "Failed to read dealias parameters for adsd3500!";
                     return status;
                 }
-            } else {
-                ModeInfo::getInstance()->setImagerTypeAndModeVersion(
-                    m_adsd3500ImagerType, 2);
-                status = m_depthSensor->setControl("modeInfoVersion", "2");
+
+                memcpy(&tempDealiasStruct, tempDealiasParams,
+                       sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
+
+                // Old modes had "lt_bin" as mode 1 with a resolution of width=320, height=288.
+                if (tempDealiasStruct.n_rows != width &&
+                    tempDealiasStruct.n_cols != height) {
+                    ModeInfo::getInstance()->setImagerTypeAndModeVersion(
+                        m_adsd3500ImagerType, 0);
+                    status = m_depthSensor->setControl("modeInfoVersion", "0");
+                    if (status != Status::OK) {
+                        LOG(ERROR)
+                            << "Failed to set target mode info for adsd3500!";
+                        return status;
+                    }
+                } else {
+                    ModeInfo::getInstance()->setImagerTypeAndModeVersion(
+                        m_adsd3500ImagerType, 2);
+                    status = m_depthSensor->setControl("modeInfoVersion", "2");
+                    if (status != Status::OK) {
+                        LOG(ERROR)
+                            << "Failed to set target mode info for adsd3500!";
+                        return status;
+                    }
+                }
+            } else if (m_adsd3500ImagerType == 2) { // Find for Tembin
+                int modeToTest = 5;
+                uint8_t tempDealiasParams[32] = {0};
+                tempDealiasParams[0] = modeToTest;
+
+                TofiXYZDealiasData tempDealiasStruct;
+                // We know old modes for Tembin has only mode "vga" with width=512 and height=640
+                uint16_t width = 512;
+                uint16_t height = 640;
+
+                // We read dealias parameters to find out the width and height for mode 5
+                status = m_depthSensor->adsd3500_read_payload_cmd(
+                    0x02, tempDealiasParams, 32);
                 if (status != Status::OK) {
                     LOG(ERROR)
-                        << "Failed to set target mode info for adsd3500!";
+                        << "Failed to read dealias parameters for adsd3500!";
                     return status;
+                }
+
+                memcpy(&tempDealiasStruct, tempDealiasParams,
+                       sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
+
+                // For new modes, there isn't mode index 5
+                if (tempDealiasStruct.n_rows == width &&
+                    tempDealiasStruct.n_cols == height) {
+                    ModeInfo::getInstance()->setImagerTypeAndModeVersion(
+                        m_adsd3500ImagerType, 0);
+                    status = m_depthSensor->setControl("modeInfoVersion", "0");
+                    if (status != Status::OK) {
+                        LOG(ERROR)
+                            << "Failed to set target mode info for adsd3500!";
+                        return status;
+                    }
+                } else {
+                    ModeInfo::getInstance()->setImagerTypeAndModeVersion(
+                        m_adsd3500ImagerType, 2);
+                    status = m_depthSensor->setControl("modeInfoVersion", "2");
+                    if (status != Status::OK) {
+                        LOG(ERROR)
+                            << "Failed to set target mode info for adsd3500!";
+                        return status;
+                    }
                 }
             }
         }
