@@ -115,6 +115,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
 
     aditof::Status setModeByIndex(uint8_t modeIndex);
     aditof::Status setMode(const std::string &mode);
+    aditof::Status queryAdsd3500();
 
   private:
     struct ImplData;
@@ -127,6 +128,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     std::unique_ptr<ImplData> m_implData;
     uint8_t m_capturesPerFrame;
     bool m_firstRun;
+    bool m_adsd3500Queried;
     std::vector<aditof::DepthSensorFrameType> m_availableFrameTypes;
     const std::vector<aditof::DepthSensorFrameType>
         availableFrameTypesAdsd3030Old = {
