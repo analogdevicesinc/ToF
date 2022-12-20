@@ -892,7 +892,7 @@ static int adsd3500_probe(struct i2c_client *client,
 	common_data->ops = &adsd3500_common_ops;
 	common_data->ctrl_handler = &priv->ctrl_handler;
 	common_data->dev = &client->dev;
-	common_data->frmfmt = &adsd3500_frmfmt[2];
+	common_data->frmfmt = &adsd3500_frmfmt[0];
 	common_data->colorfmt = camera_common_find_datafmt(
 					  ADSD3500_DEFAULT_DATAFMT);
 	common_data->numctrls = 0;
