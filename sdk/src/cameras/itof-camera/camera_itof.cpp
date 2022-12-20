@@ -243,8 +243,8 @@ aditof::Status CameraItof::initialize() {
                 tempDealiasParams[0] = modeToTest;
 
                 TofiXYZDealiasData tempDealiasStruct;
-                uint16_t width = 512;
-                uint16_t height = 640;
+                uint16_t width = 640;
+                uint16_t height = 512;
 
                 // We read dealias parameters to find out the width and height for mode 0
                 status = m_depthSensor->adsd3500_read_payload_cmd(
@@ -262,7 +262,7 @@ aditof::Status CameraItof::initialize() {
                 if (tempDealiasStruct.n_rows == width &&
                     tempDealiasStruct.n_cols == height) {
                     ModeInfo::getInstance()->setImagerTypeAndModeVersion(
-                        m_adsd3500ImagerType, 0);
+                        m_adsd3500ImagerType, 2);
                     status = m_depthSensor->setControl("modeInfoVersion", "2");
                     if (status != Status::OK) {
                         LOG(ERROR)
@@ -271,7 +271,7 @@ aditof::Status CameraItof::initialize() {
                     }
                 } else {
                     ModeInfo::getInstance()->setImagerTypeAndModeVersion(
-                        m_adsd3500ImagerType, 2);
+                        m_adsd3500ImagerType, 0);
                     status = m_depthSensor->setControl("modeInfoVersion", "0");
                     if (status != Status::OK) {
                         LOG(ERROR)
