@@ -374,7 +374,7 @@ aditof::Status Adsd3500Sensor::open() {
         if (m_implData->ccbVersion == CCBVersion::CCB_VERSION0) {
             setControl("modeInfoVersion", "0");
         } else if (m_implData->ccbVersion == CCBVersion::CCB_VERSION1) {
-            setControl("modeInfoVersion", "1");
+            setControl("modeInfoVersion", "2");
         }
     }
 
