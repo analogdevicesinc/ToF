@@ -237,16 +237,16 @@ aditof::Status CameraItof::initialize() {
                     }
                 }
             } else if (m_adsd3500ImagerType == 2) { // Find for Tembin
-                int modeToTest = 5;
+                int modeToTest =
+                    0; // We are looking at width and height for mode 0
                 uint8_t tempDealiasParams[32] = {0};
                 tempDealiasParams[0] = modeToTest;
 
                 TofiXYZDealiasData tempDealiasStruct;
-                // We know old modes for Tembin has only mode "vga" with width=512 and height=640
                 uint16_t width = 512;
                 uint16_t height = 640;
 
-                // We read dealias parameters to find out the width and height for mode 5
+                // We read dealias parameters to find out the width and height for mode 0
                 status = m_depthSensor->adsd3500_read_payload_cmd(
                     0x02, tempDealiasParams, 32);
                 if (status != Status::OK) {
@@ -258,12 +258,12 @@ aditof::Status CameraItof::initialize() {
                 memcpy(&tempDealiasStruct, tempDealiasParams,
                        sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
 
-                // For new modes, there isn't mode index 5
+                // If old modes, there won't be a width=512 and height=640 for mode 0. It would be only for mode 5 ('vga').
                 if (tempDealiasStruct.n_rows == width &&
                     tempDealiasStruct.n_cols == height) {
                     ModeInfo::getInstance()->setImagerTypeAndModeVersion(
                         m_adsd3500ImagerType, 0);
-                    status = m_depthSensor->setControl("modeInfoVersion", "0");
+                    status = m_depthSensor->setControl("modeInfoVersion", "2");
                     if (status != Status::OK) {
                         LOG(ERROR)
                             << "Failed to set target mode info for adsd3500!";
@@ -272,7 +272,7 @@ aditof::Status CameraItof::initialize() {
                 } else {
                     ModeInfo::getInstance()->setImagerTypeAndModeVersion(
                         m_adsd3500ImagerType, 2);
-                    status = m_depthSensor->setControl("modeInfoVersion", "2");
+                    status = m_depthSensor->setControl("modeInfoVersion", "0");
                     if (status != Status::OK) {
                         LOG(ERROR)
                             << "Failed to set target mode info for adsd3500!";
