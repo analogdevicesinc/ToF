@@ -146,7 +146,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
         };
     const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
         {
-            "sr-qnative",
+            "lr-qnative",
             {{"raw", 2560, 512},
              {"ir", 512, 512},
              {"xyz", 512, 512},
@@ -234,51 +234,6 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
                                            1280,
                                            320,
                                        }};
-    std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
-        {
-            "sr-native",
-            {{"raw", 2560, 640},
-             {"ir", 512, 640},
-             {"xyz", 512, 640},
-             {"depth", 512, 640},
-             {"conf", 512, 640},
-             {"embedded_header", 1, 128}},
-            2560,
-            640,
-        },
-        {
-            "lr-native",
-            {{"raw", 2560, 640},
-             {"ir", 512, 640},
-             {"xyz", 512, 640},
-             {"depth", 512, 640},
-             {"conf", 512, 640},
-             {"embedded_header", 1, 128}},
-            2560,
-            640,
-        },
-        {
-            "sr-qnative",
-            {{"raw", 1280, 320},
-             {"ir", 256, 320},
-             {"xyz", 256, 320},
-             {"depth", 256, 320},
-             {"conf", 256, 320},
-             {"embedded_header", 1, 128}},
-            1280,
-            320,
-        },
-        {
-            "lr-qnative",
-            {{"raw", 1280, 320},
-             {"ir", 256, 320},
-             {"xyz", 256, 320},
-             {"depth", 256, 320},
-             {"conf", 256, 320},
-             {"embedded_header", 1, 128}},
-            1280,
-            320,
-        }};
     const std::vector<aditof::DepthSensorFrameType> availableFrameTypesOld = {
         {
             "qmp",
