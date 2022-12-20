@@ -121,7 +121,7 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
                                const std::string &captureDev)
     : m_driverPath(driverPath), m_driverSubPath(driverSubPath),
       m_captureDev(captureDev), m_implData(new Adsd3500Sensor::ImplData),
-      m_firstRun(true) {
+      m_firstRun(true), m_adsd3500Queried(false) {
     m_sensorName = "adsd3500";
 
     // Define the controls that this sensor has available
@@ -298,84 +298,9 @@ aditof::Status Adsd3500Sensor::open() {
             return Status::GENERIC_ERROR;
         }
     }
-
-    // Ask ADSD3500 what imager is being used and whether we're using the old or new modes (CCB version)
-    if (m_implData->imagerType == ImagerType::IMAGER_UNKNOWN ||
-        m_implData->ccbVersion == CCBVersion::CCB_UNKNOWN) {
-
-        uint8_t fwData[44] = {0};
-        fwData[0] = uint8_t(1);
-        adsd3500_read_payload_cmd(0x05, fwData, 44);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Failed to retrieve fw version and git hash for "
-                          "adsd3500!";
-            return status;
-        }
-        m_implData->fw_ver = std::string((char *)(fwData), 4);
-
-        uint16_t readValue = 0;
-        if (m_implData->fw_ver.at(0) > '3') {
-            status = adsd3500_read_cmd(0x0032, &readValue);
-        } else {
-            status = Status::GENERIC_ERROR;
-        }
-        if (status == aditof::Status::OK) {
-            uint8_t ccb_version = readValue & 0x00FF;
-            switch (ccb_version) {
-            case 1: {
-                m_implData->ccbVersion = CCBVersion::CCB_VERSION0;
-                break;
-            }
-            case 2: {
-                m_implData->ccbVersion = CCBVersion::CCB_VERSION1;
-                break;
-            }
-            default: {
-                LOG(WARNING) << "Unknown CCB version read from ADSD3500: "
-                             << ccb_version;
-            }
-            } // switch (ccb_version)
-
-            uint8_t imager_version = (readValue & 0xFF00) >> 8;
-            switch (imager_version) {
-            case 1: {
-                m_implData->imagerType = ImagerType::IMAGER_ADSD3100;
-                break;
-            }
-            case 2: {
-                m_implData->imagerType = ImagerType::IMAGER_ADSD3030;
-                break;
-            }
-            default: {
-                LOG(WARNING) << "Unknown imager type read from ADSD3500: "
-                             << imager_version;
-            }
-            } // switch (imager_version)
-        } else {
-            status = Status::OK;
-            LOG(WARNING)
-                << "Failed to read imager type and CCB version (command "
-                   "0x0032). Possibly command is not implemented on the "
-                   "current adsd3500 firmware.";
-        }
-    }
-
-    if (m_implData->imagerType == ImagerType::IMAGER_UNKNOWN) {
-        LOG(WARNING) << "Since the image type is unknown, fall back on compile "
-                        "flag to determine imager type";
-#ifdef ADSD3030 // TO DO: remove this fallback mechanism once we no longer support old firmwares that don't support command 0x32
-        m_implData->imagerType = ImagerType::IMAGER_ADSD3030;
-#else
-        m_implData->imagerType = ImagerType::IMAGER_ADSD3100;
-#endif
-    }
-
-    if (m_implData->ccbVersion != CCBVersion::CCB_UNKNOWN) {
-        if (m_implData->ccbVersion == CCBVersion::CCB_VERSION0) {
-            setControl("modeInfoVersion", "0");
-        } else if (m_implData->ccbVersion == CCBVersion::CCB_VERSION1) {
-            setControl("modeInfoVersion", "2");
-        }
+    if (!m_adsd3500Queried) {
+        status = queryAdsd3500();
+        m_adsd3500Queried = true;
     }
 
     return status;
@@ -1384,4 +1309,89 @@ aditof::Status Adsd3500Sensor::enqueueInternalBuffer(struct v4l2_buffer &buf) {
 aditof::Status Adsd3500Sensor::writeConfigBlock(const uint32_t offset) {
 
     return aditof::Status::OK;
+}
+
+aditof::Status Adsd3500Sensor::queryAdsd3500() {
+    using namespace aditof;
+    Status status = Status::OK;
+    // Ask ADSD3500 what imager is being used and whether we're using the old or new modes (CCB version)
+    if (m_implData->imagerType == ImagerType::IMAGER_UNKNOWN ||
+        m_implData->ccbVersion == CCBVersion::CCB_UNKNOWN) {
+
+        uint8_t fwData[44] = {0};
+        fwData[0] = uint8_t(1);
+        adsd3500_read_payload_cmd(0x05, fwData, 44);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to retrieve fw version and git hash for "
+                          "adsd3500!";
+            return status;
+        }
+        m_implData->fw_ver = std::string((char *)(fwData), 4);
+
+        uint16_t readValue = 0;
+        if (m_implData->fw_ver.at(0) > '3') {
+            status = adsd3500_read_cmd(0x0032, &readValue);
+        } else {
+            status = Status::GENERIC_ERROR;
+        }
+        if (status == aditof::Status::OK) {
+            uint8_t ccb_version = readValue & 0x00FF;
+            switch (ccb_version) {
+            case 1: {
+                m_implData->ccbVersion = CCBVersion::CCB_VERSION0;
+                break;
+            }
+            case 2: {
+                m_implData->ccbVersion = CCBVersion::CCB_VERSION1;
+                break;
+            }
+            default: {
+                LOG(WARNING) << "Unknown CCB version read from ADSD3500: "
+                             << ccb_version;
+            }
+            } // switch (ccb_version)
+
+            uint8_t imager_version = (readValue & 0xFF00) >> 8;
+            switch (imager_version) {
+            case 1: {
+                m_implData->imagerType = ImagerType::IMAGER_ADSD3100;
+                break;
+            }
+            case 2: {
+                m_implData->imagerType = ImagerType::IMAGER_ADSD3030;
+                break;
+            }
+            default: {
+                LOG(WARNING) << "Unknown imager type read from ADSD3500: "
+                             << imager_version;
+            }
+            } // switch (imager_version)
+        } else {
+            status = Status::OK;
+            LOG(WARNING)
+                << "Failed to read imager type and CCB version (command "
+                   "0x0032). Possibly command is not implemented on the "
+                   "current adsd3500 firmware.";
+        }
+    }
+
+    if (m_implData->imagerType == ImagerType::IMAGER_UNKNOWN) {
+        LOG(WARNING) << "Since the image type is unknown, fall back on compile "
+                        "flag to determine imager type";
+#ifdef ADSD3030 // TO DO: remove this fallback mechanism once we no longer support old firmwares that don't support command 0x32
+        m_implData->imagerType = ImagerType::IMAGER_ADSD3030;
+#else
+        m_implData->imagerType = ImagerType::IMAGER_ADSD3100;
+#endif
+    }
+
+    if (m_implData->ccbVersion != CCBVersion::CCB_UNKNOWN) {
+        if (m_implData->ccbVersion == CCBVersion::CCB_VERSION0) {
+            setControl("modeInfoVersion", "0");
+        } else if (m_implData->ccbVersion == CCBVersion::CCB_VERSION1) {
+            setControl("modeInfoVersion", "2");
+        }
+    }
+
+    return status;
 }
