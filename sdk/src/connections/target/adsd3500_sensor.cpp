@@ -776,8 +776,6 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
         return Status::UNAVAILABLE;
     }
 
-    struct VideoDev *dev = &m_implData->videoDevs[0];
-
     // Send the command that sets the control value
     struct v4l2_control ctrl;
     memset(&ctrl, 0, sizeof(ctrl));
