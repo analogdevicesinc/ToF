@@ -273,7 +273,9 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
 
     case uvc_payload::FunctionName::ADSD3500_WRITE_CMD: {
         uint16_t cmd = static_cast<uint16_t>(request.func_int32_param(0));
-        uint16_t data = static_cast<uint16_t>(request.func_int32_param(1));
+        uint16_t data;
+
+        memcpy(&data, request.func_bytes_param(0).c_str(), sizeof(uint16_t));
 
         aditof::Status status = camDepthSensor->adsd3500_write_cmd(cmd, data);
 

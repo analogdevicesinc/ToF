@@ -851,7 +851,7 @@ aditof::Status UsbDepthSensor::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
     usb_payload::ClientRequest requestMsg;
     requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_WRITE_CMD);
     requestMsg.add_func_int32_param(static_cast<::google::int32>(cmd));
-    requestMsg.add_func_int32_param(static_cast<::google::int32>(data));
+    requestMsg.add_func_bytes_param(&data, sizeof(uint16_t));
 
     // Send request
     std::string requestStr;
