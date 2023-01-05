@@ -1,0 +1,6 @@
+{
+"VAUX_POWER_VOLTAGE": "18",
+"DEPTH_INI": "./config/RawToDepthAdsd3030_ab.ini;./config/RawToDepthAdsd3030_raw3.ini;./config/RawToDepthAdsd3030_raw9.ini",
+"FPS": "10",
+"FSYNC_MODE": "1"
+}
