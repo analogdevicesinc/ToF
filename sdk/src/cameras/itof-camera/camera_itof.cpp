@@ -462,6 +462,17 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     configureSensorFrameType();
     setMode(frameType);
 
+#ifdef ADSD3030_BOXDIM
+    if ((frameType == "ab"))
+        status = m_depthSensor->adsd3500_write_cmd(0x32, 0x00);
+    else
+        status = m_depthSensor->adsd3500_write_cmd(0x32, 0x01);
+    if (status != Status::OK) {
+        LOG(WARNING) << "Failed to set RAW TX DATA";
+        return status;
+    }
+#endif
+
     status = m_depthSensor->setFrameType(*frameTypeIt);
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to set frame type";

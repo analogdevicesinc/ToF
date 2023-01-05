@@ -111,6 +111,11 @@ aditof::Status convertCameraMode(const std::string &mode,
         }
     }
 #else
+#ifdef ADSD3030_BOXDIM
+    convertedMode = 5;
+    
+    return aditof::Status::OK;
+#endif
     if (mode == "vga") {
         convertedMode = 5;
     } else {

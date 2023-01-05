@@ -127,7 +127,41 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     std::unique_ptr<ImplData> m_implData;
     uint8_t m_capturesPerFrame;
     bool m_firstRun;
-#ifndef ADSD3030
+#ifdef ADSD3030_BOXDIM
+    const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
+        { 
+          "ab",
+            {{"raw", 512, 640}},
+            512,
+            640,
+        },
+        { 
+          "raw3",
+            {{"raw", 1024, 960}},
+            1024,
+            960,
+        },
+        { 
+          "raw9",
+            {{"raw", 1024, 2880}},
+            1024,
+            2880,
+        }};
+#elif ADSD3030
+    const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {{
+        //TO DO: to be renamed
+        "vga",
+        {{"raw", 2560, 640},
+         {"ir", 512, 640},
+         {"xyz", 512, 640},
+         {"depth", 512, 640},
+         { "embedded_header",
+           1,
+           128 }},
+        2560,
+        640,
+    }};
+#else
     const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
         {
             "lrqmp",
@@ -135,9 +169,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
              {"ir", 512, 512},
              {"xyz", 512, 512},
              {"depth", 512, 512},
-             { "embedded_header",
-               1,
-               128 }},
+             {"embedded_header", 1, 128}},
             2560,
             512,
         },
@@ -147,9 +179,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
              {"ir", 512, 512},
              {"xyz", 512, 512},
              {"depth", 512, 512},
-             { "embedded_header",
-               1,
-               128 }},
+             {"embedded_header", 1, 128}},
             2560,
             512,
         },
@@ -159,34 +189,19 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
              {"ir", 1024, 1024},
              {"xyz", 1024, 1024},
              {"depth", 1024, 1024},
-             { "embedded_header",
-               1,
-               128 }},
+             {"embedded_header", 1, 128}},
             1024,
             4096,
         },
-        { "srmp",
-          {{"raw", 1024, 4096},
-           {"ir", 1024, 1024},
-           {"xyz", 1024, 1024},
-           {"depth", 1024, 1024},
-           { "embedded_header",
-             1,
-             128 }},
-          1024,
-          4096,
+        {
+            "srmp",
+            {{"raw", 1024, 4096},
+             {"ir", 1024, 1024},
+             {"xyz", 1024, 1024},
+             {"depth", 1024, 1024},
+             {"embedded_header", 1, 128}},
+            1024,
+            4096,
         }};
-#else
-    const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {{
-        //TO DO: to be renamed
-        "vga",
-        {{"raw", 2560, 640},
-         {"ir", 512, 640},
-         {"xyz", 512, 640},
-         {"depth", 512, 640},
-         {"embedded_header", 1, 128}},
-        2560,
-        640,
-    }};
 #endif
 };

@@ -68,6 +68,9 @@ endif()
 
 if (USE_ADSD3030)
         add_definitions(-DADSD3030)
+        if (USE_ADSD3030_BOXDIM)
+                add_definitions(-DADSD3030_BOXDIM)
+        endif()
 endif()
 
 if (WITH_NETWORK)

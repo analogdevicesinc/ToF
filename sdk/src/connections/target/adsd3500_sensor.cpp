@@ -820,6 +820,9 @@ aditof::Status Adsd3500Sensor::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
                      << "errno: " << errno << " error: " << strerror(errno);
         return Status::GENERIC_ERROR;
     }
+
+    usleep(100000);
+
     return status;
 }
 

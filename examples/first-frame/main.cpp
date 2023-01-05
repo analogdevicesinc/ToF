@@ -33,20 +33,20 @@
 #include <aditof/frame.h>
 #include <aditof/system.h>
 #include <aditof/version.h>
-#include <glog/logging.h>
-#include <iostream>
 #include <fstream>
+#include <glog/logging.h>
 #include <ios>
+#include <iostream>
 
 using namespace aditof;
 
-Status save_frame(aditof::Frame& frame, std::string frameType){
-	
+Status save_frame(aditof::Frame &frame, std::string frameType) {
+
     uint16_t *data1;
     FrameDataDetails fDetails;
     Status status = Status::OK;
-    
-    status = frame.getData(frameType, &data1);
+
+    status = frame.getData("raw", &data1);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not get frame data " + frameType + "!";
         return status;
@@ -57,9 +57,10 @@ Status save_frame(aditof::Frame& frame, std::string frameType){
         return status;
     }
 
-    std::ofstream g("out_" + frameType + "_" + fDetails.type + ".bin", std::ios::binary);
-    frame.getDataDetails(frameType, fDetails);
-    g.write((char*)data1, fDetails.width * fDetails.height * sizeof(uint16_t));
+    std::ofstream g("out_" + frameType + "_" + fDetails.type + ".bin",
+                    std::ios::binary);
+    frame.getDataDetails("raw", fDetails);
+    g.write((char *)data1, fDetails.width * fDetails.height * sizeof(uint16_t));
     g.close();
 
     return status;
@@ -95,7 +96,7 @@ int main(int argc, char *argv[]) {
     auto camera = cameras.front();
 
     status = camera->setControl("initialization_config", configFile);
-    if(status != Status::OK){
+    if (status != Status::OK) {
         LOG(ERROR) << "Failed to set control!";
         return 0;
     }
@@ -107,21 +108,27 @@ int main(int argc, char *argv[]) {
     }
 
     aditof::CameraDetails cameraDetails;
-	camera->getDetails(cameraDetails);
+    camera->getDetails(cameraDetails);
 
-	LOG(INFO) << "SD card image version: " << cameraDetails.sdCardImageVersion;
-	LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
-	LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
+    LOG(INFO) << "SD card image version: " << cameraDetails.sdCardImageVersion;
+    LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
+    LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
 
     std::vector<std::string> frameTypes;
     camera->getAvailableFrameTypes(frameTypes);
     if (frameTypes.empty()) {
         std::cout << "no frame type avaialble!";
         return 0;
-    
-    
     }
-    status = camera->setFrameType("lrqmp");
+    
+    status = camera->setControl("enableDepthCompute", "off");
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to disable depth compute!";
+        return 0;
+    }
+    
+    // GET AB FRAME
+    status = camera->setFrameType("ab");
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 0;
@@ -132,9 +139,10 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "Could not start the camera!";
         return 0;
     }
-    aditof::Frame frame;
 
-    status = camera->requestFrame(&frame);
+    aditof::Frame frame_ab;
+
+    status = camera->requestFrame(&frame_ab);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not request frame!";
         return 0;
@@ -142,8 +150,75 @@ int main(int argc, char *argv[]) {
         LOG(INFO) << "succesfully requested frame!";
     }
 
-    save_frame(frame, "ir");
-    save_frame(frame, "depth");
+    status = camera->stop();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not stop the camera!";
+        return 0;
+    }
+
+    save_frame(frame_ab, "ab");
+
+    // GET RAW 3
+    status = camera->setFrameType("raw3");
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not set camera frame type!";
+        return 0;
+    }
+
+    status = camera->start();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not start the camera!";
+        return 0;
+    }
+
+    aditof::Frame frame_raw3;
+
+    status = camera->requestFrame(&frame_raw3);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not request frame!";
+        return 0;
+    } else {
+        LOG(INFO) << "succesfully requested frame!";
+    }
+
+    status = camera->stop();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not stop the camera!";
+        return 0;
+    }
+
+    save_frame(frame_raw3, "raw3");
+
+    // GET RAW 9
+    status = camera->setFrameType("raw9");
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not set camera frame type!";
+        return 0;
+    }
+
+    status = camera->start();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not start the camera!";
+        return 0;
+    }
+
+    aditof::Frame frame_raw9;
+
+    status = camera->requestFrame(&frame_raw9);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not request frame!";
+        return 0;
+    } else {
+        LOG(INFO) << "succesfully requested frame!";
+    }
+
+    status = camera->stop();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not stop the camera!";
+        return 0;
+    }
+
+    save_frame(frame_raw9, "raw9");
 
     return 0;
 }
