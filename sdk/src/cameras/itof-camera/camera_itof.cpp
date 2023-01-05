@@ -1449,8 +1449,10 @@ void CameraItof::configureSensorFrameType() {
             value = "4";
         else if (value == "10")
             value = "3";
-        else
+        else if (value == "8")
             value = "2";
+        else
+            value = "0";
         m_depthSensor->setControl("phaseDepthBits", value);
     } else {
         LOG(WARNING) << "bitsInPhaseOrDepth was not found in .ini file";
