@@ -24,7 +24,7 @@ ModeInfo::modeInfo ModeInfo::g_newModesAdsd3100[] = {
     {0, 1024, 1024, 6, 49156, 96, 0, "sr-native"},
     {1, 1024, 1024, 9, 49156, 144, 0, "lr-native"},
     {2, 512, 512, 6, 12292, 96, 0, "sr-qnative"},
-    {3, 512, 512, 9, 18438, 96, 0, "lr-native"},
+    {3, 512, 512, 9, 18438, 96, 0, "lr-qnative"},
     {4, 1024, 1024, 1, 49156, 16, 1, "pcmmp"},
 };
 
@@ -32,14 +32,14 @@ ModeInfo::modeInfo ModeInfo::g_newModesAdsd3500[] = {
     {0, 1024, 1024, 2, 49156, 96, 0, "sr-native"},
     {1, 1024, 1024, 3, 49156, 144, 0, "lr-native"},
     {2, 512, 512, 1, 12292, 96, 0, "sr-qnative"},
-    {3, 512, 512, 1, 18438, 96, 0, "lr-native"},
+    {3, 512, 512, 1, 18438, 96, 0, "lr-qnative"},
 };
 
 ModeInfo::modeInfo ModeInfo::g_newModesAdsd3030[] = {
     {0, 512, 640, 1, 1670, 1472, 1, "sr-native"},
     {1, 512, 640, 1, 1670, 1472, 1, "lr-native"},
     {2, 256, 320, 1, 1670, 1472, 1, "sr-qnative"},
-    {3, 256, 320, 1, 1670, 1472, 1, "lr-native"},
+    {3, 256, 320, 1, 1670, 1472, 1, "lr-qnative"},
 };
 
 int ModeInfo::g_imagerType = 1;
