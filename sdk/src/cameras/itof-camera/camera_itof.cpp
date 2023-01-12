@@ -1845,6 +1845,30 @@ aditof::Status CameraItof::adsd3500GetRadialThresholdMax(int &threshold) {
     return m_depthSensor->adsd3500_read_cmd(
         0x0030, reinterpret_cast<uint16_t *>(&threshold));
 }
+aditof::Status CameraItof::adsd3500GetSensorTemperature(uint16_t &tmpValue) {
+    using namespace aditof;
+    Status status = Status::OK;
+
+    status = m_depthSensor->adsd3500_read_cmd(0x0054, &tmpValue);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Can not read sensor temperature";
+        return Status::GENERIC_ERROR;
+    }
+
+    return status;
+}
+aditof::Status CameraItof::adsd3500GetLaserTemperature(uint16_t &tmpValue) {
+    using namespace aditof;
+    Status status = Status::OK;
+
+    status = m_depthSensor->adsd3500_read_cmd(0x0055, &tmpValue);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Can not read laser temperature";
+        return Status::GENERIC_ERROR;
+    }
+
+    return status;
+}
 
 aditof::Status CameraItof::getKeyValuePairsFromIni(
     const std::string &iniFileName,

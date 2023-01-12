@@ -761,6 +761,7 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
         }
 #endif
 
+        m_sensorFps = fps;
         status = this->adsd3500_write_cmd(0x22, fps);
         if (status != Status::OK) {
             LOG(ERROR) << "Failed to set fps at: " << fps
@@ -880,6 +881,9 @@ aditof::Status Adsd3500Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data) {
     buf[2] = 2;
 
     extCtrl.p_u8 = buf;
+
+    //wait for the last frame processing time, needed for adsd3500
+    usleep(double(1.0) / m_sensorFps * 1000000);
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Reading Adsd3500 error "
