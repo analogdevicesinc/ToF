@@ -672,7 +672,13 @@ int main(int argc, char *argv[]) {
 
         // We have both 8bit and 16bit pixels, compute the size in 8bit
         if (sensorName == "adsd3500") {
-            subFrames = 5;
+            if (modeName == "lr-native") {
+                subFrames = 8;
+            } else if (modeName == "sr-native") {
+                subFrames = 6;
+            } else {
+                subFrames = 5;
+            }
         } else {
             std::string attrVal;
             frame.getAttribute("total_captures", attrVal);
