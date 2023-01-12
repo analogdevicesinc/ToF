@@ -727,6 +727,23 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
+        //geting temperature vlues
+        uint16_t sensorTmp;
+        uint16_t laserTmp;
+        status = camera->adsd3500GetSensorTemperature(sensorTmp);
+        if (status != Status::OK) {
+            LOG(INFO) << "Could not request sensor temperature values!";
+        }
+
+        status = camera->adsd3500GetLaserTemperature(laserTmp);
+        if (status != Status::OK) {
+            LOG(INFO) << "Could not request laser temperature values!";
+        }
+
+        LOG(INFO) << "Sensor temperature: "<<sensorTmp<<std::endl;
+        LOG(INFO) << "Laser temperature: "<<laserTmp<<std::endl;
+
+
 #if 0 // TO DO: uncomment this one the header becomes available
         uint16_t *pHeader = nullptr;
         status = frame.getData("embeded_header", &pHeader);            

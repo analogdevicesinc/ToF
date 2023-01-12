@@ -287,6 +287,20 @@ class SDK_API Camera {
      * @return Status
      */
     virtual Status adsd3500GetRadialThresholdMax(int &threshold) = 0;
+
+    /**
+     * @brief Get the sensor temperature
+     * @param[out] tmpValue - Values in Celsius degree
+     * @return Status
+     */
+    virtual Status adsd3500GetSensorTemperature(uint16_t &tmpValue) = 0;
+
+    /**
+     * @brief Get the laser temperature
+     * @param[out] tmpValue - Values in Celsius degree
+     * @return Status
+     */
+    virtual Status adsd3500GetLaserTemperature(uint16_t &tmpValue) = 0;
 };
 
 } // namespace aditof

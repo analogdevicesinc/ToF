@@ -128,6 +128,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     std::unique_ptr<ImplData> m_implData;
     uint8_t m_capturesPerFrame;
     bool m_firstRun;
+    unsigned int m_sensorFps;
     bool m_adsd3500Queried;
     std::vector<aditof::DepthSensorFrameType> m_availableFrameTypes;
     const std::vector<aditof::DepthSensorFrameType>

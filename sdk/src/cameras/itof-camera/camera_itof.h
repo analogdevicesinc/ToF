@@ -145,6 +145,8 @@ class CameraItof : public aditof::Camera {
     aditof::Status adsd3500GetRadialThresholdMin(int &threshold) override;
     aditof::Status adsd3500SetRadialThresholdMax(int threshold) override;
     aditof::Status adsd3500GetRadialThresholdMax(int &threshold) override;
+    aditof::Status adsd3500GetSensorTemperature(uint16_t &tmpValue) override;
+    aditof::Status adsd3500GetLaserTemperature(uint16_t &tmpValue) override;
 
   private:
     /**
