@@ -64,6 +64,12 @@ std::shared_ptr<aditof::V4lBufferAccessInterface> sensorV4lBufAccess;
 
 static payload::ClientRequest buff_recv;
 static payload::ServerResponse buff_send;
+
+//sending frames separately without serializing it
+uint8_t *buff_frame_to_send = NULL;
+unsigned int buff_frame_length;
+bool m_frame_ready = false;
+
 static std::map<std::string, api_Values> s_map_api_Values;
 static void Initialize();
 void invoke_sdk_api(payload::ClientRequest buff_recv);
@@ -180,33 +186,47 @@ int Network::callback_function(struct lws *wsi,
             latest_sent_msg_is_was_buffered = false;
             break;
         }
+        unsigned int siz = 0;
+        //Setting starting 8 bit to set serialization or not;
+        // pkt_pad[0] = (m_frame_ready == true ? '1' : '0');
+        if (m_frame_ready == true) {
+            siz = buff_frame_length;
 
-        int siz = buff_send.ByteSize();
-        unsigned char *pkt =
-            new unsigned char[siz + LWS_SEND_BUFFER_PRE_PADDING];
-        unsigned char *pkt_pad = pkt + LWS_SEND_BUFFER_PRE_PADDING;
-        google::protobuf::io::ArrayOutputStream aos(pkt_pad, siz);
-        CodedOutputStream *coded_output = new CodedOutputStream(&aos);
-        buff_send.SerializeToCodedStream(coded_output);
+            buff_frame_to_send[0] = '1';
 
-        n = lws_write(wsi, pkt_pad, (siz), LWS_WRITE_TEXT);
-        if (lws_partial_buffered(wsi)) {
-            latest_sent_msg_is_was_buffered = true;
+            n = lws_write(wsi, buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING,
+                          (buff_frame_length + 1), LWS_WRITE_TEXT);
+            m_frame_ready = false;
+            if (lws_partial_buffered(wsi)) {
+                latest_sent_msg_is_was_buffered = true;
+            }
+
+        } else {
+            siz = buff_send.ByteSize();
+            unsigned char *pkt =
+                new unsigned char[siz + LWS_SEND_BUFFER_PRE_PADDING + 1];
+            unsigned char *pkt_pad = pkt + LWS_SEND_BUFFER_PRE_PADDING;
+
+            pkt_pad[0] = '0';
+
+            google::protobuf::io::ArrayOutputStream aos(pkt_pad + 1, siz);
+            CodedOutputStream *coded_output = new CodedOutputStream(&aos);
+            buff_send.SerializeToCodedStream(coded_output);
+            n = lws_write(wsi, pkt_pad, (siz + 1), LWS_WRITE_TEXT);
+
+            if (lws_partial_buffered(wsi)) {
+                latest_sent_msg_is_was_buffered = true;
+            }
+
+            delete coded_output;
+            delete[] pkt;
         }
-#ifdef NW_DEBUG
-        cout << "server is sending " << n << endl;
-#endif
         if (n < 0)
             std::cout << "Error Sending" << std::endl;
         else if (n < siz)
             std::cout << "Partial write" << std::endl;
         else if (n == siz) {
-#ifdef NW_DEBUG
-            cout << "Write successful" << endl;
-#endif
         }
-        delete coded_output;
-        delete[] pkt;
         break;
     }
 
@@ -470,17 +490,27 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             break;
         }
 
-        unsigned int buf_data_len;
         uint8_t *buffer;
 
-        status =
-            sensorV4lBufAccess->getInternalBuffer(&buffer, buf_data_len, buf);
+        status = sensorV4lBufAccess->getInternalBuffer(&buffer,
+                                                       buff_frame_length, buf);
+        if (buff_frame_to_send != NULL) {
+            free(buff_frame_to_send);
+            buff_frame_to_send = NULL;
+        }
+        buff_frame_to_send = (uint8_t *)malloc(
+            (buff_frame_length + LWS_SEND_BUFFER_PRE_PADDING + 1) *
+            sizeof(uint8_t));
+
+        memcpy(buff_frame_to_send + (LWS_SEND_BUFFER_PRE_PADDING + 1), buffer,
+               buff_frame_length * sizeof(uint8_t));
+
+        m_frame_ready = true;
+
         if (status != aditof::Status::OK) {
             buff_send.set_status(static_cast<::payload::Status>(status));
             break;
         }
-
-        buff_send.add_bytes_payload(buffer, buf_data_len * sizeof(uint8_t));
 
         status = sensorV4lBufAccess->enqueueInternalBuffer(buf);
         if (status != aditof::Status::OK) {

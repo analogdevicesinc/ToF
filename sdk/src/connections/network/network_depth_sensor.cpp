@@ -403,8 +403,7 @@ aditof::Status NetworkDepthSensor::getFrame(uint16_t *buffer) {
     }
 
     //when using ITOF camera the data is already deinterleaved, so a simple copy is enough
-    memcpy(buffer, net->recv_buff[m_sensorIndex].bytes_payload(0).c_str(),
-           net->recv_buff[m_sensorIndex].bytes_payload(0).length());
+    memcpy(buffer, net->recv_buff[m_sensorIndex].bytes_payload(0).c_str(), net->recv_buff[m_sensorIndex].bytes_payload(0).length());
 
     return status;
 }
