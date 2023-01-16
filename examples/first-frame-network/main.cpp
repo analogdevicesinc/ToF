@@ -36,6 +36,7 @@
 #include <glog/logging.h>
 #include <iostream>
 
+
 using namespace aditof;
 
 int main(int argc, char *argv[]) {
@@ -92,7 +93,7 @@ int main(int argc, char *argv[]) {
         std::cout << "no frame type available!";
         return 0;
     }
-    status = camera->setFrameType("lrqmp");
+    status = camera->setFrameType("lr-qnative");
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 0;
@@ -104,14 +105,29 @@ int main(int argc, char *argv[]) {
         return 0;
     }
     aditof::Frame frame;
+    
+    clock_t current_ticks, delta_ticks;
+    clock_t fps = 0;
 
-    status = camera->requestFrame(&frame);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not request frame!";
-        return 0;
-    } else {
-        LOG(INFO) << "succesfully requested frame!";
+    while (true)
+    {
+        current_ticks = clock();
+        status = camera->requestFrame(&frame);
+
+        delta_ticks = clock() - current_ticks; //the time, in ms, that took to render the scene
+        if(delta_ticks > 0)
+            fps = CLOCKS_PER_SEC / delta_ticks;
+        std::cout << fps << std::endl;
+
+        
+        // if (status != Status::OK) {
+        //     LOG(ERROR) << "Could not request frame!";
+        //     return 0;
+        // } 
     }
+    
+
+
 
     uint16_t *data1;
     status = frame.getData("ir", &data1);

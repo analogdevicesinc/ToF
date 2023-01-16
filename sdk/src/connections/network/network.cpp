@@ -428,8 +428,6 @@ int Network::callback_function(struct lws *wsi,
                 in = static_cast<void *>(clientData->data.data());
                 len = clientData->data.size();
             }
-            std::cout << "The first BYTE: " << static_cast<char *>(in)[0]
-                      << std::endl;
             if (static_cast<unsigned char *>(in)[0] == '0') {
                 // process message without frame
                 google::protobuf::io::ArrayInputStream ais(
@@ -444,8 +442,6 @@ int Network::callback_function(struct lws *wsi,
                 Cond_Var[connectionId].notify_all();
             } else {
                 // process message of only frame data
-
-                std::cout << "Protobuf frame message\n";
                 uint8_t* m_frame=NULL;
                 int m_frameLength;
                 m_frameLength = static_cast<int>(len) - 1;
