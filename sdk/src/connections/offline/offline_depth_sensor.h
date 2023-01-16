@@ -5,6 +5,7 @@
 #include "aditof/sensor_definitions.h"
 
 #include <memory>
+#include <map>
 
 class OfflineDepthSensor : public aditof::DepthSensorInterface {
   public:
@@ -55,14 +56,17 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
     adsd3500_write_payload(uint8_t *payload, uint16_t payload_len) override;
 
   private:
+    std::string m_connectionType;
     aditof::SensorDetails m_sensorDetails;
     std::vector<aditof::DepthSensorFrameType> m_depthSensorFrameTypes;
     std::string m_path;
-
+    std::string m_frameTypeSelected;
+    std::map<std::string, std::pair<std::uint16_t*, std::size_t>> m_frameTypes;
     const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
+      {
         {
             "pcmmp",
-            {{"ir", 4096, 256}, {"embedded_header", 1, 128}},
+            {{"ir", 4096, 256}, {"embedded_header", 1, 128}, {"raw", 2560, 640}, {"depth", 4096, 256}},
             4096,
             256, //TODO header size not counted here
         },
@@ -78,7 +82,17 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
             4096,
             256,
         },
-
+        // const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {{
+        // TO DO: to be renamed
+        // "vga",
+        // {{"raw", 2560, 640},
+        //  {"ir", 512, 640},
+        //  {"xyz", 512, 640},
+        //  {"depth", 512, 640},
+        //  {"embedded_header", 1, 128}},
+        // 2560,
+        // 640,
+      }
     };
 };
 

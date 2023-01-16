@@ -43,7 +43,8 @@
 #include "utils.h"
 #include <algorithm>
 #include <array>
-#include <cstdint>
+#include <cstdint>        return aditof::Status::INVALID_ARGUMENT;
+
 #include <fstream>
 #ifdef USE_GLOG
 #include <glog/logging.h>
@@ -96,6 +97,9 @@ CameraItof::CameraItof(
     m_depthSensor->getName(sensorName);
     if (sensorName == "adsd3500") {
         m_adsd3500Enabled = true;
+    }
+    else if (sensorName == "offline"){
+        m_isOffline = true;
     }
 
     // Look for EEPROM
@@ -300,9 +304,7 @@ aditof::Status CameraItof::initialize() {
             uint8_t mode = ModeInfo::getInstance()
                                ->getModeInfo(availableFrameTypes.type)
                                .mode;
-            intrinsics[0] = mode;
-            dealiasParams[0] = mode;
-
+                               
             //hardcoded function values to return intrinsics
             status =
                 m_depthSensor->adsd3500_read_payload_cmd(0x01, intrinsics, 56);
@@ -319,11 +321,13 @@ aditof::Status CameraItof::initialize() {
                 return status;
             }
 
+            intrinsics[0] = mode;
+            dealiasParams[0] = mode;
             memcpy(&dealiasStruct, dealiasParams,
                    sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
             memcpy(&dealiasStruct.camera_intrinsics, intrinsics,
                    sizeof(CameraIntrinsics));
-
+                   
             m_xyz_dealias_data[mode] = dealiasStruct;
             memcpy(&m_details.intrinsics, &dealiasStruct.camera_intrinsics,
                    sizeof(CameraIntrinsics));
@@ -475,7 +479,7 @@ aditof::Status CameraItof::start() {
 
     if (reg_data) {
         m_CameraProgrammed = true;
-        LOG(INFO) << "USEQ running. Skip CFG & CCB programming step\n";
+        LOG(INFO) << "USEQ running. Skip CinitComputeLibraryFG & CCB programming step\n";
     }
 
     if (!m_CameraProgrammed) {
@@ -560,7 +564,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         m_ini_depth = m_ini_depth_map[frameType];
     }
     getKeyValuePairsFromIni(m_ini_depth, m_iniKeyValPairs);
-    setAdsd3500WithIniParams(m_iniKeyValPairs);
+        setAdsd3500WithIniParams(m_iniKeyValPairs);
     configureSensorFrameType();
     setMode(frameType);
 
@@ -608,13 +612,13 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     }
 
     if (m_controls["enableDepthCompute"] == "on" &&
-        ((m_details.frameType.totalCaptures > 1) || m_adsd3500Enabled)) {
+        ((m_details.frameType.totalCaptures > 1) || m_adsd3500Enabled || m_isOffline)) {
         status = initComputeLibrary();
         if (Status::OK != status) {
             LOG(ERROR) << "Initializing compute libraries failed.";
             return Status::GENERIC_ERROR;
         }
-    } else {
+    } else {  
         freeComputeLibrary();
     }
 
@@ -730,13 +734,12 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     }
 
     if ((m_controls["enableDepthCompute"] == "on") &&
-        ((totalCaptures > 1) || m_adsd3500Enabled)) {
+        ((totalCaptures > 1) || m_adsd3500Enabled || m_isOffline)) {
 
         if (NULL == m_tofi_compute_context) {
             LOG(ERROR) << "Depth compute libray not initialized";
             return Status::GENERIC_ERROR;
         }
-
         uint16_t *tempDepthFrame = m_tofi_compute_context->p_depth_frame;
         uint16_t *tempAbFrame = m_tofi_compute_context->p_ab_frame;
         uint16_t *tempXyzFrame =
@@ -924,7 +927,7 @@ aditof::Status CameraItof::initComputeLibrary(void) {
             memcpy(tempDataParser, pData, dataSize);
             ConfigFileData depth_ini = {tempDataParser, dataSize};
 
-            if (m_adsd3500Enabled) {
+            if (m_adsd3500Enabled || m_isOffline) {
                 m_tofi_config = InitTofiConfig_isp((ConfigFileData *)&depth_ini,
                                                    convertedMode, &status,
                                                    m_xyz_dealias_data);
