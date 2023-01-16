@@ -64,6 +64,9 @@ int nBytes = 0;          /*no of bytes sent*/
 int recv_data_error = 0; /*flag for recv data*/
 char server_msg[] = "Connection Allowed";
 
+//frame requst without serialization
+uint8_t *m_frame = NULL;
+
 /*Declare static members*/
 std::vector<lws *> Network::web_socket;
 std::vector<lws_context *> Network::context;
@@ -425,18 +428,40 @@ int Network::callback_function(struct lws *wsi,
                 in = static_cast<void *>(clientData->data.data());
                 len = clientData->data.size();
             }
+            if (static_cast<unsigned char *>(in)[0] == '0') {
+                // process message without frame
+                google::protobuf::io::ArrayInputStream ais(
+                    static_cast<char *>(in) + 1, static_cast<int>(len) - 1);
+                CodedInputStream coded_input(&ais);
+                recv_buff[connectionId].ParseFromCodedStream(&coded_input);
 
-            // process message
-            google::protobuf::io::ArrayInputStream ais(in,
-                                                       static_cast<int>(len));
-            CodedInputStream coded_input(&ais);
-            recv_buff[connectionId].ParseFromCodedStream(&coded_input);
+                recv_data_error = 0;
+                Data_Received[connectionId] = true;
 
-            recv_data_error = 0;
-            Data_Received[connectionId] = true;
+                /*Notify the host SDK that data is received from server*/
+                Cond_Var[connectionId].notify_all();
+            } else {
+                // process message of only frame data
+                uint8_t *m_frame = NULL;
+                int m_frameLength;
+                m_frameLength = static_cast<int>(len) - 1;
 
-            /*Notify the host SDK that data is received from server*/
-            Cond_Var[connectionId].notify_all();
+                if (m_frame != NULL) {
+                    free(m_frame);
+                    m_frame =
+                        (uint8_t *)malloc(m_frameLength * sizeof(uint8_t));
+                }
+
+                recv_buff[connectionId].add_bytes_payload(
+                    static_cast<char *>(in) + 1, m_frameLength - 1);
+                // memcpy(m_frame, static_cast<char *>(in) + 1, m_frameLength);
+
+                recv_data_error = 0;
+                Data_Received[connectionId] = true;
+
+                /*Notify the host SDK that data is received from server*/
+                Cond_Var[connectionId].notify_all();
+            }
 
         } else {
             // append message
