@@ -255,7 +255,7 @@ aditof::Status Adsd3500Sensor::open() {
             return Status::GENERIC_ERROR;
         }
 
-        if (strcmp((char *)cap.card, cardName)) {
+        if (strncmp((char *)cap.card, cardName, strlen(cardName))) {
             LOG(WARNING) << "CAPTURE Device " << cap.card;
             LOG(WARNING) << "Read " << cardName;
             return Status::GENERIC_ERROR;
