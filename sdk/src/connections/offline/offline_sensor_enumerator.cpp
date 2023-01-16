@@ -3,7 +3,7 @@
 
 OfflineSensorEnumerator::OfflineSensorEnumerator() {
     m_sensorsInfo.emplace_back(
-        std::string(std::string(RESOURCES) + "/offline/mode3_raw.bin"));
+        std::string(std::string(RESOURCES) + "/offline"));
 }
 
 aditof::Status OfflineSensorEnumerator::getDepthSensors(

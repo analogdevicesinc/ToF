@@ -362,6 +362,7 @@ class CameraItof : public aditof::Camera {
     bool m_tempSensorInitialized;
     bool m_adsd3500Enabled;
     bool m_adsd3500_master;
+    bool m_isOffline;
 
     FileData m_calData;
     FileData m_depthINIData;

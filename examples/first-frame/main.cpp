@@ -124,7 +124,7 @@ int main(int argc, char *argv[]) {
         std::cout << "no frame type avaialble!";
         return 0;
     }
-    status = camera->setFrameType("lrqmp");
+    status = camera->setFrameType("pcmmp");
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 0;
@@ -136,6 +136,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
     aditof::Frame frame;
+
 
     status = camera->requestFrame(&frame);
     if (status != Status::OK) {
