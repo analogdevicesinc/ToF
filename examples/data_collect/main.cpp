@@ -670,12 +670,23 @@ int main(int argc, char *argv[]) {
         height = fDetails.height;
         width = fDetails.width;
 
+        std::string imagerType;
+        status = camera->getControl("imagerType", imagerType);
+        if(status != Status::OK){
+            LOG(ERROR) << "Failed to get imager type!";
+            return 0;
+        }
+
         // We have both 8bit and 16bit pixels, compute the size in 8bit
         if (sensorName == "adsd3500") {
-            if (modeName == "lr-native") {
-                subFrames = 8;
-            } else if (modeName == "sr-native") {
-                subFrames = 6;
+            if(imagerType == "1"){
+                if (modeName == "lr-native") {
+                    subFrames = 8;
+                } else if (modeName == "sr-native") {
+                    subFrames = 6;
+                } else {
+                    subFrames = 5;
+                }  
             } else {
                 subFrames = 5;
             }

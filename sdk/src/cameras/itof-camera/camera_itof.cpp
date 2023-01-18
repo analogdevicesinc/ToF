@@ -115,6 +115,7 @@ CameraItof::CameraItof(
     // Additional controls
     if (m_adsd3500Enabled) {
         m_controls.emplace("updateAdsd3500Firmware", "");
+        m_controls.emplace("imagerType", "1");
     }
 
     m_adsd3500_master = true;
@@ -281,6 +282,8 @@ aditof::Status CameraItof::initialize() {
                 }
             }
         }
+
+        setControl("imagerType", std::to_string(m_adsd3500ImagerType));
 
         m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
 
