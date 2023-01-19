@@ -22,6 +22,10 @@
 #include <sys/stat.h>
 #include <unordered_map>
 
+#ifdef NVIDIA
+#include <gpiod.h>
+#endif
+
 #define MAX_SUBFRAMES_COUNT                                                    \
     10 // maximum number of subframes that are used to create a full frame (maximum total_captures of all modes)
 #define EXTRA_BUFFERS_COUNT                                                    \
@@ -189,10 +193,28 @@ aditof::Status Adsd3500Sensor::open() {
         system("echo 1 > /sys/class/gpio/gpio122/value");
         usleep(7000000);
 #elif defined(NVIDIA)
-        system("echo 0 > /sys/class/gpio/PP.04/value");
-        usleep(100000);
-        system("echo 1 > /sys/class/gpio/PP.04/value");
-        usleep(5000000);
+        struct stat st;
+        if (stat("/sys/class/gpio/PP.04/value", &st) == 0) {
+            system("echo 0 > /sys/class/gpio/PP.04/value");
+            usleep(100000);
+            system("echo 1 > /sys/class/gpio/PP.04/value");
+            usleep(5000000);
+        } else {
+            struct gpiod_chip *chip;
+            struct gpiod_line *line;
+
+            chip = gpiod_chip_open_by_name("gpiochip3");
+            line = gpiod_chip_get_line(chip, 11);
+            gpiod_line_request_output(line, "adsd3500Sensor", 0);
+
+            gpiod_line_set_value(line, 0);
+            usleep(100000);
+            gpiod_line_set_value(line, 1);
+            usleep(5000000);
+
+            gpiod_line_release(line);
+            gpiod_chip_close(chip);
+        }
 #endif
         m_firstRun = false;
     }
