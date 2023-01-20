@@ -1,0 +1,8 @@
+{
+    "VAUX_POWER_VOLTAGE": "18",
+    "skip_network_cameras": "off",
+    "camera_ip": "10.42.0.1",
+    "DEPTH_INI": "./config/RawToDepthAdsd3500_lr-qnative.ini;./config/RawToDepthAdsd3500_lr-native.ini;./config/RawToDepthAdsd3500_sr-qnative.ini;./config/RawToDepthAdsd3500_sr-native.ini",
+    "FPS": "10",
+    "FSYNC_MODE:": "1"
+}
