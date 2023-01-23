@@ -737,15 +737,15 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         uint16_t *tempAbFrame = m_tofi_compute_context->p_ab_frame;
         uint16_t *tempXyzFrame =
             (uint16_t *)m_tofi_compute_context->p_xyz_frame;
-        uint16_t *tempConfFrame =
-            (uint16_t *)m_tofi_compute_context->p_conf_frame;
+        // uint16_t *tempConfFrame =
+        //     (uint16_t *)m_tofi_compute_context->p_conf_frame; // TO DO: Uncomment this and figure out why depth compute is crashing
 
         frame->getData("depth", &m_tofi_compute_context->p_depth_frame);
         frame->getData("ir", &m_tofi_compute_context->p_ab_frame);
 
-        uint16_t *confFrame;
-        frame->getData("conf", &confFrame);
-        m_tofi_compute_context->p_conf_frame = (float *)confFrame;
+        // uint16_t *confFrame;
+        // frame->getData("conf", &confFrame);
+        // m_tofi_compute_context->p_conf_frame = (float *)confFrame; // TO DO: Uncomment this and figure out why depth compute is crashing
 
         if (m_xyzEnabled) {
             uint16_t *xyzFrame;
@@ -764,7 +764,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         m_tofi_compute_context->p_depth_frame = tempDepthFrame;
         m_tofi_compute_context->p_ab_frame = tempAbFrame;
         m_tofi_compute_context->p_xyz_frame = (int16_t *)tempXyzFrame;
-        m_tofi_compute_context->p_conf_frame = (float *)tempConfFrame;
+        // m_tofi_compute_context->p_conf_frame = (float *)tempConfFrame;
 
         if (m_adsd3500Enabled && m_abEnabled &&
             (m_details.frameType.type == "lrmp" ||
