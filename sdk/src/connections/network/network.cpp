@@ -442,20 +442,11 @@ int Network::callback_function(struct lws *wsi,
                 Cond_Var[connectionId].notify_all();
             } else {
                 // process message of only frame data
-                uint8_t *m_frame = NULL;
                 int m_frameLength;
                 m_frameLength = static_cast<int>(len) - 1;
 
-                if (m_frame != NULL) {
-                    free(m_frame);
-                    m_frame =
-                        (uint8_t *)malloc(m_frameLength * sizeof(uint8_t));
-                }
-
                 recv_buff[connectionId].add_bytes_payload(
                     static_cast<char *>(in) + 1, m_frameLength - 1);
-                // memcpy(m_frame, static_cast<char *>(in) + 1, m_frameLength);
-
                 recv_data_error = 0;
                 Data_Received[connectionId] = true;
 
