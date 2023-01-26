@@ -766,13 +766,13 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         m_tofi_compute_context->p_xyz_frame = (int16_t *)tempXyzFrame;
         // m_tofi_compute_context->p_conf_frame = (float *)tempConfFrame;
 
-        if (m_adsd3500Enabled && m_abEnabled &&
-            (m_details.frameType.type == "lrmp" ||
-             m_details.frameType.type == "srmp")) {
+        if (m_adsd3500Enabled && m_abEnabled && (m_adsd3500ImagerType == 1) &&
+            (m_details.frameType.type == "lr-native" ||
+             m_details.frameType.type == "sr-native")) {
             uint16_t *mpAbFrame;
             frame->getData("ir", &mpAbFrame);
 
-            if (m_details.frameType.type == "lrmp") {
+            if (m_details.frameType.type == "lr-native") {
                 memcpy(mpAbFrame,
                        frameDataLocation + m_details.frameType.height *
                                                m_details.frameType.width * 3,
