@@ -73,7 +73,6 @@ class Network {
 
     static payload::ClientRequest send_buff[MAX_CAMERA_NUM];
     static payload::ServerResponse recv_buff[MAX_CAMERA_NUM];
-    uint8_t *m_frame;
     int m_frameLength;
 
     //! ServerConnect() - APi to initialize the websocket and connect to

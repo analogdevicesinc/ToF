@@ -64,9 +64,6 @@ int nBytes = 0;          /*no of bytes sent*/
 int recv_data_error = 0; /*flag for recv data*/
 char server_msg[] = "Connection Allowed";
 
-//frame requst without serialization
-uint8_t *m_frame = NULL;
-
 /*Declare static members*/
 std::vector<lws *> Network::web_socket;
 std::vector<lws_context *> Network::context;
