@@ -325,6 +325,8 @@ bool ADIMainWindow::startImGUI(const ADIViewerArgs &args) {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
+    m_controller = std::make_shared<adicontroller::ADIController>(
+        std::vector<std::shared_ptr<aditof::Camera>>());
     RefreshDevices();
 
     //Look for Company Logo
@@ -394,6 +396,7 @@ void ADIMainWindow::render() {
         //Create windows here:
         showMainMenu();
         showOpenDeviceWindow();
+        ShowPlaybackTree();
         if (isPlaying) {
             PlayCCD(modeSelection, viewSelection);
             if (view->m_ctrl->panicStop) {
@@ -719,7 +722,6 @@ void ADIMainWindow::showOpenDeviceWindow() {
         ImGui::TreePop();
     }
 
-    ShowPlaybackTree();
     //Logo Window
     setWindowPosition(0.0, 628);
     setWindowSize(300.0, 90.0);
@@ -756,10 +758,11 @@ void ADIMainWindow::showOpenDeviceWindow() {
 void ADIMainWindow::ShowPlaybackTree() {
     /**********/
     //Playback
-    ImGui::NewLine();
-    ImGui::Separator();
-    ImGui::NewLine();
     ImGui::SetNextTreeNodeOpen(true, ImGuiCond_FirstUseEver);
+    setWindowPosition(0.0, offsetfromtop + 590);
+    setWindowSize(300.0, 150);
+    ImGui::Begin("Playback", NULL,
+                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
     if (ImGui::TreeNode("Playback Options")) {
         float customColorOpenRec = 0.22f;
@@ -921,6 +924,7 @@ void ADIMainWindow::ShowPlaybackTree() {
 
         ImGui::TreePop(); //Playback
     }
+    ImGui::End();
 }
 
 void ADIMainWindow::stopPlayback() {
