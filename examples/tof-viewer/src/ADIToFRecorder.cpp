@@ -866,6 +866,15 @@ void ADIToFRecorder::playbackThread() {
         }
 
         auto frame = std::make_shared<aditof::Frame>();
+        aditof::FrameDataDetails dataDetails;
+        dataDetails.type = "depth";
+        dataDetails.width = m_frameDetails.width;
+        dataDetails.height = m_frameDetails.height;
+        m_frameDetails.dataDetails.emplace_back(dataDetails);
+        dataDetails.type = "ir";
+        dataDetails.width = m_frameDetails.width;
+        dataDetails.height = m_frameDetails.height;
+        m_frameDetails.dataDetails.emplace_back(dataDetails);
         frame->setDetails(m_frameDetails);
 
         frame->getData("ir", &frameDataLocationIR);
