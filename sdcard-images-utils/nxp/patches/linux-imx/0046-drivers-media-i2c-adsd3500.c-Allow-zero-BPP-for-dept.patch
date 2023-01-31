@@ -1,7 +1,7 @@
 From b3f182add9088f4a6e206f657c44bc062951a3be Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Fri, 25 Nov 2022 16:30:12 +0200
-Subject: [PATCH 46/48] drivers: media: i2c: adsd3500.c: Allow zero BPP for
+Subject: [PATCH 46/49] drivers: media: i2c: adsd3500.c: Allow zero BPP for
  depth
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
@@ -39,5 +39,5 @@ index b6a7892bb34c..2dee4602a506 100644
  };
  
 -- 
-2.38.1
+2.39.0
 

@@ -1,7 +1,7 @@
 From 32e7a7c9563b0593ece46ca4400150b13ea2a009 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Wed, 9 Nov 2022 14:39:43 +0200
-Subject: [PATCH 45/48] drivers: media: i2c: adsd3500: Add adsd3030 support
+Subject: [PATCH 45/49] drivers: media: i2c: adsd3500: Add adsd3030 support
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
@@ -1280,5 +1280,5 @@ index e6931320a871..b6a7892bb34c 100644
  	}
  };
 -- 
-2.38.1
+2.39.0
 

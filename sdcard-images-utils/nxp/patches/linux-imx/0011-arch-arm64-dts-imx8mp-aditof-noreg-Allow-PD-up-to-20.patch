@@ -1,7 +1,7 @@
 From 993eacd4a10efc80641b613466d063e9baa0e02d Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Fri, 21 May 2021 12:10:33 +0300
-Subject: [PATCH 11/48] arch: arm64: dts: imx8mp-aditof-noreg: Allow PD up to
+Subject: [PATCH 11/49] arch: arm64: dts: imx8mp-aditof-noreg: Allow PD up to
  20V and add SPI flash
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
@@ -181,5 +181,5 @@ index ae0e5bb9eeae..28924e4bc0f9 100644
  		fsl,pins = <
  			MX8MP_IOMUXC_SPDIF_RX__GPIO5_IO04		0x140
 -- 
-2.38.1
+2.39.0
 
