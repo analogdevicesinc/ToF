@@ -1,7 +1,7 @@
 From 5fcf2628d00c472fdee8d70afc54c750f1e11fc7 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Thu, 7 Oct 2021 16:10:47 +0300
-Subject: [PATCH 19/48] usb: gadget: Set lowest allowed speed to SS
+Subject: [PATCH 19/49] usb: gadget: Set lowest allowed speed to SS
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
 ---
@@ -27,5 +27,5 @@ index 3ffa939678d7..ca4e3ebf5334 100644
  		ss_cap->bU2DevExitLat = dcd_config_params.bU2DevExitLat;
  	}
 -- 
-2.38.1
+2.39.0
 
