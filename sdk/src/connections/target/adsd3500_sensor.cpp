@@ -1354,10 +1354,11 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
 
         uint16_t readValue = 0;
         int majorVersion = m_implData->fw_ver.at(0);
-        if (majorVersion == 0) { // 0 means beta version, so version start at position 1
+        if (majorVersion ==
+            0) { // 0 means beta version, so version start at position 1
             majorVersion = m_implData->fw_ver.at(1);
         }
-        if (majorVersion > '3') {
+        if (majorVersion > 3) {
             status = adsd3500_read_cmd(0x0032, &readValue);
         } else {
             status = Status::GENERIC_ERROR;
