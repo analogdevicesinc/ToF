@@ -767,16 +767,18 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         // m_tofi_compute_context->p_conf_frame = (float *)tempConfFrame;
 
         if (m_adsd3500Enabled && m_abEnabled && (m_adsd3500ImagerType == 1) &&
+            (m_abBitsPerPixel < 16) &&
             (m_details.frameType.type == "lr-native" ||
              m_details.frameType.type == "sr-native")) {
             uint16_t *mpAbFrame;
             frame->getData("ir", &mpAbFrame);
 
             //TO DO: shift with 4 because we use only 12 bits
+            uint8_t bitsToShift = 16 - m_abEnabled;
             for (unsigned int i = 0;
                  i < (m_details.frameType.height * m_details.frameType.width);
                  ++i) {
-                mpAbFrame[i] = mpAbFrame[i] >> 4;
+                mpAbFrame[i] = mpAbFrame[i] >> bitsToShift;
             }
         }
     }
@@ -1569,6 +1571,7 @@ void CameraItof::configureSensorFrameType() {
     if (it != m_iniKeyValPairs.end()) {
         value = it->second;
         m_abEnabled = 1;
+        m_abBitsPerPixel = std::stoi(value);
         if (value == "16")
             value = "6";
         else if (value == "14")
