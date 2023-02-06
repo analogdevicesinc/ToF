@@ -1,8 +1,8 @@
 {
     "VAUX_POWER_VOLTAGE": "18",
-    "skip_network_cameras": "off",
+    "skip_network_cameras": "on",
     "camera_ip": "10.76.84.247",
-    "DEPTH_INI": "./config/RawToDepthAdsd3030_vga.ini",
+    "DEPTH_INI": "./config/RawToDepthAdsd3500_sr-native.ini",
     "FPS": "10",
     "FSYNC_MODE:": "1"
 }
