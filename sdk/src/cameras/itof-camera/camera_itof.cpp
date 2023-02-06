@@ -43,8 +43,7 @@
 #include "utils.h"
 #include <algorithm>
 #include <array>
-#include <cstdint>        return aditof::Status::INVALID_ARGUMENT;
-
+#include <cstdint>
 #include <fstream>
 #ifdef USE_GLOG
 #include <glog/logging.h>
@@ -88,7 +87,7 @@ CameraItof::CameraItof(
         LOG(WARNING) << "Invalid instance of a depth sensor";
         return;
     }
-
+ 
     aditof::SensorDetails sDetails;
     m_depthSensor->getDetails(sDetails);
     m_details.connection = sDetails.connectionType;
@@ -156,7 +155,7 @@ aditof::Status CameraItof::initialize() {
     }
 
     //get intrinsics for adsd3500 TO DO: check endianess of intrinsics
-    if (m_adsd3500Enabled) {
+    if (m_adsd3500Enabled || m_isOffline) {
 
         // get imager type that is used toghether with ADSD3500
         std::string controlValue;
@@ -305,6 +304,8 @@ aditof::Status CameraItof::initialize() {
                                ->getModeInfo(availableFrameTypes.type)
                                .mode;
                                
+            intrinsics[0] = mode;
+            dealiasParams[0] = mode;
             //hardcoded function values to return intrinsics
             status =
                 m_depthSensor->adsd3500_read_payload_cmd(0x01, intrinsics, 56);
@@ -321,8 +322,6 @@ aditof::Status CameraItof::initialize() {
                 return status;
             }
 
-            intrinsics[0] = mode;
-            dealiasParams[0] = mode;
             memcpy(&dealiasStruct, dealiasParams,
                    sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
             memcpy(&dealiasStruct.camera_intrinsics, intrinsics,
@@ -402,7 +401,7 @@ aditof::Status CameraItof::initialize() {
     }
 
     ////check first mode to set ModeInfo table version for non adsd3500
-    if (m_loadedConfigData && !m_adsd3500Enabled) {
+    if (m_loadedConfigData && !m_adsd3500Enabled && !m_isOffline) {
         TofiXYZDealiasData tempDealiasStruct[11];
         uint16_t width = ModeInfo::getInstance()->getModeInfo(1).width;
         uint16_t height = ModeInfo::getInstance()->getModeInfo(1).height;
@@ -461,7 +460,7 @@ aditof::Status CameraItof::start() {
     using namespace aditof;
     Status status = Status::OK;
 
-    if (m_adsd3500Enabled) {
+    if (m_adsd3500Enabled || m_isOffline) {
         m_CameraProgrammed = true;
         status = m_depthSensor->start();
         if (Status::OK != status) {
@@ -567,6 +566,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         setAdsd3500WithIniParams(m_iniKeyValPairs);
     configureSensorFrameType();
     setMode(frameType);
+    LOG(INFO) << "Using ini file: " << m_ini_depth;
 
     status = m_depthSensor->setFrameType(*frameTypeIt);
     if (status != Status::OK) {
@@ -722,7 +722,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         LOG(WARNING) << "Failed to get frame from device";
     }
 
-    if (!m_adsd3500Enabled) {
+    if (!m_adsd3500Enabled && !m_isOffline){
         for (unsigned int i = 0;
              i < (m_details.frameType.height * m_details.frameType.width *
                   totalCaptures);
@@ -776,7 +776,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         if (m_adsd3500Enabled && m_abEnabled && (m_adsd3500ImagerType == 1) &&
             (m_abBitsPerPixel < 16) &&
             (m_details.frameType.type == "lr-native" ||
-             m_details.frameType.type == "sr-native")) {
+             m_details.frameType.type == "sr-native") || m_isOffline) {
             uint16_t *mpAbFrame;
             frame->getData("ir", &mpAbFrame);
 
@@ -910,7 +910,7 @@ aditof::Status CameraItof::initComputeLibrary(void) {
         return aditof::Status::GENERIC_ERROR;
     }
 
-    if (m_loadedConfigData || m_adsd3500Enabled) {
+    if (m_loadedConfigData || m_adsd3500Enabled || m_isOffline) {
         ConfigFileData calData = {m_calData.p_data, m_calData.size};
         uint32_t status = ADI_TOFI_SUCCESS;
 

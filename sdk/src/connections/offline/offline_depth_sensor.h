@@ -65,23 +65,28 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
     const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
       {
         {
-            "pcmmp",
-            {{"ir", 4096, 256}, {"embedded_header", 1, 128}, {"raw", 2560, 640}, {"depth", 4096, 256}},
-            4096,
-            256, //TODO header size not counted here
+            "sr-native",
+            {{"raw", 1024, 4096},
+             {"ir", 1024, 1024},
+             {"xyz", 1024, 1024},
+             {"depth", 1024, 1024},
+             {"conf", 1024, 1024},
+             {"embedded_header", 1, 128}},
+            1024,
+            4096, //TODO header size not counted here
         },
-        {
-            "lrqmp",
-            {{"ir", 4096, 256}, {"embedded_header", 1, 128}},
-            4096,
-            256,
-        },
-        {
-            "lrmp",
-            {{"ir", 4096, 256}, {"embedded_header", 1, 128}},
-            4096,
-            256,
-        },
+        // {
+        //     "lrqmp",
+        //     {{"ir", 4096, 256}, {"embedded_header", 1, 128}},
+        //     4096,
+        //     256,
+        // },
+        // {
+        //     "lrmp",
+        //     {{"ir", 4096, 256}, {"embedded_header", 1, 128}},
+        //     4096,
+        //     256,
+        // },
         // const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {{
         // TO DO: to be renamed
         // "vga",
