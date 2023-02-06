@@ -110,7 +110,11 @@ aditof::Status OfflineDepthSensor::setControl(const std::string &control,
 
 aditof::Status OfflineDepthSensor::getControl(const std::string &control,
                                               std::string &value) const {
-    return aditof::Status::UNAVAILABLE;
+    if(control == "imagerType")
+        value = "1";
+    else
+        value = "2";
+    return aditof::Status::OK;
 }
 
 aditof::Status
@@ -157,33 +161,33 @@ aditof::Status OfflineDepthSensor::adsd3500_read_payload_cmd(
         dealiasStruct.camera_intrinsics.k6 = 0.190698504;
         dealiasStruct.camera_intrinsics.p2 = 5.45154289e-05;
         dealiasStruct.camera_intrinsics.p1 = 0.000267527241;
-        memcpy(readback_data,dealiasStruct.camera_intrinsics,sizeof(CameraIntrinsics));
+        memcpy(readback_data,&dealiasStruct.camera_intrinsics,sizeof(CameraIntrinsics));
     }
     else if(cmd == 0x02){
-        if(){ // daca 1024x1024
+        if(readback_data[0] == 0){ // daca 1024x1024
             dealiasStruct.n_rows = 1024;
             dealiasStruct.n_cols = 1024;
             dealiasStruct.row_bin_factor = 1;
             dealiasStruct.col_bin_factor = 1;
         }
-        else{
+        else if(readback_data[0] == 5){
             dealiasStruct.n_rows = 512;
             dealiasStruct.n_cols = 512;
             dealiasStruct.row_bin_factor = 2;
             dealiasStruct.col_bin_factor = 2;
         }
-        dealiasStruct.n_freqs = 3;
+        dealiasStruct.n_freqs = 2;
         dealiasStruct.n_offset_rows = 0;
         dealiasStruct.n_offset_cols = 0;
         dealiasStruct.n_sensor_rows = 1024;
         dealiasStruct.n_sensor_cols = 1024;
         dealiasStruct.FreqIndex[0] = 1;
         dealiasStruct.FreqIndex[1] = 2;
-        dealiasStruct.FreqIndex[2] = 2;
-        dealiasStruct.Freq[0] = 19800;
-        dealiasStruct.Freq[1] = 18900;
-        dealiasStruct.Freq[2] = 5400;
-        memcpy(readback_data,dealiasStruct,sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
+        dealiasStruct.FreqIndex[2] = 0;
+        dealiasStruct.Freq[0] = 14200;
+        dealiasStruct.Freq[1] = 17750;
+        dealiasStruct.Freq[2] = 0;
+        memcpy(readback_data,&dealiasStruct,sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
     }
     else{
         memset(readback_data,1,payload_len);
