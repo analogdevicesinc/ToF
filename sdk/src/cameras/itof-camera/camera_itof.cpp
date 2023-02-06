@@ -778,7 +778,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
             frame->getData("ir", &mpAbFrame);
 
             //TO DO: shift with 4 because we use only 12 bits
-            uint8_t bitsToShift = 16 - m_abEnabled;
+            uint8_t bitsToShift = 16 - m_abBitsPerPixel;
             for (unsigned int i = 0;
                  i < (m_details.frameType.height * m_details.frameType.width);
                  ++i) {
