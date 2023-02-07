@@ -540,7 +540,7 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
                 pixelFormat = V4L2_PIX_FMT_SBGGR8;
             } else if (type.type == "lr-native" || type.type == "sr-native" ||
                        type.type == "mp") {
-                pixelFormat = V4L2_PIX_FMT_SBGGR12;
+                pixelFormat = V4L2_PIX_FMT_SBGGR8;
             } else {
                 LOG(ERROR) << "frame type: " << type.type << " "
                            << "is unhandled";
