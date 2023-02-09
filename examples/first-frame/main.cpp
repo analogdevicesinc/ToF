@@ -33,19 +33,19 @@
 #include <aditof/frame.h>
 #include <aditof/system.h>
 #include <aditof/version.h>
-#include <glog/logging.h>
-#include <iostream>
 #include <fstream>
+#include <glog/logging.h>
 #include <ios>
+#include <iostream>
 
 using namespace aditof;
 
-Status save_frame(aditof::Frame& frame, std::string frameType){
-	
+Status save_frame(aditof::Frame &frame, std::string frameType) {
+
     uint16_t *data1;
     FrameDataDetails fDetails;
     Status status = Status::OK;
-    
+
     status = frame.getData(frameType, &data1);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not get frame data " + frameType + "!";
@@ -57,9 +57,10 @@ Status save_frame(aditof::Frame& frame, std::string frameType){
         return status;
     }
 
-    std::ofstream g("out_" + frameType + "_" + fDetails.type + ".bin", std::ios::binary);
+    std::ofstream g("out_" + frameType + "_" + fDetails.type + ".bin",
+                    std::ios::binary);
     frame.getDataDetails(frameType, fDetails);
-    g.write((char*)data1, fDetails.width * fDetails.height * sizeof(uint16_t));
+    g.write((char *)data1, fDetails.width * fDetails.height * sizeof(uint16_t));
     g.close();
 
     return status;
@@ -95,7 +96,7 @@ int main(int argc, char *argv[]) {
     auto camera = cameras.front();
 
     status = camera->setControl("initialization_config", configFile);
-    if(status != Status::OK){
+    if (status != Status::OK) {
         LOG(ERROR) << "Failed to set control!";
         return 0;
     }
@@ -107,19 +108,17 @@ int main(int argc, char *argv[]) {
     }
 
     aditof::CameraDetails cameraDetails;
-	camera->getDetails(cameraDetails);
+    camera->getDetails(cameraDetails);
 
-	LOG(INFO) << "SD card image version: " << cameraDetails.sdCardImageVersion;
-	LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
-	LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
+    LOG(INFO) << "SD card image version: " << cameraDetails.sdCardImageVersion;
+    LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
+    LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
 
     std::vector<std::string> frameTypes;
     camera->getAvailableFrameTypes(frameTypes);
     if (frameTypes.empty()) {
         std::cout << "no frame type avaialble!";
         return 0;
-    
-    
     }
     status = camera->setFrameType("lrqmp");
     if (status != Status::OK) {
@@ -144,6 +143,22 @@ int main(int argc, char *argv[]) {
 
     save_frame(frame, "ir");
     save_frame(frame, "depth");
+
+    // Example of reading temperature from hardware
+    uint16_t sensorTmp = 0;
+    uint16_t laserTmp = 0;
+    status = camera->adsd3500GetSensorTemperature(sensorTmp);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not read sensor temperature!";
+    }
+
+    status = camera->adsd3500GetLaserTemperature(laserTmp);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not read laser temperature!";
+    }
+
+    LOG(INFO) << "Sensor temperature: " << sensorTmp;
+    LOG(INFO) << "Laser temperature: " << laserTmp;
 
     return 0;
 }

@@ -672,21 +672,21 @@ int main(int argc, char *argv[]) {
 
         std::string imagerType;
         status = camera->getControl("imagerType", imagerType);
-        if(status != Status::OK){
+        if (status != Status::OK) {
             LOG(ERROR) << "Failed to get imager type!";
             return 0;
         }
 
         // We have both 8bit and 16bit pixels, compute the size in 8bit
         if (sensorName == "adsd3500") {
-            if(imagerType == "1"){
+            if (imagerType == "1") {
                 if (modeName == "lr-native") {
                     subFrames = 8;
                 } else if (modeName == "sr-native") {
                     subFrames = 6;
                 } else {
                     subFrames = 5;
-                }  
+                }
             } else {
                 subFrames = 5;
             }
@@ -737,23 +737,6 @@ int main(int argc, char *argv[]) {
             LOG(ERROR) << "Can't allocate Memory for frame header data!";
             return 0;
         }
-
-        //geting temperature vlues
-        uint16_t sensorTmp;
-        uint16_t laserTmp;
-        status = camera->adsd3500GetSensorTemperature(sensorTmp);
-        if (status != Status::OK) {
-            LOG(INFO) << "Could not request sensor temperature values!";
-        }
-
-        status = camera->adsd3500GetLaserTemperature(laserTmp);
-        if (status != Status::OK) {
-            LOG(INFO) << "Could not request laser temperature values!";
-        }
-
-        LOG(INFO) << "Sensor temperature: "<<sensorTmp<<std::endl;
-        LOG(INFO) << "Laser temperature: "<<laserTmp<<std::endl;
-
 
 #if 0 // TO DO: uncomment this one the header becomes available
         uint16_t *pHeader = nullptr;
