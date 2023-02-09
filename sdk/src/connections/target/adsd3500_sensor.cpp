@@ -540,7 +540,11 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
                 pixelFormat = V4L2_PIX_FMT_SBGGR8;
             } else if (type.type == "lr-native" || type.type == "sr-native" ||
                        type.type == "mp") {
-                pixelFormat = V4L2_PIX_FMT_SBGGR8;
+                if (m_controls["abBits"] == "6") {
+                    pixelFormat = V4L2_PIX_FMT_SBGGR8;
+                } else {
+                    pixelFormat = V4L2_PIX_FMT_SBGGR12;
+                }
             } else {
                 LOG(ERROR) << "frame type: " << type.type << " "
                            << "is unhandled";
@@ -571,6 +575,19 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         fmt.fmt.pix.pixelformat = pixelFormat;
         fmt.fmt.pix.width = type.width;
         fmt.fmt.pix.height = type.height;
+
+        //TO DO: remove hardcoded 16bit ab resolutions
+        if (m_implData->imagerType == ImagerType::IMAGER_ADSD3100 &&
+            m_controls["abBits"] == "6") {
+            if (type.type == "lr-native" || type.type == "mp") {
+                fmt.fmt.pix.width = 2048;
+                fmt.fmt.pix.height = 3328;
+
+            } else if (type.type == "sr-native") {
+                fmt.fmt.pix.width = 2048;
+                fmt.fmt.pix.height = 2560;
+            }
+        }
 
         if (xioctl(dev->fd, VIDIOC_S_FMT, &fmt) == -1) {
             LOG(WARNING) << "Setting Pixel Format error, errno: " << errno
@@ -719,6 +736,8 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
         LOG(WARNING) << "Unsupported control";
         return Status::INVALID_ARGUMENT;
     }
+
+    m_controls[control] = value;
 
     if (control == "modeInfoVersion") {
         int n = std::stoi(value);
