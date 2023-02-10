@@ -680,7 +680,7 @@ int main(int argc, char *argv[]) {
         // We have both 8bit and 16bit pixels, compute the size in 8bit
         if (sensorName == "adsd3500") {
             if (imagerType == "1") {
-                if (modeName == "lr-native") {
+                if (modeName == "lr-native" || modeName == "mp") {
                     subFrames = 8;
                 } else if (modeName == "sr-native") {
                     subFrames = 6;
