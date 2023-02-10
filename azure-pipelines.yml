@@ -28,9 +28,6 @@ jobs:
     matrix:
       
       #PC
-      ubuntu_18_04_x86_64:
-        imageName: 'ubuntu-18.04'
-
       ubuntu_20_04_x86_64:
         imageName: 'ubuntu-20.04'
 
