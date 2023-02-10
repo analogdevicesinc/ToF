@@ -85,7 +85,8 @@ aditof::Status OfflineDepthSensor::getName(std::string &name) const {
 }
 
 aditof::Status OfflineDepthSensor::adsd3500_read_cmd(uint16_t cmd,
-                                                     uint16_t *data) {
+                                                     uint16_t *data,
+                                                     unsigned int usDelay) {
     return aditof::Status::OK;
 }
 

@@ -555,8 +555,11 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     case ADSD3500_READ_CMD: {
         uint16_t cmd = static_cast<uint16_t>(buff_recv.func_int32_param(0));
         uint16_t data;
+        unsigned int usDelay =
+            static_cast<unsigned int>(buff_recv.func_int32_param(1));
 
-        aditof::Status status = camDepthSensor->adsd3500_read_cmd(cmd, &data);
+        aditof::Status status =
+            camDepthSensor->adsd3500_read_cmd(cmd, &data, usDelay);
         if (status == aditof::Status::OK) {
             buff_send.add_int32_payload(static_cast<::google::int32>(data));
         }

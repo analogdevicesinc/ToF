@@ -870,7 +870,8 @@ aditof::Status Adsd3500Sensor::getName(std::string &name) const {
     return aditof::Status::OK;
 }
 
-aditof::Status Adsd3500Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data) {
+aditof::Status Adsd3500Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data,
+                                                 unsigned int usDelay) {
     using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
     Status status = Status::OK;
@@ -904,8 +905,7 @@ aditof::Status Adsd3500Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data) {
 
     extCtrl.p_u8 = buf;
 
-    //wait for the last frame processing time, needed for adsd3500
-    usleep(double(1.0) / m_sensorFps * 1000000);
+    usleep(usDelay);
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Reading Adsd3500 error "
