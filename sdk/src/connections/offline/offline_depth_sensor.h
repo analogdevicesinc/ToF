@@ -4,8 +4,8 @@
 #include "aditof/depth_sensor_interface.h"
 #include "aditof/sensor_definitions.h"
 
-#include <memory>
 #include <map>
+#include <memory>
 
 class OfflineDepthSensor : public aditof::DepthSensorInterface {
   public:
@@ -61,44 +61,47 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
     std::vector<aditof::DepthSensorFrameType> m_depthSensorFrameTypes;
     std::string m_path;
     std::string m_frameTypeSelected;
-    std::map<std::string, std::pair<std::uint16_t*, std::size_t>> m_frameTypes;
-    const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
-      {
+    std::map<std::string, std::pair<std::uint16_t *, std::size_t>> m_frameTypes;
+    const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {{
         {
-            "sr-native",
-            {{"raw", 1024, 4096},
-             {"ir", 1024, 1024},
-             {"xyz", 1024, 1024},
-             {"depth", 1024, 1024},
-             {"conf", 1024, 1024},
+            "lr-qnative",
+            {{"raw", 2560, 512},
+             {"ir", 512, 512},
+             {"xyz", 512, 512},
+             {"depth", 512, 512},
+             {"conf", 512, 512},
              {"embedded_header", 1, 128}},
-            1024,
-            4096, //TODO header size not counted here
+            2560,
+            512, //TODO header size not counted here
         },
-        // {
-        //     "lrqmp",
-        //     {{"ir", 4096, 256}, {"embedded_header", 1, 128}},
-        //     4096,
-        //     256,
-        // },
+        {
+            "sr-qnative",
+            {{"raw", 2560, 512},
+             {"ir", 512, 512},
+             {"xyz", 512, 512},
+             {"depth", 512, 512},
+             {"conf", 512, 512},
+             {"embedded_header", 1, 128}},
+            2560,
+            512,
+        },
         // {
         //     "lrmp",
         //     {{"ir", 4096, 256}, {"embedded_header", 1, 128}},
         //     4096,
         //     256,
         // },
-        // const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {{
-        // TO DO: to be renamed
-        // "vga",
-        // {{"raw", 2560, 640},
-        //  {"ir", 512, 640},
-        //  {"xyz", 512, 640},
-        //  {"depth", 512, 640},
-        //  {"embedded_header", 1, 128}},
-        // 2560,
-        // 640,
-      }
-    };
+        //   const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {{
+        //   TO DO: to be renamed
+        //   "vga",
+        //   {{"raw", 2560, 640},
+        //    {"ir", 512, 640},
+        //    {"xyz", 512, 640},
+        //    {"depth", 512, 640},
+        //    {"embedded_header", 1, 128}},
+        //   2560,
+        //   640,
+    }};
 };
 
 #endif // OFFLINE_DEPTH_SENSOR_H

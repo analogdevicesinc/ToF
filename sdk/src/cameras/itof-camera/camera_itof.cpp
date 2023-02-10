@@ -87,7 +87,7 @@ CameraItof::CameraItof(
         LOG(WARNING) << "Invalid instance of a depth sensor";
         return;
     }
- 
+
     aditof::SensorDetails sDetails;
     m_depthSensor->getDetails(sDetails);
     m_details.connection = sDetails.connectionType;
@@ -96,8 +96,7 @@ CameraItof::CameraItof(
     m_depthSensor->getName(sensorName);
     if (sensorName == "adsd3500") {
         m_adsd3500Enabled = true;
-    }
-    else if (sensorName == "offline"){
+    } else if (sensorName == "offline") {
         m_isOffline = true;
     }
 
@@ -303,7 +302,7 @@ aditof::Status CameraItof::initialize() {
             uint8_t mode = ModeInfo::getInstance()
                                ->getModeInfo(availableFrameTypes.type)
                                .mode;
-                               
+
             intrinsics[0] = mode;
             dealiasParams[0] = mode;
             //hardcoded function values to return intrinsics
@@ -326,7 +325,7 @@ aditof::Status CameraItof::initialize() {
                    sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
             memcpy(&dealiasStruct.camera_intrinsics, intrinsics,
                    sizeof(CameraIntrinsics));
-                   
+
             m_xyz_dealias_data[mode] = dealiasStruct;
             memcpy(&m_details.intrinsics, &dealiasStruct.camera_intrinsics,
                    sizeof(CameraIntrinsics));
@@ -478,7 +477,8 @@ aditof::Status CameraItof::start() {
 
     if (reg_data) {
         m_CameraProgrammed = true;
-        LOG(INFO) << "USEQ running. Skip CinitComputeLibraryFG & CCB programming step\n";
+        LOG(INFO) << "USEQ running. Skip CinitComputeLibraryFG & CCB "
+                     "programming step\n";
     }
 
     if (!m_CameraProgrammed) {
@@ -563,7 +563,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         m_ini_depth = m_ini_depth_map[frameType];
     }
     getKeyValuePairsFromIni(m_ini_depth, m_iniKeyValPairs);
-        setAdsd3500WithIniParams(m_iniKeyValPairs);
+    setAdsd3500WithIniParams(m_iniKeyValPairs);
     configureSensorFrameType();
     setMode(frameType);
     LOG(INFO) << "Using ini file: " << m_ini_depth;
@@ -612,13 +612,14 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     }
 
     if (m_controls["enableDepthCompute"] == "on" &&
-        ((m_details.frameType.totalCaptures > 1) || m_adsd3500Enabled || m_isOffline)) {
+        ((m_details.frameType.totalCaptures > 1) || m_adsd3500Enabled ||
+         m_isOffline)) {
         status = initComputeLibrary();
         if (Status::OK != status) {
             LOG(ERROR) << "Initializing compute libraries failed.";
             return Status::GENERIC_ERROR;
         }
-    } else {  
+    } else {
         freeComputeLibrary();
     }
 
@@ -722,7 +723,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         LOG(WARNING) << "Failed to get frame from device";
     }
 
-    if (!m_adsd3500Enabled && !m_isOffline){
+    if (!m_adsd3500Enabled && !m_isOffline) {
         for (unsigned int i = 0;
              i < (m_details.frameType.height * m_details.frameType.width *
                   totalCaptures);
