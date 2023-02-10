@@ -655,7 +655,8 @@ aditof::Status NetworkDepthSensor::getName(std::string &name) const {
 }
 
 aditof::Status NetworkDepthSensor::adsd3500_read_cmd(uint16_t cmd,
-                                                     uint16_t *data) {
+                                                     uint16_t *data,
+                                                     unsigned int usDelay) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -669,6 +670,8 @@ aditof::Status NetworkDepthSensor::adsd3500_read_cmd(uint16_t cmd,
     net->send_buff[m_sensorIndex].set_func_name("Adsd3500ReadCmd");
     net->send_buff[m_sensorIndex].add_func_int32_param(
         static_cast<::google::int32>(cmd));
+    net->send_buff[m_sensorIndex].add_func_int32_param(
+        static_cast<::google::int32>(usDelay));
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {

@@ -790,7 +790,8 @@ aditof::Status UsbDepthSensor::getName(std::string &name) const {
     return aditof::Status::OK;
 }
 
-aditof::Status UsbDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data) {
+aditof::Status UsbDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data,
+                                                 unsigned int usDelay) {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -798,6 +799,7 @@ aditof::Status UsbDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data) {
     usb_payload::ClientRequest requestMsg;
     requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_READ_CMD);
     requestMsg.add_func_int32_param(static_cast<::google::int32>(cmd));
+    requestMsg.add_func_int32_param(static_cast<::google::int32>(usDelay));
 
     // Send request
     std::string requestStr;

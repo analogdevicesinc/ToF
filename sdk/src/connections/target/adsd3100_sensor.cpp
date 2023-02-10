@@ -886,7 +886,8 @@ aditof::Status Adsd3100Sensor::getName(std::string &name) const {
     return aditof::Status::OK;
 }
 
-aditof::Status Adsd3100Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data) {
+aditof::Status Adsd3100Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data,
+                                                 unsigned int usDelay) {
     LOG(INFO) << "Adsd3500 is not connected to this sensor type!";
     return aditof::Status::UNAVAILABLE;
 }

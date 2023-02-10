@@ -255,8 +255,11 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
         std::string controlName = request.func_strings_param(0);
         uint16_t cmd = static_cast<uint32_t>(request.func_int32_param(0));
         uint16_t *data = new uint16_t;
+        unsigned int usDelay =
+            static_cast<unsigned int>(request.func_int32_param(1));
 
-        aditof::Status status = camDepthSensor->adsd3500_read_cmd(cmd, data);
+        aditof::Status status =
+            camDepthSensor->adsd3500_read_cmd(cmd, data, usDelay);
 
         if (status == aditof::Status::OK) {
             response.add_bytes_payload(data, sizeof(uint16_t));

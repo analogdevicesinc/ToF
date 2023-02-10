@@ -1838,7 +1838,12 @@ aditof::Status CameraItof::adsd3500GetSensorTemperature(uint16_t &tmpValue) {
     using namespace aditof;
     Status status = Status::OK;
 
-    status = m_depthSensor->adsd3500_read_cmd(0x0054, &tmpValue);
+    unsigned int usDelay = 0;
+    if (m_cameraFps > 0) {
+        usDelay =
+            static_cast<unsigned int>((1 / (double)m_cameraFps) * 1000000);
+    }
+    status = m_depthSensor->adsd3500_read_cmd(0x0054, &tmpValue, usDelay);
     if (status != Status::OK) {
         LOG(ERROR) << "Can not read sensor temperature";
         return Status::GENERIC_ERROR;
@@ -1850,7 +1855,12 @@ aditof::Status CameraItof::adsd3500GetLaserTemperature(uint16_t &tmpValue) {
     using namespace aditof;
     Status status = Status::OK;
 
-    status = m_depthSensor->adsd3500_read_cmd(0x0055, &tmpValue);
+    unsigned int usDelay = 0;
+    if (m_cameraFps > 0) {
+        usDelay =
+            static_cast<unsigned int>((1 / (double)m_cameraFps) * 1000000);
+    }
+    status = m_depthSensor->adsd3500_read_cmd(0x0055, &tmpValue, usDelay);
     if (status != Status::OK) {
         LOG(ERROR) << "Can not read laser temperature";
         return Status::GENERIC_ERROR;
