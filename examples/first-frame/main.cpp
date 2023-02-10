@@ -124,7 +124,7 @@ int main(int argc, char *argv[]) {
         std::cout << "no frame type avaialble!";
         return 0;
     }
-    status = camera->setFrameType("sr-native");
+    status = camera->setFrameType("lr-qnative");
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 0;
