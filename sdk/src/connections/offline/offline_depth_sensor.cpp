@@ -51,10 +51,11 @@ aditof::Status OfflineDepthSensor::open() {
                  std::ios::in | std::ios::binary);
         std::string content((std::istreambuf_iterator<char>(ifs)),
                             (std::istreambuf_iterator<char>()));
-        buffer = new uint16_t[content.size()];
-        for (int i = 0; i < content.size(); i += 2) {
-            buffer[i / 2] = *(uint16_t *)&content[i];
-        }
+        buffer = new uint16_t[content.size()/2];
+        // for (int i = 0; i < content.size(); i += 2) {
+        //     buffer[i / 2] = *(uint16_t *)&content[i];
+        // }
+        memcpy(buffer, content.data(), content.size());
         m_frameTypes.insert({frameTypesResources[index],
                              std::make_pair(buffer, content.size())});
         ifs.close();
