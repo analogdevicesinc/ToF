@@ -1,7 +1,7 @@
 From b733d15ef79f74df4703c8a1c858fbe380d479d3 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Thu, 29 Sep 2022 13:27:06 +0300
-Subject: [PATCH 42/49] drivers: media: common: v4l2-loopback: Add
+Subject: [PATCH 42/50] drivers: media: common: v4l2-loopback: Add
  v4l2-loopback driver
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>

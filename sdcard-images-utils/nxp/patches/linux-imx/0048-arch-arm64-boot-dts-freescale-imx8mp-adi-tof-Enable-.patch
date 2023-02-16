@@ -1,7 +1,7 @@
 From a3983c1bf5436ef9be1ba4869b715b87c31aae67 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Tue, 13 Dec 2022 16:46:30 +0200
-Subject: [PATCH 48/49] arch/arm64/boot/dts/freescale/imx8mp-adi-tof: Enable
+Subject: [PATCH 48/50] arch/arm64/boot/dts/freescale/imx8mp-adi-tof: Enable
  CPU scaling governor
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
