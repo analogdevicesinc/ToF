@@ -1,7 +1,7 @@
 From 15b15edee0b184aef441cfd36a62f4f904e25c17 Mon Sep 17 00:00:00 2001
 From: Bogdan Togorean <bogdan.togorean@analog.com>
 Date: Wed, 3 Nov 2021 16:26:00 +0200
-Subject: [PATCH 31/49] drivers: media: i2c: Initial revision of ADSD3500
+Subject: [PATCH 31/50] drivers: media: i2c: Initial revision of ADSD3500
  driver
 
 Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
