@@ -85,22 +85,6 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
             2560,
             512,
         },
-        // {
-        //     "lrmp",
-        //     {{"ir", 4096, 256}, {"embedded_header", 1, 128}},
-        //     4096,
-        //     256,
-        // },
-        //   const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {{
-        //   TO DO: to be renamed
-        //   "vga",
-        //   {{"raw", 2560, 640},
-        //    {"ir", 512, 640},
-        //    {"xyz", 512, 640},
-        //    {"depth", 512, 640},
-        //    {"embedded_header", 1, 128}},
-        //   2560,
-        //   640,
     }};
 };
 

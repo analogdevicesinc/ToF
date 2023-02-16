@@ -86,13 +86,21 @@ if (WITH_OFFLINE)
         set(RESOURCES_OFFLINE_DIR "${RESOURCES_DIR}/offline")
         make_directory(${RESOURCES_OFFLINE_DIR})
         
-        set(MODE3_FILE "mode3_raw.bin")
+        set(MODE3_FILE "lr-qnative.bin")
         set(MODE3_URL "swdownloads.analog.com/cse/aditof/resources/itof/frames/${MODE3_FILE}")
         set(MODE3_PATH "${RESOURCES_OFFLINE_DIR}/${MODE3_FILE}")
 
         message("Downloading raw frames into ${RESOURCES_OFFLINE_DIR}")
         if (NOT EXISTS ${MODE3_PATH})
                 file(DOWNLOAD "${MODE3_URL}" "${MODE3_PATH}")
+        endif()
+
+        set(MODE2_FILE "sr-qnative.bin")
+        set(MODE2_URL "swdownloads.analog.com/cse/aditof/resources/itof/frames/${MODE2_FILE}")
+        set(MODE2_PATH "${RESOURCES_OFFLINE_DIR}/${MODE2_FILE}")
+
+        if (NOT EXISTS ${MODE2_PATH})
+                file(DOWNLOAD "${MODE2_URL}" "${MODE2_PATH}")
         endif()
 endif()
 
