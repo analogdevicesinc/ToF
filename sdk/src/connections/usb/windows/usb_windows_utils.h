@@ -84,22 +84,22 @@ interface ISampleGrabberCB : public IUnknown {
 interface ISampleGrabber : public IUnknown {
     virtual HRESULT STDMETHODCALLTYPE SetOneShot(BOOL OneShot) = 0;
 
-    virtual HRESULT STDMETHODCALLTYPE
-    SetMediaType(const AM_MEDIA_TYPE *pType) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetMediaType(
+        const AM_MEDIA_TYPE *pType) = 0;
 
-    virtual HRESULT STDMETHODCALLTYPE
-    GetConnectedMediaType(AM_MEDIA_TYPE *pType) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetConnectedMediaType(AM_MEDIA_TYPE *
+                                                            pType) = 0;
 
     virtual HRESULT STDMETHODCALLTYPE SetBufferSamples(BOOL BufferThem) = 0;
 
-    virtual HRESULT STDMETHODCALLTYPE GetCurrentBuffer(LONG *pBufferSize,
-                                                       LONG *pBuffer) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetCurrentBuffer(LONG * pBufferSize,
+                                                       LONG * pBuffer) = 0;
 
-    virtual HRESULT STDMETHODCALLTYPE
-    GetCurrentSample(IMediaSample **ppSample) = 0;
+    virtual HRESULT STDMETHODCALLTYPE GetCurrentSample(IMediaSample *
+                                                       *ppSample) = 0;
 
-    virtual HRESULT STDMETHODCALLTYPE
-    SetCallback(ISampleGrabberCB *pCallback, LONG WhichMethodToCallback) = 0;
+    virtual HRESULT STDMETHODCALLTYPE SetCallback(
+        ISampleGrabberCB * pCallback, LONG WhichMethodToCallback) = 0;
 
     virtual ~ISampleGrabber() {}
 };

@@ -1075,3 +1075,44 @@ aditof::Status UsbDepthSensor::adsd3500_write_payload(uint8_t *payload,
 
     return Status::OK;
 }
+
+aditof::Status UsbDepthSensor::adsd3500_reset() {
+    using namespace aditof;
+    Status status = Status::OK;
+
+    // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_RESET);
+
+    // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to write adsd3500 payload failed";
+        return status;
+    }
+
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbLinuxUtils::uvcExUnitGetResponse(m_implData->fd, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failes to get respode to adsd3500 payload write";
+
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Adsd3500 payload write: operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
+
+    return Status::OK;
+}

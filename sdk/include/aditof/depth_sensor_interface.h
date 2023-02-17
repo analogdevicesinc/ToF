@@ -198,6 +198,12 @@ class DepthSensorInterface {
                                                   uint16_t payload_len) = 0;
 
     /**
+     * @brief Reset adsd3500 chip
+     * @return Status
+     */
+    virtual aditof::Status adsd3500_reset() = 0;
+
+    /**
      * @brief Gets the sensors's list of controls
      * @param[out] controls
      * @return Status
