@@ -35,7 +35,11 @@
 #include "target_definitions.h"
 
 #include <dirent.h>
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

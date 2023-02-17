@@ -37,7 +37,11 @@
 #include "device_utils.h"
 
 #include <atlstr.h>
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 #include <unordered_map>
 
 struct CalibrationData {

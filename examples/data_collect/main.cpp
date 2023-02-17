@@ -15,7 +15,11 @@
 #include <docopt.h>
 #include <fsf_common.h>
 #include <fstream>
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 #include <iostream>
 #include <string>
 #include <thread>

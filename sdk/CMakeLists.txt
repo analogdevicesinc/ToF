@@ -13,7 +13,11 @@ endif()
 add_subdirectory(common/adi/ccb)
 
 add_definitions(-DSDK_EXPORTS)
-find_package(glog 0.3.5 REQUIRED)
+if(NOT DISABLE_LOGGING)
+    find_package(glog 0.3.5 REQUIRED)
+else()
+    add_definitions(-DDISABLE_LOGGING)
+endif()
 find_package(Protobuf 3.9.0 REQUIRED)
 
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS src/connections/usb/usb_buffer.proto)
@@ -137,18 +141,21 @@ set_target_properties( ${PROJECT_NAME} PROPERTIES
 
 if ( WITH_NETWORK )
     target_link_libraries( ${PROJECT_NAME}
-        PUBLIC
-            glog::glog
         PRIVATE
             ${Protobuf_LIBRARIES}
             websockets_shared
     )
 else()
     target_link_libraries( ${PROJECT_NAME}
-        PUBLIC
-            glog::glog
         PRIVATE
             ${Protobuf_LIBRARIES}
+    )
+endif()
+
+if ( NOT DISABLE_LOGGING)
+    target_link_libraries( ${PROJECT_NAME}
+    PUBLIC
+        glog::glog
     )
 endif()
 

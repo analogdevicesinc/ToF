@@ -32,7 +32,11 @@
 #include "connections/network/network_temperature_sensor.h"
 #include "connections/network/network.h"
 
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 
 using namespace aditof;
 

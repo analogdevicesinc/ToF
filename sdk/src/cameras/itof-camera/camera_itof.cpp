@@ -45,7 +45,11 @@
 #include <array>
 #include <cstdint>
 #include <fstream>
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 #include <iostream>
 #include <iterator>
 #include <vector>

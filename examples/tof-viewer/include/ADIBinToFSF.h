@@ -9,7 +9,11 @@
 
 #include "ADIToFRecorder.h"
 #include <functional>
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 
 class ADIBinToFSF {
   public:

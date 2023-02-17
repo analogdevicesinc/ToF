@@ -1,6 +1,10 @@
 #include "tof-sdk-interface.h"
 #include "buffer.pb.h"
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 
 #include <aditof/depth_sensor_interface.h>
 #include <aditof/sensor_definitions.h>

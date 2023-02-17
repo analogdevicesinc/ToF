@@ -31,7 +31,11 @@
  */
 #include "aditofdemoview.h"
 
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 #include <sstream>
 
 #define CVUI_IMPLEMENTATION

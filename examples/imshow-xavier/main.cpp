@@ -33,7 +33,11 @@
 #include <aditof/camera.h>
 #include <aditof/frame.h>
 #include <aditof/system.h>
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>

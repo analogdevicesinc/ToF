@@ -33,7 +33,11 @@
 #include <aditof/frame.h>
 #include <aditof/system.h>
 #include <aditof/version.h>
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 #include <iostream>
 
 using namespace aditof;

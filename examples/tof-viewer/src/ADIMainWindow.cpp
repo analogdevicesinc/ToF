@@ -13,7 +13,11 @@
 #include <cmath>
 #include <fcntl.h>
 #include <fstream>
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 #include <iostream>
 #include <stdio.h>
 

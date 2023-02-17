@@ -33,7 +33,11 @@
 #include "connections/network/network.h"
 #include "device_utils.h"
 
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 #include <unordered_map>
 
 struct CalibrationData {

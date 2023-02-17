@@ -6,7 +6,11 @@
 /********************************************************************************/
 #include "mode_info.h"
 #include <algorithm>
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 
 ModeInfo::modeInfo ModeInfo::g_oldModes[] = {
     {1, 320, 288, 9, 2162, 288, 0, "lt_bin"},
