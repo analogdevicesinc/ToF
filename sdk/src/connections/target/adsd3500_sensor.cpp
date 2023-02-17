@@ -190,30 +190,7 @@ aditof::Status Adsd3500Sensor::open() {
 
     //Reset device once before first open
     if (m_firstRun) {
-#if defined(NXP)
-        system("echo 0 > /sys/class/gpio/gpio122/value");
-        usleep(100000);
-        system("echo 1 > /sys/class/gpio/gpio122/value");
-        usleep(7000000);
-#elif defined(NVIDIA)
-        struct stat st;
-        if (stat("/sys/class/gpio/PP.04/value", &st) == 0) {
-            system("echo 0 > /sys/class/gpio/PP.04/value");
-            usleep(100000);
-            system("echo 1 > /sys/class/gpio/PP.04/value");
-            usleep(5000000);
-        } else {
-            Gpio gpio11("/dev/gpiochip3", 11);
-            gpio11.openForWrite();
-
-            gpio11.writeValue(0);
-            usleep(100000);
-            gpio11.writeValue(1);
-            usleep(5000000);
-
-            gpio11.close();
-        }
-#endif
+        adsd3500_reset();
         m_firstRun = false;
     }
 
@@ -1225,6 +1202,34 @@ aditof::Status Adsd3500Sensor::adsd3500_write_payload(uint8_t *payload,
     usleep(100000);
 
     return status;
+}
+
+aditof::Status Adsd3500Sensor::adsd3500_reset() {
+#if defined(NXP)
+        system("echo 0 > /sys/class/gpio/gpio122/value");
+        usleep(100000);
+        system("echo 1 > /sys/class/gpio/gpio122/value");
+        usleep(7000000);
+#elif defined(NVIDIA)
+        struct stat st;
+        if (stat("/sys/class/gpio/PP.04/value", &st) == 0) {
+            system("echo 0 > /sys/class/gpio/PP.04/value");
+            usleep(100000);
+            system("echo 1 > /sys/class/gpio/PP.04/value");
+            usleep(5000000);
+        } else {
+            Gpio gpio11("/dev/gpiochip3", 11);
+            gpio11.openForWrite();
+
+            gpio11.writeValue(0);
+            usleep(100000);
+            gpio11.writeValue(1);
+            usleep(5000000);
+
+            gpio11.close();
+        }
+#endif
+    return aditof::Status::OK;
 }
 
 aditof::Status Adsd3500Sensor::waitForBufferPrivate(struct VideoDev *dev) {
