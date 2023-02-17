@@ -929,7 +929,7 @@ aditof::Status Adsd3100Sensor::adsd3500_write_payload(uint8_t *payload,
     return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status Adsd3100Sensor::reset() {
+aditof::Status Adsd3100Sensor::adsd3500_reset() {
     LOG(INFO) << "Adsd3500 is not connected to this sensor type!";
     return aditof::Status::UNAVAILABLE;
 }

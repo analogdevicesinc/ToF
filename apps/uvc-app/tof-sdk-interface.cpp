@@ -342,6 +342,14 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
         break;
     }
 
+    case uvc_payload::FunctionName::ADSD3500_RESET: {
+
+        aditof::Status status = camDepthSensor->adsd3500_reset();
+
+        response.set_status(static_cast<::uvc_payload::Status>(status));
+        break;
+    }
+
     case uvc_payload::FunctionName::STORAGE_OPEN: {
 
         aditof::Status status = aditof::Status::OK;
