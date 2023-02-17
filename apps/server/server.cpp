@@ -37,7 +37,11 @@
 
 #include "../../sdk/src/connections/target/v4l_buffer_access_interface.h"
 
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 #include <iostream>
 #include <linux/videodev2.h>
 #include <map>

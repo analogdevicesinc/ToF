@@ -35,7 +35,11 @@
 #include "connections/target/eeprom.h"
 #include <algorithm>
 #include <fstream>
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 
 using namespace aditof;
 

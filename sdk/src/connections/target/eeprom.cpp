@@ -34,7 +34,11 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 #include <linux/fs.h>
 #include <stdio.h>
 #include <string.h>

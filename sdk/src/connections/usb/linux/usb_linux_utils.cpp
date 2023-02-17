@@ -32,7 +32,11 @@
 #include "usb_linux_utils.h"
 
 #include <errno.h>
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 #include <linux/usb/video.h>
 #include <linux/uvcvideo.h>
 #include <memory>

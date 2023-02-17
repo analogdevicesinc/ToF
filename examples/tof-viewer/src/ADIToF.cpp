@@ -12,7 +12,11 @@
 #include <aditof/version.h>
 #include <algorithm>
 #include <cctype>
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 #include <iostream>
 
 #include "ADIMainWindow.h"

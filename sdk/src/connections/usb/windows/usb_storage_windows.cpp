@@ -35,7 +35,11 @@
 #include "usb_windows_utils.h"
 
 #include <chrono>
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 #include <string>
 #include <thread>
 

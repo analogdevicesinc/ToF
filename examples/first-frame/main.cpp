@@ -34,7 +34,11 @@
 #include <aditof/system.h>
 #include <aditof/version.h>
 #include <fstream>
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 #include <ios>
 #include <iostream>
 

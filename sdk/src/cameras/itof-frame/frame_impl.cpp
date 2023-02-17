@@ -38,7 +38,11 @@
 #include <cmath>
 #include <cstring>
 #include <fstream>
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 #include <unordered_map>
 
 const std::vector<std::string> availableAttributes = {

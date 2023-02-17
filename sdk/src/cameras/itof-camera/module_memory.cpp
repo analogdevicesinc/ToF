@@ -24,7 +24,11 @@ SOFTWARE.
 #include <ccb.h>
 #include <cstdio>
 #include <fstream>
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 #include <iomanip>
 
 #include "aditof_common.h"

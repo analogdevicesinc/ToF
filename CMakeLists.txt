@@ -28,6 +28,7 @@ option(WITH_NETWORK "Build network interface?" OFF)
 option(WITH_OFFLINE "Build offline interface?" OFF)
 option(USE_DEPTH_COMPUTE_STUBS "Use empty generated libs?" OFF)
 option(USE_DEPTH_COMPUTE_OPENSOURCE "Use an open source implementation?" OFF)
+option(DISABLE_LOGGING "Disable log messages? (glog dependency ignored)" OFF)
 
 ################################## Git ########################################
 include(FindGit OPTIONAL)

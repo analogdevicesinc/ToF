@@ -29,27 +29,16 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include "aditofdemocontroller.h"
-#include "aditofdemoview.h"
-#include <aditof/version.h>
-#ifndef DISABLE_LOGGING
-#include <glog/logging.h>
-#else
-#include <aditof/log.h>
-#endif
+
+#ifndef LOG_H
+#define LOG_H
+
 #include <iostream>
 
-int main(int argc, char **argv) {
+#define INFO "INFO "
+#define ERROR "ERROR "
+#define WARNING "WARNING "
+#define LOG(x) std::cout << x
+#define DLOG(x) std::cout << x
 
-    // Init google logging system
-    google::InitGoogleLogging(argv[0]);
-    FLAGS_alsologtostderr = 1;
-
-    std::string version = aditof::getApiVersion();
-    auto controller = std::make_shared<AdiTofDemoController>();
-    auto view =
-        std::make_shared<AdiTofDemoView>(controller, "aditof-demo " + version);
-    view->render();
-
-    return 0;
-}
+#endif // LOG_COUT_H

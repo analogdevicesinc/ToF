@@ -32,7 +32,11 @@
 #include <aditof/camera.h>
 #include <aditof/frame.h>
 #include <aditof/system.h>
+#ifndef DISABLE_LOGGING
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 
 #include <fstream>
 #include <iostream>
