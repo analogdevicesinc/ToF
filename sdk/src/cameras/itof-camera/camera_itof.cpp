@@ -477,7 +477,7 @@ aditof::Status CameraItof::start() {
 
     if (reg_data) {
         m_CameraProgrammed = true;
-        LOG(INFO) << "USEQ running. Skip CinitComputeLibraryFG & CCB "
+        LOG(INFO) << "USEQ running. Skip CFG & CCB "
                      "programming step\n";
     }
 
