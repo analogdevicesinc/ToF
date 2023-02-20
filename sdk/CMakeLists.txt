@@ -15,8 +15,6 @@ add_subdirectory(common/adi/ccb)
 add_definitions(-DSDK_EXPORTS)
 if(NOT DISABLE_LOGGING)
     find_package(glog 0.3.5 REQUIRED)
-else()
-    add_definitions(-DDISABLE_LOGGING)
 endif()
 find_package(Protobuf 3.9.0 REQUIRED)
 
