@@ -94,6 +94,10 @@ if (WITH_OFFLINE)
         endif()
 endif()
 
+if(DISABLE_LOGGING)
+        add_definitions(-DDISABLE_LOGGING)
+endif()
+
 set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
 
 set(CONFIG_DIR_NAME "config")

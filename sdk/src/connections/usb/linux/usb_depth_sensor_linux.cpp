@@ -29,6 +29,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 #include "connections/usb/usb_depth_sensor.h"
 #include "connections/usb/usb_utils.h"
 #include "usb_buffer.pb.h"
@@ -42,6 +43,7 @@
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>
+#include <unistd.h>
 #endif
 #include <linux/usb/video.h>
 #include <linux/uvcvideo.h>

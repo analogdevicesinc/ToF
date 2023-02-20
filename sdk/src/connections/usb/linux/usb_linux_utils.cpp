@@ -36,6 +36,9 @@
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>
+#include <cstring>
+#include <stdio.h>
+#include <unistd.h>
 #endif
 #include <linux/usb/video.h>
 #include <linux/uvcvideo.h>
