@@ -18,7 +18,7 @@
 #include <fsf/fsf.h>
 #include <fsf/fsf_definitions.h>
 #include <fsf_common.h>
-#ifndef DISABLE_LOGGING
+#ifdef USE_GLOG
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>

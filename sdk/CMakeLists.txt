@@ -13,7 +13,7 @@ endif()
 add_subdirectory(common/adi/ccb)
 
 add_definitions(-DSDK_EXPORTS)
-if(NOT DISABLE_LOGGING)
+if(WITH_GLOG_DEPENDENCY)
     find_package(glog 0.3.5 REQUIRED)
 endif()
 find_package(Protobuf 3.9.0 REQUIRED)
@@ -150,7 +150,7 @@ else()
     )
 endif()
 
-if ( NOT DISABLE_LOGGING)
+if (WITH_GLOG_DEPENDENCY)
     target_link_libraries( ${PROJECT_NAME}
     PUBLIC
         glog::glog

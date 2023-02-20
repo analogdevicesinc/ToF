@@ -5,7 +5,7 @@
 /*                                                                              */
 /********************************************************************************/
 #include <ADIController.h>
-#ifndef DISABLE_LOGGING
+#ifdef USE_GLOG
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>

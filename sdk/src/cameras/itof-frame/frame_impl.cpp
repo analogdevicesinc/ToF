@@ -38,7 +38,7 @@
 #include <cmath>
 #include <cstring>
 #include <fstream>
-#ifndef DISABLE_LOGGING
+#ifdef USE_GLOG
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>

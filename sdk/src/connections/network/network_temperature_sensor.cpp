@@ -32,7 +32,7 @@
 #include "connections/network/network_temperature_sensor.h"
 #include "connections/network/network.h"
 
-#ifndef DISABLE_LOGGING
+#ifdef USE_GLOG
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>

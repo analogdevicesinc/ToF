@@ -37,7 +37,7 @@
 #include "connections/usb/windows/usb_windows_utils.h"
 #include "utils.h"
 
-#ifndef DISABLE_LOGGING
+#ifdef USE_GLOG
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>

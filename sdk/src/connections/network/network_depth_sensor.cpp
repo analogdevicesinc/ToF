@@ -33,7 +33,7 @@
 #include "connections/network/network.h"
 #include "device_utils.h"
 
-#ifndef DISABLE_LOGGING
+#ifdef USE_GLOG
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>
