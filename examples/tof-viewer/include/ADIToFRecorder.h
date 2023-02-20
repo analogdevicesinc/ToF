@@ -22,6 +22,7 @@
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>
+#include <cstring>
 #endif
 
 #ifdef _WIN32

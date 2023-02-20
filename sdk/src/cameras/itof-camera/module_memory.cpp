@@ -28,6 +28,8 @@ SOFTWARE.
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>
+#include <cstring>
+#include <sstream>
 #endif
 #include <iomanip>
 

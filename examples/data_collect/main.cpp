@@ -19,6 +19,9 @@
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>
+#include <cstring>
+#define __STDC_FORMAT_MACROS 1
+#include <inttypes.h>
 #endif
 #include <iostream>
 #include <string>

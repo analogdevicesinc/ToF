@@ -30,6 +30,7 @@ SOFTWARE.
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>
+#include <cstring>
 #endif
 
 using namespace aditof;
