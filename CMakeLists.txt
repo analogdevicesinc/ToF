@@ -28,7 +28,7 @@ option(WITH_NETWORK "Build network interface?" OFF)
 option(WITH_OFFLINE "Build offline interface?" OFF)
 option(USE_DEPTH_COMPUTE_STUBS "Use empty generated libs?" OFF)
 option(USE_DEPTH_COMPUTE_OPENSOURCE "Use an open source implementation?" OFF)
-option(DISABLE_LOGGING "Disable log messages? (glog dependency ignored)" OFF)
+option(WITH_GLOG_DEPENDENCY "Build with GLOG dependency to be used for logging" ON)
 
 ################################## Git ########################################
 include(FindGit OPTIONAL)
@@ -94,8 +94,8 @@ if (WITH_OFFLINE)
         endif()
 endif()
 
-if(DISABLE_LOGGING)
-        add_definitions(-DDISABLE_LOGGING)
+if(WITH_GLOG_DEPENDENCY)
+        add_definitions(-DUSE_GLOG)
 endif()
 
 set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")

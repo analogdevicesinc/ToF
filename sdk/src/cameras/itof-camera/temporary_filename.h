@@ -30,7 +30,7 @@
 
 #include <cstdint>
 #include <cstdio>
-#ifndef DISABLE_LOGGING
+#ifdef USE_GLOG
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>

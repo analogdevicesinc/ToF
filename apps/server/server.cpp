@@ -37,7 +37,7 @@
 
 #include "../../sdk/src/connections/target/v4l_buffer_access_interface.h"
 
-#ifndef DISABLE_LOGGING
+#ifdef USE_GLOG
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>

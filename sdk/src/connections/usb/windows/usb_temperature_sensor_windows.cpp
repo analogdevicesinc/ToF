@@ -32,7 +32,7 @@
 #include "connections/usb/usb_temperature_sensor.h"
 #include "usb_windows_utils.h"
 
-#ifndef DISABLE_LOGGING
+#ifdef USE_GLOG
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>

@@ -1,6 +1,6 @@
 #include "tof-sdk-interface.h"
 #include "buffer.pb.h"
-#ifndef DISABLE_LOGGING
+#ifdef USE_GLOG
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>
