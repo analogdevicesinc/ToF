@@ -109,7 +109,7 @@ aditof::Status OfflineDepthSensor::getControl(const std::string &control,
                                               std::string &value) const {
     if (control == "imagerType")
         value = "1";
-    else
+    else if(control == "modeInfoVersion")
         value = "2";
     return aditof::Status::OK;
 }
