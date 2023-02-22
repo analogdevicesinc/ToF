@@ -102,6 +102,8 @@ endif()
 
 if(NOT WITH_PROTOBUF_DEPENDENCY AND NOT NXP)
         message(FATAL_ERROR "SDK can be built without protobuf only on target builds!")
+else()
+        add_definitions(-DUSE_PROTOBUF)
 endif()
 
 set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
