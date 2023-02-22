@@ -203,7 +203,7 @@ aditof::Status Adsd3500Sensor::open() {
             system("echo 1 > /sys/class/gpio/PP.04/value");
             usleep(5000000);
         } else {
-            Gpio gpio11("gpiochip3", 11);
+            Gpio gpio11("/dev/gpiochip3", 11);
             gpio11.openForWrite();
 
             gpio11.writeValue(0);
