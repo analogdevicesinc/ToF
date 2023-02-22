@@ -775,9 +775,10 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         // m_tofi_compute_context->p_conf_frame = (float *)tempConfFrame;
 
         if (m_adsd3500Enabled && m_abEnabled && (m_adsd3500ImagerType == 1) &&
-            (m_abBitsPerPixel < 16) &&
-            (m_details.frameType.type == "lr-native" ||
-             m_details.frameType.type == "sr-native") || m_isOffline) {
+                (m_abBitsPerPixel < 16) &&
+                (m_details.frameType.type == "lr-native" ||
+                 m_details.frameType.type == "sr-native") ||
+            m_isOffline) {
             uint16_t *mpAbFrame;
             frame->getData("ir", &mpAbFrame);
 
