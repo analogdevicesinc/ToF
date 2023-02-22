@@ -13,20 +13,23 @@ endif()
 add_subdirectory(common/adi/ccb)
 
 add_definitions(-DSDK_EXPORTS)
+
 if(WITH_GLOG_DEPENDENCY)
     find_package(glog 0.3.5 REQUIRED)
 endif()
-find_package(Protobuf 3.9.0 REQUIRED)
 
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS src/connections/usb/usb_buffer.proto)
-get_filename_component(GENERATED_PROTO_FILES_DIR ${PROTO_HDRS} DIRECTORY)
+if(WITH_PROTOBUF_DEPENDENCY)
+    find_package(Protobuf 3.9.0 REQUIRED)
+    protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS src/connections/usb/usb_buffer.proto)
+    get_filename_component(GENERATED_PROTO_FILES_DIR ${PROTO_HDRS} DIRECTORY)
 
-if ( WITH_NETWORK )
-    find_package(Libwebsockets REQUIRED)
-    set(LWS_CMAKE_DIR ${LWS_CMAKE_DIR} PARENT_SCOPE)
+    if ( WITH_NETWORK )
+        find_package(Libwebsockets REQUIRED)
+        set(LWS_CMAKE_DIR ${LWS_CMAKE_DIR} PARENT_SCOPE)
 
-    protobuf_generate_cpp(NET_PROTO_SRCS NET_PROTO_HRDS src/connections/network/buffer.proto)
-    get_filename_component(GENERATED_NET_PROTO_FILES_DIR ${NET_PROTO_HRDS} DIRECTORY)
+        protobuf_generate_cpp(NET_PROTO_SRCS NET_PROTO_HRDS src/connections/network/buffer.proto)
+        get_filename_component(GENERATED_NET_PROTO_FILES_DIR ${NET_PROTO_HRDS} DIRECTORY)
+    endif()
 endif()
 
 file(GLOB SOURCES
@@ -108,8 +111,8 @@ add_library(${PROJECT_NAME} SHARED
     $<$<BOOL:${WITH_NETWORK}>:${NET_PROTO_HDRS}>
     $<$<BOOL:${WITH_OFFLINE}>:${OFFLINE_SOURCES}>
     $<$<BOOL:${WITH_OFFLINE}>:${OFFLINE_HEADERS}>
-    ${PROTO_SRCS}
-    ${PROTO_HDRS}
+    $<$<BOOL:${WITH_PROTOBUF_DEPENDENCY}>:${PROTO_SRCS}>
+    $<$<BOOL:${WITH_PROTOBUF_DEPENDENCY}>:${PROTO_HDRS}>
 )
 
 # Add alias to aditof as aditof::aditof
@@ -140,10 +143,11 @@ set_target_properties( ${PROJECT_NAME} PROPERTIES
 if ( WITH_NETWORK )
     target_link_libraries( ${PROJECT_NAME}
         PRIVATE
-            ${Protobuf_LIBRARIES}
             websockets_shared
     )
-else()
+endif()
+
+if (WITH_PROTOBUF_DEPENDENCY)
     target_link_libraries( ${PROJECT_NAME}
         PRIVATE
             ${Protobuf_LIBRARIES}
