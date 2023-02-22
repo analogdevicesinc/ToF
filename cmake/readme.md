@@ -24,6 +24,8 @@ which will generate all the necessary recipes for building and installing. Usefu
 | CMAKE_PREFIX_PATH | \<path\> | Empty | Specifies a path which will be used by the FIND_XXX() commands |
 | CMAKE_INSTALL_PREFIX | \<path\> |  /usr/local on UNIX, c:/Program Files on Windows | Installation directory used by `cmake install` |
 | PYTHON_EXECUTABLE | \<path\> | Path to default python executable used | Specify which python executable should be used for building the python bindings |
+| WITH_GLOG_DEPENDENCY | on/off | on | Build the sdk with GLOG dependency. Used for logging. |
+| WITH_PROTOBUF_DEPENDENCY | on/off | on | Build the sdk with Protobuf dependency. Used for serializing the messages sent over network/usb. |
 
 
 #### Building and Installing 

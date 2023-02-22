@@ -29,7 +29,7 @@ option(WITH_OFFLINE "Build offline interface?" OFF)
 option(USE_DEPTH_COMPUTE_STUBS "Use empty generated libs?" OFF)
 option(USE_DEPTH_COMPUTE_OPENSOURCE "Use an open source implementation?" OFF)
 option(WITH_GLOG_DEPENDENCY "Build with GLOG dependency to be used for logging" ON)
-option(WITH_PROTOBUF_DEPENDENCY "Build with GLOG dependency to be used for logging" ON)
+option(WITH_PROTOBUF_DEPENDENCY "Build with PROTOBUF dependency to be used for serializing messages" ON)
 
 
 ################################## Git ########################################
@@ -100,8 +100,10 @@ if(WITH_GLOG_DEPENDENCY)
         add_definitions(-DUSE_GLOG)
 endif()
 
-if(NOT WITH_PROTOBUF_DEPENDENCY AND NOT NXP)
-        message(FATAL_ERROR "SDK can be built without protobuf only on target builds!")
+if(NOT WITH_PROTOBUF_DEPENDENCY)
+        if(NOT NXP AND NOT NVIDIA)
+                message(FATAL_ERROR "SDK can be built without protobuf only on target builds!")
+        endif()
 else()
         add_definitions(-DUSE_PROTOBUF)
 endif()
