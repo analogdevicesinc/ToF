@@ -18,6 +18,8 @@
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>
+#include <cstring>
+#include <unistd.h>
 #endif
 #include <linux/videodev2.h>
 #include <sstream>
