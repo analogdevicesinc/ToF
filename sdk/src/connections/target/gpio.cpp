@@ -51,7 +51,8 @@ int Gpio::open(int openType) {
     int fd;
 
     fd = ::open(m_charDevName.c_str(), O_RDONLY);
-    if (!fd) {
+    if (fd <= 0) {
+        LOG(ERROR) << "Failed to open gpio!";
         return errno;
     }
 
@@ -62,6 +63,7 @@ int Gpio::open(int openType) {
     ret = ioctl(fd, GPIO_GET_LINEHANDLE_IOCTL, &request);
     ::close(fd);
     if (ret == -1) {
+        LOG(ERROR) << "ioctl failed with error: " << errno;
         return errno;
     }
     m_lineHandle = request.fd;
