@@ -6,6 +6,7 @@
 /********************************************************************************/
 #include "adsd3500_sensor.h"
 #include "aditof/frame_operations.h"
+#include "gpio.h"
 #include "utils.h"
 
 #include "cameras/itof-camera/mode_info.h"
@@ -27,10 +28,6 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unordered_map>
-
-#ifdef NVIDIA
-#include <gpiod.h>
-#endif
 
 #define MAX_SUBFRAMES_COUNT                                                    \
     10 // maximum number of subframes that are used to create a full frame (maximum total_captures of all modes)
@@ -206,20 +203,15 @@ aditof::Status Adsd3500Sensor::open() {
             system("echo 1 > /sys/class/gpio/PP.04/value");
             usleep(5000000);
         } else {
-            struct gpiod_chip *chip;
-            struct gpiod_line *line;
+            Gpio gpio11("gpiochip3", 11);
+            gpio11.openForWrite();
 
-            chip = gpiod_chip_open_by_name("gpiochip3");
-            line = gpiod_chip_get_line(chip, 11);
-            gpiod_line_request_output(line, "adsd3500Sensor", 0);
-
-            gpiod_line_set_value(line, 0);
+            gpio11.writeValue(0);
             usleep(100000);
-            gpiod_line_set_value(line, 1);
+            gpio11.writeValue(1);
             usleep(5000000);
 
-            gpiod_line_release(line);
-            gpiod_chip_close(chip);
+            gpio11.close();
         }
 #endif
         m_firstRun = false;
