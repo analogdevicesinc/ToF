@@ -161,7 +161,7 @@ aditof::Status OfflineDepthSensor::adsd3500_read_payload_cmd(
         memcpy(readback_data, &dealiasStruct.camera_intrinsics,
                sizeof(CameraIntrinsics));
     } else if (cmd == 0x02) {
-        if (readback_data[0] == 3) { // daca 1024x1024
+        if (readback_data[0] == 3) {
             dealiasStruct.n_rows = 512;
             dealiasStruct.n_cols = 512;
             dealiasStruct.row_bin_factor = 1;
