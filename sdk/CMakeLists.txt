@@ -16,6 +16,8 @@ add_definitions(-DSDK_EXPORTS)
 
 if(WITH_GLOG_DEPENDENCY)
     find_package(glog 0.3.5 REQUIRED)
+    set(GLOG_BIN_DIR "${glog_DIR}/../../../bin")
+    set(GLOG_BIN_DIR ${GLOG_BIN_DIR} PARENT_SCOPE)
 endif()
 
 if(WITH_PROTOBUF_DEPENDENCY)
