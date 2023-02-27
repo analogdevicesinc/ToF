@@ -40,6 +40,7 @@
 #include <fcntl.h>
 #include <linux/gpio.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
 
 using namespace aditof;
 Gpio::Gpio(const std::string &charDeviceName, int gpioNumber)
