@@ -1270,7 +1270,8 @@ void ADIMainWindow::InitCamera() {
         if (cJSON_IsString(json_min_max_range) &&
             (json_min_max_range->valuestring != NULL)) {
             // Set AB Max range
-            view->maxABPixelValue = std::stoi(json_min_max_range->valuestring);
+            //view->maxABPixelValue = std::stoi(json_min_max_range->valuestring);
+            LOG(INFO) << "Deprecated: AB_Max_RANGE";
         }
         //Get available modes
         json_min_max_range =
@@ -1344,6 +1345,10 @@ void ADIMainWindow::prepareCamera(std::string mode) {
     int totalCaptures = camDetails.frameType.totalCaptures;
 
     view->m_ctrl->m_recorder->m_frameDetails.totalCaptures = totalCaptures;
+
+    std::string value;
+    getActiveCamera()->getSensor()->getControl("abBits", value);
+    view->setABWidth(value);
 
     // Program the camera with cfg passed, set the mode by writing to 0x200 and start the camera
     status = getActiveCamera()->start();
