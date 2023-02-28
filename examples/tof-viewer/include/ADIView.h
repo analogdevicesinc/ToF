@@ -73,6 +73,10 @@ class ADIView {
 		* @brief Will Try to render the image pixel by pixel
 		*/
     uint8_t *imageRender(uint16_t *image);
+
+    void setABWidth(std::string value);
+    uint32_t getABWidth() { return m_maxABPixelValue; }
+
     std::shared_ptr<adicontroller::ADIController> m_ctrl;
     std::shared_ptr<aditof::Frame> m_capturedFrame = nullptr;
     std::condition_variable m_barrierCv;
@@ -103,7 +107,6 @@ class ADIView {
     double m_blendValue = 0.5;
     int maxRange = 5000;
     int minRange = 0;
-    int maxABPixelValue = 511;
     /**************/
     //OpenCV  here
     /**
@@ -172,6 +175,7 @@ class ADIView {
     const char *vertexShaderSource;
     const char *fragmentShaderSource;
     int shaderProgram;
+    uint32_t m_maxABPixelValue = 65535;
 };
 } //namespace adiviewer
 
