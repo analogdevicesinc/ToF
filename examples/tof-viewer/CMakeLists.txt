@@ -45,6 +45,10 @@ add_executable(ADIToFGUI
 			   )
 
 # Link Libraries
+if(UNIX)
+	set(OpenGL_GL_PREFERENCE "LEGACY")
+endif()
+
 find_package(OpenGL REQUIRED)
 if( WIN32 )																	 
 	target_link_libraries(ADIToFGUI PRIVATE "${PROJECT_SOURCE_DIR}/external/imgui/src/examples/libs/glfw/lib-vc2010-64/glfw3.lib")
