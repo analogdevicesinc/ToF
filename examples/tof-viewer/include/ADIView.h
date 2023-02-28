@@ -76,6 +76,10 @@ class ADIView {
 
     void setABWidth(std::string value);
     uint32_t getABWidth() { return m_maxABPixelValue; }
+    void setLogImage(bool value) { m_logImage = value; }
+    bool getLogImage() { return m_logImage; }
+    void setCapABWidth(bool value) { m_capABWidth = value; }
+    bool getCapABWidth() { return m_capABWidth; }
 
     std::shared_ptr<adicontroller::ADIController> m_ctrl;
     std::shared_ptr<aditof::Frame> m_capturedFrame = nullptr;
@@ -176,6 +180,8 @@ class ADIView {
     const char *fragmentShaderSource;
     int shaderProgram;
     uint32_t m_maxABPixelValue = 65535;
+    bool m_logImage = true;
+    bool m_capABWidth = false;
 };
 } //namespace adiviewer
 

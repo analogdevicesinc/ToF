@@ -252,17 +252,20 @@ void ADIView::render() {
 }
 
 void ADIView::setABWidth(std::string value) {
-    uint16_t base;
-    if (value == "6")
-        base = 16;
-    else if (value == "5")
-        base = 14;
-    else if (value == "4")
-        base = 12;
-    else if (value == "3")
-        base = 10;
-    else
-        base = 8;
+    uint16_t base = 13; // Cap at 8191
+    
+    if (getCapABWidth() == false) {
+        if (value == "6")
+            base = 16;
+        else if (value == "5")
+            base = 14;
+        else if (value == "4")
+            base = 12;
+        else if (value == "3")
+            base = 10;
+        else
+            base = 8;
+    }
     m_maxABPixelValue = (1 << base) - 1;
     LOG(INFO) << "AB Width: " << base << "-bits";
 }
@@ -296,6 +299,7 @@ void ADIView::_displayIrImage() {
 
         int max_value_of_IR_pixel = getABWidth();
 
+        double c = 255.0f / log10(1 + max_value_of_IR_pixel);
         size_t imageSize = frameHeight * frameWidth;
         size_t bgrSize = 0;
         ir_video_data_8bit =
@@ -304,9 +308,11 @@ void ADIView::_displayIrImage() {
         for (size_t dummyCtr = 0; dummyCtr < imageSize; dummyCtr++) {
             //ir Data is a "width size as 16 bit data. Need to normalize to an 8 bit data
             //It is doing a width x height x 3: Resolution * 3bytes (BGR)
-            double pix =
-                ir_video_data[dummyCtr] * (255.0 / max_value_of_IR_pixel);
+            double pix = ir_video_data[dummyCtr] * (255.0 / max_value_of_IR_pixel);
             pix = (pix >= 255.0) ? 255.0 : pix; //clip to 8bit range;
+            if (getLogImage()) {
+                pix = c * log10(pix + 1);
+            }            
             ir_video_data_8bit[bgrSize++] = (uint8_t)(pix);
             ir_video_data_8bit[bgrSize++] = (uint8_t)(pix);
             ir_video_data_8bit[bgrSize++] = (uint8_t)(pix);

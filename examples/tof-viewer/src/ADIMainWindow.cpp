@@ -1302,6 +1302,21 @@ void ADIMainWindow::InitCamera() {
             _usesExternalModeDefinition = false;
         }
 
+        json_min_max_range =
+            cJSON_GetObjectItemCaseSensitive(config_json, "ABCap");
+        if (cJSON_IsString(json_min_max_range) &&
+            (json_min_max_range->valuestring != NULL)) {
+            std::string str(json_min_max_range->valuestring);
+            std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+            if (str.compare("TRUE") == 0) {
+                view->setCapABWidth(true);
+            } else {
+                view->setCapABWidth(false);
+            }
+        } else {
+            view->setCapABWidth(false);
+        }
+
         cJSON_Delete(config_json);
     }
     if (!ifs.fail()) {
@@ -1539,9 +1554,12 @@ void ADIMainWindow::displayActiveBrightnessWindow(
     setWindowSize(dictWinPosition["ab"][2] + 40, dictWinPosition["ab"][3] + 40);
 
     if (ImGui::Begin("Active Brightness Window", nullptr, overlayFlags)) {
+        CaptureIRVideo();
+        bool logImage = view->getLogImage();
+        ImGui::Checkbox("Log Image", &logImage);
+        view->setLogImage(logImage);
     }
 
-    CaptureIRVideo();
     ImGui::End();
 }
 
