@@ -251,6 +251,22 @@ void ADIView::render() {
     }
 }
 
+void ADIView::setABWidth(std::string value) {
+    uint16_t base;
+    if (value == "6")
+        base = 16;
+    else if (value == "5")
+        base = 14;
+    else if (value == "4")
+        base = 12;
+    else if (value == "3")
+        base = 10;
+    else
+        base = 8;
+    m_maxABPixelValue = (1 << base) - 1;
+    LOG(INFO) << "AB Width: " << base << "-bits";
+}
+
 void ADIView::_displayIrImage() {
     while (!m_stopWorkersFlag) {
         std::unique_lock<std::mutex> lock(m_frameCapturedMutex);
@@ -278,9 +294,7 @@ void ADIView::_displayIrImage() {
         frameHeight = static_cast<int>(frameIrDetails.height);
         frameWidth = static_cast<int>(frameIrDetails.width);
 
-        //int max_value_of_IR_pixel = 8191;//(1 << m_ctrl->getbitCount()) - 1; //Range is not supported yet. It will be for next deve.
-        int max_value_of_IR_pixel =
-            maxABPixelValue; //8191;//Range is not supported yet. It will be for next deve.
+        int max_value_of_IR_pixel = getABWidth();
 
         size_t imageSize = frameHeight * frameWidth;
         size_t bgrSize = 0;
