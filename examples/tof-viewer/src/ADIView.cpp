@@ -299,8 +299,7 @@ void ADIView::_displayIrImage() {
 
         size_t imageSize = frameHeight * frameWidth;
         size_t bgrSize = 0;
-        ir_video_data_8bit =
-            new uint8_t[frameHeight * frameWidth * 3]; //Multiplied by BGR
+        ir_video_data_8bit = new uint8_t[frameHeight * frameWidth * 3];
 
         uint32_t min_value_of_IR_pixel = 0xFFFF;
         uint32_t max_value_of_IR_pixel = 0;
@@ -318,8 +317,7 @@ void ADIView::_displayIrImage() {
         } else {
 
             max_value_of_IR_pixel = getABMaxRange();
-            min_value_of_IR_pixel =
-                (!getUserABMinState()) ? 0 : getABMinRange();
+            min_value_of_IR_pixel = (!getUserABMinState()) ? 0 : getABMinRange();
         }
 
         double c = 255.0f / log10(1 + max_value_of_IR_pixel);
@@ -329,8 +327,7 @@ void ADIView::_displayIrImage() {
             //ir Data is a "width size as 16 bit data. Need to normalize to an 8 bit data
             //It is doing a width x height x 3: Resolution * 3bytes (BGR)
             if (getAutoScale()) {
-                ir_video_data[dummyCtr] =
-                    ir_video_data[dummyCtr] - min_value_of_IR_pixel;
+                ir_video_data[dummyCtr] = ir_video_data[dummyCtr] - min_value_of_IR_pixel;
             }
             double pix = ir_video_data[dummyCtr] * (255.0 / max_value_of_IR_pixel);
             pix = (pix >= 255.0) ? 255.0 : pix; //clip to 8bit range;
