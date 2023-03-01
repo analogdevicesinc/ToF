@@ -267,7 +267,6 @@ void ADIView::setABMaxRange(std::string value) {
             base = 8;
     }
     m_maxABPixelValue = (1 << base) - 1;
-    LOG(INFO) << "AB Width: " << base << "-bits";
 }
 
 void ADIView::_displayIrImage() {
@@ -302,15 +301,15 @@ void ADIView::_displayIrImage() {
         ir_video_data_8bit =
             new uint8_t[frameHeight * frameWidth * 3]; //Multiplied by BGR
 
-        volatile uint32_t min_value_of_IR_pixel = 0xFFFF;
-        volatile uint32_t max_value_of_IR_pixel = 0;
+        uint32_t min_value_of_IR_pixel = 0xFFFF;
+        uint32_t max_value_of_IR_pixel = 0;
         if (getAutoScale()) {
             max_value_of_IR_pixel = 1;
             for (size_t dummyCtr = 0; dummyCtr < imageSize; dummyCtr++) {
                 if (ir_video_data[dummyCtr] > max_value_of_IR_pixel) {
                     max_value_of_IR_pixel = ir_video_data[dummyCtr];
                 }
-                if (ir_video_data[dummyCtr] < max_value_of_IR_pixel) {
+                if (ir_video_data[dummyCtr] < min_value_of_IR_pixel) {
                     min_value_of_IR_pixel = ir_video_data[dummyCtr];
                 }
             }
