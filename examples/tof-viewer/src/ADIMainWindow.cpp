@@ -1264,14 +1264,28 @@ void ADIMainWindow::InitCamera() {
             // Set Min range
             view->minRange = std::stoi(json_min_max_range->valuestring);
         }
-        //Get GUI AB_Max_RANGE file location
+        //Get GUI AB_MAX_RANGE and AB_MIN_RANGE file location
         json_min_max_range =
-            cJSON_GetObjectItemCaseSensitive(config_json, "AB_Max_RANGE");
+            cJSON_GetObjectItemCaseSensitive(config_json, "AB_MAX_RANGE");
         if (cJSON_IsString(json_min_max_range) &&
             (json_min_max_range->valuestring != NULL)) {
-            // Set AB Max range
-            //view->maxABPixelValue = std::stoi(json_min_max_range->valuestring);
-            LOG(INFO) << "Deprecated: AB_Max_RANGE";
+            uint32_t value =
+                (uint32_t)std::stoi(json_min_max_range->valuestring);
+            view->setABMaxRange(value);
+            view->setUserABMaxState(true);
+        } else {
+            view->setUserABMaxState(false);
+        }
+        json_min_max_range =
+            cJSON_GetObjectItemCaseSensitive(config_json, "AB_MIN_RANGE");
+        if (cJSON_IsString(json_min_max_range) &&
+            (json_min_max_range->valuestring != NULL)) {
+            uint32_t value =
+                (uint32_t)std::stoi(json_min_max_range->valuestring);
+            view->setABMinRange(value);
+            view->setUserABMinState(true);
+        } else {
+            view->setUserABMinState(false);
         }
         //Get available modes
         json_min_max_range =
@@ -1300,21 +1314,6 @@ void ADIMainWindow::InitCamera() {
 
         } else {
             _usesExternalModeDefinition = false;
-        }
-
-        json_min_max_range =
-            cJSON_GetObjectItemCaseSensitive(config_json, "ABCap");
-        if (cJSON_IsString(json_min_max_range) &&
-            (json_min_max_range->valuestring != NULL)) {
-            std::string str(json_min_max_range->valuestring);
-            std::transform(str.begin(), str.end(), str.begin(), ::toupper);
-            if (str.compare("TRUE") == 0) {
-                view->setCapABWidth(true);
-            } else {
-                view->setCapABWidth(false);
-            }
-        } else {
-            view->setCapABWidth(false);
         }
 
         cJSON_Delete(config_json);
@@ -1361,9 +1360,11 @@ void ADIMainWindow::prepareCamera(std::string mode) {
 
     view->m_ctrl->m_recorder->m_frameDetails.totalCaptures = totalCaptures;
 
-    std::string value;
-    getActiveCamera()->getSensor()->getControl("abBits", value);
-    view->setABWidth(value);
+    if (!view->getUserABMaxState()) {
+        std::string value;
+        getActiveCamera()->getSensor()->getControl("abBits", value);
+        view->setABMaxRange(value);
+    }
 
     // Program the camera with cfg passed, set the mode by writing to 0x200 and start the camera
     status = getActiveCamera()->start();
@@ -1558,6 +1559,10 @@ void ADIMainWindow::displayActiveBrightnessWindow(
         bool logImage = view->getLogImage();
         ImGui::Checkbox("Log Image", &logImage);
         view->setLogImage(logImage);
+        ImGui::SameLine();
+        bool autoScale = view->getAutoScale();
+        ImGui::Checkbox("Auto-scale", &autoScale);
+        view->setAutoScale(autoScale);
     }
 
     ImGui::End();
