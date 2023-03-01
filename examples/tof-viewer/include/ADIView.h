@@ -200,7 +200,7 @@ class ADIView {
     bool m_minABPixelValueSet = false;
     bool m_logImage = true;
     bool m_capABWidth = false;
-    bool m_autoScale = false;
+    bool m_autoScale = true;
 };
 } //namespace adiviewer
 
