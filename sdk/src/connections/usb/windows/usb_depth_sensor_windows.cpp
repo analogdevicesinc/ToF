@@ -983,6 +983,12 @@ aditof::Status UsbDepthSensor::getName(std::string &name) const {
     return aditof::Status::OK;
 }
 
+aditof::Status
+UsbDepthSensor::setHostConnectionType(std::string &connectionType) {
+    LOG(INFO) << "Function used only on target!";
+    return aditof::Status::OK;
+}
+
 aditof::Status UsbDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data,
                                                  unsigned int usDelay) {
     using namespace aditof;
@@ -1232,4 +1238,9 @@ aditof::Status UsbDepthSensor::adsd3500_write_payload(uint8_t *payload,
     }
 
     return Status::OK;
+}
+
+aditof::Status UsbDepthSensor::adsd3500_reset() {
+    LOG(INFO) << "Not available!";
+    return aditof::Status::OK;
 }

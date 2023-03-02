@@ -658,6 +658,12 @@ aditof::Status NetworkDepthSensor::getName(std::string &name) const {
     return aditof::Status::OK;
 }
 
+aditof::Status
+NetworkDepthSensor::setHostConnectionType(std::string &connectionType) {
+    LOG(INFO) << "Function used only on target!";
+    return aditof::Status::OK;
+}
+
 aditof::Status NetworkDepthSensor::adsd3500_read_cmd(uint16_t cmd,
                                                      uint16_t *data,
                                                      unsigned int usDelay) {

@@ -347,7 +347,8 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
 
         modeChanged = 1;
 
-        response.set_status(static_cast<::uvc_payload::Status>(aditof::Status::OK));
+        response.set_status(
+            static_cast<::uvc_payload::Status>(aditof::Status::OK));
         break;
     }
 
