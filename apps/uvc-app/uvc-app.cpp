@@ -5,6 +5,7 @@
 #include <aditof/log.h>
 #endif
 
+#include "reset.h"
 #include "tof-sdk-interface.h"
 #include <aditof/version.h>
 
@@ -26,6 +27,8 @@ static void sigint_handler(int signal) {
     stop_app = true;
 }
 
+bool modeChanged = false;
+
 int main(int argc, char *argv[]) {
     char *function = NULL;
     char *cap_device_1 = NULL;
@@ -36,7 +39,7 @@ int main(int argc, char *argv[]) {
     struct events events;
     int ret = 0;
 
-    // Init google logging system
+    //  Init google logging system
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
 
@@ -86,6 +89,19 @@ int main(int argc, char *argv[]) {
     while (!stop_app) {
         /* Main capture loop */
         events_loop(&events);
+
+        if (modeChanged) {
+            video_source_destroy(src);
+            src = v4l2_video_source_create(cap_device);
+            if (src == NULL) {
+                ret = 1;
+                goto done;
+            }
+
+            v4l2_video_source_init(src, &events);
+            uvc_stream_set_video_source(stream, src);
+            modeChanged = 0;
+        }
     }
 
 done:

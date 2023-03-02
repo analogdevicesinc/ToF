@@ -5,6 +5,7 @@
 #else
 #include <aditof/log.h>
 #endif
+#include "reset.h"
 
 #include <aditof/depth_sensor_interface.h>
 #include <aditof/sensor_definitions.h>
@@ -344,9 +345,9 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
 
     case uvc_payload::FunctionName::ADSD3500_RESET: {
 
-        aditof::Status status = camDepthSensor->adsd3500_reset();
+        modeChanged = 1;
 
-        response.set_status(static_cast<::uvc_payload::Status>(status));
+        response.set_status(static_cast<::uvc_payload::Status>(aditof::Status::OK));
         break;
     }
 

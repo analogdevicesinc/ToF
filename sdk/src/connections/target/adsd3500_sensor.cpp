@@ -172,14 +172,20 @@ Adsd3500Sensor::~Adsd3500Sensor() {
         }
         free(dev->videoBuffers);
 
-        if (close(dev->fd) == -1) {
-            LOG(WARNING) << "close m_implData->fd error "
-                         << "errno: " << errno << " error: " << strerror(errno);
+        if (dev->fd != -1) {
+            if (close(dev->fd) == -1) {
+                LOG(WARNING)
+                    << "close m_implData->fd error "
+                    << "errno: " << errno << " error: " << strerror(errno);
+            }
         }
 
-        if (close(dev->sfd) == -1) {
-            LOG(WARNING) << "close m_implData->sfd error "
-                         << "errno: " << errno << " error: " << strerror(errno);
+        if (dev->sfd != -1) {
+            if (close(dev->sfd) == -1) {
+                LOG(WARNING)
+                    << "close m_implData->sfd error "
+                    << "errno: " << errno << " error: " << strerror(errno);
+            }
         }
     }
 }
@@ -227,7 +233,7 @@ aditof::Status Adsd3500Sensor::open() {
         dev = &m_implData->videoDevs[i];
 
         LOG(INFO) << "device: " << devName << "\tsubdevice: " << subDevName;
-#if 1 //Don't open the video device for UVC context. It is opened in uvc-app/lib/v4l2.c
+#if 0 //Don't open the video device for UVC context. It is opened in uvc-app/lib/v4l2.c
         /* Open V4L2 device */
         if (stat(devName, &st) == -1) {
             LOG(WARNING) << "Cannot identify " << devName << "errno: " << errno
@@ -445,14 +451,20 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         }
         free(dev->videoBuffers);
 
-        if (close(dev->fd) == -1) {
-            LOG(WARNING) << "close m_implData->fd error "
-                         << "errno: " << errno << " error: " << strerror(errno);
+        if (dev->fd != -1) {
+            if (close(dev->fd) == -1) {
+                LOG(WARNING)
+                    << "close m_implData->fd error "
+                    << "errno: " << errno << " error: " << strerror(errno);
+            }
         }
 
-        if (close(dev->sfd) == -1) {
-            LOG(WARNING) << "close m_implData->sfd error "
-                         << "errno: " << errno << " error: " << strerror(errno);
+        if (dev->sfd != -1) {
+            if (close(dev->sfd) == -1) {
+                LOG(WARNING)
+                    << "close m_implData->sfd error "
+                    << "errno: " << errno << " error: " << strerror(errno);
+            }
         }
     }
 

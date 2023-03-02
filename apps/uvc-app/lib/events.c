@@ -24,6 +24,8 @@
 #include "list.h"
 #include "tools.h"
 
+#include "../../reset.h"
+
 #define SELECT_TIMEOUT		2000		/* in milliseconds */
 
 struct event_fd {
@@ -150,6 +152,9 @@ bool events_loop(struct events *events)
 		}
 
 		events_dispatch(events, &rfds, &wfds, &efds);
+
+		if(modeChanged)
+			return false;
 	}
 
 	return !events->done;
