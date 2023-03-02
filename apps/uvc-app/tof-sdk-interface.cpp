@@ -26,6 +26,8 @@ std::string kernelversion;
 std::string ubootversion;
 std::string sdversion;
 
+std::string connectionType = "USB";
+
 int init_tof_sdk(char *cap_dev_path) {
     auto sensorsEnumerator =
         aditof::SensorEnumeratorFactory::buildTargetSensorEnumerator();
@@ -48,6 +50,7 @@ int init_tof_sdk(char *cap_dev_path) {
     }
 
     camDepthSensor = depthSensors[0];
+    camDepthSensor->setHostConnectionType(connectionType);
     camDepthSensor->open();
 
     return 0;

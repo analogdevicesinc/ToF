@@ -125,6 +125,7 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
     struct ImplData;
     std::string m_sensorName;
     aditof::SensorDetails m_sensorDetails;
+    aditof::ConnectionType m_hostConnectionType;
     std::string m_driverPath;
     std::string m_driverSubPath;
     std::string m_captureDev;

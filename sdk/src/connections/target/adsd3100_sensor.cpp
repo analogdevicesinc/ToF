@@ -892,6 +892,17 @@ aditof::Status Adsd3100Sensor::getName(std::string &name) const {
     return aditof::Status::OK;
 }
 
+aditof::Status
+Adsd3100Sensor::setHostConnectionType(std::string &connectionType) {
+    if (connectionType == "USB") {
+        m_hostConnectionType = aditof::ConnectionType::USB;
+    } else if (connectionType == "NETWORK") {
+        m_hostConnectionType = aditof::ConnectionType::NETWORK;
+    }
+
+    return aditof::Status::OK;
+}
+
 aditof::Status Adsd3100Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data,
                                                  unsigned int usDelay) {
     LOG(INFO) << "Adsd3500 is not connected to this sensor type!";

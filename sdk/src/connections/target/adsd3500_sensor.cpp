@@ -233,54 +233,57 @@ aditof::Status Adsd3500Sensor::open() {
         dev = &m_implData->videoDevs[i];
 
         LOG(INFO) << "device: " << devName << "\tsubdevice: " << subDevName;
-#if 0 //Don't open the video device for UVC context. It is opened in uvc-app/lib/v4l2.c
-        /* Open V4L2 device */
-        if (stat(devName, &st) == -1) {
-            LOG(WARNING) << "Cannot identify " << devName << "errno: " << errno
-                         << "error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
-        }
 
-        if (!S_ISCHR(st.st_mode)) {
-            LOG(WARNING) << devName << " is not a valid device";
-            return Status::GENERIC_ERROR;
-        }
+        //Don't open the video device for UVC context. It is opened in uvc-app/lib/v4l2.c
+        if (m_hostConnectionType != ConnectionType::USB) {
+            /* Open V4L2 device */
+            if (stat(devName, &st) == -1) {
+                LOG(WARNING)
+                    << "Cannot identify " << devName << "errno: " << errno
+                    << "error: " << strerror(errno);
+                return Status::GENERIC_ERROR;
+            }
 
-        dev->fd = ::open(devName, O_RDWR | O_NONBLOCK, 0);
-        if (dev->fd == -1) {
-            LOG(WARNING) << "Cannot open " << devName << "errno: " << errno
-                         << "error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
-        }
+            if (!S_ISCHR(st.st_mode)) {
+                LOG(WARNING) << devName << " is not a valid device";
+                return Status::GENERIC_ERROR;
+            }
 
-        if (xioctl(dev->fd, VIDIOC_QUERYCAP, &cap) == -1) {
-            LOG(WARNING) << devName << " VIDIOC_QUERYCAP error";
-            return Status::GENERIC_ERROR;
-        }
+            dev->fd = ::open(devName, O_RDWR | O_NONBLOCK, 0);
+            if (dev->fd == -1) {
+                LOG(WARNING) << "Cannot open " << devName << "errno: " << errno
+                             << "error: " << strerror(errno);
+                return Status::GENERIC_ERROR;
+            }
 
-        if (strncmp((char *)cap.card, cardName, strlen(cardName))) {
-            LOG(WARNING) << "CAPTURE Device " << cap.card;
-            LOG(WARNING) << "Read " << cardName;
-            return Status::GENERIC_ERROR;
-        }
+            if (xioctl(dev->fd, VIDIOC_QUERYCAP, &cap) == -1) {
+                LOG(WARNING) << devName << " VIDIOC_QUERYCAP error";
+                return Status::GENERIC_ERROR;
+            }
 
-        if (!(cap.capabilities &
-              (V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE))) {
-            LOG(WARNING) << devName << " is not a video capture device";
-            return Status::GENERIC_ERROR;
-        }
+            if (strncmp((char *)cap.card, cardName, strlen(cardName))) {
+                LOG(WARNING) << "CAPTURE Device " << cap.card;
+                LOG(WARNING) << "Read " << cardName;
+                return Status::GENERIC_ERROR;
+            }
 
-        if (cap.capabilities & V4L2_CAP_VIDEO_CAPTURE_MPLANE) {
-            dev->videoBuffersType = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
-        } else {
-            dev->videoBuffersType = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        }
+            if (!(cap.capabilities &
+                  (V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE))) {
+                LOG(WARNING) << devName << " is not a video capture device";
+                return Status::GENERIC_ERROR;
+            }
 
-        if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
-            LOG(WARNING) << devName << " does not support streaming i/o";
-            return Status::GENERIC_ERROR;
+            if (cap.capabilities & V4L2_CAP_VIDEO_CAPTURE_MPLANE) {
+                dev->videoBuffersType = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+            } else {
+                dev->videoBuffersType = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            }
+
+            if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
+                LOG(WARNING) << devName << " does not support streaming i/o";
+                return Status::GENERIC_ERROR;
+            }
         }
-#endif
         /* Open V4L2 subdevice */
         if (stat(subDevName, &st) == -1) {
             LOG(WARNING) << "Cannot identify " << subDevName
@@ -486,43 +489,42 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         return status;
     }
 
-    return status;
-
     dev = &m_implData->videoDevs[0];
 
-#if 1 // Don't request buffers & set fromat for UVC context. It is already done in uvc-app/lib/v4l2.c
-    m_capturesPerFrame = 1;
+    // Don't request buffers & set fromat for UVC context. It is already done in uvc-app/lib/v4l2.c
+    if (m_hostConnectionType != ConnectionType::USB) {
+        m_capturesPerFrame = 1;
 
-    for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
-        dev = &m_implData->videoDevs[i];
-        if (type.type != m_implData->frameType.type) {
-            for (unsigned int i = 0; i < dev->nVideoBuffers; i++) {
-                if (munmap(dev->videoBuffers[i].start,
-                           dev->videoBuffers[i].length) == -1) {
+        for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
+            dev = &m_implData->videoDevs[i];
+            if (type.type != m_implData->frameType.type) {
+                for (unsigned int i = 0; i < dev->nVideoBuffers; i++) {
+                    if (munmap(dev->videoBuffers[i].start,
+                               dev->videoBuffers[i].length) == -1) {
+                        LOG(WARNING) << "munmap error "
+                                     << "errno: " << errno
+                                     << " error: " << strerror(errno);
+                        return Status::GENERIC_ERROR;
+                    }
+                }
+                free(dev->videoBuffers);
+                dev->nVideoBuffers = 0;
+                CLEAR(req);
+                req.count = 0;
+                req.type = dev->videoBuffersType;
+                req.memory = V4L2_MEMORY_MMAP;
+
+                if (xioctl(dev->fd, VIDIOC_REQBUFS, &req) == -1) {
                     LOG(WARNING)
-                        << "munmap error "
+                        << "VIDIOC_REQBUFS error "
                         << "errno: " << errno << " error: " << strerror(errno);
                     return Status::GENERIC_ERROR;
                 }
+            } else if (dev->nVideoBuffers) {
+                return status;
             }
-            free(dev->videoBuffers);
-            dev->nVideoBuffers = 0;
-            CLEAR(req);
-            req.count = 0;
-            req.type = dev->videoBuffersType;
-            req.memory = V4L2_MEMORY_MMAP;
 
-            if (xioctl(dev->fd, VIDIOC_REQBUFS, &req) == -1) {
-                LOG(WARNING)
-                    << "VIDIOC_REQBUFS error "
-                    << "errno: " << errno << " error: " << strerror(errno);
-                return Status::GENERIC_ERROR;
-            }
-        } else if (dev->nVideoBuffers) {
-            return status;
-        }
-
-        __u32 pixelFormat = 0;
+            __u32 pixelFormat = 0;
 
         if (m_implData->imagerType == ImagerType::IMAGER_ADSD3100) {
             if (type.type == "lr-qnative" || type.type == "sr-qnative" ||
@@ -545,26 +547,26 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
                 type.type == "sr-qnative" || type.type == "lr-qnative" ||
                 type.type == "vga") {
 #ifdef NXP
-                pixelFormat =
-                    V4L2_PIX_FMT_SBGGR8; // TO DO: Add implementation to automatically find pixel format based on resolution instead of all this harcoding
+                    pixelFormat =
+                        V4L2_PIX_FMT_SBGGR8; // TO DO: Add implementation to automatically find pixel format based on resolution instead of all this harcoding
 #else
-                pixelFormat = V4L2_PIX_FMT_SRGGB8;
+                    pixelFormat = V4L2_PIX_FMT_SRGGB8;
 #endif
+                } else {
+                    LOG(ERROR) << "frame type: " << type.type << " "
+                               << "is unhandled";
+                    return Status::GENERIC_ERROR;
+                }
             } else {
-                LOG(ERROR) << "frame type: " << type.type << " "
-                           << "is unhandled";
-                return Status::GENERIC_ERROR;
+                LOG(ERROR) << "Unknow imager type!";
             }
-        } else {
-            LOG(ERROR) << "Unknow imager type!";
-        }
 
-        /* Set the frame format in the driver */
-        CLEAR(fmt);
-        fmt.type = dev->videoBuffersType;
-        fmt.fmt.pix.pixelformat = pixelFormat;
-        fmt.fmt.pix.width = type.width;
-        fmt.fmt.pix.height = type.height;
+            /* Set the frame format in the driver */
+            CLEAR(fmt);
+            fmt.type = dev->videoBuffersType;
+            fmt.fmt.pix.pixelformat = pixelFormat;
+            fmt.fmt.pix.width = type.width;
+            fmt.fmt.pix.height = type.height;
 
         //TO DO: remove hardcoded 16bit ab resolutions
         if (m_implData->imagerType == ImagerType::IMAGER_ADSD3100 &&
@@ -585,64 +587,66 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
             return Status::GENERIC_ERROR;
         }
 
-        /* Allocate the video buffers in the driver */
-        CLEAR(req);
-        req.count = m_capturesPerFrame + EXTRA_BUFFERS_COUNT;
-        req.type = dev->videoBuffersType;
-        req.memory = V4L2_MEMORY_MMAP;
+            /* Allocate the video buffers in the driver */
+            CLEAR(req);
+            req.count = m_capturesPerFrame + EXTRA_BUFFERS_COUNT;
+            req.type = dev->videoBuffersType;
+            req.memory = V4L2_MEMORY_MMAP;
 
-        if (xioctl(dev->fd, VIDIOC_REQBUFS, &req) == -1) {
-            LOG(WARNING) << "VIDIOC_REQBUFS error "
-                         << "errno: " << errno << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
-        }
-
-        dev->videoBuffers =
-            (buffer *)calloc(req.count, sizeof(*dev->videoBuffers));
-        if (!dev->videoBuffers) {
-            LOG(WARNING) << "Failed to allocate video m_implData->videoBuffers";
-            return Status::GENERIC_ERROR;
-        }
-
-        for (dev->nVideoBuffers = 0; dev->nVideoBuffers < req.count;
-             dev->nVideoBuffers++) {
-            CLEAR(buf);
-            buf.type = dev->videoBuffersType;
-            buf.memory = V4L2_MEMORY_MMAP;
-            buf.index = dev->nVideoBuffers;
-            buf.m.planes = dev->planes;
-            buf.length = 1;
-
-            if (xioctl(dev->fd, VIDIOC_QUERYBUF, &buf) == -1) {
+            if (xioctl(dev->fd, VIDIOC_REQBUFS, &req) == -1) {
                 LOG(WARNING)
-                    << "VIDIOC_QUERYBUF error "
+                    << "VIDIOC_REQBUFS error "
                     << "errno: " << errno << " error: " << strerror(errno);
                 return Status::GENERIC_ERROR;
             }
 
-            if (dev->videoBuffersType == V4L2_BUF_TYPE_VIDEO_CAPTURE) {
-                length = buf.length;
-                offset = buf.m.offset;
-            } else {
-                length = buf.m.planes[0].length;
-                offset = buf.m.planes[0].m.mem_offset;
-            }
-
-            dev->videoBuffers[dev->nVideoBuffers].start =
-                mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_SHARED, dev->fd,
-                     offset);
-
-            if (dev->videoBuffers[dev->nVideoBuffers].start == MAP_FAILED) {
+            dev->videoBuffers =
+                (buffer *)calloc(req.count, sizeof(*dev->videoBuffers));
+            if (!dev->videoBuffers) {
                 LOG(WARNING)
-                    << "mmap error "
-                    << "errno: " << errno << " error: " << strerror(errno);
+                    << "Failed to allocate video m_implData->videoBuffers";
                 return Status::GENERIC_ERROR;
             }
 
-            dev->videoBuffers[dev->nVideoBuffers].length = length;
+            for (dev->nVideoBuffers = 0; dev->nVideoBuffers < req.count;
+                 dev->nVideoBuffers++) {
+                CLEAR(buf);
+                buf.type = dev->videoBuffersType;
+                buf.memory = V4L2_MEMORY_MMAP;
+                buf.index = dev->nVideoBuffers;
+                buf.m.planes = dev->planes;
+                buf.length = 1;
+
+                if (xioctl(dev->fd, VIDIOC_QUERYBUF, &buf) == -1) {
+                    LOG(WARNING)
+                        << "VIDIOC_QUERYBUF error "
+                        << "errno: " << errno << " error: " << strerror(errno);
+                    return Status::GENERIC_ERROR;
+                }
+
+                if (dev->videoBuffersType == V4L2_BUF_TYPE_VIDEO_CAPTURE) {
+                    length = buf.length;
+                    offset = buf.m.offset;
+                } else {
+                    length = buf.m.planes[0].length;
+                    offset = buf.m.planes[0].m.mem_offset;
+                }
+
+                dev->videoBuffers[dev->nVideoBuffers].start =
+                    mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_SHARED,
+                         dev->fd, offset);
+
+                if (dev->videoBuffers[dev->nVideoBuffers].start == MAP_FAILED) {
+                    LOG(WARNING)
+                        << "mmap error "
+                        << "errno: " << errno << " error: " << strerror(errno);
+                    return Status::GENERIC_ERROR;
+                }
+
+                dev->videoBuffers[dev->nVideoBuffers].length = length;
+            }
         }
     }
-#endif
 
     m_implData->frameType = type;
 
@@ -875,6 +879,17 @@ aditof::Status Adsd3500Sensor::getHandle(void **handle) {
 
 aditof::Status Adsd3500Sensor::getName(std::string &name) const {
     name = m_sensorName;
+
+    return aditof::Status::OK;
+}
+
+aditof::Status
+Adsd3500Sensor::setHostConnectionType(std::string &connectionType) {
+    if (connectionType == "USB") {
+        m_hostConnectionType = aditof::ConnectionType::USB;
+    } else if (connectionType == "NETWORK") {
+        m_hostConnectionType = aditof::ConnectionType::NETWORK;
+    }
 
     return aditof::Status::OK;
 }
