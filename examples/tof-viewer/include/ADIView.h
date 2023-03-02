@@ -73,26 +73,26 @@ class ADIView {
 		* @brief Will Try to render the image pixel by pixel
 		*/
     uint8_t *imageRender(uint16_t *image);
-    
+
     void setLogImage(bool value) { m_logImage = value; }
     bool getLogImage() { return m_logImage; }
-    
+
     void setCapABWidth(bool value) { m_capABWidth = value; }
     bool getCapABWidth() { return m_capABWidth; }
-    
+
     void setAutoScale(bool value) { m_autoScale = value; }
     bool getAutoScale() { return m_autoScale; }
 
     void setABMaxRange(std::string value);
     void setABMaxRange(uint32_t value) { m_maxABPixelValue = value; }
     uint32_t getABMaxRange() { return m_maxABPixelValue; }
-    
+
     void setABMinRange(uint32_t value) { m_minABPixelValue = value; }
     uint32_t getABMinRange() { return m_minABPixelValue; }
-    
+
     void setUserABMaxState(bool value) { m_maxABPixelValueSet = value; }
     bool getUserABMaxState() { return m_maxABPixelValueSet; }
-    
+
     void setUserABMinState(bool value) { m_minABPixelValueSet = value; }
     bool getUserABMinState() { return m_minABPixelValueSet; }
 

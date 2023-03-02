@@ -11,7 +11,7 @@
 #include <chrono>
 #include <iostream>
 //#include <GL\gl3w.h>
-#include <math.h> 
+#include <math.h>
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to
 // maximize ease of testing and compatibility with old VS compilers. To link
@@ -254,7 +254,7 @@ void ADIView::render() {
 
 void ADIView::setABMaxRange(std::string value) {
     uint16_t base = 13; // Cap at 8191
-    
+
     if (getCapABWidth() == false) {
         if (value == "6")
             base = 16;
@@ -317,23 +317,26 @@ void ADIView::_displayIrImage() {
         } else {
 
             max_value_of_IR_pixel = getABMaxRange();
-            min_value_of_IR_pixel = (!getUserABMinState()) ? 0 : getABMinRange();
+            min_value_of_IR_pixel =
+                (!getUserABMinState()) ? 0 : getABMinRange();
         }
 
         double c = 255.0f / log10(1 + max_value_of_IR_pixel);
-        
+
         //Create a  for loop that mimics some future process
         for (size_t dummyCtr = 0; dummyCtr < imageSize; dummyCtr++) {
             //ir Data is a "width size as 16 bit data. Need to normalize to an 8 bit data
             //It is doing a width x height x 3: Resolution * 3bytes (BGR)
             if (getAutoScale()) {
-                ir_video_data[dummyCtr] = ir_video_data[dummyCtr] - min_value_of_IR_pixel;
+                ir_video_data[dummyCtr] =
+                    ir_video_data[dummyCtr] - min_value_of_IR_pixel;
             }
-            double pix = ir_video_data[dummyCtr] * (255.0 / max_value_of_IR_pixel);
+            double pix =
+                ir_video_data[dummyCtr] * (255.0 / max_value_of_IR_pixel);
             pix = (pix >= 255.0) ? 255.0 : pix; //clip to 8bit range;
             if (getLogImage()) {
                 pix = c * log10(pix + 1);
-            }            
+            }
             ir_video_data_8bit[bgrSize++] = (uint8_t)(pix);
             ir_video_data_8bit[bgrSize++] = (uint8_t)(pix);
             ir_video_data_8bit[bgrSize++] = (uint8_t)(pix);
