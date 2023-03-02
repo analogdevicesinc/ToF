@@ -562,6 +562,15 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     if (m_ini_depth_map.size() > 1) {
         m_ini_depth = m_ini_depth_map[frameType];
     }
+
+    if (m_details.connection == ConnectionType::USB) {
+        status = m_depthSensor->adsd3500_reset();
+        if (status != Status::OK) {
+            LOG(WARNING) << "Failed to reset the camera!";
+            return status;
+        }
+    }
+
     getKeyValuePairsFromIni(m_ini_depth, m_iniKeyValPairs);
     setAdsd3500WithIniParams(m_iniKeyValPairs);
     configureSensorFrameType();
