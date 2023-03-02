@@ -39,6 +39,8 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
     getDetails(aditof::SensorDetails &details) const override;
     virtual aditof::Status getHandle(void **handle) override;
     virtual aditof::Status getName(std::string &name) const override;
+    virtual aditof::Status
+    setHostConnectionType(std::string &connectionType) override;
 
     virtual aditof::Status adsd3500_read_cmd(uint16_t cmd, uint16_t *data,
                                              unsigned int usDelay) override;

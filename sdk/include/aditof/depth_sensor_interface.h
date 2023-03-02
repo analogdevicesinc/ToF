@@ -253,6 +253,14 @@ class DepthSensorInterface {
      * @return Status
      */
     virtual aditof::Status getName(std::string &name) const = 0;
+
+    /**
+     * @brief Set the host connection type for target sdk
+     * @param[in] connectionType - the string that sets the host type on the target
+     * @return Status
+     */
+    virtual aditof::Status
+    setHostConnectionType(std::string &connectionType) = 0;
 };
 
 } // namespace aditof

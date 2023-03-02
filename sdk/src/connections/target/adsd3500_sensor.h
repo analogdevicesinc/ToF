@@ -71,6 +71,8 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     getDetails(aditof::SensorDetails &details) const override;
     virtual aditof::Status getHandle(void **handle) override;
     virtual aditof::Status getName(std::string &name) const override;
+    virtual aditof::Status
+    setHostConnectionType(std::string &connectionType) override;
 
     virtual aditof::Status adsd3500_read_cmd(uint16_t cmd, uint16_t *data,
                                              unsigned int usDelay = 0) override;
@@ -122,6 +124,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     struct ImplData;
     std::string m_sensorName;
     aditof::SensorDetails m_sensorDetails;
+    aditof::ConnectionType m_hostConnectionType;
     std::string m_driverPath;
     std::string m_driverSubPath;
     std::string m_captureDev;
