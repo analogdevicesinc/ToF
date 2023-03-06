@@ -526,26 +526,26 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
             __u32 pixelFormat = 0;
 
-        if (m_implData->imagerType == ImagerType::IMAGER_ADSD3100) {
-            if (type.type == "lr-qnative" || type.type == "sr-qnative" ||
-                type.type == "qmp") {
-                pixelFormat = V4L2_PIX_FMT_SBGGR8;
-            } else if (type.type == "lr-native" || type.type == "sr-native" ||
-                       type.type == "mp") {
-                if (m_controls["abBits"] == "6") {
+            if (m_implData->imagerType == ImagerType::IMAGER_ADSD3100) {
+                if (type.type == "lr-qnative" || type.type == "sr-qnative" ||
+                    type.type == "qmp") {
                     pixelFormat = V4L2_PIX_FMT_SBGGR8;
+                } else if (type.type == "lr-native" ||
+                           type.type == "sr-native" || type.type == "mp") {
+                    if (m_controls["abBits"] == "6") {
+                        pixelFormat = V4L2_PIX_FMT_SBGGR8;
+                    } else {
+                        pixelFormat = V4L2_PIX_FMT_SBGGR12;
+                    }
                 } else {
-                    pixelFormat = V4L2_PIX_FMT_SBGGR12;
+                    LOG(ERROR) << "frame type: " << type.type << " "
+                               << "is unhandled";
+                    return Status::GENERIC_ERROR;
                 }
-            } else {
-                LOG(ERROR) << "frame type: " << type.type << " "
-                           << "is unhandled";
-                return Status::GENERIC_ERROR;
-            }
-        } else if (m_implData->imagerType == ImagerType::IMAGER_ADSD3030) {
-            if (type.type == "sr-native" || type.type == "lr-native" ||
-                type.type == "sr-qnative" || type.type == "lr-qnative" ||
-                type.type == "vga") {
+            } else if (m_implData->imagerType == ImagerType::IMAGER_ADSD3030) {
+                if (type.type == "sr-native" || type.type == "lr-native" ||
+                    type.type == "sr-qnative" || type.type == "lr-qnative" ||
+                    type.type == "vga") {
 #ifdef NXP
                     pixelFormat =
                         V4L2_PIX_FMT_SBGGR8; // TO DO: Add implementation to automatically find pixel format based on resolution instead of all this harcoding
@@ -568,24 +568,24 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
             fmt.fmt.pix.width = type.width;
             fmt.fmt.pix.height = type.height;
 
-        //TO DO: remove hardcoded 16bit ab resolutions
-        if (m_implData->imagerType == ImagerType::IMAGER_ADSD3100 &&
-            m_controls["abBits"] == "6") {
-            if (type.type == "lr-native" || type.type == "mp") {
-                fmt.fmt.pix.width = 2048;
-                fmt.fmt.pix.height = 3328;
+            //TO DO: remove hardcoded 16bit ab resolutions
+            if (m_implData->imagerType == ImagerType::IMAGER_ADSD3100 &&
+                m_controls["abBits"] == "6") {
+                if (type.type == "lr-native" || type.type == "mp") {
+                    fmt.fmt.pix.width = 2048;
+                    fmt.fmt.pix.height = 3328;
 
-            } else if (type.type == "sr-native") {
-                fmt.fmt.pix.width = 2048;
-                fmt.fmt.pix.height = 2560;
+                } else if (type.type == "sr-native") {
+                    fmt.fmt.pix.width = 2048;
+                    fmt.fmt.pix.height = 2560;
+                }
             }
-        }
 
-        if (xioctl(dev->fd, VIDIOC_S_FMT, &fmt) == -1) {
-            LOG(WARNING) << "Setting Pixel Format error, errno: " << errno
-                         << " error: " << strerror(errno);
-            return Status::GENERIC_ERROR;
-        }
+            if (xioctl(dev->fd, VIDIOC_S_FMT, &fmt) == -1) {
+                LOG(WARNING) << "Setting Pixel Format error, errno: " << errno
+                             << " error: " << strerror(errno);
+                return Status::GENERIC_ERROR;
+            }
 
             /* Allocate the video buffers in the driver */
             CLEAR(req);
@@ -1233,28 +1233,28 @@ aditof::Status Adsd3500Sensor::adsd3500_write_payload(uint8_t *payload,
 
 aditof::Status Adsd3500Sensor::adsd3500_reset() {
 #if defined(NXP)
-        system("echo 0 > /sys/class/gpio/gpio122/value");
-        usleep(100000);
-        system("echo 1 > /sys/class/gpio/gpio122/value");
-        usleep(7000000);
+    system("echo 0 > /sys/class/gpio/gpio122/value");
+    usleep(100000);
+    system("echo 1 > /sys/class/gpio/gpio122/value");
+    usleep(7000000);
 #elif defined(NVIDIA)
-        struct stat st;
-        if (stat("/sys/class/gpio/PP.04/value", &st) == 0) {
-            system("echo 0 > /sys/class/gpio/PP.04/value");
-            usleep(100000);
-            system("echo 1 > /sys/class/gpio/PP.04/value");
-            usleep(5000000);
-        } else {
-            Gpio gpio11("/dev/gpiochip3", 11);
-            gpio11.openForWrite();
+    struct stat st;
+    if (stat("/sys/class/gpio/PP.04/value", &st) == 0) {
+        system("echo 0 > /sys/class/gpio/PP.04/value");
+        usleep(100000);
+        system("echo 1 > /sys/class/gpio/PP.04/value");
+        usleep(5000000);
+    } else {
+        Gpio gpio11("/dev/gpiochip3", 11);
+        gpio11.openForWrite();
 
-            gpio11.writeValue(0);
-            usleep(100000);
-            gpio11.writeValue(1);
-            usleep(5000000);
+        gpio11.writeValue(0);
+        usleep(100000);
+        gpio11.writeValue(1);
+        usleep(5000000);
 
-            gpio11.close();
-        }
+        gpio11.close();
+    }
 #endif
     return aditof::Status::OK;
 }
