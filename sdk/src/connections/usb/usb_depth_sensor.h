@@ -100,6 +100,7 @@ class UsbDepthSensor : public aditof::DepthSensorInterface {
     std::string m_driverPath;
     std::unique_ptr<ImplData> m_implData;
     std::vector<aditof::DepthSensorFrameType> m_depthSensorFrameTypes;
+    int m_fps;
 };
 
 #endif // USB_DEPTH_SENSOR_H

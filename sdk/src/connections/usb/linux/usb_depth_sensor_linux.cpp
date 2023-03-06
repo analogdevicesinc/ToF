@@ -192,6 +192,21 @@ aditof::Status UsbDepthSensor::start() {
     }
     LOG(INFO) << "Starting device";
 
+    struct v4l2_streamparm fpsControl;
+    memset(&fpsControl, 0, sizeof(struct v4l2_streamparm));
+
+    fpsControl.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    fpsControl.parm.capture.timeperframe.numerator = 1;
+    fpsControl.parm.capture.timeperframe.denominator = m_fps;
+
+    if (UsbLinuxUtils::xioctl(m_implData->fd, VIDIOC_S_PARM, &fpsControl) ==
+        -1) {
+        LOG(WARNING) << "Failed to set control: "
+                     << " "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        return Status::GENERIC_ERROR;
+    }
+
     enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     if (-1 == UsbLinuxUtils::xioctl(m_implData->fd, VIDIOC_STREAMON, &type)) {
         LOG(WARNING) << "VIDIOC_STREAMON, error:" << errno << "("
@@ -687,6 +702,11 @@ aditof::Status UsbDepthSensor::setControl(const std::string &control,
                                           const std::string &value) {
     using namespace aditof;
     Status status = Status::OK;
+
+    if (control == "fps") {
+        m_fps = std::stoi(value);
+        return status;
+    }
 
     // Construct request message
     usb_payload::ClientRequest requestMsg;
