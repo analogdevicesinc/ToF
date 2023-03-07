@@ -1232,6 +1232,7 @@ aditof::Status Adsd3500Sensor::adsd3500_write_payload(uint8_t *payload,
 }
 
 aditof::Status Adsd3500Sensor::adsd3500_reset() {
+    using namespace aditof;
 #if defined(NXP)
     system("echo 0 > /sys/class/gpio/gpio122/value");
     usleep(100000);
