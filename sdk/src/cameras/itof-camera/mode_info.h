@@ -86,6 +86,8 @@ class ModeInfo {
     static modeInfo g_newModesAdsd3100[];
     static modeInfo g_newModesAdsd3500[];
     static modeInfo g_newModesAdsd3030[];
+    static modeInfo g_newMixedModesAdsd3500[];
+    static modeInfo g_newMixedModesAdsd3030[];
     static ModeInfo *m_instance; //single instance
     static int g_imagerType;
     static int g_modeVersion;
