@@ -46,6 +46,24 @@ ModeInfo::modeInfo ModeInfo::g_newModesAdsd3030[] = {
     {3, 256, 320, 1, 1670, 1472, 1, "lr-qnative"},
 };
 
+ModeInfo::modeInfo ModeInfo::g_newMixedModesAdsd3500[] = {
+    {0, 1024, 1024, 2, 49156, 96, 0, "sr-native"},
+    {1, 1024, 1024, 3, 49156, 144, 0, "lr-native"},
+    {2, 512, 512, 1, 12292, 96, 0, "sr-qnative"},
+    {3, 512, 512, 1, 18438, 96, 0, "lr-qnative"},
+    {6, 512, 512, 1, 12292, 96, 0, "sr-mixed"},
+    {5, 512, 512, 1, 18438, 96, 0, "lr-mixed"},
+};
+
+ModeInfo::modeInfo ModeInfo::g_newMixedModesAdsd3030[] = {
+    {0, 512, 640, 1, 1670, 1472, 1, "sr-native"},
+    {1, 512, 640, 1, 1670, 1472, 1, "lr-native"},
+    {2, 256, 320, 1, 1670, 1472, 1, "sr-qnative"},
+    {3, 256, 320, 1, 1670, 1472, 1, "lr-qnative"},
+    {6, 256, 320, 1, 1670, 1472, 0, "sr-mixed"},
+    {5, 256, 320, 1, 1670, 1472, 0, "lr-mixed"},
+};
+
 int ModeInfo::g_imagerType = 1;
 int ModeInfo::g_modeVersion = 2;
 
@@ -121,9 +139,10 @@ aditof::Status ModeInfo::setImagerTypeAndModeVersion(int type, int version) {
                                   std::end(g_newModesAdsd3100));
             LOG(INFO) << "Using new modes table for adsd3100.";
         } else if (version == 2) {
-            g_modeInfoData.assign(std::begin(g_newModesAdsd3500),
-                                  std::end(g_newModesAdsd3500));
-            LOG(INFO) << "Using new modes table for adsd3500.";
+            g_modeInfoData.assign(std::begin(g_newMixedModesAdsd3500),
+                                  std::end(g_newMixedModesAdsd3500));
+            LOG(INFO) << "Using new mixed modes table for adsd3500.";
+
         } else {
             g_modeInfoData.assign(std::begin(g_oldModes), std::end(g_oldModes));
             LOG(INFO) << "Using old modes table.";
@@ -133,9 +152,9 @@ aditof::Status ModeInfo::setImagerTypeAndModeVersion(int type, int version) {
     }
     case 2: {
         if (version == 2) {
-            g_modeInfoData.assign(std::begin(g_newModesAdsd3030),
-                                  std::end(g_newModesAdsd3030));
-            LOG(INFO) << "Using new modes table for adsd3030.";
+            g_modeInfoData.assign(std::begin(g_newMixedModesAdsd3030),
+                                  std::end(g_newMixedModesAdsd3030));
+            LOG(INFO) << "Using new mixed modes table for adsd3030.";
         } else {
             g_modeInfoData.assign(std::begin(g_oldModesAdsd3030),
                                   std::end(g_oldModesAdsd3030));
