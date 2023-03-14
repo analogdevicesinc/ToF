@@ -15,14 +15,23 @@ base folder
 └── ToF
 ```
 
+You can use the evaluation folder as a reference by over writing the files with the executables and binaries built.
+
+The following variables must be exported for execution of the examples:
+```
+export OverrideDefaultFP64Settings=1
+export IGC_EnableDPEmulation=1 
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:
+```
+
 ## Building the SDK only
 
-Download the latest Linux installer - as of writing v3.2.0.
+Download the latest Linux installer - as of writing v4.1.1.
 https://github.com/analogdevicesinc/ToF/releases
 
 * mkdir libs
 * cd libs
-* cp ~/Analog\ Devices/TOF_Evaluation_ADTF3175D-Rel3.2.0/bin/\*tofi\* .
+* cp ~/Analog\ Devices/TOF_Evaluation_ADTF3175D-Ubuntu22.04-Rel4.1.1/bin/\*tofi\* .
 
 ### Pre-requisites
 * CMake
@@ -72,10 +81,10 @@ sudo cmake --build . --target install
 
 ### Download and build SDK only
 ```console
-git clone --branch v3.2.0 --depth 1 https://github.com/analogdevicesinc/ToF
+git clone --branch v4.1.1 --depth 1 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
-cmake -DWITH_EXAMPLES=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
+cmake -DWITH_EXAMPLES=off -DWITH_NETWORK=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
 make
 ```
 
@@ -93,10 +102,10 @@ sudo apt install libopencv-dev
 
 ### Build SDK with examples
 ```console
-git clone --branch v3.2.0 --depth 1 https://github.com/analogdevicesinc/ToF
+git clone --branch v4.1.1 --depth 1 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
-cmake -DWITH_EXAMPLES=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
+cmake -DWITH_EXAMPLES=on -DWITH_NETWORK=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
 make
 ```
 
