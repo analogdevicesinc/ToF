@@ -31,6 +31,17 @@
 					</table>
 
 					<h2>Command Interface</h2>
+					<table>
+						<tr>
+							<td id=wsdi_statustd align=center class="wsstatus">
+								<span id=wsdi_status>Websocket connection not
+									initialized
+								</span>
+							</td>
+						</tr>
+					</table>
+					</br>
+					</br>
 					<!-- Camera selection -->
 					<select class="custom-select" id="cameraSelect" name="cameraSelect">
 						<option value="adsd3030">Adsd3030</option>
@@ -66,20 +77,14 @@
 									<img id="my-image" src="" alt="" />
  						-->
 						 <div id="count"></div>
-						 <div id="img"></div>
+						 <img id="img"></img>
 						 <img id="img2"> </img>
+						 <canvas id="canvas" width="300" height="300" willReadFrequently="true"></canvas>
 						</br>
 						</br>
 
 
 					<table>
-						<tr>
-							<td id=wsdi_statustd align=center class="wsstatus">
-								<span id=wsdi_status>Websocket connection not
-									initialized
-								</span>
-							</td>
-						</tr>
 						<tr>
 							<td align=center>
 								<div id=number class="bigger"> </div>
