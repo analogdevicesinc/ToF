@@ -1594,7 +1594,7 @@
                         socket_tof.onmessage = async function got_packet(msgGot) {
                                 let msg = msgGot;
 
-                                if (msg.data instanceof Blob && generalState == 5) {
+                                if (msg.data instanceof Blob) {
                                         if (isPreparingFrame == false)
                                                 blobToBinary(msg.data);
                                         if (isStreaming == true) {
