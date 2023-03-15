@@ -193,6 +193,7 @@ var state = 0;
 var camera = "";
 var frameType = "";
 var formatType = "";
+var isPreparingFrame = false;
 
 
 var mirror_name = "";
@@ -200,35 +201,34 @@ if (params.mirror)
 	mirror_name = params.mirror;
 	// console.log(mirror_name);
 
-// To Remove
-function encode (input) {
-    var keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-    var output = "";
-    var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
-    var i = 0;
+var canvas;
+var context;
+var imgData;
+var data;
 
-    while (i < input.length) {
-        chr1 = input[i++];
-        chr2 = i < input.length ? input[i++] : Number.NaN; // Not sure if the index 
-        chr3 = i < input.length ? input[i++] : Number.NaN; // checks are needed here
+var firstFrameDrawn = false;
 
-        enc1 = chr1 >> 2;
-        enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
-        enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
-        enc4 = chr3 & 63;
-
-        if (isNaN(chr2)) {
-            enc3 = enc4 = 64;
-        } else if (isNaN(chr3)) {
-            enc4 = 64;
-        }
-        output += keyStr.charAt(enc1) + keyStr.charAt(enc2) +
-                  keyStr.charAt(enc3) + keyStr.charAt(enc4);
-    }
-    return output;
+function updateFrame(binaryArray){
+	data=imgData.data;
+	var j = 0;
+	for(var i=0;i<data.length;i+=4){
+			data[i]=binaryArray[j];
+			data[i+1]=binaryArray[j];
+			data[i+2]=binaryArray[j];
+			data[i+3]=255;
+		j++;
+	}
+	context.putImageData(imgData,0,0);
+	isPreparingFrame=false;
 }
 
 
+const blobToBinary = async (blob) => {
+	isPreparingFrame = true;
+	const buffer = await blob.arrayBuffer();
+	const frame = new Uint8Array(buffer);
+	updateFrame(frame);
+  };
 
 function ws_open_tof()
 {
@@ -236,9 +236,7 @@ function ws_open_tof()
 
 	try {
 		socket_tof.onopen = function() {
-
 			// lws_gray_out(false);
-
 			document.getElementById("wsdi_statustd").style.backgroundColor =
 																"#40ff40";
 			document.getElementById("wsdi_status").innerHTML =
@@ -249,35 +247,15 @@ function ws_open_tof()
 			state = 1;
 		};
 
-		socket_tof.onmessage = function got_packet(msgGot) {
+		socket_tof.onmessage = async function got_packet(msgGot) {
 			let msg = msgGot;
+
 			if (msg.data instanceof Blob)
 			{
-				// const view = new DataView(msg.data);
-				// console.log(view.getInt32(0));
-
-				var arrayBuffer = msg.data;
-				var bmp = createImageBitmap(msg.data, 0, 0, 512, 512);
-
-				bmp.then(function(result){
-					console.log(result); //
-					// create a canvas
-					const canvas = document.createElement('canvas');
-					// resize it to the size of our ImageBitmap
-					canvas.width = 512;
-					canvas.height = 512;
-					// get a bitmaprenderer context
-					const ctx = canvas.getContext('bitmaprenderer');
-					ctx.transferFromImageBitmap(result);
-					// get it back as a Blob
-					const blob2 = new Promise((res) => canvas.toBlob(res));
-					console.log(blob2); // Blob
-					const img = document.getElementById("img2");
-					img.src = URL.createObjectURL(blob2);
-				})
-
+				if (isPreparingFrame == false)
+					blobToBinary(msg.data);
+				socket_tof.send("requestFrame\n");
 			}
-
 			else
 			{
 				if (msg.data.includes("ft:"))
@@ -325,11 +303,31 @@ function ws_open_tof()
 					enableFormat();
 	
 				}
+				else if (msg.data.includes("size:"))
+				{
+					var message = msg.data.substring(msg.data.indexOf(":") + 1);
+					const formats = message.split(',');
+					if (formats.length == 2)
+					{
+						canvas = document.getElementById("canvas");
+						canvas.width = formats[0];
+						canvas.height = formats[1];
+
+						// Update variables for frame drawing
+						context = canvas.getContext('2d');					
+						imgData=context.getImageData(0,0,canvas.width,canvas.height);
+						data=imgData.data;
+					}
+					else
+					{
+						console.log("Bad size format from server");
+					}
+
+				}
 				else if (msg.data.includes("ready"))
 				{
 					// Enabling start/stop buttons 
 					enableStartStop();
-	
 				}
 				else
 				{
@@ -432,7 +430,7 @@ function startStreaming(){
 	{
 		// Start streaming
 		console.log("Starting streaming");
-		socket_tof.send("start\n");
+		socket_tof.send("requestFrame\n");
 	}
 	else
 	{
