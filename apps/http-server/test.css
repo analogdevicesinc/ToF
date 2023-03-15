@@ -64,11 +64,11 @@ span.m2 {
 	color:#404000;
 	padding:3px;
 }
-td.wsstatus { vertical-align:middle; width:200px; height:50px;
+td.wsstatus { vertical-align:middle; width:170px; height:50px;
 	text-align:center;
 	background:#f0f0c0; padding:6px;
 	-webkit-border-radius:8px;
-	border-radius:8px;
+	border-radius:0px;
 	color:#404000; }
 .tdform { vertical-align:middle; width:200px; height:50px;
 	text-align:center;
@@ -140,11 +140,11 @@ span.f12 { font-size:12pt }
   z-index: 1;
 }
 
-td.wsstatus { vertical-align:middle; width:200px; height:50px;
+td.wsstatus { vertical-align:middle; width:170px; height:50px;
 	text-align:center;
 	background:#f0f0c0; padding:6px;
 	-webkit-border-radius:8px;
-	border-radius:8px;
+	border-radius:0px;
 	color:#404000; }
 td.l { vertical-align:middle;
 	text-align:center;
