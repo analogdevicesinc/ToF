@@ -8,7 +8,8 @@
 using namespace std;
 
 #define DUMB_PERIOD_US 50000
-#define MAX_MESSAGE_LEN (524288 + 100) // For Quarter Megapixel
+#define MAX_MESSAGE_LEN (512 * 512 + 100) // For Quarter Megapixel
+// #define MAX_MESSAGE_LEN (524 + 100) // For Quarter Megapixel
 
 struct pss__tof {
     int number;
@@ -28,6 +29,7 @@ uint8_t buf[LWS_PRE + MAX_MESSAGE_LEN], *p = &buf[LWS_PRE];
 void *camera;
 //Available frametypes
 string availableFrameTypes = "ft:sr-mp,sr-qmp,lr-mp,lr-qmp,pcm,n-mp,n-qmp";
+string availableSize = "size:512,512";
 string availableFormats = "format:depth,ir";
 
 /**
@@ -54,8 +56,8 @@ int send_message(struct lws *wsi, const char *msg, int len) {
 }
 
 int send_frame(struct lws *wsi, const char *msg, int len) {
-    memcpy((void *)(buf), msg, len);
-    int ret = lws_write(wsi, buf, len, LWS_WRITE_BINARY);
+    memcpy((void *)(buf + LWS_PRE), msg, len);
+    int ret = lws_write(wsi, buf, LWS_PRE + len, LWS_WRITE_BINARY);
     if (!ret) {
         lwsl_err("ERROR writing to tof socket\n");
         return -1;
@@ -121,6 +123,8 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
             std::string message = process_message((char *)in);
             std::cout << "Messeage from HOST: " << message << "\n";
 
+            // Send available size for the frame:
+            send_message(wsi, availableSize.c_str(), availableSize.length());
             // Send available formats (depth/ir)
             send_message(wsi, availableFormats.c_str(),
                          availableFormats.length());
@@ -134,7 +138,7 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
             string state = "ready\n";
             send_message(wsi, state.c_str(), state.length());
 
-        } else if (strncmp((const char *)in, "start\n", 6) == 0) {
+        } else if (strncmp((const char *)in, "requestFrame\n", 13) == 0) {
             // Set chosen frame type
             std::string message = process_message((char *)in);
             std::cout << "Messeage from HOST: " << message << "\n";
@@ -154,7 +158,27 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
             std::cout << "Read in: " << size << "\n";
             // const char buff2 = (1, 2, 3);
             // send_frame(wsi, &buff2, 3);
-            send_frame(wsi, buffer, size);
+
+            // Change endianness
+            // char tmp;
+            // for (int i = 0; i <size-1; i=i+2)
+            // {
+            //     tmp = buffer[i];
+            //     buffer[i] = buffer[i+1];
+            //     buffer[i+1] = tmp;
+            // }
+
+            uint8_t *frameToSend =
+                (uint8_t *)malloc(sizeof(uint8_t) * 512 * 512);
+            for (int i = 0; i < 512 * 512; i++) {
+                uint16_t var =
+                    (uint16_t)buffer[i * 2] << 8 | (uint16_t)buffer[i * 2 + 1];
+                frameToSend[i] = (var / 255) & 0xff;
+            }
+            int i = 0;
+            send_frame(wsi, (const char *)frameToSend, MAX_MESSAGE_LEN);
+
+            free(frameToSend);
 
         } else if (strncmp((const char *)in, "stop\n", 5) == 0) {
             // Set chosen frame type
