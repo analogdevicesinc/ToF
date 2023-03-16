@@ -24,12 +24,13 @@ option(WITH_OPENCV "Build opencv bindings?" OFF)
 option(WITH_OPEN3D "Build open3d bindings?" OFF)
 option(WITH_ROS "Build ros bindings?" OFF)
 option(WITH_ROS2 "Build ros2 bindings?" OFF)
-option(WITH_NETWORK "Build network interface?" OFF)
+option(WITH_NETWORK "Build network interface?" ON)
 option(WITH_OFFLINE "Build offline interface?" OFF)
 option(USE_DEPTH_COMPUTE_STUBS "Use empty generated libs?" OFF)
 option(USE_DEPTH_COMPUTE_OPENSOURCE "Use an open source implementation?" OFF)
 option(WITH_GLOG_DEPENDENCY "Build with GLOG dependency to be used for logging" ON)
 option(WITH_PROTOBUF_DEPENDENCY "Build with PROTOBUF dependency to be used for serializing messages" ON)
+option(WITH_EMBEDDED_LINUX_TOOLS "Build with embedded Linux command line tools" ON)
 
 
 ################################## Git ########################################
@@ -139,6 +140,9 @@ if (WITH_ROS)
 endif()
 if (WITH_ROS2)
         add_subdirectory(bindings/ros2)
+endif()
+if (WITH_EMBEDDED_LINUX_TOOLS)
+        add_subdirectory(tools)
 endif()
 
 ############################### Installer #######################################
