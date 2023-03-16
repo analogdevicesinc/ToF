@@ -21,7 +21,7 @@ The following variables must be exported for execution of the examples:
 ```
 export OverrideDefaultFP64Settings=1
 export IGC_EnableDPEmulation=1 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.
 ```
 
 ## Building the SDK only
