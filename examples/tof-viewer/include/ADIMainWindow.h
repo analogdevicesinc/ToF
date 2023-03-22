@@ -376,12 +376,6 @@ class ADIMainWindow {
     void InitCamera();
 
     /**
-		* @brief Initialize CCD Camera and 
-		*        Show all the options available
-		*/
-    void InitCCDCamera();
-
-    /**
 		* @brief				Will Play ADI CCD depending on
 		*						mode and view settings
 		* @param modeSelect		Camera mode selection
@@ -550,7 +544,7 @@ class ADIMainWindow {
     int mainWindowWidth;
     bool showIRWindow = false;
     bool showDepthWindow = false;
-    bool isADICCD = false;
+    bool isADICCD = false; // TO DO: remove
     bool isADIToF = false;
     int modeSelection = 0;
     int modeSelectChanged = 0; //flag when changed

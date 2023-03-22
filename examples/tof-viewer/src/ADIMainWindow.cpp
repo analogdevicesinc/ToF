@@ -6,13 +6,14 @@
 /*																				*/
 /********************************************************************************/
 
-#include "ADIMainWindow.h"
 #include "ADIImGUIExtensions.h"
+#include "ADIMainWindow.h"
 #include "ADIOpenFile.h"
 #include "aditof/version.h"
 #include <cmath>
 #include <fcntl.h>
 #include <fstream>
+
 #ifdef USE_GLOG
 #include <glog/logging.h>
 #else
@@ -570,7 +571,6 @@ void ADIMainWindow::showOpenDeviceWindow() {
                         "ADI CCD")) {
                     //Init CCD Device here
                     _isOpenDevice = false;
-                    InitCCDCamera();
                     isADICCD = true;
                     isADIToF = false;
                 } else if (!m_connectedDevices[m_selectedDevice].second.find(
@@ -1375,17 +1375,6 @@ void ADIMainWindow::prepareCamera(std::string mode) {
 
     my_log.AddLog("Camera ready.\n");
     cameraWorkerDone = true;
-}
-
-void ADIMainWindow::InitCCDCamera() {
-    std::string version = aditof::getApiVersion();
-    my_log.AddLog("Preparing camera. Please wait...\n");
-
-    my_log.AddLog("Camera ready.\n");
-
-    //TO DO: do we stil need this?
-
-    //my_log.AddLog(sbuf->pubsetbuf);
 }
 
 void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect) {
