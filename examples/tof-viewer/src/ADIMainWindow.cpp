@@ -443,7 +443,6 @@ void ADIMainWindow::showMainMenu() {
             if (ImGui::MenuItem("Reset") && view != nullptr) {
                 stopPlayback();
                 stopPlayCCD();
-                isADICCD = false;
                 isADIToF = false;
                 cameraWorkerDone = false;
                 m_cameraModes.clear();
@@ -467,7 +466,6 @@ void ADIMainWindow::showMainMenu() {
 
 void ADIMainWindow::RefreshDevices() {
 
-    isADICCD = false;
     isADIToF = false;
     cameraWorkerDone = false;
     m_cameraModes.clear();
@@ -571,7 +569,6 @@ void ADIMainWindow::showOpenDeviceWindow() {
                         "ADI CCD")) {
                     //Init CCD Device here
                     _isOpenDevice = false;
-                    isADICCD = true;
                     isADIToF = false;
                 } else if (!m_connectedDevices[m_selectedDevice].second.find(
                                "ToF Camera")) {
@@ -579,11 +576,9 @@ void ADIMainWindow::showOpenDeviceWindow() {
                     _isOpenDevice = false;
                     initCameraWorker = std::thread(
                         std::bind(&ADIMainWindow::InitCamera, this));
-                    isADICCD = false;
                     isADIToF = true;
                 } else if (!m_connectedDevices[m_selectedDevice].second.find(
                                "Fake Device")) {
-                    isADICCD = false;
                     isADIToF = false;
                 }
             }
@@ -630,46 +625,6 @@ void ADIMainWindow::showOpenDeviceWindow() {
         ImGui::Text("Memory Used by Process: %s MB",
                     std::to_string((double)physMemUsedByMe / 1000000).c_str());
 #endif
-        if (isADICCD) {
-            ImGui::NewLine();
-            ImGui::Separator();
-            ImGui::NewLine();
-            ImGui::SetNextTreeNodeOpen(cameraOptionsTreeEnabled,
-                                       ImGuiCond_FirstUseEver);
-            if (ImGui::TreeNode("ADI CCD Camera Options")) {
-                ImGui::Text("Mode:");
-                ImGuiExtensions::ADIRadioButton("Near", &modeSelection, 0);
-                ImGuiExtensions::ADIRadioButton("Medium", &modeSelection, 1);
-                ImGuiExtensions::ADIRadioButton("Far", &modeSelection, 2);
-
-                ImGui::NewLine();
-                ImGui::Text("View Depth and Active Brightness:");
-                ImGuiExtensions::ADIRadioButton("Show in separated windows",
-                                                &viewSelection, 0);
-                ImGuiExtensions::ADIRadioButton("Blend both in one window",
-                                                &viewSelection, 1);
-
-                ImGui::NewLine();
-                ImGui::Text("Video:");
-                float customColorPlay = 0.4f;
-                float customColorStop = 0.0f;
-                ImGuiExtensions::ButtonColorChanger colorChangerPlay(
-                    customColorPlay, !isPlaying);
-                if (ImGuiExtensions::ADIButton("Play", !isPlaying)) {
-                    viewSelectionChanged = viewSelection;
-                    isPlaying = true;
-                }
-                ImGui::SameLine();
-                ImGuiExtensions::ButtonColorChanger colorChangerStop(
-                    customColorStop, isPlaying);
-                if (ImGuiExtensions::ADIButton("Stop", isPlaying)) {
-                    isPlaying = false;
-                    stopPlayCCD();
-                }
-
-                ImGui::TreePop();
-            }
-        }
         if (isADIToF && cameraWorkerDone) {
             ImGui::NewLine();
             ImGui::Separator();
