@@ -443,7 +443,6 @@ void ADIMainWindow::showMainMenu() {
             if (ImGui::MenuItem("Reset") && view != nullptr) {
                 stopPlayback();
                 stopPlayCCD();
-                isADIToF = false;
                 cameraWorkerDone = false;
                 m_cameraModes.clear();
                 _cameraModes.clear();
@@ -465,8 +464,6 @@ void ADIMainWindow::showMainMenu() {
 }
 
 void ADIMainWindow::RefreshDevices() {
-
-    isADIToF = false;
     cameraWorkerDone = false;
     m_cameraModes.clear();
     _cameraModes.clear();
@@ -565,22 +562,9 @@ void ADIMainWindow::showOpenDeviceWindow() {
                     stopPlayback();
                 }
 
-                if (!m_connectedDevices[m_selectedDevice].second.find(
-                        "ADI CCD")) {
-                    //Init CCD Device here
-                    _isOpenDevice = false;
-                    isADIToF = false;
-                } else if (!m_connectedDevices[m_selectedDevice].second.find(
-                               "ToF Camera")) {
-                    //Init CMOS Device here
-                    _isOpenDevice = false;
-                    initCameraWorker = std::thread(
-                        std::bind(&ADIMainWindow::InitCamera, this));
-                    isADIToF = true;
-                } else if (!m_connectedDevices[m_selectedDevice].second.find(
-                               "Fake Device")) {
-                    isADIToF = false;
-                }
+                _isOpenDevice = false;
+                initCameraWorker =
+                    std::thread(std::bind(&ADIMainWindow::InitCamera, this));
             }
         }
 
@@ -625,7 +609,7 @@ void ADIMainWindow::showOpenDeviceWindow() {
         ImGui::Text("Memory Used by Process: %s MB",
                     std::to_string((double)physMemUsedByMe / 1000000).c_str());
 #endif
-        if (isADIToF && cameraWorkerDone) {
+        if (cameraWorkerDone) {
             ImGui::NewLine();
             ImGui::Separator();
             ImGui::NewLine();

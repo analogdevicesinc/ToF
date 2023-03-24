@@ -544,7 +544,6 @@ class ADIMainWindow {
     int mainWindowWidth;
     bool showIRWindow = false;
     bool showDepthWindow = false;
-    bool isADIToF = false;
     int modeSelection = 0;
     int modeSelectChanged = 0; //flag when changed
     bool isPlaying = false;
