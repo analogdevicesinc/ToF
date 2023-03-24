@@ -6,8 +6,8 @@
 /*																				*/
 /********************************************************************************/
 
-#include "ADIImGUIExtensions.h"
 #include "ADIMainWindow.h"
+#include "ADIImGUIExtensions.h"
 #include "ADIOpenFile.h"
 #include "aditof/version.h"
 #include <cmath>
