@@ -115,10 +115,11 @@ struct Adsd3500Sensor::ImplData {
 // Should not have duplicated code if possible.
 static int xioctl(int fh, unsigned int request, void *arg) {
     int r;
+    int tries = 3;
 
     do {
         r = ioctl(fh, request, arg);
-    } while (-1 == r && EINTR == errno && errno != 0);
+    } while (--tries > 0 && r == -1 && EINTR == errno);
 
     return r;
 }
@@ -291,7 +292,7 @@ aditof::Status Adsd3500Sensor::open() {
             return Status::GENERIC_ERROR;
         }
 
-        dev->sfd = ::open(subDevName, O_RDWR | O_NONBLOCK, 0);
+        dev->sfd = ::open(subDevName, O_RDWR | O_NONBLOCK);
         if (dev->sfd == -1) {
             LOG(WARNING) << "Cannot open " << subDevName << " errno: " << errno
                          << " error: " << strerror(errno);
@@ -306,39 +307,10 @@ aditof::Status Adsd3500Sensor::open() {
             dealiasCheck[0] = 1;
 
             while (chipStatus != aditof::Status::OK) {
-                if (-1 == dev->sfd) {
-                /* Open V4L2 subdevice */
-                if (stat(subDevName, &st) == -1) {
-                    LOG(WARNING)
-                        << "Cannot identify " << subDevName
-                        << " errno: " << errno << " error: " << strerror(errno);
-                    return Status::GENERIC_ERROR;
-                }
-
-                if (!S_ISCHR(st.st_mode)) {
-                    LOG(WARNING) << subDevName << " is not a valid device";
-                    return Status::GENERIC_ERROR;
-                }
-
-                dev->sfd = ::open(subDevName, O_RDWR | O_NONBLOCK, 0);
-                if (dev->sfd == -1) {
-                    LOG(WARNING)
-                        << "Cannot open " << subDevName << " errno: " << errno
-                        << " error: " << strerror(errno);
-                    return Status::GENERIC_ERROR;
-                }
-            }
                 chipStatus = adsd3500_read_cmd(0x0112, &chipID);
                 if (chipStatus != Status::OK) {
                     LOG(ERROR)
                         << "Failed to read adsd3500 chip id! Reseting chip.";
-                    if (dev->sfd != -1) {
-                        if (close(dev->sfd) == -1) {
-                            LOG(WARNING) << "close m_implData->sfd error "
-                                         << "errno: " << errno
-                                         << " error: " << strerror(errno);
-                        }
-                    }
                     adsd3500_reset();
                     continue;
                 }
@@ -347,14 +319,6 @@ aditof::Status Adsd3500Sensor::open() {
                 if (chipStatus != Status::OK) {
                     LOG(ERROR) << "Failed to read dealias parameters for "
                                   "adsd3500. Reseting chip.";
-                    if (dev->sfd != -1) {
-                        if (close(dev->sfd) == -1) {
-                            LOG(WARNING) << "close m_implData->sfd error "
-                                         << "errno: " << errno
-                                         << " error: " << strerror(errno);
-                        }
-                        dev->sfd = -1;
-                    }
                     adsd3500_reset();
                 }
             }
