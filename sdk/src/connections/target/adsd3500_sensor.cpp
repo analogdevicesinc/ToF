@@ -323,6 +323,8 @@ aditof::Status Adsd3500Sensor::open() {
                 }
             }
             m_firstRun = false;
+
+            LOG(INFO) << "Chip programmed successfully!";
         }
     }
     if (!m_adsd3500Queried) {
