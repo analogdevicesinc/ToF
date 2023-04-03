@@ -310,7 +310,7 @@ aditof::Status Adsd3500Sensor::open() {
                 chipStatus = adsd3500_read_cmd(0x0112, &chipID);
                 if (chipStatus != Status::OK) {
                     LOG(ERROR)
-                        << "Failed to read adsd3500 chip id! Reseting chip.";
+                        << "Failed to read adsd3500 chip id! Reseting chip...";
                     adsd3500_reset();
                     continue;
                 }
@@ -318,7 +318,7 @@ aditof::Status Adsd3500Sensor::open() {
                 chipStatus = adsd3500_read_payload_cmd(0x02, dealiasCheck, 32);
                 if (chipStatus != Status::OK) {
                     LOG(ERROR) << "Failed to read dealias parameters for "
-                                  "adsd3500. Reseting chip.";
+                                  "adsd3500. Reseting chip...";
                     adsd3500_reset();
                 }
             }
@@ -1094,7 +1094,7 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd,
                            0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00,
                            0x00, 0x00, 0x00, 0x00, 0x00};
 
-    extCtrl.p_u8 = switchBuf;
+    memcpy(extCtrl.p_u8, switchBuf, 19);
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Switch Adsd3500 to standard mode error "
@@ -1207,7 +1207,7 @@ Adsd3500Sensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload,
                            0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00,
                            0x00, 0x00, 0x00, 0x00, 0x00};
 
-    extCtrl.p_u8 = switchBuf;
+    memcpy(extCtrl.p_u8, switchBuf, 19);
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
         LOG(WARNING) << "Switch Adsd3500 to standard mode error "
