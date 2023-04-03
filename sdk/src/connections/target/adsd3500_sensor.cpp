@@ -194,12 +194,6 @@ aditof::Status Adsd3500Sensor::open() {
     using namespace aditof;
     Status status = Status::OK;
 
-    //Reset device once before first open
-    if (m_firstRun) {
-        adsd3500_reset();
-        m_firstRun = false;
-    }
-
     LOG(INFO) << "Opening device";
 
     struct stat st;
@@ -302,6 +296,69 @@ aditof::Status Adsd3500Sensor::open() {
             LOG(WARNING) << "Cannot open " << subDevName << " errno: " << errno
                          << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
+        }
+
+        //Check chip status and reset if there are any errors.
+        if (m_firstRun) {
+            aditof::Status chipStatus = aditof::Status::GENERIC_ERROR;
+            uint16_t chipID;
+            uint8_t dealiasCheck[32] = {0};
+            dealiasCheck[0] = 1;
+
+            while (chipStatus != aditof::Status::OK) {
+                if (-1 == dev->sfd) {
+                /* Open V4L2 subdevice */
+                if (stat(subDevName, &st) == -1) {
+                    LOG(WARNING)
+                        << "Cannot identify " << subDevName
+                        << " errno: " << errno << " error: " << strerror(errno);
+                    return Status::GENERIC_ERROR;
+                }
+
+                if (!S_ISCHR(st.st_mode)) {
+                    LOG(WARNING) << subDevName << " is not a valid device";
+                    return Status::GENERIC_ERROR;
+                }
+
+                dev->sfd = ::open(subDevName, O_RDWR | O_NONBLOCK, 0);
+                if (dev->sfd == -1) {
+                    LOG(WARNING)
+                        << "Cannot open " << subDevName << " errno: " << errno
+                        << " error: " << strerror(errno);
+                    return Status::GENERIC_ERROR;
+                }
+            }
+                chipStatus = adsd3500_read_cmd(0x0112, &chipID);
+                if (chipStatus != Status::OK) {
+                    LOG(ERROR)
+                        << "Failed to read adsd3500 chip id! Reseting chip.";
+                    if (dev->sfd != -1) {
+                        if (close(dev->sfd) == -1) {
+                            LOG(WARNING) << "close m_implData->sfd error "
+                                         << "errno: " << errno
+                                         << " error: " << strerror(errno);
+                        }
+                    }
+                    adsd3500_reset();
+                    continue;
+                }
+
+                chipStatus = adsd3500_read_payload_cmd(0x02, dealiasCheck, 32);
+                if (chipStatus != Status::OK) {
+                    LOG(ERROR) << "Failed to read dealias parameters for "
+                                  "adsd3500. Reseting chip.";
+                    if (dev->sfd != -1) {
+                        if (close(dev->sfd) == -1) {
+                            LOG(WARNING) << "close m_implData->sfd error "
+                                         << "errno: " << errno
+                                         << " error: " << strerror(errno);
+                        }
+                        dev->sfd = -1;
+                    }
+                    adsd3500_reset();
+                }
+            }
+            m_firstRun = false;
         }
     }
     if (!m_adsd3500Queried) {
@@ -1235,7 +1292,7 @@ aditof::Status Adsd3500Sensor::adsd3500_reset() {
     using namespace aditof;
 #if defined(NXP)
     system("echo 0 > /sys/class/gpio/gpio122/value");
-    usleep(100000);
+    usleep(1000000);
     system("echo 1 > /sys/class/gpio/gpio122/value");
     usleep(7000000);
 #elif defined(NVIDIA)
