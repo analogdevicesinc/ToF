@@ -17,7 +17,7 @@ if [ "x$SHALLOW" == "xtrue" ]; then
 fi
 
 REPO_PREFIX=`git log -1 --pretty=format:%h`
-NXP_GIT_LOCATION=${NXP_GIT_LOCATION:=https://source.codeaurora.org/external/imx}
+NXP_GIT_LOCATION=${NXP_GIT_LOCATION:=https://github.com/nxp-imx}
 export ARCH=arm64
 export CROSS_COMPILE=aarch64-linux-gnu-
 ROOTDIR=`pwd`
