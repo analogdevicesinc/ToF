@@ -29,49 +29,36 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef STATUS_DEFINITIONS_H
-#define STATUS_DEFINITIONS_H
 
-/**
- * @brief Namespace aditof
- */
-namespace aditof {
+#include <aditof/status_definitions.h>
+#include <memory>
+#include <signal.h>
+#include <vector>
 
-/**
- * @enum Status
- * @brief Status of any operation that the TOF sdk performs.
- */
-enum class Status {
-    OK,               //!< Success
-    BUSY,             //!< Device or resource is busy
-    UNREACHABLE,      //!< Device or resource is unreachable
-    INVALID_ARGUMENT, //!< Invalid arguments provided
-    UNAVAILABLE,      //!< The requested action or resource is unavailable
-    GENERIC_ERROR     //!< An error occured but there are no details available.
+class Adsd3500Sensor;
+
+class Adsd3500InterruptNotifier final {
+  private:
+    Adsd3500InterruptNotifier() = default;
+
+  public:
+    Adsd3500InterruptNotifier(const Adsd3500InterruptNotifier &) = delete;
+    ~Adsd3500InterruptNotifier() = default;
+    void operator=(const Adsd3500InterruptNotifier &) = delete;
+    Adsd3500InterruptNotifier(Adsd3500InterruptNotifier &&) noexcept = default;
+    Adsd3500InterruptNotifier &
+    operator=(Adsd3500InterruptNotifier &&) noexcept = default;
+
+  public:
+    static Adsd3500InterruptNotifier &getInstance();
+    aditof::Status enableInterrupts();
+    aditof::Status disableInterrupts();
+    void subscribeSensor(std::weak_ptr<Adsd3500Sensor> sensor);
+    void unsubscribeSensor(std::weak_ptr<Adsd3500Sensor> sensor);
+
+  private:
+    static void signalEventHandler(int n, siginfo_t *info, void *unused);
+
+  private:
+    static std::vector<std::weak_ptr<Adsd3500Sensor>> m_sensors;
 };
-
-/**
- * @enum Adsd3500Status
- * @brief Status of the ADSD3500 sensor.
- */
-enum class Adsd3500Status {
-    OK,                       //!< Success
-    INVALID_MODE,             //!< Invalid mode has been set
-    INVALID_JBLF_FILTER_SIZE, //!< Invalid JBLF filter size has been set
-    UNSUPPORTED_COMMAND,      //!< The command is not supported by the ADSD3500
-    INVALID_MEMORY_REGION,    //!< Invalid memory region
-    INVALID_FIRMWARE_CRC,     //!< Invalid firmware CRC
-    INVALID_IMAGER,           //!< Invalid imager
-    INVALID_CCB,              //!< Invalid CCB
-    FLASH_HEADER_PARSE_ERROR, //!< Flash header parse error
-    FLASH_FILE_PARSE_ERROR,   //!< Flash file parse error
-    SPIM_ERROR,               //!< SPIM error
-    INVALID_CHIPID,           //!< Invalid chip ID
-    IMAGER_COMMUNICATION_ERROR, //!< Imager communication error
-    IMAGER_BOOT_FAILURE,        //!< Imager boot failure
-    UNKNOWN_ERROR_ID            //!< Unknown ID read from ADSD3500
-};
-
-} // namespace aditof
-
-#endif // STATUS_DEFINITIONS_H

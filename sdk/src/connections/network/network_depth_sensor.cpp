@@ -957,3 +957,11 @@ aditof::Status NetworkDepthSensor::adsd3500_reset() {
 
     return status;
 }
+
+aditof::Status NetworkDepthSensor::adsd3500_register_interrupt_callback(
+    aditof::SensorInterruptCallback cb) {
+    LOG(WARNING) << "Registering an interrupt callback on a network connection "
+                    "is not supported yet!";
+    m_cb = cb;
+    return aditof::Status::UNAVAILABLE;
+}

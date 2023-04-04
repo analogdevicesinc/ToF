@@ -37,10 +37,16 @@
 #include <aditof/status_definitions.h>
 
 #include <cstddef>
+#include <functional>
 #include <string>
 #include <vector>
 
 namespace aditof {
+
+/**
+ * @brief Callback for sensor interrupts
+ */
+typedef std::function<void(Adsd3500Status)> SensorInterruptCallback;
 
 /**
  * @class DepthSensorInterface
@@ -202,6 +208,14 @@ class DepthSensorInterface {
      * @return Status
      */
     virtual aditof::Status adsd3500_reset() = 0;
+
+    /**
+     * @brief Register a function to be called when a ADSD3500 interrupt occurs
+     * @param cb - the function to be called whenever the interrupt occurs
+     * @return Status
+     */
+    virtual aditof::Status
+    adsd3500_register_interrupt_callback(SensorInterruptCallback cb) = 0;
 
     /**
      * @brief Gets the sensors's list of controls

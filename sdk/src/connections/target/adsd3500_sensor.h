@@ -37,7 +37,8 @@
 #include <unordered_map>
 
 class Adsd3500Sensor : public aditof::DepthSensorInterface,
-                       public aditof::V4lBufferAccessInterface {
+                       public aditof::V4lBufferAccessInterface,
+                       public std::enable_shared_from_this<Adsd3500Sensor> {
   public:
     Adsd3500Sensor(const std::string &driverPath,
                    const std::string &driverSubPath,
@@ -89,6 +90,8 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     virtual aditof::Status
     adsd3500_write_payload(uint8_t *payload, uint16_t payload_len) override;
     virtual aditof::Status adsd3500_reset() override;
+    virtual aditof::Status adsd3500_register_interrupt_callback(
+        aditof::SensorInterruptCallback cb) override;
 
   public: // implements V4lBufferAccessInterface
     // Methods that give a finer control than getFrame()
@@ -103,6 +106,9 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     enqueueInternalBuffer(struct v4l2_buffer &buf) override;
     virtual aditof::Status
     getDeviceFileDescriptor(int &fileDescriptor) override;
+
+  public:
+    aditof::Status adsd3500InterruptHandler(int signalValue);
 
   private:
     aditof::Status writeConfigBlock(const uint32_t offset);
@@ -119,6 +125,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     aditof::Status setModeByIndex(uint8_t modeIndex);
     aditof::Status setMode(const std::string &mode);
     aditof::Status queryAdsd3500();
+    aditof::Adsd3500Status convertIdToAdsd3500Status(int status);
 
   private:
     struct ImplData;
@@ -134,6 +141,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     bool m_firstRun;
     unsigned int m_sensorFps;
     bool m_adsd3500Queried;
+    aditof::SensorInterruptCallback m_interruptCallback;
     std::vector<aditof::DepthSensorFrameType> m_availableFrameTypes;
     const std::vector<aditof::DepthSensorFrameType>
         availableFrameTypesAdsd3030Old = {

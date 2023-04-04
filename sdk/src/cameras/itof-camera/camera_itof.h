@@ -401,6 +401,8 @@ class CameraItof : public aditof::Camera {
     std::pair<std::string, std::string> m_adsd3500FwGitHash;
     int m_adsd3500ImagerType;
     int m_modesVersion;
+    bool m_fwUpdated;
+    aditof::Adsd3500Status m_adsd3500Status;
 };
 
 #endif // CAMERA_ITOF_H
