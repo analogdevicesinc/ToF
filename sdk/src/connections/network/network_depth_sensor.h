@@ -86,6 +86,8 @@ class NetworkDepthSensor : public aditof::DepthSensorInterface {
     virtual aditof::Status
     adsd3500_write_payload(uint8_t *payload, uint16_t payload_len) override;
     virtual aditof::Status adsd3500_reset() override;
+    virtual aditof::Status adsd3500_register_interrupt_callback(
+        aditof::SensorInterruptCallback cb) override;
 
   private:
     struct ImplData;
@@ -94,6 +96,7 @@ class NetworkDepthSensor : public aditof::DepthSensorInterface {
     std::unique_ptr<ImplData> m_implData;
     int m_sensorIndex;
     static int m_sensorCounter;
+    aditof::SensorInterruptCallback m_cb;
 };
 
 #endif // NETWORK_DEPTH_SENSOR_H

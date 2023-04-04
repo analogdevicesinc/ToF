@@ -31,6 +31,7 @@
  */
 #include "connections/target/target_sensor_enumerator.h"
 #include "connections/target/adsd3100_sensor.h"
+#include "connections/target/adsd3500_interrupt_notifier.h"
 #include "connections/target/adsd3500_sensor.h"
 #include "connections/target/eeprom.h"
 #include <algorithm>
@@ -54,6 +55,10 @@ Status TargetSensorEnumerator::getDepthSensors(
             auto sensor = std::make_shared<Adsd3500Sensor>(
                 sInfo.driverPath, sInfo.subDevPath, sInfo.captureDev);
             depthSensors.emplace_back(sensor);
+
+            auto &interruptNotifier = Adsd3500InterruptNotifier::getInstance();
+            interruptNotifier.enableInterrupts(); // TO DO: refactor this!
+
             break;
         }
         case SensorType::SENSOR_ADSD3100: {

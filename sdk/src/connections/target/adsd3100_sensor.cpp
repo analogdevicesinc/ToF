@@ -1351,3 +1351,9 @@ aditof::Status Adsd3100Sensor::writeConfigBlock(const uint32_t offset) {
 }
 
 std::string Adsd3100Sensor::getDriverPath() { return m_driverPath; }
+
+aditof::Status Adsd3100Sensor::adsd3500_register_interrupt_callback(
+    aditof::SensorInterruptCallback cb) {
+    LOG(INFO) << "Adsd3500 is not connected to this sensor type!";
+    return aditof::Status::UNAVAILABLE;
+}

@@ -160,3 +160,10 @@ aditof::Status UsbDepthSensor::getHandle(void **handle) {
 
     return status;
 }
+
+aditof::Status UsbDepthSensor::adsd3500_register_interrupt_callback(
+    aditof::SensorInterruptCallback cb) {
+    LOG(WARNING) << "Registering an interrupt callback on a USB connection "
+                    "is not supported yet!";
+    return aditof::Status::UNAVAILABLE;
+}

@@ -6,6 +6,7 @@
 /********************************************************************************/
 #include "adsd3500_sensor.h"
 #include "aditof/frame_operations.h"
+#include "adsd3500_interrupt_notifier.h"
 #include "gpio.h"
 #include "utils.h"
 
@@ -23,6 +24,7 @@
 #include <unistd.h>
 #endif
 #include <linux/videodev2.h>
+#include <signal.h>
 #include <sstream>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -55,6 +57,7 @@
 
 #define ADI_DEBUG 1
 #define REQ_COUNT 10
+
 struct buffer {
     void *start;
     size_t length;
@@ -194,6 +197,10 @@ Adsd3500Sensor::~Adsd3500Sensor() {
 aditof::Status Adsd3500Sensor::open() {
     using namespace aditof;
     Status status = Status::OK;
+
+    // Subscribe to ADSD3500 interrupts
+    std::weak_ptr<Adsd3500Sensor> wptr = shared_from_this();
+    Adsd3500InterruptNotifier::getInstance().subscribeSensor(wptr);
 
     LOG(INFO) << "Opening device";
 
@@ -1516,4 +1523,78 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
     }
 
     return status;
+}
+
+aditof::Status Adsd3500Sensor::adsd3500_register_interrupt_callback(
+    aditof::SensorInterruptCallback cb) {
+    m_interruptCallback = cb;
+
+    return aditof::Status::OK;
+}
+
+aditof::Status Adsd3500Sensor::adsd3500InterruptHandler(int signalValue) {
+    uint16_t statusRegister;
+    aditof::Status status = aditof::Status::OK;
+
+    status = adsd3500_read_cmd(0x0020, &statusRegister);
+    DLOG(INFO) << "statusRegister:" << statusRegister;
+
+    if (m_interruptCallback) {
+        m_interruptCallback(convertIdToAdsd3500Status(statusRegister));
+    }
+
+    return status;
+}
+
+aditof::Adsd3500Status Adsd3500Sensor::convertIdToAdsd3500Status(int status) {
+    using namespace aditof;
+
+    switch (status) {
+    case 0:
+        return Adsd3500Status::OK;
+
+    case 1:
+        return Adsd3500Status::INVALID_MODE;
+
+    case 2:
+        return Adsd3500Status::INVALID_JBLF_FILTER_SIZE;
+
+    case 3:
+        return Adsd3500Status::UNSUPPORTED_COMMAND;
+
+    case 4:
+        return Adsd3500Status::INVALID_MEMORY_REGION;
+
+    case 5:
+        return Adsd3500Status::INVALID_FIRMWARE_CRC;
+
+    case 6:
+        return Adsd3500Status::INVALID_IMAGER;
+
+    case 7:
+        return Adsd3500Status::INVALID_CCB;
+
+    case 8:
+        return Adsd3500Status::FLASH_HEADER_PARSE_ERROR;
+
+    case 9:
+        return Adsd3500Status::FLASH_FILE_PARSE_ERROR;
+
+    case 10:
+        return Adsd3500Status::SPIM_ERROR;
+
+    case 11:
+        return Adsd3500Status::INVALID_CHIPID;
+
+    case 12:
+        return Adsd3500Status::IMAGER_COMMUNICATION_ERROR;
+
+    case 13:
+        return Adsd3500Status::IMAGER_BOOT_FAILURE;
+
+    default: {
+        LOG(ERROR) << "Unknown ID: " << status;
+        return Adsd3500Status::UNKNOWN_ERROR_ID;
+    }
+    }
 }

@@ -45,13 +45,16 @@
 #include <array>
 #include <cstdint>
 #include <fstream>
+
 #ifdef USE_GLOG
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>
 #endif
+#include <chrono>
 #include <iostream>
 #include <iterator>
+#include <thread>
 #include <vector>
 
 CameraItof::CameraItof(
@@ -1353,6 +1356,15 @@ aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath) {
     using namespace aditof;
     Status status = Status::OK;
 
+    m_fwUpdated = false;
+    m_adsd3500Status = Adsd3500Status::OK;
+    aditof::SensorInterruptCallback cb = [this](Adsd3500Status status) {
+        m_adsd3500Status = status;
+        m_fwUpdated = true;
+    };
+    status = m_depthSensor->adsd3500_register_interrupt_callback(cb);
+    bool interruptsAvailable = (status == Status::OK);
+
     // Read Chip ID in STANDARD mode
     uint16_t chip_id;
     status = m_depthSensor->adsd3500_read_cmd(0x0112, &chip_id);
@@ -1446,7 +1458,34 @@ aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath) {
         return status;
     }
 
-    LOG(INFO) << "Adsd3500 firmware updated succesfully!";
+    if (interruptsAvailable) {
+        LOG(INFO) << "Waiting for ADSD3500 to update itself";
+        int secondsTimeout = 60;
+        int secondsWaited = 0;
+        int secondsWaitingStep = 1;
+        while (!m_fwUpdated && secondsWaited < secondsTimeout) {
+            LOG(INFO) << ".";
+            std::this_thread::sleep_for(
+                std::chrono::seconds(secondsWaitingStep));
+            secondsWaited += secondsWaitingStep;
+        }
+        LOG(INFO) << "Waited: " << secondsWaited << " seconds";
+        m_depthSensor->adsd3500_register_interrupt_callback(nullptr);
+        if (!m_fwUpdated && secondsWaited >= secondsTimeout) {
+            LOG(WARNING) << "Adsd3500 firmware updated has timeout after: "
+                         << secondsWaited << "seconds";
+            return aditof::Status::GENERIC_ERROR;
+        }
+
+        if (m_adsd3500Status == Adsd3500Status::OK) {
+            LOG(INFO) << "Adsd3500 firmware updated succesfully!";
+        } else {
+            LOG(ERROR) << "Adsd3500 firmware updated but with error: "
+                       << (int)m_adsd3500Status;
+        }
+    } else {
+        LOG(INFO) << "Adsd3500 firmware updated succesfully!";
+    }
 
     return aditof::Status::OK;
 }
