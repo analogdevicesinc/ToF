@@ -301,32 +301,49 @@ aditof::Status Adsd3500Sensor::open() {
 
         //Check chip status and reset if there are any errors.
         if (m_firstRun) {
-            aditof::Status chipStatus = aditof::Status::GENERIC_ERROR;
+            aditof::Status chipIDStatus = aditof::Status::GENERIC_ERROR;
+            aditof::Status dealiasStatus = aditof::Status::GENERIC_ERROR;
             uint16_t chipID;
             uint8_t dealiasCheck[32] = {0};
             dealiasCheck[0] = 1;
 
-            while (chipStatus != aditof::Status::OK) {
-                chipStatus = adsd3500_read_cmd(0x0112, &chipID);
-                if (chipStatus != Status::OK) {
-                    LOG(ERROR)
-                        << "Failed to read adsd3500 chip id! Reseting chip...";
+            for (int i = 0; i < 10; i++) {
+                chipIDStatus = adsd3500_read_cmd(0x0112, &chipID);
+                if (chipIDStatus != Status::OK) {
                     adsd3500_reset();
                     continue;
                 }
 
-                chipStatus = adsd3500_read_payload_cmd(0x02, dealiasCheck, 32);
-                if (chipStatus != Status::OK) {
-                    LOG(ERROR) << "Failed to read dealias parameters for "
-                                  "adsd3500. Reseting chip...";
+                dealiasStatus =
+                    adsd3500_read_payload_cmd(0x02, dealiasCheck, 32);
+                if (dealiasStatus != Status::OK) {
                     adsd3500_reset();
+                    continue;
+                }
+
+                if (chipIDStatus == aditof::Status::OK &&
+                    dealiasStatus == aditof::Status::OK) {
+                    LOG(INFO) << "ADSD3500 is ready to communicate with.";
+                    break;
                 }
             }
-            m_firstRun = false;
 
-            LOG(INFO) << "Chip programmed successfully!";
+            if (chipIDStatus != aditof::Status::OK) {
+                LOG(ERROR) << "Cannot read chip id! Latest ADSD3500 "
+                              "programming might not be succesful";
+                return chipIDStatus;
+            }
+
+            if (dealiasStatus != aditof::Status::OK) {
+                LOG(ERROR) << "Cannot read dealias parameters! Latest ADSD3500 "
+                              "programming might not be succesful";
+                return dealiasStatus;
+            }
+
+            m_firstRun = false;
         }
     }
+
     if (!m_adsd3500Queried) {
         status = queryAdsd3500();
         m_adsd3500Queried = true;
