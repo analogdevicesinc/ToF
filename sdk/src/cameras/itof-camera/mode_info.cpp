@@ -126,7 +126,7 @@ aditof::Status ModeInfo::setImagerTypeAndModeVersion(int type, int version) {
         return aditof::Status::INVALID_ARGUMENT;
     }
 
-    if (version >= 0 && version <= 2) {
+    if (version >= 0 && version <= 3) {
         g_modeVersion = version;
     } else {
         return Status::INVALID_ARGUMENT;
@@ -134,24 +134,35 @@ aditof::Status ModeInfo::setImagerTypeAndModeVersion(int type, int version) {
 
     switch (g_imagerType) {
     case 1: {
-        if (version == 1) {
-            g_modeInfoData.assign(std::begin(g_newModesAdsd3100),
-                                  std::end(g_newModesAdsd3100));
-            LOG(INFO) << "Using new modes table for adsd3100.";
-        } else if (version == 2) {
+        if (version == 3) {
             g_modeInfoData.assign(std::begin(g_newMixedModesAdsd3500),
                                   std::end(g_newMixedModesAdsd3500));
             LOG(INFO) << "Using new mixed modes table for adsd3500.";
+        } else if (version == 2) {
+            g_modeInfoData.assign(std::begin(g_newModesAdsd3500),
+                                  std::end(g_newModesAdsd3500));
+            LOG(INFO) << "Using new mixed modes table for adsd3500.";
 
+        } else if (version == 1) {
+            g_modeInfoData.assign(std::begin(g_newModesAdsd3100),
+                                  std::end(g_newModesAdsd3100));
+            LOG(INFO) << "Using new modes table for adsd3100.";
         } else {
             g_modeInfoData.assign(std::begin(g_oldModes), std::end(g_oldModes));
             LOG(INFO) << "Using old modes table.";
         }
-
         break;
     }
     case 2: {
-        if (version == 2) {
+        if (version == 3) {
+            g_modeInfoData.assign(std::begin(g_newMixedModesAdsd3030),
+                                  std::end(g_newMixedModesAdsd3030));
+            LOG(INFO) << "Using new modes table for adsd3030.";
+        } else if (version == 2) {
+            g_modeInfoData.assign(std::begin(g_newModesAdsd3030),
+                                  std::end(g_newModesAdsd3030));
+            LOG(INFO) << "Using new modes table for adsd3030.";
+        } else if (version == 2) {
             g_modeInfoData.assign(std::begin(g_newMixedModesAdsd3030),
                                   std::end(g_newMixedModesAdsd3030));
             LOG(INFO) << "Using new mixed modes table for adsd3030.";
