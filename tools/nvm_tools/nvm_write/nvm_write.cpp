@@ -9,29 +9,29 @@
 
 const char *CAMERA_DEV = "/dev/v4l-subdev1";
 
-int32_t send_nvm_write_command(int fd, uint8_t *fw_content, uint32_t fw_len)
-{
+int32_t send_nvm_write_command(int fd, uint8_t *fw_content, uint32_t fw_len) {
     uint8_t cmd_nvm_write[16] = {0};
-	cmd_header_t *nvm_write_header = (cmd_header_t *)&cmd_nvm_write;
+    cmd_header_t *nvm_write_header = (cmd_header_t *)&cmd_nvm_write;
 
-	nvm_write_header->id8 = 0xAD;
-	nvm_write_header->chunk_size16 = PAGE_SIZE; // 256=0x100
-	nvm_write_header->cmd8 = FULL_UPDATE_CMD;           // FW Upgrade CMD = 0x04
-	nvm_write_header->total_size_fw32 = fw_len;
-	nvm_write_header->header_checksum32 = 0;
+    nvm_write_header->id8 = 0xAD;
+    nvm_write_header->chunk_size16 = PAGE_SIZE; // 256=0x100
+    nvm_write_header->cmd8 = FULL_UPDATE_CMD;   // FW Upgrade CMD = 0x04
+    nvm_write_header->total_size_fw32 = fw_len;
+    nvm_write_header->header_checksum32 = 0;
 
-	for (int i = 1; i < 8; i++) {
-		nvm_write_header->header_checksum32 +=
-			nvm_write_header->cmd_header_byte[i];
-	}
+    for (int i = 1; i < 8; i++) {
+        nvm_write_header->header_checksum32 +=
+            nvm_write_header->cmd_header_byte[i];
+    }
 
-	uint32_t res = crcFast(fw_content, fw_len, true) ^ 0xFFFFFFFF;
-	nvm_write_header->crc_of_fw32 = ~res;
+    uint32_t res = crcFast(fw_content, fw_len, true) ^ 0xFFFFFFFF;
+    nvm_write_header->crc_of_fw32 = ~res;
 
-	std::cout << "send_nvm_write_commands: Update NVM command;  ";
-	int32_t ret = write_cmd(fd, cmd_nvm_write, sizeof(cmd_nvm_write) / sizeof(cmd_nvm_write[0]));
-	std::cout << ((ret >= 0)?"SUCCESS":"FAIL") << std::endl;
-	return ret;
+    std::cout << "send_nvm_write_commands: Update NVM command;  ";
+    int32_t ret = write_cmd(fd, cmd_nvm_write,
+                            sizeof(cmd_nvm_write) / sizeof(cmd_nvm_write[0]));
+    std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
+    return ret;
 }
 
 int main(int argc, char **argv) {
@@ -50,8 +50,7 @@ int main(int argc, char **argv) {
     }
 
     int32_t fd = tof_open(CAMERA_DEV);
-    if (fd < 0)
-    {
+    if (fd < 0) {
         std::cout << "Unable to find camera: " << CAMERA_DEV << std::endl;
         return -1;
     }
@@ -72,8 +71,7 @@ int main(int argc, char **argv) {
 
     set_burst_mode(fd);
 
-    if (send_nvm_write_command(fd, binbuff, actualSize) < 0)
-    {
+    if (send_nvm_write_command(fd, binbuff, actualSize) < 0) {
         return -3;
     }
 
@@ -103,7 +101,7 @@ int main(int argc, char **argv) {
     reset_adsd3500();
 
     set_burst_mode(fd);
-	get_firmware_version(fd);
+    get_firmware_version(fd);
 
     reset_adsd3500();
 

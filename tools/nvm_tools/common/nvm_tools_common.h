@@ -1,22 +1,22 @@
 #ifndef NVM_TOOLS_COMMON_H
 #define NVM_TOOLS_COMMON_H
-#include <string>
-#include <iostream>
-#include <algorithm> 
-#include <sstream>
+#include "crc.h"
+#include <algorithm>
+#include <cstring>
+#include <errno.h>
+#include <fcntl.h>
 #include <fstream>
 #include <iomanip>
-#include <fcntl.h>
-#include <errno.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <malloc.h>
-#include <cstring>
-#include <stdbool.h>
-#include <sys/mman.h>
-#include <sys/ioctl.h>
+#include <iostream>
 #include <linux/videodev2.h>
-#include "crc.h"
+#include <malloc.h>
+#include <sstream>
+#include <stdbool.h>
+#include <stdint.h>
+#include <string>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <unistd.h>
 
 #pragma pack(push, 1)
 typedef union {
@@ -34,16 +34,18 @@ typedef union {
 
 #define CTRL_SIZE 4099
 #define IOCTL_TRIES 3
-#define CLEAR(x) memset (&(x), 0, sizeof (x))
+#define CLEAR(x) memset(&(x), 0, sizeof(x))
 
 int32_t tof_open(const char *tof_device);
 int xioctl(int fd, int request, void *arg);
 bool v4l2_ctrl_set(int fd, uint32_t id, uint8_t *val);
 bool v4l2_ctrl_get(int fd, uint32_t id, uint8_t *val);
-void printByteArray(unsigned char* byteArray, int arraySize);
-int32_t write_cmd(int fd, uint8_t *ptr, uint16_t len) ;
-int32_t read_cmd(int fd, uint8_t *ptr, uint16_t len, uint8_t *rcmd, uint16_t rlen);
-int32_t send_firmware_update_command(int fd, uint8_t *fw_content, uint32_t fw_len);
+void printByteArray(unsigned char *byteArray, int arraySize);
+int32_t write_cmd(int fd, uint8_t *ptr, uint16_t len);
+int32_t read_cmd(int fd, uint8_t *ptr, uint16_t len, uint8_t *rcmd,
+                 uint16_t rlen);
+int32_t send_firmware_update_command(int fd, uint8_t *fw_content,
+                                     uint32_t fw_len);
 int32_t get_firmware_version(int fd);
 int32_t set_burst_mode(int fd);
 void reset_adsd3500();
