@@ -347,6 +347,14 @@ class CameraItof : public aditof::Camera {
     void setAdsd3500WithIniParams(
         const std::map<std::string, std::string> &iniKeyValPairs);
 
+    /**
+     * Get the ASDSD3500 firmware version from the ADSD3500
+     * @param[out] fwVersion - the ADSD3500 firmware version
+     * @param[out] fwHash - the ADSD3500 firmware git commit hash
+    */
+    aditof::Status adsd3500_get_firmware_Version(std::string &fwVersion,
+                                                 std::string &fwHash);
+
   private:
     using noArgCallable = std::function<aditof::Status()>;
 
