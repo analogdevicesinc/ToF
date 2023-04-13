@@ -301,6 +301,15 @@ class SDK_API Camera {
      * @return Status
      */
     virtual Status adsd3500GetLaserTemperature(uint16_t &tmpValue) = 0;
+
+        /**
+     * Get the ASDSD3500 firmware version from the ADSD3500
+     * @param[out] fwVersion - the ADSD3500 firmware version
+     * @param[out] fwHash - the ADSD3500 firmware git commit hash
+    */
+    virtual Status
+    adsd3500_get_firmware_Version(std::string &fwVersion,
+                                  std::string &fwHash) = 0;
 };
 
 } // namespace aditof

@@ -331,24 +331,9 @@ aditof::Status CameraItof::initialize() {
                    sizeof(CameraIntrinsics));
         }
 
-        uint8_t fwData[44] = {0};
-        fwData[0] = uint8_t(1);
-
-        status = m_depthSensor->adsd3500_read_payload_cmd(0x05, fwData, 44);
-        if (status != Status::OK) {
-            LOG(INFO) << "Failed to retrieve fw version and git hash for "
-                         "adsd3500!";
-            return status;
-        }
-        std::string fwVersion((char *)(fwData), 4);
-        std::string fwHash((char *)(fwData + 4), 40);
-        m_adsd3500FwGitHash = std::make_pair(fwVersion, fwHash);
-
-        LOG(INFO) << "Current adsd3500 firmware version is: " << int(fwData[0])
-                  << "." << int(fwData[1]) << "." << int(fwData[2]) << "."
-                  << int(fwData[3]);
-        LOG(INFO) << "Current adsd3500 firmware git hash is: "
-                  << m_adsd3500FwGitHash.second;
+        std::string fwVersion;
+        std::string fwHash;
+        CameraItof::adsd3500_get_firmware_Version(fwVersion, fwHash);
     }
 
     if (m_eeprom) {
@@ -1804,6 +1789,39 @@ aditof::Status CameraItof::adsd3500_toggle_fsync() {
         }
     }
 
+    return status;
+}
+
+aditof::Status CameraItof::adsd3500_get_firmware_Version(std::string &fwVersion,
+                                                         std::string &fwHash) {
+    using namespace aditof;
+    Status status = Status::OK;
+    uint8_t fwData[44] = {0};
+    fwData[0] = uint8_t(1);
+
+    status = m_depthSensor->adsd3500_read_payload_cmd(0x05, fwData, 44);
+    if (status != Status::OK) {
+        LOG(INFO) << "Failed to retrieve fw version and git hash for "
+                     "adsd3500!";
+        return status;
+    }
+
+    std::string fwv;
+    
+    fwv = std::to_string(fwData[0]) + '.' + std::to_string(fwData[1]) + '.' +
+          std::to_string(fwData[2]) + '.' + std::to_string(fwData[3]);
+
+    m_adsd3500FwGitHash = std::make_pair(fwv, std::string((char *)(fwData + 4), 40));
+
+    
+    fwVersion = m_adsd3500FwGitHash.first;
+    fwHash = m_adsd3500FwGitHash.second;
+
+    LOG(INFO) << "Current adsd3500 firmware version is: "
+              << m_adsd3500FwGitHash.first;
+    LOG(INFO) << "Current adsd3500 firmware git hash is: "
+              << m_adsd3500FwGitHash.second;
+    
     return status;
 }
 
