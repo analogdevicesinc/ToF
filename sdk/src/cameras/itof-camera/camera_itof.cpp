@@ -1807,13 +1807,13 @@ aditof::Status CameraItof::adsd3500_get_firmware_Version(std::string &fwVersion,
     }
 
     std::string fwv;
-    
+
     fwv = std::to_string(fwData[0]) + '.' + std::to_string(fwData[1]) + '.' +
           std::to_string(fwData[2]) + '.' + std::to_string(fwData[3]);
 
-    m_adsd3500FwGitHash = std::make_pair(fwv, std::string((char *)(fwData + 4), 40));
+    m_adsd3500FwGitHash =
+        std::make_pair(fwv, std::string((char *)(fwData + 4), 40));
 
-    
     fwVersion = m_adsd3500FwGitHash.first;
     fwHash = m_adsd3500FwGitHash.second;
 
@@ -1821,7 +1821,7 @@ aditof::Status CameraItof::adsd3500_get_firmware_Version(std::string &fwVersion,
               << m_adsd3500FwGitHash.first;
     LOG(INFO) << "Current adsd3500 firmware git hash is: "
               << m_adsd3500FwGitHash.second;
-    
+
     return status;
 }
 
