@@ -333,7 +333,7 @@ aditof::Status CameraItof::initialize() {
 
         std::string fwVersion;
         std::string fwHash;
-        CameraItof::adsd3500_get_firmware_Version(fwVersion, fwHash);
+        adsd3500_get_firmware_version(fwVersion, fwHash);
     }
 
     if (m_eeprom) {
@@ -1792,7 +1792,7 @@ aditof::Status CameraItof::adsd3500_toggle_fsync() {
     return status;
 }
 
-aditof::Status CameraItof::adsd3500_get_firmware_Version(std::string &fwVersion,
+aditof::Status CameraItof::adsd3500_get_firmware_version(std::string &fwVersion,
                                                          std::string &fwHash) {
     using namespace aditof;
     Status status = Status::OK;
