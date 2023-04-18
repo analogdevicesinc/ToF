@@ -333,7 +333,15 @@ aditof::Status CameraItof::initialize() {
 
         std::string fwVersion;
         std::string fwHash;
-        adsd3500_get_firmware_version(fwVersion, fwHash);
+        status = adsd3500_get_firmware_version(fwVersion, fwHash);
+
+        if (status == Status::OK) {
+            LOG(INFO) << "Current adsd3500 firmware version is: "
+                      << m_adsd3500FwGitHash.first;
+            LOG(INFO) << "Current adsd3500 firmware git hash is: "
+                      << m_adsd3500FwGitHash.second;
+        } else
+            return status;
     }
 
     if (m_eeprom) {
@@ -1816,11 +1824,6 @@ aditof::Status CameraItof::adsd3500_get_firmware_version(std::string &fwVersion,
 
     fwVersion = m_adsd3500FwGitHash.first;
     fwHash = m_adsd3500FwGitHash.second;
-
-    LOG(INFO) << "Current adsd3500 firmware version is: "
-              << m_adsd3500FwGitHash.first;
-    LOG(INFO) << "Current adsd3500 firmware git hash is: "
-              << m_adsd3500FwGitHash.second;
 
     return status;
 }
