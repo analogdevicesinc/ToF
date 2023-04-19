@@ -1469,7 +1469,8 @@ aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath) {
             return aditof::Status::GENERIC_ERROR;
         }
 
-        if (m_adsd3500Status == Adsd3500Status::OK) {
+        if (m_adsd3500Status == Adsd3500Status::OK ||
+            m_adsd3500Status == Adsd3500Status::FIRMWARE_UPDATE_COMPLETE) {
             LOG(INFO) << "Adsd3500 firmware updated succesfully!";
         } else {
             LOG(ERROR) << "Adsd3500 firmware updated but with error: "
