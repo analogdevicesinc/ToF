@@ -69,6 +69,9 @@ enum class Adsd3500Status {
     INVALID_CHIPID,           //!< Invalid chip ID
     IMAGER_COMMUNICATION_ERROR, //!< Imager communication error
     IMAGER_BOOT_FAILURE,        //!< Imager boot failure
+    FIRMWARE_UPDATE_COMPLETE,   //!< The firmware update action has completed
+    NVM_WRITE_COMPLETE,         //!< The write action to the NVM has completed
+    IMAGER_ERROR,               //!< Imager error
     UNKNOWN_ERROR_ID            //!< Unknown ID read from ADSD3500
 };
 
