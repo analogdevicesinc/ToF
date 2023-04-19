@@ -1592,6 +1592,15 @@ aditof::Adsd3500Status Adsd3500Sensor::convertIdToAdsd3500Status(int status) {
     case 13:
         return Adsd3500Status::IMAGER_BOOT_FAILURE;
 
+    case 14:
+        return Adsd3500Status::FIRMWARE_UPDATE_COMPLETE;
+
+    case 15:
+        return Adsd3500Status::NVM_WRITE_COMPLETE;
+
+    case 16:
+        return Adsd3500Status::IMAGER_ERROR;
+
     default: {
         LOG(ERROR) << "Unknown ID: " << status;
         return Adsd3500Status::UNKNOWN_ERROR_ID;
