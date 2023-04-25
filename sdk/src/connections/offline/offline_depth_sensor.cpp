@@ -1,7 +1,9 @@
 #include "offline_depth_sensor.h"
 #include "tofi/tofi_config.h"
 #include <cstring>
+#ifdef UNIX
 #include <dirent.h>
+#endif
 #include <fstream>
 #include <glog/logging.h>
 #include <iostream>
@@ -35,16 +37,38 @@ aditof::Status OfflineDepthSensor::getFrame(uint16_t *buffer) {
 aditof::Status OfflineDepthSensor::open() {
     std::vector<std::string> frameTypesResources;
     std::streampos size;
-    std::string fileName;
     uint16_t *buffer;
+#ifdef UNIX
+    std::string fileName;
     struct dirent *entry;
     DIR *dir = opendir(m_path.c_str());
     while ((entry = readdir(dir)) != NULL) {
         fileName = entry->d_name;
-        if (fileName != "." && fileName != "..")
+        if (fileName[0] != ".")
             frameTypesResources.push_back(fileName);
     }
+#elif WIN32
+    HANDLE dir;
+    WIN32_FIND_DATA file_data;
+    if ((dir = FindFirstFile((m_path + "/*").c_str(), &file_data)) ==
+        INVALID_HANDLE_VALUE)
+        return aditof::Status::UNREACHABLE;
+    do {
+        std::string fileName = file_data.cFileName;
+        const bool is_directory =
+            (file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0;
 
+        if (fileName[0] == '.')
+            continue;
+
+        if (is_directory)
+            continue;
+
+        frameTypesResources.push_back(fileName);
+    } while (FindNextFile(dir, &file_data));
+
+    FindClose(dir);
+#endif
     for (int index = 0; index < frameTypesResources.size(); index++) {
         std::ifstream ifs;
         ifs.open(m_path + '/' + frameTypesResources[index],
@@ -135,6 +159,11 @@ aditof::Status OfflineDepthSensor::adsd3500_read_cmd(uint16_t cmd,
     return aditof::Status::OK;
 }
 
+aditof::Status
+OfflineDepthSensor::setHostConnectionType(std::string &connectionType) {
+    return aditof::Status::OK;
+}
+
 aditof::Status OfflineDepthSensor::adsd3500_write_cmd(uint16_t cmd,
                                                       uint16_t data) {
     return aditof::Status::OK;
@@ -208,6 +237,10 @@ OfflineDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload,
 aditof::Status
 OfflineDepthSensor::adsd3500_write_payload(uint8_t *payload,
                                            uint16_t payload_len) {
+    return aditof::Status::OK;
+}
+
+aditof::Status OfflineDepthSensor::adsd3500_reset() {
     return aditof::Status::OK;
 }
 
