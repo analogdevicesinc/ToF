@@ -1537,10 +1537,13 @@ aditof::Status Adsd3500Sensor::adsd3500InterruptHandler(int signalValue) {
     aditof::Status status = aditof::Status::OK;
 
     status = adsd3500_read_cmd(0x0020, &statusRegister);
-    DLOG(INFO) << "statusRegister:" << statusRegister;
+    aditof::Adsd3500Status adsd3500Status =
+        convertIdToAdsd3500Status(statusRegister);
+    DLOG(INFO) << "statusRegister:" << statusRegister << "(" << adsd3500Status
+               << ")";
 
     if (m_interruptCallback) {
-        m_interruptCallback(convertIdToAdsd3500Status(statusRegister));
+        m_interruptCallback(adsd3500Status);
     }
 
     return status;
