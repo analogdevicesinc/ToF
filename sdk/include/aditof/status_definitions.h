@@ -32,6 +32,10 @@
 #ifndef STATUS_DEFINITIONS_H
 #define STATUS_DEFINITIONS_H
 
+#include "sdk_exports.h"
+
+#include <ostream>
+
 /**
  * @brief Namespace aditof
  */
@@ -74,6 +78,10 @@ enum class Adsd3500Status {
     IMAGER_ERROR,               //!< Imager error
     UNKNOWN_ERROR_ID            //!< Unknown ID read from ADSD3500
 };
+
+SDK_API std::ostream &operator<<(std::ostream &os, aditof::Status status);
+SDK_API std::ostream &operator<<(std::ostream &os,
+                                 aditof::Adsd3500Status status);
 
 } // namespace aditof
 
