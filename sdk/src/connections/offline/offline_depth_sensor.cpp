@@ -69,17 +69,23 @@ aditof::Status OfflineDepthSensor::open() {
 
     FindClose(dir);
 #endif
-    for (int index = 0; index < frameTypesResources.size(); index++) {
-        std::ifstream ifs;
-        ifs.open(m_path + '/' + frameTypesResources[index],
-                 std::ios::in | std::ios::binary);
-        std::string content((std::istreambuf_iterator<char>(ifs)),
-                            (std::istreambuf_iterator<char>()));
-        buffer = new uint16_t[content.size() / 2];
-        memcpy(buffer, content.data(), content.size());
-        m_frameTypes.insert({frameTypesResources[index],
-                             std::make_pair(buffer, content.size())});
-        ifs.close();
+    if (frameTypesResources..empty()){
+        LOG(WARNING) << "No available frame types found";
+        return::aditof::Status::INVALID_ARGUMENT;
+    }
+    else{
+        for (int index = 0; index < frameTypesResources.size(); index++) {
+            std::ifstream ifs;
+            ifs.open(m_path + '/' + frameTypesResources[index],
+                     std::ios::in | std::ios::binary);
+            std::string content((std::istreambuf_iterator<char>(ifs)),
+                                (std::istreambuf_iterator<char>()));
+            buffer = new uint16_t[content.size() / 2];
+            memcpy(buffer, content.data(), content.size());
+            m_frameTypes.insert({frameTypesResources[index],
+                                 std::make_pair(buffer, content.size())});
+            ifs.close();
+        }
     }
     return aditof::Status::OK;
 }
