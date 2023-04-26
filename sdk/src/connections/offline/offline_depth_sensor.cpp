@@ -69,11 +69,10 @@ aditof::Status OfflineDepthSensor::open() {
 
     FindClose(dir);
 #endif
-    if (frameTypesResources..empty()){
+    if (frameTypesResources.empty()) {
         LOG(WARNING) << "No available frame types found";
-        return::aditof::Status::INVALID_ARGUMENT;
-    }
-    else{
+        return ::aditof::Status::INVALID_ARGUMENT;
+    } else {
         for (int index = 0; index < frameTypesResources.size(); index++) {
             std::ifstream ifs;
             ifs.open(m_path + '/' + frameTypesResources[index],
