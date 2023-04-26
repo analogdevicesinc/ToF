@@ -79,7 +79,22 @@ enum class Adsd3500Status {
     UNKNOWN_ERROR_ID            //!< Unknown ID read from ADSD3500
 };
 
+/**
+ * @brief operator << which make possible to print out items from aditof::Status enum
+ *
+ * @param os - output streamm
+ * @param status - an item of type aditof::Status
+ * @return std::ostream&
+ */
 SDK_API std::ostream &operator<<(std::ostream &os, aditof::Status status);
+
+/**
+ * @brief operator << which make possible to print out items from aditof::Adsd3500Status enum
+ *
+ * @param os - output streamm
+ * @param status - an item of type aditof::Adsd3500Status
+ * @return std::ostream&
+ */
 SDK_API std::ostream &operator<<(std::ostream &os,
                                  aditof::Adsd3500Status status);
 
