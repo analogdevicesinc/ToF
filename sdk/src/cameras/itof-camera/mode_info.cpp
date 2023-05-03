@@ -37,6 +37,7 @@ ModeInfo::modeInfo ModeInfo::g_newModesAdsd3500[] = {
     {1, 1024, 1024, 3, 49156, 144, 0, "lr-native"},
     {2, 512, 512, 1, 12292, 96, 0, "sr-qnative"},
     {3, 512, 512, 1, 18438, 96, 0, "lr-qnative"},
+    {4, 1024, 1024, 1, 18438, 96, 1, "pcm-native"},
 };
 
 ModeInfo::modeInfo ModeInfo::g_newModesAdsd3030[] = {
@@ -44,6 +45,7 @@ ModeInfo::modeInfo ModeInfo::g_newModesAdsd3030[] = {
     {1, 512, 640, 1, 1670, 1472, 1, "lr-native"},
     {2, 256, 320, 1, 1670, 1472, 1, "sr-qnative"},
     {3, 256, 320, 1, 1670, 1472, 1, "lr-qnative"},
+    {4, 512, 640, 1, 18438, 96, 1, "pcm-native"},
 };
 
 ModeInfo::modeInfo ModeInfo::g_newMixedModesAdsd3500[] = {
@@ -51,6 +53,7 @@ ModeInfo::modeInfo ModeInfo::g_newMixedModesAdsd3500[] = {
     {1, 1024, 1024, 3, 49156, 144, 0, "lr-native"},
     {2, 512, 512, 1, 12292, 96, 0, "sr-qnative"},
     {3, 512, 512, 1, 18438, 96, 0, "lr-qnative"},
+    {4, 1024, 1024, 1, 18438, 96, 1, "pcm-native"},
     {6, 512, 512, 1, 12292, 96, 0, "sr-mixed"},
     {5, 512, 512, 1, 18438, 96, 0, "lr-mixed"},
 };
@@ -60,6 +63,7 @@ ModeInfo::modeInfo ModeInfo::g_newMixedModesAdsd3030[] = {
     {1, 512, 640, 1, 1670, 1472, 1, "lr-native"},
     {2, 256, 320, 1, 1670, 1472, 1, "sr-qnative"},
     {3, 256, 320, 1, 1670, 1472, 1, "lr-qnative"},
+    {4, 512, 640, 1, 18438, 96, 1, "pcm-native"},
     {6, 256, 320, 1, 1670, 1472, 0, "sr-mixed"},
     {5, 256, 320, 1, 1670, 1472, 0, "lr-mixed"},
 };

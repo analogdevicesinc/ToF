@@ -567,20 +567,23 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         }
     }
 
+    if (frameType == "pcm-native") {
+        m_pcmFrame = true;
+    } else {
+        m_pcmFrame = false;
+    }
+
     getKeyValuePairsFromIni(m_ini_depth, m_iniKeyValPairs);
     setAdsd3500WithIniParams(m_iniKeyValPairs);
     configureSensorFrameType();
     setMode(frameType);
+
     LOG(INFO) << "Using ini file: " << m_ini_depth;
 
     status = m_depthSensor->setFrameType(*frameTypeIt);
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to set frame type";
         return status;
-    }
-
-    if ((frameType == "pcm")) {
-        m_controls["enableDepthCompute"] = "off";
     }
 
     // Store the frame details in camera details
@@ -616,7 +619,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
     }
 
-    if (m_controls["enableDepthCompute"] == "on" &&
+    if (m_controls["enableDepthCompute"] == "on" && !m_pcmFrame &&
         ((m_details.frameType.totalCaptures > 1) || m_adsd3500Enabled ||
          m_isOffline)) {
         status = initComputeLibrary();
@@ -710,7 +713,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     }
 
     uint16_t *frameDataLocation = nullptr;
-    if ((m_details.frameType.type == "pcm")) {
+    if ((m_details.frameType.type == "pcm-native")) {
         frame->getData("ir", &frameDataLocation);
     } else if (m_details.frameType.type == "") {
         LOG(ERROR) << "Frame type not found!";
@@ -728,7 +731,8 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         LOG(WARNING) << "Failed to get frame from device";
     }
 
-    if (!m_adsd3500Enabled && !m_isOffline) {
+    if (!m_adsd3500Enabled && !m_isOffline &&
+        (m_details.frameType.type != "pcm-native")) {
         for (unsigned int i = 0;
              i < (m_details.frameType.height * m_details.frameType.width *
                   totalCaptures);
@@ -739,7 +743,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         }
     }
 
-    if ((m_controls["enableDepthCompute"] == "on") &&
+    if ((m_controls["enableDepthCompute"] == "on") && !m_pcmFrame &&
         ((totalCaptures > 1) || m_adsd3500Enabled || m_isOffline)) {
 
         if (NULL == m_tofi_compute_context) {

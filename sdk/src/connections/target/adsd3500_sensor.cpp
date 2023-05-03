@@ -585,6 +585,8 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
                     } else {
                         pixelFormat = V4L2_PIX_FMT_SBGGR12;
                     }
+                } else if (type.type == "pcm-native") {
+                    pixelFormat = V4L2_PIX_FMT_SBGGR12;
                 } else {
                     LOG(ERROR) << "frame type: " << type.type << " "
                                << "is unhandled";
@@ -601,6 +603,8 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 #else
                     pixelFormat = V4L2_PIX_FMT_SRGGB8;
 #endif
+                } else if (type.type == "pcm-native") {
+                    pixelFormat = V4L2_PIX_FMT_SBGGR12;
                 } else {
                     LOG(ERROR) << "frame type: " << type.type << " "
                                << "is unhandled";
