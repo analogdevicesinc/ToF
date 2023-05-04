@@ -3,6 +3,7 @@ apps/uvc-app/lib
 bindings/python/pybind11
 drivers/
 examples/data_collect/third_party
+examples/data_collect/adi
 examples/tof-viewer/external
 examples/tof-viewer/include/stb_image.h
 examples/tof-viewer/include/linmath.h
