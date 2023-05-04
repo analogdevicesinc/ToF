@@ -15,9 +15,6 @@
 
 #include "safequeue.h"
 #include <aditof/frame.h>
-#include <fsf/fsf.h>
-#include <fsf/fsf_definitions.h>
-#include <fsf_common.h>
 #ifdef USE_GLOG
 #include <glog/logging.h>
 #else
@@ -28,35 +25,6 @@
 #ifdef _WIN32
 #include <direct.h>
 #endif
-
-#define FSF_CUSTOM_MAX_NUM_FRAMES 10000UL
-
-typedef struct {
-    unsigned char *buffer;
-    size_t size;
-} fsf_data_t;
-
-struct FSFStreamEnable {
-    bool active_br = true;
-    bool depth = true; //This is Z
-    bool unknown = false;
-    bool raw = false;
-    bool phase = false;
-    bool x = true;
-    bool y = true;
-    bool rgb = false;
-    bool raw_norm = false;
-    bool raw_real = false;
-    bool raw_imag = false;
-    bool raw_real_filt = false;
-    bool raw_imag_filt = false;
-    bool radial = true; //This is radial Depth.
-    bool radial_filt = false;
-    bool common_mode = false;
-    bool conf = false;
-    bool variance = false;
-    bool reflectivity = false;
-};
 
 class ADIToFRecorder {
 
@@ -91,7 +59,7 @@ class ADIToFRecorder {
     void stopRecording();
 
     /**
-	* @brief			Starts raw or FSF playback
+	* @brief			Starts raw playback
 	* @param fileName	Given file name by the user
 	* @param fps		Number of frames set by the user
 	*/
@@ -170,47 +138,10 @@ class ADIToFRecorder {
 	*/
     void playbackThread();
 
-    /**
-	* @brief When FSF Thread fails, reset varialbes
-	*/
-    void recordFSFThreadFail();
-
     uint16_t *frameDataLocationIR = nullptr;
     uint16_t *frameDataLocationDEPTH = nullptr;
     uint16_t *frameDataLocationXYZ = nullptr;
     bool _stopPlayback = false;
-
-    //FSF Read:
-    /**
-	* @brief Start FSF Playback
-	*/
-    void startPlaybackFSF();
-
-    /**
-	* @brief FSF Playback Thread
-	*/
-    void playbackFSFThread();
-    FSFStreamEnable _streamEnable;
-    aditof::FileHeader fileHeader;
-    aditof::FileHeader fileHeaderRaw;
-
-    //FSF Write/Record
-    /**
-	* @brief			Start Recording FSF file format
-	* @param fileName	Given file name by the user
-	* @param fps		Number of frames set by the user
-	* @param height		Image height, set by SDK
-	* @param width		Image width, set by SDK	
-	*/
-    void startRecordingFSF(const std::string &fileName, int &fps,
-                           unsigned int height, unsigned int width);
-
-    /**
-	* @brief Record FSF Data Structure
-	*/
-    void recordFSFThread();
-    bool isFSFRecording = false;
-    bool fsfStop = false;
 
     /**
 	* @brief Clears all playback and recording variables
@@ -221,14 +152,6 @@ class ADIToFRecorder {
 	* @brief Will build XYZ stream
 	*/
     void processXYZData();
-
-    /**
-	* @brief Starts the binary to FSF conversion
-	*        of a Point Cloud stream. No AB or Depth.
-	*/
-    bool startPointCloudBinToFSFConversion(const std::string &fileName,
-                                           int &frames, int &width,
-                                           int &height);
 
     int currentPBPos = 0;
     int m_numberOfFrames;
@@ -259,48 +182,11 @@ class ADIToFRecorder {
     const int _ir = 1;
     const int _depth = 2;
 
-    //FSF Read:
-    FILE *m_playbackFSFFile;
-    fsf_data_t fsfData;
-    aditof::FSF *pFsfRead = NULL;
-    aditof::FSF *pFsfWrite = NULL;
-    aditof::OptionalFileHeader optFileHeader;
-    aditof::StreamInfo streamInfo;
-    aditof::Stream stream;
-    aditof::FileComment fileComment;
-    std::string fsfFileName;
-    std::map<uint32_t, int> streamTable;
-
-    //FSF RAW in different document
-    FILE *m_playbackFSFFileRaw;
-    fsf_data_t fsfDataRaw;
-    aditof::FSF *pFsfReadRaw = NULL;
-    aditof::FSF *pFsfWriteRaw = NULL;
-    aditof::OptionalFileHeader optFileHeaderRaw;
-    aditof::StreamInfo streamInfoRaw;
-    aditof::Stream streamRaw;
-    aditof::FileComment fileCommentRaw;
-    std::string fsfFileNameRaw;
-
-    /**
-	* @brief Creates FSF files for RAW_NORM Stream type
-	*        and backwards compatibility for MS FSF format.
-	*/
-    void createRawFsfFile(std::string &fileName, unsigned int height,
-                          unsigned int width, uint8_t totalCaptures,
-                          uint32_t nFrames);
-
     /**
 	* @brief Analyzes the given number and returns its number
 	*        of digits.
 	*/
     int findDigits(int number);
-    size_t fsfFrameCtr = 0;
-
-    /**
-	* @brief Enables Stream types for FSF playback
-	*/
-    void enableStreamType(aditof::StreamType streamType);
 };
 
 #endif // ADITOFRECORDER_H

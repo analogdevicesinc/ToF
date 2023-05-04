@@ -16,8 +16,6 @@ git submodule update --init --recursive
 <*PATH*>\adi_tof_gui>cd external\aditof_cmos_sdk\src
 <*PATH*>\adi_tof_gui\external\aditof_cmos_sdk\src>git checkout master
 <*PATH*>\adi_tof_gui\external\aditof_cmos_sdk\src>cd ../../
-<*PATH*>\adi_tof_gui\external>cd FSF\src
-<*PATH*>\adi_tof_gui\external\FSF\src>git checkout master
 ```
 * Next go back to "adi_tof_gui" folder and let's build the code
 ```

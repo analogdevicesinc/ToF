@@ -66,15 +66,13 @@ Refer to Figure 5.
 
 **Figure 5**: *Recording Options*
 
-Once the above options are set, then press the "Start Recording" button. The Viewer GUI will prompt a "Save As" window to pre-save the file name. It is advisable to give a unique name to the new recording file. Then, choose file format, which can be either *.raw (binary) format or *.fsf format, as depicted in Figure 6.
+Once the above options are set, then press the "Start Recording" button. The Viewer GUI will prompt a "Save As" window to pre-save the file name. It is advisable to give a unique name to the new recording file. Then, choose file format, which can be *.raw (binary) format, as depicted in Figure 6.
 
-!<img src="Images/SaveAs.png" width="500" height=400 />
+!<img src="Images/SaveAs.jpg" width="500" height=400 />
 
 **Figure 6**: *Save As Window*
 
 If ".raw" format is selected, then the Viewer will automaically record both Active Brightness and Depth stream formats and the recording will take place according to the chosen number of frames shown in Figure 5. After recording, a folder with name " *<user_given_name>_RAW* " will be created. Within this folder, a set of files with "*raw_frame_n-1*" naming convention and *.bin* extension will be created. Where "*n*" starts with 1 and increments up to the chosen number of frames.
-
-If ".fsf" format is selected, Active Brightness, Depth, and Point Cloud streams will be recorded up to 300 frames. A file will be created with the following naming convention: "*<user_given_name>_XYZ.fsf*". Alternatively, another file with RAW stream will be created. This file will follow the "*<user_given_name>_RAW.fsf*" naming convention. 
 
 
 **Playback**
@@ -86,9 +84,9 @@ In contrast to *Recording* option, we do not need to have a detected camera. Ins
 
 **Figure 7**: *Playback options*
 
-Once pressed, a pop-up window will show and the user must locate the recorded file. There are two filters available: ".raw" and ".fsf" to find files with ease. Refer to Figure 8.
+Once pressed, a pop-up window will show and the user must locate the recorded file. There is filter available in format: ".raw". Refer to Figure 8.
 
-!<img src="Images/PlaybackFilters.png" width="400" height=320 />
+!<img src="Images/PlaybackFilters.jpg" width="400" height=320 />
 
 **Figure 8**: *File filters*
 
@@ -97,10 +95,6 @@ If the recorded file is in the ".raw" format, then both Active Brightness and De
 !<img src="Images/PlaybackProgress.png" width="400" height=160 />
 
 **Figure 9**: *Playback Progress Bar, Pause button, and Stop Playback button.*
-
-If the recorded file is in the ".fsf" format, only the "*<user_given_name>_XYZ.fsf*" file will be supported. This file contains Active Brightness, Depth, and Point Cloud stream information, as previously mentioned.
-
-
 
 ## Point Cloud (XYZ)
 

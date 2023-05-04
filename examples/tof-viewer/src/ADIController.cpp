@@ -134,12 +134,6 @@ int ADIController::startPlayback(const std::string &fileName, int &fps) {
     return m_recorder->startPlayback(fileName, fps);
 }
 
-bool ADIController::startPointCloudBinToFSFConversion(
-    const std::string &fileName, int &frames, int &width, int &height) {
-    return m_recorder->startPointCloudBinToFSFConversion(fileName, frames,
-                                                         width, height);
-}
-
 void ADIController::stopPlayback() { m_recorder->stopPlayback(); }
 
 bool ADIController::playbackFinished() const {

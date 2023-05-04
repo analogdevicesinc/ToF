@@ -100,7 +100,6 @@ class ADIController {
 		* @param	fps			Number of frames from file
 		*/
     int startPlayback(const std::string &fileName, int &fps);
-    //int startPlayback(const std::string& fileName, int& fps, FSFStreamEnable& streamEnable);
 
     /**
 		* @brief	Stops current playback recording
@@ -163,14 +162,6 @@ class ADIController {
 		* @brief Gets camera bit counts.
 		*/
     int getbitCount() const;
-
-    /**
-		* @brief Starts the binary to FSF conversion
-		*        of a Point Cloud stream. No AB or Depth.
-		*/
-    bool startPointCloudBinToFSFConversion(const std::string &fileName,
-                                           int &frames, int &width,
-                                           int &height);
 
     std::vector<std::shared_ptr<aditof::Camera>> m_cameras;
     std::unique_ptr<ADIToFRecorder> m_recorder;

@@ -22,7 +22,6 @@
 #include <iostream>
 #include <stdio.h>
 
-#include <ADIFSFOptions.h>
 #include <aditof/system.h>
 #include <cJSON/cJSON.h>
 
@@ -181,8 +180,7 @@ ADIMainWindow::~ADIMainWindow() {
     }
 
     //Recording flags
-    if (view != nullptr && (view->m_ctrl->m_recorder->isFSFRecording ||
-                            !view->m_ctrl->m_recorder->m_finishRecording)) {
+    if (view != nullptr && !view->m_ctrl->m_recorder->m_finishRecording) {
         view->m_ctrl->m_recorder->stopRecording();
     }
     if (view != nullptr && !view->m_ctrl->m_recorder->_stopPlayback) {
@@ -411,16 +409,6 @@ void ADIMainWindow::render() {
             PlayRecorded();
         }
         showLogWindow(&show_app_log);
-        if (_fsfShowPbOpWin) {
-            ShowFSFOptionsGUI(mainWindowWidth, mainWindowHeight,
-                              _fsfShowPbOpWin, _startFSFPb,
-                              view->m_ctrl->m_recorder->_streamEnable);
-        }
-        if (_fsfShowRecordOpWin) {
-            //SetFSFStreamInfo(mainWindowWidth, mainWindowHeight, _fsfShowRecordOpWin, _startFSFRec, view->m_ctrl->m_recorder->_streamEnable);
-            _fsfShowRecordOpWin = false;
-            _startFSFRec = true;
-        }
 
         /***************************************************/
         // Rendering
@@ -713,13 +701,12 @@ void ADIMainWindow::ShowPlaybackTree() {
             customColorOpenRec, !isPlayRecorded && !isPlaying);
 
         if (ImGuiExtensions::ADIButton("Open Recording",
-                                       !isPlayRecorded && !isPlaying &&
-                                           !_fsfShowPbOpWin)) {
+                                       !isPlayRecorded && !isPlaying)) {
             customFilter =
-                std::string("FSF Files (*.fsf)\0*.fsf*\0 Raw Files "
+                std::string("Raw Files "
                             "(*.raw)\0*.raw*\0 All Files (*.*)\0*.*\0",
                             72);
-            std::string filters[] = {"fsf", "raw"};
+            std::string filters[] = {"raw"};
             customFilters.clear();
             std::copy(std::begin(filters), std::end(filters),
                       std::back_inserter(customFilters));
@@ -729,18 +716,12 @@ void ADIMainWindow::ShowPlaybackTree() {
                     view = std::make_shared<adiviewer::ADIView>(
                         m_controller, "Record Viewer");
                 }
-                if (path.find(".fsf") !=
-                    std::string::npos) { //If fsf File was found
-                    _fsfShowPbOpWin = true;
-                    _getFSFInfo = true;
-                    fsfPath = path;
-                } else {
-                    view->m_ctrl->startPlayback(path, recordingSeconds);
-                    initOpenGLIRTexture();
-                    initOpenGLDepthTexture();
-                    isPlayRecorded = true;
-                    _usingFSF = false;
-                }
+
+                view->m_ctrl->startPlayback(path, recordingSeconds);
+                initOpenGLIRTexture();
+                initOpenGLDepthTexture();
+                isPlayRecorded = true;
+
                 viewSelection = 0; //default view to depth/ab
                 _isOpenDevice = false;
                 cameraOptionsTreeEnabled = false;
@@ -748,22 +729,6 @@ void ADIMainWindow::ShowPlaybackTree() {
                 _isOpenDevice = true;
                 cameraOptionsTreeEnabled = true;
             }
-        }
-        if (_getFSFInfo) {
-            FSFStreamEnable checkAvailability;
-            view->m_ctrl->m_recorder->_streamEnable =
-                checkAvailability; //init this variable again.
-            GetFSFInfo(fsfPath.c_str(), checkAvailability);
-            _getFSFInfo = false;
-        }
-        if (_startFSFPb) {
-            view->m_ctrl->startPlayback(fsfPath, recordingSeconds);
-            initOpenGLIRTexture();
-            initOpenGLDepthTexture();
-            initOpenGLPointCloudTexture();
-            isPlayRecorded = true;
-            _startFSFPb = false;
-            _usingFSF = true;
         }
 
         std::string playbackButtonText =
@@ -807,31 +772,24 @@ void ADIMainWindow::ShowPlaybackTree() {
                                                                isPlayRecorded);
         if (ImGuiExtensions::ADIButton("Close Recording", isPlayRecorded)) {
             stopPlayback();
-            _usingFSF = false;
         }
         if (isPlayRecorded) {
             ImGui::NewLine();
-            if (_usingFSF) {
-                ImGuiExtensions::ADISliderInt(
-                    "Progress", &view->m_ctrl->m_recorder->currentPBPos, 0,
-                    view->m_ctrl->m_recorder->fileHeader.nFrames - 1, "%d",
-                    true);
-            } else { //Using RAW
-                rawSeeker =
-                    (view->m_ctrl->m_recorder->currentPBPos) /
-                    (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
-                     ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
-                     sizeof(uint16_t) * 2);
-                ImGuiExtensions::ADISliderInt(
-                    "Progress", &rawSeeker, 0,
-                    (view->m_ctrl->m_recorder->m_numberOfFrames / 2) - 1, "%d",
-                    true);
-                view->m_ctrl->m_recorder->currentPBPos =
-                    rawSeeker *
-                    (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
-                     ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
-                     sizeof(uint16_t) * 2);
-            }
+
+            rawSeeker =
+                (view->m_ctrl->m_recorder->currentPBPos) /
+                (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
+                 ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
+                 sizeof(uint16_t) * 2);
+            ImGuiExtensions::ADISliderInt(
+                "Progress", &rawSeeker, 0,
+                (view->m_ctrl->m_recorder->m_numberOfFrames / 2) - 1, "%d",
+                true);
+            view->m_ctrl->m_recorder->currentPBPos =
+                rawSeeker *
+                (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
+                 ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
+                 sizeof(uint16_t) * 2);
 
             ImGui::Text("View Options:");
             ImGuiExtensions::ADIRadioButton("Active Brightness and Depth",
@@ -847,8 +805,7 @@ void ADIMainWindow::ShowPlaybackTree() {
             //USE ONLY IN DEBUG MODE: Highly Experimental. May use in the future
             ImGui::NewLine();
             if (ImGuiExtensions::ADIButton("Open *.bin Recording",
-                                           !isPlayRecorded && !isPlaying &&
-                                               !_fsfShowPbOpWin)) {
+                                           !isPlayRecorded && !isPlaying)) {
                 customFilter = std::string(
                     "Raw Files (*.bin)\0*.bin*\0 All Files (*.*)\0*.*\0", 46);
                 std::string path = openADIFileName().c_str();
@@ -858,8 +815,6 @@ void ADIMainWindow::ShowPlaybackTree() {
                         int frames = 1;
                         int width = 1024;
                         int height = 1024;
-                        view->m_ctrl->startPointCloudBinToFSFConversion(
-                            path, frames, width, height);
                     }
                 }
             }
@@ -914,10 +869,10 @@ void ADIMainWindow::ShowRecordTree() {
             fs::path NPath = fs::current_path();
 
             customFilter =
-                std::string("FSF Files (*.fsf)\0*.fsf*\0 Raw Files "
+                std::string("Raw Files "
                             "(*.raw)\0*.raw*\0 All Files (*.*)\0*.*\0",
                             72);
-            std::string filters[] = {"fsf", "raw"};
+            std::string filters[] = {"raw"};
             customFilters.clear();
             std::copy(std::begin(filters), std::end(filters),
                       std::back_inserter(customFilters));
@@ -943,9 +898,8 @@ void ADIMainWindow::ShowRecordTree() {
             if (!saveFile.empty()) {
                 //Add a file extension
                 switch (filterIndex) {
-                case 1: //FSF file
-                    saveFile += ".fsf";
-                    fsfPath = saveFile;
+                case 1:
+                    // not supported anymore
                     break;
                 case 2: //Raw file
                     saveFile += ".raw";
@@ -965,12 +919,6 @@ void ADIMainWindow::ShowRecordTree() {
                     break;
                 }
 
-                if (filterIndex == 1) { //FSF file
-                    _fsfShowRecordOpWin = true;
-                    _setFSFInfo = true;
-                } else {
-                    //Decide what to do here:
-                }
                 // Save CFG and CCB next to the recording
                 auto camera = getActiveCamera();
                 if (camera) {
@@ -997,25 +945,6 @@ void ADIMainWindow::ShowRecordTree() {
                         << "No camera found. Can't save CCB & CFG files.";
                 }
             }
-        }
-
-        if (_setFSFInfo) {
-            FSFStreamEnable setStreams;
-            view->m_ctrl->m_recorder->_streamEnable =
-                setStreams; //init this variable again.
-            _setFSFInfo = false;
-        }
-        if (_startFSFRec) {
-            if (!isPlaying) {
-                //"Press" the play button, in case it is not pressed.
-                PlayCCD(modeSelection,
-                        viewSelection); //Which ever is currently selected
-                isPlaying = true;
-            }
-            view->m_ctrl->startRecording(fsfPath, view->frameHeight,
-                                         view->frameWidth, recordingSeconds);
-            isRecording = true;
-            _startFSFRec = false;
         }
 
         ImGui::SameLine();
@@ -1053,30 +982,12 @@ void ADIMainWindow::PlayRecorded() {
 
     const bool imageIsHovered = ImGui::IsItemHovered();
 
-    if (_usingFSF) {
-        displayIR = view->m_ctrl->m_recorder->_streamEnable.active_br;
-        displayDepth = view->m_ctrl->m_recorder->_streamEnable.depth;
-        displayPointCloud = view->m_ctrl->m_recorder->_streamEnable.x &&
-                            view->m_ctrl->m_recorder->_streamEnable.y &&
-                            view->m_ctrl->m_recorder->_streamEnable.depth;
-        pointCloudEnable = displayPointCloud;
-        if (viewSelection != 1) {      //Display Point Cloud == 1
-            displayPointCloud = false; //Don't show it
-            //Display Either Active_BR or Depth OR both
-            synchronizeDepthIRVideo();
-        } else { //We're maybe displaying only Point Cloud
-            displayIR = false;
-            displayDepth = true;
-            synchronizePointCloudVideo();
-            synchronizeDepthIRVideo();
-        }
-    } else {
-        displayIR = true;
-        displayDepth = true;
-        displayPointCloud = false;
-        pointCloudEnable = false;
-        synchronizeDepthIRVideo();
-    }
+    displayIR = true;
+    displayDepth = true;
+    displayPointCloud = false;
+    pointCloudEnable = false;
+    synchronizeDepthIRVideo();
+
     if (displayIR) {
         displayActiveBrightnessWindow(overlayFlags);
     }
