@@ -607,18 +607,6 @@ class ADIMainWindow {
     char buffer[1024];
     FILE *stream;
     FILE *input;
-
-    //FSF Flags
-    bool _fsfShowPbOpWin = false;
-    bool _fsfShowRecordOpWin = false;
-    bool _fsfCancel = true;
-    bool _fsfOk = false;
-    bool _startFSFPb = false;
-    bool _getFSFInfo = false;
-    bool _setFSFInfo = false;
-    bool _startFSFRec = false;
-    bool _usingFSF = false;
-    std::string fsfPath;
 };
 } // namespace adiMainWindow
 #endif //ADIMAINWINDOW_H

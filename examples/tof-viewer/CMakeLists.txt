@@ -16,7 +16,6 @@ configure_file(ADIToFConfig.h.in ADIToFConfig.h)
 
 # adding submodules and subdirectories
 add_subdirectory(external/imgui)
-add_subdirectory(external/FSF)
 if( WIN32 )
     set(OS_SPECIFIC_DIR windows)
 elseif ( APPLE )
@@ -39,7 +38,6 @@ add_executable(ADIToFGUI
 			   ${ADIToF_SOURCE_DIR}/ADIInformationPane.cpp
 			   ${ADIToF_SOURCE_DIR}/ADIImGUIExtensions.cpp
 			   ${ADIToF_SOURCE_DIR}/ADIController.cpp
-			   ${ADIToF_SOURCE_DIR}/ADIBinToFSF.cpp
                ${ADIToF_SOURCE_DIR}/ADIOpenFile.cpp			   
                ${OS_SPECIFIC_SOURCES}			   
 			   )
@@ -64,8 +62,6 @@ target_link_libraries(ADIToFGUI PRIVATE
 					  imgui::imgui
 					  ${OPENGL_gl_LIBRARY}
 					  ${CMAKE_DL_LIBS}
-					  fsf_common
-					  fsf
 					 )
 
 if( WIN32 )					 
@@ -84,8 +80,6 @@ target_include_directories(ADIToFGUI PUBLIC
 						"${PROJECT_SOURCE_DIR}/external/imgui/src/examples"
 						"${PROJECT_SOURCE_DIR}/external/imgui/src"
 						"${PROJECT_SOURCE_DIR}/src"
-						"${PROJECT_SOURCE_DIR}/external/FSF/src/FSF/src"
-						"${PROJECT_SOURCE_DIR}/external/FSF/src/FSF/include"
 				)
 
 target_include_directories(ADIToFGUI PUBLIC
