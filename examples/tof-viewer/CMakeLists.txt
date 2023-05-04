@@ -62,6 +62,7 @@ target_link_libraries(ADIToFGUI PRIVATE
 					  imgui::imgui
 					  ${OPENGL_gl_LIBRARY}
 					  ${CMAKE_DL_LIBS}
+					  cjson
 					 )
 
 if( WIN32 )					 
