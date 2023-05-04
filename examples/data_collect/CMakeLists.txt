@@ -2,20 +2,13 @@ cmake_minimum_required(VERSION 3.10)
 project(data_collect)
 
 set(DOCOPT_LIBRARY third_party/doc_opt)
-set(FSF_LIBRARY adi/FSF)
 
 include_directories(
     ${DOCOPT_LIBRARY}
-    ${FSF_LIBRARY}/include
-    ${FSF_LIBRARY}/include/fsf
-    ${FSF_LIBRARY}/src
 )
 
 set( SOURCES
 ${DOCOPT_LIBRARY}/docopt.cpp
-${FSF_LIBRARY}/src/fsf.cpp
-${FSF_LIBRARY}/src/fsf_common.cpp
-${FSF_LIBRARY}/src/fsf_wrapper.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${SOURCES})
