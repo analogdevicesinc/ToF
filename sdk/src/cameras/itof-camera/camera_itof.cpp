@@ -33,8 +33,8 @@
 #include "aditof/frame.h"
 #include "aditof/frame_operations.h"
 #include "aditof_internal.h"
-#include "cJSON/cJSON.c"
-#include "cJSON/cJSON.h"
+
+#include "cJSON.h"
 #include "calibration_itof.h"
 #include "crc.h"
 #include "module_memory.h"

@@ -209,6 +209,7 @@ else()
     target_link_libraries(${PROJECT_NAME} PRIVATE tofi_config)
 endif()
 
+target_link_libraries(${PROJECT_NAME} PRIVATE cjson)
 target_link_libraries(${PROJECT_NAME} PRIVATE ccb)
 
 if (CMAKE_COMPILER_IS_GNUCC)

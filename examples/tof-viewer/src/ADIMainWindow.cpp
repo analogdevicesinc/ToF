@@ -23,7 +23,7 @@
 #include <stdio.h>
 
 #include <aditof/system.h>
-#include <cJSON/cJSON.h>
+#include <cJSON.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
