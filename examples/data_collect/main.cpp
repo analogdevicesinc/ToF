@@ -13,7 +13,6 @@
 #include <chrono>
 #include <ctime>
 #include <docopt.h>
-#include <fsf_common.h>
 #include <fstream>
 #ifdef USE_GLOG
 #include <glog/logging.h>
@@ -49,14 +48,6 @@ using namespace aditof;
 int main(int argc, char *argv[]);
 #endif
 
-typedef struct fsf_params {
-    uint32_t n_frames;
-    bool raw_frames;
-    std::vector<aditof::StreamInfo> stream_info;
-    std::vector<aditof::Stream> streams;
-    aditof::FSF *pFileHandle;
-} fsf_params;
-
 typedef struct thread_params {
     uint16_t *pCaptureData;
     uint8_t *pHeaderData;
@@ -68,14 +59,13 @@ typedef struct thread_params {
     const char *pFolderPath;
     const char *pFrame_type;
     const char *nFileTime;
-    fsf_params *pFsfParams;
 } thread_params;
 
 static const char kUsagePublic[] =
     R"(Data Collect.
     Usage:
       data_collect FILE
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--fsf <0|1>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] FILE
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] FILE
       data_collect (-h | --help) 
 
     Arguments:
@@ -87,7 +77,6 @@ static const char kUsagePublic[] =
       --n <ncapture>     Capture frame num. [default: 1]
       --m <mode>         Mode to capture data in. [default: 0]
       --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
-      --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
       --wt <warmup>      Warmup Time (sec) [default: 0]
       --ccb <FILE>       The path to store CCB content
       --ip <ip>          Camera IP  
@@ -105,7 +94,7 @@ static const char kUsageInternal[] =
     R"(Data Collect.
     Usage:
       data_collect FILE
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--ft <frame_type>] [--fsf <0|1>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [--fps <setfps>] FILE
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--ft <frame_type>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [--fps <setfps>] FILE
       data_collect (-h | --help) 
 
     Arguments:
@@ -118,7 +107,6 @@ static const char kUsageInternal[] =
       --m <mode>         Mode to capture data in. [default: 0]
       --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
       --ft <frame_type>  Type of frame to be captured [default: raw]
-      --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
       --wt <warmup>      Warmup Time (in seconds) before data capture [default: 0]
       --ccb <FILE>       The path to store CCB content      
       --ip <ip>          Camera IP
@@ -130,142 +118,12 @@ static const char kUsageInternal[] =
 void fileWriterTask(const thread_params *const pThreadParams);
 #endif
 
-/**
- * @brief The function which initializes the fsf parameters if the fsf flag is raised high for generating FSF files.
- * @param Fsfparams: The fsf structure parameters to store the required information of the respective frame to fsf stream
- * @return null
- */
-static aditof::FsfStatus fsf_initialize(fsf_params *const Fsfparams,
-                                        const char *fileName) {
-    aditof::FsfStatus fsfStatus = aditof::FsfStatus::FILE_NOT_CREATED;
-    Fsfparams->pFileHandle = new aditof::FSF_Common{aditof::FsfMode::WRITE};
-    if (Fsfparams->pFileHandle) {
-        fsfStatus = Fsfparams->pFileHandle->CreateFsfFile(fileName);
-    }
-
-    if (fsfStatus == aditof::FsfStatus::SUCCESS) {
-        std::string comments = "ADI Data Collect";
-        std::string optionalFileHdr =
-            "DataCollectVersion=" DATA_COLLECT_VERSION ";";
-
-        aditof::FileHeader fileHeader = {};
-        fileHeader.OptionalFileHdrSize =
-            static_cast<uint32_t>(optionalFileHdr.size());
-        fileHeader.FileCommentSize = static_cast<uint32_t>(comments.size());
-        fileHeader.nFrames = Fsfparams->n_frames;
-        fileHeader.nStreams = static_cast<uint32_t>(Fsfparams->streams.size());
-        fsfStatus = Fsfparams->pFileHandle->SetFileHeader(fileHeader);
-
-        Fsfparams->pFileHandle->SetFileComment(comments);
-        Fsfparams->pFileHandle->SetOptionalFileHeader(optionalFileHdr);
-    }
-    return fsfStatus;
-}
-
-/**
- * @brief helper function to set fsf parameters for Stream Info of the respective frame.
- * @param Fsfparams: The fsf structure parameters to store the required information of the respective frame to fsf stream
- * @param fDetails: The frame details acquired from getDetails() function to fetch the height, width and subFrames of the frame.
- * @return null
- */
-static aditof::FsfStatus fsf_setparameters(fsf_params *Fsfparams,
-                                           FrameDetails *fDetails) {
-    aditof::FsfStatus status = aditof::FsfStatus::SUCCESS;
-
-    for (auto &info : Fsfparams->stream_info) {
-        info.SystemID = 0;
-        info.nRowsPerStream = fDetails->height;
-        info.nColsPerStream = fDetails->width;
-        info.BytesPerPixel = sizeof(int16_t);
-        if (info.StreamType ==
-                static_cast<uint32_t>(StreamType::STREAM_TYPE_RAW_NORM) ||
-            info.StreamType ==
-                static_cast<uint32_t>(StreamType::STREAM_TYPE_COMMON_MODE)) {
-            info.ChannelFormat =
-                static_cast<uint32_t>(ChannelFormat::FSF_CHANNEL_SIGNED_INT16);
-            info.OptionalStreamHdrSize = EMBED_HDR_LENGTH;
-        } else {
-            info.ChannelFormat =
-                static_cast<uint32_t>(ChannelFormat::FSF_CHANNEL_UINT16);
-            info.OptionalStreamHdrSize =
-                0; //TODO: debug stream header for depth frames
-        }
-    }
-
-    for (std::size_t i = 0; i < Fsfparams->streams.size(); i++) {
-        Fsfparams->streams[i].streamHeader.CompressedStreamSize =
-            sizeof(uint16_t) * fDetails->height * fDetails->width;
-        if (aditof::FsfStatus::SUCCESS !=
-            Fsfparams->pFileHandle->SetStreamInfo(static_cast<uint32_t>(i),
-                                                  Fsfparams->stream_info[i])) {
-            status = aditof::FsfStatus::FAILED;
-        }
-    }
-
-    return status;
-}
-
-/**
- * @brief The function to set the fsf file stream and generating FSF files.
- * @param pThreadParams: The thread parameters which stores all the required information of the respective frame
- * @return null
- */
-static void fsf_setstream(const thread_params *const pThreadParams) {
-
-    uint16_t *pData =
-        pThreadParams
-            ->pCaptureData; // Pointer to depth/raw data returned by getData
-    uint8_t *pHeader =
-        pThreadParams
-            ->pHeaderData; // Pointer to frame headers returned by getData
-    uint64_t loopcount =
-        pThreadParams
-            ->nFrameCount; // The for loop index for requesting number of frames
-    uint64_t frame_size = pThreadParams->pFramesize;
-
-    if (pThreadParams->pFsfParams && pThreadParams->pFsfParams->pFileHandle) {
-        for (std::size_t i = 0; i < pThreadParams->pFsfParams->streams.size();
-             i++) {
-            uint16_t *pdata = pData + (frame_size * i);
-            uint16_t *pdataEnd = pdata + frame_size;
-            pThreadParams->pFsfParams->streams[i].streamHeader.TimeStamp =
-                static_cast<uint32_t>(loopcount);
-            pThreadParams->pFsfParams->streams[i].streamData.assign(
-                (char *)pdata, (char *)pdataEnd);
-            pThreadParams->pFsfParams->streams[i].optionalStreamHeader.assign(
-                (char *)pHeader + (EMBED_HDR_LENGTH * i), EMBED_HDR_LENGTH);
-            pThreadParams->pFsfParams->pFileHandle->SetStream(
-                static_cast<uint32_t>(loopcount), static_cast<uint32_t>(i),
-                pThreadParams->pFsfParams->streams[i]);
-        }
-    }
-}
-
-/**
- * @brief helper function to save and close the fsf file successfully.
- * @param fileHandle: The fileHandle to an open fsf file.
- * @return null
- */
-static void fsf_stop(fsf_params *Fsfparams) {
-    if (Fsfparams->pFileHandle) {
-        if (Fsfparams->pFileHandle->SaveFile() == aditof::FsfStatus::SUCCESS) {
-            LOG(INFO) << "Fsf file saved";
-        }
-        if (Fsfparams->pFileHandle->CloseFile() == aditof::FsfStatus::SUCCESS) {
-            LOG(INFO) << "Fsf file closed";
-        }
-    }
-}
-
 int main(int argc, char *argv[]) {
 
     char folder_path[MAX_FILE_PATH_SIZE]; // Path to store the raw/depth frames
     char json_file_path
         [MAX_FILE_PATH_SIZE]; // Get the .json file from command line
     std::string frame_type; // Type of frame need to be captured (Raw/Depth/IR)
-
-    uint32_t fsf_flag = false;
-    fsf_params Fsfparams = {};
 
     uint16_t err = 0;
     uint32_t n_frames = 0;
@@ -338,7 +196,6 @@ int main(int argc, char *argv[]) {
     if (args["--n"]) {
         n_frames = args["--n"].asLong();
     }
-    Fsfparams.n_frames = n_frames;
 
     // Parsing mode type
     if (args["--m"]) {
@@ -393,16 +250,6 @@ int main(int argc, char *argv[]) {
         warmup_time = args["--wt"].asLong();
         if (warmup_time < 0) {
             LOG(ERROR) << "Invalid warm up time input!";
-        }
-    }
-
-    // Checking fsf flag
-    if (args["--fsf"]) {
-        fsf_flag = args["--fsf"].asLong();
-        if (fsf_flag && n_frames > DEFAULT_MAX_FRAMES) {
-            LOG(ERROR)
-                << "FSF file format is limited to a maximum of 300 frames!";
-            return 0;
         }
     }
 
@@ -501,7 +348,6 @@ int main(int argc, char *argv[]) {
     // Set UVC format type and camera frame details
     if ("raw" == frame_type) {
         camera->setControl("enableDepthCompute", "off");
-        Fsfparams.raw_frames = true;
     } else if ("depth" == frame_type) {
         if (modeName == "pcm") {
             LOG(ERROR) << modeName
@@ -510,7 +356,6 @@ int main(int argc, char *argv[]) {
             return 0;
         } else {
             camera->setControl("enableDepthCompute", "on");
-            Fsfparams.raw_frames = false;
         }
     } else {
         LOG(ERROR) << "unsupported frame type!";
@@ -523,7 +368,6 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    char fsf_file[MAX_FILE_PATH_SIZE];
     char time_buffer[128];
     time_t rawtime;
     time(&rawtime);
@@ -534,64 +378,6 @@ int main(int argc, char *argv[]) {
     localtime_r(&rawtime, &timeinfo);
 #endif
     strftime(time_buffer, sizeof(time_buffer), "%Y%m%d%H%M%S", &timeinfo);
-    if (fsf_flag) {
-        err = snprintf(fsf_file, sizeof(fsf_file), "%s/%s_frames_%s.fsf",
-                       folder_path, frame_type.c_str(), time_buffer);
-        if (err < 0) {
-            LOG(ERROR) << "Could not create FSF file!";
-            return 0;
-        }
-
-        CameraDetails camDetails;
-        camera->getDetails(camDetails);
-        int totalCaptures = camDetails.frameType.totalCaptures;
-
-        if (Fsfparams.raw_frames) {
-            for (int ix = 0; ix < totalCaptures; ++ix) {
-                aditof::StreamInfo info = {};
-                aditof::Stream stream = {};
-                if (camDetails.frameType.passiveIRCaptured &&
-                    ix == totalCaptures - 1) {
-                    info.StreamType = static_cast<uint32_t>(
-                        StreamType::STREAM_TYPE_COMMON_MODE);
-                } else {
-                    info.StreamType =
-                        static_cast<uint32_t>(StreamType::STREAM_TYPE_RAW_NORM);
-                }
-                Fsfparams.stream_info.push_back(info);
-                Fsfparams.streams.push_back(stream);
-            }
-        } else { //depth/AB
-            LOG(ERROR) << "Depth FSF file not supported!";
-            return 0;
-#if 0
-            aditof::StreamInfo depth_info = {};
-            aditof::Stream depth_stream = {};
-            depth_info.StreamType = StreamType::STREAM_TYPE_DEPTH;
-            Fsfparams.stream_info.push_back(depth_info);
-            Fsfparams.streams.push_back(depth_stream);
-
-            aditof::StreamInfo ab_info = {};
-            aditof::Stream ab_stream = {};
-            ab_info.StreamType = StreamType::STREAM_TYPE_ACTIVE_BR;
-            Fsfparams.stream_info.push_back(ab_info);
-            Fsfparams.streams.push_back(ab_stream);
-#endif
-        }
-
-        if (FsfStatus::SUCCESS != fsf_initialize(&Fsfparams, fsf_file)) {
-            LOG(ERROR) << "FSF file could not be created";
-            return 0;
-        }
-        LOG(INFO) << "FSF File name: " << fsf_file;
-
-        if (FsfStatus::SUCCESS !=
-            fsf_setparameters(&Fsfparams, &camDetails.frameType)) {
-            LOG(ERROR) << "Error initializeing FSF file!";
-            return 0;
-        }
-    }
-
 #if 0
     camera->setControl("setFPS", std::to_string(setfps));
     if (status != Status::OK) {
@@ -774,7 +560,6 @@ int main(int argc, char *argv[]) {
         pThreadParams->nframes = n_frames;
         pThreadParams->nFrameCount = loopcount;
         pThreadParams->pFrame_type = frame_type.c_str();
-        pThreadParams->pFsfParams = (fsf_flag) ? &Fsfparams : NULL;
         pThreadParams->pFramesize = height * width;
 
         /* fileWriterThread handles the copying of raw/depth frames to a file */
@@ -790,28 +575,11 @@ int main(int argc, char *argv[]) {
 #else
         char out_file[MAX_FILE_PATH_SIZE];
 
-        if (!fsf_flag) {
-            snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05u.bin",
-                     &folder_path[0], &frame_type[0], time_buffer, loopcount);
-            std::ofstream rawFile(out_file, std::ios::out | std::ios::binary |
-                                                std::ofstream::trunc);
-            rawFile.write((const char *)&frameBuffer[0], frame_size);
-            rawFile.close();
-        } else {
-            for (std::size_t i = 0; i < Fsfparams.streams.size(); i++) {
-                uint16_t *pdata = frameBuffer + (height * width * i);
-                uint16_t *pdataEnd = pdata + height * width;
-                uint8_t *pheader = headerBuffer + (EMBED_HDR_LENGTH * i);
-                Fsfparams.streams[i].streamHeader.TimeStamp =
-                    static_cast<uint32_t>(loopcount);
-                Fsfparams.streams[i].streamData.assign((char *)pdata,
-                                                       (char *)pdataEnd);
-                Fsfparams.streams[i].optionalStreamHeader.assign(
-                    (char *)pheader, EMBED_HDR_LENGTH);
-                Fsfparams.pFileHandle->SetStream(
-                    loopcount, static_cast<uint32_t>(i), Fsfparams.streams[i]);
-            }
-        }
+        snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05u.bin", &folder_path[0], &frame_type[0], time_buffer, loopcount);
+        std::ofstream rawFile(out_file, std::ios::out | std::ios::binary |
+                                            std::ofstream::trunc);
+        rawFile.write((const char *)&frameBuffer[0], frame_size);
+        rawFile.close();
 
         if (frameBuffer != NULL) {
             free((void *)frameBuffer);
@@ -831,7 +599,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    fsf_stop(&Fsfparams);
     status = camera->stop();
     if (status != Status::OK) {
         LOG(INFO) << "Error stopping camera!";
@@ -846,19 +613,16 @@ void fileWriterTask(const thread_params *const pThreadParams) {
     }
 
     char out_file[MAX_FILE_PATH_SIZE] = {0};
-    if (nullptr == pThreadParams->pFsfParams) {
-        snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05" PRIu64 ".bin",
-                 pThreadParams->pFolderPath, pThreadParams->pFrame_type,
-                 pThreadParams->nFileTime, pThreadParams->nFrameCount);
+    snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05" PRIu64 ".bin",
+                pThreadParams->pFolderPath, pThreadParams->pFrame_type,
+                pThreadParams->nFileTime, pThreadParams->nFrameCount);
 
-        std::ofstream rawFile(out_file, std::ios::out | std::ios::binary |
-                                            std::ofstream::trunc);
-        rawFile.write((const char *)pThreadParams->pCaptureData,
-                      pThreadParams->nTotalCaptureSize);
-        rawFile.close();
-    } else {
-        fsf_setstream(pThreadParams);
-    }
+    std::ofstream rawFile(out_file, std::ios::out | std::ios::binary |
+                                        std::ofstream::trunc);
+    rawFile.write((const char *)pThreadParams->pCaptureData,
+                    pThreadParams->nTotalCaptureSize);
+    rawFile.close();
+
 
     if (pThreadParams->pCaptureData != nullptr) {
         delete[] pThreadParams->pCaptureData;

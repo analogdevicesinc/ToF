@@ -8,7 +8,7 @@
 ```
 Usage:
       data_collect FILE
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--fsf <0|1>] [--wt <warmup>] [--ip <ip>] [--ccb FILE] FILE
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--wt <warmup>] [--ip <ip>] [--ccb FILE] FILE
       data_collect (-h | --help)
 
     Arguments:
@@ -20,7 +20,6 @@ Usage:
       --n <ncapture>     Number of frames to capture. [default: 1]
       --m <mode>         Mode to capture data in. [default: 10]
       --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
-      --fsf <0|1>        FSF file type [0: Disable 1: Enable] [default: 0]
       --wt <warmup>      Warmup Time (in seconds) [default: 0]
       --ip <ip>          Camera IP
       --ccb <FILE>       The path to store CCB content
@@ -40,7 +39,7 @@ To run the example, run data_collect.exe with config_default.json file (which co
 ./data_collect.exe --f "../data_output" "config.json"
 ./data_collect.exe --f "../data_output" --m 10 "config.json"
 ./data_collect.exe --f "../data_output" --n 50 "config.json"
-./data_collect.exe --f "../data_output" --m 10 --n 4 "config.json" --fsf 1 --wt 5
+./data_collect.exe --f "../data_output" --m 10 --n 4 "config.json" --wt 5
 ```
 
 ## Known Issues
