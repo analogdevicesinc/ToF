@@ -2,7 +2,7 @@
     "VAUX_POWER_VOLTAGE": "18",
     "skip_network_cameras": "off",
     "camera_ip": "10.42.0.1",
-    "DEPTH_INI": "./config/RawToDepthAdsd3030_sr-native.ini;./config/RawToDepthAdsd3030_lr-native.ini;./config/RawToDepthAdsd3030_sr-qnative.ini;./config/RawToDepthAdsd3030_lr-qnative.ini",
+    "DEPTH_INI": "./config/RawToDepthAdsd3030_sr-native.ini;./config/RawToDepthAdsd3030_lr-native.ini;./config/RawToDepthAdsd3030_sr-qnative.ini;./config/RawToDepthAdsd3030_lr-qnative.ini;./config/RawToDepthAdsd_pcm-native.ini",
     "FPS": "10",
     "FSYNC_MODE:": "1"
 }
