@@ -349,7 +349,7 @@ int main(int argc, char *argv[]) {
     if ("raw" == frame_type) {
         camera->setControl("enableDepthCompute", "off");
     } else if ("depth" == frame_type) {
-        if (modeName == "pcm") {
+        if (modeName == "pcm-native") {
             LOG(ERROR) << modeName
                        << " mode doesn't contain depth data, please set --ft "
                           "(frameType) to raw.";
@@ -491,6 +491,10 @@ int main(int argc, char *argv[]) {
             subFrames = subFrames * 2;
         }
 
+        if (modeName == "pcm-native") {
+            subFrames = 2;
+        }
+
         frameType = "raw";
 
         // Depth Data
@@ -575,7 +579,8 @@ int main(int argc, char *argv[]) {
 #else
         char out_file[MAX_FILE_PATH_SIZE];
 
-        snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05u.bin", &folder_path[0], &frame_type[0], time_buffer, loopcount);
+        snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05u.bin",
+                 &folder_path[0], &frame_type[0], time_buffer, loopcount);
         std::ofstream rawFile(out_file, std::ios::out | std::ios::binary |
                                             std::ofstream::trunc);
         rawFile.write((const char *)&frameBuffer[0], frame_size);
@@ -614,15 +619,14 @@ void fileWriterTask(const thread_params *const pThreadParams) {
 
     char out_file[MAX_FILE_PATH_SIZE] = {0};
     snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05" PRIu64 ".bin",
-                pThreadParams->pFolderPath, pThreadParams->pFrame_type,
-                pThreadParams->nFileTime, pThreadParams->nFrameCount);
+             pThreadParams->pFolderPath, pThreadParams->pFrame_type,
+             pThreadParams->nFileTime, pThreadParams->nFrameCount);
 
     std::ofstream rawFile(out_file, std::ios::out | std::ios::binary |
                                         std::ofstream::trunc);
     rawFile.write((const char *)pThreadParams->pCaptureData,
-                    pThreadParams->nTotalCaptureSize);
+                  pThreadParams->nTotalCaptureSize);
     rawFile.close();
-
 
     if (pThreadParams->pCaptureData != nullptr) {
         delete[] pThreadParams->pCaptureData;
