@@ -899,9 +899,6 @@ void ADIMainWindow::ShowRecordTree() {
                 //Add a file extension
                 switch (filterIndex) {
                 case 1:
-                    // not supported anymore
-                    break;
-                case 2: //Raw file
                     saveFile += ".raw";
                     if (!isPlaying) {
                         //"Press" the play button, in case it is not pressed.
