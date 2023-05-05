@@ -6,6 +6,13 @@
 /********************************************************************************/
 #include "ADIToFRecorder.h"
 
+#ifdef USE_GLOG
+#include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#include <cstring>
+#endif
+
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -31,40 +38,46 @@ ADIToFRecorder::~ADIToFRecorder() {
     }
 }
 
-void ADIToFRecorder::startRecording(const std::string &fileName,
-                                    unsigned int height, unsigned int width,
-                                    unsigned int fps) {
-
-    m_fileNameRaw = "raw_frame_#.bin";
+void ADIToFRecorder::createBinaryDirectory(std::string fileName) {
     auto pos = fileName.find(".raw");
-    if (pos != std::string::npos) {
-        //Create a directory with same name as .raw file for .bin generation
-        std::string rawFileDirectory = fileName;
-        rawFileDirectory.erase(pos, std::string::npos);
-        rawFileDirectory = rawFileDirectory + "_RAW";
-#ifdef _WIN32
-        static const int max_path = 260;
-        char dir_path[max_path];
-        // Create folder if not created already
-        if (GetFullPathName(rawFileDirectory.c_str(), max_path, &dir_path[0],
-                            NULL) == 0) {
-            LOG(ERROR) << "Error Unable to open bin file directory. Error:"
-                       << GetLastError();
-        }
+    //Create a directory with same name as .raw file for .bin generation
+    std::string rawFileDirectory = fileName;
 
-        BOOL dirResult = CreateDirectory(dir_path, NULL);
-        if (dirResult || ERROR_ALREADY_EXISTS == GetLastError()) {
-            m_fileNameRaw = rawFileDirectory + "/" + m_fileNameRaw;
-        }
-#else
-        int err = mkdir(rawFileDirectory.c_str(), 0777);
-        if (err < 0) {
-            LOG(ERROR) << "Unable to create bin file directory";
-        } else {
-            m_fileNameRaw = rawFileDirectory + "/" + m_fileNameRaw;
-        }
-#endif
+    rawFileDirectory.erase(pos, std::string::npos);
+    rawFileDirectory = rawFileDirectory + "_RAW";
+
+#ifdef _WIN32
+    static const int max_path = 260;
+    char dir_path[max_path];
+    // Create folder if not created already
+    if (GetFullPathName(rawFileDirectory.c_str(), max_path, &dir_path[0],
+                        NULL) == 0) {
+        LOG(ERROR) << "Error Unable to open bin file directory. Error:"
+                   << GetLastError();
     }
+    BOOL dirResult = CreateDirectory(dir_path, NULL);
+    if (dirResult || ERROR_ALREADY_EXISTS == GetLastError()) {
+        m_fileNameRaw = rawFileDirectory + "/" + m_fileNameRaw;
+    }
+#else
+    int err = mkdir(rawFileDirectory.c_str(), 0777);
+    if (err < 0) {
+        LOG(ERROR) << "Unable to create bin file directory";
+    } else {
+        m_fileNameRaw = rawFileDirectory + "/" + m_fileNameRaw;
+    }
+#endif
+}
+
+void ADIToFRecorder::startRecordingRaw(const std::string &fileName,
+                                       unsigned int height, unsigned int width,
+                                       unsigned int fps) {
+    m_fileNameRaw = "raw_frame_#.bin";
+
+    //save for binary
+    if (m_saveBinaryFormat)
+        createBinaryDirectory(fileName);
+
     m_recordFile.open(fileName, std::ios::binary);
     m_recordFile.write(reinterpret_cast<const char *>(&height),
                        sizeof(unsigned int));
@@ -81,6 +94,17 @@ void ADIToFRecorder::startRecording(const std::string &fileName,
     m_recordTreadStop = false;
     m_recordThread =
         std::thread(std::bind(&ADIToFRecorder::recordThread, this));
+}
+
+void ADIToFRecorder::startRecording(const std::string &fileName,
+                                    unsigned int height, unsigned int width,
+                                    unsigned int fps) {
+    if (fileName.find(".raw") != std::string::npos) {
+        startRecordingRaw(fileName, height, width, fps);
+    } else {
+        LOG(ERROR) << "File format not supported";
+        return;
+    }
 }
 
 int ADIToFRecorder::findDigits(int number) {
@@ -102,15 +126,6 @@ void ADIToFRecorder::stopRecording() {
 
     m_recordFile.close();
     LOG(INFO) << "Recording has been completed.";
-}
-
-int ADIToFRecorder::startPlayback(const std::string &fileName, int &fps) {
-    if (fileName.find(".raw") != std::string::npos) //if a raw file was found
-    {
-        return startPlaybackRaw(fileName, fps);
-    } else {
-        return 0; //No file type is supported
-    }
 }
 
 int ADIToFRecorder::startPlaybackRaw(const std::string &fileName, int &fps) {
@@ -141,6 +156,15 @@ int ADIToFRecorder::startPlaybackRaw(const std::string &fileName, int &fps) {
         std::thread(std::bind(&ADIToFRecorder::playbackThread, this));
 
     return m_numberOfFrames;
+}
+
+int ADIToFRecorder::startPlayback(const std::string &fileName, int &fps) {
+    if (fileName.find(".raw") != std::string::npos) {
+        return startPlaybackRaw(fileName, fps);
+    } else {
+        LOG(ERROR) << "Selected Playback format not supported.";
+        return 0;
+    }
 }
 
 void ADIToFRecorder::stopPlayback() {
@@ -210,7 +234,6 @@ void ADIToFRecorder::recordThread() {
         uint16_t *depthData;
         frame->getData("depth", &depthData);
 
-        //Raw Data
         uint16_t *rawData;
         frame->getData("raw", &rawData);
 
@@ -220,20 +243,21 @@ void ADIToFRecorder::recordThread() {
         int size = static_cast<int>(sizeof(uint16_t) * width * height);
 
         m_recordFile.write(reinterpret_cast<const char *>(irData), size);
-
         m_recordFile.write(reinterpret_cast<const char *>(depthData), size);
 
         //Create a new .bin file for each frame with raw sensor data
-        std::string fileNameRawFrame = m_fileNameRaw;
-        fileNameRawFrame.replace(fileNameRawFrame.find_last_of("#"), 1,
-                                 std::to_string(frameCtr));
-        std::ofstream recordFileRaw;
-        recordFileRaw.open(fileNameRawFrame,
-                           std::ios::binary | std::ofstream::trunc);
-        recordFileRaw.write(reinterpret_cast<const char *>(rawData),
-                            static_cast<int>(captures * size));
-        recordFileRaw.close();
+        if (m_saveBinaryFormat) {
+            std::string fileNameRawFrame = m_fileNameRaw;
+            fileNameRawFrame.replace(fileNameRawFrame.find_last_of("#"), 1,
+                                     std::to_string(frameCtr));
 
+            std::ofstream recordFileRaw;
+            recordFileRaw.open(fileNameRawFrame,
+                               std::ios::binary | std::ofstream::trunc);
+            recordFileRaw.write(reinterpret_cast<const char *>(rawData),
+                                static_cast<int>(captures * size));
+            recordFileRaw.close();
+        }
         frameCtr++;
     }
 }
@@ -245,17 +269,16 @@ void ADIToFRecorder::playbackThread() {
         if (!m_playbackFile.is_open()) {
             break;
         }
-
-        std::unique_lock<std::mutex> lock(m_playbackMutex);
-        m_playbackCv.wait(lock, [&]() { return m_shouldReadNewFrame; });
-        m_shouldReadNewFrame = false;
-
         if (m_playbackThreadStop) {
             break;
         }
 
+        std::unique_lock<std::mutex> lock(m_playbackMutex);
         auto frame = std::make_shared<aditof::Frame>();
         aditof::FrameDataDetails dataDetails;
+
+        m_playbackCv.wait(lock, [&]() { return m_shouldReadNewFrame; });
+        m_shouldReadNewFrame = false;
         dataDetails.type = "depth";
         dataDetails.width = m_frameDetails.width;
         dataDetails.height = m_frameDetails.height;
@@ -264,8 +287,8 @@ void ADIToFRecorder::playbackThread() {
         dataDetails.width = m_frameDetails.width;
         dataDetails.height = m_frameDetails.height;
         m_frameDetails.dataDetails.emplace_back(dataDetails);
-        frame->setDetails(m_frameDetails);
 
+        frame->setDetails(m_frameDetails);
         frame->getData("ir", &frameDataLocationIR);
         frame->getData("depth", &frameDataLocationDEPTH);
 

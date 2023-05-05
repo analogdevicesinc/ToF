@@ -77,6 +77,9 @@ class ADIView {
     void setLogImage(bool value) { m_logImage = value; }
     bool getLogImage() { return m_logImage; }
 
+    void setSaveBinaryFormat(bool value) { m_saveBinaryFormat = value; }
+    bool getSaveBinaryFormat() { return m_saveBinaryFormat; }
+
     void setCapABWidth(bool value) { m_capABWidth = value; }
     bool getCapABWidth() { return m_capABWidth; }
 
@@ -109,6 +112,8 @@ class ADIView {
     bool m_irFrameAvailable;
     bool m_pointCloudFrameAvailable;
     bool m_stopWorkersFlag = false;
+    bool m_saveBinaryFormat = false;
+
     std::thread m_depthImageWorker;
     std::thread m_irImageWorker;
     std::thread m_pointCloudImageWorker;

@@ -125,6 +125,7 @@ aditof::Status ADIController::readAFEregister(uint16_t *address, uint16_t *data,
 void ADIController::startRecording(const std::string &fileName,
                                    unsigned int height, unsigned int width,
                                    unsigned int fps) {
+    m_recorder->m_saveBinaryFormat = this->m_saveBinaryFormat;
     m_recorder->startRecording(fileName, height, width, fps);
 }
 

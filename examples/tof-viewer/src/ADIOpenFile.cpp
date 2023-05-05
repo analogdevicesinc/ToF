@@ -6,10 +6,13 @@
 /********************************************************************************/
 #include "ADIOpenFile.h"
 
-std::string customFilter("All Files (*.*)\0*.*\0\0", 21);
-std::vector<std::string> customFilters;
+std::string customFilter = std::string("Raw Files (*.raw)\0*.raw*\0 All "
+                                       "Files (*.*)\0*.*\0",
+                                       72);
+std::vector<std::string> customFilters = {"raw"};
 
 #ifdef _WIN32
+
 #include <codecvt>
 #include <windows.h>
 
@@ -26,7 +29,12 @@ using namespace std;
 * @param owner	NULL
 * @return		Selected file name with its extension
 */
-string openADIFileName(const char *filter, void *owner) {
+string openADIFileName(const char *filter, void *owner, int &FilterIndex) {
+
+    std::vector<std::string> filters;
+    std::copy(std::begin(customFilters), std::end(customFilters),
+              std::back_inserter(filters));
+
     OPENFILENAME file;
     char fileName[MAX_PATH] = "";
     ZeroMemory(&file, sizeof(file));
@@ -41,18 +49,32 @@ string openADIFileName(const char *filter, void *owner) {
     if (GetOpenFileName(&file)) {
         fileNameStr = std::string(fileName);
     }
+
+    for (int ix = 0; ix < filters.size(); ix++) {
+        if (fileNameStr.find(filters[ix].insert(0, 1, '.')) !=
+            std::string::npos) {
+            FilterIndex = ix + 1;
+            return fileNameStr;
+        }
+    }
+    FilterIndex = 0;
     return fileNameStr;
 }
 
 /**
 * @brief Opens a dialog box to save a file
-* @param hwndOwner		urrent handle
+* @param hwndOwner		Current handle
 * @param filename		Saved name from user
 * @param FilterIndex	Index of chosen filter
 * @return				Saved name if successful,
 *						empty string otherwise
 */
 string getADIFileName(void *hwndOwner, char *filename, int &FilterIndex) {
+
+    std::vector<std::string> filters;
+    std::copy(std::begin(customFilters), std::end(customFilters),
+              std::back_inserter(filters));
+
     OPENFILENAME ofn = {0};
     ofn.lStructSize = sizeof(ofn);
     ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST;
@@ -63,10 +85,18 @@ string getADIFileName(void *hwndOwner, char *filename, int &FilterIndex) {
     ofn.nFilterIndex = 1;
     ofn.lpstrFilter = customFilter.c_str();
     ofn.lpstrDefExt = '\0';
+
     if (GetSaveFileName(&ofn)) {
-        FilterIndex = (DWORD)ofn.nFilterIndex;
-        return filename;
+        FilterIndex = (int)((DWORD)ofn.nFilterIndex);
+        filters[FilterIndex - 1].insert(0, 1, '.');
+        //chack if path has extension, in case no add one
+        if (std::string(filename).find(filters[FilterIndex - 1]) !=
+            std::string::npos)
+            return std::string(filename);
+        else
+            return std::string(filename).append(filters[FilterIndex - 1]);
     }
+    FilterIndex = 0;
     return ""; //Something wen't wrong, so it did not save anything
 }
 
@@ -106,10 +136,10 @@ void getFilesList(string filePath, string extension,
 
 #elif defined(__APPLE__) && defined(__MACH__)
 
+#include "filesystem.hpp"
 #include <cstdio>
 #include <dirent.h>
 
-#include "filesystem.hpp"
 namespace fs = ghc::filesystem;
 #include <sys/syslimits.h>
 #define MAX_PATH PATH_MAX
@@ -147,11 +177,12 @@ std::string getADIFileName(void *hwndOwner, char *filename, int &FilterIndex) {
             break;
         }
     }
+    FilterIndex = 0;
     return files[0].substr(0,
                            files[0].find_last_of(".")); //strip file extension
 }
 
-std::string openADIFileName(const char *filter, void *owner) {
+std::string openADIFileName(const char *filter, void *owner, int &FilterIndex) {
 
     std::vector<std::string> filters;
     std::copy(std::begin(customFilters), std::end(customFilters),
@@ -163,6 +194,16 @@ std::string openADIFileName(const char *filter, void *owner) {
     if (files.size() == 0) {
         return "";
     }
+
+    for (int ix = 0; ix < filters.size(); ix++) {
+        if (files[0].substr(files[0].find_last_of(".") + 1) == filters[ix]) {
+            FilterIndex = ix + 1;
+            break;
+        }
+    }
+    FilterIndex = 0;
+    return files[0].substr(0,
+                           files[0].find_last_of(".")); //strip file extension
 
     return files[0];
 }
@@ -214,25 +255,40 @@ void getFilesList(std::string filePath, std::string extension,
 *						empty string otherwise
 */
 std::string getADIFileName(void *hwndOwner, char *filename, int &FilterIndex) {
+
+    std::vector<std::string> filters;
+    std::copy(std::begin(customFilters), std::end(customFilters),
+              std::back_inserter(filters));
     const char zenityP[] = "/usr/bin/zenity";
     char Call[2048];
 
-    int ret = sprintf(Call, "%s  --file-selection --modal --title=\"%s\" ",
-                      zenityP, "Select filename");
+    int ret =
+        sprintf(Call, "%s  --file-selection --save --modal --title=\"%s\" ",
+                zenityP, "Select filename");
 
     FILE *f = popen(Call, "r");
     std::fgets(filename, FILENAME_MAX, f);
-
     ret = pclose(f);
     if (ret < 0) {
         perror("file_name_dialog()");
     }
+    std::string fileNameTmp(filename);
+    for (int ix = 0; ix < filters.size(); ix++) {
+        if (fileNameTmp.find(filters[ix].insert(0, 1, '.')) !=
+            std::string::npos) {
+            FilterIndex = ix + 1;
+            break;
+        }
+    }
+    FilterIndex = 0;
 
-    return (ret == 0) ? filename : "";
+    return (ret == 0) ? std::string(filename) : "";
 }
 
-std::string openADIFileName(const char *filter, void *owner) {
-
+std::string openADIFileName(const char *filter, void *owner, int &FilterIndex) {
+    std::vector<std::string> filters;
+    std::copy(std::begin(customFilters), std::end(customFilters),
+              std::back_inserter(filters));
     const char zenityP[] = "/usr/bin/zenity";
     char Call[2048];
     char filename[FILENAME_MAX];
@@ -247,6 +303,15 @@ std::string openADIFileName(const char *filter, void *owner) {
     if (ret < 0) {
         perror("file_name_dialog()");
     }
+    std::string fileNameTmp(filename);
+    for (int ix = 0; ix < filters.size(); ix++) {
+        if (fileNameTmp.find(filters[ix].insert(0, 1, '.')) !=
+            std::string::npos) {
+            FilterIndex = ix + 1;
+            break;
+        }
+    }
+    FilterIndex = 0;
 
     return (ret == 0) ? std::string(filename) : "";
 }

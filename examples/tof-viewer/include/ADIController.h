@@ -165,6 +165,7 @@ class ADIController {
 
     std::vector<std::shared_ptr<aditof::Camera>> m_cameras;
     std::unique_ptr<ADIToFRecorder> m_recorder;
+    bool m_saveBinaryFormat;
     bool panicStop = false;
     size_t panicCount = 0;
 

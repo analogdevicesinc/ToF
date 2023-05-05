@@ -276,6 +276,7 @@ class ADIMainWindow {
     int pointSize = 1;
     unsigned int framebuffer;
     bool mouseDown = false;
+    bool m_saveBinaryFormatTmp = false;
 
     /**
 		* @brief Virtual Sphere

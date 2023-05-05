@@ -7,20 +7,13 @@
 #ifndef ADITOFRECORDER_H
 #define ADITOFRECORDER_H
 
+#include "safequeue.h"
+#include <aditof/frame.h>
 #include <atomic>
 #include <fstream>
 #include <functional>
 #include <map>
 #include <thread>
-
-#include "safequeue.h"
-#include <aditof/frame.h>
-#ifdef USE_GLOG
-#include <glog/logging.h>
-#else
-#include <aditof/log.h>
-#include <cstring>
-#endif
 
 #ifdef _WIN32
 #include <direct.h>
@@ -40,7 +33,7 @@ class ADIToFRecorder {
     ~ADIToFRecorder();
 
     /**
-	* @biref			Start the recording thread
+	* @brief			Start the recording thread
 	* @param fileName	Given file name by the user
 	* @param height		Image height, set by SDK
 	* @param width		Image width, set by SDK
@@ -49,9 +42,15 @@ class ADIToFRecorder {
     void startRecording(const std::string &fileName, unsigned int height,
                         unsigned int width, unsigned int fps);
 
+    /**
+    * @brief           Start RAW fileformat recording
+    * @param fileName	Given file name by the user
+    * @param height		Image height, set by SDK
+    * @param width		Image width, set by SDK
+    * @param fps		Number of frames set by the user
+    */
     void startRecordingRaw(const std::string &fileName, unsigned int height,
-                           unsigned int width,
-                           unsigned int fps); //ADI's Recording method
+                           unsigned int width, unsigned int fps);
 
     /**
 	* @brief Stops Recording
@@ -138,11 +137,6 @@ class ADIToFRecorder {
 	*/
     void playbackThread();
 
-    uint16_t *frameDataLocationIR = nullptr;
-    uint16_t *frameDataLocationDEPTH = nullptr;
-    uint16_t *frameDataLocationXYZ = nullptr;
-    bool _stopPlayback = false;
-
     /**
 	* @brief Clears all playback and recording variables
 	*/
@@ -153,40 +147,52 @@ class ADIToFRecorder {
 	*/
     void processXYZData();
 
-    int currentPBPos = 0;
-    int m_numberOfFrames;
-    int fileSize = 0;
-    aditof::FrameDetails m_frameDetails;
-
-    bool m_finishRecording = true;
-
   private:
-    SafeQueue<std::shared_ptr<aditof::Frame>> m_recordQueue;
-    SafeQueue<std::shared_ptr<aditof::Frame>> m_playbackQueue;
-    std::ofstream m_recordFile;
-    //Raw stream
-    std::string m_fileNameRaw;
-    std::ifstream m_playbackFile;
-    std::thread m_recordThread;
-    std::thread m_playbackThread;
-    std::atomic<bool> m_recordTreadStop;
-    std::atomic<bool> m_playbackThreadStop;
-    bool m_shouldReadNewFrame;
-    std::mutex m_playbackMutex;
-    std::condition_variable m_playbackCv;
-    bool m_playBackEofReached;
-    //bool m_finishRecording = true;
-    bool isPaused = false;
-    int framesToRecord = 0;
-    size_t frameCtr = 0;
-    const int _ir = 1;
-    const int _depth = 2;
-
     /**
 	* @brief Analyzes the given number and returns its number
 	*        of digits.
 	*/
     int findDigits(int number);
+
+    /**
+     * @brief                   Create binary directory
+     * @param  fileDirectory    String with full path for saved raw file
+     * 
+     */
+    void createBinaryDirectory(std::string fileName);
+
+  public:
+    uint16_t *frameDataLocationDEPTH = nullptr;
+    uint16_t *frameDataLocationXYZ = nullptr;
+    uint16_t *frameDataLocationIR = nullptr;
+    aditof::FrameDetails m_frameDetails;
+    bool m_saveBinaryFormat = false;
+    bool m_finishRecording = true;
+    bool _stopPlayback = false;
+    int currentPBPos = 0;
+    int m_numberOfFrames;
+    int fileSize = 0;
+
+  private:
+    SafeQueue<std::shared_ptr<aditof::Frame>> m_playbackQueue;
+    SafeQueue<std::shared_ptr<aditof::Frame>> m_recordQueue;
+    std::ofstream m_recordFile;
+    //Raw stream
+    std::atomic<bool> m_playbackThreadStop;
+    std::atomic<bool> m_recordTreadStop;
+    std::condition_variable m_playbackCv;
+    std::thread m_playbackThread;
+    std::ifstream m_playbackFile;
+    std::string m_fileNameRaw;
+    std::thread m_recordThread;
+    std::mutex m_playbackMutex;
+    bool m_shouldReadNewFrame;
+    bool m_playBackEofReached;
+    bool isPaused = false;
+    int framesToRecord = 0;
+    const int _depth = 2;
+    const int _ir = 1;
+    size_t frameCtr = 0;
 };
 
 #endif // ADITOFRECORDER_H

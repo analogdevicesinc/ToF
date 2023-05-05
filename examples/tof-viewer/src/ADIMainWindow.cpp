@@ -71,8 +71,6 @@ namespace fs = ghc::filesystem;
 
 using namespace adiMainWindow;
 
-extern std::vector<std::string> customFilters;
-
 static int numProcessors;
 GLFWimage icons[1];
 GLFWimage logos[1];
@@ -133,7 +131,7 @@ ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
     setvbuf(stream, 0, _IONBF, 0);               // No Buffering
     input = fopen(wholeLogPath, "r");
 
-    // Parse config file for this application
+    //Parse config file for this application
     //Parse config.json
     std::ifstream ifs("tof-viewer_config.json");
     std::string content((std::istreambuf_iterator<char>(ifs)),
@@ -702,16 +700,12 @@ void ADIMainWindow::ShowPlaybackTree() {
 
         if (ImGuiExtensions::ADIButton("Open Recording",
                                        !isPlayRecorded && !isPlaying)) {
-            customFilter =
-                std::string("Raw Files "
-                            "(*.raw)\0*.raw*\0 All Files (*.*)\0*.*\0",
-                            72);
-            std::string filters[] = {"raw"};
-            customFilters.clear();
-            std::copy(std::begin(filters), std::end(filters),
-                      std::back_inserter(customFilters));
-            std::string path = openADIFileName().c_str();
-            if (!path.empty()) {
+            int filterIndex = 0;
+            std::string path =
+                openADIFileName(customFilter.c_str(), NULL, filterIndex)
+                    .c_str();
+            if (!path.empty() && filterIndex) {
+
                 if (view == NULL) {
                     view = std::make_shared<adiviewer::ADIView>(
                         m_controller, "Record Viewer");
@@ -725,9 +719,12 @@ void ADIMainWindow::ShowPlaybackTree() {
                 viewSelection = 0; //default view to depth/ab
                 _isOpenDevice = false;
                 cameraOptionsTreeEnabled = false;
+
             } else {
                 _isOpenDevice = true;
                 cameraOptionsTreeEnabled = true;
+                LOG(ERROR) << "Non-existing file or unsupported file format "
+                              "chosen for playback";
             }
         }
 
@@ -773,9 +770,9 @@ void ADIMainWindow::ShowPlaybackTree() {
         if (ImGuiExtensions::ADIButton("Close Recording", isPlayRecorded)) {
             stopPlayback();
         }
+
         if (isPlayRecorded) {
             ImGui::NewLine();
-
             rawSeeker =
                 (view->m_ctrl->m_recorder->currentPBPos) /
                 (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
@@ -801,24 +798,23 @@ void ADIMainWindow::ShowPlaybackTree() {
             ImGui::NewLine();
         }
 
-        if (0) {
-            //USE ONLY IN DEBUG MODE: Highly Experimental. May use in the future
-            ImGui::NewLine();
-            if (ImGuiExtensions::ADIButton("Open *.bin Recording",
-                                           !isPlayRecorded && !isPlaying)) {
-                customFilter = std::string(
-                    "Raw Files (*.bin)\0*.bin*\0 All Files (*.*)\0*.*\0", 46);
-                std::string path = openADIFileName().c_str();
-                if (!path.empty()) {
-                    if (path.find(".bin") !=
-                        std::string::npos) { //If bin File was found
-                        int frames = 1;
-                        int width = 1024;
-                        int height = 1024;
-                    }
-                }
-            }
-        }
+        // if (0) {
+        // int filterIndex = 0;
+        // //USE ONLY IN DEBUG MODE: Highly Experimental. May use in the future
+        // ImGui::NewLine();
+        // if (ImGuiExtensions::ADIButton("Open *.bin Recording",
+        //                                !isPlayRecorded && !isPlaying)) {
+        //     std::string path = openADIFileName(customFilter.c_str(), NULL, filterIndex).c_str();
+        //     if (!path.empty()) {
+        //         if (path.find(".bin") !=
+        //             std::string::npos) { //If bin File was found
+        //             int frames = 1;
+        //             int width = 1024;
+        //             int height = 1024;
+        //         }
+        //     }
+        // }
+        // }
 
         ImGui::TreePop(); //Playback
     }
@@ -867,16 +863,6 @@ void ADIMainWindow::ShowRecordTree() {
         if (ImGuiExtensions::ADIButton("Start Recording",
                                        !isRecording && !isPlayRecorded)) {
             fs::path NPath = fs::current_path();
-
-            customFilter =
-                std::string("Raw Files "
-                            "(*.raw)\0*.raw*\0 All Files (*.*)\0*.*\0",
-                            72);
-            std::string filters[] = {"raw"};
-            customFilters.clear();
-            std::copy(std::begin(filters), std::end(filters),
-                      std::back_inserter(customFilters));
-
             std::string tempPath = NPath.string();
             char time_buffer[128];
             struct tm timeinfo;
@@ -895,26 +881,20 @@ void ADIMainWindow::ShowRecordTree() {
             tempPath.copy(tempbuff, tempPath.length(), 0);
             tempbuff[tempPath.length()] = '\0';
             std::string saveFile = getADIFileName(NULL, tempbuff, filterIndex);
-            if (!saveFile.empty()) {
-                //Add a file extension
-                switch (filterIndex) {
-                case 1:
-                    saveFile += ".raw";
-                    if (!isPlaying) {
-                        //"Press" the play button, in case it is not pressed.
-                        PlayCCD(
-                            modeSelection,
+            //Check if filename exists and format is corrct
+            if (!saveFile.empty() && filterIndex) {
+                if (!isPlaying && filterIndex) {
+                    //"Press" the play button, in case it is not pressed.
+                    PlayCCD(modeSelection,
                             viewSelection); //Which ever is currently selected
-                        isPlaying = true;
-                    }
-                    view->m_ctrl->startRecording(saveFile, view->frameHeight,
-                                                 view->frameWidth,
-                                                 recordingSeconds);
-                    isRecording = true;
-                    break;
-                default: //custom extension
-                    break;
+                    isPlaying = true;
                 }
+                //setting binary save option
+                view->m_ctrl->m_saveBinaryFormat = view->getSaveBinaryFormat();
+                view->m_ctrl->startRecording(saveFile, view->frameHeight,
+                                             view->frameWidth,
+                                             recordingSeconds);
+                isRecording = true;
 
                 // Save CFG and CCB next to the recording
                 auto camera = getActiveCamera();
@@ -954,6 +934,13 @@ void ADIMainWindow::ShowRecordTree() {
 
             stopPlayCCD(); //TODO: Create a Stop ToF camera
             isPlaying = false;
+        }
+
+        ImGui::NewLine();
+        ImGui::Checkbox("Save Binary records", &m_saveBinaryFormatTmp);
+        if (view != NULL) {
+            // saveBinaryFormatTmp = view->getSaveBinaryFormat();
+            view->setSaveBinaryFormat(m_saveBinaryFormatTmp);
         }
         ImGui::TreePop(); //Record
     }
