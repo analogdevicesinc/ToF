@@ -19,10 +19,10 @@ extern std::vector<std::string> customFilters;
 *                      Opens a dialog box to fetch a file with a custom file extension
 * @param filter        Is assigned a customized filter per camera requirements
 * @param owner         Platform specific, typically NULL
+* @param FilterIndex   Index of file filter
 * @return              Selected file name with its extension
 */
-std::string openADIFileName(const char *filter = customFilter.c_str(),
-                            void *owner = NULL);
+std::string openADIFileName(const char *filter, void *owner, int &FilterIndex);
 
 /**
 * @brief Opens a dialog box to save a file
