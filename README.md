@@ -62,6 +62,7 @@ For more details about the SDK check the links below:
 | scripts | Useful development scripts |
 | sdcard-images-utils | Things required to build a SD card image for targets |
 | sdk | SDK source code |
+| tools | Standalone applications |
 
 ---
 **Known issues**
