@@ -122,14 +122,14 @@ if "%1" neq "" (
    shift
    goto :interpret_arg
    )
-   shift
-   goto :interpret_arg
    if /I "%1" EQU "-j" (
-   set /a threads=%2
+   set threads=%2
    shift
    shift
    goto :interpret_arg
    )
+   shift
+   goto :interpret_arg
 )
 
 if %display_help%==1 (
@@ -181,7 +181,7 @@ if %set_generator%==0 (
    set opencv_vs=16
    )
 if %opt%==0 (
-    echo Please enter a correct configuration ("Visual Studio 17 2022"; "Visual Studio 16 2019"; "Visual Studio 15 2017 Win64" or "Visual Studio 14 2015 Win64"^)
+    echo Please enter a correct configuration ("Visual Studio 17 2022";"Visual Studio 16 2019"; "Visual Studio 15 2017 Win64" or "Visual Studio 14 2015 Win64"^)
     EXIT /B %ERRORLEVEL%
 )
 echo Setup will continue with the generator: %generator%
@@ -228,7 +228,7 @@ if %use_depth_compute_stubs%==1 (
    ) else (
    cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir%
 )
-cmake --build . --config %config_type% -j threads
+cmake --build . --config %config_type% -j %threads%
 popd
 EXIT /B %ERRORLEVEL%
 
@@ -254,7 +254,7 @@ ECHO        Debug   = Configuration for Debug build.
 ECHO --use_depth_compute_stubs
 ECHO        Used when building with stubs in place of the depth compute libraries.
 ECHO -j
-ECHO 	    Set the number of threads used for building, by default is set to 4.
+ECHO        Set the number of threads used for building, by default is set to 4.
 EXIT /B 0
 
 :yes_or_exit
@@ -276,7 +276,7 @@ git checkout tags/v0.6.0
 if not exist "build_0_6_0" ( mkdir build_0_6_0 )
 pushd build_0_6_0
 cmake -DWITH_GFLAGS=off -DCMAKE_INSTALL_PREFIX=%deps_install_dir%\glog -G %generator% ..
-cmake --build . --target install --config %configuration% -j threads
+cmake --build . --target install --config %configuration% -j %threads%
 popd
 popd
 popd
@@ -291,7 +291,7 @@ pushd protobuf
 if not exist "build_3_9_0" ( mkdir build_3_9_0 )
 pushd build_3_9_0
 cmake -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=%deps_install_dir%\protobuf -Dprotobuf_MSVC_STATIC_RUNTIME=OFF -G %generator% ..\cmake\
-cmake --build . --target install --config %configuration% -j threads
+cmake --build . --target install --config %configuration% -j %threads%
 popd
 popd
 popd
@@ -306,7 +306,7 @@ pushd libwebsockets
 if not exist "build_3_1_stable" ( mkdir build_3_1_stable )
 pushd build_3_1_stable
 cmake -DLWS_WITH_SSL=OFF -DLWS_WITHOUT_TESTAPPS=ON -DLWS_WITHOUT_TEST_SERVER=ON -DLWS_WITH_SHARED=ON -DLWS_WITH_STATIC=OFF -DCMAKE_INSTALL_PREFIX=%deps_install_dir%\libwebsockets -G %generator% ..
-cmake --build . --target install --config %configuration% -j threads
+cmake --build . --target install --config %configuration% -j %threads%
 popd
 popd
 popd
