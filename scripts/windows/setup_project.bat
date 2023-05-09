@@ -11,6 +11,7 @@ set /a set_build=0
 set /a set_deps=0
 set /a set_deps_install=0
 set /a use_depth_compute_stubs=0
+set /a use_depth_compute_opensource=0
 set /a threads=4
 
 set build_dire=""
@@ -122,6 +123,12 @@ if "%1" neq "" (
    shift
    goto :interpret_arg
    )
+   if /I "%1" EQU "--use_depth_compute_opensource" (
+   set /a use_depth_compute_opensource=1
+   shift
+   shift
+   goto :interpret_arg
+   )
    if /I "%1" EQU "-j" (
    set threads=%2
    shift
@@ -224,9 +231,13 @@ CALL :install_websockets %config_type% %generator%
 ::build the project with the selected options
 pushd %build_dire%
 if %use_depth_compute_stubs%==1 (
-   cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir% -DUSE_DEPTH_COMPUTE_STUBS=ON
+   cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir% -DUSE_DEPTH_COMPUTE_STUBS=ON -DCMAKE_BUILD_TYPE=%config_type%
    ) else (
-   cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir%
+		if %use_depth_compute_opensource%==1 (
+			cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir% -DUSE_DEPTH_COMPUTE_OPENSOURCE=ON -DCMAKE_BUILD_TYPE=%config_type%
+		) else (
+			cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir% -DCMAKE_BUILD_TYPE=%config_type%
+		) 
 )
 cmake --build . --config %config_type% -j %threads%
 popd
