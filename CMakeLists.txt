@@ -111,7 +111,17 @@ else()
         add_definitions(-DUSE_PROTOBUF)
 endif()
 
-set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
+message("${CMAKE_BUILD_TYPE}")
+
+if(WIN32)
+    if(USE_DEPTH_COMPUTE_STUBS)
+		set(LIBTOFI_LIBDIR_PATH "${CMAKE_BINARY_DIR}/sdk/common/adi/depth-compute-stub/${CMAKE_BUILD_TYPE}")
+	elseif(USE_DEPTH_COMPUTE_OPENSOURCE)
+		set(LIBTOFI_LIBDIR_PATH "${CMAKE_BINARY_DIR}/sdk/common/adi/depth-compute-opensource/${CMAKE_BUILD_TYPE}")
+	else()
+		set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
+    endif() 
+endif()
 
 set(CONFIG_DIR_NAME "config")
 add_definitions(-DCONFIG_DIR_NAME="${CONFIG_DIR_NAME}")
