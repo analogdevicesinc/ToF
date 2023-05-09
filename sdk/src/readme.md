@@ -6,8 +6,5 @@ Container for SDK source and header files
 #### Directory Structure
 | Directory/File | Description |
 | --------- | ----------- |
-| target | Directory containing Dragonboard and Raspberry Pi specific files |
-| linux | Directory containing Linux host specific files |
-| macos | Directory containing MacOS host specific files |
-| windows | Directory containing Windows host specific files |
-
+| cameras | Directory containing ITOF camera and frame specific source files |
+| connections | Directory containing  the source files for network, usb (windows, linux and macOS), target and offline connection types|
