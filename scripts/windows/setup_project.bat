@@ -120,12 +120,10 @@ if "%1" neq "" (
    if /I "%1" EQU "--use_depth_compute_stubs" (
    set /a use_depth_compute_stubs=1
    shift
-   shift
    goto :interpret_arg
    )
    if /I "%1" EQU "--use_depth_compute_opensource" (
    set /a use_depth_compute_opensource=1
-   shift
    shift
    goto :interpret_arg
    )
@@ -143,7 +141,13 @@ if %display_help%==1 (
    call :print_help
    EXIT /B 0
    )
-
+   
+if %use_depth_compute_opensource%==1 (
+	if %use_depth_compute_stubs%==1 (
+		echo Please choose only one between stubs and opensource
+		EXIT /B %ERRORLEVEL%
+	)
+)
 ::check if the configuration is correct
 set /a opt=0
 if "%config_type%"=="Release" (
