@@ -240,7 +240,7 @@ if %use_depth_compute_stubs%==1 (
 		if %use_depth_compute_opensource%==1 (
 			cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir% -DUSE_DEPTH_COMPUTE_OPENSOURCE=ON -DCMAKE_BUILD_TYPE=%config_type%
 		) else (
-			cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir% -DCMAKE_BUILD_TYPE=%config_type%
+			cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir% 
 		) 
 )
 cmake --build . --config %config_type% -j %threads%
@@ -268,6 +268,8 @@ ECHO        Release = Configuration for Release build.
 ECHO        Debug   = Configuration for Debug build.
 ECHO --use_depth_compute_stubs
 ECHO        Used when building with stubs in place of the depth compute libraries.
+ECHO --use_depth_compute_opensource
+ECHO        Used when building with opensource in place of the depth compute libraries.
 ECHO -j
 ECHO        Set the number of threads used for building, by default is set to 4.
 EXIT /B 0
