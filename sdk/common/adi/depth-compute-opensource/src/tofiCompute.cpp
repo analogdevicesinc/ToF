@@ -158,7 +158,7 @@ uint32_t GenerateXYZTables(const float **pp_x_table, const float **pp_y_table,
 uint32_t ComputeXYZ(const uint16_t *p_depth, XYZTable *p_xyz_data,
                     int16_t *p_xyz_image, uint32_t n_rows, uint32_t n_cols) {
 
-    for (uint32_t pixel_id = 0; pixel_id < n_rows * n_cols; pixel_id++) {
+    for (int pixel_id = 0; pixel_id < n_rows * n_cols; pixel_id++) {
         p_xyz_image[3 * pixel_id + 0] = (int16_t)(floorf(
             p_xyz_data->p_x_table[pixel_id] * (float)p_depth[pixel_id] + 0.5f));
 

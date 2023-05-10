@@ -244,7 +244,7 @@ uint32_t ComputeXYZ(uint16_t *p_depth, XYZData *p_xyz_data,
     const uint32_t n_rows = p_xyz_data->n_rows;
     const uint32_t n_cols = p_xyz_data->n_cols;
 
-    for (uint32_t pixel_id = 0; pixel_id < n_rows * n_cols; pixel_id++) {
+    for (int pixel_id = 0; pixel_id < n_rows * n_cols; pixel_id++) {
         p_xyz_image[3 * pixel_id + 0] = (int16_t)(floorf(
             p_xyz_data->p_x_table[pixel_id] * (float)p_depth[pixel_id] + 0.5f));
 
