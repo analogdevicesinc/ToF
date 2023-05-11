@@ -13,15 +13,9 @@ endif(MSVC)
 
 
 set(SRC_DIR ${CMAKE_SOURCE_DIR}/examples/point_cloud)
-set(DOCOPT_SRC ${CMAKE_SOURCE_DIR}/examples/data_collect/third_party/doc_opt/)
 set(TOFI_CCB ${CMAKE_SOURCE_DIR}/sdk/common/adi/ccb)
 
 set(THIRD_PARTY_SRC 
-	${DOCOPT_SRC}/docopt.cpp
-	${DOCOPT_SRC}/docopt.h
-	${DOCOPT_SRC}/docopt_value.h
-	${DOCOPT_SRC}/docopt_util.h
-	${DOCOPT_SRC}/docopt_private.h
     ${TOFI_CCB}/src/ccb.c
     ${TOFI_CCB}/include/ccb.h
 )
@@ -38,6 +32,6 @@ add_executable(point_cloud ${THIRD_PARTY_SRC} ${SRC_FILES})
 target_include_directories(point_cloud PRIVATE
 	    ${TOFI_CCB}/include/
         ${SRC_DIR}/
-        ${DOCOPT_SRC}
 )
 
+target_link_libraries(${PROJECT_NAME} PRIVATE doc_opt)

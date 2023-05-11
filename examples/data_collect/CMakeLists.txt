@@ -1,16 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(data_collect)
 
-set(DOCOPT_LIBRARY third_party/doc_opt)
-
-include_directories(
-    ${DOCOPT_LIBRARY}
-)
-
-set( SOURCES
-${DOCOPT_LIBRARY}/docopt.cpp
-)
-
 add_executable(${PROJECT_NAME} main.cpp ${SOURCES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11)
@@ -62,4 +52,4 @@ if ( WIN32 )
    endif()
 endif()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE aditof)
+target_link_libraries(${PROJECT_NAME} PRIVATE aditof doc_opt)
