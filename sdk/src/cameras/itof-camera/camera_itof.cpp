@@ -1862,7 +1862,7 @@ aditof::Status CameraItof::adsd3500ToggleFsync() {
 }
 
 aditof::Status CameraItof::adsd3500GetFirmwareVersion(std::string &fwVersion,
-                                                         std::string &fwHash) {
+                                                      std::string &fwHash) {
     using namespace aditof;
     Status status = Status::OK;
     uint8_t fwData[44] = {0};

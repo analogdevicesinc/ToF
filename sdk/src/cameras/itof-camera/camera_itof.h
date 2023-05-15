@@ -353,7 +353,7 @@ class CameraItof : public aditof::Camera {
      * @param[out] fwHash - the ADSD3500 firmware git commit hash
     */
     aditof::Status adsd3500GetFirmwareVersion(std::string &fwVersion,
-                                                 std::string &fwHash);
+                                              std::string &fwHash);
 
   private:
     using noArgCallable = std::function<aditof::Status()>;

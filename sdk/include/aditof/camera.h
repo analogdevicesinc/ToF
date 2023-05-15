@@ -308,7 +308,7 @@ class SDK_API Camera {
      * @param[out] fwHash - the ADSD3500 firmware git commit hash
     */
     virtual Status adsd3500GetFirmwareVersion(std::string &fwVersion,
-                                                 std::string &fwHash) = 0;
+                                              std::string &fwHash) = 0;
 };
 
 } // namespace aditof
