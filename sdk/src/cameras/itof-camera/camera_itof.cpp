@@ -594,7 +594,6 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     setAdsd3500WithIniParams(m_iniKeyValPairs);
     configureSensorFrameType();
     setMode(frameType);
-
     LOG(INFO) << "Using ini file: " << m_ini_depth;
 
     status = m_depthSensor->setFrameType(*frameTypeIt);
@@ -2040,18 +2039,18 @@ void CameraItof::setAdsd3500WithIniParams(
         LOG(WARNING) << "radialThreshMax was not found in .ini file";
     }
 
+    it = iniKeyValPairs.find("jblfWindowSize");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500SetJBLFfilterSize(std::stoi(it->second));
+    } else {
+        LOG(WARNING) << "jblfWindowSize was not found in .ini file";
+    }
+
     it = iniKeyValPairs.find("jblfApplyFlag");
     if (it != iniKeyValPairs.end()) {
         bool en = !(it->second == "0");
         adsd3500SetJBLFfilterEnableState(en);
     } else {
         LOG(WARNING) << "jblfApplyFlag was not found in .ini file";
-    }
-
-    it = iniKeyValPairs.find("jblfWindowSize");
-    if (it != iniKeyValPairs.end()) {
-        adsd3500SetJBLFfilterSize(std::stoi(it->second));
-    } else {
-        LOG(WARNING) << "jblfWindowSize was not found in .ini file";
     }
 }
