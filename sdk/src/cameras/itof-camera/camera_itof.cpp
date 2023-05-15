@@ -353,7 +353,7 @@ aditof::Status CameraItof::initialize() {
 
         std::string fwVersion;
         std::string fwHash;
-        status = adsd3500_get_firmware_version(fwVersion, fwHash);
+        status = adsd3500GetFirmwareVersion(fwVersion, fwHash);
 
         if (status == Status::OK) {
             LOG(INFO) << "Current adsd3500 firmware version is: "
@@ -456,7 +456,7 @@ aditof::Status CameraItof::initialize() {
     }
 
     if (m_adsd3500Enabled) {
-        status = adsd3500_set_toggle_mode(m_fsyncMode);
+        status = adsd3500SetToggleMode(m_fsyncMode);
         if (status != Status::OK) {
             LOG(ERROR) << "Failed to set fsync mode";
             return status;
@@ -1823,7 +1823,7 @@ aditof::Status CameraItof::parseJsonFileContent() {
     return status;
 }
 
-aditof::Status CameraItof::adsd3500_set_toggle_mode(int mode) {
+aditof::Status CameraItof::adsd3500SetToggleMode(int mode) {
     /*mode = 2, adsd3500 fsync does not automatically toggle - Pin set as input (Slave)*/
     /*mode = 1, adsd3500 fsync automatically toggles at user specified framerate*/
     /*mode = 0, adsd3500 fsync does not automatically toggle*/
@@ -1843,7 +1843,7 @@ aditof::Status CameraItof::adsd3500_set_toggle_mode(int mode) {
     return status;
 }
 
-aditof::Status CameraItof::adsd3500_toggle_fsync() {
+aditof::Status CameraItof::adsd3500ToggleFsync() {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -1861,7 +1861,7 @@ aditof::Status CameraItof::adsd3500_toggle_fsync() {
     return status;
 }
 
-aditof::Status CameraItof::adsd3500_get_firmware_version(std::string &fwVersion,
+aditof::Status CameraItof::adsd3500GetFirmwareVersion(std::string &fwVersion,
                                                          std::string &fwHash) {
     using namespace aditof;
     Status status = Status::OK;
