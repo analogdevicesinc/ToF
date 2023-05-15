@@ -53,6 +53,7 @@ class Adsd3500InterruptNotifier final {
     static Adsd3500InterruptNotifier &getInstance();
     aditof::Status enableInterrupts();
     aditof::Status disableInterrupts();
+    bool interruptsAvailable();
     void subscribeSensor(std::weak_ptr<Adsd3500Sensor> sensor);
     void unsubscribeSensor(std::weak_ptr<Adsd3500Sensor> sensor);
 
@@ -61,4 +62,5 @@ class Adsd3500InterruptNotifier final {
 
   private:
     static std::vector<std::weak_ptr<Adsd3500Sensor>> m_sensors;
+    bool m_interruptsAvailable;
 };

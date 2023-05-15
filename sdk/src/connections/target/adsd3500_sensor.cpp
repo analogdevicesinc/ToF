@@ -199,8 +199,10 @@ aditof::Status Adsd3500Sensor::open() {
     Status status = Status::OK;
 
     // Subscribe to ADSD3500 interrupts
-    std::weak_ptr<Adsd3500Sensor> wptr = shared_from_this();
-    Adsd3500InterruptNotifier::getInstance().subscribeSensor(wptr);
+    if (Adsd3500InterruptNotifier::getInstance().interruptsAvailable()) {
+        std::weak_ptr<Adsd3500Sensor> wptr = shared_from_this();
+        Adsd3500InterruptNotifier::getInstance().subscribeSensor(wptr);
+    }
 
     LOG(INFO) << "Opening device";
 
@@ -1533,7 +1535,11 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
 
 aditof::Status Adsd3500Sensor::adsd3500_register_interrupt_callback(
     aditof::SensorInterruptCallback cb) {
-    m_interruptCallback = cb;
+    if (Adsd3500InterruptNotifier::getInstance().interruptsAvailable()) {
+        m_interruptCallback = cb;
+    } else {
+        return aditof::Status::UNAVAILABLE;
+    }
 
     return aditof::Status::OK;
 }

@@ -1506,7 +1506,9 @@ aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath) {
                        << (int)m_adsd3500Status;
         }
     } else {
-        LOG(INFO) << "Adsd3500 firmware updated succesfully!";
+        LOG(INFO) << "Adsd3500 firmware updated succesfully! Waiting 60 "
+                     "seconds since interrupts support was not detected";
+        std::this_thread::sleep_for(std::chrono::seconds(60));
     }
 
     return aditof::Status::OK;

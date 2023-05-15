@@ -50,6 +50,8 @@ aditof::Status Adsd3500InterruptNotifier::enableInterrupts() {
     act.sa_sigaction = Adsd3500InterruptNotifier::signalEventHandler;
     sigaction(SIGETX, &act, NULL);
 
+    m_interruptsAvailable = false;
+
     int debug_fd = ::open("/sys/kernel/debug/adsd3500/value", O_RDWR);
     if (debug_fd < 0) {
         LOG(WARNING) << "Failed to open the debug sysfs."
@@ -63,11 +65,17 @@ aditof::Status Adsd3500InterruptNotifier::enableInterrupts() {
         close(debug_fd);
     }
 
+    m_interruptsAvailable = true;
+
     return aditof::Status::OK;
 }
 
 aditof::Status Adsd3500InterruptNotifier::disableInterrupts() {
     return aditof::Status::OK;
+}
+
+bool Adsd3500InterruptNotifier::interruptsAvailable() {
+    return m_interruptsAvailable;
 }
 
 void Adsd3500InterruptNotifier::subscribeSensor(
