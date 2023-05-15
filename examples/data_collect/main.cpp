@@ -87,7 +87,9 @@ static const char kUsagePublic[] =
         1: long-range native
         2: short-range Qnative
         3: long-range Qnative
-        5: vga
+        4: pcm-native
+        5: long-range mixed
+        6: short-range mixed
 )";
 // Hide 'ft' (frame_type) option from public doc string
 static const char kUsageInternal[] =
