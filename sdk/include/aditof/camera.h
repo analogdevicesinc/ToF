@@ -193,16 +193,16 @@ class SDK_API Camera {
 
     /**
      * @brief Enables or disables FSYNC toggle for ADSD3500
-     * @param[in] mode - 2 = Fsync pin set as HiZ ; 1 = Toggle at user specified framerate ; 0 = Toggle controlled via adsd3500_toggle_fsync ; 
+     * @param[in] mode - 2 = Fsync pin set as HiZ ; 1 = Toggle at user specified framerate ; 0 = Toggle controlled via adsd3500ToggleFsync ; 
      * @return Status
      */
-    virtual Status adsd3500_set_toggle_mode(int mode) = 0;
+    virtual Status adsd3500SetToggleMode(int mode) = 0;
 
     /**
      * @brief Toggles ADSD3500 FSYNC once if automated FSYNC is disabled
      * @return Status
      */
-    virtual Status adsd3500_toggle_fsync() = 0;
+    virtual Status adsd3500ToggleFsync() = 0;
 
     /**
      * @brief Set the AB invalidation threshold
@@ -307,7 +307,7 @@ class SDK_API Camera {
      * @param[out] fwVersion - the ADSD3500 firmware version
      * @param[out] fwHash - the ADSD3500 firmware git commit hash
     */
-    virtual Status adsd3500_get_firmware_version(std::string &fwVersion,
+    virtual Status adsd3500GetFirmwareVersion(std::string &fwVersion,
                                                  std::string &fwHash) = 0;
 };
 

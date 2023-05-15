@@ -131,8 +131,8 @@ class CameraItof : public aditof::Camera {
     aditof::Status getTemperatureSensors(
         std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
             &sensors) override;
-    aditof::Status adsd3500_set_toggle_mode(int mode);
-    aditof::Status adsd3500_toggle_fsync();
+    aditof::Status adsd3500SetToggleMode(int mode);
+    aditof::Status adsd3500ToggleFsync();
     aditof::Status adsd3500SetABinvalidationThreshold(int threshold) override;
     aditof::Status adsd3500GetABinvalidationThreshold(int &threshold) override;
     aditof::Status adsd3500SetConfidenceThreshold(int threshold) override;
@@ -352,7 +352,7 @@ class CameraItof : public aditof::Camera {
      * @param[out] fwVersion - the ADSD3500 firmware version
      * @param[out] fwHash - the ADSD3500 firmware git commit hash
     */
-    aditof::Status adsd3500_get_firmware_version(std::string &fwVersion,
+    aditof::Status adsd3500GetFirmwareVersion(std::string &fwVersion,
                                                  std::string &fwHash);
 
   private:

@@ -287,10 +287,9 @@ PYBIND11_MODULE(aditofpython, m) {
                 return status;
             },
             py::arg("tempSensors"))
-        .def("adsd3500_set_toggle_mode",
-             &aditof::Camera::adsd3500_set_toggle_mode, py::arg("mode"))
-        .def("adsd3500_toggle_fsync", &aditof::Camera::adsd3500_toggle_fsync)
-        .def("adsd3500_toggle_fsync", &aditof::Camera::adsd3500_toggle_fsync)
+        .def("adsd3500SetToggleMode",
+             &aditof::Camera::adsd3500SetToggleMode, py::arg("mode"))
+        .def("adsd3500ToggleFsync", &aditof::Camera::adsd3500ToggleFsync)
         .def("adsd3500SetABinvalidationThreshold",
              &aditof::Camera::adsd3500SetABinvalidationThreshold,
              py::arg("threshold"))
