@@ -1,4 +1,5 @@
 /*
+/*
  * BSD 3-Clause License
  *
  * Copyright (c) 2019, Analog Devices, Inc.
@@ -309,6 +310,152 @@ class SDK_API Camera {
     */
     virtual Status adsd3500GetFirmwareVersion(std::string &fwVersion,
                                               std::string &fwHash) = 0;
+
+    /**
+     * @brief Set ADSD3500 MIPI output speed
+     * @param[in] speed - See "Set MIPI Output Speed" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual Status adsd3500SetMIPIOutputSpeed(uint16_t speed) = 0;
+
+    /**
+     * @brief Get ADSD3500 MIPI output speed
+     * @param[out] speed - See "Get MIPI Output Speed" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual Status adsd3500GetMIPIOutputSpeed(uint16_t &speed) = 0;
+
+    /**
+     * @brief Get error code from the imager
+     * @param[out] errcode - See "Get Imager Error Code" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual Status adsd3500GetImagerErrorCode(uint16_t &errcode) = 0;
+
+    /**
+     * @brief Set the delay for VCSEL - ADSD3100 imager only
+     * @param[in] delay - See "Set VCSEL Delay" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual Status adsd3500SetVCSELDelay(uint16_t delay) = 0;
+
+    /**
+     * @brief Get the delay for VCSEL - ADSD3100 imager only
+     * @param[out] delay - See "Get VCSEL Delay" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual Status adsd3500GetVCSELDelay(uint16_t &delay) = 0;
+
+    /**
+     * @brief Set JBLF Max Edge Threshold
+     * @param[in] threshold - See "Set JBLF Max Edge Threshold" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual Status adsd3500SetJBLFMaxEdgeThreshold(uint16_t threshold) = 0;
+
+    /**
+     * @brief Get JBLF Max Edge Threshold
+     * @param[out] threshold - See "Get JBLF Max Edge Threshold" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual Status adsd3500SetJBLFABThreshold(uint16_t threshold) = 0;
+
+    /**
+     * @brief Set JBLF Gaussian Sigma
+     * @param[in] value - See "Set JBLF Gaussian Sigma" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual Status adsd3500SetJBLFGaussianSigma(uint16_t value) = 0;
+
+    /**
+     * @brief Get JBLF Gaussian Sigma
+     * @param[out] value - See "Get JBLF Gaussian Sigma" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual Status adsd3500GetJBLFGaussianSigma(uint16_t &value) = 0;
+
+    /**
+     * @brief Set JBLF Exponential Term
+     * @param[in] value - See "Set JBLF Exponential Term" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual Status adsd3500SetJBLFExponentialTerm(uint16_t value) = 0;
+
+    /**
+     * @brief Get JBLF Exponential Term
+     * @param[out] value - See "Get JBLF Exponential Term" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual Status adsd3500GetJBLFExponentialTerm(uint16_t &value) = 0;
+
+    /**
+     * @brief Get Frame Rate
+     * @param[out] fps - See "Get Frame Rate" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual Status adsd3500GetFrameRate(uint16_t &fps) = 0;
+
+    /**
+     * @brief Set Enable Edge Confidence
+     * @param[in] value - See "Set Enable Edge Confidence" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual Status adsd3500SetEnableEdgeConfidence(uint16_t value) = 0;
+
+    /**
+     * @brief Get Temperature Compensation Status
+     * @param[out] value - See "Get Temperature Compensation Status" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual Status
+    adsd3500GetTemperatureCompensationStatus(uint16_t &value) = 0;
+
+    /**
+     * @brief Set Enable Phase Invalidation
+     * @param[out] value - See "Set Enable Phase Invalidation" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual Status adsd3500SetEnablePhaseInvalidation(uint16_t value) = 0;
+
+    /**
+     * @brief Set Enable Temperature Compensation
+     * @param[out] value - See "Set Enable Temperature Compensation" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual Status adsd3500SetEnableTemperatureCompensation(uint16_t value) = 0;
+
+    /**
+     * @brief Set Enable Embedded Header in the AB frame
+     * @param[in] value - See "Enable/Disable Output Embedded Header in AB Frame" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual aditof::Status
+    adsd3500SetEnableEmbeddedHeaderinAB(uint16_t value) = 0;
+
+    /**
+     * @brief Get state of Enable Embedded Header in the AB frame
+     * @param[out] value - See "Get Output Embedded Header in AB Frame status" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual aditof::Status
+    adsd3500GetEnableEmbeddedHeaderinAB(uint16_t &value) = 0;
+
+    /**
+     * @brief Generic ADSD3500 function for commands not defined in the SDK (yet)
+     * @param[in] reg - 16-bit ADSD3500 register
+     * @param[in] value - 16-bit value to write to the register
+     * @return Status
+     */
+    virtual Status adsd3500SetGenericTemplate(uint16_t reg, uint16_t value) = 0;
+
+    /**
+     * @brief Generic ADSD3500 function for commands not defined in the SDK (yet)
+     * @param[in] reg - 16-bit ADSD3500 register
+     * @param[out] value - 16-bit value read from the register
+     * @return Status
+     */
+    virtual Status adsd3500GetGenericTemplate(uint16_t reg,
+                                              uint16_t &value) = 0;
 };
 
 } // namespace aditof
