@@ -1930,10 +1930,106 @@ aditof::Status CameraItof::adsd3500GetRadialThresholdMin(int &threshold) {
 aditof::Status CameraItof::adsd3500SetRadialThresholdMax(int threshold) {
     return m_depthSensor->adsd3500_write_cmd(0x0029, threshold);
 }
+
 aditof::Status CameraItof::adsd3500GetRadialThresholdMax(int &threshold) {
     return m_depthSensor->adsd3500_read_cmd(
         0x0030, reinterpret_cast<uint16_t *>(&threshold));
 }
+
+aditof::Status CameraItof::adsd3500SetMIPIOutputSpeed(uint16_t speed) {
+    return m_depthSensor->adsd3500_write_cmd(0x0031, speed);
+}
+
+aditof::Status CameraItof::adsd3500GetMIPIOutputSpeed(uint16_t &speed) {
+    return m_depthSensor->adsd3500_read_cmd(
+        0x0034, reinterpret_cast<uint16_t *>(&speed));
+}
+
+aditof::Status CameraItof::adsd3500GetImagerErrorCode(uint16_t &errcode) {
+    return m_depthSensor->adsd3500_read_cmd(
+        0x0038, reinterpret_cast<uint16_t *>(&errcode));
+}
+
+aditof::Status CameraItof::adsd3500SetVCSELDelay(uint16_t delay) {
+    return m_depthSensor->adsd3500_write_cmd(0x0066, delay);
+}
+
+aditof::Status CameraItof::adsd3500GetVCSELDelay(uint16_t &delay) {
+    return m_depthSensor->adsd3500_read_cmd(
+        0x0068, reinterpret_cast<uint16_t *>(&delay));
+}
+
+aditof::Status CameraItof::adsd3500SetJBLFMaxEdgeThreshold(uint16_t threshold) {
+    return m_depthSensor->adsd3500_write_cmd(0x0074, threshold);
+}
+
+aditof::Status CameraItof::adsd3500SetJBLFABThreshold(uint16_t threshold) {
+    return m_depthSensor->adsd3500_write_cmd(0x0075, threshold);
+}
+
+aditof::Status CameraItof::adsd3500SetJBLFGaussianSigma(uint16_t value) {
+    return m_depthSensor->adsd3500_write_cmd(0x006B, value);
+}
+
+aditof::Status CameraItof::adsd3500GetJBLFGaussianSigma(uint16_t &value) {
+    return m_depthSensor->adsd3500_read_cmd(
+        0x0069, reinterpret_cast<uint16_t *>(&value));
+}
+
+aditof::Status CameraItof::adsd3500SetJBLFExponentialTerm(uint16_t value) {
+    return m_depthSensor->adsd3500_write_cmd(0x006C, value);
+}
+
+aditof::Status CameraItof::adsd3500GetJBLFExponentialTerm(uint16_t &value) {
+    return m_depthSensor->adsd3500_read_cmd(
+        0x006A, reinterpret_cast<uint16_t *>(&value));
+}
+
+aditof::Status CameraItof::adsd3500GetFrameRate(uint16_t &fps) {
+    return m_depthSensor->adsd3500_read_cmd(0x0023,
+                                            reinterpret_cast<uint16_t *>(&fps));
+}
+
+aditof::Status CameraItof::adsd3500SetEnableEdgeConfidence(uint16_t value) {
+    return m_depthSensor->adsd3500_write_cmd(0x0062, value);
+}
+
+aditof::Status
+CameraItof::adsd3500GetTemperatureCompensationStatus(uint16_t &value) {
+    return m_depthSensor->adsd3500_read_cmd(
+        0x0076, reinterpret_cast<uint16_t *>(&value));
+}
+
+aditof::Status CameraItof::adsd3500SetEnablePhaseInvalidation(uint16_t value) {
+    return m_depthSensor->adsd3500_write_cmd(0x0072, value);
+}
+
+aditof::Status
+CameraItof::adsd3500SetEnableTemperatureCompensation(uint16_t value) {
+    return m_depthSensor->adsd3500_write_cmd(0x0021, value);
+}
+
+aditof::Status CameraItof::adsd3500SetEnableEmbeddedHeaderinAB(uint16_t value) {
+    return m_depthSensor->adsd3500_write_cmd(0x0036, value);
+}
+
+aditof::Status
+CameraItof::adsd3500GetEnableEmbeddedHeaderinAB(uint16_t &value) {
+    return m_depthSensor->adsd3500_read_cmd(
+        0x0037, reinterpret_cast<uint16_t *>(&value));
+}
+
+aditof::Status CameraItof::adsd3500SetGenericTemplate(uint16_t reg,
+                                                      uint16_t value) {
+    return m_depthSensor->adsd3500_write_cmd(reg, value);
+}
+
+aditof::Status CameraItof::adsd3500GetGenericTemplate(uint16_t reg,
+                                                      uint16_t &value) {
+    return m_depthSensor->adsd3500_read_cmd(
+        reg, reinterpret_cast<uint16_t *>(&value));
+}
+
 aditof::Status CameraItof::adsd3500GetSensorTemperature(uint16_t &tmpValue) {
     using namespace aditof;
     Status status = Status::OK;

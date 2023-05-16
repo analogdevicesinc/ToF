@@ -131,8 +131,8 @@ class CameraItof : public aditof::Camera {
     aditof::Status getTemperatureSensors(
         std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
             &sensors) override;
-    aditof::Status adsd3500SetToggleMode(int mode);
-    aditof::Status adsd3500ToggleFsync();
+    aditof::Status adsd3500SetToggleMode(int mode) override;
+    aditof::Status adsd3500ToggleFsync() override;
     aditof::Status adsd3500SetABinvalidationThreshold(int threshold) override;
     aditof::Status adsd3500GetABinvalidationThreshold(int &threshold) override;
     aditof::Status adsd3500SetConfidenceThreshold(int threshold) override;
@@ -147,6 +147,33 @@ class CameraItof : public aditof::Camera {
     aditof::Status adsd3500GetRadialThresholdMax(int &threshold) override;
     aditof::Status adsd3500GetSensorTemperature(uint16_t &tmpValue) override;
     aditof::Status adsd3500GetLaserTemperature(uint16_t &tmpValue) override;
+    aditof::Status adsd3500GetFirmwareVersion(std::string &fwVersion,
+                                              std::string &fwHash) override;
+    aditof::Status adsd3500SetMIPIOutputSpeed(uint16_t speed) override;
+    aditof::Status adsd3500GetMIPIOutputSpeed(uint16_t &speed) override;
+    aditof::Status adsd3500GetImagerErrorCode(uint16_t &errcode) override;
+    aditof::Status adsd3500SetVCSELDelay(uint16_t delay) override;
+    aditof::Status adsd3500GetVCSELDelay(uint16_t &delay) override;
+    aditof::Status adsd3500SetJBLFMaxEdgeThreshold(uint16_t threshold) override;
+    aditof::Status adsd3500SetJBLFABThreshold(uint16_t threshold) override;
+    aditof::Status adsd3500SetJBLFGaussianSigma(uint16_t value) override;
+    aditof::Status adsd3500GetJBLFGaussianSigma(uint16_t &value) override;
+    aditof::Status adsd3500SetJBLFExponentialTerm(uint16_t value) override;
+    aditof::Status adsd3500GetJBLFExponentialTerm(uint16_t &value) override;
+    aditof::Status adsd3500GetFrameRate(uint16_t &fps) override;
+    aditof::Status adsd3500SetEnableEdgeConfidence(uint16_t value) override;
+    aditof::Status
+    adsd3500GetTemperatureCompensationStatus(uint16_t &value) override;
+    aditof::Status adsd3500SetEnablePhaseInvalidation(uint16_t value) override;
+    aditof::Status
+    adsd3500SetEnableTemperatureCompensation(uint16_t value) override;
+    aditof::Status adsd3500SetEnableEmbeddedHeaderinAB(uint16_t value) override;
+    aditof::Status
+    adsd3500GetEnableEmbeddedHeaderinAB(uint16_t &value) override;
+    aditof::Status adsd3500SetGenericTemplate(uint16_t reg,
+                                              uint16_t value) override;
+    aditof::Status adsd3500GetGenericTemplate(uint16_t reg,
+                                              uint16_t &value) override;
 
   private:
     /**
@@ -346,14 +373,6 @@ class CameraItof : public aditof::Camera {
     */
     void setAdsd3500WithIniParams(
         const std::map<std::string, std::string> &iniKeyValPairs);
-
-    /**
-     * Get the ASDSD3500 firmware version from the ADSD3500
-     * @param[out] fwVersion - the ADSD3500 firmware version
-     * @param[out] fwHash - the ADSD3500 firmware git commit hash
-    */
-    aditof::Status adsd3500GetFirmwareVersion(std::string &fwVersion,
-                                              std::string &fwHash);
 
   private:
     using noArgCallable = std::function<aditof::Status()>;

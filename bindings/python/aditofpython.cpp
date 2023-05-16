@@ -329,7 +329,55 @@ PYBIND11_MODULE(aditofpython, m) {
              py::arg("threshold"))
         .def("adsd3500GetRadialThresholdMax",
              &aditof::Camera::adsd3500GetRadialThresholdMax,
-             py::arg("threshold"));
+             py::arg("threshold"))
+        .def("adsd3500SetMIPIOutputSpeed",
+             &aditof::Camera::adsd3500SetMIPIOutputSpeed, py::arg("speed"))
+        .def("adsd3500GetMIPIOutputSpeed",
+             &aditof::Camera::adsd3500GetMIPIOutputSpeed, py::arg("speed"))
+        .def("adsd3500GetImagerErrorCode",
+             &aditof::Camera::adsd3500GetImagerErrorCode, py::arg("errcode"))
+        .def("adsd3500SetVCSELDelay", &aditof::Camera::adsd3500SetVCSELDelay,
+             py::arg("delay"))
+        .def("adsd3500GetVCSELDelay", &aditof::Camera::adsd3500GetVCSELDelay,
+             py::arg("delay"))
+        .def("adsd3500SetJBLFMaxEdgeThreshold",
+             &aditof::Camera::adsd3500SetJBLFMaxEdgeThreshold,
+             py::arg("threshold"))
+        .def("adsd3500SetJBLFABThreshold",
+             &aditof::Camera::adsd3500SetJBLFABThreshold, py::arg("threshold"))
+        .def("adsd3500SetJBLFGaussianSigma",
+             &aditof::Camera::adsd3500SetJBLFGaussianSigma, py::arg("value"))
+        .def("adsd3500GetJBLFGaussianSigma",
+             &aditof::Camera::adsd3500GetJBLFGaussianSigma, py::arg("value"))
+        .def("adsd3500SetJBLFExponentialTerm",
+             &aditof::Camera::adsd3500SetJBLFExponentialTerm, py::arg("value"))
+        .def("adsd3500GetJBLFExponentialTerm",
+             &aditof::Camera::adsd3500GetJBLFExponentialTerm, py::arg("value"))
+        .def("adsd3500GetFrameRate", &aditof::Camera::adsd3500GetFrameRate,
+             py::arg("fps"))
+        .def("adsd3500SetEnableEdgeConfidence",
+             &aditof::Camera::adsd3500SetEnableEdgeConfidence, py::arg("value"))
+        .def("adsd3500GetTemperatureCompensationStatus",
+             &aditof::Camera::adsd3500GetTemperatureCompensationStatus,
+             py::arg("value"))
+        .def("adsd3500SetEnablePhaseInvalidation",
+             &aditof::Camera::adsd3500SetEnablePhaseInvalidation,
+             py::arg("value"))
+        .def("adsd3500SetEnableTemperatureCompensation",
+             &aditof::Camera::adsd3500SetEnableTemperatureCompensation,
+             py::arg("value"))
+        .def("adsd3500SetEnableEmbeddedHeaderinAB",
+             &aditof::Camera::adsd3500SetEnableEmbeddedHeaderinAB,
+             py::arg("value"))
+        .def("adsd3500GetEnableEmbeddedHeaderinAB",
+             &aditof::Camera::adsd3500GetEnableEmbeddedHeaderinAB,
+             py::arg("value"))
+        .def("adsd3500SetGenericTemplate",
+             &aditof::Camera::adsd3500SetGenericTemplate, py::arg("reg"),
+             py::arg("value"))
+        .def("adsd3500GetGenericTemplate",
+             &aditof::Camera::adsd3500GetGenericTemplate, py::arg("reg"),
+             py::arg("value"));
 
     // Frame
     py::class_<aditof::Frame>(m, "Frame")
