@@ -12,7 +12,7 @@
 #include <aditof/version.h>
 #include <chrono>
 #include <ctime>
-#include <docopt.h>
+#include <command_parser.h>
 #include <fstream>
 #ifdef USE_GLOG
 #include <glog/logging.h>
@@ -26,6 +26,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <map>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -33,6 +34,7 @@
 #include <sys/stat.h>
 #endif
 
+#if 0
 #define MULTI_THREADED 1
 #define DATA_COLLECT_VERSION "1.3.0"
 #define EMBED_HDR_LENGTH 128
@@ -60,13 +62,23 @@ typedef struct thread_params {
     const char *pFrame_type;
     const char *nFileTime;
 } thread_params;
+#endif
 
 static const char kUsagePublic[] =
     R"(Data Collect.
     Usage:
       data_collect FILE
       data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] FILE
-      data_collect (-h | --help) 
+      data_collect (-h | --help)
+
+    data_collect config/my_config.cfg
+    data_collect --n=1 --m=3 config/my_config.cfg
+    data_collect --m=1 --n=3 config/my_config.cfg (linux style)
+    data_collect --m=1 --n=3 config\my_config.cfg (windows style)
+    data_collect --long_ver config/my_config.cfg
+    data_collect -lv config/my_config.cfg
+    data_collect --n 1 --m config/my_config.cfg config/my_config.cfg
+    data_collect --long_ver 1 config/my_config
 
     Arguments:
       FILE            Input config_default.json file (which has *.ccb and *.cfg)
@@ -79,7 +91,7 @@ static const char kUsagePublic[] =
       --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
       --wt <warmup>      Warmup Time (sec) [default: 0]
       --ccb <FILE>       The path to store CCB content
-      --ip <ip>          Camera IP  
+      --ip <ip>          Camera IP
       --fw <firmware>    Adsd3500 fw file
 
     Valid mode (--m) options are:
@@ -97,7 +109,7 @@ static const char kUsageInternal[] =
     Usage:
       data_collect FILE
       data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--ft <frame_type>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [--fps <setfps>] FILE
-      data_collect (-h | --help) 
+      data_collect (-h | --help)
 
     Arguments:
       FILE            Input config_default.json file (which has *.ccb and *.cfg)
@@ -110,10 +122,10 @@ static const char kUsageInternal[] =
       --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
       --ft <frame_type>  Type of frame to be captured [default: raw]
       --wt <warmup>      Warmup Time (in seconds) before data capture [default: 0]
-      --ccb <FILE>       The path to store CCB content      
+      --ccb <FILE>       The path to store CCB content
       --ip <ip>          Camera IP
-      --fw <firmware>    Adsd3500 fw file      
-      --fps <setfps>     Set target FPS value [range: 50 to 200] 
+      --fw <firmware>    Adsd3500 fw file
+      --fps <setfps>     Set target FPS value [range: 50 to 200]
 )";
 
 #ifdef MULTI_THREADED
@@ -121,7 +133,24 @@ void fileWriterTask(const thread_params *const pThreadParams);
 #endif
 
 int main(int argc, char *argv[]) {
+    std::vector<std::string> arg_vector;
+    google::InitGoogleLogging(argv[0]);
+    FLAGS_alsologtostderr = 1;
 
+    LOG(INFO) << "SDK version: " << aditof::getApiVersion()
+                << " | branch: " << aditof::getBranchVersion()
+                << " | commit: " << aditof::getCommitVersion();
+
+    std::cout<<std::endl;
+    for(int i = 0; i < argc; i++){
+        std::cout<<argv[i]<<std::endl;
+        arg_vector.push_back(argv[i]);
+        std::cout<<arg_vector[i]<<std::endl;
+    }
+}
+
+#if 0
+int main(int argc, char *argv[]) {
     char folder_path[MAX_FILE_PATH_SIZE]; // Path to store the raw/depth frames
     char json_file_path
         [MAX_FILE_PATH_SIZE]; // Get the .json file from command line
@@ -136,14 +165,14 @@ int main(int argc, char *argv[]) {
     std::string firmware;
     uint32_t setfps = 0;
     uint16_t fps_defaults[11] = {200, 105, 100, 200, 50, 50,
-                                 50,  105, 105, 50,  50};
+                                50,  105, 105, 50,  50};
 
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
 
     LOG(INFO) << "SDK version: " << aditof::getApiVersion()
-              << " | branch: " << aditof::getBranchVersion()
-              << " | commit: " << aditof::getCommitVersion();
+            << " | branch: " << aditof::getBranchVersion()
+            << " | commit: " << aditof::getCommitVersion();
 
     Status status = Status::OK;
 
@@ -152,7 +181,7 @@ int main(int argc, char *argv[]) {
 
     // Parsing the arguments from command line
     err = snprintf(json_file_path, sizeof(json_file_path), "%s",
-                   args["FILE"].asString().c_str());
+                args["FILE"].asString().c_str());
     if (err < 0) {
         LOG(ERROR) << "Error copying the json file path!";
         return 0;
@@ -161,7 +190,7 @@ int main(int argc, char *argv[]) {
     // Parsing output folder
     if (args["--f"]) {
         err = snprintf(folder_path, sizeof(folder_path), "%s",
-                       args["--f"].asString().c_str());
+                    args["--f"].asString().c_str());
     } else {
         err = snprintf(folder_path, sizeof(folder_path), "%s", ".");
     }
@@ -339,7 +368,7 @@ int main(int argc, char *argv[]) {
     status = camera->getFrameTypeNameFromId(mode, modeName);
     if (status != Status::OK) {
         LOG(ERROR) << "Mode: " << mode
-                   << " is invalid for this type of camera!";
+                << " is invalid for this type of camera!";
         return 0;
     }
 
@@ -353,8 +382,8 @@ int main(int argc, char *argv[]) {
     } else if ("depth" == frame_type) {
         if (modeName == "pcm-native") {
             LOG(ERROR) << modeName
-                       << " mode doesn't contain depth data, please set --ft "
-                          "(frameType) to raw.";
+                    << " mode doesn't contain depth data, please set --ft "
+                        "(frameType) to raw.";
             return 0;
         } else {
             camera->setControl("enableDepthCompute", "on");
@@ -444,8 +473,8 @@ int main(int argc, char *argv[]) {
 
             auto warmup_end = std::chrono::steady_clock::now();
             elapsed_time = std::chrono::duration_cast<std::chrono::seconds>(
-                               warmup_end - warmup_start)
-                               .count();
+                            warmup_end - warmup_start)
+                            .count();
         } while (warmup_time >= elapsed_time);
     }
 
@@ -539,7 +568,7 @@ int main(int argc, char *argv[]) {
 
 #if 0 // TO DO: uncomment this one the header becomes available
         uint16_t *pHeader = nullptr;
-        status = frame.getData("embeded_header", &pHeader);            
+        status = frame.getData("embeded_header", &pHeader);
         if (status != Status::OK) {
             LOG(ERROR) << "Could not get frame header data!";
             return 0;
@@ -582,7 +611,7 @@ int main(int argc, char *argv[]) {
         char out_file[MAX_FILE_PATH_SIZE];
 
         snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05u.bin",
-                 &folder_path[0], &frame_type[0], time_buffer, loopcount);
+                &folder_path[0], &frame_type[0], time_buffer, loopcount);
         std::ofstream rawFile(out_file, std::ios::out | std::ios::binary |
                                             std::ofstream::trunc);
         rawFile.write((const char *)&frameBuffer[0], frame_size);
@@ -638,3 +667,4 @@ void fileWriterTask(const thread_params *const pThreadParams) {
     }
     delete pThreadParams;
 }
+#endif
