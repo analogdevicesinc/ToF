@@ -55,6 +55,8 @@ export LC_ALL=C
 export LANGUAGE=C
 export LANG=C
 
+BRANCH=$1
+
 function setup_config() {
 
   # default configs
@@ -243,6 +245,12 @@ pushd Workspace
 TOF_GIT_LOCATION=${TOF_GIT_LOCATION:=https://github.com/analogdevicesinc/ToF.git}
 echo "Clone ToF source code from: $TOF_GIT_LOCATION"
 git clone ${TOF_GIT_LOCATION}
+if [ -n ${BRANCH} ]; then
+	echo "Checkout to Branch: ${BRANCH}"
+	pushd ToF
+	git checkout ${BRANCH}
+	popd
+fi
 pushd ToF/scripts/nxp/
 chmod +x setup.sh
 ./setup.sh -y -b ../../build -d ../../deps -i /opt -j4
@@ -273,11 +281,12 @@ EOF
   # Apply step3 overlay (configs)
   sudo cp -R ${SCRIPT_DIR}/patches/ubuntu_overlay/step3/* ${ROOTFS_TMP}/
   # Change owner of Tools
-  sudo chown -R ${USERNAME}:${USERNAME} ${ROOTFS_TMP}/home/${USERNAME}/Workspace/Tools
+  #sudo chown -R ${USERNAME}:${USERNAME} ${ROOTFS_TMP}/home/${USERNAME}/Workspace/Tools
 }
 
 function main() {
 
+  echo ${BRANCH}
   setup_config
   
   cd ${OUTPUT_DIR}

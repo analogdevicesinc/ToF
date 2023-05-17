@@ -1,6 +1,25 @@
 #!/bin/bash
 set -e
 
+### Command Line args
+
+SDK_VERSION=$1
+BRANCH=$2
+
+echo ${SDK_VERSION}
+echo ${BRANCH}
+
+if [ -z ${SDK_VERSION} ]; then
+	echo 'usagr: ./runme.sh <sdk_version> <ToF_Branch>'
+	exit 1
+fi
+
+if [ -z ${BRANCH} ]; then
+	echo 'usagr: ./runme.sh <sdk_version> <ToF_Branch>'
+	exit 1
+fi
+
+
 ### General setup
 NXP_REL=rel_imx_5.4.70_2.3.0
 KERNEL_NXP_REL=lf-5.10.72-2.2.0
@@ -85,7 +104,7 @@ elif [[ $BUILD_TYPE == "ubuntu" ]]; then
 	#Build ubuntu rootfs
 	echo "*** Building ubuntu rootFS"
 	mkdir -p $ROOTDIR/build/ubuntu
-	bash $ROOTDIR/deboot.sh
+	bash $ROOTDIR/deboot.sh $BRANCH
 	ROOTFS_IMAGE=$ROOTDIR/build/ubuntu/rootfs.ext4
 fi
 
@@ -121,6 +140,9 @@ dd if=/dev/zero of=tmp/part1.fat32 bs=1M count=148
 env PATH="$PATH:/sbin:/usr/sbin" mkdosfs tmp/part1.fat32
 
 IMG=microsd-${REPO_PREFIX}.img
+if [ -n $SDK_VERSION ]; then
+	IMG=microsd-${SDK_VERSION}-${REPO_PREFIX}.img
+fi
 
 echo "sd_img_ver	$IMG" > $ROOTDIR/images/sw-versions
 echo "kernel		$KERNEL_NXP_REL" >> $ROOTDIR/images/sw-versions
