@@ -333,13 +333,27 @@ PYBIND11_MODULE(aditofpython, m) {
         .def("adsd3500SetMIPIOutputSpeed",
              &aditof::Camera::adsd3500SetMIPIOutputSpeed, py::arg("speed"))
         .def("adsd3500GetMIPIOutputSpeed",
-             &aditof::Camera::adsd3500GetMIPIOutputSpeed, py::arg("speed"))
+             [](aditof::Camera &camera) {
+                 uint16_t speed;
+                 aditof::Status status =
+                     camera.adsd3500GetMIPIOutputSpeed(speed);
+                 return std::make_pair(status, speed);
+             })
         .def("adsd3500GetImagerErrorCode",
-             &aditof::Camera::adsd3500GetImagerErrorCode, py::arg("errcode"))
+             [](aditof::Camera &camera) {
+                 uint16_t errcode;
+                 aditof::Status status =
+                     camera.adsd3500GetImagerErrorCode(errcode);
+                 return std::make_pair(status, errcode);
+             })
         .def("adsd3500SetVCSELDelay", &aditof::Camera::adsd3500SetVCSELDelay,
              py::arg("delay"))
-        .def("adsd3500GetVCSELDelay", &aditof::Camera::adsd3500GetVCSELDelay,
-             py::arg("delay"))
+        .def("adsd3500GetVCSELDelay",
+             [](aditof::Camera &camera) {
+                 uint16_t delay;
+                 aditof::Status status = camera.adsd3500GetVCSELDelay(delay);
+                 return std::make_pair(status, delay);
+             })
         .def("adsd3500SetJBLFMaxEdgeThreshold",
              &aditof::Camera::adsd3500SetJBLFMaxEdgeThreshold,
              py::arg("threshold"))
@@ -348,18 +362,36 @@ PYBIND11_MODULE(aditofpython, m) {
         .def("adsd3500SetJBLFGaussianSigma",
              &aditof::Camera::adsd3500SetJBLFGaussianSigma, py::arg("value"))
         .def("adsd3500GetJBLFGaussianSigma",
-             &aditof::Camera::adsd3500GetJBLFGaussianSigma, py::arg("value"))
+             [](aditof::Camera &camera) {
+                 uint16_t value;
+                 aditof::Status status =
+                     camera.adsd3500GetJBLFGaussianSigma(value);
+                 return std::make_pair(status, value);
+             })
         .def("adsd3500SetJBLFExponentialTerm",
              &aditof::Camera::adsd3500SetJBLFExponentialTerm, py::arg("value"))
         .def("adsd3500GetJBLFExponentialTerm",
-             &aditof::Camera::adsd3500GetJBLFExponentialTerm, py::arg("value"))
-        .def("adsd3500GetFrameRate", &aditof::Camera::adsd3500GetFrameRate,
-             py::arg("fps"))
+             [](aditof::Camera &camera) {
+                 uint16_t value;
+                 aditof::Status status =
+                     camera.adsd3500GetJBLFExponentialTerm(value);
+                 return std::make_pair(status, value);
+             })
+        .def("adsd3500GetFrameRate",
+             [](aditof::Camera &camera) {
+                 uint16_t framerate;
+                 aditof::Status status = camera.adsd3500GetFrameRate(framerate);
+                 return std::make_pair(status, framerate);
+             })
         .def("adsd3500SetEnableEdgeConfidence",
              &aditof::Camera::adsd3500SetEnableEdgeConfidence, py::arg("value"))
         .def("adsd3500GetTemperatureCompensationStatus",
-             &aditof::Camera::adsd3500GetTemperatureCompensationStatus,
-             py::arg("value"))
+             [](aditof::Camera &camera) {
+                 uint16_t value;
+                 aditof::Status status =
+                     camera.adsd3500GetTemperatureCompensationStatus(value);
+                 return std::make_pair(status, value);
+             })
         .def("adsd3500SetEnablePhaseInvalidation",
              &aditof::Camera::adsd3500SetEnablePhaseInvalidation,
              py::arg("value"))
@@ -370,14 +402,22 @@ PYBIND11_MODULE(aditofpython, m) {
              &aditof::Camera::adsd3500SetEnableEmbeddedHeaderinAB,
              py::arg("value"))
         .def("adsd3500GetEnableEmbeddedHeaderinAB",
-             &aditof::Camera::adsd3500GetEnableEmbeddedHeaderinAB,
-             py::arg("value"))
+             [](aditof::Camera &camera) {
+                 uint16_t value;
+                 aditof::Status status =
+                     camera.adsd3500GetEnableEmbeddedHeaderinAB(value);
+                 return std::make_pair(status, value);
+             })
         .def("adsd3500SetGenericTemplate",
              &aditof::Camera::adsd3500SetGenericTemplate, py::arg("reg"),
              py::arg("value"))
         .def("adsd3500GetGenericTemplate",
-             &aditof::Camera::adsd3500GetGenericTemplate, py::arg("reg"),
-             py::arg("value"));
+             [](aditof::Camera &camera, uint16_t reg) {
+                 uint16_t value;
+                 aditof::Status status =
+                     camera.adsd3500GetGenericTemplate(reg, value);
+                 return std::make_pair(status, value);
+             });
 
     // Frame
     py::class_<aditof::Frame>(m, "Frame")
