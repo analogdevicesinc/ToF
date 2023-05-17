@@ -601,9 +601,8 @@ void ADIMainWindow::showOpenDeviceWindow() {
             ImGui::NewLine();
             ImGui::Separator();
             ImGui::NewLine();
-            ImGui::SetNextTreeNodeOpen(
-                cameraOptionsTreeEnabled,
-                /*ImGuiCond_FirstUseEver*/ ImGuiCond_Always);
+            ImGui::SetNextTreeNodeOpen(cameraOptionsTreeEnabled,
+                                       ImGuiCond_FirstUseEver);
 
             _isOpenDevice = false;
             if (ImGui::TreeNode("ToF Camera Options")) {
