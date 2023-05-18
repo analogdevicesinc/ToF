@@ -145,7 +145,7 @@ aditof::Status ModeInfo::setImagerTypeAndModeVersion(int type, int version) {
         } else if (version == 2) {
             g_modeInfoData.assign(std::begin(g_newModesAdsd3500),
                                   std::end(g_newModesAdsd3500));
-            LOG(INFO) << "Using new mixed modes table for adsd3500.";
+            LOG(INFO) << "Using new modes table for adsd3500.";
 
         } else if (version == 1) {
             g_modeInfoData.assign(std::begin(g_newModesAdsd3100),
@@ -161,15 +161,11 @@ aditof::Status ModeInfo::setImagerTypeAndModeVersion(int type, int version) {
         if (version == 3) {
             g_modeInfoData.assign(std::begin(g_newMixedModesAdsd3030),
                                   std::end(g_newMixedModesAdsd3030));
-            LOG(INFO) << "Using new modes table for adsd3030.";
+            LOG(INFO) << "Using new mixed modes table for adsd3030.";
         } else if (version == 2) {
             g_modeInfoData.assign(std::begin(g_newModesAdsd3030),
                                   std::end(g_newModesAdsd3030));
             LOG(INFO) << "Using new modes table for adsd3030.";
-        } else if (version == 2) {
-            g_modeInfoData.assign(std::begin(g_newMixedModesAdsd3030),
-                                  std::end(g_newMixedModesAdsd3030));
-            LOG(INFO) << "Using new mixed modes table for adsd3030.";
         } else {
             g_modeInfoData.assign(std::begin(g_oldModesAdsd3030),
                                   std::end(g_oldModesAdsd3030));
