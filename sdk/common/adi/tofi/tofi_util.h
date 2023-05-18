@@ -40,30 +40,30 @@ typedef float ConfBuf;
 #endif
 
 typedef struct {
-  float a;
-  float b;
+    float a;
+    float b;
 } Point2F;
 
 typedef struct {
-  int32_t a;
-  int32_t b;
+    int32_t a;
+    int32_t b;
 } Point2I;
 
 typedef struct {
-  int16_t a;
-  int16_t b;
-  int16_t c;
+    int16_t a;
+    int16_t b;
+    int16_t c;
 } Point3I;
 
 typedef struct {
-  float a;
-  float b;
-  float c;
+    float a;
+    float b;
+    float c;
 } Point3F;
 
 typedef struct {
-  unsigned char *p_data;
-  size_t size;
+    unsigned char *p_data;
+    size_t size;
 } FileData;
 
 #ifdef BUILD_FIXED
