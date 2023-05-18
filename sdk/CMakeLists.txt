@@ -44,6 +44,7 @@ file(GLOB HEADERS
 
 set(CAMERA_DIR "cameras/itof-camera")
 set(FRAME_DIR "cameras/itof-frame")
+set(COMMON_DIR "common/adi")
 
 if( WIN32 )
         set(OS_SPECIFIC_DIR "connections/usb/windows")
@@ -72,18 +73,18 @@ file(GLOB PLATFORM_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${OS_SPECIFIC_DIR}/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/*.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/tofi/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/adsd3500/crc/src/*.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/${TARGET_SPECIFIC_DIR}/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${FRAME_DIR}/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/${COMMON_DIR}/tofi/*.c
 )
 file(GLOB PLATFORM_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${OS_SPECIFIC_DIR}/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/*.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/tofi/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/adsd3500/crc/include/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${CAMERA_DIR}/${TARGET_SPECIFIC_DIR}/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${FRAME_DIR}/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/${COMMON_DIR}/tofi/*.h
 )
 
 file(GLOB USB_SOURCES
@@ -135,6 +136,7 @@ target_include_directories(${PROJECT_NAME}
         src/
         src/${OS_SPECIFIC_DIR}/${TARGET_SPECIFIC_DIR}
         src/${CAMERA_DIR}/
+        ${COMMON_DIR}/
         ${Protobuf_INCLUDE_DIRS}
         ${GENERATED_NET_PROTO_FILES_DIR}
         ${GENERATED_PROTO_FILES_DIR}
