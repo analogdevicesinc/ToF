@@ -281,7 +281,7 @@ EOF
   # Apply step3 overlay (configs)
   sudo cp -R ${SCRIPT_DIR}/patches/ubuntu_overlay/step3/* ${ROOTFS_TMP}/
   # Change owner of Tools
-  #sudo chown -R ${USERNAME}:${USERNAME} ${ROOTFS_TMP}/home/${USERNAME}/Workspace/Tools
+  sudo chown -R ${USERNAME}:${USERNAME} ${ROOTFS_TMP}/home/${USERNAME}/Workspace/Tools
 }
 
 function main() {
