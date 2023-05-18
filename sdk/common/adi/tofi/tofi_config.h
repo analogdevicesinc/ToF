@@ -5,8 +5,8 @@
 #define TOFI_CONFIG_H
 
 #ifdef __cplusplus
-extern "C" {  // only need to export C interface if
-              // used by C++ source code
+extern "C" { // only need to export C interface if
+             // used by C++ source code
 #endif
 
 #ifdef _WIN32
@@ -28,34 +28,34 @@ extern "C" {  // only need to export C interface if
 
 #define MAX_CHAR_SIZE 12
 typedef struct ConfigFileData {
-  unsigned char *p_data;  ///< Pointer to the data
-  size_t size;            ///< Size of the data
+    unsigned char *p_data; ///< Pointer to the data
+    size_t size;           ///< Size of the data
 } ConfigFileData;
 
 typedef struct XYZTable {
-  const float *p_x_table;  ///< Pointer to the radial correction X Table
-  const float *p_y_table;  ///< Pointer to the radial correction Y Table
-  const float *p_z_table;  ///< Pointer to the radial correction Z Table
+    const float *p_x_table; ///< Pointer to the radial correction X Table
+    const float *p_y_table; ///< Pointer to the radial correction Y Table
+    const float *p_z_table; ///< Pointer to the radial correction Z Table
 } XYZTable;
 
 typedef struct TofiConfig {
-  uint32_t n_rows;  ///< Number of rows
-  uint32_t n_cols;  ///< Number of Columns
-  CameraIntrinsics
-      *p_camera_intrinsics;  ///< Pointer to the camera intrinsic parameters
-  XYZTable xyz_table;  ///< Structure holding pointer to the X,Y,and Z table
-  const struct CAL_LSDAC_BLOCK_V1
-      *p_lsdac_block;  ///< Pointer to the LSDAC Block
-  const struct CAL_GAIN_CORRECTION_BLOCK
-      *p_cal_gain_block;  ///< Pointer to the Gain Block
-  const struct CAL_ADDRVAL_REG_BLOCK_V1
-      *p_cal_reg_block;           ///< Pointer to the register writes block
-  const void *p_tofi_cal_config;  ///< Pointer to the calibration config block
-  const char *p_tofi_config_str;  ///< Pointer to a string of ini config data
-  char raw_format[MAX_CHAR_SIZE];
-  uint32_t hdr_size;
-  uint32_t phases;
-  uint32_t freqs;
+    uint32_t n_rows; ///< Number of rows
+    uint32_t n_cols; ///< Number of Columns
+    CameraIntrinsics
+        *p_camera_intrinsics; ///< Pointer to the camera intrinsic parameters
+    XYZTable xyz_table; ///< Structure holding pointer to the X,Y,and Z table
+    const struct CAL_LSDAC_BLOCK_V1
+        *p_lsdac_block; ///< Pointer to the LSDAC Block
+    const struct CAL_GAIN_CORRECTION_BLOCK
+        *p_cal_gain_block; ///< Pointer to the Gain Block
+    const struct CAL_ADDRVAL_REG_BLOCK_V1
+        *p_cal_reg_block;          ///< Pointer to the register writes block
+    const void *p_tofi_cal_config; ///< Pointer to the calibration config block
+    const char *p_tofi_config_str; ///< Pointer to a string of ini config data
+    char raw_format[MAX_CHAR_SIZE];
+    uint32_t hdr_size;
+    uint32_t phases;
+    uint32_t freqs;
 } TofiConfig;
 
 ///
@@ -78,10 +78,9 @@ TOFI_CONFIG_API TofiConfig *InitTofiConfig(ConfigFileData *p_cal_file_data,
                                            uint16_t mode, uint32_t *p_status);
 
 //
-TOFI_CONFIG_API TofiConfig *InitTofiConfig_isp(
-    ConfigFileData *p_ini_file_data, uint16_t mode, uint32_t *p_status,
-    TofiXYZDealiasData *p_xyz_dealias_data);
-
+TOFI_CONFIG_API TofiConfig *
+InitTofiConfig_isp(ConfigFileData *p_ini_file_data, uint16_t mode,
+                   uint32_t *p_status, TofiXYZDealiasData *p_xyz_dealias_data);
 
 /// Function to release memory for configuration structure and
 /// Depth/AB/Confidence memory buffers
@@ -89,14 +88,11 @@ TOFI_CONFIG_API TofiConfig *InitTofiConfig_isp(
 /// calibration configuration parameter structure to be freed
 TOFI_CONFIG_API void FreeTofiConfig(TofiConfig *p_tofi_cal_config);
 
-
 TOFI_CONFIG_API uint32_t GetXYZ_DealiasData(ConfigFileData *ccb_data,
-                            TofiXYZDealiasData *p_xyz_data);
-
-
+                                            TofiXYZDealiasData *p_xyz_data);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // TOFI_CONFIG_H
+#endif // TOFI_CONFIG_H
