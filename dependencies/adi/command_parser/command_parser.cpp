@@ -27,3 +27,14 @@
 #include <vector>
 #include <iostream>
 #include <map>
+
+
+std::vector<std::string> CommandParser::getArguments(int argc, char *argv[]) {
+    return arguments;
+}   
+
+void CommandParser::setArguments(int argc, char* argv[]) { 
+    for (int i = 0; i < argc; i++) {
+        arguments.push_back(argv[i]);
+    }
+}

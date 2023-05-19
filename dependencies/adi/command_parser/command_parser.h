@@ -28,5 +28,10 @@
 
 class CommandParser{
     public:
-    ~CommandParser();
+    std::vector<std::string> getArguments(int argc, char *argv[]);
+    void setArguments(int argc, char *argv[]);
+
+    private:
+    std::map<std::string, std::string> command_map;
+    std::vector<std::string> arguments;
 };
