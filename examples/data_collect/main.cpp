@@ -133,6 +133,7 @@ void fileWriterTask(const thread_params *const pThreadParams);
 #endif
 
 int main(int argc, char *argv[]) {
+    CommandParser command;
     std::vector<std::string> arg_vector;
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
@@ -140,12 +141,10 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "SDK version: " << aditof::getApiVersion()
                 << " | branch: " << aditof::getBranchVersion()
                 << " | commit: " << aditof::getCommitVersion();
-
-    std::cout<<std::endl;
-    for(int i = 0; i < argc; i++){
-        std::cout<<argv[i]<<std::endl;
-        arg_vector.push_back(argv[i]);
-        std::cout<<arg_vector[i]<<std::endl;
+    command.setArguments(argc, argv);
+    arg_vector = command.getArguments(argc, argv);
+    for (int i = 0; i < arg_vector.size(); i++) {
+        std::cout << arg_vector[i] << std::endl;
     }
 }
 
