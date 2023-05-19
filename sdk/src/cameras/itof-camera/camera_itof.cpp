@@ -263,41 +263,37 @@ aditof::Status CameraItof::initialize() {
                     m_modesVersion = 0;
                 }
             }
+        }
+        // Check weather new mixed modes are present, in case no, switch back to simple new modes
+        if (m_modesVersion == 2) {
+            int modeToTest = 5; // We are looking at width and height for mode 5
+            uint8_t tempDealiasParams[32] = {0};
+            tempDealiasParams[0] = modeToTest;
 
-            // Check weather new mixed modes are present, in case no, switch back to simple new modes
-            if (m_modesVersion == 2) //new mixed modes table is active
-            {
-                int modeToTest =
-                    5; // We are looking at width and height for mode 0
-                uint8_t tempDealiasParams[32] = {0};
-                tempDealiasParams[0] = modeToTest;
+            TofiXYZDealiasData tempDealiasStruct;
+            uint16_t width1 = 512;
+            uint16_t height1 = 512;
 
-                TofiXYZDealiasData tempDealiasStruct;
-                uint16_t width1 = 512;
-                uint16_t height1 = 512;
+            uint16_t width2 = 256;
+            uint16_t height2 = 320;
 
-                uint16_t width2 = 256;
-                uint16_t height2 = 320;
+            // We read dealias parameters to find out the width and height for mode 5
+            status = m_depthSensor->adsd3500_read_payload_cmd(
+                0x02, tempDealiasParams, 32);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to read dealias parameters for adsd3500!";
+                return status;
+            }
 
-                // We read dealias parameters to find out the width and height for mode 5
-                status = m_depthSensor->adsd3500_read_payload_cmd(
-                    0x02, tempDealiasParams, 32);
-                if (status != Status::OK) {
-                    LOG(ERROR)
-                        << "Failed to read dealias parameters for adsd3500!";
-                    return status;
-                }
+            memcpy(&tempDealiasStruct, tempDealiasParams,
+                   sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
 
-                memcpy(&tempDealiasStruct, tempDealiasParams,
-                       sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
-
-                // If mixed modes don't have accurate dimensions, switch back to simple new modes table
-                if ((tempDealiasStruct.n_rows == width1 &&
-                     tempDealiasStruct.n_cols == height1) ||
-                    (tempDealiasStruct.n_rows == width2 &&
-                     tempDealiasStruct.n_cols == height2)) {
-                    m_modesVersion = 3;
-                }
+            // If mixed modes don't have accurate dimensions, switch back to simple new modes table
+            if ((tempDealiasStruct.n_rows == width1 &&
+                 tempDealiasStruct.n_cols == height1) ||
+                (tempDealiasStruct.n_rows == width2 &&
+                 tempDealiasStruct.n_cols == height2)) {
+                m_modesVersion = 3;
             }
         }
 
