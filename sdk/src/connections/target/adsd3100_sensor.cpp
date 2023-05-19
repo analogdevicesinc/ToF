@@ -1069,8 +1069,6 @@ aditof::Status Adsd3100Sensor::enqueueInternalBuffer(struct v4l2_buffer &buf) {
 aditof::Status Adsd3100Sensor::writeConfigBlock(const uint32_t offset) {
     FILE *fid;
     ConfigurationData configuration_data;
-    static struct v4l2_ext_control extCtrl;
-    static struct v4l2_ext_controls extCtrls;
     static uint16_t tempBuf[2];
 
     /* Open configuration file */
