@@ -1017,6 +1017,10 @@ aditof::Status Adsd3500Sensor::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
                      << "errno: " << errno << " error: " << strerror(errno);
         return Status::GENERIC_ERROR;
     }
+
+    if (cmd == 0x32 || cmd == 0xDA05)
+        usleep(100000);
+
     return status;
 }
 
@@ -1274,9 +1278,9 @@ aditof::Status Adsd3500Sensor::adsd3500_write_payload(uint8_t *payload,
 aditof::Status Adsd3500Sensor::adsd3500_reset() {
     using namespace aditof;
 #if defined(NXP)
-    system("echo 0 > /sys/class/gpio/gpio122/value");
+    system("echo 0 > /sys/class/gpio/gpio1/value");
     usleep(1000000);
-    system("echo 1 > /sys/class/gpio/gpio122/value");
+    system("echo 1 > /sys/class/gpio/gpio1/value");
     usleep(7000000);
 #elif defined(NVIDIA)
     struct stat st;

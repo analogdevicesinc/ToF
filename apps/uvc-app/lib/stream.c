@@ -68,7 +68,7 @@ static int uvc_stream_start(struct uvc_stream *stream)
 	printf("Starting video stream.\n");
 
 	/* Allocate and export the buffers on the source. */
-	ret = video_source_alloc_buffers(stream->src, 4);
+	ret = video_source_alloc_buffers(stream->src, 2);
 	if (ret < 0) {
 		printf("Failed to allocate source buffers: %s (%d)\n",
 		       strerror(-ret), -ret);
