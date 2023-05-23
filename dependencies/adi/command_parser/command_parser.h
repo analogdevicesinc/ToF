@@ -22,16 +22,19 @@
 /* SOFTWARE.                                                                      */
 /**********************************************************************************/
 
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <vector>
 
 class CommandParser{
     public:
-    std::vector<std::string> getArguments(int argc, char *argv[]);
-    void setArguments(int argc, char *argv[]);
+    CommandParser() = default;
+    ~CommandParser() = default;
+
+    public:
+    std::unordered_map<std::string, std::string> getConfiguration();
+    int parseArguments(int argc, char *argv[]);
 
     private:
-    std::map<std::string, std::string> command_map;
-    std::vector<std::string> arguments;
+    std::unordered_map<std::string, std::string> m_command_map;
 };
