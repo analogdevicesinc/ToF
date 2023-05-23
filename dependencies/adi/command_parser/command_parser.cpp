@@ -26,15 +26,41 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <map>
+#include <unordered_map>
+#include <regex>
 
+/* CommandParser::CommandParser() {
+    {{"-h", "--help"}, "null"},
+    {{"-f", "--folder"}, "./"},
+    {{"-n", "--ncapture"}, "1"},
+    {{"-m", "--mode"}, "0"},
+    {{"-ext", "--ext_fsync"}, "0"},
+    {{"-wt", "--warmup"}, "0"},
+    {{"-ip", "--ip"}, "null"},
+    {{"-fw", "--firmware"}, "null"},
+    {{"-fps", "--setfps"}, "null"},
+    {{"-ccb", "--file"}, "null"},
+    {{"FILE"}, "null"}
+};*/
 
-std::vector<std::string> CommandParser::getArguments(int argc, char *argv[]) {
-    return arguments;
+std::unordered_map<std::string, std::string> CommandParser::getConfiguration() {
+    return m_command_map;
 }   
 
-void CommandParser::setArguments(int argc, char* argv[]) { 
-    for (int i = 0; i < argc; i++) {
-        arguments.push_back(argv[i]);
-    }
+int CommandParser::parseArguments(int argc, char *argv[]) {
+    for (int i = 1; i < argc; i++) {
+        int end = std::string(argv[i]).find("=");
+        if (end != -1)
+            m_command_map.insert({std::string(argv[i]).substr(0, end),
+                                  std::string(argv[i]).substr(end + 1)});
+        else if(i != argc-1) {
+            m_command_map.insert({argv[i], argv[i + 1]});
+            i++;
+        } else if (std::string(argv[i]) == "-h" || std::string(argv[i]) == "--help") {
+            m_command_map.insert({argv[i], "help_menu"});
+        } else {
+            m_command_map.insert({"FILE", argv[i]});
+        }
+    } 
+    return 0;
 }
