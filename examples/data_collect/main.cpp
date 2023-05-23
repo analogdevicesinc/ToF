@@ -27,12 +27,18 @@
 #include <thread>
 #include <vector>
 #include <map>
+#include <unordered_map>
 
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <sys/stat.h>
 #endif
+
+enum : uint16_t {
+    MAX_FILE_PATH_SIZE = 512,
+    FRAME_TYPE_LEN = 20,
+};
 
 #if 0
 #define MULTI_THREADED 1
@@ -133,19 +139,74 @@ void fileWriterTask(const thread_params *const pThreadParams);
 #endif
 
 int main(int argc, char *argv[]) {
+    std::map<std::vector<std::string>, std::string> command_map = {
+        {{"-h", "--help"}, "null"},
+        {{"-f", "--folder"}, "./"},
+        {{"-n", "--ncapture"}, "1"},
+        {{"-m", "--mode"}, "0"},
+        {{"-ext", "--ext_fsync"}, "0"},
+        {{"-wt", "--warmup"}, "0"},
+        {{"-ip", "--ip"}, "null"},
+        {{"-fw", "--firmware"}, "null"},
+        {{"-fps", "--setfps"}, "null"},
+        {{"-ccb", "--ccb"}, "null"},
+        {{"FILE", "file"}, "null"}};
     CommandParser command;
     std::vector<std::string> arg_vector;
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
 
+    bool is_command;
+    char folder_path[MAX_FILE_PATH_SIZE]; // Path to store the raw/depth frames
+    char json_file_path
+        [MAX_FILE_PATH_SIZE]; // Get the .json file from command line
+    std::string frame_type; // Type of frame need to be captured (Raw/Depth/IR)
+
+    uint16_t err = 0;
+    uint32_t n_frames = 0;
+    uint32_t mode = 0;
+    uint32_t ext_frame_sync_en = 0;
+    uint32_t warmup_time = 0;
+    std::string ip;
+    std::string firmware;
+    uint32_t setfps = 0;
+
     LOG(INFO) << "SDK version: " << aditof::getApiVersion()
-                << " | branch: " << aditof::getBranchVersion()
-                << " | commit: " << aditof::getCommitVersion();
-    command.setArguments(argc, argv);
-    arg_vector = command.getArguments(argc, argv);
-    for (int i = 0; i < arg_vector.size(); i++) {
-        std::cout << arg_vector[i] << std::endl;
+              << " | branch: " << aditof::getBranchVersion()
+              << " | commit: " << aditof::getCommitVersion();
+    command.parseArguments(argc, argv);
+    std::unordered_map<std::string, std::string> arg_map =
+        command.getConfiguration();
+
+    for (auto it = arg_map.begin(); it != arg_map.end(); it++) {
+        is_command = false;
+        if (std::next(it) == arg_map.end()) {
+            if (it->first != "FILE" && it->first != "file") {
+                LOG(ERROR) << "Argument FILE should be the last one! "
+                           << "Please check help menu.";
+                break;
+            }
+        }
+        for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
+            if (it->first == ct->first[0] || it->first == ct->first[1]) {
+                ct->second = it->second;
+                is_command = true;
+                break;
+            }
+        }
+        if (!is_command) {
+            LOG(ERROR) << "Argument " + it->first + " does not exist! "
+                       << "Please check help menu.";
+            break;
+        }
     }
+    
+    //auto it = command_map.find({"-h", "--help"});
+    //if (it->second == "help_menu") {
+    //    std::cout << kUsagePublic;
+    //}
+
+
 }
 
 #if 0
