@@ -11,8 +11,8 @@
 #include <aditof/system.h>
 #include <aditof/version.h>
 #include <chrono>
-#include <ctime>
 #include <command_parser.h>
+#include <ctime>
 #include <fstream>
 #ifdef USE_GLOG
 #include <glog/logging.h>
@@ -23,11 +23,10 @@
 #include <inttypes.h>
 #endif
 #include <iostream>
+#include <map>
 #include <string>
 #include <thread>
 #include <vector>
-#include <map>
-#include <unordered_map>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -40,15 +39,9 @@ enum : uint16_t {
     FRAME_TYPE_LEN = 20,
 };
 
-#if 0
 #define MULTI_THREADED 1
 #define DATA_COLLECT_VERSION "1.3.0"
 #define EMBED_HDR_LENGTH 128
-
-enum : uint16_t {
-    MAX_FILE_PATH_SIZE = 512,
-    FRAME_TYPE_LEN = 20,
-};
 
 using namespace aditof;
 
@@ -68,13 +61,12 @@ typedef struct thread_params {
     const char *pFrame_type;
     const char *nFileTime;
 } thread_params;
-#endif
 
 static const char kUsagePublic[] =
     R"(Data Collect.
     Usage:
-      data_collect FILE
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] FILE
+      data_collect CONFIG
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] CONFIG
       data_collect (-h | --help)
 
     data_collect config/my_config.cfg
@@ -87,7 +79,7 @@ static const char kUsagePublic[] =
     data_collect --long_ver 1 config/my_config
 
     Arguments:
-      FILE            Input config_default.json file (which has *.ccb and *.cfg)
+      CONFIG            Input config_default.json file (which has *.ccb and *.cfg)
 
     Options:
       -h --help          Show this screen.
@@ -113,12 +105,12 @@ static const char kUsagePublic[] =
 static const char kUsageInternal[] =
     R"(Data Collect.
     Usage:
-      data_collect FILE
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--ft <frame_type>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [--fps <setfps>] FILE
+      data_collect CONFIG
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--ft <frame_type>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [--fps <setfps>] CONFIG
       data_collect (-h | --help)
 
     Arguments:
-      FILE            Input config_default.json file (which has *.ccb and *.cfg)
+      CONFIG            Input config_default.json file (which has *.ccb and *.cfg)
 
     Options:
       -h --help          Show this screen.
@@ -140,77 +132,55 @@ void fileWriterTask(const thread_params *const pThreadParams);
 
 int main(int argc, char *argv[]) {
     std::map<std::vector<std::string>, std::string> command_map = {
-        {{"-h", "--help"}, "null"},
-        {{"-f", "--folder"}, "./"},
-        {{"-n", "--ncapture"}, "1"},
-        {{"-m", "--mode"}, "0"},
-        {{"-ext", "--ext_fsync"}, "0"},
-        {{"-wt", "--warmup"}, "0"},
-        {{"-ip", "--ip"}, "null"},
-        {{"-fw", "--firmware"}, "null"},
-        {{"-fps", "--setfps"}, "null"},
-        {{"-ccb", "--ccb"}, "null"},
-        {{"FILE", "file"}, "null"}};
+        {{"-h", "--help"}, ""},         {{"-f", "--folder"}, "."},
+        {{"-n", "--ncapture"}, "1"},    {{"-m", "--mode"}, "0"},
+        {{"-ext", "--ext_fsync"}, "0"}, {{"-wt", "--warmup"}, ""},
+        {{"-ip", "--ip"}, ""},          {{"-fw", "--firmware"}, ""},
+        {{"-fps", "--setfps"}, ""},     {{"-ccb", "--ccb"}, ""},
+        {{"-ft", "--frame"}, "raw"},    {{"CONFIG", "config"}, ""}};
     CommandParser command;
-    std::vector<std::string> arg_vector;
-    google::InitGoogleLogging(argv[0]);
-    FLAGS_alsologtostderr = 1;
-
-    bool is_command;
-    char folder_path[MAX_FILE_PATH_SIZE]; // Path to store the raw/depth frames
-    char json_file_path
-        [MAX_FILE_PATH_SIZE]; // Get the .json file from command line
-    std::string frame_type; // Type of frame need to be captured (Raw/Depth/IR)
-
-    uint16_t err = 0;
-    uint32_t n_frames = 0;
-    uint32_t mode = 0;
-    uint32_t ext_frame_sync_en = 0;
-    uint32_t warmup_time = 0;
-    std::string ip;
-    std::string firmware;
-    uint32_t setfps = 0;
-
-    LOG(INFO) << "SDK version: " << aditof::getApiVersion()
-              << " | branch: " << aditof::getBranchVersion()
-              << " | commit: " << aditof::getCommitVersion();
     command.parseArguments(argc, argv);
-    std::unordered_map<std::string, std::string> arg_map =
+    std::vector<std::pair<std::string, std::string>> arg_vector =
         command.getConfiguration();
+    bool is_command;
 
-    for (auto it = arg_map.begin(); it != arg_map.end(); it++) {
+    for (int it = 0; it < arg_vector.size(); it++) {
+        if (arg_vector[it].second == "help_menu") {
+            if (it != 0 || arg_vector.size() != 1) {
+                LOG(ERROR) << "Usage of argument " + arg_vector[it].first +
+                                  " is incorrect! " + arg_vector[it].first
+                           << " should be used alone!";
+                return 0;
+            }
+            LOG(INFO) << kUsagePublic;
+            return 0;
+        }
         is_command = false;
-        if (std::next(it) == arg_map.end()) {
-            if (it->first != "FILE" && it->first != "file") {
-                LOG(ERROR) << "Argument FILE should be the last one! "
+        if (it == arg_vector.size() - 1) {
+            if (arg_vector[it].first != "CONFIG" &&
+                arg_vector[it].first != "config") {
+                LOG(ERROR) << "Argument CONFIG is either missing or needs to "
+                              "be the last one! "
                            << "Please check help menu.";
-                break;
+                return 0;
             }
         }
         for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
-            if (it->first == ct->first[0] || it->first == ct->first[1]) {
-                ct->second = it->second;
+            if (arg_vector[it].first == ct->first[0] ||
+                arg_vector[it].first == ct->first[1]) {
+                ct->second = arg_vector[it].second;
                 is_command = true;
                 break;
             }
         }
         if (!is_command) {
-            LOG(ERROR) << "Argument " + it->first + " does not exist! "
+            LOG(ERROR) << "Argument " + arg_vector[it].first +
+                              " does not exist! "
                        << "Please check help menu.";
-            break;
+            return 0;
         }
     }
-    
-    //auto it = command_map.find({"-h", "--help"});
-    //if (it->second == "help_menu") {
-    //    std::cout << kUsagePublic;
-    //}
 
-
-}
-
-#if 0
-int main(int argc, char *argv[]) {
     char folder_path[MAX_FILE_PATH_SIZE]; // Path to store the raw/depth frames
     char json_file_path
         [MAX_FILE_PATH_SIZE]; // Get the .json file from command line
@@ -225,35 +195,28 @@ int main(int argc, char *argv[]) {
     std::string firmware;
     uint32_t setfps = 0;
     uint16_t fps_defaults[11] = {200, 105, 100, 200, 50, 50,
-                                50,  105, 105, 50,  50};
+                                 50,  105, 105, 50,  50};
 
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
 
     LOG(INFO) << "SDK version: " << aditof::getApiVersion()
-            << " | branch: " << aditof::getBranchVersion()
-            << " | commit: " << aditof::getCommitVersion();
+              << " | branch: " << aditof::getBranchVersion()
+              << " | commit: " << aditof::getCommitVersion();
 
     Status status = Status::OK;
 
-    std::map<std::string, docopt::value> args = docopt::docopt_private(
-        kUsagePublic, kUsageInternal, {argv + 1, argv + argc}, true);
-
     // Parsing the arguments from command line
     err = snprintf(json_file_path, sizeof(json_file_path), "%s",
-                args["FILE"].asString().c_str());
+                   command_map[{"CONFIG", "config"}].c_str());
     if (err < 0) {
         LOG(ERROR) << "Error copying the json file path!";
         return 0;
     }
 
     // Parsing output folder
-    if (args["--f"]) {
-        err = snprintf(folder_path, sizeof(folder_path), "%s",
-                    args["--f"].asString().c_str());
-    } else {
-        err = snprintf(folder_path, sizeof(folder_path), "%s", ".");
-    }
+    err = snprintf(folder_path, sizeof(folder_path), "%s",
+                   command_map[{"-f", "--folder"}].c_str());
 
     if (err < 0) {
         LOG(ERROR) << "Error copying the output folder path!";
@@ -284,61 +247,42 @@ int main(int argc, char *argv[]) {
 #endif
 
     // Parsing number of frames
-    if (args["--n"]) {
-        n_frames = args["--n"].asLong();
-    }
+    n_frames = std::stoi(command_map[{"-n", "--ncapture"}]);
 
     // Parsing mode type
-    if (args["--m"]) {
-        mode = args["--m"].asLong();
-    }
+    mode = std::stoi(command_map[{"-m", "--mode"}]);
 
     // Parsing ip
-    if (args["--ip"]) {
-        ip = args["--ip"].asString();
-        if (ip.empty()) {
-            LOG(ERROR) << "Invalid ip (--ip) from command line!";
-            return 0;
-        }
+    if (!command_map[{"-ip", "--ip"}].empty()) {
+        ip = command_map[{"-ip", "--ip"}];
     }
 
     // Parsing firmware
-    if (args["--fw"]) {
-        firmware = args["--fw"].asString();
-        if (firmware.empty()) {
-            LOG(ERROR) << "Invalid firmware (--fw) from command line!";
-            return 0;
-        }
+    if (!command_map[{"-fw", "--firmware"}].empty()) {
+        firmware = command_map[{"-fw", "--firmware"}];
     }
 
     //set FPS value
-    if (args["--fps"]) {
-        setfps = args["--fps"].asLong();
-        if (setfps > 200 || setfps < 50) {
-            LOG(ERROR) << "Invalid FPS value.." << setfps;
-            return 0;
-        }
+    if (!command_map[{"-fps", "--setfps"}].empty()) {
+        setfps = std::stoi(command_map[{"-fps", "--setfps"}]);
     } else {
         setfps = fps_defaults[mode];
     }
 
-    if (args["--ext_fsync"]) {
-        ext_frame_sync_en = args["--ext_fsync"].asLong();
-    }
+    ext_frame_sync_en = std::stoi(command_map[{"-ext", "--ext_fsync"}]);
 
-    if (args["--ft"]) {
-        frame_type = args["--ft"].asString();
-    } else {
-        frame_type = "raw";
-    }
+    frame_type = command_map[{"-ft", "--frame"}];
+
     if (frame_type.length() <= 0) {
-        LOG(ERROR) << "Error parsing frame_type (--ft) from command line!";
+        LOG(ERROR)
+            << "Error parsing frame_type (-ft/--frame) from command line!"
+            << "\n Please check help menu";
         return 0;
     }
 
     //Parsing Warm up time
-    if (args["--wt"]) {
-        warmup_time = args["--wt"].asLong();
+    if (!command_map[{"-wt", "--warmup"}].empty()) {
+        warmup_time = std::stoi(command_map[{"-wt", "--warmup"}]);
         if (warmup_time < 0) {
             LOG(ERROR) << "Invalid warm up time input!";
         }
@@ -346,8 +290,8 @@ int main(int argc, char *argv[]) {
 
     //Parsing CCB path
     std::string ccbFilePath;
-    if (args["--ccb"]) {
-        ccbFilePath = args["--ccb"].asString();
+    if (!command_map[{"-ccb", "--ccb"}].empty()) {
+        ccbFilePath = command_map[{"-ccb", "--ccb"}];
     }
 
     LOG(INFO) << "Output folder: " << folder_path;
@@ -428,7 +372,7 @@ int main(int argc, char *argv[]) {
     status = camera->getFrameTypeNameFromId(mode, modeName);
     if (status != Status::OK) {
         LOG(ERROR) << "Mode: " << mode
-                << " is invalid for this type of camera!";
+                   << " is invalid for this type of camera!";
         return 0;
     }
 
@@ -442,8 +386,8 @@ int main(int argc, char *argv[]) {
     } else if ("depth" == frame_type) {
         if (modeName == "pcm-native") {
             LOG(ERROR) << modeName
-                    << " mode doesn't contain depth data, please set --ft "
-                        "(frameType) to raw.";
+                       << " mode doesn't contain depth data, please set --ft "
+                          "(frameType) to raw.";
             return 0;
         } else {
             camera->setControl("enableDepthCompute", "on");
@@ -533,8 +477,8 @@ int main(int argc, char *argv[]) {
 
             auto warmup_end = std::chrono::steady_clock::now();
             elapsed_time = std::chrono::duration_cast<std::chrono::seconds>(
-                            warmup_end - warmup_start)
-                            .count();
+                               warmup_end - warmup_start)
+                               .count();
         } while (warmup_time >= elapsed_time);
     }
 
@@ -671,7 +615,7 @@ int main(int argc, char *argv[]) {
         char out_file[MAX_FILE_PATH_SIZE];
 
         snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05u.bin",
-                &folder_path[0], &frame_type[0], time_buffer, loopcount);
+                 &folder_path[0], &frame_type[0], time_buffer, loopcount);
         std::ofstream rawFile(out_file, std::ios::out | std::ios::binary |
                                             std::ofstream::trunc);
         rawFile.write((const char *)&frameBuffer[0], frame_size);
@@ -727,4 +671,3 @@ void fileWriterTask(const thread_params *const pThreadParams) {
     }
     delete pThreadParams;
 }
-#endif
