@@ -23,44 +23,31 @@
 /**********************************************************************************/
 
 #include "command_parser.h"
+#include <iostream>
 #include <string>
 #include <vector>
-#include <iostream>
-#include <unordered_map>
-#include <regex>
 
-/* CommandParser::CommandParser() {
-    {{"-h", "--help"}, "null"},
-    {{"-f", "--folder"}, "./"},
-    {{"-n", "--ncapture"}, "1"},
-    {{"-m", "--mode"}, "0"},
-    {{"-ext", "--ext_fsync"}, "0"},
-    {{"-wt", "--warmup"}, "0"},
-    {{"-ip", "--ip"}, "null"},
-    {{"-fw", "--firmware"}, "null"},
-    {{"-fps", "--setfps"}, "null"},
-    {{"-ccb", "--file"}, "null"},
-    {{"FILE"}, "null"}
-};*/
-
-std::unordered_map<std::string, std::string> CommandParser::getConfiguration() {
-    return m_command_map;
-}   
+std::vector<std::pair<std::string, std::string>>
+CommandParser::getConfiguration() {
+    return m_command_vector;
+}
 
 int CommandParser::parseArguments(int argc, char *argv[]) {
     for (int i = 1; i < argc; i++) {
         int end = std::string(argv[i]).find("=");
-        if (end != -1)
-            m_command_map.insert({std::string(argv[i]).substr(0, end),
-                                  std::string(argv[i]).substr(end + 1)});
-        else if(i != argc-1) {
-            m_command_map.insert({argv[i], argv[i + 1]});
+        int config = std::string(argv[i]).find(".json");
+        if (end != -1) {
+            m_command_vector.push_back({std::string(argv[i]).substr(0, end),
+                                        std::string(argv[i]).substr(end + 1)});
+        } else if (config != -1) {
+            m_command_vector.push_back({"CONFIG", argv[i]});
+        } else if (std::string(argv[i]) == "-h" ||
+                   std::string(argv[i]) == "--help") {
+            m_command_vector.push_back({argv[i], "help_menu"});
+        } else if (i != argc - 1) {
+            m_command_vector.push_back({argv[i], argv[i + 1]});
             i++;
-        } else if (std::string(argv[i]) == "-h" || std::string(argv[i]) == "--help") {
-            m_command_map.insert({argv[i], "help_menu"});
-        } else {
-            m_command_map.insert({"FILE", argv[i]});
         }
-    } 
+    }
     return 0;
 }
