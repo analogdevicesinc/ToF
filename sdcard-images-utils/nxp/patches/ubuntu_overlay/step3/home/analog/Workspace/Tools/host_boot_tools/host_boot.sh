@@ -43,7 +43,7 @@ do
 done
 
 # Run hostboot script
-python3 host_boot.py host_boot.stream
+python host_boot.py host_boot.stream
 
 # Select back the imager flash memory
 echo 0 | sudo tee /sys/class/gpio/$NVM_GPIO/value > /dev/null
@@ -51,7 +51,7 @@ echo 0 | sudo tee /sys/class/gpio/$NVM_GPIO/value > /dev/null
 sleep 2
 
 # Read chip ID to check correct hostboot
-python3 read_chip_id.py
+python read_chip_id.py
 
 # Reload ADSD3500 driver
 sudo modprobe adsd3500
