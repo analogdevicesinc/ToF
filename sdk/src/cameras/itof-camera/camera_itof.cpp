@@ -274,8 +274,8 @@ aditof::Status CameraItof::initialize() {
             uint16_t width1 = 512;
             uint16_t height1 = 512;
 
-            uint16_t width2 = 256;
-            uint16_t height2 = 320;
+            uint16_t width2 = 320;
+            uint16_t height2 = 256;
 
             // We read dealias parameters to find out the width and height for mode 5
             status = m_depthSensor->adsd3500_read_payload_cmd(
