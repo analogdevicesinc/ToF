@@ -9,7 +9,8 @@ except Exception as e:
     print(e)
     print('Installing Wheel FIle')
     os.system('pip install smbus2-0.4.2-py2.py3-none-any.whl')
-    from smbus2 import SMBus, i2c_msg
+    time.sleep(2)
+from smbus2 import SMBus, i2c_msg
 
 
 # Open a handle to "/dev/i2c-1", representing the I2C bus.
