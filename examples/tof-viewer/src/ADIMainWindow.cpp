@@ -894,7 +894,7 @@ void ADIMainWindow::ShowRecordTree() {
                                              view->frameWidth,
                                              recordingSeconds);
                 isRecording = true;
-
+                /*
                 // Save CFG and CCB next to the recording
                 auto camera = getActiveCamera();
                 if (camera) {
@@ -920,6 +920,7 @@ void ADIMainWindow::ShowRecordTree() {
                     LOG(ERROR)
                         << "No camera found. Can't save CCB & CFG files.";
                 }
+                */
             }
         }
 
