@@ -317,6 +317,14 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
 
     if (!firmware.empty()) {
+
+        std::ifstream file(firmware);
+        if (!(file.good() &&
+              file.peek() != std::ifstream::traits_type::eof())) {
+            LOG(ERROR) << firmware << " not found or is an empty file";
+            return 0;
+        }
+
         status = camera->setControl("updateAdsd3500Firmware", firmware);
         if (status != Status::OK) {
             LOG(ERROR) << "Could not update the adsd3500 firmware";
