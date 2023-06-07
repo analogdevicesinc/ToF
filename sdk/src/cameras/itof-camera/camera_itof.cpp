@@ -1768,25 +1768,6 @@ aditof::Status CameraItof::parseJsonFileContent() {
             }
         }
 
-        // Get optional power config
-        const cJSON *json_vaux_pwr =
-            cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_ENABLE");
-        if (cJSON_IsString(json_vaux_pwr) &&
-            (json_vaux_pwr->valuestring != NULL)) {
-            m_sensor_settings.push_back(std::make_pair(
-                json_vaux_pwr->string, atoi(json_vaux_pwr->valuestring)));
-        }
-
-        // Get optional power config
-        const cJSON *json_vaux_voltage =
-            cJSON_GetObjectItemCaseSensitive(config_json, "VAUX_POWER_VOLTAGE");
-        if (cJSON_IsString(json_vaux_voltage) &&
-            (json_vaux_voltage->valuestring != NULL)) {
-            m_sensor_settings.push_back(
-                std::make_pair(json_vaux_voltage->string,
-                               atoi(json_vaux_voltage->valuestring)));
-        }
-
         // Get fsync mode from config
         const cJSON *json_fsync_mode =
             cJSON_GetObjectItemCaseSensitive(config_json, "FSYNC_MODE");
