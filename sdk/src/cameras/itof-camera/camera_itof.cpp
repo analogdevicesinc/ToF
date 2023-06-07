@@ -441,16 +441,6 @@ aditof::Status CameraItof::initialize() {
         m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
     }
 
-    //Set FPS
-    if (m_cameraFps != 0) {
-        status = m_depthSensor->setControl("fps", std::to_string(m_cameraFps));
-        if (status != Status::OK) {
-            LOG(ERROR) << "Failed to set fps at: " << m_cameraFps << "!";
-        } else {
-            LOG(INFO) << "Camera FPS set from Json file at: " << m_cameraFps;
-        }
-    }
-
     if (m_adsd3500Enabled) {
         status = adsd3500SetToggleMode(m_fsyncMode);
         if (status != Status::OK) {
@@ -1797,13 +1787,6 @@ aditof::Status CameraItof::parseJsonFileContent() {
                                atoi(json_vaux_voltage->valuestring)));
         }
 
-        // Get fps from config
-        const cJSON *json_fps =
-            cJSON_GetObjectItemCaseSensitive(config_json, "FPS");
-        if (cJSON_IsString(json_fps) && (json_fps->valuestring != NULL)) {
-            m_cameraFps = atoi(json_fps->valuestring);
-        }
-
         // Get fsync mode from config
         const cJSON *json_fsync_mode =
             cJSON_GetObjectItemCaseSensitive(config_json, "FSYNC_MODE");
@@ -1990,6 +1973,22 @@ aditof::Status CameraItof::adsd3500GetFrameRate(uint16_t &fps) {
                                             reinterpret_cast<uint16_t *>(&fps));
 }
 
+aditof::Status CameraItof::adsd3500SetFrameRate(uint16_t fps) {
+    if (fps == 0) {
+        fps = 10;
+        LOG(WARNING) << "Using a default frame rate of " << fps;
+    }
+
+    aditof::Status status = m_depthSensor->setControl("fps", std::to_string(fps));
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to set fps at: " << fps << "!";
+    } else {
+        m_cameraFps = fps;
+        LOG(INFO) << "Camera FPS set from Ini file at: " << m_cameraFps;
+    }
+    return status;
+}
+
 aditof::Status CameraItof::adsd3500SetEnableEdgeConfidence(uint16_t value) {
     return m_depthSensor->adsd3500_write_cmd(0x0062, value);
 }
@@ -2144,5 +2143,12 @@ void CameraItof::setAdsd3500WithIniParams(
         adsd3500SetJBLFfilterEnableState(en);
     } else {
         LOG(WARNING) << "jblfApplyFlag was not found in .ini file";
+    }
+
+    it = iniKeyValPairs.find("fps");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500SetFrameRate(std::stoi(it->second));
+    } else {
+        LOG(WARNING) << "fps was not found in .ini file";
     }
 }
