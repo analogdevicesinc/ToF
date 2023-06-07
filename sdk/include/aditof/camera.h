@@ -396,6 +396,13 @@ class SDK_API Camera {
     virtual Status adsd3500GetFrameRate(uint16_t &fps) = 0;
 
     /**
+     * @brief Set Frame Rate
+     * @param[out] fps - See "Set Frame Rate" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual Status adsd3500SetFrameRate(uint16_t fps) = 0;
+
+    /**
      * @brief Set Enable Edge Confidence
      * @param[in] value - See "Set Enable Edge Confidence" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
      * @return Status

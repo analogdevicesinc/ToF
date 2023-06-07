@@ -161,6 +161,7 @@ class CameraItof : public aditof::Camera {
     aditof::Status adsd3500SetJBLFExponentialTerm(uint16_t value) override;
     aditof::Status adsd3500GetJBLFExponentialTerm(uint16_t &value) override;
     aditof::Status adsd3500GetFrameRate(uint16_t &fps) override;
+    aditof::Status adsd3500SetFrameRate(uint16_t fps) override;
     aditof::Status adsd3500SetEnableEdgeConfidence(uint16_t value) override;
     aditof::Status
     adsd3500GetTemperatureCompensationStatus(uint16_t &value) override;
