@@ -1960,7 +1960,8 @@ aditof::Status CameraItof::adsd3500SetFrameRate(uint16_t fps) {
         LOG(WARNING) << "Using a default frame rate of " << fps;
     }
 
-    aditof::Status status = m_depthSensor->setControl("fps", std::to_string(fps));
+    aditof::Status status =
+        m_depthSensor->setControl("fps", std::to_string(fps));
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Failed to set fps at: " << fps << "!";
     } else {

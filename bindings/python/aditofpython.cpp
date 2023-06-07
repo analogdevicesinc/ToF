@@ -377,8 +377,8 @@ PYBIND11_MODULE(aditofpython, m) {
                      camera.adsd3500GetJBLFExponentialTerm(value);
                  return std::make_pair(status, value);
              })
-        .def("adsd3500SetFrameRate",
-             &aditof::Camera::adsd3500SetFrameRate, py::arg("value"))
+        .def("adsd3500SetFrameRate", &aditof::Camera::adsd3500SetFrameRate,
+             py::arg("value"))
         .def("adsd3500GetFrameRate",
              [](aditof::Camera &camera) {
                  uint16_t framerate;
