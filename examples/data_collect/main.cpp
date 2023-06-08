@@ -69,15 +69,6 @@ static const char kUsagePublic[] =
       data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] CONFIG
       data_collect (-h | --help)
 
-    data_collect config/my_config.cfg
-    data_collect --n=1 --m=3 config/my_config.cfg
-    data_collect --m=1 --n=3 config/my_config.cfg (linux style)
-    data_collect --m=1 --n=3 config\my_config.cfg (windows style)
-    data_collect --long_ver config/my_config.cfg
-    data_collect -lv config/my_config.cfg
-    data_collect --n 1 --m config/my_config.cfg config/my_config.cfg
-    data_collect --long_ver 1 config/my_config
-
     Arguments:
       CONFIG            Input config_default.json file (which has *.ccb and *.cfg)
 
@@ -101,30 +92,6 @@ static const char kUsagePublic[] =
         5: long-range mixed
         6: short-range mixed
 )";
-// Hide 'ft' (frame_type) option from public doc string
-static const char kUsageInternal[] =
-    R"(Data Collect.
-    Usage:
-      data_collect CONFIG
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--ft <frame_type>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [--fps <setfps>] CONFIG
-      data_collect (-h | --help)
-
-    Arguments:
-      CONFIG            Input config_default.json file (which has *.ccb and *.cfg)
-
-    Options:
-      -h --help          Show this screen.
-      --f <folder>       Input folder to save data to. Max folder name size is 512. [default: ./]
-      --n <ncapture>     Number of frames to capture. [default: 1]
-      --m <mode>         Mode to capture data in. [default: 0]
-      --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
-      --ft <frame_type>  Type of frame to be captured [default: raw]
-      --wt <warmup>      Warmup Time (in seconds) before data capture [default: 0]
-      --ccb <FILE>       The path to store CCB content
-      --ip <ip>          Camera IP
-      --fw <firmware>    Adsd3500 fw file
-      --fps <setfps>     Set target FPS value [range: 50 to 200]
-)";
 
 #ifdef MULTI_THREADED
 void fileWriterTask(const thread_params *const pThreadParams);
@@ -132,12 +99,12 @@ void fileWriterTask(const thread_params *const pThreadParams);
 
 int main(int argc, char *argv[]) {
     std::map<std::vector<std::string>, std::string> command_map = {
-        {{"-h", "--help"}, ""},         {{"-f", "--folder"}, "."},
-        {{"-n", "--ncapture"}, "1"},    {{"-m", "--mode"}, "0"},
-        {{"-ext", "--ext_fsync"}, "0"}, {{"-wt", "--warmup"}, ""},
-        {{"-ip", "--ip"}, ""},          {{"-fw", "--firmware"}, ""},
-        {{"-fps", "--setfps"}, ""},     {{"-ccb", "--ccb"}, ""},
-        {{"-ft", "--frame"}, "raw"},    {{"CONFIG", "config"}, ""}};
+        {{"-h", "--help"}, ""},         {{"-f", "--f"}, "."},
+        {{"-n", "--n"}, "1"},           {{"-m", "--m"}, "0"},
+        {{"-ext", "--ext_fsync"}, "0"}, {{"-wt", "--wt"}, ""},
+        {{"-ip", "--ip"}, ""},          {{"-fw", "--fw"}, ""},
+        {{"-fps", "--fps"}, ""},        {{"-ccb", "--ccb"}, ""},
+        {{"-ft", "--ft"}, "raw"},       {{"CONFIG", "config"}, ""}};
     CommandParser command;
     command.parseArguments(argc, argv);
     std::vector<std::pair<std::string, std::string>> arg_vector =
