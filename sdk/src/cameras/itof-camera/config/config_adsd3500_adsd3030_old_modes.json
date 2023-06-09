@@ -1,6 +1,0 @@
-{
-    "VAUX_POWER_VOLTAGE": "18",
-    "DEPTH_INI": "./config/RawToDepthAdsd3030_vga.ini",
-    "FPS": "10",
-    "FSYNC_MODE": "1"
-}

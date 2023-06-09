@@ -1,6 +1,0 @@
-{
-    "VAUX_POWER_VOLTAGE": "18",
-    "DEPTH_INI": "./config/RawToDepthAdsd3500_mp.ini;./config/RawToDepthAdsd3500_qmp.ini",
-    "FPS": "10",
-    "FSYNC_MODE": "1"
-}
