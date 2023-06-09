@@ -547,7 +547,7 @@ CameraItof::getAvailableModes(std::vector<std::string> &availableModes) const {
     using namespace aditof;
     Status status = Status::OK;
 
-    availableModes = g_availableModes;
+    availableModes = ModeInfo::getInstance()->GetAvailableModes();
 
     return status;
 }
