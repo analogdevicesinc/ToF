@@ -297,8 +297,13 @@ aditof::Status CameraItof::initialize() {
             }
         }
 
-        ModeInfo::getInstance()->setImagerTypeAndModeVersion(
+        status = ModeInfo::getInstance()->setImagerTypeAndModeVersion(
             m_adsd3500ImagerType, m_modesVersion);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Call to setImagerTypeAndModeVersion failed, see "
+                          "previoud LOG message.";
+            return status;
+        }
         setControl("imagerType", std::to_string(m_adsd3500ImagerType));
         status = m_depthSensor->setControl("modeInfoVersion",
                                            std::to_string(m_modesVersion));

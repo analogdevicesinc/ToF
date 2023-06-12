@@ -147,7 +147,7 @@ aditof::Status ModeInfo::setImagerTypeAndModeVersion(int type, int version) {
             LOG(INFO) << "Using new modes table for ADSD3100.";
         } else {
             LOG(INFO) << "Unknow modes table.";
-            return Status::INVALID_ARGUMENT;
+            return Status::GENERIC_ERROR;
         }
         break;
     }
@@ -163,7 +163,7 @@ aditof::Status ModeInfo::setImagerTypeAndModeVersion(int type, int version) {
         } else {
 
             LOG(INFO) << "Unknow modes table.";
-            return Status::INVALID_ARGUMENT;
+            return Status::GENERIC_ERROR;
         }
         break;
     }
