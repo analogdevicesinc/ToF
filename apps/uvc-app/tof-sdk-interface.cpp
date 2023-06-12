@@ -356,6 +356,7 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
         response.set_status(
             static_cast<::uvc_payload::Status>(aditof::Status::OK));
         break;
+    }
 
     case uvc_payload::FunctionName::INIT_TARGET_DEPTH_COMPUTE: {
         uint16_t iniFileLength =
