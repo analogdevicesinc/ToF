@@ -10,8 +10,6 @@
 #include "gpio.h"
 #include "utils.h"
 
-#include "../../cameras/itof-camera/mode_info.h"
-
 #include "cameras/itof-camera/mode_info.h"
 #include <algorithm>
 #include <arm_neon.h>
@@ -1327,7 +1325,8 @@ aditof::Status Adsd3500Sensor::initTargetDepthCompute(uint8_t *iniFile,
     Status status = Status::OK;
 
     uint8_t convertedMode;
-    status = convertCameraMode(m_implData->frameType.type, convertedMode);
+    status = ModeInfo::getInstance()->convertCameraMode(
+        m_implData->frameType.type, convertedMode);
 
     status = m_bufferProcessor->setProcessorProperties(
         iniFile, iniFileLength, calData, calDataLength, convertedMode, true);

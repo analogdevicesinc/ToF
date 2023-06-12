@@ -1057,7 +1057,8 @@ aditof::Status CameraItof::initComputeLibrary(void) {
             if (1) {
                 aditof::Status localStatus;
                 localStatus = m_depthSensor->initTargetDepthCompute(
-                    (uint8_t*)tempDataParser, dataSize, (uint8_t *)m_xyz_dealias_data,
+                    (uint8_t *)tempDataParser, dataSize,
+                    (uint8_t *)m_xyz_dealias_data,
                     sizeof(TofiXYZDealiasData) * 10);
                 if (localStatus != aditof::Status::OK) {
                     LOG(ERROR)
