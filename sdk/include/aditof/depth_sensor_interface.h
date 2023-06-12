@@ -275,7 +275,7 @@ class DepthSensorInterface {
      */
     virtual aditof::Status
     setHostConnectionType(std::string &connectionType) = 0;
-    
+
     /**
      * @brief Get the name of the sensor
      * @param[in] iniFile - iniFile content parsed as uint8_t*

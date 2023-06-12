@@ -33,9 +33,9 @@
 #include "v4l_buffer_access_interface.h"
 
 #include "../../cameras/itof-camera/mode_info.h"
-#include "../../cameras/itof-camera/tofi/tofi_compute.h"
-#include "../../cameras/itof-camera/tofi/tofi_config.h"
-#include "../../cameras/itof-camera/tofi/tofi_util.h"
+#include "tofi/tofi_compute.h"
+#include "tofi/tofi_config.h"
+#include "tofi/tofi_util.h"
 
 #define OUTPUT_DEVICE "/dev/video1"
 
