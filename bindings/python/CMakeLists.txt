@@ -63,6 +63,7 @@ set(TARGET_OUTPUT_NAME "${target_prefix}aditofpython${target_suffix}")
 if (WITH_EXAMPLES)
     PopulateforPython("examples/dnn")
     PopulateforPython("examples/first_frame")
+    PopulateforPython("examples/streaming")
 endif()
 
 configure_file(
