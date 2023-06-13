@@ -95,10 +95,8 @@ endif()
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../../sdk/src/cameras/itof-camera/config $<TARGET_FILE_DIR:${PROJECT_NAME}>/${CONFIG_DIR_NAME}/.
 	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/tof-viewer_config.json $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/tof-viewer_config_adsd3030_new_modes.json $<TARGET_FILE_DIR:${PROJECT_NAME}>/..
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/tof-viewer_config_adsd3030_old_modes.json $<TARGET_FILE_DIR:${PROJECT_NAME}>/..
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/tof-viewer_config_adsd3500_new_modes.json $<TARGET_FILE_DIR:${PROJECT_NAME}>/..
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/tof-viewer_config_adsd3500_old_modes.json $<TARGET_FILE_DIR:${PROJECT_NAME}>/..
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/tof-viewer_config_adsd3500_adsd3030.json $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
+    COMMENT "Copying cfgs and libs to build examples for tof-viewer."
 	)
 
 if(WIN32)
