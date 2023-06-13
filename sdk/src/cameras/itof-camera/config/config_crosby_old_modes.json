@@ -1,4 +1,0 @@
-{
-    "DEPTH_INI": "./config/RawToDepthAdsd3500_mp.ini;./config/RawToDepthAdsd3500_qmp.ini",
-    "FSYNC_MODE": "1"
-}
