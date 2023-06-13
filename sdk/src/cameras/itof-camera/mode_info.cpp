@@ -12,68 +12,52 @@
 #include <aditof/log.h>
 #endif
 
-ModeInfo::modeInfo ModeInfo::g_oldModes[] = {
-    {1, 320, 288, 9, 2162, 288, 0, "lt_bin"},
-    {3, 1024, 1024, 1, 12289, 64, 1, "pcmmp"},
-    {7, 512, 512, 10, 2195, 896, 1, "qmp"},
-    {10, 1024, 1024, 9, 12289, 576, 0, "mp"},
-};
-
-ModeInfo::modeInfo ModeInfo::g_oldModesAdsd3030[] = {
-    {5, 512, 640, 1, 1670, 1472, 1, "vga"},
-};
-
 //TO DO: update table with new values
 ModeInfo::modeInfo ModeInfo::g_newModesAdsd3100[] = {
     {0, 1024, 1024, 6, 49156, 96, 0, "sr-native"},
     {1, 1024, 1024, 9, 49156, 144, 0, "lr-native"},
     {2, 512, 512, 6, 12292, 96, 0, "sr-qnative"},
     {3, 512, 512, 9, 18438, 96, 0, "lr-qnative"},
-    {4, 1024, 1024, 1, 49156, 16, 1, "pcmmp"},
-};
+    {4, 1024, 1024, 1, 49156, 16, 1, "pcm-native"}};
 
-ModeInfo::modeInfo ModeInfo::g_newModesAdsd3500[] = {
+ModeInfo::modeInfo ModeInfo::g_newModesAdsd3500Adsd3100[] = {
     {0, 1024, 1024, 2, 49156, 96, 0, "sr-native"},
     {1, 1024, 1024, 3, 49156, 144, 0, "lr-native"},
     {2, 512, 512, 1, 12292, 96, 0, "sr-qnative"},
     {3, 512, 512, 1, 18438, 96, 0, "lr-qnative"},
-    {4, 1024, 1024, 1, 18438, 96, 1, "pcm-native"},
-};
+    {4, 1024, 1024, 1, 18438, 96, 1, "pcm-native"}};
 
-ModeInfo::modeInfo ModeInfo::g_newModesAdsd3030[] = {
+ModeInfo::modeInfo ModeInfo::g_newModesAdsd3500Adsd3030[] = {
     {0, 512, 640, 1, 1670, 1472, 1, "sr-native"},
     {1, 512, 640, 1, 1670, 1472, 1, "lr-native"},
     {2, 256, 320, 1, 1670, 1472, 1, "sr-qnative"},
     {3, 256, 320, 1, 1670, 1472, 1, "lr-qnative"},
-    {4, 512, 640, 1, 18438, 96, 1, "pcm-native"},
-};
+    {4, 512, 640, 1, 18438, 96, 1, "pcm-native"}};
 
-ModeInfo::modeInfo ModeInfo::g_newMixedModesAdsd3500[] = {
+ModeInfo::modeInfo ModeInfo::g_newMixedModesAdsd3500Adsd3100[] = {
     {0, 1024, 1024, 2, 49156, 96, 0, "sr-native"},
     {1, 1024, 1024, 3, 49156, 144, 0, "lr-native"},
     {2, 512, 512, 1, 12292, 96, 0, "sr-qnative"},
     {3, 512, 512, 1, 18438, 96, 0, "lr-qnative"},
     {4, 1024, 1024, 1, 18438, 96, 1, "pcm-native"},
     {6, 512, 512, 1, 12292, 96, 0, "sr-mixed"},
-    {5, 512, 512, 1, 18438, 96, 0, "lr-mixed"},
-};
+    {5, 512, 512, 1, 18438, 96, 0, "lr-mixed"}};
 
-ModeInfo::modeInfo ModeInfo::g_newMixedModesAdsd3030[] = {
+ModeInfo::modeInfo ModeInfo::g_newMixedModesAdsd3500Adsd3030[] = {
     {0, 512, 640, 1, 1670, 1472, 1, "sr-native"},
     {1, 512, 640, 1, 1670, 1472, 1, "lr-native"},
     {2, 256, 320, 1, 1670, 1472, 1, "sr-qnative"},
     {3, 256, 320, 1, 1670, 1472, 1, "lr-qnative"},
     {4, 512, 640, 1, 18438, 96, 1, "pcm-native"},
     {6, 256, 320, 1, 1670, 1472, 0, "sr-mixed"},
-    {5, 256, 320, 1, 1670, 1472, 0, "lr-mixed"},
-};
+    {5, 256, 320, 1, 1670, 1472, 0, "lr-mixed"}};
 
 int ModeInfo::g_imagerType = 1;
 int ModeInfo::g_modeVersion = 2;
 
 std::vector<ModeInfo::modeInfo>
-    ModeInfo::g_modeInfoData(std::begin(g_newModesAdsd3500),
-                             std::end(g_newModesAdsd3500));
+    ModeInfo::g_modeInfoData(std::begin(g_newModesAdsd3500Adsd3100),
+                             std::end(g_newModesAdsd3500Adsd3100));
 
 //Define the static Singleton pointer
 ModeInfo *ModeInfo::m_instance = NULL;
@@ -120,6 +104,16 @@ ModeInfo::modeInfo ModeInfo::getModeInfo(const std::string &mode) {
     return {0};
 }
 
+aditof::Status
+ModeInfo::populateAvailableModes(const std::vector<ModeInfo::modeInfo> modes) {
+    for (ModeInfo::modeInfo mode : modes) {
+        m_availableModes.emplace_back(mode.mode_name);
+    }
+
+    return (m_availableModes.size() > 0) ? aditof::Status::OK
+                                         : aditof::Status::GENERIC_ERROR;
+}
+
 aditof::Status ModeInfo::setImagerTypeAndModeVersion(int type, int version) {
     using namespace aditof;
     Status status = Status::OK;
@@ -139,37 +133,37 @@ aditof::Status ModeInfo::setImagerTypeAndModeVersion(int type, int version) {
     switch (g_imagerType) {
     case 1: {
         if (version == 3) {
-            g_modeInfoData.assign(std::begin(g_newMixedModesAdsd3500),
-                                  std::end(g_newMixedModesAdsd3500));
-            LOG(INFO) << "Using new mixed modes table for adsd3500.";
+            g_modeInfoData.assign(std::begin(g_newMixedModesAdsd3500Adsd3100),
+                                  std::end(g_newMixedModesAdsd3500Adsd3100));
+            LOG(INFO) << "Using new mixed modes table for ADSD3500 w/ADSD3100.";
         } else if (version == 2) {
-            g_modeInfoData.assign(std::begin(g_newModesAdsd3500),
-                                  std::end(g_newModesAdsd3500));
-            LOG(INFO) << "Using new modes table for adsd3500.";
+            g_modeInfoData.assign(std::begin(g_newModesAdsd3500Adsd3100),
+                                  std::end(g_newModesAdsd3500Adsd3100));
+            LOG(INFO) << "Using new modes table for ADSD3500 w/ADSD3100.";
 
         } else if (version == 1) {
             g_modeInfoData.assign(std::begin(g_newModesAdsd3100),
                                   std::end(g_newModesAdsd3100));
-            LOG(INFO) << "Using new modes table for adsd3100.";
+            LOG(INFO) << "Using new modes table for ADSD3100.";
         } else {
-            g_modeInfoData.assign(std::begin(g_oldModes), std::end(g_oldModes));
-            LOG(INFO) << "Using old modes table.";
+            LOG(INFO) << "Unknow modes table.";
+            return Status::GENERIC_ERROR;
         }
         break;
     }
     case 2: {
         if (version == 3) {
-            g_modeInfoData.assign(std::begin(g_newMixedModesAdsd3030),
-                                  std::end(g_newMixedModesAdsd3030));
-            LOG(INFO) << "Using new mixed modes table for adsd3030.";
+            g_modeInfoData.assign(std::begin(g_newMixedModesAdsd3500Adsd3030),
+                                  std::end(g_newMixedModesAdsd3500Adsd3030));
+            LOG(INFO) << "Using new mixed modes table for ADSD3500 w/ADSD3030.";
         } else if (version == 2) {
-            g_modeInfoData.assign(std::begin(g_newModesAdsd3030),
-                                  std::end(g_newModesAdsd3030));
-            LOG(INFO) << "Using new modes table for adsd3030.";
+            g_modeInfoData.assign(std::begin(g_newModesAdsd3500Adsd3030),
+                                  std::end(g_newModesAdsd3500Adsd3030));
+            LOG(INFO) << "Using new modes table for ADSD3500 w/ADSD3030.";
         } else {
-            g_modeInfoData.assign(std::begin(g_oldModesAdsd3030),
-                                  std::end(g_oldModesAdsd3030));
-            LOG(INFO) << "Using old modes table for adsd3030.";
+
+            LOG(INFO) << "Unknow modes table.";
+            return Status::GENERIC_ERROR;
         }
         break;
     }
@@ -178,6 +172,8 @@ aditof::Status ModeInfo::setImagerTypeAndModeVersion(int type, int version) {
         status = Status::GENERIC_ERROR;
         break;
     }
+
+    populateAvailableModes(g_modeInfoData);
 
     return status;
 };
