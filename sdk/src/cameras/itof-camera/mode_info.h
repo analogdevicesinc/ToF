@@ -12,9 +12,6 @@
 #include <string>
 #include <vector>
 
-const std::vector<std::string> g_availableModes = {"pcmmp", "srqmp", "lrqmp",
-                                                   "srmp", "lrmp"};
-
 /**
  * @class ModeInfo
  * @brief Singleton definition of Mode details (width, height, total captures, embedded_width, embedded_height, passive_ir, mode_name)
@@ -79,23 +76,32 @@ class ModeInfo {
     aditof::Status convertCameraMode(const std::string &modes,
                                      uint8_t &convertedMode);
 
+    std::vector<std::string> GetAvailableModes() { return m_availableModes; };
+
   private:
     static std::vector<modeInfo> g_modeInfoData;
-    static modeInfo g_oldModes[];
-    static modeInfo g_oldModesAdsd3030[];
     static modeInfo g_newModesAdsd3100[];
-    static modeInfo g_newModesAdsd3500[];
-    static modeInfo g_newModesAdsd3030[];
-    static modeInfo g_newMixedModesAdsd3500[];
-    static modeInfo g_newMixedModesAdsd3030[];
+    static modeInfo g_newModesAdsd3500Adsd3100[];
+    static modeInfo g_newModesAdsd3500Adsd3030[];
+    static modeInfo g_newMixedModesAdsd3500Adsd3100[];
+    static modeInfo g_newMixedModesAdsd3500Adsd3030[];
     static ModeInfo *m_instance; //single instance
     static int g_imagerType;
     static int g_modeVersion;
+    std::vector<std::string> m_availableModes;
 
     ModeInfo() {
     } // private so that it can not be called, always access through getInstance()
     ModeInfo(const ModeInfo &);            // copy constructor is private
     ModeInfo &operator=(const ModeInfo &); // assignment operator is private
+
+    /**
+     * Populate g_availableModes with the modes for the selected mode
+     * param[in] modes - modes array
+     * @return aditof::Status
+    */
+    aditof::Status
+    populateAvailableModes(const std::vector<ModeInfo::modeInfo> modes);
 };
 
 #endif // MODE_INFO
