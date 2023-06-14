@@ -54,7 +54,7 @@ Status NetworkSensorEnumerator::searchSensors() {
     sensorCount++;
     Status status = Status::OK;
 
-    LOG(INFO) << "Looking for sensors over network";
+    LOG(INFO) << "Looking for sensors over network: " << m_ip;
 
     std::unique_ptr<Network> net(new Network(sensorIndex));
 
