@@ -111,6 +111,7 @@ int main(int argc, char *argv[]) {
         command.getConfiguration();
     bool is_command;
 
+    // Goes through vector of pairs and assings values in map
     for (int it = 0; it < arg_vector.size(); it++) {
         if (arg_vector[it].second == "help_menu") {
             if (it != 0 || arg_vector.size() != 1) {
@@ -126,8 +127,7 @@ int main(int argc, char *argv[]) {
         if (it == arg_vector.size() - 1) {
             if (arg_vector[it].first != "CONFIG" &&
                 arg_vector[it].first != "config") {
-                LOG(ERROR) << "Argument CONFIG is either missing or needs to "
-                              "be the last one! "
+                LOG(ERROR) << "Argument CONFIG is missing! "
                            << "Please check help menu.";
                 return 0;
             }
@@ -141,6 +141,11 @@ int main(int argc, char *argv[]) {
             }
         }
         if (!is_command) {
+            if (arg_vector[it].second.find('-') == 0) {
+                LOG(ERROR) << "Argument CONFIG should be the last one! "
+                           << "Please check help menu.";
+                return 0;
+            }
             LOG(ERROR) << "Argument " + arg_vector[it].first +
                               " does not exist! "
                        << "Please check help menu.";
@@ -183,7 +188,7 @@ int main(int argc, char *argv[]) {
 
     // Parsing output folder
     err = snprintf(folder_path, sizeof(folder_path), "%s",
-                   command_map[{"-f", "--folder"}].c_str());
+                   command_map[{"-f", "--f"}].c_str());
 
     if (err < 0) {
         LOG(ERROR) << "Error copying the output folder path!";
@@ -214,10 +219,10 @@ int main(int argc, char *argv[]) {
 #endif
 
     // Parsing number of frames
-    n_frames = std::stoi(command_map[{"-n", "--ncapture"}]);
+    n_frames = std::stoi(command_map[{"-n", "--n"}]);
 
     // Parsing mode type
-    mode = std::stoi(command_map[{"-m", "--mode"}]);
+    mode = std::stoi(command_map[{"-m", "--m"}]);
 
     // Parsing ip
     if (!command_map[{"-ip", "--ip"}].empty()) {
@@ -225,31 +230,30 @@ int main(int argc, char *argv[]) {
     }
 
     // Parsing firmware
-    if (!command_map[{"-fw", "--firmware"}].empty()) {
-        firmware = command_map[{"-fw", "--firmware"}];
+    if (!command_map[{"-fw", "--fw"}].empty()) {
+        firmware = command_map[{"-fw", "--fw"}];
     }
 
     //set FPS value
-    if (!command_map[{"-fps", "--setfps"}].empty()) {
-        setfps = std::stoi(command_map[{"-fps", "--setfps"}]);
+    if (!command_map[{"-fps", "--fps"}].empty()) {
+        setfps = std::stoi(command_map[{"-fps", "--fps"}]);
     } else {
         setfps = fps_defaults[mode];
     }
 
     ext_frame_sync_en = std::stoi(command_map[{"-ext", "--ext_fsync"}]);
 
-    frame_type = command_map[{"-ft", "--frame"}];
+    frame_type = command_map[{"-ft", "--ft"}];
 
     if (frame_type.length() <= 0) {
-        LOG(ERROR)
-            << "Error parsing frame_type (-ft/--frame) from command line!"
-            << "\n Please check help menu";
+        LOG(ERROR) << "Error parsing frame_type (-ft/--ft) from command line!"
+                   << "\n Please check help menu";
         return 0;
     }
 
     //Parsing Warm up time
-    if (!command_map[{"-wt", "--warmup"}].empty()) {
-        warmup_time = std::stoi(command_map[{"-wt", "--warmup"}]);
+    if (!command_map[{"-wt", "--wt"}].empty()) {
+        warmup_time = std::stoi(command_map[{"-wt", "--wt"}]);
         if (warmup_time < 0) {
             LOG(ERROR) << "Invalid warm up time input!";
         }
