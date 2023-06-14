@@ -33,17 +33,18 @@ CommandParser::getConfiguration() {
 }
 
 int CommandParser::parseArguments(int argc, char *argv[]) {
+    // Parse the config and stores argument + value
     for (int i = 1; i < argc; i++) {
-        int end = std::string(argv[i]).find("=");
-        int config = std::string(argv[i]).find(".json");
-        if (end != -1) {
-            m_command_vector.push_back({std::string(argv[i]).substr(0, end),
-                                        std::string(argv[i]).substr(end + 1)});
-        } else if (config != -1) {
-            m_command_vector.push_back({"CONFIG", argv[i]});
+        int contains_equal = std::string(argv[i]).find("=");
+        if (contains_equal != -1) {
+            m_command_vector.push_back(
+                {std::string(argv[i]).substr(0, contains_equal),
+                 std::string(argv[i]).substr(contains_equal + 1)});
         } else if (std::string(argv[i]) == "-h" ||
-                   std::string(argv[i]) == "--help") {
+                   std::string(argv[i]) == "--h") {
             m_command_vector.push_back({argv[i], "help_menu"});
+        } else if (i == argc - 1) {
+            m_command_vector.push_back({"CONFIG", argv[i]});
         } else if (i != argc - 1) {
             m_command_vector.push_back({argv[i], argv[i + 1]});
             i++;
