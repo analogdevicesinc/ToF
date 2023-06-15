@@ -1,0 +1,8 @@
+{
+  "firmware": "4.2.4.0",
+  "firmwarehash": "5ecd368683f2b49f6af7c872deaf04d5696206c4",
+  "sdcard": "microsd-4.2.0-b260ad46.img",
+  "package-sdk": "4.2.0",
+  "branch": "HEAD",
+  "commit": "b260ad46"
+}
