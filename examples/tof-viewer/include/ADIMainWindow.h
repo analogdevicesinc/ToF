@@ -202,6 +202,7 @@ class ADIMainWindow {
     const uint32_t INITIALDEG = 0;
     const float NORMALDPISCALAR = 1.0f;
     const float HIGHDPISCALAR = 2.0f;
+    const std::string DEFAULT_TOOLS_CONFIG_FILENAME = "tof-tools.config";
 
   public:
     /**
