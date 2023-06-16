@@ -29,32 +29,28 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <cstring>
-#include <iostream>
-#include <vector>
-#include <sstream>
-#include <filesystem>
-#include <aditof/version.h>
-#include <aditof/system.h>
-#include <aditof/camera.h>
 #include "c_json/cJSON.h"
+#include <aditof/camera.h>
+#include <aditof/system.h>
+#include <aditof/version.h>
+#include <cstring>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 
-
-const char* localJson = "sw_versions.info";
-const char* remoteJsonURL = "https://swdownloads.analog.com/cse/aditof/aware3d/sw_update/remote.json";
-const char* localTmpFile = "remote.json";
+const char *localJson = "sw_versions.info";
+const char *remoteJsonURL =
+    "https://swdownloads.analog.com/cse/aditof/aware3d/sw_update/remote.json";
+const char *localTmpFile = "remote.json";
 std::string ip = "10.42.0.1";
-const char* VERSION = "v1.0.1";
+const char *VERSION = "v1.0.1";
 
-int32_t getLocalJSON(std::string &fwversion, 
-                       std::string &fwhash,
-                       std::string &sdcard,
-                       std::string &package_sdk,
-                       std::string &branch,
-                       std::string &commit) {
+int32_t getLocalJSON(std::string &fwversion, std::string &fwhash,
+                     std::string &sdcard, std::string &package_sdk,
+                     std::string &branch, std::string &commit) {
     // Open the JSON file
     std::ifstream file(localJson);
     if (!file.is_open()) {
@@ -63,16 +59,17 @@ int32_t getLocalJSON(std::string &fwversion,
     }
 
     // Read the JSON contents into a string buffer
-    std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    std::string buffer((std::istreambuf_iterator<char>(file)),
+                       std::istreambuf_iterator<char>());
 
     // Parse the JSON contents
-    cJSON* data = cJSON_Parse(buffer.c_str());
+    cJSON *data = cJSON_Parse(buffer.c_str());
     if (!data) {
         std::cerr << "Error parsing JSON!" << std::endl;
         return -2;
     }
 
-    cJSON* output;
+    cJSON *output;
     output = cJSON_GetObjectItem(data, "firmware");
     fwversion = (output != nullptr) ? output->valuestring : "";
 
@@ -96,12 +93,9 @@ int32_t getLocalJSON(std::string &fwversion,
     return 0;
 }
 
-int32_t getinstalledVersion(std::string& fwVersion,
-    std::string& fwHash,
-    std::string& sdcard,
-    std::string& sdkpackage,
-    std::string& sdkbranch,
-    std::string& sdkcommit) {
+int32_t getinstalledVersion(std::string &fwVersion, std::string &fwHash,
+                            std::string &sdcard, std::string &sdkpackage,
+                            std::string &sdkbranch, std::string &sdkcommit) {
 
     sdkpackage = aditof::getApiVersion();
     sdkbranch = aditof::getBranchVersion();
@@ -112,8 +106,7 @@ int32_t getinstalledVersion(std::string& fwVersion,
 
     if (ip.empty()) {
         system.getCameraList(cameras);
-    }
-    else {
+    } else {
         system.getCameraListAtIp(cameras, ip);
     }
 
@@ -131,18 +124,17 @@ int32_t getinstalledVersion(std::string& fwVersion,
         return -2;
     }
 
-    aditof::CameraDetails cameraDetails;  
+    aditof::CameraDetails cameraDetails;
     camera->getDetails(cameraDetails);
 
     camera->adsd3500GetFirmwareVersion(fwVersion, fwHash);
 
     sdcard = cameraDetails.sdCardImageVersion;
-    
+
     return 0;
 }
 
-int32_t getRemoteJSON(std::string& packageversion,
-                      std::string& packageurl) {
+int32_t getRemoteJSON(std::string &packageversion, std::string &packageurl) {
 
     std::string url = remoteJsonURL;
     std::string filename = localTmpFile;
@@ -150,7 +142,9 @@ int32_t getRemoteJSON(std::string& packageversion,
     std::filesystem::remove(filename);
 
     // Create an HTTP request using cURL and save the response to a file
-    std::system(("curl -H \"Cache-Control: no-cache\" -s -o " + filename + " " + url).c_str());
+    std::system(
+        ("curl -H \"Cache-Control: no-cache\" -s -o " + filename + " " + url)
+            .c_str());
 
     // Read the file into memory
     std::ifstream file(filename);
@@ -158,15 +152,16 @@ int32_t getRemoteJSON(std::string& packageversion,
     buffer << file.rdbuf();
 
     // Parse the JSON contents
-    cJSON* data = cJSON_Parse(buffer.str().c_str());
+    cJSON *data = cJSON_Parse(buffer.str().c_str());
     if (!data) {
-        std::cerr << "Error parsing JSON: " << buffer.str().c_str() << std::endl;
+        std::cerr << "Error parsing JSON: " << buffer.str().c_str()
+                  << std::endl;
         std::filesystem::remove(filename);
         return -1;
     }
 
     // Extract the values from the JSON object
-    cJSON* output;
+    cJSON *output;
     output = cJSON_GetObjectItem(data, "packageversion");
     packageversion = (output != nullptr) ? output->valuestring : "";
     output = cJSON_GetObjectItem(data, "packageurl");
@@ -182,31 +177,37 @@ int32_t getRemoteJSON(std::string& packageversion,
 std::string compare(const std::string s1, const std::string s2) {
     if (s1 == s2) {
         return std::string(" == ");
-    }
-    else {
+    } else {
         return std::string(" != ");
     }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     int32_t ret = 0;
 
     std::cout << "SofwareCheck " << VERSION << std::endl << std::endl;
 
     if (argc != 2) {
         std::cerr << "Usage:" << std::endl;
-        std::cerr << argv[0] << " " << "<ip address>" << std::endl;
-        std::cerr << "Where the 'ip address' is the address of the eval kit, normally 10.42.0.1" << std::endl;
+        std::cerr << argv[0] << " "
+                  << "<ip address>" << std::endl;
+        std::cerr << "Where the 'ip address' is the address of the eval kit, "
+                     "normally 10.42.0.1"
+                  << std::endl;
         std::cerr << std::endl;
         std::cerr << "For example:" << std::endl;
-        std::cerr << argv[0] << " " << "10.42.0.1" << std::endl;
+        std::cerr << argv[0] << " "
+                  << "10.42.0.1" << std::endl;
         std::cerr << std::endl;
         std::cerr << "Using the default IP address of " << ip << std::endl;
     }
 
     if (argc == 2) {
         ip = argv[1];
-        std::cout << "No IP address specififed, using network access with IP address " << ip << "." << std::endl << std::endl;
+        std::cout
+            << "No IP address specififed, using network access with IP address "
+            << ip << "." << std::endl
+            << std::endl;
     }
 
     // Version as stored on the server.
@@ -216,8 +217,8 @@ int main(int argc, char* argv[]) {
     remotestatus = getRemoteJSON(remotePackageversion, remotePackageurl);
 
     if (remotestatus < 0) {
-        std::cerr
-            << "Warning: Unable to get details on new version availability. Try again later. Continuing.";   
+        std::cerr << "Warning: Unable to get details on new version "
+                     "availability. Try again later. Continuing.";
     }
 
     // Version information as distributed in the package.
@@ -227,15 +228,13 @@ int main(int argc, char* argv[]) {
     std::string distributedPackageversion;
     std::string distributedBranch;
     std::string distributedCommit;
-    ret = getLocalJSON(distributedFwversion,
-        distributedFwhash,
-        distributedSdcard,
-        distributedPackageversion,
-        distributedBranch,
-        distributedCommit);
+    ret = getLocalJSON(distributedFwversion, distributedFwhash,
+                       distributedSdcard, distributedPackageversion,
+                       distributedBranch, distributedCommit);
 
     if (ret < 0) {
-        std::cerr << "Error: Unable to process local version information. Exiting.";
+        std::cerr
+            << "Error: Unable to process local version information. Exiting.";
         return ret;
     }
 
@@ -246,44 +245,73 @@ int main(int argc, char* argv[]) {
     std::string installedSdkPackageversion;
     std::string installedSdkBranch;
     std::string installedSdkCommit;
-    std::cerr << "*******************************: Getting Installed Version Infomation: start" << std::endl;
-    ret = getinstalledVersion(installedFwversion,
-        installedFwhash,
-        installedSdcard,
-        installedSdkPackageversion,
-        installedSdkBranch,
-        installedSdkCommit);
+    std::cerr << "*******************************: Getting Installed Version "
+                 "Infomation: start"
+              << std::endl;
+    std::cerr
+        << "CTRL+C if call does not return. Start by updating the SD card."
+        << std::endl;
+    ret = getinstalledVersion(installedFwversion, installedFwhash,
+                              installedSdcard, installedSdkPackageversion,
+                              installedSdkBranch, installedSdkCommit);
 
-    std::cerr << "*******************************: Getting Installed Version Infomation: stop" << std::endl;
+    std::cerr << "*******************************: Getting Installed Version "
+                 "Infomation: stop"
+              << std::endl;
 
     if (ret < 0) {
-        std::cerr << "Error: Unable to get installed version information. Please "
-                     "start by ensuring the SD card is updated. Exiting.";
+        std::cerr
+            << "Error: Unable to get installed version information. Please "
+               "start by ensuring the SD card is updated. Exiting.";
         return ret;
     }
 
-    if (distributedFwversion != installedFwversion || distributedFwhash != installedFwhash) {
+    if (distributedFwversion != installedFwversion ||
+        distributedFwhash != installedFwhash) {
         std::cerr << std::endl;
-        std::cerr << "** Error: Firmware version you have installed is incorrect: distributed != installed" << std::endl;
-        std::cerr << "    Firmware version: " << distributedFwversion << compare(distributedFwversion, installedFwversion) << installedFwversion << std::endl;
-        std::cerr << "    Firmware git commit hash: " << distributedFwhash << compare(distributedFwhash, installedFwhash) << installedFwhash << std::endl;
+        std::cerr << "** Error: Firmware version you have installed is "
+                     "incorrect: distributed != installed"
+                  << std::endl;
+        std::cerr << "    Firmware version: " << distributedFwversion
+                  << compare(distributedFwversion, installedFwversion)
+                  << installedFwversion << std::endl;
+        std::cerr << "    Firmware git commit hash: " << distributedFwhash
+                  << compare(distributedFwhash, installedFwhash)
+                  << installedFwhash << std::endl;
     }
     if (distributedSdcard != installedSdcard) {
         std::cerr << std::endl;
-        std::cerr << "** Error: SD Card version you have used is incorrect: distributed != installed" << std::endl;
-        std::cerr << "    SD Card version: " << distributedSdcard << compare(distributedSdcard, installedSdcard) << installedSdcard << std::endl;
+        std::cerr << "** Error: SD Card version you have used is incorrect: "
+                     "distributed != installed"
+                  << std::endl;
+        std::cerr << "    SD Card version: " << distributedSdcard
+                  << compare(distributedSdcard, installedSdcard)
+                  << installedSdcard << std::endl;
     }
-    if (distributedPackageversion != installedSdkPackageversion || distributedBranch != installedSdkBranch || distributedCommit != installedSdkCommit) {
+    if (distributedPackageversion != installedSdkPackageversion ||
+        distributedBranch != installedSdkBranch ||
+        distributedCommit != installedSdkCommit) {
         std::cerr << std::endl;
-        std::cerr << "** Error: Host eval package installed does not match expected version: distributed != installed" << std::endl;
-        std::cerr << "    Package version: " << distributedPackageversion << compare(distributedPackageversion, installedSdkPackageversion) << installedSdkPackageversion << std::endl;
-        std::cerr << "    Package branch: " << distributedBranch << compare(distributedBranch, installedSdkBranch) << installedSdkBranch << std::endl;
-        std::cerr << "    Pacakge commit hash: " << distributedCommit << compare(distributedCommit, installedSdkCommit) << installedSdkCommit << std::endl;
+        std::cerr << "** Error: Host eval package installed does not match "
+                     "expected version: distributed != installed"
+                  << std::endl;
+        std::cerr << "    Package version: " << distributedPackageversion
+                  << compare(distributedPackageversion,
+                             installedSdkPackageversion)
+                  << installedSdkPackageversion << std::endl;
+        std::cerr << "    Package branch: " << distributedBranch
+                  << compare(distributedBranch, installedSdkBranch)
+                  << installedSdkBranch << std::endl;
+        std::cerr << "    Pacakge commit hash: " << distributedCommit
+                  << compare(distributedCommit, installedSdkCommit)
+                  << installedSdkCommit << std::endl;
     }
 
-    if (remotestatus >= 0 && remotePackageversion != distributedPackageversion) {
+    if (remotestatus >= 0 &&
+        remotePackageversion != distributedPackageversion) {
         std::cerr << std::endl;
-        std::cerr << ">> New update is avialable: " << remotePackageversion << std::endl;
+        std::cerr << ">> New update is avialable: " << remotePackageversion
+                  << std::endl;
         std::cerr << ">> Please see, " << remotePackageurl << std::endl;
     }
 
