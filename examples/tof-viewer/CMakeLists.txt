@@ -15,7 +15,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 configure_file(ADIToFConfig.h.in ADIToFConfig.h)
 
 # adding submodules and subdirectories
-add_subdirectory(external/imgui)
 if( WIN32 )
     set(OS_SPECIFIC_DIR windows)
 elseif ( APPLE )
@@ -28,6 +27,7 @@ else()
     message(FATAL_ERROR "Platform not supported")
 endif()
 
+set(IMGUI_SOURCE_DIR ${CMAKE_SOURCE_DIR}/dependencies/third-party/imgui)
 set(ADIToF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_executable(ADIToFGUI
 			   ${ADIToF_SOURCE_DIR}/wmain.cpp
@@ -49,9 +49,9 @@ endif()
 
 find_package(OpenGL REQUIRED)
 if( WIN32 )																	 
-	target_link_libraries(ADIToFGUI PRIVATE "${PROJECT_SOURCE_DIR}/external/imgui/src/examples/libs/glfw/lib-vc2010-64/glfw3.lib")
+	target_link_libraries(ADIToFGUI PRIVATE "${IMGUI_SOURCE_DIR}/src/examples/libs/glfw/lib-vc2010-64/glfw3.lib")
 elseif(APPLE)
-    target_link_libraries(ADIToFGUI PRIVATE "${PROJECT_SOURCE_DIR}/external/imgui/lib/macOS/glfw/lib-x86_64/libglfw3.a")
+    target_link_libraries(ADIToFGUI PRIVATE "${IMGUI_SOURCE_DIR}/lib/macOS/glfw/lib-x86_64/libglfw3.a")
 elseif (UNIX)
 	find_package(glfw3 REQUIRED)
 	target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
@@ -76,10 +76,10 @@ endif()
 target_include_directories(ADIToFGUI PUBLIC
 						"${PROJECT_BINARY_DIR}"
 						"${PROJECT_SOURCE_DIR}/include"
-						"${PROJECT_SOURCE_DIR}/external/imgui/src/examples/libs/gl3w"
-						"${PROJECT_SOURCE_DIR}/external/imgui/src/examples/libs/glfw/include"
-						"${PROJECT_SOURCE_DIR}/external/imgui/src/examples"
-						"${PROJECT_SOURCE_DIR}/external/imgui/src"
+						"${IMGUI_SOURCE_DIR}/src/examples/libs/gl3w"
+						"${IMGUI_SOURCE_DIR}/src/examples/libs/glfw/include"
+						"${IMGUI_SOURCE_DIR}/src/examples"
+						"${IMGUI_SOURCE_DIR}/src"
 						"${PROJECT_SOURCE_DIR}/src"
 				)
 
