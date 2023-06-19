@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
-project(softwarecheck)
+project(software_check)
 
-add_executable(${PROJECT_NAME} softwarecheck.cpp ${SOURCES})
+add_executable(${PROJECT_NAME} software_check.cpp ${SOURCES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 
@@ -11,10 +11,6 @@ set(SDK_DIR ../../sdk/include)
 include_directories(
     ${DEPENDENCIES_DIR}
     ${SDK_DIR}
-)
-
-set(SOURCES
-    ${DEPENDENCIES_DIR}/c_json/cJSON.c
 )
 
 if (WIN32)
