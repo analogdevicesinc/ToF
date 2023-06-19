@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    status = camera->setFrameType("lrqmp");
+    status = camera->setFrameType("lr-qnative");
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 0;
