@@ -791,16 +791,9 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
         int n = std::stoi(value);
         if (n == 0) {
             m_implData->ccbVersion = CCBVersion::CCB_VERSION0;
-            if (m_implData->imagerType == ImagerType::IMAGER_ADSD3100) {
-                m_availableFrameTypes = availableFrameTypesOld;
-            } else if (m_implData->imagerType == ImagerType::IMAGER_ADSD3030) {
-                m_availableFrameTypes = availableFrameTypesAdsd3030Old;
-            } else {
-                LOG(ERROR) << "Unknown imager type. Because of this, cannot "
-                              "set control:"
-                           << control;
-                return Status::GENERIC_ERROR;
-            }
+            LOG(ERROR) << "Old modes have been detected but they are no "
+                          "longer supported!";
+            return Status::INVALID_ARGUMENT;
         } else if (n == 2) {
             m_implData->ccbVersion = CCBVersion::CCB_VERSION1;
             if (m_implData->imagerType == ImagerType::IMAGER_ADSD3100) {
