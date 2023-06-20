@@ -1,17 +1,14 @@
 cmake_minimum_required(VERSION 3.0)
 project(examples)
 
+add_subdirectory(first-frame)
 add_subdirectory(data_collect)
 if (NOT NXP)
     add_subdirectory(tof-viewer)
 endif()
 
 if (WITH_NETWORK)
-    if (NOT NXP)
-        add_subdirectory(first-frame-network)
-    endif()
-else()
-    add_subdirectory(first-frame)
+    add_subdirectory(first-frame-network)
 endif()
 add_subdirectory(point_cloud)
 
