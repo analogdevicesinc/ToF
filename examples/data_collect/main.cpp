@@ -98,19 +98,32 @@ void fileWriterTask(const thread_params *const pThreadParams);
 #endif
 
 int main(int argc, char *argv[]) {
+    std::map<std::vector<std::string>, std::string> optional_arguments;
+    std::map<std::vector<std::string>, std::string> mandatory_arguments;
     std::map<std::vector<std::string>, std::string> command_map = {
-        {{"-h", "--help"}, ""},         {{"-f", "--f"}, "."},
-        {{"-n", "--n"}, "1"},           {{"-m", "--m"}, "0"},
-        {{"-ext", "--ext_fsync"}, "0"}, {{"-wt", "--wt"}, ""},
-        {{"-ip", "--ip"}, ""},          {{"-fw", "--fw"}, ""},
-        {{"-fps", "--fps"}, ""},        {{"-ccb", "--ccb"}, ""},
-        {{"-ft", "--ft"}, "raw"},       {{"CONFIG", "config"}, ""}};
-    CommandParser command;
+        {{"-h", "--help", "false"}, ""},         {{"-f", "--f", "false"}, "."},
+        {{"-n", "--n", "false"}, "1"},           {{"-m", "--m", "false"}, "0"},
+        {{"-ext", "--ext_fsync", "false"}, "0"}, {{"-wt", "--wt", "false"}, ""},
+        {{"-ip", "--ip", "false"}, ""},          {{"-fw", "--fw", "false"}, ""},
+        {{"-fps", "--fps", "false"}, ""},        {{"-ccb", "--ccb", "false"}, ""},
+        {{"-ft", "--ft", "false"}, "raw"},       {{"CONFIG", "config", "true"}, ""}};
+    
+    for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
+        if(ct->first[2] == "true"){
+            std::vector<std::string> remover = ct->first;
+            remover.pop_back();
+            mandatory_arguments.insert({remover, ct->second});
+        }else{
+            std::vector<std::string> remover = ct->first;
+            remover.pop_back();
+            optional_arguments.insert({remover, ct->second});
+        }
+    }
+    CommandParser command(mandatory_arguments, optional_arguments);
     command.parseArguments(argc, argv);
     std::vector<std::pair<std::string, std::string>> arg_vector =
         command.getConfiguration();
     bool is_command;
-
     // Goes through vector of pairs and assings values in map
     for (int it = 0; it < arg_vector.size(); it++) {
         if (arg_vector[it].second == "help_menu") {
