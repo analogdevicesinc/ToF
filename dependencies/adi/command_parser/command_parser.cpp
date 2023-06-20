@@ -27,6 +27,12 @@
 #include <string>
 #include <vector>
 
+CommandParser::CommandParser(std::map<std::vector<std::string>, std::string> mandatory,
+    std::map<std::vector<std::string>, std::string> optional) {
+    m_mandatory = mandatory;
+    m_optional = optional;
+}
+
 std::vector<std::pair<std::string, std::string>>
 CommandParser::getConfiguration() {
     return m_command_vector;

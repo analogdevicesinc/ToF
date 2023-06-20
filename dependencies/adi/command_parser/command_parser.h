@@ -24,10 +24,12 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 class CommandParser {
   public:
-    CommandParser() = default;
+      CommandParser(std::map<std::vector<std::string>, std::string> mandatory, 
+          std::map<std::vector<std::string>, std::string> optional);
     ~CommandParser() = default;
 
   public:
@@ -36,4 +38,6 @@ class CommandParser {
 
   private:
     std::vector<std::pair<std::string, std::string>> m_command_vector;
+    std::map<std::vector<std::string>, std::string> m_mandatory;
+    std::map<std::vector<std::string>, std::string> m_optional;
 };
