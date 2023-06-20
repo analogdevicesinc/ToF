@@ -6,6 +6,7 @@ The examples in this directory provide sample applications to demonstrate how 3D
 
 | Name | Language | Description |
 | --------- | ----------- | -------------- |
-| aditof-demo | C++ | An application that uses OpenCV to display infrared and depth images |
 | first-frame | C++ | An example code that shows the step required to get to the point where camera frames can be captured |
 | first-frame-network | C++ | An example code that shows the step required to get to the point where camera frames can be captured from a remote target |
+| data_collect | C++ | An example code and user application for retriving data from the device then saving to files |
+| tof-viewer | C++ | ADIToFGUI Application |
