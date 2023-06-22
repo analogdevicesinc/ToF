@@ -23,22 +23,18 @@
 /**********************************************************************************/
 
 #include "command_parser.h"
+#include <glog/logging.h>
 #include <iostream>
+#include <map>
 #include <string>
 #include <vector>
-
-CommandParser::CommandParser(std::map<std::vector<std::string>, std::string> mandatory,
-    std::map<std::vector<std::string>, std::string> optional) {
-    m_mandatory = mandatory;
-    m_optional = optional;
-}
 
 std::vector<std::pair<std::string, std::string>>
 CommandParser::getConfiguration() {
     return m_command_vector;
 }
 
-int CommandParser::parseArguments(int argc, char *argv[]) {
+void CommandParser::parseArguments(int argc, char *argv[]) {
     // Parse the config and stores argument + value
     for (int i = 1; i < argc; i++) {
         int contains_equal = std::string(argv[i]).find("=");
@@ -47,14 +43,77 @@ int CommandParser::parseArguments(int argc, char *argv[]) {
                 {std::string(argv[i]).substr(0, contains_equal),
                  std::string(argv[i]).substr(contains_equal + 1)});
         } else if (std::string(argv[i]) == "-h" ||
-                   std::string(argv[i]) == "--h") {
+                   std::string(argv[i]) == "--help") {
             m_command_vector.push_back({argv[i], "help_menu"});
         } else if (i == argc - 1) {
             m_command_vector.push_back({"CONFIG", argv[i]});
-        } else if (i != argc - 1) {
+        } else if (i != argc - 1 && std::string(argv[i + 1]).find("-") == -1) {
             m_command_vector.push_back({argv[i], argv[i + 1]});
             i++;
+        } else {
+            m_command_vector.push_back({argv[i], ""});
         }
+    }
+}
+
+int CommandParser::helpMenu() {
+    for (int i = 0; i < m_command_vector.size(); i++) {
+        if (m_command_vector[i].second == "help_menu") {
+            if (i != 0 || m_command_vector.size() != 1) {
+                LOG(ERROR) << "Usage of argument " << m_command_vector[i].first
+                           << " is incorrect! " << m_command_vector[i].first
+                           << " should be used alone!";
+                return -1;
+            }
+            return 0;
+        }
+    }
+    return -2;
+}
+
+int CommandParser::sendArguments(
+    std::map<std::vector<std::string>, std::string> &command_map) {
+    for (int i = 0; i < m_command_vector.size(); i++) {
+        bool is_command = false;
+        for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
+            if (m_command_vector[i].first == ct->first[0] ||
+                m_command_vector[i].first == ct->first[1]) {
+                if (m_command_vector[i].second == "" && ct->second == "") {
+                    LOG(ERROR)
+                        << "Optional argument: " << m_command_vector[i].first
+                        << " doesn't have assigned or default value! Please "
+                           "check help menu.";
+                    return -1;
+                } else if (m_command_vector[i].second == "" &&
+                           ct->second != "") {
+                    // Optional argument doesn't have value assigned but has default
+                    is_command = true;
+                    break;
+                } else {
+                    // Optional argument has value assigned
+                    ct->second = m_command_vector[i].second;
+                    is_command = true;
+                    break;
+                }
+            }
+        }
+        if (!is_command) {
+            LOG(ERROR) << "Argument: " << m_command_vector[i].first
+                       << " doesn't exist! Please check help menu.";
+            return -1;
+        }
+    }
+
+    for (auto ct = command_map.begin(); ct != command_map.end();) {
+        if (ct->first[2] == "true" && ct->second == "") {
+            LOG(ERROR) << "Mandatory argument: " << ct->first[0]
+                       << " missing.Please check help menu!";
+            return -1;
+        }
+        std::vector<std::string> copy = ct->first;
+        copy.pop_back();
+        command_map[copy] = ct->second;
+        ct = command_map.erase(ct);
     }
     return 0;
 }
