@@ -31,14 +31,27 @@
 #
 import aditofpython as tof
 import numpy as np
-import matplotlib.pyplot as plt
+import pygame
 import sys
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+
+modemapping = {
+"lr-native": {"width":1024, "height":1024},
+"lr-qnative": {"width":512, "height":512},
+"sr-native": {"width":1024, "height":1024},
+"sr-qnative": {"width":512, "height":512}
+}
+
+mode = "lr-qnative"
 
 if len(sys.argv) < 2  or sys.argv[1] == "--help" or sys.argv[1] == "-h" :
-    print("first_frame.py usage:")
-    print("USB / Local connection: first_frame.py <config>")
-    print("Network connection: first_frame.py <ip> <config>")
+    print(f"{sys.argv[0]} usage:")
+    print(f"USB: {sys.argv[0]} <config>")
+    print(f"Network connection: {sys.argv[0]} <ip> <config>")
     exit(1)
+
+viridis = plt.get_cmap('viridis')
 
 system = tof.System()
 
@@ -73,27 +86,49 @@ status = camera1.getDetails(camDetails)
 print("camera1.getDetails()", status)
 print("camera1 details:", "id:", camDetails.cameraId, "connection:", camDetails.connection)
 
-status = camera1.setFrameType("lr-qnative")
+status = camera1.setFrameType(mode)
 print("camera1.setFrameType()", status)
-print("lrqmp")
 
 status = camera1.start()
 print("camera1.start()", status)
+    
+def normalize(image_scalar, width, height):
+    image_scalar_norm = image_scalar / image_scalar.max()
 
-frame = tof.Frame()
-status = camera1.requestFrame(frame)
-print("camera1.requestFrame()", status)
+    # Apply the colormap to the scalar image to obtain an RGB image
+    image_rgb = viridis(image_scalar_norm)
+        
+    surface = (image_rgb[:, :, :3] * 255).astype(np.uint8)
+    return surface
 
-frameDataDetails = tof.FrameDataDetails()
-status = frame.getDataDetails("depth", frameDataDetails)
-print("frame.getDataDetails()", status)
-print("depth frame details:", "width:", frameDataDetails.width, "height:", frameDataDetails.height, "type:", frameDataDetails.type)
+def animate():
+    frame = tof.Frame()
+    status = camera1.requestFrame(frame)
+    frameDataDetails = tof.FrameDataDetails()
+    status = frame.getDataDetails("depth", frameDataDetails)
+    image = np.array(frame.getData("depth"), copy=False)
+    image = np.rot90(image)
+    return pygame.surfarray.make_surface(normalize(image, frameDataDetails.width, frameDataDetails.height))
+    
+def main():
+    pygame.init()
+    window_size = (modemapping[mode]["width"], modemapping[mode]["height"])
+    screen = pygame.display.set_mode(window_size)
 
-image = np.array(frame.getData("depth"), copy=False)
+    # display the animation
+    done = False
+    i = 0
+    while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                done = True
 
-plt.figure()
-plt.imshow(image)
-plt.colorbar()
-plt.show()
+        screen.blit(animate(), (0, 0))
+        pygame.display.flip()
 
+    # quit Pygame
+    pygame.quit()
 
+    status = camera1.stop()
+    
+main()

@@ -133,7 +133,7 @@ ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
 
     //Parse config file for this application
     //Parse config.json
-    std::ifstream ifs("tof-viewer_config.json");
+    std::ifstream ifs(DEFAULT_TOOLS_CONFIG_FILENAME);
     std::string content((std::istreambuf_iterator<char>(ifs)),
                         (std::istreambuf_iterator<char>()));
     cJSON *config_json = cJSON_Parse(content.c_str());
@@ -894,32 +894,6 @@ void ADIMainWindow::ShowRecordTree() {
                                              view->frameWidth,
                                              recordingSeconds);
                 isRecording = true;
-
-                // Save CFG and CCB next to the recording
-                auto camera = getActiveCamera();
-                if (camera) {
-                    aditof::CameraDetails camDetails;
-                    camera->getDetails(camDetails);
-
-                    std::ofstream ccbFile;
-                    std::string ccbFilePath(camDetails.cameraId + ".ccb");
-                    std::ofstream cfgFile;
-                    std::string cfgFilePath(camDetails.cameraId + ".cfg");
-
-                    aditof::Status status =
-                        camera->setControl("saveModuleCCB", ccbFilePath);
-                    if (status != aditof::Status::OK) {
-                        LOG(INFO) << "Failed to store CCB to " << ccbFilePath;
-                    }
-
-                    status = camera->setControl("saveModuleCFG", cfgFilePath);
-                    if (status != aditof::Status::OK) {
-                        LOG(INFO) << "Failed to store CFG to " << cfgFilePath;
-                    }
-                } else {
-                    LOG(ERROR)
-                        << "No camera found. Can't save CCB & CFG files.";
-                }
             }
         }
 
@@ -935,12 +909,13 @@ void ADIMainWindow::ShowRecordTree() {
             isPlaying = false;
         }
 
+        /* AS 2023-6-6: Temporarily disable.
         ImGui::NewLine();
         ImGui::Checkbox("Save Binary records", &m_saveBinaryFormatTmp);
         if (view != NULL) {
-            // saveBinaryFormatTmp = view->getSaveBinaryFormat();
             view->setSaveBinaryFormat(m_saveBinaryFormatTmp);
         }
+        */
         ImGui::TreePop(); //Record
     }
 

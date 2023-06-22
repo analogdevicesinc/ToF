@@ -14,19 +14,14 @@ RUN \
     && apt-get install wget \
     && apt-get -y install sudo
 
+ENV DESTDIR_TOF_LIB=/tof_lib
+
+SHELL ["/bin/bash", "-c"]
 
 RUN \
 mkdir tof_lib && cd tof_lib \
 && mkdir DEBIAN && cd DEBIAN \
-&& echo 'Package:tof-lib\n\
-Version:1.0.1\n\
-Maintainer:Analog Devices Inc\n\
-Architecture:amd64\n\
-Description:ROS_Wrapper_for_ADIs_ToF_SDK' > control
-
-ENV DESTDIR_TOF_LIB=/tof_lib
-
-SHELL ["/bin/bash", "-c"]
+&& echo $'Package:tof-lib\nVersion:1.0.1\nMaintainer:Analog Devices Inc\nArchitecture:amd64\nDescription:ROS_Wrapper_for_ADIs_ToF_SDK' > control
 
 RUN \
     git clone https://github.com/analogdevicesinc/ToF \

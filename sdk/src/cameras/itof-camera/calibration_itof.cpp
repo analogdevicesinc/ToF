@@ -192,7 +192,7 @@ Status CalibrationItof::writeCalibration(const std::string &calibrationFile) {
         return status;
     }
 
-    int err = fopen_s(&f, calibrationFile.c_str(), "rb");
+    fopen_s(&f, calibrationFile.c_str(), "rb");
     if (f) {
         if (0 == fseek(f, 0L, SEEK_END)) {
             size_ccb = ftell(f);
@@ -362,45 +362,6 @@ Status CalibrationItof::writeSettings(
 }
 
 Status CalibrationItof::writeDefaultCalibration() {
-    /* Write default analog registers */
-    const int lsdac_blocksize = 33 + 2; //(usecases*freqs) + 2_word_header)
-    uint16_t wav_ram_lsdac[lsdac_blocksize] = {
-        0x0069,  // freq 3
-        0x0060,  // freq 2
-        0x0061,  // freq 1
-        0x0307,  // Mode 11 LSDAC Header (3 freq) - MP Mode
-        0x0069,  // freq 1
-        0x0105,  // Mode 10
-        0x0000,  // Mode 9
-        0x0069,  // freq 3
-        0x0060,  // freq 2
-        0x0061,  // freq 1
-        0x0307,  // Mode 8
-        0x0000,  // freq 3
-        0x0000,  // freq 2
-        0x0000,  // freq 1
-        0x0303,  // Mode 7 LSDAC Header (3 freq)
-        0x0069,  // freq 3
-        0x0060,  // freq 2
-        0x0061,  // freq 1
-        0x0307,  // Mode 6 LSDAC Header (3 freq) - MP Mode
-        0x0060,  // freq 3
-        0x0059,  // freq 2
-        0x0059,  // freq 1
-        0x0301,  // Mode 5 LSDAC Header (3 frea)
-        0x0000,  // Mode 4 LSDAC Header (0 freq)
-        0x006f,  // freq 1
-        0x0105,  // Mode 3 LSDAC Header (1 freq)
-        0x006e,  // freq 3
-        0x0067,  // freq 2
-        0x0063,  // freq 1
-        0x0301,  // Mode 2 LSDAC header (3 freq)
-        0x0068,  // freq 2
-        0x006e,  // freq 1
-        0x0205,  // Mode 1 LSDAC header (2 freq)
-        0x646b,  // structural checksum
-        0x0021}; // lsdac table size
-
     // wave RAM, LSADC calibration settings
     writeRegister(adsd3100::USEQ_RAM_LOAD_ADDR_REG_ADDR,
                   0x1d29); // lsdac checksum MSB
@@ -409,9 +370,6 @@ Status CalibrationItof::writeDefaultCalibration() {
                   0x1d25); // lsdac checksum LSB
     writeRegister(adsd3100::USEQ_RAM_LOAD_DATA_REG_ADDR, 0x0000);
     writeRegister(adsd3100::USEQ_RAM_LOAD_ADDR_REG_ADDR, 0x1c99);
-
-    uint16_t startAddress = adsd3100::USEQ_RAM_LOAD_DATA_REG_ADDR;
-    //m_sensor->writeRegisters(&startAddress, wav_ram_lsdac, lsdac_blocksize, true);
 
     // vlowreg
     writeRegister(adsd3100::VLOW_REG, 0x0a0a);

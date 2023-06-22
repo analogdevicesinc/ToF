@@ -30,7 +30,7 @@ option(USE_DEPTH_COMPUTE_STUBS "Use empty generated libs?" OFF)
 option(USE_DEPTH_COMPUTE_OPENSOURCE "Use an open source implementation?" OFF)
 option(WITH_GLOG_DEPENDENCY "Build with GLOG dependency to be used for logging" ON)
 option(WITH_PROTOBUF_DEPENDENCY "Build with PROTOBUF dependency to be used for serializing messages" ON)
-option(WITH_EMBEDDED_LINUX_TOOLS "Build with embedded Linux command line tools" ON)
+option(WITH_COMMAND_LINE_TOOLS "Build with embedded Linux command line tools" ON)
 
 
 ################################## Git ########################################
@@ -151,7 +151,7 @@ endif()
 if (WITH_ROS2)
         add_subdirectory(bindings/ros2)
 endif()
-if (WITH_EMBEDDED_LINUX_TOOLS)
+if (WITH_COMMAND_LINE_TOOLS)
         add_subdirectory(tools)
 endif()
 

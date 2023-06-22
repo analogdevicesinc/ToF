@@ -11,8 +11,8 @@
 #include <aditof/system.h>
 #include <aditof/version.h>
 #include <chrono>
+#include <command_parser.h>
 #include <ctime>
-#include <docopt.h>
 #include <fstream>
 #ifdef USE_GLOG
 #include <glog/logging.h>
@@ -23,6 +23,7 @@
 #include <inttypes.h>
 #endif
 #include <iostream>
+#include <map>
 #include <string>
 #include <thread>
 #include <vector>
@@ -33,14 +34,14 @@
 #include <sys/stat.h>
 #endif
 
-#define MULTI_THREADED 1
-#define DATA_COLLECT_VERSION "1.3.0"
-#define EMBED_HDR_LENGTH 128
-
 enum : uint16_t {
     MAX_FILE_PATH_SIZE = 512,
     FRAME_TYPE_LEN = 20,
 };
+
+#define MULTI_THREADED 1
+#define DATA_COLLECT_VERSION "1.3.0"
+#define EMBED_HDR_LENGTH 128
 
 using namespace aditof;
 
@@ -64,12 +65,12 @@ typedef struct thread_params {
 static const char kUsagePublic[] =
     R"(Data Collect.
     Usage:
-      data_collect FILE
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] FILE
-      data_collect (-h | --help) 
+      data_collect CONFIG
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] CONFIG
+      data_collect (-h | --help)
 
     Arguments:
-      FILE            Input config_default.json file (which has *.ccb and *.cfg)
+      CONFIG            Input config_default.json file (which has *.ccb and *.cfg)
 
     Options:
       -h --help          Show this screen.
@@ -79,7 +80,7 @@ static const char kUsagePublic[] =
       --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
       --wt <warmup>      Warmup Time (sec) [default: 0]
       --ccb <FILE>       The path to store CCB content
-      --ip <ip>          Camera IP  
+      --ip <ip>          Camera IP
       --fw <firmware>    Adsd3500 fw file
 
     Valid mode (--m) options are:
@@ -91,36 +92,66 @@ static const char kUsagePublic[] =
         5: long-range mixed
         6: short-range mixed
 )";
-// Hide 'ft' (frame_type) option from public doc string
-static const char kUsageInternal[] =
-    R"(Data Collect.
-    Usage:
-      data_collect FILE
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--ft <frame_type>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [--fps <setfps>] FILE
-      data_collect (-h | --help) 
-
-    Arguments:
-      FILE            Input config_default.json file (which has *.ccb and *.cfg)
-
-    Options:
-      -h --help          Show this screen.
-      --f <folder>       Input folder to save data to. Max folder name size is 512. [default: ./]
-      --n <ncapture>     Number of frames to capture. [default: 1]
-      --m <mode>         Mode to capture data in. [default: 0]
-      --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
-      --ft <frame_type>  Type of frame to be captured [default: raw]
-      --wt <warmup>      Warmup Time (in seconds) before data capture [default: 0]
-      --ccb <FILE>       The path to store CCB content      
-      --ip <ip>          Camera IP
-      --fw <firmware>    Adsd3500 fw file      
-      --fps <setfps>     Set target FPS value [range: 50 to 200] 
-)";
 
 #ifdef MULTI_THREADED
 void fileWriterTask(const thread_params *const pThreadParams);
 #endif
 
 int main(int argc, char *argv[]) {
+    std::map<std::vector<std::string>, std::string> command_map = {
+        {{"-h", "--help"}, ""},         {{"-f", "--f"}, "."},
+        {{"-n", "--n"}, "1"},           {{"-m", "--m"}, "0"},
+        {{"-ext", "--ext_fsync"}, "0"}, {{"-wt", "--wt"}, ""},
+        {{"-ip", "--ip"}, ""},          {{"-fw", "--fw"}, ""},
+        {{"-fps", "--fps"}, ""},        {{"-ccb", "--ccb"}, ""},
+        {{"-ft", "--ft"}, "raw"},       {{"CONFIG", "config"}, ""}};
+    CommandParser command;
+    command.parseArguments(argc, argv);
+    std::vector<std::pair<std::string, std::string>> arg_vector =
+        command.getConfiguration();
+    bool is_command;
+
+    // Goes through vector of pairs and assings values in map
+    for (int it = 0; it < arg_vector.size(); it++) {
+        if (arg_vector[it].second == "help_menu") {
+            if (it != 0 || arg_vector.size() != 1) {
+                LOG(ERROR) << "Usage of argument " + arg_vector[it].first +
+                                  " is incorrect! " + arg_vector[it].first
+                           << " should be used alone!";
+                return 0;
+            }
+            LOG(INFO) << kUsagePublic;
+            return 0;
+        }
+        is_command = false;
+        if (it == arg_vector.size() - 1) {
+            if (arg_vector[it].first != "CONFIG" &&
+                arg_vector[it].first != "config") {
+                LOG(ERROR) << "Argument CONFIG is missing! "
+                           << "Please check help menu.";
+                return 0;
+            }
+        }
+        for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
+            if (arg_vector[it].first == ct->first[0] ||
+                arg_vector[it].first == ct->first[1]) {
+                ct->second = arg_vector[it].second;
+                is_command = true;
+                break;
+            }
+        }
+        if (!is_command) {
+            if (arg_vector[it].second.find('-') == 0) {
+                LOG(ERROR) << "Argument CONFIG should be the last one! "
+                           << "Please check help menu.";
+                return 0;
+            }
+            LOG(ERROR) << "Argument " + arg_vector[it].first +
+                              " does not exist! "
+                       << "Please check help menu.";
+            return 0;
+        }
+    }
 
     char folder_path[MAX_FILE_PATH_SIZE]; // Path to store the raw/depth frames
     char json_file_path
@@ -147,24 +178,17 @@ int main(int argc, char *argv[]) {
 
     Status status = Status::OK;
 
-    std::map<std::string, docopt::value> args = docopt::docopt_private(
-        kUsagePublic, kUsageInternal, {argv + 1, argv + argc}, true);
-
     // Parsing the arguments from command line
     err = snprintf(json_file_path, sizeof(json_file_path), "%s",
-                   args["FILE"].asString().c_str());
+                   command_map[{"CONFIG", "config"}].c_str());
     if (err < 0) {
         LOG(ERROR) << "Error copying the json file path!";
         return 0;
     }
 
     // Parsing output folder
-    if (args["--f"]) {
-        err = snprintf(folder_path, sizeof(folder_path), "%s",
-                       args["--f"].asString().c_str());
-    } else {
-        err = snprintf(folder_path, sizeof(folder_path), "%s", ".");
-    }
+    err = snprintf(folder_path, sizeof(folder_path), "%s",
+                   command_map[{"-f", "--f"}].c_str());
 
     if (err < 0) {
         LOG(ERROR) << "Error copying the output folder path!";
@@ -195,61 +219,41 @@ int main(int argc, char *argv[]) {
 #endif
 
     // Parsing number of frames
-    if (args["--n"]) {
-        n_frames = args["--n"].asLong();
-    }
+    n_frames = std::stoi(command_map[{"-n", "--n"}]);
 
     // Parsing mode type
-    if (args["--m"]) {
-        mode = args["--m"].asLong();
-    }
+    mode = std::stoi(command_map[{"-m", "--m"}]);
 
     // Parsing ip
-    if (args["--ip"]) {
-        ip = args["--ip"].asString();
-        if (ip.empty()) {
-            LOG(ERROR) << "Invalid ip (--ip) from command line!";
-            return 0;
-        }
+    if (!command_map[{"-ip", "--ip"}].empty()) {
+        ip = command_map[{"-ip", "--ip"}];
     }
 
     // Parsing firmware
-    if (args["--fw"]) {
-        firmware = args["--fw"].asString();
-        if (firmware.empty()) {
-            LOG(ERROR) << "Invalid firmware (--fw) from command line!";
-            return 0;
-        }
+    if (!command_map[{"-fw", "--fw"}].empty()) {
+        firmware = command_map[{"-fw", "--fw"}];
     }
 
     //set FPS value
-    if (args["--fps"]) {
-        setfps = args["--fps"].asLong();
-        if (setfps > 200 || setfps < 50) {
-            LOG(ERROR) << "Invalid FPS value.." << setfps;
-            return 0;
-        }
+    if (!command_map[{"-fps", "--fps"}].empty()) {
+        setfps = std::stoi(command_map[{"-fps", "--fps"}]);
     } else {
         setfps = fps_defaults[mode];
     }
 
-    if (args["--ext_fsync"]) {
-        ext_frame_sync_en = args["--ext_fsync"].asLong();
-    }
+    ext_frame_sync_en = std::stoi(command_map[{"-ext", "--ext_fsync"}]);
 
-    if (args["--ft"]) {
-        frame_type = args["--ft"].asString();
-    } else {
-        frame_type = "raw";
-    }
+    frame_type = command_map[{"-ft", "--ft"}];
+
     if (frame_type.length() <= 0) {
-        LOG(ERROR) << "Error parsing frame_type (--ft) from command line!";
+        LOG(ERROR) << "Error parsing frame_type (-ft/--ft) from command line!"
+                   << "\n Please check help menu";
         return 0;
     }
 
     //Parsing Warm up time
-    if (args["--wt"]) {
-        warmup_time = args["--wt"].asLong();
+    if (!command_map[{"-wt", "--wt"}].empty()) {
+        warmup_time = std::stoi(command_map[{"-wt", "--wt"}]);
         if (warmup_time < 0) {
             LOG(ERROR) << "Invalid warm up time input!";
         }
@@ -257,8 +261,8 @@ int main(int argc, char *argv[]) {
 
     //Parsing CCB path
     std::string ccbFilePath;
-    if (args["--ccb"]) {
-        ccbFilePath = args["--ccb"].asString();
+    if (!command_map[{"-ccb", "--ccb"}].empty()) {
+        ccbFilePath = command_map[{"-ccb", "--ccb"}];
     }
 
     LOG(INFO) << "Output folder: " << folder_path;
@@ -317,6 +321,14 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
 
     if (!firmware.empty()) {
+
+        std::ifstream file(firmware);
+        if (!(file.good() &&
+              file.peek() != std::ifstream::traits_type::eof())) {
+            LOG(ERROR) << firmware << " not found or is an empty file";
+            return 0;
+        }
+
         status = camera->setControl("updateAdsd3500Firmware", firmware);
         if (status != Status::OK) {
             LOG(ERROR) << "Could not update the adsd3500 firmware";
@@ -539,7 +551,7 @@ int main(int argc, char *argv[]) {
 
 #if 0 // TO DO: uncomment this one the header becomes available
         uint16_t *pHeader = nullptr;
-        status = frame.getData("embeded_header", &pHeader);            
+        status = frame.getData("embeded_header", &pHeader);
         if (status != Status::OK) {
             LOG(ERROR) << "Could not get frame header data!";
             return 0;

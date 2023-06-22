@@ -5,4 +5,6 @@ if (NXP OR NVIDIA)
     add_subdirectory(nvm_tools)
 endif()
 
+add_subdirectory(software_check)
+
 include(GNUInstallDirs)

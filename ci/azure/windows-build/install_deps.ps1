@@ -1,7 +1,7 @@
 $ARCH=$Env:ARCH
 $GENERATOR=$Env:COMPILER
 
-cinst openssl
+choco install openssl
 
 $local_path=$pwd
 mkdir deps_installed

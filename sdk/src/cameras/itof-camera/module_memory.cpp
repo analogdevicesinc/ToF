@@ -190,7 +190,7 @@ uint32_t ModuleMemory::loadfileData(const std::string filename,
     uint32_t size = 0;
 
     if (!filename.empty()) {
-        int err = fopen_s(&file, filename.c_str(), "rb");
+        fopen_s(&file, filename.c_str(), "rb");
         if (file) {
             if (0 == fseek(file, 0L, SEEK_END)) {
                 size = ftell(file);
