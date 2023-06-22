@@ -22,22 +22,22 @@
 /* SOFTWARE.                                                                      */
 /**********************************************************************************/
 
+#include <map>
 #include <string>
 #include <vector>
-#include <map>
 
 class CommandParser {
   public:
-      CommandParser(std::map<std::vector<std::string>, std::string> mandatory, 
-          std::map<std::vector<std::string>, std::string> optional);
+    CommandParser() = default;
     ~CommandParser() = default;
 
   public:
     std::vector<std::pair<std::string, std::string>> getConfiguration();
-    int parseArguments(int argc, char *argv[]);
+    void parseArguments(int argc, char *argv[]);
+    int
+    sendArguments(std::map<std::vector<std::string>, std::string> &command_map);
+    int helpMenu();
 
   private:
     std::vector<std::pair<std::string, std::string>> m_command_vector;
-    std::map<std::vector<std::string>, std::string> m_mandatory;
-    std::map<std::vector<std::string>, std::string> m_optional;
 };
