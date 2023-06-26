@@ -189,16 +189,9 @@ aditof::Status CameraItof::initialize() {
 
         // If depth sensor knows the modes version, use it, otherwise fallback to old workaround
         if (m_modesVersion != 0) {
-            if (m_adsd3500ImagerType == 1) {
+            if (m_adsd3500ImagerType == 1 || m_adsd3500ImagerType == 2) {
                 if (m_modesVersion == 1) {
                     m_modesVersion = 0;
-                } else if (m_modesVersion == 2) {
-                    m_modesVersion = 2;
-                }
-            } else if (m_adsd3500ImagerType == 2) {
-                if (m_modesVersion == 1) {
-                    m_modesVersion = 0;
-
                 } else if (m_modesVersion == 2) {
                     m_modesVersion = 2;
                 }
@@ -295,6 +288,13 @@ aditof::Status CameraItof::initialize() {
                  tempDealiasStruct.n_cols == height2)) {
                 m_modesVersion = 3;
             }
+        }
+
+        // From release version 4.3 old modes are not supported
+        if (m_modesVersion == 0 || m_modesVersion == 1) {
+            LOG(ERROR) << "Old modes detected on camera. SDK no longer "
+                          "supports them. Please update your hardware!";
+            return Status::GENERIC_ERROR;
         }
 
         status = ModeInfo::getInstance()->setImagerTypeAndModeVersion(
