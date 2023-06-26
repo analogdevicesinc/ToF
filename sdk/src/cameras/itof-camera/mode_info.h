@@ -9,6 +9,7 @@
 
 #include <aditof/status_definitions.h>
 #include <cstdint>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -76,6 +77,25 @@ class ModeInfo {
     aditof::Status convertCameraMode(const std::string &modes,
                                      uint8_t &convertedMode);
 
+    /**
+     * Get the sensor width and height for the provided mode
+     * param[in] modes - the name of the mode (represented as a string)
+     * param[out] width - sensor width
+     * param[out] height - sensor height
+     * @return aditof::Status
+     */
+    aditof::Status getSensorProperties(const std::string mode, uint16_t *width,
+                                       uint16_t *height,
+                                       uint8_t *pixelFormatIndex = nullptr);
+
+    /**
+     * Set number of bits in depth/ab/conf and pixelformat
+     * param[in] control - the name of the parameter
+     * param[in] value - the value
+     * @return aditof::Status
+     */
+    aditof::Status setSensorPixelParam(std::string control, std::string value);
+
     std::vector<std::string> GetAvailableModes() { return m_availableModes; };
 
   private:
@@ -89,6 +109,7 @@ class ModeInfo {
     static int g_imagerType;
     static int g_modeVersion;
     std::vector<std::string> m_availableModes;
+    std::map<std::string, std::string> m_sensorConfigBits;
 
     ModeInfo() {
     } // private so that it can not be called, always access through getInstance()

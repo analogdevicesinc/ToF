@@ -175,5 +175,94 @@ aditof::Status ModeInfo::setImagerTypeAndModeVersion(int type, int version) {
 
     populateAvailableModes(g_modeInfoData);
 
+    m_sensorConfigBits.clear();
+    m_sensorConfigBits.emplace("bitsInDepth", "");
+    m_sensorConfigBits.emplace("bitsInAb", "");
+    m_sensorConfigBits.emplace("bitsInConf", "");
+    m_sensorConfigBits.emplace("pixelFormat", "");
+
     return status;
+};
+
+aditof::Status
+ModeInfo::getSensorProperties(const std::string mode, uint16_t *width,
+                              uint16_t *height,
+                              uint8_t *pixelFormatIndex) {
+    aditof::Status status;
+    uint8_t m_mode;
+    status = convertCameraMode(mode, m_mode);
+
+    float depthBits, abBits, confBits;
+    std::string pixelFormat;
+    float depthBytes, abConfBytes;
+
+    int frameWidth = ModeInfo::getInstance()->getModeInfo(m_mode).width;
+    int frameHeight = ModeInfo::getInstance()->getModeInfo(m_mode).height;
+
+    if (!m_sensorConfigBits["bitsInDepth"].empty())
+        depthBits = std::stoi(m_sensorConfigBits["bitsInDepth"]);
+    else {
+        LOG(ERROR) << "Please set the number of depth bits in ini file!";
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    if (!m_sensorConfigBits["bitsInAb"].empty())
+        abBits = std::stoi(m_sensorConfigBits["bitsInAb"]);
+    else {
+        LOG(ERROR) << "Please set the number of AB bits in ini file!";
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    if (!m_sensorConfigBits["bitsInConf"].empty())
+        float confBits = std::stoi(m_sensorConfigBits["bitsInConf"]);
+    else {
+        LOG(ERROR) << "Please set the number of conf bits in ini file!";
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    if (!m_sensorConfigBits["pixelFormat"].empty())
+        pixelFormat = std::stoi(m_sensorConfigBits["pixelFormat"]);
+    else {
+        LOG(ERROR) << "Please set the pixelFormat in ini file!";
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    if (pixelFormat == "raw16_bits12_shift4") {
+        depthBytes = 2;
+        abConfBytes = 2;
+    } else if (pixelFormat == "mipiRaw12_8") {
+        if (g_imagerType != 1 || mode.find("-native") == std::string::npos) {
+            LOG(ERROR) << "Pixel format only available for ADSD3500+ADSD3100!";
+            return aditof::Status::GENERIC_ERROR;
+        }
+        depthBytes = 3 / 2;
+        abConfBytes = 2;
+    }
+    if (pixelFormat == "raw8") {
+        depthBytes = 1;
+        abConfBytes = 1;
+    } else {
+        LOG(ERROR) << "Invalid pixelFormat!";
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    // No of bits used from 16 (can be 16, 14, ..) / 16 * width * 2 * no of bytes used depending on format
+    // it can be either 8/16 bit format
+    // with an exception for adsd3500+adsd3100 with 12 bit depth and 16 bit ab
+    //*width = int(depthBits / 16 * frameWidth * 2 / depthBytes);
+    //*width = int(abBits / 16 * frameWidth * 2 / abConfBytes);
+    //*width = int(confBits / 16 * frameWidth * 2 / abConfBytes);
+
+    //*height = frameHeight;
+
+    return aditof::Status::UNAVAILABLE;
+};
+
+aditof::Status ModeInfo::setSensorPixelParam(std::string control,
+                                             std::string value) {
+    if (m_sensorConfigBits.count(control) == 0) {
+        LOG(WARNING) << "Unsuported sensor configuration!";
+        return aditof::Status::INVALID_ARGUMENT;
+    } else
+        m_sensorConfigBits[control] = value;
 };
