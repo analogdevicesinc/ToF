@@ -1613,6 +1613,7 @@ void CameraItof::configureSensorFrameType() {
         else
             value = "2";
         m_depthSensor->setControl("phaseDepthBits", value);
+        ModeInfo::getInstance()->setSensorPixelParam("bitsInDepth", value);
     } else {
         LOG(WARNING) << "bitsInPhaseOrDepth was not found in .ini file";
     }
@@ -1627,6 +1628,7 @@ void CameraItof::configureSensorFrameType() {
         else
             value = "0";
         m_depthSensor->setControl("confidenceBits", value);
+        ModeInfo::getInstance()->setSensorPixelParam("bitsInConf", value);
     } else {
         LOG(WARNING) << "bitsInConf was not found in .ini file";
     }
@@ -1651,6 +1653,7 @@ void CameraItof::configureSensorFrameType() {
             m_abEnabled = 0;
         }
         m_depthSensor->setControl("abBits", value);
+        ModeInfo::getInstance()->setSensorPixelParam("bitsInAb", value);
     } else {
         LOG(WARNING) << "bitsInAB was not found in .ini file";
     }
@@ -1668,6 +1671,7 @@ void CameraItof::configureSensorFrameType() {
     if (it != m_iniKeyValPairs.end()) {
         value = it->second;
         m_depthSensor->setControl("inputFormat", value);
+        ModeInfo::getInstance()->setSensorPixelParam("pixelFormat", value);
     } else {
         LOG(WARNING) << "bitsInAB was not found in .ini file";
     }
