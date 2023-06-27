@@ -1673,7 +1673,7 @@ void CameraItof::configureSensorFrameType() {
         m_depthSensor->setControl("inputFormat", value);
         ModeInfo::getInstance()->setSensorPixelParam("pixelFormat", value);
     } else {
-        LOG(WARNING) << "bitsInAB was not found in .ini file";
+        LOG(WARNING) << "inputFormat was not found in .ini file";
     }
 
     // XYZ set through camera control takes precedence over the setting from .ini file
