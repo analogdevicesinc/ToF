@@ -1860,6 +1860,7 @@ aditof::Status CameraItof::adsd3500SetABinvalidationThreshold(int threshold) {
 }
 
 aditof::Status CameraItof::adsd3500GetABinvalidationThreshold(int &threshold) {
+    threshold = 0;
     return m_depthSensor->adsd3500_read_cmd(
         0x0015, reinterpret_cast<uint16_t *>(&threshold));
 }
@@ -1868,6 +1869,7 @@ aditof::Status CameraItof::adsd3500SetConfidenceThreshold(int threshold) {
     return m_depthSensor->adsd3500_write_cmd(0x0011, threshold);
 }
 aditof::Status CameraItof::adsd3500GetConfidenceThreshold(int &threshold) {
+    threshold = 0;
     return m_depthSensor->adsd3500_read_cmd(
         0x0016, reinterpret_cast<uint16_t *>(&threshold));
 }
@@ -1876,6 +1878,7 @@ aditof::Status CameraItof::adsd3500SetJBLFfilterEnableState(bool enable) {
     return m_depthSensor->adsd3500_write_cmd(0x0013, enable ? 1 : 0);
 }
 aditof::Status CameraItof::adsd3500GetJBLFfilterEnableState(bool &enabled) {
+    enabled = 0;
     return m_depthSensor->adsd3500_read_cmd(
         0x0017, reinterpret_cast<uint16_t *>(&enabled));
 }
@@ -1884,6 +1887,7 @@ aditof::Status CameraItof::adsd3500SetJBLFfilterSize(int size) {
     return m_depthSensor->adsd3500_write_cmd(0x0014, size);
 }
 aditof::Status CameraItof::adsd3500GetJBLFfilterSize(int &size) {
+    size = 0;
     return m_depthSensor->adsd3500_read_cmd(
         0x0018, reinterpret_cast<uint16_t *>(&size));
 }
@@ -1892,6 +1896,7 @@ aditof::Status CameraItof::adsd3500SetRadialThresholdMin(int threshold) {
     return m_depthSensor->adsd3500_write_cmd(0x0027, threshold);
 }
 aditof::Status CameraItof::adsd3500GetRadialThresholdMin(int &threshold) {
+    threshold = 0;
     return m_depthSensor->adsd3500_read_cmd(
         0x0028, reinterpret_cast<uint16_t *>(&threshold));
 }
@@ -1901,6 +1906,7 @@ aditof::Status CameraItof::adsd3500SetRadialThresholdMax(int threshold) {
 }
 
 aditof::Status CameraItof::adsd3500GetRadialThresholdMax(int &threshold) {
+    threshold = 0;
     return m_depthSensor->adsd3500_read_cmd(
         0x0030, reinterpret_cast<uint16_t *>(&threshold));
 }
@@ -1941,6 +1947,7 @@ aditof::Status CameraItof::adsd3500SetJBLFGaussianSigma(uint16_t value) {
 }
 
 aditof::Status CameraItof::adsd3500GetJBLFGaussianSigma(uint16_t &value) {
+    value = 0;
     return m_depthSensor->adsd3500_read_cmd(
         0x0069, reinterpret_cast<uint16_t *>(&value));
 }
