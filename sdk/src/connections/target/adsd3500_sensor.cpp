@@ -144,6 +144,7 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     m_controls.emplace("modeInfoVersion", "0");
     m_controls.emplace("fps", "0");
     m_controls.emplace("imagerType", "");
+    m_controls.emplace("inputFormat", "");
 
     // Define the commands that correspond to the sensor controls
     m_implData->controlsCommands["abAveraging"] = 0x9819e5;
