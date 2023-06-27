@@ -212,23 +212,23 @@ aditof::Status ModeInfo::getSensorProperties(const std::string mode,
 
     //convert values from driver settings to pixel number
     depthBits = std::stoi(m_sensorConfigBits["bitsInDepth"]);
-    if (!depthBits){
+    if (!depthBits) {
         depthBits = depthBits * 2 + 4;
     }
 
     abBits = std::stoi(m_sensorConfigBits["bitsInAb"]);
-        if (!abBits){
+    if (!abBits) {
         abBits = abBits * 2 + 4;
     }
 
     confBits = std::stoi(m_sensorConfigBits["bitsInConf"]);
-        if (!confBits){
+    if (!confBits) {
         confBits = confBits * 2 + 4;
     }
 
     pixelFormat = m_sensorConfigBits["pixelFormat"];
 
-    if(mode == "pcm-native"){
+    if (mode == "pcm-native") {
         *width = frameWidth;
         *height = frameHeight;
         *pixelFormatIndex = 1;
@@ -312,7 +312,7 @@ aditof::Status ModeInfo::setSensorPixelParam(std::string control,
         LOG(WARNING) << "Unsuported sensor configuration!";
         return aditof::Status::INVALID_ARGUMENT;
     }
-    
+
     m_sensorConfigBits[control] = value;
     return aditof::Status::OK;
 };
