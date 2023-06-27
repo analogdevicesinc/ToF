@@ -574,66 +574,32 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
             __u32 pixelFormat = 0;
 
-            if (m_implData->imagerType == ImagerType::IMAGER_ADSD3100) {
-                if (type.type == "lr-qnative" || type.type == "sr-qnative" ||
-                    type.type == "lr-mixed" || type.type == "sr-mixed" ||
-                    type.type == "qmp") {
-                    pixelFormat = V4L2_PIX_FMT_SBGGR8;
-                } else if (type.type == "lr-native" ||
-                           type.type == "sr-native" || type.type == "mp") {
-                    if (m_controls["abBits"] == "6") {
-                        pixelFormat = V4L2_PIX_FMT_SBGGR8;
-                    } else {
-                        pixelFormat = V4L2_PIX_FMT_SBGGR12;
-                    }
-                } else if (type.type == "pcm-native") {
-                    pixelFormat = V4L2_PIX_FMT_SBGGR12;
-                } else {
-                    LOG(ERROR) << "frame type: " << type.type << " "
-                               << "is unhandled";
-                    return Status::GENERIC_ERROR;
-                }
-            } else if (m_implData->imagerType == ImagerType::IMAGER_ADSD3030) {
-                if (type.type == "sr-native" || type.type == "lr-native" ||
-                    type.type == "sr-qnative" || type.type == "lr-qnative" ||
-                    type.type == "vga" || type.type == "sr-mixed" ||
-                    type.type == "lr-mixed") {
-#ifdef NXP
-                    pixelFormat =
-                        V4L2_PIX_FMT_SBGGR8; // TO DO: Add implementation to automatically find pixel format based on resolution instead of all this harcoding
-#else
-                    pixelFormat = V4L2_PIX_FMT_SRGGB8;
-#endif
-                } else if (type.type == "pcm-native") {
-                    pixelFormat = V4L2_PIX_FMT_SBGGR12;
-                } else {
-                    LOG(ERROR) << "frame type: " << type.type << " "
-                               << "is unhandled";
-                    return Status::GENERIC_ERROR;
-                }
+            int width, height;
+            uint8_t pixFmt;
+
+            status = ModeInfo::getInstance()->getSensorProperties(
+                type.type, &width, &height, &pixelFormat);
+            if (status != status::OK) {
+                LOG(ERROR) << "Invalid configuration provided!";
+                return status;
+            }
+
+            if (pixFmt = 1) {
+                pixelFormat = V4L2_PIX_FMT_SBGGR12;
             } else {
-                LOG(ERROR) << "Unknow imager type!";
+#ifdef NXP
+                pixelFormat = V4L2_PIX_FMT_SBGGR8;
+#else
+                pixelFormat = V4L2_PIX_FMT_SRGGB8;
+#endif
             }
 
             /* Set the frame format in the driver */
             CLEAR(fmt);
             fmt.type = dev->videoBuffersType;
             fmt.fmt.pix.pixelformat = pixelFormat;
-            fmt.fmt.pix.width = type.width;
-            fmt.fmt.pix.height = type.height;
-
-            //TO DO: remove hardcoded 16bit ab resolutions
-            if (m_implData->imagerType == ImagerType::IMAGER_ADSD3100 &&
-                m_controls["abBits"] == "6") {
-                if (type.type == "lr-native" || type.type == "mp") {
-                    fmt.fmt.pix.width = 2048;
-                    fmt.fmt.pix.height = 3328;
-
-                } else if (type.type == "sr-native") {
-                    fmt.fmt.pix.width = 2048;
-                    fmt.fmt.pix.height = 2560;
-                }
-            }
+            fmt.fmt.pix.width = width;
+            fmt.fmt.pix.height = height;
 
             if (xioctl(dev->fd, VIDIOC_S_FMT, &fmt) == -1) {
                 LOG(WARNING) << "Setting Pixel Format error, errno: " << errno
@@ -858,6 +824,15 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
         LOG(WARNING) << "Control: " << control << " is read only!";
         return Status::UNAVAILABLE;
     }
+
+    if(control == "bitsInPhaseOrDepth")
+        ModeInfo::getInstance()->setSensorPixelParam("bitsInDepth", value);
+    if(control == "abBits")
+        ModeInfo::getInstance()->setSensorPixelParam("bitsInAb", value);
+    if(control == "confidenceBits")
+        ModeInfo::getInstance()->setSensorPixelParam("bitsInConf", value);
+    if(control == "inputFormat")
+        ModeInfo::getInstance()->setSensorPixelParam("pixelFormat", value);
 
     // Send the command that sets the control value
     struct v4l2_control ctrl;

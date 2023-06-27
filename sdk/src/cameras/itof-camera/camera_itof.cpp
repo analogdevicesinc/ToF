@@ -1664,6 +1664,14 @@ void CameraItof::configureSensorFrameType() {
         LOG(WARNING) << "partialDepthEnable was not found in .ini file";
     }
 
+    it = m_iniKeyValPairs.find("inputFormat");
+    if (it != m_iniKeyValPairs.end()) {
+        value = it->second;
+        m_depthSensor->setControl("inputFormat", value);
+    } else {
+        LOG(WARNING) << "bitsInAB was not found in .ini file";
+    }
+
     // XYZ set through camera control takes precedence over the setting from .ini file
     if (!m_xyzSetViaControl) {
         it = m_iniKeyValPairs.find("xyzEnable");
