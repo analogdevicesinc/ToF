@@ -312,8 +312,8 @@ aditof::Status ModeInfo::getSensorProperties(const std::string mode,
     return aditof::Status::OK;
 };
 
-aditof::Status ModeInfo::setSensorPixelParam(std::string control,
-                                             std::string value) {
+aditof::Status ModeInfo::setSensorPixelParam(const std::string &control,
+                                             const std::string &value) {
     if (m_sensorConfigBits.count(control) == 0) {
         LOG(WARNING) << "Unsuported sensor configuration!";
         return aditof::Status::INVALID_ARGUMENT;

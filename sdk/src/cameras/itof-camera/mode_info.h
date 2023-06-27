@@ -82,6 +82,7 @@ class ModeInfo {
      * param[in] modes - the name of the mode (represented as a string)
      * param[out] width - sensor width
      * param[out] height - sensor height
+     * param[out] pixelFormatIndex - 0 for 8 bit format/ 1 for 12bit format
      * @return aditof::Status
      */
     aditof::Status getSensorProperties(const std::string mode, uint16_t *width,
@@ -94,7 +95,8 @@ class ModeInfo {
      * param[in] value - the value
      * @return aditof::Status
      */
-    aditof::Status setSensorPixelParam(std::string control, std::string value);
+    aditof::Status setSensorPixelParam(const std::string &control,
+                                       const std::string &value);
 
     std::vector<std::string> GetAvailableModes() { return m_availableModes; };
 
