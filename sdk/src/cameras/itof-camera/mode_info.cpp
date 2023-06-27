@@ -293,10 +293,16 @@ aditof::Status ModeInfo::getSensorProperties(const std::string mode,
     } else {
         //TO DO: add raw12 modes for adsd3030
         if (pixelFormat == "raw8") {
-            float totalBits = depthBits + abBits + confBits;
-            *width = frameWidth;
-            *height = frameHeight * totalBits / 8;
-            *pixelFormatIndex = 0;
+            if (m_mode <= 2) {
+                float totalBits = depthBits + abBits + confBits;
+                *width = frameWidth;
+                *height = frameHeight * totalBits / 8;
+                *pixelFormatIndex = 0;
+            } else {
+                *width = 1280;
+                *height = 320;
+                *pixelFormatIndex = 0;
+            }
         } else {
             LOG(ERROR) << "Invalid configuration!";
             return aditof::Status::INVALID_ARGUMENT;
