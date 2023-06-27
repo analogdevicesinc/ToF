@@ -574,17 +574,17 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
             __u32 pixelFormat = 0;
 
-            int width, height;
+            uint16_t width, height;
             uint8_t pixFmt;
 
             status = ModeInfo::getInstance()->getSensorProperties(
-                type.type, &width, &height, &pixelFormat);
-            if (status != status::OK) {
+                type.type, &width, &height, &pixFmt);
+            if (status != Status::OK) {
                 LOG(ERROR) << "Invalid configuration provided!";
                 return status;
             }
 
-            if (pixFmt = 1) {
+            if (pixFmt == 1) {
                 pixelFormat = V4L2_PIX_FMT_SBGGR12;
             } else {
 #ifdef NXP
@@ -825,13 +825,13 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
         return Status::UNAVAILABLE;
     }
 
-    if(control == "bitsInPhaseOrDepth")
+    if (control == "bitsInPhaseOrDepth")
         ModeInfo::getInstance()->setSensorPixelParam("bitsInDepth", value);
-    if(control == "abBits")
+    if (control == "abBits")
         ModeInfo::getInstance()->setSensorPixelParam("bitsInAb", value);
-    if(control == "confidenceBits")
+    if (control == "confidenceBits")
         ModeInfo::getInstance()->setSensorPixelParam("bitsInConf", value);
-    if(control == "inputFormat")
+    if (control == "inputFormat")
         ModeInfo::getInstance()->setSensorPixelParam("pixelFormat", value);
 
     // Send the command that sets the control value
