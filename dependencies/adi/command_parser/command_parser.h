@@ -26,17 +26,26 @@
 #include <string>
 #include <vector>
 
+struct Values {
+    std::string long_option;
+    bool mandatory;
+    std::string type;
+    std::string position;
+    std::string value;
+};
+
 class CommandParser {
   public:
     CommandParser() = default;
     ~CommandParser() = default;
 
   public:
-    std::vector<std::pair<std::string, std::string>> getConfiguration();
     void parseArguments(int argc, char *argv[]);
-    int
-    sendArguments(std::map<std::vector<std::string>, std::string> &command_map);
+    int sendArguments(std::map<std::string, struct Values> &command_map);
     int helpMenu();
+    int isNumber(std::string);
+    bool isPath(std::string);
+    bool isString(std::string);
 
   private:
     std::vector<std::pair<std::string, std::string>> m_command_vector;
