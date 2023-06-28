@@ -35,6 +35,7 @@
 #include "camera_itof.h"
 #include <aditof/camera.h>
 #include <algorithm>
+
 #ifdef USE_GLOG
 #include <glog/logging.h>
 #else
@@ -81,8 +82,9 @@ SystemImpl::SystemImpl() {}
 
 SystemImpl::~SystemImpl() = default;
 
-Status SystemImpl::getCameraList(
-    std::vector<std::shared_ptr<Camera>> &cameraList) const {
+Status
+SystemImpl::getCameraList(std::vector<std::shared_ptr<Camera>> &cameraList,
+                          const std::string &uri) const {
 
 #if HAS_NETWORK
     static bool logged = false;
@@ -94,6 +96,12 @@ Status SystemImpl::getCameraList(
 #endif
 
     cameraList.clear();
+
+    if (uri.compare(0, 3, "ip:") == 0) {
+        std::string ip(uri, 3);
+        return getCameraListAtIp(cameraList, ip);
+    }
+
     std::unique_ptr<SensorEnumeratorInterface> sensorEnumerator;
 #ifdef HAS_OFFLINE
     DLOG(INFO) << "Creating offline sensor.";
@@ -127,18 +135,6 @@ Status SystemImpl::getCameraList(
 Status
 SystemImpl::getCameraListAtIp(std::vector<std::shared_ptr<Camera>> &cameraList,
                               const std::string &ip) const {
-
-#if HAS_NETWORK
-    static bool logged = false;
-    if (!logged) {
-        LOG(INFO) << "SDK built with websockets version:"
-                  << LWS_LIBRARY_VERSION;
-        logged = true;
-    }
-#endif
-
-    cameraList.clear();
-
     std::unique_ptr<SensorEnumeratorInterface> sensorEnumerator =
         SensorEnumeratorFactory::buildNetworkSensorEnumerator(ip);
 

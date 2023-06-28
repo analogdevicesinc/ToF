@@ -77,21 +77,18 @@ class System {
      * @brief Populates the given list with Camera objects that correspond to
      * the available cameras.
      * @param[out] cameraList - A container to be set with the available cameras
+     * @param[in] uri - A uniform resource identifier (URI) for specifying the
+     * type of connectivity with the camera and the identification of the camera.
+     * For no remote connection, the uri parameter should be omitted
+     * For network connectivity, the URI format must be: "ip:ip-address" where
+     * the ip-address is the address of the system to which the camera is
+     * attached to. For example: "ip:10.42.0.1" or "ip:192.186.1.2", etc.
+     * For USB (UVC) connectivity, the uri parameter should be omitted
      * @return Status
      */
     SDK_API Status
-    getCameraList(std::vector<std::shared_ptr<Camera>> &cameraList) const;
-
-    /**
-     * @brief Populates the given list with Camera objects that correspond to
-     * the available cameras from the remote target.
-     * @param[out] cameraList - A container to be set with the available cameras
-     * @param ip - The IP of the remote target
-     * @return Status
-     */
-    SDK_API Status
-    getCameraListAtIp(std::vector<std::shared_ptr<Camera>> &cameraList,
-                      const std::string &ip) const;
+    getCameraList(std::vector<std::shared_ptr<Camera>> &cameraList,
+                  const std::string &uri = "") const;
 
   private:
     std::unique_ptr<SystemImpl> m_impl;

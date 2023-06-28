@@ -43,15 +43,9 @@ System::System(System &&) noexcept = default;
 
 System &System::operator=(System &&) noexcept = default;
 
-Status
-System::getCameraList(std::vector<std::shared_ptr<Camera>> &cameraList) const {
-    return m_impl->getCameraList(cameraList);
-}
-
-Status
-System::getCameraListAtIp(std::vector<std::shared_ptr<Camera>> &cameraList,
-                          const std::string &ip) const {
-    return m_impl->getCameraListAtIp(cameraList, ip);
+Status System::getCameraList(std::vector<std::shared_ptr<Camera>> &cameraList,
+                             const std::string &uri) const {
+    return m_impl->getCameraList(cameraList, uri);
 }
 
 } // namespace aditof
