@@ -1878,9 +1878,11 @@ aditof::Status CameraItof::adsd3500SetJBLFfilterEnableState(bool enable) {
     return m_depthSensor->adsd3500_write_cmd(0x0013, enable ? 1 : 0);
 }
 aditof::Status CameraItof::adsd3500GetJBLFfilterEnableState(bool &enabled) {
-    enabled = 0;
-    return m_depthSensor->adsd3500_read_cmd(
-        0x0017, reinterpret_cast<uint16_t *>(&enabled));
+    int intEnabled = 0;
+    aditof::Status status = m_depthSensor->adsd3500_read_cmd(
+        0x0017, reinterpret_cast<uint16_t *>(&intEnabled));
+    enabled = !!intEnabled;
+    return status;
 }
 
 aditof::Status CameraItof::adsd3500SetJBLFfilterSize(int size) {
