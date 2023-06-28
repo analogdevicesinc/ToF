@@ -294,42 +294,60 @@ PYBIND11_MODULE(aditofpython, m) {
              &aditof::Camera::adsd3500SetABinvalidationThreshold,
              py::arg("threshold"))
         .def("adsd3500GetABinvalidationThreshold",
-             &aditof::Camera::adsd3500GetABinvalidationThreshold,
-             py::arg("threshold"))
+             [](aditof::Camera &camera) {
+                 int threshold;
+                 aditof::Status status =
+                     camera.adsd3500GetABinvalidationThreshold(threshold);
+                 return std::make_pair(status, threshold);
+             })
         .def("adsd3500SetConfidenceThreshold",
              &aditof::Camera::adsd3500SetConfidenceThreshold,
              py::arg("threshold"))
         .def("adsd3500GetConfidenceThreshold",
-             &aditof::Camera::adsd3500GetConfidenceThreshold,
-             py::arg("threshold"))
-        .def("adsd3500SetConfidenceThreshold",
-             &aditof::Camera::adsd3500SetConfidenceThreshold,
-             py::arg("threshold"))
-        .def("adsd3500GetConfidenceThreshold",
-             &aditof::Camera::adsd3500GetConfidenceThreshold,
-             py::arg("threshold"))
+             [](aditof::Camera &camera) {
+                 int threshold;
+                 aditof::Status status =
+                     camera.adsd3500GetConfidenceThreshold(threshold);
+                 return std::make_pair(status, threshold);
+             })
         .def("adsd3500SetJBLFfilterEnableState",
              &aditof::Camera::adsd3500SetJBLFfilterEnableState,
              py::arg("enable"))
         .def("adsd3500GetJBLFfilterEnableState",
-             &aditof::Camera::adsd3500GetJBLFfilterEnableState,
-             py::arg("enabled"))
+             [](aditof::Camera &camera) {
+                 bool enableState;
+                 aditof::Status status =
+                     camera.adsd3500GetJBLFfilterEnableState(enableState);
+                 return std::make_pair(status, enableState);
+             })
         .def("adsd3500SetJBLFfilterSize",
              &aditof::Camera::adsd3500SetJBLFfilterSize, py::arg("size"))
         .def("adsd3500GetJBLFfilterSize",
-             &aditof::Camera::adsd3500GetJBLFfilterSize, py::arg("size"))
+             [](aditof::Camera &camera) {
+                 int size;
+                 aditof::Status status = camera.adsd3500GetJBLFfilterSize(size);
+                 return std::make_pair(status, size);
+             })
         .def("adsd3500SetRadialThresholdMin",
              &aditof::Camera::adsd3500SetRadialThresholdMin,
              py::arg("threshold"))
         .def("adsd3500GetRadialThresholdMin",
-             &aditof::Camera::adsd3500GetRadialThresholdMin,
-             py::arg("threshold"))
+             [](aditof::Camera &camera) {
+                 int threshold;
+                 aditof::Status status =
+                     camera.adsd3500GetRadialThresholdMin(threshold);
+                 return std::make_pair(status, threshold);
+             })
         .def("adsd3500SetRadialThresholdMax",
              &aditof::Camera::adsd3500SetRadialThresholdMax,
              py::arg("threshold"))
         .def("adsd3500GetRadialThresholdMax",
-             &aditof::Camera::adsd3500GetRadialThresholdMax,
-             py::arg("threshold"))
+             [](aditof::Camera &camera) {
+                 int threshold;
+                 aditof::Status status =
+                     camera.adsd3500GetRadialThresholdMax(threshold);
+                 return std::make_pair(status, threshold);
+             })
         .def("adsd3500SetMIPIOutputSpeed",
              &aditof::Camera::adsd3500SetMIPIOutputSpeed, py::arg("speed"))
         .def("adsd3500GetMIPIOutputSpeed",
