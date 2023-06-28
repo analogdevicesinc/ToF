@@ -80,18 +80,24 @@ int main(int argc, char *argv[]) {
               << " | commit: " << aditof::getCommitVersion();
 
     Status status = Status::OK;
+    std::string configFile;
+    std::string ip;
 
     if (argc < 2) {
-        LOG(ERROR) << "No config file provided! ./first-frame <config_file>";
+        LOG(ERROR) << "No config file nor ip provided! ./first-frame [<ip>] "
+                      "<config_file>";
         return 0;
+    } else if (argc == 2) {
+        configFile = argv[1];
+    } else if (argc == 3) {
+        ip = "ip:" + std::string(argv[1]);
+        configFile = argv[2];
     }
-
-    std::string configFile = argv[1];
 
     System system;
 
     std::vector<std::shared_ptr<Camera>> cameras;
-    system.getCameraList(cameras);
+    system.getCameraList(cameras, ip);
     if (cameras.empty()) {
         LOG(WARNING) << "No cameras found";
         return 0;
@@ -136,7 +142,6 @@ int main(int argc, char *argv[]) {
         return 0;
     }
     aditof::Frame frame;
-
 
     status = camera->requestFrame(&frame);
     if (status != Status::OK) {
