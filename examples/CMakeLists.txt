@@ -6,10 +6,6 @@ add_subdirectory(data_collect)
 if (NOT NXP)
     add_subdirectory(tof-viewer)
 endif()
-
-if (WITH_NETWORK)
-    add_subdirectory(first-frame-network)
-endif()
 add_subdirectory(point_cloud)
 
 include(GNUInstallDirs)
