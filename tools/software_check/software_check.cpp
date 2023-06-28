@@ -104,12 +104,10 @@ int32_t getinstalledVersion(std::string &fwVersion, std::string &fwHash,
     aditof::System system;
     std::vector<std::shared_ptr<aditof::Camera>> cameras;
 
-    if (ip.empty()) {
-        system.getCameraList(cameras);
-    } else {
-        system.getCameraListAtIp(cameras, ip);
+    if (!ip.empty()) {
+        ip = "ip:" + ip;
     }
-
+    system.getCameraList(cameras, ip);
     if (cameras.empty()) {
         std::cout << "No cameras found" << std::endl;
         return -1;

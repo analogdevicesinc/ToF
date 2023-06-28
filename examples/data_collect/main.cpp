@@ -287,12 +287,10 @@ int main(int argc, char *argv[]) {
     System system;
     std::vector<std::shared_ptr<Camera>> cameras;
 
-    if (ip.empty()) {
-        system.getCameraList(cameras);
-    } else {
-        system.getCameraListAtIp(cameras, ip);
+    if (!ip.empty()) {
+        ip = "ip:" + ip;
     }
-
+    system.getCameraList(cameras, ip);
     if (cameras.empty()) {
         LOG(WARNING) << "No cameras found";
         return 0;
