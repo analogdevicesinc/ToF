@@ -833,14 +833,16 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
         return Status::UNAVAILABLE;
     }
 
-    if (control == "bitsInPhaseOrDepth")
+    if (control == "phaseDepthBits")
         ModeInfo::getInstance()->setSensorPixelParam("bitsInDepth", value);
     if (control == "abBits")
         ModeInfo::getInstance()->setSensorPixelParam("bitsInAb", value);
     if (control == "confidenceBits")
         ModeInfo::getInstance()->setSensorPixelParam("bitsInConf", value);
-    if (control == "inputFormat")
+    if (control == "inputFormat") {
         ModeInfo::getInstance()->setSensorPixelParam("pixelFormat", value);
+        return Status::OK;
+    }
 
     // Send the command that sets the control value
     struct v4l2_control ctrl;

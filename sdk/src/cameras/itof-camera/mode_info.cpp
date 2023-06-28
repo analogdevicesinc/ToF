@@ -175,11 +175,12 @@ aditof::Status ModeInfo::setImagerTypeAndModeVersion(int type, int version) {
 
     populateAvailableModes(g_modeInfoData);
 
-    m_sensorConfigBits.clear();
-    m_sensorConfigBits.emplace("bitsInDepth", "");
-    m_sensorConfigBits.emplace("bitsInAb", "");
-    m_sensorConfigBits.emplace("bitsInConf", "");
-    m_sensorConfigBits.emplace("pixelFormat", "");
+    if (m_sensorConfigBits.empty()) {
+        m_sensorConfigBits.emplace("bitsInDepth", "");
+        m_sensorConfigBits.emplace("bitsInAb", "");
+        m_sensorConfigBits.emplace("bitsInConf", "");
+        m_sensorConfigBits.emplace("pixelFormat", "");
+    }
 
     return status;
 };
@@ -212,18 +213,20 @@ aditof::Status ModeInfo::getSensorProperties(const std::string mode,
 
     //convert values from driver settings to pixel number
     depthBits = std::stoi(m_sensorConfigBits["bitsInDepth"]);
-    if (!depthBits) {
+    if (depthBits) {
         depthBits = depthBits * 2 + 4;
     }
 
     abBits = std::stoi(m_sensorConfigBits["bitsInAb"]);
-    if (!abBits) {
+    if (abBits) {
         abBits = abBits * 2 + 4;
     }
 
     confBits = std::stoi(m_sensorConfigBits["bitsInConf"]);
-    if (!confBits) {
-        confBits = confBits * 2 + 4;
+    if (confBits == 1) {
+        confBits = 4;
+    } else if (confBits == 2) {
+        confBits = 8;
     }
 
     pixelFormat = m_sensorConfigBits["pixelFormat"];
@@ -283,8 +286,8 @@ aditof::Status ModeInfo::getSensorProperties(const std::string mode,
         } else if (pixelFormat == "raw8") {
             if (m_mode > 1) {
                 float totalBits = depthBits + abBits + confBits;
-                *width = frameWidth;
-                *height = frameHeight * totalBits / 8;
+                *width = frameWidth * totalBits / 8;
+                *height = frameHeight;
                 *pixelFormatIndex = 0;
             }
         }
@@ -293,10 +296,10 @@ aditof::Status ModeInfo::getSensorProperties(const std::string mode,
     } else {
         //TO DO: add raw12 modes for adsd3030
         if (pixelFormat == "raw8") {
-            if (m_mode <= 2) {
+            if (m_mode < 2) {
                 float totalBits = depthBits + abBits + confBits;
-                *width = frameWidth;
-                *height = frameHeight * totalBits / 8;
+                *width = frameWidth * totalBits / 8;
+                *height = frameHeight;
                 *pixelFormatIndex = 0;
             } else {
                 *width = 1280;
