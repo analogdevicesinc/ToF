@@ -98,21 +98,19 @@ void fileWriterTask(const thread_params *const pThreadParams);
 #endif
 
 int main(int argc, char *argv[]) {
-    std::map<std::vector<std::string>, std::string> optional_arguments;
-    std::map<std::vector<std::string>, std::string> mandatory_arguments;
-    std::map<std::vector<std::string>, std::string> command_map = {
-        {{"-h", "--help", "false"}, ""},
-        {{"-f", "--f", "false"}, "."},
-        {{"-n", "--n", "false"}, "1"},
-        {{"-m", "--m", "false"}, "0"},
-        {{"-ext", "--ext_fsync", "false"}, "0"},
-        {{"-wt", "--wt", "false"}, ""},
-        {{"-ip", "--ip", "false"}, ""},
-        {{"-fw", "--fw", "false"}, ""},
-        {{"-fps", "--fps", "false"}, ""},
-        {{"-ccb", "--ccb", "false"}, ""},
-        {{"-ft", "--ft", "false"}, "raw"},
-        {{"CONFIG", "config", "true"}, ""}};
+    std::map<std::string, struct Values> command_map = {
+        {"-h", {"--help", false, "", "", ""}},
+        {"-f", {"--f", false, "path", "", "."}},
+        {"-n", {"--n", false, "value", "", "1"}},
+        {"-m", {"--m", false, "value", "", "0"}},
+        {"-ext", {"--ext_fsync", false, "value", "", "0"}},
+        {"-wt", {"--wt", false, "value", "", "0"}},
+        {"-ip", {"--ip", false, "value", "", ""}},
+        {"-fw", {"--fw", false, "path", "", ""}},
+        {"-fps", {"--fps", false, "value", "", ""}},
+        {"-ccb", {"--ccb", false, "path", "", ""}},
+        {"-ft", {"--ft", false, "string", "", "raw"}},
+        {"-config", {"-CONFIG", true, "path", "last", ""}}};
 
     CommandParser command;
     command.parseArguments(argc, argv);
@@ -124,13 +122,10 @@ int main(int argc, char *argv[]) {
         return 0;
     }
     int result = command.sendArguments(command_map);
-    if (result == 0) {
-        char folder_path
-            [MAX_FILE_PATH_SIZE]; // Path to store the raw/depth frames
-        char json_file_path
-            [MAX_FILE_PATH_SIZE]; // Get the .json file from command line
-        std::string
-            frame_type; // Type of frame need to be captured (Raw/Depth/IR)
+    char folder_path[MAX_FILE_PATH_SIZE]; // Path to store the raw/depth frames
+    char json_file_path
+        [MAX_FILE_PATH_SIZE]; // Get the .json file from command line
+    std::string frame_type; // Type of frame need to be captured (Raw/Depth/IR)
 
     uint16_t err = 0;
     uint32_t n_frames = 0;
@@ -141,58 +136,56 @@ int main(int argc, char *argv[]) {
     std::string firmware;
     uint32_t setfps = 0;
 
-        google::InitGoogleLogging(argv[0]);
-        FLAGS_alsologtostderr = 1;
+    google::InitGoogleLogging(argv[0]);
+    FLAGS_alsologtostderr = 1;
 
-        LOG(INFO) << "SDK version: " << aditof::getApiVersion()
-                  << " | branch: " << aditof::getBranchVersion()
-                  << " | commit: " << aditof::getCommitVersion();
+    LOG(INFO) << "SDK version: " << aditof::getApiVersion()
+              << " | branch: " << aditof::getBranchVersion()
+              << " | commit: " << aditof::getCommitVersion();
 
-        Status status = Status::OK;
-        // Parsing the arguments from command line
-        err = snprintf(json_file_path, sizeof(json_file_path), "%s",
-                       command_map[{"CONFIG", "config"}].c_str());
-        if (err < 0) {
-            LOG(ERROR) << "Error copying the json file path!";
-            return 0;
-        }
+    Status status = Status::OK;
+    // Parsing the arguments from command line
+    err = snprintf(json_file_path, sizeof(json_file_path), "%s",
+                   command_map["-config"].value.c_str());
+    if (err < 0) {
+        LOG(ERROR) << "Error copying the json file path!";
+        return 0;
+    }
 
-        // Parsing output folder
-        err = snprintf(folder_path, sizeof(folder_path), "%s",
-                       command_map[{"-f", "--f"}].c_str());
+    // Parsing output folder
+    err = snprintf(folder_path, sizeof(folder_path), "%s",
+                   command_map["-f"].value.c_str());
 
-        if (err < 0) {
-            LOG(ERROR) << "Error copying the output folder path!";
-            return 0;
-        }
+    if (err < 0) {
+        LOG(ERROR) << "Error copying the output folder path!";
+        return 0;
+    }
 #ifdef _WIN32
-        // Create folder if not created already
-        char dir_path[MAX_PATH];
-        if (GetFullPathName(folder_path, MAX_PATH, &dir_path[0], NULL) == 0) {
-            LOG(ERROR) << "Error Unable to get directory. Error:"
-                       << GetLastError();
+    // Create folder if not created already
+    char dir_path[MAX_PATH];
+    if (GetFullPathName(folder_path, MAX_PATH, &dir_path[0], NULL) == 0) {
+        LOG(ERROR) << "Error Unable to get directory. Error:" << GetLastError();
+        return 0;
+    }
+
+    if (!(CreateDirectory(dir_path, NULL))) {
+        if (ERROR_ALREADY_EXISTS != GetLastError()) {
+            LOG(ERROR) << "Error creating directory. Error:", GetLastError();
             return 0;
         }
-
-        if (!(CreateDirectory(dir_path, NULL))) {
-            if (ERROR_ALREADY_EXISTS != GetLastError()) {
-                LOG(ERROR) << "Error creating directory. Error:",
-                    GetLastError();
-                return 0;
-            }
-        }
+    }
 
 #else
-        err = mkdir(folder_path, 0777);
+    err = mkdir(folder_path, 0777);
 
-        if (err < 0) {
-            LOG(ERROR) << "Unable to create directory";
-            return 0;
-        }
+    if (err < 0) {
+        LOG(ERROR) << "Unable to create directory";
+        return 0;
+    }
 #endif
 
-        // Parsing number of frames
-        n_frames = std::stoi(command_map[{"-n", "--n"}]);
+    // Parsing number of frames
+    n_frames = std::stoi(command_map["-n"].value);
 
     // Parsing mode type
     std::string modeName;
@@ -208,15 +201,15 @@ int main(int argc, char *argv[]) {
         modeName = command_map[{"-m", "--m"}].c_str();
     }
 
-        // Parsing ip
-        if (!command_map[{"-ip", "--ip"}].empty()) {
-            ip = command_map[{"-ip", "--ip"}];
-        }
+    // Parsing ip
+    if (!command_map["-ip"].value.empty()) {
+        ip = command_map["-ip"].value;
+    }
 
-        // Parsing firmware
-        if (!command_map[{"-fw", "--fw"}].empty()) {
-            firmware = command_map[{"-fw", "--fw"}];
-        }
+    // Parsing firmware
+    if (!command_map["-fw"].value.empty()) {
+        firmware = command_map["-fw"].value;
+    }
 
     //set FPS value
     if (!command_map[{"-fps", "--fps"}].empty()) {
@@ -225,30 +218,29 @@ int main(int argc, char *argv[]) {
         setfps = 10;
     }
 
-        ext_frame_sync_en = std::stoi(command_map[{"-ext", "--ext_fsync"}]);
+    ext_frame_sync_en = std::stoi(command_map["-ext"].value);
 
-        frame_type = command_map[{"-ft", "--ft"}];
+    frame_type = command_map["-ft"].value;
 
-        if (frame_type.length() <= 0) {
-            LOG(ERROR)
-                << "Error parsing frame_type (-ft/--ft) from command line!"
-                << "\n Please check help menu";
-            return 0;
+    if (frame_type.length() <= 0) {
+        LOG(ERROR) << "Error parsing frame_type (-ft/--ft) from command line!"
+                   << "\n Please check help menu";
+        return 0;
+    }
+
+    //Parsing Warm up time
+    if (!command_map["-wt"].value.empty()) {
+        warmup_time = std::stoi(command_map["-wt"].value);
+        if (warmup_time < 0) {
+            LOG(ERROR) << "Invalid warm up time input!";
         }
+    }
 
-        //Parsing Warm up time
-        if (!command_map[{"-wt", "--wt"}].empty()) {
-            warmup_time = std::stoi(command_map[{"-wt", "--wt"}]);
-            if (warmup_time < 0) {
-                LOG(ERROR) << "Invalid warm up time input!";
-            }
-        }
-
-        //Parsing CCB path
-        std::string ccbFilePath;
-        if (!command_map[{"-ccb", "--ccb"}].empty()) {
-            ccbFilePath = command_map[{"-ccb", "--ccb"}];
-        }
+    //Parsing CCB path
+    std::string ccbFilePath;
+    if (!command_map["-ccb"].value.empty()) {
+        ccbFilePath = command_map["-ccb"].value;
+    }
 
     LOG(INFO) << "Output folder: " << folder_path;
     LOG(INFO) << "Mode: " << command_map[{"-m", "--m"}];
@@ -257,20 +249,20 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "Frame type is: " << frame_type;
     LOG(INFO) << "Warm Up Time is: " << warmup_time << " seconds";
 
-        if (!ip.empty()) {
-            LOG(INFO) << "Ip address is: " << ip;
-        }
+    if (!ip.empty()) {
+        LOG(INFO) << "Ip address is: " << ip;
+    }
 
-        if (!firmware.empty()) {
-            LOG(INFO) << "Firmware file is is: " << firmware;
-        }
+    if (!firmware.empty()) {
+        LOG(INFO) << "Firmware file is is: " << firmware;
+    }
 
-        if (!ccbFilePath.empty()) {
-            LOG(INFO) << "Path to store CCB content: " << ccbFilePath;
-        }
+    if (!ccbFilePath.empty()) {
+        LOG(INFO) << "Path to store CCB content: " << ccbFilePath;
+    }
 
-        System system;
-        std::vector<std::shared_ptr<Camera>> cameras;
+    System system;
+    std::vector<std::shared_ptr<Camera>> cameras;
 
     if (!ip.empty()) {
         ip = "ip:" + ip;
@@ -284,54 +276,53 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-        auto camera = cameras.front();
+    auto camera = cameras.front();
 
-        // user can pass any config.json stored anywhere in HW
-        status = camera->setControl("initialization_config", json_file_path);
+    // user can pass any config.json stored anywhere in HW
+    status = camera->setControl("initialization_config", json_file_path);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not set the initialization config file!";
+        return 0;
+    }
+
+    status = camera->initialize();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not initialize camera!";
+        return 0;
+    }
+
+    aditof::CameraDetails cameraDetails;
+    camera->getDetails(cameraDetails);
+
+    LOG(INFO) << "SD card image version: " << cameraDetails.sdCardImageVersion;
+    LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
+    LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
+
+    if (!firmware.empty()) {
+        std::ifstream file(firmware);
+        if (!(file.good() &&
+              file.peek() != std::ifstream::traits_type::eof())) {
+            LOG(ERROR) << firmware << " not found or is an empty file";
+            return 0;
+        }
+
+        status = camera->setControl("updateAdsd3500Firmware", firmware);
         if (status != Status::OK) {
-            LOG(ERROR) << "Could not set the initialization config file!";
+            LOG(ERROR) << "Could not update the adsd3500 firmware";
+            return 0;
+        } else {
+            LOG(INFO) << "Please reboot the board!";
             return 0;
         }
+    }
 
-        status = camera->initialize();
-        if (status != Status::OK) {
-            LOG(ERROR) << "Could not initialize camera!";
-            return 0;
-        }
-
-        aditof::CameraDetails cameraDetails;
-        camera->getDetails(cameraDetails);
-
-        LOG(INFO) << "SD card image version: "
-                  << cameraDetails.sdCardImageVersion;
-        LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
-        LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
-
-        if (!firmware.empty()) {
-            std::ifstream file(firmware);
-            if (!(file.good() &&
-                  file.peek() != std::ifstream::traits_type::eof())) {
-                LOG(ERROR) << firmware << " not found or is an empty file";
-                return 0;
-            }
-
-            status = camera->setControl("updateAdsd3500Firmware", firmware);
-            if (status != Status::OK) {
-                LOG(ERROR) << "Could not update the adsd3500 firmware";
-                return 0;
-            } else {
-                LOG(INFO) << "Please reboot the board!";
-                return 0;
-            }
-        }
-
-        // Get frame types
-        std::vector<std::string> frameTypes;
-        status = camera->getAvailableFrameTypes(frameTypes);
-        if (status != Status::OK || frameTypes.empty()) {
-            LOG(ERROR) << "Could not aquire frame types";
-            return 0;
-        }
+    // Get frame types
+    std::vector<std::string> frameTypes;
+    status = camera->getAvailableFrameTypes(frameTypes);
+    if (status != Status::OK || frameTypes.empty()) {
+        LOG(ERROR) << "Could not aquire frame types";
+        return 0;
+    }
 
     if (modeName.empty()) {
         status = camera->getFrameTypeNameFromId(mode, modeName);
@@ -342,44 +333,43 @@ int main(int argc, char *argv[]) {
         }
     }
 
-        std::shared_ptr<DepthSensorInterface> depthSensor = camera->getSensor();
-        std::string sensorName;
-        status = depthSensor->getName(sensorName);
+    std::shared_ptr<DepthSensorInterface> depthSensor = camera->getSensor();
+    std::string sensorName;
+    status = depthSensor->getName(sensorName);
 
-        // Set UVC format type and camera frame details
-        if ("raw" == frame_type) {
-            camera->setControl("enableDepthCompute", "off");
-        } else if ("depth" == frame_type) {
-            if (modeName == "pcm-native") {
-                LOG(ERROR)
-                    << modeName
-                    << " mode doesn't contain depth data, please set --ft "
-                       "(frameType) to raw.";
-                return 0;
-            } else {
-                camera->setControl("enableDepthCompute", "on");
-            }
+    // Set UVC format type and camera frame details
+    if ("raw" == frame_type) {
+        camera->setControl("enableDepthCompute", "off");
+    } else if ("depth" == frame_type) {
+        if (modeName == "pcm-native") {
+            LOG(ERROR) << modeName
+                       << " mode doesn't contain depth data, please set --ft "
+                          "(frameType) to raw.";
+            return 0;
         } else {
-            LOG(ERROR) << "unsupported frame type!";
-            return 0;
+            camera->setControl("enableDepthCompute", "on");
         }
+    } else {
+        LOG(ERROR) << "unsupported frame type!";
+        return 0;
+    }
 
-        status = camera->setFrameType(modeName);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Could not set camera frame type!";
-            return 0;
-        }
+    status = camera->setFrameType(modeName);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not set camera frame type!";
+        return 0;
+    }
 
-        char time_buffer[128];
-        time_t rawtime;
-        time(&rawtime);
-        struct tm timeinfo;
+    char time_buffer[128];
+    time_t rawtime;
+    time(&rawtime);
+    struct tm timeinfo;
 #ifdef _WIN32
-        localtime_s(&timeinfo, &rawtime);
+    localtime_s(&timeinfo, &rawtime);
 #else
-        localtime_r(&rawtime, &timeinfo);
+    localtime_r(&rawtime, &timeinfo);
 #endif
-        strftime(time_buffer, sizeof(time_buffer), "%Y%m%d%H%M%S", &timeinfo);
+    strftime(time_buffer, sizeof(time_buffer), "%Y%m%d%H%M%S", &timeinfo);
 #if 0
     camera->setControl("setFPS", std::to_string(setfps));
     if (status != Status::OK) {
@@ -388,34 +378,33 @@ int main(int argc, char *argv[]) {
     }
 #endif
 
-        // Store CCB to file
-        if (!ccbFilePath.empty()) {
-            status = camera->setControl("saveModuleCCB", ccbFilePath);
-            if (status != Status::OK) {
-                LOG(INFO) << "Failed to store CCB to " << ccbFilePath;
-            }
-        }
-
-        // Program the camera with cfg passed, set the mode by writing to 0x200 and start the camera
-        status = camera->start();
+    // Store CCB to file
+    if (!ccbFilePath.empty()) {
+        status = camera->setControl("saveModuleCCB", ccbFilePath);
         if (status != Status::OK) {
-            LOG(ERROR) << "Could not start camera!";
-            return 0;
+            LOG(INFO) << "Failed to store CCB to " << ccbFilePath;
         }
+    }
 
-        if (ext_frame_sync_en == 0) {
-            status =
-                camera->setControl("syncMode", "0, 0"); // Master, timer driven
+    // Program the camera with cfg passed, set the mode by writing to 0x200 and start the camera
+    status = camera->start();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not start camera!";
+        return 0;
+    }
 
-        } else if (ext_frame_sync_en == 1) {
-            status = camera->setControl(
-                "syncMode",
-                "2, 0"); // Slave, 1.8v  // TODO: This configuration is required by oFilm, expand for finer control
-        }
+    if (ext_frame_sync_en == 0) {
+        status = camera->setControl("syncMode", "0, 0"); // Master, timer driven
 
-        aditof::Frame frame;
-        FrameDetails fDetails;
-        std::string frameType;
+    } else if (ext_frame_sync_en == 1) {
+        status = camera->setControl(
+            "syncMode",
+            "2, 0"); // Slave, 1.8v  // TODO: This configuration is required by oFilm, expand for finer control
+    }
+
+    aditof::Frame frame;
+    FrameDetails fDetails;
+    std::string frameType;
 
     uint16_t *frameBuffer;
     uint8_t *headerBuffer;
@@ -424,48 +413,48 @@ int main(int argc, char *argv[]) {
     uint64_t frame_size = 0;
     uint64_t elapsed_time;
 
-        auto warmup_start = std::chrono::steady_clock::now();
+    auto warmup_start = std::chrono::steady_clock::now();
 
-        // Wait until the warmup time is finished
-        if (warmup_time > 0) {
-            do {
-                frameType = "raw";
-                uint16_t *pRawFrame;
-                status = camera->requestFrame(&frame);
-                if (status != Status::OK) {
-                    LOG(ERROR) << "Could not request frame!";
-                    return 0;
-                }
-                status = frame.getData(frameType, &pRawFrame);
-                if (status != Status::OK) {
-                    LOG(ERROR) << "Could not get Raw frame type data!";
-                    return 0;
-                }
-
-                auto warmup_end = std::chrono::steady_clock::now();
-                elapsed_time = std::chrono::duration_cast<std::chrono::seconds>(
-                                   warmup_end - warmup_start)
-                                   .count();
-            } while (warmup_time >= elapsed_time);
-        }
-
-        LOG(INFO) << "Requesting " << n_frames << " frames!";
-        auto start_time = std::chrono::high_resolution_clock::now();
-        // Request the frames for the respective mode
-        for (uint32_t loopcount = 0; loopcount < n_frames; loopcount++) {
-
+    // Wait until the warmup time is finished
+    if (warmup_time > 0) {
+        do {
+            frameType = "raw";
+            uint16_t *pRawFrame;
             status = camera->requestFrame(&frame);
             if (status != Status::OK) {
                 LOG(ERROR) << "Could not request frame!";
                 return 0;
             }
+            status = frame.getData(frameType, &pRawFrame);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Could not get Raw frame type data!";
+                return 0;
+            }
 
-            frame.getDetails(fDetails);
+            auto warmup_end = std::chrono::steady_clock::now();
+            elapsed_time = std::chrono::duration_cast<std::chrono::seconds>(
+                               warmup_end - warmup_start)
+                               .count();
+        } while (warmup_time >= elapsed_time);
+    }
+
+    LOG(INFO) << "Requesting " << n_frames << " frames!";
+    auto start_time = std::chrono::high_resolution_clock::now();
+    // Request the frames for the respective mode
+    for (uint32_t loopcount = 0; loopcount < n_frames; loopcount++) {
+
+        status = camera->requestFrame(&frame);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Could not request frame!";
+            return 0;
+        }
+
+        frame.getDetails(fDetails);
 
         height = fDetails.height;
         width = fDetails.width;
 
-            frameType = "raw";
+        frameType = "raw";
 
         // Depth Data
         if (frame_type == "depth") {
@@ -483,25 +472,25 @@ int main(int argc, char *argv[]) {
             LOG(WARNING) << "Can't recognize frame data type!";
         }
 
-            /* Since getData returns the pointer to the depth/raw data, which only main thread has access to,
+        /* Since getData returns the pointer to the depth/raw data, which only main thread has access to,
             we need to copy depth frame to local memory and pass that to thread for file I/O, there is no drop in the throughput with this. */
-            frameBuffer = new uint16_t[frame_size];
-            if (frameBuffer == NULL) {
-                LOG(ERROR) << "Can't allocate Memory for frame type data!";
-                return 0;
-            }
+        frameBuffer = new uint16_t[frame_size];
+        if (frameBuffer == NULL) {
+            LOG(ERROR) << "Can't allocate Memory for frame type data!";
+            return 0;
+        }
 
-            uint16_t *pData;
-            status = frame.getData(frameType, &pData);
-            if (status != Status::OK) {
-                LOG(ERROR) << "Could not get frame type data!";
-                return 0;
-            }
-            if (!pData) {
-                LOG(ERROR) << "no memory allocated in frame";
-                return 0;
-            }
-            memcpy(frameBuffer, (uint8_t *)pData, frame_size);
+        uint16_t *pData;
+        status = frame.getData(frameType, &pData);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Could not get frame type data!";
+            return 0;
+        }
+        if (!pData) {
+            LOG(ERROR) << "no memory allocated in frame";
+            return 0;
+        }
+        memcpy(frameBuffer, (uint8_t *)pData, frame_size);
 
         uint32_t header_data_size = EMBED_HDR_LENGTH;
         headerBuffer = new uint8_t[header_data_size];
@@ -524,67 +513,66 @@ int main(int argc, char *argv[]) {
         memcpy(headerBuffer, (uint8_t *)pHeader, header_data_size);
 #endif
 
-            // Create thread to handle the file I/O of copying raw/depth images to file
+        // Create thread to handle the file I/O of copying raw/depth images to file
 #ifdef MULTI_THREADED
-            thread_params *pThreadParams = new thread_params();
-            if (pThreadParams == nullptr) {
-                LOG(ERROR) << "Thread param memory allocation failed";
-                return 0;
-            }
-            pThreadParams->pCaptureData = frameBuffer;
-            pThreadParams->pHeaderData = headerBuffer;
-            pThreadParams->nTotalCaptureSize = frame_size;
-            pThreadParams->pFolderPath = folder_path;
-            pThreadParams->nFileTime = time_buffer;
-            pThreadParams->nframes = n_frames;
-            pThreadParams->nFrameCount = loopcount;
-            pThreadParams->pFrame_type = frame_type.c_str();
-            pThreadParams->pFramesize = height * width;
+        thread_params *pThreadParams = new thread_params();
+        if (pThreadParams == nullptr) {
+            LOG(ERROR) << "Thread param memory allocation failed";
+            return 0;
+        }
+        pThreadParams->pCaptureData = frameBuffer;
+        pThreadParams->pHeaderData = headerBuffer;
+        pThreadParams->nTotalCaptureSize = frame_size;
+        pThreadParams->pFolderPath = folder_path;
+        pThreadParams->nFileTime = time_buffer;
+        pThreadParams->nframes = n_frames;
+        pThreadParams->nFrameCount = loopcount;
+        pThreadParams->pFrame_type = frame_type.c_str();
+        pThreadParams->pFramesize = height * width;
 
-            /* fileWriterThread handles the copying of raw/depth frames to a file */
-            std::thread fileWriterThread(
-                fileWriterTask,
-                const_cast<const thread_params *const>(pThreadParams));
-            if (loopcount == n_frames - 1) {
-                // wait for completion on final loop iteration
-                fileWriterThread.join();
-            } else {
-                fileWriterThread.detach();
-            }
+        /* fileWriterThread handles the copying of raw/depth frames to a file */
+        std::thread fileWriterThread(
+            fileWriterTask,
+            const_cast<const thread_params *const>(pThreadParams));
+        if (loopcount == n_frames - 1) {
+            // wait for completion on final loop iteration
+            fileWriterThread.join();
+        } else {
+            fileWriterThread.detach();
+        }
 #else
-            char out_file[MAX_FILE_PATH_SIZE];
+        char out_file[MAX_FILE_PATH_SIZE];
 
-            snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05u.bin",
-                     &folder_path[0], &frame_type[0], time_buffer, loopcount);
-            std::ofstream rawFile(out_file, std::ios::out | std::ios::binary |
-                                                std::ofstream::trunc);
-            rawFile.write((const char *)&frameBuffer[0], frame_size);
-            rawFile.close();
+        snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05u.bin",
+                 &folder_path[0], &frame_type[0], time_buffer, loopcount);
+        std::ofstream rawFile(out_file, std::ios::out | std::ios::binary |
+                                            std::ofstream::trunc);
+        rawFile.write((const char *)&frameBuffer[0], frame_size);
+        rawFile.close();
 
-            if (frameBuffer != NULL) {
-                free((void *)frameBuffer);
-            }
-            if (headerBuffer != NULL) {
-                free((void *)headerBuffer);
-            }
+        if (frameBuffer != NULL) {
+            free((void *)frameBuffer);
+        }
+        if (headerBuffer != NULL) {
+            free((void *)headerBuffer);
+        }
 #endif
-        } // End of for Loop
+    } // End of for Loop
 
-        auto end_time = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> total_time = end_time - start_time;
-        if (frame_type == "raw") {
-            if (total_time.count() > 0.0) {
-                double fps = (double)n_frames / total_time.count();
-                LOG(INFO) << "FPS: " << fps;
-            }
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> total_time = end_time - start_time;
+    if (frame_type == "raw") {
+        if (total_time.count() > 0.0) {
+            double fps = (double)n_frames / total_time.count();
+            LOG(INFO) << "FPS: " << fps;
         }
-
-        status = camera->stop();
-        if (status != Status::OK) {
-            LOG(INFO) << "Error stopping camera!";
-        }
-        return 0;
     }
+
+    status = camera->stop();
+    if (status != Status::OK) {
+        LOG(INFO) << "Error stopping camera!";
+    }
+    return 0;
 }
 
 void fileWriterTask(const thread_params *const pThreadParams) {
