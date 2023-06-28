@@ -180,23 +180,9 @@ PYBIND11_MODULE(aditofpython, m) {
         .def(py::init<>())
         .def(
             "getCameraList",
-            [](aditof::System &system, py::list cameras) {
-                std::vector<std::shared_ptr<aditof::Camera>> cameraList;
-                aditof::Status status = system.getCameraList(cameraList);
-
-                for (const auto &cam : cameraList) {
-                    cameras.append(cam);
-                }
-
-                return status;
-            },
-            py::arg("cameras"))
-        .def(
-            "getCameraListAtIp",
             [](aditof::System &system, py::list cameras, py::str ip) {
                 std::vector<std::shared_ptr<aditof::Camera>> cameraList;
-                aditof::Status status =
-                    system.getCameraListAtIp(cameraList, ip);
+                aditof::Status status = system.getCameraList(cameraList, ip);
 
                 for (const auto &cam : cameraList) {
                     cameras.append(cam);
