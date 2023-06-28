@@ -162,6 +162,9 @@ ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
         if (cJSON_IsString(json_camera_ip) &&
             (json_camera_ip->valuestring != NULL)) {
             m_cameraIp = json_camera_ip->valuestring;
+            if (!m_cameraIp.empty()) {
+                m_cameraIp = "ip:" + m_cameraIp;
+            }
         }
 
         cJSON_Delete(config_json);
@@ -470,7 +473,7 @@ void ADIMainWindow::RefreshDevices() {
 
     if (!m_skipNetworkCameras) {
         // Add network camera
-        m_system.getCameraListAtIp(m_camerasList, m_cameraIp);
+        m_system.getCameraList(m_camerasList, m_cameraIp);
         if (m_camerasList.size() > 0) {
             int index = m_connectedDevices.size();
             m_connectedDevices.emplace_back(index, "ToF Camera" +
