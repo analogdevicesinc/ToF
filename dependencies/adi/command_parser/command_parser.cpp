@@ -29,11 +29,6 @@
 #include <string>
 #include <vector>
 
-std::vector<std::pair<std::string, std::string>>
-CommandParser::getConfiguration() {
-    return m_command_vector;
-}
-
 void CommandParser::parseArguments(int argc, char *argv[]) {
     // Parse the config and stores argument + value
     for (int i = 1; i < argc; i++) {
@@ -45,8 +40,6 @@ void CommandParser::parseArguments(int argc, char *argv[]) {
         } else if (std::string(argv[i]) == "-h" ||
                    std::string(argv[i]) == "--help") {
             m_command_vector.push_back({argv[i], "help_menu"});
-        } else if (i == argc - 1) {
-            m_command_vector.push_back({"CONFIG", argv[i]});
         } else if (i != argc - 1 && std::string(argv[i + 1]).find("-") == -1) {
             m_command_vector.push_back({argv[i], argv[i + 1]});
             i++;
@@ -72,26 +65,51 @@ int CommandParser::helpMenu() {
 }
 
 int CommandParser::sendArguments(
-    std::map<std::vector<std::string>, std::string> &command_map) {
+    std::map<std::string, struct Values> &command_map) {
+
+    // Check arguments (value assigned, has default value, exist argument)
     for (int i = 0; i < m_command_vector.size(); i++) {
         bool is_command = false;
         for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
-            if (m_command_vector[i].first == ct->first[0] ||
-                m_command_vector[i].first == ct->first[1]) {
-                if (m_command_vector[i].second == "" && ct->second == "") {
+            if (m_command_vector[i].first == ct->first ||
+                m_command_vector[i].first == ct->second.long_option) {
+                if (ct->second.type == "value" &&
+                    !isNumber(m_command_vector[i].second)) {
+                    LOG(ERROR) << "Argument " << ct->first << "/"
+                               << ct->second.long_option
+                               << " should have type: " << ct->second.type
+                               << " as parameter. Please check help menu!";
+                    return -1;
+                } else if (ct->second.type == "path" &&
+                           !isPath(m_command_vector[i].second)) {
+                    LOG(ERROR) << "Argument " << ct->first << "/"
+                               << ct->second.long_option
+                               << " should have type: " << ct->second.type
+                               << " as parameter. Please check help menu!";
+                    return -1;
+                } else if (ct->second.type == "string" &&
+                           !isString(m_command_vector[i].second)) {
+                    LOG(ERROR) << "Argument " << ct->first << "/"
+                               << ct->second.long_option
+                               << " should have type: " << ct->second.type
+                               << " as parameter. Please check help menu!";
+                    return -1;
+                }
+                if (m_command_vector[i].second == "" &&
+                    ct->second.value == "") {
                     LOG(ERROR)
-                        << "Optional argument: " << m_command_vector[i].first
+                        << "Argument: " << m_command_vector[i].first
                         << " doesn't have assigned or default value! Please "
                            "check help menu.";
                     return -1;
                 } else if (m_command_vector[i].second == "" &&
-                           ct->second != "") {
-                    // Optional argument doesn't have value assigned but has default
+                           ct->second.value != "") {
+                    // Argument doesn't have value assigned but has default
                     is_command = true;
                     break;
                 } else {
-                    // Optional argument has value assigned
-                    ct->second = m_command_vector[i].second;
+                    // Argument has value assigned
+                    ct->second.value = m_command_vector[i].second;
                     is_command = true;
                     break;
                 }
@@ -104,16 +122,60 @@ int CommandParser::sendArguments(
         }
     }
 
-    for (auto ct = command_map.begin(); ct != command_map.end();) {
-        if (ct->first[2] == "true" && ct->second == "") {
-            LOG(ERROR) << "Mandatory argument: " << ct->first[0]
+    // Check if mandatory arguments are provided
+    for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
+        if (ct->second.mandatory == true && ct->second.value == "") {
+            LOG(ERROR) << "Mandatory argument: " << ct->first
                        << " missing.Please check help menu!";
             return -1;
         }
-        std::vector<std::string> copy = ct->first;
-        copy.pop_back();
-        command_map[copy] = ct->second;
-        ct = command_map.erase(ct);
+    }
+
+    // Mandatory arguments position check
+    for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
+        if (ct->second.mandatory == true) {
+            int index;
+            if (ct->second.position != "last") {
+                index = std::stoi(ct->second.position);
+            } else {
+                index = m_command_vector.size() - 1;
+            }
+            if (m_command_vector[index].first != ct->first &&
+                m_command_vector[index].first != ct->second.long_option) {
+                if (ct->second.position != "last") {
+                    LOG(ERROR)
+                        << "Mandatory argument " << ct->first << "/"
+                        << ct->second.long_option
+                        << " is not on its correct position ("
+                        << ct->second.position << "). Please check help menu!";
+                } else {
+                    LOG(ERROR)
+                        << "Mandatory argument " << ct->first << "/"
+                        << ct->second.long_option
+                        << " is not on its correct position ("
+                        << ct->second.position << "). Please check help menu!";
+                }
+                return -1;
+            }
+        }
     }
     return 0;
+}
+
+int CommandParser::isNumber(std::string value) {
+    return value.find_first_not_of("0123456789") == std::string::npos;
+}
+
+bool CommandParser::isPath(std::string value) {
+    if (value.find(".") != -1) {
+        return true;
+    }
+    return false;
+}
+
+bool CommandParser::isString(std::string value) {
+    if (isNumber(value) || isPath(value)) {
+        return false;
+    }
+    return true;
 }
