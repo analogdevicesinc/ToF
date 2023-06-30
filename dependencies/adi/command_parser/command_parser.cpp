@@ -23,11 +23,6 @@
 /**********************************************************************************/
 
 #include "command_parser.h"
-#ifdef USE_GLOG
-#include <glog/logging.h>
-#else
-#include <aditof/log.h>
-#endif
 #include <iostream>
 #include <map>
 #include <string>
@@ -57,9 +52,9 @@ int CommandParser::helpMenu() {
     for (int i = 0; i < m_command_vector.size(); i++) {
         if (m_command_vector[i].second == "help_menu") {
             if (i != 0 || m_command_vector.size() != 1) {
-                LOG(ERROR) << "Usage of argument " << m_command_vector[i].first
+                /*LOG(ERROR) << "Usage of argument " << m_command_vector[i].first
                            << " is incorrect! " << m_command_vector[i].first
-                           << " should be used alone!";
+                           << " should be used alone!";*/
                 return -1;
             }
             return 0;
@@ -79,32 +74,32 @@ int CommandParser::sendArguments(
                 m_command_vector[i].first == ct->second.long_option) {
                 if (ct->second.type == "value" &&
                     !isNumber(m_command_vector[i].second)) {
-                    LOG(ERROR) << "Argument " << ct->first << "/"
+                    /*LOG(ERROR) << "Argument " << ct->first << "/"
                                << ct->second.long_option
                                << " should have type: " << ct->second.type
-                               << " as parameter. Please check help menu!";
+                               << " as parameter. Please check help menu!";*/
                     return -1;
                 } else if (ct->second.type == "path" &&
                            !isPath(m_command_vector[i].second)) {
-                    LOG(ERROR) << "Argument " << ct->first << "/"
+                    /*LOG(ERROR) << "Argument " << ct->first << "/"
                                << ct->second.long_option
                                << " should have type: " << ct->second.type
-                               << " as parameter. Please check help menu!";
+                               << " as parameter. Please check help menu!";*/
                     return -1;
                 } else if (ct->second.type == "string" &&
                            !isString(m_command_vector[i].second)) {
-                    LOG(ERROR) << "Argument " << ct->first << "/"
+                    /*LOG(ERROR) << "Argument " << ct->first << "/"
                                << ct->second.long_option
                                << " should have type: " << ct->second.type
-                               << " as parameter. Please check help menu!";
+                               << " as parameter. Please check help menu!";*/
                     return -1;
                 }
                 if (m_command_vector[i].second == "" &&
                     ct->second.value == "") {
-                    LOG(ERROR)
+                    /*LOG(ERROR)
                         << "Argument: " << m_command_vector[i].first
                         << " doesn't have assigned or default value! Please "
-                           "check help menu.";
+                           "check help menu.";*/
                     return -1;
                 } else if (m_command_vector[i].second == "" &&
                            ct->second.value != "") {
@@ -120,8 +115,8 @@ int CommandParser::sendArguments(
             }
         }
         if (!is_command) {
-            LOG(ERROR) << "Argument: " << m_command_vector[i].first
-                       << " doesn't exist! Please check help menu.";
+            /*LOG(ERROR) << "Argument: " << m_command_vector[i].first
+                       << " doesn't exist! Please check help menu.";*/
             return -1;
         }
     }
@@ -129,8 +124,8 @@ int CommandParser::sendArguments(
     // Check if mandatory arguments are provided
     for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
         if (ct->second.mandatory == true && ct->second.value == "") {
-            LOG(ERROR) << "Mandatory argument: " << ct->first
-                       << " missing.Please check help menu!";
+            /*LOG(ERROR) << "Mandatory argument: " << ct->first
+                       << " missing.Please check help menu!";*/
             return -1;
         }
     }
@@ -147,17 +142,17 @@ int CommandParser::sendArguments(
             if (m_command_vector[index].first != ct->first &&
                 m_command_vector[index].first != ct->second.long_option) {
                 if (ct->second.position != "last") {
-                    LOG(ERROR)
+                    /*LOG(ERROR)
                         << "Mandatory argument " << ct->first << "/"
                         << ct->second.long_option
                         << " is not on its correct position ("
-                        << ct->second.position << "). Please check help menu!";
+                        << ct->second.position << "). Please check help menu!";*/
                 } else {
-                    LOG(ERROR)
+                    /*LOG(ERROR)
                         << "Mandatory argument " << ct->first << "/"
                         << ct->second.long_option
                         << " is not on its correct position ("
-                        << ct->second.position << "). Please check help menu!";
+                        << ct->second.position << "). Please check help menu!";*/
                 }
                 return -1;
             }
