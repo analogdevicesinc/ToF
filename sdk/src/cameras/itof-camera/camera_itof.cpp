@@ -621,6 +621,14 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
 
         if (item.type == "xyz") {
             fDataDetails.subelementsPerElement = 3;
+        } else if (item.type == "raw") {
+            // We overwrite the maximum width&height with the actual width&height calculated based on .ini params
+            uint8_t pixFmt;
+            ModeInfo::getInstance()->getSensorProperties(
+                frameType, (uint16_t *)&fDataDetails.width,
+                (uint16_t *)&fDataDetails.height, &pixFmt);
+            fDataDetails.subelementSize = 1;
+            fDataDetails.subelementsPerElement = 1;
         }
 
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
