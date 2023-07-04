@@ -430,7 +430,6 @@ int main(int argc, char *argv[]) {
     uint8_t *headerBuffer;
     uint32_t height;
     uint32_t width;
-    uint32_t subFrames = 0;
     uint64_t frame_size = 0;
     uint64_t elapsed_time;
 
@@ -482,31 +481,6 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
-        // We have both 8bit and 16bit pixels, compute the size in 8bit
-        if (sensorName == "adsd3500") {
-            if (imagerType == "1") {
-                if (modeName == "lr-native" || modeName == "mp") {
-                    subFrames = 8;
-                } else if (modeName == "sr-native") {
-                    subFrames = 6;
-                } else {
-                    subFrames = 5;
-                }
-            } else {
-                subFrames = 5;
-            }
-        } else {
-            std::string attrVal;
-            frame.getAttribute("total_captures", attrVal);
-            subFrames = std::stoi(attrVal);
-            //here it was 16 bit. changed to 8 bit
-            subFrames = subFrames * 2;
-        }
-
-        if (modeName == "pcm-native") {
-            subFrames = 2;
-        }
-
         frameType = "raw";
 
         // Depth Data
@@ -545,7 +519,7 @@ int main(int argc, char *argv[]) {
         }
         memcpy(frameBuffer, (uint8_t *)pData, frame_size);
 
-        uint32_t header_data_size = EMBED_HDR_LENGTH * subFrames;
+        uint32_t header_data_size = EMBED_HDR_LENGTH;
         headerBuffer = new uint8_t[header_data_size];
         if (headerBuffer == NULL) {
             LOG(ERROR) << "Can't allocate Memory for frame header data!";
