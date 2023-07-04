@@ -31,6 +31,7 @@ struct Values {
     bool mandatory;
     std::string type;
     std::string position;
+    short int error;
     std::string value;
 };
 
@@ -41,7 +42,12 @@ class CommandParser {
 
   public:
     void parseArguments(int argc, char *argv[]);
-    int sendArguments(std::map<std::string, struct Values> &command_map);
+    int checkArgumentExist(std::map<std::string, struct Values> &command_map);
+    int checkType(std::map<std::string, struct Values> &command_map);
+    int checkValue(std::map<std::string, struct Values> &command_map);
+    int checkMandatory(std::map<std::string, struct Values> &command_map);
+    int
+    checkMandatoryPosition(std::map<std::string, struct Values> &command_map);
     int helpMenu();
     int isNumber(std::string);
     bool isPath(std::string);

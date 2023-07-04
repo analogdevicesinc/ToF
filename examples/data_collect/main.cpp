@@ -99,29 +99,94 @@ void fileWriterTask(const thread_params *const pThreadParams);
 
 int main(int argc, char *argv[]) {
     std::map<std::string, struct Values> command_map = {
-        {"-h", {"--help", false, "", "", ""}},
-        {"-f", {"--f", false, "path", "", "."}},
-        {"-n", {"--n", false, "value", "", "1"}},
-        {"-m", {"--m", false, "value", "", "0"}},
-        {"-ext", {"--ext_fsync", false, "value", "", "0"}},
-        {"-wt", {"--wt", false, "value", "", "0"}},
-        {"-ip", {"--ip", false, "value", "", ""}},
-        {"-fw", {"--fw", false, "path", "", ""}},
-        {"-fps", {"--fps", false, "value", "", ""}},
-        {"-ccb", {"--ccb", false, "path", "", ""}},
-        {"-ft", {"--ft", false, "string", "", "raw"}},
-        {"-config", {"-CONFIG", true, "path", "last", ""}}};
+        {"-h", {"--help", false, "", "", -1, ""}},
+        {"-f", {"--f", false, "path", "", -2, "."}},
+        {"-n", {"--n", false, "value", "", -3, "1"}},
+        {"-m", {"--m", false, "value", "", -4, "0"}},
+        {"-ext", {"--ext_fsync", false, "value", "", -5, "0"}},
+        {"-wt", {"--wt", false, "value", "", -6, "0"}},
+        {"-ip", {"--ip", false, "value", "", -7, ""}},
+        {"-fw", {"--fw", false, "path", "", -8, ""}},
+        {"-fps", {"--fps", false, "value", "", -9, ""}},
+        {"-ccb", {"--ccb", false, "path", "", -10, ""}},
+        {"-ft", {"--ft", false, "string", "", -11, "raw"}},
+        {"-config", {"-CONFIG", true, "path", "last", -12, ""}}};
 
     CommandParser command;
     command.parseArguments(argc, argv);
-    int help_menu = command.helpMenu();
-    if (help_menu == 0) {
-        LOG(INFO) << kUsagePublic;
-        return 0;
-    } else if (help_menu == -1) {
+
+    int result = command.checkArgumentExist(command_map);
+    if (result != 0) {
+        LOG(ERROR) << "Argument used doesn't exist! "
+                   << "Please check help menu.";
         return 0;
     }
-    int result = command.sendArguments(command_map);
+
+    result = command.helpMenu();
+    if (result == 1) {
+        LOG(INFO) << kUsagePublic;
+        return 0;
+    } else if (result == -1) {
+        LOG(ERROR) << "Usage of argument -h/--help"
+                   << " is incorrect! Help argument should be used alone!";
+        return 0;
+    }
+
+    result = command.checkType(command_map);
+    if (result != 0) {
+        for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
+            if (result == ct->second.error) {
+                LOG(ERROR) << "Argument " << ct->first << "/"
+                           << ct->second.long_option
+                           << " should have type: " << ct->second.type
+                           << " as parameter. Please check help menu!";
+                break;
+            }
+        }
+        return 0;
+    }
+
+    result = command.checkValue(command_map);
+    if (result != 0) {
+        for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
+            if (result == ct->second.error) {
+                LOG(ERROR) << "Argument: " << ct->first << "/"
+                           << ct->second.long_option
+                           << " doesn't have assigned or default value! Please "
+                              "check help menu.";
+                break;
+            }
+        }
+        return 0;
+    }
+
+    result = command.checkMandatory(command_map);
+    if (result != 0) {
+        for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
+            if (result == ct->second.error) {
+                LOG(ERROR) << "Mandatory argument: " << ct->first << "/"
+                           << ct->second.long_option
+                           << " missing.Please check help menu!";
+                break;
+            }
+        }
+        return 0;
+    }
+
+    result = command.checkMandatoryPosition(command_map);
+    if (result != 0) {
+        for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
+            if (result == ct->second.error) {
+                LOG(ERROR) << "Mandatory argument " << ct->first << "/"
+                           << ct->second.long_option
+                           << " is not on its correct position ("
+                           << ct->second.position
+                           << "). Please check help menu!";
+                break;
+            }
+        }
+        return 0;
+    }
     char folder_path[MAX_FILE_PATH_SIZE]; // Path to store the raw/depth frames
     char json_file_path
         [MAX_FILE_PATH_SIZE]; // Get the .json file from command line
