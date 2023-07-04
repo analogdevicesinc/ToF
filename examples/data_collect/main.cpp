@@ -514,7 +514,12 @@ int main(int argc, char *argv[]) {
             frame_size = sizeof(uint16_t) * height * width;
             frameType = "depth";
         } else if (frame_type == "raw") {
-            frame_size = height * width * subFrames;
+            aditof::FrameDataDetails rawFrameDetails;
+            frame.getDataDetails("raw", rawFrameDetails);
+
+            frame_size = rawFrameDetails.width * rawFrameDetails.height *
+                         rawFrameDetails.subelementsPerElement *
+                         rawFrameDetails.subelementSize;
             frameType = "raw";
         } else {
             LOG(WARNING) << "Can't recognize frame data type!";
