@@ -474,13 +474,6 @@ int main(int argc, char *argv[]) {
         height = fDetails.height;
         width = fDetails.width;
 
-        std::string imagerType;
-        status = camera->getControl("imagerType", imagerType);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Failed to get imager type!";
-            return 0;
-        }
-
         frameType = "raw";
 
         // Depth Data
