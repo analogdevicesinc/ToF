@@ -41,9 +41,11 @@ while [[ $(i2cdetect -y 1 | grep 38) == "" ]]
 do
 	sleep 1
 done
+#Install smbus2 dependency
+pip install smbus2-0.4.2-py2.py3-none-any.whl > /dev/null 2>&1
 
 # Run hostboot script
-python3 host_boot.py host_boot.stream
+python host_boot.py host_boot.stream
 
 # Select back the imager flash memory
 echo 0 | sudo tee /sys/class/gpio/$NVM_GPIO/value > /dev/null
@@ -51,7 +53,7 @@ echo 0 | sudo tee /sys/class/gpio/$NVM_GPIO/value > /dev/null
 sleep 2
 
 # Read chip ID to check correct hostboot
-python3 read_chip_id.py
+python read_chip_id.py
 
 # Reload ADSD3500 driver
 sudo modprobe adsd3500

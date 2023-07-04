@@ -1,0 +1,11 @@
+[Unit]
+Description=Analog Devices TOF backup service
+After=adi-tof.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/share/systemd/backup_nvm_ccb.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
