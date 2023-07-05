@@ -23,10 +23,6 @@
 /**********************************************************************************/
 
 #include "command_parser.h"
-#include <iostream>
-#include <map>
-#include <string>
-#include <vector>
 
 void CommandParser::parseArguments(int argc, char *argv[]) {
     // Parse the config and stores argument + value
@@ -39,7 +35,8 @@ void CommandParser::parseArguments(int argc, char *argv[]) {
         } else if (std::string(argv[i]) == "-h" ||
                    std::string(argv[i]) == "--help") {
             m_command_vector.push_back({argv[i], "help_menu"});
-        } else if (i != argc - 1 && std::string(argv[i + 1]).find("-") == -1) {
+        } else if (i != argc - 1 && std::string(argv[i + 1]).find("-") == -1 ||
+                   std::string(argv[i + 1]).find("-") != 1) {
             m_command_vector.push_back({argv[i], argv[i + 1]});
             i++;
         } else {
@@ -49,17 +46,20 @@ void CommandParser::parseArguments(int argc, char *argv[]) {
 }
 
 int CommandParser::checkArgumentExist(
-    std::map<std::string, struct Values> &command_map) {
-    // Check if argument exist
+    std::map<std::string, struct Argument> &command_map,
+    std::string &arg_error) {
+    // Check if arguments used exist
     for (int i = 0; i < m_command_vector.size(); i++) {
         bool is_command = false;
         for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
             if (m_command_vector[i].first == ct->first ||
                 m_command_vector[i].first == ct->second.long_option) {
                 is_command = true;
+                break;
             }
         }
         if (!is_command) {
+            arg_error = m_command_vector[i].first;
             return -1;
         }
     }
@@ -78,31 +78,9 @@ int CommandParser::helpMenu() {
     return 0;
 }
 
-int CommandParser::checkType(
-    std::map<std::string, struct Values> &command_map) {
-    // Check if argument has the correct type
-    for (int i = 0; i < m_command_vector.size(); i++) {
-        for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
-            if (m_command_vector[i].first == ct->first ||
-                m_command_vector[i].first == ct->second.long_option) {
-                if (ct->second.type == "value" &&
-                    !isNumber(m_command_vector[i].second)) {
-                    return ct->second.error;
-                } else if (ct->second.type == "path" &&
-                           !isPath(m_command_vector[i].second)) {
-                    return ct->second.error;
-                } else if (ct->second.type == "string" &&
-                           !isString(m_command_vector[i].second)) {
-                    return ct->second.error;
-                }
-            }
-        }
-    }
-    return 0;
-}
-
 int CommandParser::checkValue(
-    std::map<std::string, struct Values> &command_map) {
+    std::map<std::string, struct Argument> &command_map,
+    std::string &arg_error) {
     // Checks if argument has default and value assigned.
     // If there is value assigned, it will send it
     for (int i = 0; i < m_command_vector.size(); i++) {
@@ -111,7 +89,8 @@ int CommandParser::checkValue(
                 m_command_vector[i].first == ct->second.long_option) {
                 if (m_command_vector[i].second == "" &&
                     ct->second.value == "") {
-                    return ct->second.error;
+                    arg_error = ct->first;
+                    return -1;
                 } else if (m_command_vector[i].second == "" &&
                            ct->second.value != "") {
                     // Argument doesn't have value assigned but has default
@@ -127,22 +106,25 @@ int CommandParser::checkValue(
     return 0;
 }
 
-int CommandParser::checkMandatory(
-    std::map<std::string, struct Values> &command_map) {
+int CommandParser::checkMandatoryArguments(
+    std::map<std::string, struct Argument> &command_map,
+    std::string &arg_error) {
     // Check if mandatory arguments are provided
     for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
-        if (ct->second.mandatory == true && ct->second.value == "") {
-            return ct->second.error;
+        if (ct->second.is_mandatory == true && ct->second.value == "") {
+            arg_error = ct->first;
+            return -1;
         }
     }
     return 0;
 }
 
 int CommandParser::checkMandatoryPosition(
-    std::map<std::string, struct Values> &command_map) {
-    // Mandatory arguments position check
+    std::map<std::string, struct Argument> &command_map,
+    std::string &arg_error) {
+    // Mandatory arguments location check
     for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
-        if (ct->second.mandatory == true) {
+        if (ct->second.is_mandatory == true) {
             int index;
             if (ct->second.position != "last") {
                 index = std::stoi(ct->second.position);
@@ -151,27 +133,10 @@ int CommandParser::checkMandatoryPosition(
             }
             if (m_command_vector[index].first != ct->first &&
                 m_command_vector[index].first != ct->second.long_option) {
-                return ct->second.error;
+                arg_error = ct->first;
+                return -1;
             }
         }
     }
     return 0;
-}
-
-int CommandParser::isNumber(std::string value) {
-    return value.find_first_not_of("0123456789") == std::string::npos;
-}
-
-bool CommandParser::isPath(std::string value) {
-    if (value.find("\\") != -1) {
-        return true;
-    }
-    return false;
-}
-
-bool CommandParser::isString(std::string value) {
-    if (isNumber(value) || isPath(value)) {
-        return false;
-    }
-    return true;
 }
