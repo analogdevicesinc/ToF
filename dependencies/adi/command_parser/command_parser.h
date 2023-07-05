@@ -26,12 +26,10 @@
 #include <string>
 #include <vector>
 
-struct Values {
+struct Argument {
     std::string long_option;
-    bool mandatory;
-    std::string type;
+    bool is_mandatory;
     std::string position;
-    short int error;
     std::string value;
 };
 
@@ -42,16 +40,17 @@ class CommandParser {
 
   public:
     void parseArguments(int argc, char *argv[]);
-    int checkArgumentExist(std::map<std::string, struct Values> &command_map);
-    int checkType(std::map<std::string, struct Values> &command_map);
-    int checkValue(std::map<std::string, struct Values> &command_map);
-    int checkMandatory(std::map<std::string, struct Values> &command_map);
+    int checkArgumentExist(std::map<std::string, struct Argument> &command_map,
+                           std::string &arg_error);
+    int checkValue(std::map<std::string, struct Argument> &command_map,
+                   std::string &arg_error);
     int
-    checkMandatoryPosition(std::map<std::string, struct Values> &command_map);
+    checkMandatoryArguments(std::map<std::string, struct Argument> &command_map,
+                            std::string &arg_error);
+    int
+    checkMandatoryPosition(std::map<std::string, struct Argument> &command_map,
+                           std::string &arg_error);
     int helpMenu();
-    int isNumber(std::string);
-    bool isPath(std::string);
-    bool isString(std::string);
 
   private:
     std::vector<std::pair<std::string, std::string>> m_command_vector;

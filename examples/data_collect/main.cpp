@@ -98,28 +98,29 @@ void fileWriterTask(const thread_params *const pThreadParams);
 #endif
 
 int main(int argc, char *argv[]) {
-    std::map<std::string, struct Values> command_map = {
-        {"-h", {"--help", false, "", "", -1, ""}},
-        {"-f", {"--f", false, "path", "", -2, "."}},
-        {"-n", {"--n", false, "value", "", -3, "1"}},
-        {"-m", {"--m", false, "value", "", -4, "0"}},
-        {"-ext", {"--ext_fsync", false, "value", "", -5, "0"}},
-        {"-wt", {"--wt", false, "value", "", -6, "0"}},
-        {"-ip", {"--ip", false, "value", "", -7, ""}},
-        {"-fw", {"--fw", false, "path", "", -8, ""}},
-        {"-fps", {"--fps", false, "value", "", -9, ""}},
-        {"-ccb", {"--ccb", false, "path", "", -10, ""}},
-        {"-ft", {"--ft", false, "string", "", -11, "raw"}},
-        {"-config", {"-CONFIG", true, "path", "last", -12, ""}}};
+    std::map<std::string, struct Argument> command_map = {
+        {"-h", {"--help", false, "", ""}},
+        {"-f", {"--f", false, "", "."}},
+        {"-n", {"--n", false, "", "1"}},
+        {"-m", {"--m", false, "", "0"}},
+        {"-ext", {"--ext_fsync", false, "", "0"}},
+        {"-wt", {"--wt", false, "", "0"}},
+        {"-ip", {"--ip", false, "", ""}},
+        {"-fw", {"--fw", false, "", ""}},
+        {"-fps", {"--fps", false, "", ""}},
+        {"-ccb", {"--ccb", false, "", ""}},
+        {"-ft", {"--ft", false, "", "raw"}},
+        {"-config", {"-CONFIG", true, "last", ""}}};
 
     CommandParser command;
+    std::string arg_error;
     command.parseArguments(argc, argv);
 
-    int result = command.checkArgumentExist(command_map);
+    int result = command.checkArgumentExist(command_map, arg_error);
     if (result != 0) {
-        LOG(ERROR) << "Argument used doesn't exist! "
+        LOG(ERROR) << "Argument " << arg_error << " doesn't exist! "
                    << "Please check help menu.";
-        return 0;
+        return -1;
     }
 
     result = command.helpMenu();
@@ -129,64 +130,33 @@ int main(int argc, char *argv[]) {
     } else if (result == -1) {
         LOG(ERROR) << "Usage of argument -h/--help"
                    << " is incorrect! Help argument should be used alone!";
-        return 0;
+        return -1;
     }
 
-    result = command.checkType(command_map);
+    result = command.checkValue(command_map, arg_error);
     if (result != 0) {
-        for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
-            if (result == ct->second.error) {
-                LOG(ERROR) << "Argument " << ct->first << "/"
-                           << ct->second.long_option
-                           << " should have type: " << ct->second.type
-                           << " as parameter. Please check help menu!";
-                break;
-            }
-        }
-        return 0;
+        LOG(ERROR) << "Argument: " << arg_error
+                   << " doesn't have assigned or default value! Please check "
+                      "help menu.";
+        return -1;
     }
 
-    result = command.checkValue(command_map);
+    result = command.checkMandatoryArguments(command_map, arg_error);
     if (result != 0) {
-        for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
-            if (result == ct->second.error) {
-                LOG(ERROR) << "Argument: " << ct->first << "/"
-                           << ct->second.long_option
-                           << " doesn't have assigned or default value! Please "
-                              "check help menu.";
-                break;
-            }
-        }
-        return 0;
+        LOG(ERROR) << "Mandatory argument: " << arg_error
+                   << " missing. Please check help menu!";
+        return -1;
     }
 
-    result = command.checkMandatory(command_map);
+    result = command.checkMandatoryPosition(command_map, arg_error);
     if (result != 0) {
-        for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
-            if (result == ct->second.error) {
-                LOG(ERROR) << "Mandatory argument: " << ct->first << "/"
-                           << ct->second.long_option
-                           << " missing.Please check help menu!";
-                break;
-            }
-        }
-        return 0;
+        LOG(ERROR) << "Mandatory argument " << arg_error
+                   << " is not on its correct position ("
+                   << command_map[arg_error].position
+                   << "). Please check help menu !";
+        return -1;
     }
 
-    result = command.checkMandatoryPosition(command_map);
-    if (result != 0) {
-        for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
-            if (result == ct->second.error) {
-                LOG(ERROR) << "Mandatory argument " << ct->first << "/"
-                           << ct->second.long_option
-                           << " is not on its correct position ("
-                           << ct->second.position
-                           << "). Please check help menu!";
-                break;
-            }
-        }
-        return 0;
-    }
     char folder_path[MAX_FILE_PATH_SIZE]; // Path to store the raw/depth frames
     char json_file_path
         [MAX_FILE_PATH_SIZE]; // Get the .json file from command line
@@ -256,14 +226,14 @@ int main(int argc, char *argv[]) {
     std::string modeName;
     try {
         std::size_t counter;
-        mode = std::stoi(command_map[{"-m", "--m"}].c_str(), &counter);
-        if (counter != command_map[{"-m", "--m"}].size()) {
-            throw command_map[{"-m", "--m"}].c_str();
+        mode = std::stoi(command_map["-m"].value, &counter);
+        if (counter != command_map["-m"].value.size()) {
+            throw command_map["-m"].value.c_str();
         }
     } catch (const char *name) {
         modeName = name;
     } catch (const std::exception &) {
-        modeName = command_map[{"-m", "--m"}].c_str();
+        modeName = command_map["-m"].value;
     }
 
     // Parsing ip
@@ -277,8 +247,8 @@ int main(int argc, char *argv[]) {
     }
 
     //set FPS value
-    if (!command_map[{"-fps", "--fps"}].empty()) {
-        setfps = std::stoi(command_map[{"-fps", "--fps"}]);
+    if (!command_map["-fps"].value.empty()) {
+        setfps = std::stoi(command_map["-fps"].value);
     } else {
         setfps = 10;
     }
@@ -308,7 +278,7 @@ int main(int argc, char *argv[]) {
     }
 
     LOG(INFO) << "Output folder: " << folder_path;
-    LOG(INFO) << "Mode: " << command_map[{"-m", "--m"}];
+    LOG(INFO) << "Mode: " << command_map["-m"].value;
     LOG(INFO) << "Number of frames: " << n_frames;
     LOG(INFO) << "Json file: " << json_file_path;
     LOG(INFO) << "Frame type is: " << frame_type;
