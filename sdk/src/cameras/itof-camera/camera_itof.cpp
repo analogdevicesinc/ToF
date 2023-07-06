@@ -744,6 +744,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     status = m_depthSensor->getFrame(frameDataLocation);
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to get frame from device";
+        return status;
     }
 
     if (!m_adsd3500Enabled && !m_isOffline &&
