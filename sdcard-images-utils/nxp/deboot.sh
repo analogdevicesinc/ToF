@@ -234,6 +234,7 @@ systemctl enable avahi-daemon.service
 systemctl enable usb-gadget.service
 systemctl enable network-gadget.path
 systemctl enable uvc-gadget.path
+systemctl enable adi-backup.service
 
 #set default python3
 update-alternatives --install /usr/bin/python python /usr/bin/python3 1
