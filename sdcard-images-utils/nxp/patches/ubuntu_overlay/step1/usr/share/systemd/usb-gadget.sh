@@ -247,7 +247,9 @@ case "$1" in
 	echo "OK"
 
 	echo "Binding USB Device Controller"
+	sleep 2
 	echo $UDC > UDC
+	sleep 2
 	echo "OK"
 	;;
     *)
