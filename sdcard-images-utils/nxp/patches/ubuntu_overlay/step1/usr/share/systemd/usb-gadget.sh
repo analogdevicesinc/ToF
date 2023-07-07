@@ -140,6 +140,7 @@ create_uvc() {
 			create_frame $FUNCTION 2048 640 uncompressed u1 1
 			create_frame $FUNCTION 2304 640 uncompressed u1 1
 			create_frame $FUNCTION 2560 640 uncompressed u1 1
+			create_frame $FUNCTION 1280 320 uncompressed u1 1
 			echo 8 > functions/$FUNCTION/streaming/uncompressed/u1/bBitsPerPixel
 			echo -n -e '\x42\x41\x38\x31\x00\x00\x10\x00\x80\x00\x00\xaa\x00\x38\x9b\x71' > $GADGET/g1/functions/$FUNCTION/streaming/uncompressed/u1/guidFormat
 			;;
