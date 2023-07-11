@@ -415,8 +415,12 @@ class CameraItof : public aditof::Camera {
     aditof::TOF_ModuleFiles_t m_tempFiles;
     std::vector<aditof::DepthSensorFrameType> m_availableSensorFrameTypes;
     std::vector<std::pair<std::string, int32_t>> m_sensor_settings;
-    int m_cameraFps;
-    int m_fsyncMode;
+    int16_t m_cameraFps;
+    int16_t m_fsyncMode;
+    int16_t m_mipiOutputSpeed;
+    int16_t m_enableTempCompenstation;
+    int16_t m_enableMetaDatainAB;
+    int16_t m_enableEdgeConfidence;
     std::map<std::string, std::string> m_iniKeyValPairs;
     //pair between firmware version and git hash
     std::pair<std::string, std::string> m_adsd3500FwGitHash;

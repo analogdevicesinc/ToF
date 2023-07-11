@@ -89,6 +89,9 @@ status = frame.getDataDetails("depth", frameDataDetails)
 print("frame.getDataDetails()", status)
 print("depth frame details:", "width:", frameDataDetails.width, "height:", frameDataDetails.height, "type:", frameDataDetails.type)
 
+status = camera1.stop()
+print("camera1.stop()", status)
+
 image = np.array(frame.getData("depth"), copy=False)
 
 plt.figure()

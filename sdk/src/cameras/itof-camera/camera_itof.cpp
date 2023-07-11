@@ -67,7 +67,9 @@ CameraItof::CameraItof(
       m_eepromInitialized(false), m_adsd3500Enabled(false),
       m_loadedConfigData(false), m_xyzEnabled(false), m_xyzSetViaControl(false),
       m_modechange_framedrop_count(0), m_tempFiles{}, m_cameraFps(0),
-      m_fsyncMode(1), m_adsd3500ImagerType(0), m_modesVersion(0) {
+      m_fsyncMode(-1), m_mipiOutputSpeed(-1), m_adsd3500ImagerType(0),
+      m_modesVersion(0), m_enableTempCompenstation(-1),
+      m_enableMetaDatainAB(-1), m_enableEdgeConfidence(-1) {
 
     FloatToLinGenerateTable();
 
@@ -390,18 +392,20 @@ aditof::Status CameraItof::initialize() {
         return status;
     }
 
-    status = loadModuleData();
-    if (status != Status::OK) {
-        LOG(INFO) << "No CCB/CFG data found in camera module,";
-        LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data "
-                     "from JSON config file...";
-    } else {
-        //CCB and CFG files will be taken from module memory if
-        //they are not passed in the initialization_config json file
-        status = parseJsonFileContent();
+    if (!m_adsd3500Enabled) {
+        status = loadModuleData();
         if (status != Status::OK) {
-            LOG(ERROR) << "Failed to parse Json file!";
-            return status;
+            LOG(INFO) << "No CCB/CFG data found in camera module,";
+            LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data "
+                         "from JSON config file...";
+        } else {
+            //CCB and CFG files will be taken from module memory if
+            //they are not passed in the initialization_config json file
+            status = parseJsonFileContent();
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to parse Json file!";
+                return status;
+            }
         }
     }
 
@@ -447,10 +451,55 @@ aditof::Status CameraItof::initialize() {
     }
 
     if (m_adsd3500Enabled) {
-        status = adsd3500SetToggleMode(m_fsyncMode);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Failed to set fsync mode";
-            return status;
+        if (m_fsyncMode >= 0) {
+            status = adsd3500SetToggleMode(m_fsyncMode);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to set fsyncMode.";
+                return status;
+            }
+        } else {
+            LOG(WARNING) << "fsyncMode is not being set by SDK.";
+        }
+
+        if (m_mipiOutputSpeed >= 0) {
+            status = adsd3500SetMIPIOutputSpeed(m_mipiOutputSpeed);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to set mipiOutputSpeed.";
+                return status;
+            }
+        } else {
+            LOG(WARNING) << "mipiSpeed is not being set by SDK.";
+        }
+
+        if (m_enableTempCompenstation >= 0) {
+            status = adsd3500SetEnableTemperatureCompensation(
+                m_enableTempCompenstation);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to set enableTempCompenstation.";
+                return status;
+            }
+        } else {
+            LOG(WARNING) << "enableTempCompenstation is not being set by SDK.";
+        }
+
+        if (m_enableMetaDatainAB >= 0) {
+            status = adsd3500SetEnableEmbeddedHeaderinAB(m_enableMetaDatainAB);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to set enableMetaDatainAB.";
+                return status;
+            }
+        } else {
+            LOG(WARNING) << "enableMetaDatainAB is not being set by SDK.";
+        }
+
+        if (m_enableEdgeConfidence >= 0) {
+            status = adsd3500SetEnableEdgeConfidence(m_enableEdgeConfidence);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to set enableEdgeConfidence.";
+                return status;
+            }
+        } else {
+            LOG(WARNING) << "enableEdgeConfidence is not being set by SDK.";
         }
     }
 
@@ -1696,6 +1745,16 @@ void CameraItof::configureSensorFrameType() {
     }
 }
 
+static int16_t getValueFromJSON(cJSON *config_json, std::string key) {
+    int16_t value = -1;
+    const cJSON *json_value =
+        cJSON_GetObjectItemCaseSensitive(config_json, key.c_str());
+    if (cJSON_IsString(json_value) && (json_value->valuestring != NULL)) {
+        value = atoi(json_value->valuestring);
+    }
+    return value;
+}
+
 aditof::Status CameraItof::parseJsonFileContent() {
     using namespace aditof;
     Status status = Status::OK;
@@ -1751,8 +1810,13 @@ aditof::Status CameraItof::parseJsonFileContent() {
         }
 
         // Get depth ini file location
-        const cJSON *json_depth_ini_file =
-            cJSON_GetObjectItemCaseSensitive(config_json, "DEPTH_INI");
+        const cJSON *json_depth_ini_file = nullptr;
+        json_depth_ini_file =
+            cJSON_GetObjectItemCaseSensitive(config_json, "depthIni");
+        if (cJSON_IsString(json_depth_ini_file) == false) { // Check for old key
+            json_depth_ini_file =
+                cJSON_GetObjectItemCaseSensitive(config_json, "DEPTH_INI");
+        }
         if (cJSON_IsString(json_depth_ini_file) &&
             (json_depth_ini_file->valuestring != NULL)) {
             // store depth ini file location
@@ -1794,13 +1858,17 @@ aditof::Status CameraItof::parseJsonFileContent() {
             }
         }
 
-        // Get fsync mode from config
-        const cJSON *json_fsync_mode =
-            cJSON_GetObjectItemCaseSensitive(config_json, "FSYNC_MODE");
-        if (cJSON_IsString(json_fsync_mode) &&
-            (json_fsync_mode->valuestring != NULL)) {
-            m_fsyncMode = atoi(json_fsync_mode->valuestring);
+        m_fsyncMode = getValueFromJSON(config_json, "fsyncMode"); // New key
+        if (m_fsyncMode < 0) { // Check for old key
+            m_fsyncMode = getValueFromJSON(config_json, "FSYNC_MODE");
         }
+        m_mipiOutputSpeed = getValueFromJSON(config_json, "mipiSpeed");
+        m_enableTempCompenstation =
+            getValueFromJSON(config_json, "enableTempCompenstation");
+        m_enableMetaDatainAB =
+            getValueFromJSON(config_json, "enableMetaDatainAB");
+        m_enableEdgeConfidence =
+            getValueFromJSON(config_json, "enableEdgeConfidence");
 
     } else if (!config.empty()) {
         LOG(ERROR) << "Couldn't parse config file: " << config.c_str();
@@ -2123,35 +2191,38 @@ void CameraItof::setAdsd3500WithIniParams(
     if (it != iniKeyValPairs.end()) {
         adsd3500SetABinvalidationThreshold(std::stoi(it->second));
     } else {
-        LOG(WARNING) << "abThreshMin was not found in .ini file";
+        LOG(WARNING) << "abThreshMin was not found in .ini file, not setting.";
     }
 
     it = iniKeyValPairs.find("confThresh");
     if (it != iniKeyValPairs.end()) {
         adsd3500SetConfidenceThreshold(std::stoi(it->second));
     } else {
-        LOG(WARNING) << "confThresh was not found in .ini file";
+        LOG(WARNING) << "confThresh was not found in .ini file, not setting.";
     }
 
     it = iniKeyValPairs.find("radialThreshMin");
     if (it != iniKeyValPairs.end()) {
         adsd3500SetRadialThresholdMin(std::stoi(it->second));
     } else {
-        LOG(WARNING) << "radialThreshMin was not found in .ini file";
+        LOG(WARNING)
+            << "radialThreshMin was not found in .ini file, not setting.";
     }
 
     it = iniKeyValPairs.find("radialThreshMax");
     if (it != iniKeyValPairs.end()) {
         adsd3500SetRadialThresholdMax(std::stoi(it->second));
     } else {
-        LOG(WARNING) << "radialThreshMax was not found in .ini file";
+        LOG(WARNING)
+            << "radialThreshMax was not found in .ini file, not setting.";
     }
 
     it = iniKeyValPairs.find("jblfWindowSize");
     if (it != iniKeyValPairs.end()) {
         adsd3500SetJBLFfilterSize(std::stoi(it->second));
     } else {
-        LOG(WARNING) << "jblfWindowSize was not found in .ini file";
+        LOG(WARNING)
+            << "jblfWindowSize was not found in .ini file, not setting.";
     }
 
     it = iniKeyValPairs.find("jblfApplyFlag");
@@ -2159,13 +2230,60 @@ void CameraItof::setAdsd3500WithIniParams(
         bool en = !(it->second == "0");
         adsd3500SetJBLFfilterEnableState(en);
     } else {
-        LOG(WARNING) << "jblfApplyFlag was not found in .ini file";
+        LOG(WARNING)
+            << "jblfApplyFlag was not found in .ini file, not setting.";
     }
 
     it = iniKeyValPairs.find("fps");
     if (it != iniKeyValPairs.end()) {
         adsd3500SetFrameRate(std::stoi(it->second));
     } else {
-        LOG(WARNING) << "fps was not found in .ini file";
+        LOG(WARNING) << "fps was not found in .ini file, not setting.";
+    }
+
+    it = iniKeyValPairs.find("vcselDelay");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500SetVCSELDelay(std::stoi(it->second));
+    } else {
+        LOG(WARNING) << "vcselDelay was not found in .ini file, not setting.";
+    }
+
+    it = iniKeyValPairs.find("jblfMaxEdgeThreshold");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500SetJBLFMaxEdgeThreshold(std::stoi(it->second));
+    } else {
+        LOG(WARNING)
+            << "jblfMaxEdgeThreshold was not found in .ini file, not setting.";
+    }
+
+    it = iniKeyValPairs.find("jblfABThreshold");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500SetJBLFABThreshold(std::stoi(it->second));
+    } else {
+        LOG(WARNING) << "jblfABThreshold was not found in .ini file";
+    }
+
+    it = iniKeyValPairs.find("jblfGaussianSigma");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500SetJBLFGaussianSigma(std::stoi(it->second));
+    } else {
+        LOG(WARNING)
+            << "jblfGaussianSigma was not found in .ini file, not setting.";
+    }
+
+    it = iniKeyValPairs.find("jblfExponentialTerm");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500SetJBLFExponentialTerm(std::stoi(it->second));
+    } else {
+        LOG(WARNING)
+            << "jblfExponentialTerm was not found in .ini file, not setting.";
+    }
+
+    it = iniKeyValPairs.find("enablePhaseInvalidation");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500SetEnablePhaseInvalidation(std::stoi(it->second));
+    } else {
+        LOG(WARNING) << "enablePhaseInvalidation was not found in .ini file, "
+                        "not setting.";
     }
 }
