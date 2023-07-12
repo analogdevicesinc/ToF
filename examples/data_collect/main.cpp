@@ -166,8 +166,6 @@ int main(int argc, char *argv[]) {
     std::string ip;
     std::string firmware;
     uint32_t setfps = 0;
-    uint16_t fps_defaults[11] = {200, 105, 100, 200, 50, 50,
-                                 50,  105, 105, 50,  50};
 
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
@@ -222,7 +220,18 @@ int main(int argc, char *argv[]) {
     n_frames = std::stoi(command_map[{"-n", "--n"}]);
 
     // Parsing mode type
-    mode = std::stoi(command_map[{"-m", "--m"}]);
+    std::string modeName;
+    try {
+        std::size_t counter;
+        mode = std::stoi(command_map[{"-m", "--m"}].c_str(), &counter);
+        if (counter != command_map[{"-m", "--m"}].size()) {
+            throw command_map[{"-m", "--m"}].c_str();
+        }
+    } catch (const char *name) {
+        modeName = name;
+    } catch (const std::exception &) {
+        modeName = command_map[{"-m", "--m"}].c_str();
+    }
 
     // Parsing ip
     if (!command_map[{"-ip", "--ip"}].empty()) {
@@ -238,7 +247,7 @@ int main(int argc, char *argv[]) {
     if (!command_map[{"-fps", "--fps"}].empty()) {
         setfps = std::stoi(command_map[{"-fps", "--fps"}]);
     } else {
-        setfps = fps_defaults[mode];
+        setfps = 10;
     }
 
     ext_frame_sync_en = std::stoi(command_map[{"-ext", "--ext_fsync"}]);
@@ -266,7 +275,7 @@ int main(int argc, char *argv[]) {
     }
 
     LOG(INFO) << "Output folder: " << folder_path;
-    LOG(INFO) << "Mode: " << mode;
+    LOG(INFO) << "Mode: " << command_map[{"-m", "--m"}];
     LOG(INFO) << "Number of frames: " << n_frames;
     LOG(INFO) << "Json file: " << json_file_path;
     LOG(INFO) << "Frame type is: " << frame_type;
@@ -345,12 +354,13 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    std::string modeName;
-    status = camera->getFrameTypeNameFromId(mode, modeName);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Mode: " << mode
-                   << " is invalid for this type of camera!";
-        return 0;
+    if (modeName.empty()) {
+        status = camera->getFrameTypeNameFromId(mode, modeName);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Mode: " << mode
+                       << " is invalid for this type of camera!";
+            return 0;
+        }
     }
 
     std::shared_ptr<DepthSensorInterface> depthSensor = camera->getSensor();
