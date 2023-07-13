@@ -43,16 +43,20 @@ if len(sys.argv) < 2  or sys.argv[1] == "--help" or sys.argv[1] == "-h" :
 system = tof.System()
 
 cameras = []
+ip = ""
 if len(sys.argv) == 3 :
-    status = system.getCameraListAtIp(cameras,sys.argv[1])
+    ip = sys.argv[1]
     config = sys.argv[2]
+    print (f"Looking for camera on network @ {ip}. Will use {config}.")
+    ip = "ip:" + ip
 elif len(sys.argv) == 2 :
-    status = system.getCameraList(cameras)
     config = sys.argv[1]
+    print (f"Looking for camera on UVC. Will use {config}.")
 else :
     print("Too many arguments provided!")
     exit(1)
 
+status = system.getCameraList(cameras, ip)
 print("system.getCameraList()", status)
 
 camera1 = cameras[0]

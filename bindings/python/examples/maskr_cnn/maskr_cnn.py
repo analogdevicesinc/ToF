@@ -41,6 +41,7 @@ import statistics
 
 thr = 0.5
 
+ip = "" # Set to "ip:10.42.0.1" if networking is used.
 
 class ModesEnum(Enum):
     MODE_NEAR = 0
@@ -173,7 +174,7 @@ if __name__ == "__main__":
     system = tof.System()
 
     cameras = []
-    status = system.getCameraList(cameras)
+    status = system.getCameraList(cameras, ip)
     if not status:
         print("system.getCameraList() failed with status: ", status)
 

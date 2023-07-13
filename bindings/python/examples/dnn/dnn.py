@@ -36,6 +36,8 @@ import argparse
 from enum import Enum
 import sys
 
+ip = "" # Set to "ip:10.42.0.1" if networking is used.
+
 inWidth = 300
 inHeight = 300
 WHRatio = inWidth / float(inHeight)
@@ -80,7 +82,7 @@ if __name__ == "__main__":
     system = tof.System()
 
     cameras = []
-    status = system.getCameraList(cameras)
+    status = system.getCameraList(cameras, ip)
     if not status:
         print("system.getCameraList() failed with status: ", status)
 
