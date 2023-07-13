@@ -167,6 +167,12 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "Could not read laser temperature!";
     }
 
+    status = camera->stop();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not stop the camera!";
+        return 0;
+    }
+
     LOG(INFO) << "Sensor temperature: " << sensorTmp;
     LOG(INFO) << "Laser temperature: " << laserTmp;
 
