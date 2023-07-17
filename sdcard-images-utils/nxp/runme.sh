@@ -150,7 +150,7 @@ echo "u-boot		$UBOOT_NXP_REL" >> $ROOTDIR/images/sw-versions
 
 echo "MENU TITLE ADITOF boot options" > $ROOTDIR/images/extlinux.conf
 echo "TIMEOUT 10" >> $ROOTDIR/images/extlinux.conf
-echo "DEFAULT ADSD3500" >> $ROOTDIR/images/extlinux.conf
+echo "DEFAULT ADSD3500+ADSD3100" >> $ROOTDIR/images/extlinux.conf
 echo "label ADSD3100" >> $ROOTDIR/images/extlinux.conf
 echo "        linux ../Image" >> $ROOTDIR/images/extlinux.conf
 echo "        fdt ../imx8mp-adi-tof-noreg.dtb" >> $ROOTDIR/images/extlinux.conf
@@ -159,7 +159,7 @@ if [[ $BUILD_TYPE == "buildroot" ]]; then
 else
 	echo "        append root=/dev/mmcblk1p2 rootwait ro init=/usr/lib/init_resize.sh" >> $ROOTDIR/images/extlinux.conf
 fi
-echo "label ADSD3500" >> $ROOTDIR/images/extlinux.conf
+echo "label ADSD3500+ADSD3100" >> $ROOTDIR/images/extlinux.conf
 echo "        linux ../Image" >> $ROOTDIR/images/extlinux.conf
 echo "        fdt ../imx8mp-adi-tof-adsd3500.dtb" >> $ROOTDIR/images/extlinux.conf
 if [[ $BUILD_TYPE == "buildroot" ]]; then
@@ -167,7 +167,7 @@ if [[ $BUILD_TYPE == "buildroot" ]]; then
 else
 	echo "        append root=/dev/mmcblk1p2 rootwait ro init=/usr/lib/init_resize.sh" >> $ROOTDIR/images/extlinux.conf
 fi
-echo "label ADSD3030" >> $ROOTDIR/images/extlinux.conf
+echo "label ADSD3500+ADSD3030" >> $ROOTDIR/images/extlinux.conf
 echo "        linux ../Image" >> $ROOTDIR/images/extlinux.conf
 echo "        fdt ../imx8mp-adi-tof-adsd3030.dtb" >> $ROOTDIR/images/extlinux.conf
 if [[ $BUILD_TYPE == "buildroot" ]]; then
