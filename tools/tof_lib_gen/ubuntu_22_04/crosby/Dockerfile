@@ -25,7 +25,7 @@ mkdir tof_lib && cd tof_lib \
 
 RUN \
     git clone https://github.com/analogdevicesinc/ToF \
-    && cd ToF && git checkout tags/v4.2.0 \
+    && cd ToF \
     && source scripts/nxp/utils.sh && get_deps_source_code ./ 
 RUN \
     cd ToF \
@@ -39,7 +39,7 @@ RUN \
 RUN \
     cd ToF \
     && mkdir build && cd build \
-    && cmake -DUSE_DEPTH_COMPUTE_OPENSOURCE=1 -DWITH_NETWORK=1 -DWITH_EXAMPLES=0 -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" -DCMAKE_INSTALL_PREFIX=$DESTDIR_TOF_LIB/usr/ .. \
+    && cmake -DUSE_DEPTH_COMPUTE_OPENSOURCE=1 -DWITH_NETWORK=1 -DCMAKE_POSITION_INDEPENDENT_CODE=1 -DWITH_EXAMPLES=0 -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" -DCMAKE_INSTALL_PREFIX=$DESTDIR_TOF_LIB/usr/ .. \
     && cmake --build . --target install 
 
 RUN \
