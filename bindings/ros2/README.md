@@ -38,37 +38,4 @@ sudo cmake --build . --target tof_ros2_package
 
 # 3. Usage
 
-In directory ```ros2_ws/src/``` clone the repository:
-
-```console
-git clone https://github.com/analogdevicesinc/tof-ros2.git
-```
-
-After cloning the repository in the ``ros2_ws/ run the following command:
- 
-```console
-colcon build
-source devel/setup.bash
-```
-
-### Starting camera node
-- In the general ROS2 workspace run the following code:
-```console
-cd ros2_ws
-source ./install/setup.bash
-ros2 run tof_ros2cpp tof_camera_node ip="10.42.0.1" config_file="config/config_walden_3500_nxp.json" use_depthCompute="true" mode=1
-```
-### Parameters
- [config_file:"<<b>path></b>"]
-* Crosby with Pulsatrix: "```config/config_walden_3500_nxp.json```"
-* Crosby: "```config/config_crosby_nxp.json```"
-* Walden: "```config/config_walden_nxp.json```"
-
- [use_depthCompute] 
- - "true" for enabling Depth Compute libraries
- - "false" for disabling Depth Compute libraries 
-
- [mode]:
-* 1 -> QMP mode of the camera
-* 2 -> MP mode of the camera
-
+For usage information please refere to ```section 3``` from: [ROS Usage](https://github.com/analogdevicesinc/tof-ros2#3-usage)
