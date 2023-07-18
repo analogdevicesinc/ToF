@@ -263,12 +263,14 @@ popd
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace
 
 #copy executables to bin folder
-mkdir bin
-cp -r ToF/build/examples/data_collect/config/ bin/
-cp ToF/build/examples/data_collect/data_collect bin/
-cp ToF/build/examples/first-frame/first-frame bin/
-cp ToF/build/examples/first-frame-network/first-frame-network bin/
-cp ToF/build/examples/point_cloud/point_cloud bin/
+mkdir /home/${USERNAME}/Workspace/bin
+cp -r /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/config/ /home/${USERNAME}/Workspace/bin
+cp /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/data_collect /home/${USERNAME}/Workspace/bin
+cp /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/*.so* /home/${USERNAME}/Workspace/bin
+cp /home/${USERNAME}/Workspace/ToF/build/examples/first-frame/first-frame /home/${USERNAME}/Workspace/bin
+cp /home/${USERNAME}/Workspace/ToF/build/examples/first-frame-network/first-frame-network /home/${USERNAME}/Workspace/bin
+cp /home/${USERNAME}/Workspace/ToF/build/examples/point_cloud/point_cloud /home/${USERNAME}/Workspace/bin
+
 
 
 #generate licences file
