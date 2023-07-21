@@ -38,6 +38,7 @@
 #include "calibration_itof.h"
 #include "crc.h"
 #include "module_memory.h"
+#include "tofi/algorithms.h"
 #include "tofi/floatTolin.h"
 #include "tofi/tofi_config.h"
 #include "utils.h"
@@ -69,9 +70,13 @@ CameraItof::CameraItof(
       m_modechange_framedrop_count(0), m_tempFiles{}, m_cameraFps(0),
       m_fsyncMode(-1), m_mipiOutputSpeed(-1), m_adsd3500ImagerType(0),
       m_modesVersion(0), m_enableTempCompenstation(-1),
-      m_enableMetaDatainAB(-1), m_enableEdgeConfidence(-1) {
+      m_enableMetaDatainAB(-1), m_enableEdgeConfidence(-1),
+      m_targetFramesAreComputed(false) {
 
     FloatToLinGenerateTable();
+
+    // set this to true once we no longer use depth compute on host
+    // m_targetFramesAreComputed = true;
 
     m_details.mode = "sr-native";
     m_details.cameraId = "";
@@ -84,7 +89,8 @@ CameraItof::CameraItof(
     m_controls.emplace("syncMode", "0, 0");
     m_controls.emplace("saveModuleCCB", "");
     m_controls.emplace("saveModuleCFG", "");
-    m_controls.emplace("enableDepthCompute", "on");
+    m_controls.emplace("enableDepthCompute",
+                       m_targetFramesAreComputed ? "off" : "on");
     m_controls.emplace("enableXYZframe", "off");
 
     // Check Depth Sensor
@@ -139,6 +145,7 @@ CameraItof::~CameraItof() {
     if (m_eepromInitialized) {
         m_eeprom->close();
     }
+    cleanupXYZtables();
 }
 
 aditof::Status CameraItof::initialize() {
@@ -695,6 +702,29 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         freeComputeLibrary();
     }
 
+    // If we compute XYZ then prepare the XYZ tables which depend on the mode
+    if (m_targetFramesAreComputed) {
+        uint8_t mode =
+            ModeInfo::getInstance()->getModeInfo(m_details.frameType.type).mode;
+        const int GEN_XYZ_ITERATIONS = 20;
+        TofiXYZDealiasData *pDealias = &m_xyz_dealias_data[mode];
+
+        cleanupXYZtables();
+        int ret = Algorithms::GenerateXYZTables(
+            &m_xyzTable.p_x_table, &m_xyzTable.p_y_table, &m_xyzTable.p_z_table,
+            &(pDealias->camera_intrinsics), pDealias->n_sensor_rows,
+            pDealias->n_sensor_cols,
+            ModeInfo::getInstance()->getModeInfo(frameType).width,
+            ModeInfo::getInstance()->getModeInfo(frameType).width,
+            pDealias->n_offset_rows, pDealias->n_offset_cols,
+            pDealias->row_bin_factor, pDealias->col_bin_factor,
+            GEN_XYZ_ITERATIONS);
+        if (ret != 0 || !m_xyzTable.p_x_table || !m_xyzTable.p_y_table ||
+            !m_xyzTable.p_z_table)
+            LOG(ERROR) << "Failed to generate the XYZ tables";
+        return Status::GENERIC_ERROR;
+    }
+
     return status;
 }
 
@@ -777,13 +807,17 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     }
 
     uint16_t *frameDataLocation = nullptr;
-    if ((m_details.frameType.type == "pcm-native")) {
-        frame->getData("ir", &frameDataLocation);
-    } else if (m_details.frameType.type == "") {
-        LOG(ERROR) << "Frame type not found!";
-        return Status::INVALID_ARGUMENT;
+    if (m_targetFramesAreComputed) {
+        frame->getData("frameData", &frameDataLocation);
     } else {
-        frame->getData("raw", &frameDataLocation);
+        if ((m_details.frameType.type == "pcm-native")) {
+            frame->getData("ir", &frameDataLocation);
+        } else if (m_details.frameType.type == "") {
+            LOG(ERROR) << "Frame type not found!";
+            return Status::INVALID_ARGUMENT;
+        } else {
+            frame->getData("raw", &frameDataLocation);
+        }
     }
     if (!frameDataLocation) {
         LOG(WARNING) << "getframe failed to allocated valid frame";
@@ -863,6 +897,21 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
                  ++i) {
                 mpAbFrame[i] = mpAbFrame[i] >> bitsToShift;
             }
+        }
+    }
+
+    // The incoming frames frome sensor are already processed. Need to just create XYZ data
+    if (m_targetFramesAreComputed) {
+        if (m_xyzEnabled) {
+            uint16_t *depthFrame;
+            uint16_t *xyzFrame;
+
+            frame->getData("depth", &depthFrame);
+            frame->getData("xyz", &xyzFrame);
+
+            Algorithms::ComputeXYZ(
+                (const uint16_t *)depthFrame, &m_xyzTable, (int16_t *)xyzFrame,
+                m_details.frameType.height, m_details.frameType.width);
         }
     }
 
@@ -2285,5 +2334,20 @@ void CameraItof::setAdsd3500WithIniParams(
     } else {
         LOG(WARNING) << "enablePhaseInvalidation was not found in .ini file, "
                         "not setting.";
+    }
+}
+
+void CameraItof::cleanupXYZtables() {
+    if (m_xyzTable.p_x_table) {
+        free((void *)m_xyzTable.p_x_table);
+        m_xyzTable.p_x_table = nullptr;
+    }
+    if (m_xyzTable.p_y_table) {
+        free((void *)m_xyzTable.p_y_table);
+        m_xyzTable.p_y_table = nullptr;
+    }
+    if (m_xyzTable.p_z_table) {
+        free((void *)m_xyzTable.p_z_table);
+        m_xyzTable.p_z_table = nullptr;
     }
 }
