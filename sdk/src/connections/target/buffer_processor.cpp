@@ -93,6 +93,9 @@ aditof::Status BufferProcessor::open() {
     using namespace aditof;
     Status status = Status::OK;
 
+    //TO DO: remove when we re-enable uvc
+    return aditof::Status::OK;
+
     m_outputVideoDev->fd = ::open(m_videoDeviceName, O_RDWR);
     if (m_outputVideoDev->fd == -1) {
         LOG(ERROR) << "Cannot open " << OUTPUT_DEVICE << "errno: " << errno
@@ -128,19 +131,19 @@ aditof::Status BufferProcessor::setVideoProperties(int frameWidth,
     m_outputFrameWidth = frameWidth;
     m_outputFrameHeight = frameHeight;
 
-    m_videoFormat.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
-    m_videoFormat.fmt.pix.width = frameWidth / 2;
-    m_videoFormat.fmt.pix.height = frameHeight;
-    m_videoFormat.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
-    m_videoFormat.fmt.pix.sizeimage = frameWidth * frameHeight;
-    m_videoFormat.fmt.pix.field = V4L2_FIELD_NONE;
-    m_videoFormat.fmt.pix.bytesperline = frameWidth;
-    m_videoFormat.fmt.pix.colorspace = V4L2_COLORSPACE_SRGB;
+    //m_videoFormat.type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
+    //m_videoFormat.fmt.pix.width = frameWidth / 2;
+    //m_videoFormat.fmt.pix.height = frameHeight;
+    //m_videoFormat.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+    //m_videoFormat.fmt.pix.sizeimage = frameWidth * frameHeight;
+    //m_videoFormat.fmt.pix.field = V4L2_FIELD_NONE;
+    //m_videoFormat.fmt.pix.bytesperline = frameWidth;
+    //m_videoFormat.fmt.pix.colorspace = V4L2_COLORSPACE_SRGB;
 
-    if (xioctl(m_outputVideoDev->fd, VIDIOC_S_FMT, &m_videoFormat) == -1) {
-        LOG(ERROR) << "Failed to set format!";
-        return Status::GENERIC_ERROR;
-    }
+    //if (xioctl(m_outputVideoDev->fd, VIDIOC_S_FMT, &m_videoFormat) == -1) {
+    //    LOG(ERROR) << "Failed to set format!";
+    //    return Status::GENERIC_ERROR;
+    //}
 
     if (m_processedBuffer != nullptr) {
         delete[] m_processedBuffer;
