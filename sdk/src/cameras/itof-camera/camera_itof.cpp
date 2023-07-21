@@ -829,6 +829,21 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         LOG(WARNING) << "Failed to get frame from device";
         return status;
     }
+    
+    //hardcode for local/network run
+    if (1) {
+        uint16_t *irData;
+        uint16_t *depthData;
+        frame->getData("depth", &depthData);
+        frame->getData("ir", &irData);
+        memcpy(depthData, frameDataLocation,
+               m_details.frameType.width * m_details.frameType.height);
+        memcpy(irData,
+               frameDataLocation +
+                   m_details.frameType.width * m_details.frameType.height,
+               m_details.frameType.width * m_details.frameType.height);
+        return aditof::Status::OK;
+    }
 
     if (!m_adsd3500Enabled && !m_isOffline &&
         (m_details.frameType.type != "pcm-native")) {
