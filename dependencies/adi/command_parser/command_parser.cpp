@@ -35,10 +35,14 @@ void CommandParser::parseArguments(int argc, char *argv[]) {
         } else if (std::string(argv[i]) == "-h" ||
                    std::string(argv[i]) == "--help") {
             m_command_vector.push_back({argv[i], "help_menu"});
-        } else if (i != argc - 1 && std::string(argv[i + 1]).find("-") == -1 ||
-                   std::string(argv[i + 1]).find("-") != 1) {
-            m_command_vector.push_back({argv[i], argv[i + 1]});
-            i++;
+        } else if (i != argc - 1) {
+            if (std::string(argv[i + 1]).find("-") == -1 ||
+                std::string(argv[i + 1]).find("-") != 0) {
+                    m_command_vector.push_back({argv[i], argv[i + 1]});
+                    i++;
+            } else {
+                m_command_vector.push_back({argv[i], ""});
+            }
         } else {
             m_command_vector.push_back({argv[i], ""});
         }
