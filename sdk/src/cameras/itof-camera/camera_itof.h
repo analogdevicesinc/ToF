@@ -375,6 +375,11 @@ class CameraItof : public aditof::Camera {
     void setAdsd3500WithIniParams(
         const std::map<std::string, std::string> &iniKeyValPairs);
 
+    /**
+     * @brief Delete allocated tables for X, Y, Z
+     */
+    void cleanupXYZtables();
+
   private:
     using noArgCallable = std::function<aditof::Status()>;
 
@@ -428,6 +433,8 @@ class CameraItof : public aditof::Camera {
     int m_modesVersion;
     bool m_fwUpdated;
     aditof::Adsd3500Status m_adsd3500Status;
+    bool m_targetFramesAreComputed;
+    XYZTable m_xyzTable;
 };
 
 #endif // CAMERA_ITOF_H
