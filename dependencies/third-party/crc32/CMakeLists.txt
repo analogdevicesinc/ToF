@@ -1,14 +1,13 @@
 cmake_minimum_required(VERSION 3.0)
 project(crc32)
 
-if (NOT WIN32) 
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fpic")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic")
-endif()
-
 add_library(${PROJECT_NAME} STATIC
     crc.c
 )
+
+if (NOT WIN32) 
+    set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
+endif()
 
 target_include_directories(${PROJECT_NAME}
     PUBLIC

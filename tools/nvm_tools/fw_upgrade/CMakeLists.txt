@@ -1,11 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(fw_upgrade)
 
-find_library(CRC32
-    NAMES crc32
-    PATHS /home/analog/Workspace/ToF/dependencies/third-party/crc32
-)
-
 set(NVM_COMMON ../common)
 
 include_directories(
