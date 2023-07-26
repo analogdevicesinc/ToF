@@ -837,11 +837,11 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         frame->getData("depth", &depthData);
         frame->getData("ir", &irData);
         memcpy(depthData, frameDataLocation,
-               m_details.frameType.width * m_details.frameType.height);
+               m_details.frameType.width * m_details.frameType.height * 2);
         memcpy(irData,
                frameDataLocation +
                    m_details.frameType.width * m_details.frameType.height,
-               m_details.frameType.width * m_details.frameType.height);
+               m_details.frameType.width * m_details.frameType.height * 2);
         return aditof::Status::OK;
     }
 
