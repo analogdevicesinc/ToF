@@ -1960,6 +1960,9 @@ aditof::Status CameraItof::parseJsonFileContent() {
         m_enableEdgeConfidence =
             getValueFromJSON(config_json, "enableEdgeConfidence");
 
+        // Delete memory allocated for JSON
+        cJSON_Delete(config_json);
+
     } else if (!config.empty()) {
         LOG(ERROR) << "Couldn't parse config file: " << config.c_str();
         return Status::GENERIC_ERROR;
