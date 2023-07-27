@@ -71,13 +71,9 @@ CameraItof::CameraItof(
       m_fsyncMode(-1), m_mipiOutputSpeed(-1), m_adsd3500ImagerType(0),
       m_modesVersion(0), m_enableTempCompenstation(-1),
       m_enableMetaDatainAB(-1), m_enableEdgeConfidence(-1),
-      m_targetFramesAreComputed(false),
-      m_xyzTable({nullptr, nullptr, nullptr}) {
-
+      m_targetFramesAreComputed(true), m_xyzTable({nullptr, nullptr, nullptr}) {
     FloatToLinGenerateTable();
-
-    // set this to true once we no longer use depth compute on host
-    // m_targetFramesAreComputed = true;
+    memset(&m_xyzTable, 0, sizeof(m_xyzTable));
 
     m_details.mode = "sr-native";
     m_details.cameraId = "";
@@ -703,6 +699,32 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         freeComputeLibrary();
     }
 
+    // If we want computed frames (Depth & AB), tell target to initialize depth compute
+    if (m_targetFramesAreComputed) {
+        if (!m_ini_depth.empty()) {
+            size_t dataSize = m_depthINIData.size;
+            unsigned char *pData = m_depthINIData.p_data;
+
+            if (m_depthINIDataMap.size() > 1) {
+                dataSize = m_depthINIDataMap[m_ini_depth].size;
+                pData = m_depthINIDataMap[m_ini_depth].p_data;
+            }
+
+            uint8_t *tempDataParser = new uint8_t[dataSize];
+            memcpy(tempDataParser, pData, dataSize);
+            aditof::Status localStatus;
+            localStatus = m_depthSensor->initTargetDepthCompute(
+                (uint8_t *)tempDataParser, dataSize,
+                (uint8_t *)m_xyz_dealias_data, sizeof(TofiXYZDealiasData) * 10);
+            delete[] tempDataParser;
+            tempDataParser = nullptr;
+            if (localStatus != aditof::Status::OK) {
+                LOG(ERROR) << "Failed to initialize depth compute on target!";
+                return localStatus;
+            }
+        }
+    }
+
     // If we compute XYZ then prepare the XYZ tables which depend on the mode
     if (m_targetFramesAreComputed) {
         uint8_t mode =
@@ -721,9 +743,10 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
             pDealias->row_bin_factor, pDealias->col_bin_factor,
             GEN_XYZ_ITERATIONS);
         if (ret != 0 || !m_xyzTable.p_x_table || !m_xyzTable.p_y_table ||
-            !m_xyzTable.p_z_table)
+            !m_xyzTable.p_z_table) {
             LOG(ERROR) << "Failed to generate the XYZ tables";
-        return Status::GENERIC_ERROR;
+            return Status::GENERIC_ERROR;
+        }
     }
 
     return status;
@@ -829,21 +852,6 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to get frame from device";
         return status;
-    }
-    
-    //hardcode for local/network run
-    if (1) {
-        uint16_t *irData;
-        uint16_t *depthData;
-        frame->getData("depth", &depthData);
-        frame->getData("ir", &irData);
-        memcpy(depthData, frameDataLocation,
-               m_details.frameType.width * m_details.frameType.height * 2);
-        memcpy(irData,
-               frameDataLocation +
-                   m_details.frameType.width * m_details.frameType.height,
-               m_details.frameType.width * m_details.frameType.height * 2);
-        return aditof::Status::OK;
     }
 
     if (!m_adsd3500Enabled && !m_isOffline &&
@@ -1064,23 +1072,8 @@ aditof::Status CameraItof::initComputeLibrary(void) {
                 pData = m_depthINIDataMap[m_ini_depth].p_data;
             }
 
-            uint8_t *tempDataParser = new uint8_t[dataSize];
-            memcpy(tempDataParser, pData, dataSize);
-            ConfigFileData depth_ini = {tempDataParser, dataSize};
-
-            //TO DO: Change this after set status of dc on target
-            if (1) {
-                aditof::Status localStatus;
-                localStatus = m_depthSensor->initTargetDepthCompute(
-                    (uint8_t *)tempDataParser, dataSize,
-                    (uint8_t *)m_xyz_dealias_data,
-                    sizeof(TofiXYZDealiasData) * 10);
-                if (localStatus != aditof::Status::OK) {
-                    LOG(ERROR)
-                        << "Failed to initialize depth compute on target!";
-                    return localStatus;
-                }
-            } else if (m_adsd3500Enabled || m_isOffline) {
+            ConfigFileData depth_ini = {pData, dataSize};
+            if (m_adsd3500Enabled || m_isOffline) {
                 m_tofi_config = InitTofiConfig_isp((ConfigFileData *)&depth_ini,
                                                    convertedMode, &status,
                                                    m_xyz_dealias_data);
@@ -1092,29 +1085,23 @@ aditof::Status CameraItof::initComputeLibrary(void) {
                     LOG(ERROR) << "Failed to get calibration data";
                 }
             }
-
-            delete[] tempDataParser;
-
         } else {
             m_tofi_config =
                 InitTofiConfig(&calData, NULL, NULL, convertedMode, &status);
         }
-        //TO DO: Change this after set status of dc on target
-        if (0) {
-            if ((m_tofi_config == NULL) ||
-                (m_tofi_config->p_tofi_cal_config == NULL) ||
-                (status != ADI_TOFI_SUCCESS)) {
-                LOG(ERROR) << "InitTofiConfig failed";
-                return aditof::Status::GENERIC_ERROR;
 
-            } else {
-                m_tofi_compute_context =
-                    InitTofiCompute(m_tofi_config->p_tofi_cal_config, &status);
-                if (m_tofi_compute_context == NULL ||
-                    status != ADI_TOFI_SUCCESS) {
-                    LOG(ERROR) << "InitTofiCompute failed";
-                    return aditof::Status::GENERIC_ERROR;
-                }
+        if ((m_tofi_config == NULL) ||
+            (m_tofi_config->p_tofi_cal_config == NULL) ||
+            (status != ADI_TOFI_SUCCESS)) {
+            LOG(ERROR) << "InitTofiConfig failed";
+            return aditof::Status::GENERIC_ERROR;
+
+        } else {
+            m_tofi_compute_context =
+                InitTofiCompute(m_tofi_config->p_tofi_cal_config, &status);
+            if (m_tofi_compute_context == NULL || status != ADI_TOFI_SUCCESS) {
+                LOG(ERROR) << "InitTofiCompute failed";
+                return aditof::Status::GENERIC_ERROR;
             }
         }
     } else {
@@ -2332,8 +2319,8 @@ void CameraItof::setAdsd3500WithIniParams(
     if (it != iniKeyValPairs.end()) {
         adsd3500SetJBLFMaxEdgeThreshold(std::stoi(it->second));
     } else {
-        LOG(WARNING)
-            << "jblfMaxEdgeThreshold was not found in .ini file, not setting.";
+        LOG(WARNING) << "jblfMaxEdgeThreshold was not found in .ini file, "
+                        "not setting.";
     }
 
     it = iniKeyValPairs.find("jblfABThreshold");
@@ -2355,8 +2342,8 @@ void CameraItof::setAdsd3500WithIniParams(
     if (it != iniKeyValPairs.end()) {
         adsd3500SetJBLFExponentialTerm(std::stoi(it->second));
     } else {
-        LOG(WARNING)
-            << "jblfExponentialTerm was not found in .ini file, not setting.";
+        LOG(WARNING) << "jblfExponentialTerm was not found in .ini file, "
+                        "not setting.";
     }
 
     it = iniKeyValPairs.find("enablePhaseInvalidation");
