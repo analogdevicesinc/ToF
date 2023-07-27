@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
         {"-fw", {"--fw", false, "", ""}},
         {"-fps", {"--fps", false, "", ""}},
         {"-ccb", {"--ccb", false, "", ""}},
-        {"-ft", {"--ft", false, "", "raw"}},
+        {"-ft", {"--ft", false, "", "depth"}},
         {"-config", {"-CONFIG", true, "last", ""}}};
 
     CommandParser command;
