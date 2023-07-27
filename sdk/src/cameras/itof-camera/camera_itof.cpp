@@ -1173,7 +1173,19 @@ aditof::Status CameraItof::loadConfigData(void) {
 }
 
 void CameraItof::freeConfigData(void) {
-    // TO DO:
+
+    if (m_depthINIDataMap.size() > 0) {
+        for (auto it = m_depthINIDataMap.begin(); it != m_depthINIDataMap.end();
+             ++it) {
+            free((void *)(it->second.p_data));
+        }
+        m_depthINIDataMap.clear();
+    }
+    if (m_calData.p_data) {
+        free((void *)(m_calData.p_data));
+        m_calData.p_data = nullptr;
+        m_calData.size = 0;
+    }
 }
 
 aditof::Status CameraItof::isValidFrame(const int numTotalFrames) {
