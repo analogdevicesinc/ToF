@@ -39,7 +39,8 @@ class CommandParser {
     ~CommandParser() = default;
 
   public:
-    void parseArguments(int argc, char *argv[]);
+    void parseArguments(int argc, char *argv[],
+                        std::map<std::string, struct Argument> command_map);
     int checkArgumentExist(std::map<std::string, struct Argument> &command_map,
                            std::string &arg_error);
     int checkValue(std::map<std::string, struct Argument> &command_map,

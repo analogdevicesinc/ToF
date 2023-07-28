@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
 
     CommandParser command;
     std::string arg_error;
-    command.parseArguments(argc, argv);
+    command.parseArguments(argc, argv, command_map);
 
     int result = command.checkArgumentExist(command_map, arg_error);
     if (result != 0) {

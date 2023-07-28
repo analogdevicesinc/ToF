@@ -24,27 +24,52 @@
 
 #include "command_parser.h"
 
-void CommandParser::parseArguments(int argc, char *argv[]) {
-    // Parse the config and stores argument + value
+void CommandParser::parseArguments(
+    int argc, char *argv[],
+    std::map<std::string, struct Argument> command_map) {
+    int arg_number = 1;
+    std::vector<std::pair<std::string, int>> arg_position;
+    for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
+        if (ct->second.is_mandatory == true) {
+            if (ct->second.position == "last") {
+                arg_position.push_back({ct->first, argc - 1});
+            } else {
+                arg_position.push_back(
+                    {ct->first, std::stoi(ct->second.position)});
+            }
+        }
+    }
+
     for (int i = 1; i < argc; i++) {
+        bool mandatory = false;
         int contains_equal = std::string(argv[i]).find("=");
-        if (contains_equal != -1) {
+        for (int j = 0; j < arg_position.size(); j++) {
+            if (arg_number == arg_position[j].second &&
+                (std::string(argv[i]).find("h") == -1 &&
+                 std::string(argv[i]).find("help") == -1)) {
+                m_command_vector.push_back({arg_position[j].first, argv[i]});
+                arg_number++;
+                mandatory = true;
+            }
+        }
+        if (mandatory) {
+            continue;
+        } else if (contains_equal != -1) {
             m_command_vector.push_back(
                 {std::string(argv[i]).substr(0, contains_equal),
                  std::string(argv[i]).substr(contains_equal + 1)});
+            arg_number++;
         } else if (std::string(argv[i]) == "-h" ||
                    std::string(argv[i]) == "--help") {
             m_command_vector.push_back({argv[i], "help_menu"});
+            arg_number++;
         } else if (i != argc - 1) {
-            if (std::string(argv[i + 1]).find("-") == -1 ||
-                std::string(argv[i + 1]).find("-") != 0) {
-                    m_command_vector.push_back({argv[i], argv[i + 1]});
-                    i++;
-            } else {
-                m_command_vector.push_back({argv[i], ""});
-            }
+            m_command_vector.push_back({argv[i], argv[i + 1]});
+            i++;
+            arg_number += 2;
         } else {
             m_command_vector.push_back({argv[i], ""});
+            arg_number++;
         }
     }
 }
@@ -131,7 +156,7 @@ int CommandParser::checkMandatoryPosition(
         if (ct->second.is_mandatory == true) {
             int index;
             if (ct->second.position != "last") {
-                index = std::stoi(ct->second.position);
+                index = std::stoi(ct->second.position) - 1;
             } else {
                 index = m_command_vector.size() - 1;
             }
