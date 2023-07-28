@@ -666,6 +666,13 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         if (item.type == "xyz" && !m_xyzEnabled) {
             continue;
         }
+        if (m_targetFramesAreComputed) {
+            if (item.type == "raw") {
+                continue;
+            } else if (item.type == "conf") {
+                continue;
+            }
+        }
 
         FrameDataDetails fDataDetails;
         fDataDetails.type = item.type;
