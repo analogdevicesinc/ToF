@@ -70,6 +70,23 @@ endif()
 
 ############################## Rest of cmake ##################################
 
+# Check whether we configure things for remote or we're on target
+set(SELECTED_PLATFORMS 0)
+set(ALL_PLATFORMS NXP;NVIDIA)
+foreach(platform IN LISTS ALL_PLATFORMS)
+    if(${platform})
+        math(EXPR SELECTED_PLATFORMS "${SELECTED_PLATFORMS}+1")
+    endif()
+endforeach()
+
+set(ON_TARGET FALSE)
+if(${SELECTED_PLATFORMS} GREATER 1)
+        message(FATAL_ERROR "More than one platform was selected. \nPlease select a single platform. CMake will exit.")
+elseif(${SELECTED_PLATFORMS} EQUAL 1)
+    add_definitions(-DTARGET)
+    set(ON_TARGET TRUE)
+endif()
+
 if (USE_ADSD3030)
         add_definitions(-DADSD3030)
 endif()
