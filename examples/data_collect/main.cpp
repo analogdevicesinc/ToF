@@ -83,6 +83,8 @@ static const char kUsagePublic[] =
       --ip <ip>          Camera IP
       --fw <firmware>    Adsd3500 fw file
 
+    Note: --m argument supports both index and string (0/sr-native) 
+
     Valid mode (--m) options are:
         0: short-range native
         1: long-range native
