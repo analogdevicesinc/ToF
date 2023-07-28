@@ -400,11 +400,8 @@ class CameraItof : public aditof::Camera {
     bool m_adsd3500_master;
     bool m_isOffline;
 
-    FileData m_calData = {
-        .p_data = NULL,
-        .size = 0
-    };
-    
+    FileData m_calData = {NULL, 0};
+
     FileData m_depthINIData;
     std::map<std::string, FileData> m_depthINIDataMap;
     uint8_t *m_jconfigData = NULL;
