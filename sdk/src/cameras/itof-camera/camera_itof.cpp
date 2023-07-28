@@ -1059,7 +1059,8 @@ aditof::Status CameraItof::initComputeLibrary(void) {
     aditof::Status status = aditof::Status::OK;
 
     LOG(INFO) << "initComputeLibrary";
-    //freeComputeLibrary();
+
+    freeComputeLibrary();
     uint8_t convertedMode;
 
     status = ModeInfo::getInstance()->convertCameraMode(m_details.mode,
@@ -1129,14 +1130,10 @@ aditof::Status CameraItof::initComputeLibrary(void) {
 
 aditof::Status CameraItof::freeComputeLibrary(void) {
 
-    freeConfigData();
-
-    if (NULL != m_tofi_compute_context) {
-        LOG(INFO) << "freeComputeLibrary";
+    if (m_tofi_compute_context != NULL) {
         FreeTofiCompute(m_tofi_compute_context);
         m_tofi_compute_context = NULL;
     }
-
     if (m_tofi_config != NULL) {
         FreeTofiConfig(m_tofi_config);
         m_tofi_config = NULL;
@@ -1145,6 +1142,7 @@ aditof::Status CameraItof::freeComputeLibrary(void) {
 }
 
 aditof::Status CameraItof::loadConfigData(void) {
+
     freeConfigData();
 
     if (m_ini_depth_map.size() > 0) {
