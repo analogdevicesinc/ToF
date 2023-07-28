@@ -72,9 +72,11 @@ CameraItof::CameraItof(
       m_modesVersion(0), m_enableTempCompenstation(-1),
       m_enableMetaDatainAB(-1), m_enableEdgeConfidence(-1),
       m_targetFramesAreComputed(true), m_xyzTable({nullptr, nullptr, nullptr}) {
+#ifdef TARGET
+    m_targetFramesAreComputed = false;
+#endif
     FloatToLinGenerateTable();
     memset(&m_xyzTable, 0, sizeof(m_xyzTable));
-
     m_details.mode = "sr-native";
     m_details.cameraId = "";
     m_details.uBootVersion = ubootVersion;
