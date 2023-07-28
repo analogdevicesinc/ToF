@@ -134,6 +134,10 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
       m_firstRun(true), m_adsd3500Queried(false), m_depthComputeOnTarget(true) {
     m_sensorName = "adsd3500";
 
+#ifdef TARGET
+    m_depthComputeOnTarget = false;
+#endif
+
     // Define the controls that this sensor has available
     m_controls.emplace("abAveraging", "0");
     m_controls.emplace("depthEnable", "0");
