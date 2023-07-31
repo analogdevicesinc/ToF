@@ -470,12 +470,25 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         aditof::Status status = camDepthSensor->setFrameType(aditofFrameType);
         if (status == aditof::Status::OK) {
             //width * height * 2 bytes/pixel * 2 frames(depth/ir)
-            processedFrameSize = aditofFrameType.width *
-                                 aditofFrameType.height * sizeof(uint16_t) * 2;
+
+            //Looking for depth resolution
+            int width_tmp = aditofFrameType.width;
+            int height_tmp = aditofFrameType.height;
+
+            for (auto it = aditofFrameType.content.begin();
+                 it != aditofFrameType.content.end(); ++it) {
+                if (!(it->type.compare(std::string("depth")))) {
+                    width_tmp = it->width;
+                    height_tmp = it->height;
+                }
+            }
+            processedFrameSize = width_tmp * height_tmp * 2;
+
             if (processedFrameBuffer != nullptr) {
                 delete[] processedFrameBuffer;
             }
-            processedFrameBuffer = new uint16_t[processedFrameSize];
+            processedFrameBuffer =
+                new uint16_t[processedFrameSize * sizeof(uint16_t)];
         }
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
@@ -501,10 +514,22 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                 buff_send.set_status(static_cast<::payload::Status>(status));
                 break;
             }
+            if (buff_frame_to_send != NULL) {
+                free(buff_frame_to_send);
+                buff_frame_to_send = NULL;
+            }
+            buff_frame_length = processedFrameSize * 2;
+            buff_frame_to_send = (uint8_t *)malloc(
+                (buff_frame_length + LWS_SEND_BUFFER_PRE_PADDING + 1) *
+                sizeof(uint8_t));
 
-            buff_send.add_bytes_payload(processedFrameBuffer,
-                                        processedFrameSize);
-            buff_send.set_status(static_cast<::payload::Status>(status));
+            memcpy(buff_frame_to_send + (LWS_SEND_BUFFER_PRE_PADDING + 1),
+                   (uint8_t *)processedFrameBuffer,
+                   buff_frame_length * sizeof(uint8_t));
+
+            m_frame_ready = true;
+
+            buff_send.set_status(payload::Status::OK);
             break;
         }
 
