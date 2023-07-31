@@ -10,12 +10,12 @@ echo ${SDK_VERSION}
 echo ${BRANCH}
 
 if [ -z ${SDK_VERSION} ]; then
-	echo 'usagr: ./runme.sh <sdk_version> <ToF_Branch>'
+	echo 'usage: ./runme.sh <sdk_version> <ToF_Branch>'
 	exit 1
 fi
 
 if [ -z ${BRANCH} ]; then
-	echo 'usagr: ./runme.sh <sdk_version> <ToF_Branch>'
+	echo 'usage: ./runme.sh <sdk_version> <ToF_Branch>'
 	exit 1
 fi
 
