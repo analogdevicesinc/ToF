@@ -18,16 +18,17 @@ User can specify local mirror location to speed up the fetch of packages and git
 
 ## Dependencies
 
-Dependencies that must be installed: 
+Dependencies that must be installed: Please do an **sudo apt-get update** first.
 
-* Bison
-* Flex
-* gcc aarch64
-* libssl-dev
-* qemu, qemu-user-static
-* debootstrap
-* zlib dev
-* device tree compiler
+* Bison: **sudo apt install bison**
+* Flex: **sudo apt install flex**
+* gcc aarch64: **sudo apt install gcc-aarch64-linux-gnu**
+* libssl-dev: **sudo apt install libssl-dev**
+* qemu: **sudo apt install qemu**
+* qemu-user-static: **sudo apt install qemu-user-static**
+* debootstrap: **sudo apt install debootstrap**
+* zlib dev: **sudo apt install zlib1g-dev**
+* device tree compiler: **sudo apt install device-tree-compiler**
 
 ## Build with host tools
 Simply running ./runme.sh, it will check for required tools, clone and build images and place results in images/ directory.
