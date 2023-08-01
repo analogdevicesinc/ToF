@@ -538,7 +538,7 @@ aditof::Status UsbDepthSensor::start() {
     using namespace aditof;
     Status status = Status::OK;
 
-     // Construct request message
+    // Construct request message
     usb_payload::ClientRequest requestMsg;
     requestMsg.set_func_name(usb_payload::FunctionName::START);
 
@@ -1361,7 +1361,6 @@ aditof::Status UsbDepthSensor::initTargetDepthCompute(uint8_t *iniFile,
         static_cast<::google::int32>(calDataLength));
     requestMsg.add_func_bytes_param(iniFile, iniFileLength);
     requestMsg.add_func_bytes_param(calData, calDataLength);
-
 
     // Send request
     std::string requestStr;
