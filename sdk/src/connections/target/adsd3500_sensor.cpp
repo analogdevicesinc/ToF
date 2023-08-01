@@ -131,7 +131,8 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
                                const std::string &captureDev)
     : m_driverPath(driverPath), m_driverSubPath(driverSubPath),
       m_captureDev(captureDev), m_implData(new Adsd3500Sensor::ImplData),
-      m_firstRun(true), m_adsd3500Queried(false), m_depthComputeOnTarget(true) {
+      m_firstRun(true), m_adsd3500Queried(false),
+      m_depthComputeOnTarget(false) {
     m_sensorName = "adsd3500";
 
 #ifdef TARGET
