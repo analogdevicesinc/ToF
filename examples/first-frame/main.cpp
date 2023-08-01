@@ -33,6 +33,7 @@
 #include <aditof/frame.h>
 #include <aditof/system.h>
 #include <aditof/version.h>
+#include <command_parser.h>
 #include <fstream>
 #ifdef USE_GLOG
 #include <glog/logging.h>
@@ -41,8 +42,34 @@
 #endif
 #include <ios>
 #include <iostream>
+#include <map>
 
 using namespace aditof;
+
+static const char Help_Menu[] =
+    R"(First-frame usage:
+    first-frame CONFIG
+    first-frame (-h | --help)
+    first-frame [-ip | --ip <ip>] [-m | --m <mode>] CONFIG
+
+    Arguments:
+      CONFIG            Input config_default.json file (which has *.ccb and *.cfg)
+
+    Options:
+      -h --help          Show this screen.
+      -m --m <mode>      Mode to capture data in. [default: 0]
+
+    NOTE: -m | --m argument supports both index and string (0/sr-native)
+
+    Valid mode (-m | --m) options are:
+        0: short-range native
+        1: long-range native
+        2: short-range Qnative
+        3: long-range Qnative
+        4: pcm-native
+        5: long-range mixed
+        6: short-range mixed
+)";
 
 Status save_frame(aditof::Frame &frame, std::string frameType) {
 
@@ -71,9 +98,58 @@ Status save_frame(aditof::Frame &frame, std::string frameType) {
 }
 
 int main(int argc, char *argv[]) {
+    std::map<std::string, struct Argument> command_map = {
+        {"-h", {"--help", false, "", ""}},
+        {"-ip", {"--ip", false, "", ""}},
+        {"-m", {"--m", false, "", "0"}},
+        {"config", {"CONFIG", true, "last", ""}}};
 
+    CommandParser command;
+    std::string arg_error;
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
+
+    command.parseArguments(argc, argv, command_map);
+    int result = command.checkArgumentExist(command_map, arg_error);
+    if (result != 0) {
+        std::cout << "Argument " << arg_error << " doesn't exist."
+                  << "\n"
+                  << Help_Menu;
+        return -1;
+    }
+    result = command.helpMenu();
+    if (result == 1) {
+        std::cout << Help_Menu;
+        return 0;
+    } else if (result == -1) {
+        std::cout << "Usage of argument -h/--help"
+                  << " is incorrect! Help argument should be used alone."
+                  << "\n"
+                  << Help_Menu;
+        return -1;
+    }
+    result = command.checkValue(command_map, arg_error);
+    if (result != 0) {
+        std::cout << "Argument: " << arg_error
+                  << " doesn't have assigned or default value."
+                  << "\n"
+                  << Help_Menu;
+        return -1;
+    }
+    result = command.checkMandatoryArguments(command_map, arg_error);
+    if (result != 0) {
+        std::cout << "Mandatory argument: " << arg_error << " missing. \n"
+                  << Help_Menu;
+        return -1;
+    }
+    result = command.checkMandatoryPosition(command_map, arg_error);
+    if (result != 0) {
+        std::cout << "Mandatory argument " << arg_error
+                  << " is not on its correct position ("
+                  << command_map[arg_error].position << "). \n"
+                  << Help_Menu;
+        return -1;
+    }
 
     LOG(INFO) << "SDK version: " << aditof::getApiVersion()
               << " | branch: " << aditof::getBranchVersion()
@@ -82,22 +158,36 @@ int main(int argc, char *argv[]) {
     Status status = Status::OK;
     std::string configFile;
     std::string ip;
+    uint32_t mode = 0;
 
-    if (argc < 2) {
-        LOG(ERROR) << "No config file nor ip provided! ./first-frame [<ip>] "
-                      "<config_file>";
-        return 0;
-    } else if (argc == 2) {
-        configFile = argv[1];
-    } else if (argc == 3) {
-        ip = "ip:" + std::string(argv[1]);
-        configFile = argv[2];
+    // Parsing mode type
+    std::string modeName;
+    try {
+        std::size_t counter;
+        mode = std::stoi(command_map["-m"].value, &counter);
+        if (counter != command_map["-m"].value.size()) {
+            throw command_map["-m"].value.c_str();
+        }
+    } catch (const char *name) {
+        modeName = name;
+    } catch (const std::exception &) {
+        modeName = command_map["-m"].value;
+    }
+
+    configFile = command_map["config"].value;
+
+    if (!command_map["-ip"].value.empty()) {
+        ip = "ip:" + command_map["-ip"].value;
     }
 
     System system;
 
     std::vector<std::shared_ptr<Camera>> cameras;
-    system.getCameraList(cameras, ip);
+    if (!ip.empty()) {
+        system.getCameraList(cameras, ip);
+    } else {
+        system.getCameraList(cameras);
+    }
     if (cameras.empty()) {
         LOG(WARNING) << "No cameras found";
         return 0;
@@ -130,7 +220,17 @@ int main(int argc, char *argv[]) {
         std::cout << "no frame type avaialble!";
         return 0;
     }
-    status = camera->setFrameType("lr-qnative");
+
+    if (modeName.empty()) {
+        status = camera->getFrameTypeNameFromId(mode, modeName);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Mode: " << mode
+                       << " is invalid for this type of camera!";
+            return 0;
+        }
+    }
+
+    status = camera->setFrameType(modeName);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 0;
