@@ -51,6 +51,7 @@
 using namespace google::protobuf::io;
 
 static int interrupted = 0;
+bool depthComputeOnTarget = false;
 
 /* Available sensors */
 std::vector<std::shared_ptr<aditof::DepthSensorInterface>> depthSensors;
@@ -468,9 +469,9 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         }
 
         aditof::Status status = camDepthSensor->setFrameType(aditofFrameType);
+#ifdef DEPTH_COMPUTE_ON_TARGET
         if (status == aditof::Status::OK) {
             //width * height * 2 bytes/pixel * 2 frames(depth/ir)
-
             //Looking for depth resolution
             int width_tmp = aditofFrameType.width;
             int height_tmp = aditofFrameType.height;
@@ -490,6 +491,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             processedFrameBuffer =
                 new uint16_t[processedFrameSize * sizeof(uint16_t)];
         }
+#endif
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
@@ -505,34 +507,32 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
     case GET_FRAME: {
         aditof::Status status = aditof::Status::OK;
-
         //to do: get value of m_depthComputeOnTarget from sensor
-        if (1) {
-            status = camDepthSensor->getFrame(processedFrameBuffer);
-            if (status != aditof::Status::OK) {
-                LOG(ERROR) << "Failed to get frame!";
-                buff_send.set_status(static_cast<::payload::Status>(status));
-                break;
-            }
-            if (buff_frame_to_send != NULL) {
-                free(buff_frame_to_send);
-                buff_frame_to_send = NULL;
-            }
-            buff_frame_length = processedFrameSize * 2;
-            buff_frame_to_send = (uint8_t *)malloc(
-                (buff_frame_length + LWS_SEND_BUFFER_PRE_PADDING + 1) *
-                sizeof(uint8_t));
-
-            memcpy(buff_frame_to_send + (LWS_SEND_BUFFER_PRE_PADDING + 1),
-                   (uint8_t *)processedFrameBuffer,
-                   buff_frame_length * sizeof(uint8_t));
-
-            m_frame_ready = true;
-
-            buff_send.set_status(payload::Status::OK);
+#ifdef DEPTH_COMPUTE_ON_TARGET
+        status = camDepthSensor->getFrame(processedFrameBuffer);
+        if (status != aditof::Status::OK) {
+            LOG(ERROR) << "Failed to get frame!";
+            buff_send.set_status(static_cast<::payload::Status>(status));
             break;
         }
+        if (buff_frame_to_send != NULL) {
+            free(buff_frame_to_send);
+            buff_frame_to_send = NULL;
+        }
+        buff_frame_length = processedFrameSize * 2;
+        buff_frame_to_send = (uint8_t *)malloc(
+            (buff_frame_length + LWS_SEND_BUFFER_PRE_PADDING + 1) *
+            sizeof(uint8_t));
 
+        memcpy(buff_frame_to_send + (LWS_SEND_BUFFER_PRE_PADDING + 1),
+               (uint8_t *)processedFrameBuffer,
+               buff_frame_length * sizeof(uint8_t));
+
+        m_frame_ready = true;
+
+        buff_send.set_status(payload::Status::OK);
+        break;
+#else
         status = sensorV4lBufAccess->waitForBuffer();
 
         if (status != aditof::Status::OK) {
@@ -578,6 +578,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
         buff_send.set_status(payload::Status::OK);
         break;
+#endif
     }
 
     case READ_REGISTERS: {
@@ -656,6 +657,9 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
         delete[] iniFile;
         delete[] calData;
+
+        if (status == aditof::Status::OK)
+            depthComputeOnTarget = true;
 
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;

@@ -135,8 +135,8 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
       m_depthComputeOnTarget(false) {
     m_sensorName = "adsd3500";
 
-#ifdef TARGET
-    m_depthComputeOnTarget = false;
+#ifdef DEPTH_COMPUTE_ON_TARGET
+    m_depthComputeOnTarget = true;
 #endif
 
     // Define the controls that this sensor has available
