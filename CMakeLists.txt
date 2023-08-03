@@ -28,6 +28,7 @@ option(WITH_NETWORK "Build network interface?" ON)
 option(WITH_OFFLINE "Build offline interface?" OFF)
 option(USE_DEPTH_COMPUTE_STUBS "Use empty generated libs?" OFF)
 option(USE_DEPTH_COMPUTE_OPENSOURCE "Use an open source implementation?" OFF)
+option(USE_DEPTH_COMPUTE_ON_TARGET "Use depth compute on target?" OFF)
 option(WITH_GLOG_DEPENDENCY "Build with GLOG dependency to be used for logging" ON)
 option(WITH_PROTOBUF_DEPENDENCY "Build with PROTOBUF dependency to be used for serializing messages" ON)
 option(WITH_COMMAND_LINE_TOOLS "Build with embedded Linux command line tools" ON)
@@ -64,8 +65,17 @@ add_definitions(-DADITOFSDK_GIT_COMMIT="${ADITOFSDK_GIT_COMMIT}")
 add_definitions(-DADITOFSDK_GIT_BRANCH="${ADITOFSDK_GIT_BRANCH}")
 
 ########################## Checks and validations #############################
-if (${USE_DEPTH_COMPUTE_STUBS} AND ${USE_DEPTH_COMPUTE_OPENSOURCE})
-        message(FATAL_ERROR "Choose only one type of depth compute. CMake will exit.")
+
+set(DEPTH_COMPUTE_LOCATION 0)
+set(ALL_DEPTH_COMPUTE_OPTIONS USE_DEPTH_COMPUTE_STUBS;USE_DEPTH_COMPUTE_OPENSOURCE;USE_DEPTH_COMPUTE_ON_TARGET)
+foreach(depth_compute IN LISTS ALL_DEPTH_COMPUTE_OPTIONS)
+    if(${depth_compute})
+        math(EXPR DEPTH_COMPUTE_LOCATION "${DEPTH_COMPUTE_LOCATION}+1")
+    endif()
+endforeach()
+
+if(${DEPTH_COMPUTE_LOCATION} GREATER 1)
+        message(FATAL_ERROR "More than one Depth Compute library source was selected. Please selecte at most one or none. Cmake will exit.")
 endif()
 
 ############################## Rest of cmake ##################################
@@ -132,8 +142,15 @@ if(USE_DEPTH_COMPUTE_STUBS)
 	set(LIBTOFI_LIBDIR_PATH "${CMAKE_BINARY_DIR}/sdk/common/adi/depth-compute-stub")
 elseif(USE_DEPTH_COMPUTE_OPENSOURCE)
 	set(LIBTOFI_LIBDIR_PATH "${CMAKE_BINARY_DIR}/sdk/common/adi/depth-compute-opensource")
+elseif(USE_DEPTH_COMPUTE_ON_TARGET)
+        add_definitions(-DDEPTH_COMPUTE_ON_TARGET=1)
+        if(ON_TARGET) # On TARGET link the proper library
+                set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
+        else() # On HOST link stubs to silence the build errors
+                set(LIBTOFI_LIBDIR_PATH "${CMAKE_BINARY_DIR}/sdk/common/adi/depth-compute-stub")
+        endif()
 else()
-	set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
+        set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
 endif()
 if(WIN32 AND (USE_DEPTH_COMPUTE_STUBS OR USE_DEPTH_COMPUTE_OPENSOURCE))
         set(LIBTOFI_LIBDIR_PATH "${LIBTOFI_LIBDIR_PATH}/${CMAKE_BUILD_TYPE}")
@@ -143,10 +160,9 @@ set(CONFIG_DIR_NAME "config")
 add_definitions(-DCONFIG_DIR_NAME="${CONFIG_DIR_NAME}")
 add_definitions(-DRESOURCES="${RESOURCES_DIR}")
 
-
 add_subdirectory(dependencies)
-add_subdirectory(sdk)
 add_subdirectory(apps)
+add_subdirectory(sdk)
 
 if (WITH_EXAMPLES)
         add_subdirectory(examples)
