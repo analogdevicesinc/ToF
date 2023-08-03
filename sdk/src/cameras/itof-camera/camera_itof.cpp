@@ -71,9 +71,9 @@ CameraItof::CameraItof(
       m_fsyncMode(-1), m_mipiOutputSpeed(-1), m_adsd3500ImagerType(0),
       m_modesVersion(0), m_enableTempCompenstation(-1),
       m_enableMetaDatainAB(-1), m_enableEdgeConfidence(-1),
-      m_targetFramesAreComputed(true) {
-#ifdef TARGET
-    m_targetFramesAreComputed = false;
+      m_targetFramesAreComputed(false) {
+#ifdef DEPTH_COMPUTE_ON_TARGET
+    m_targetFramesAreComputed = true;
 #endif
     FloatToLinGenerateTable();
     memset(&m_xyzTable, 0, sizeof(m_xyzTable));
