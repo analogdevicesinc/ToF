@@ -82,6 +82,7 @@ static const char kUsagePublic[] =
       --ccb <FILE>       The path to store CCB content
       --ip <ip>          Camera IP
       --fw <firmware>    Adsd3500 fw file
+      --ft <format>      Format of saved image (raw/depth/ir/conf) [default: depth]
 
     Note: --m argument supports both index and string (0/sr-native) 
 
@@ -259,8 +260,13 @@ int main(int argc, char *argv[]) {
 
     frame_type = command_map["-ft"].value;
 
-    if (frame_type.length() <= 0) {
+    if (frame_type.length() <= 0 &&
+        (!frame_type.compare(std::string("raw")) ||
+         !frame_type.compare(std::string("depth")) ||
+         !frame_type.compare(std::string("ir")) ||
+         !frame_type.compare(std::string("conf")))) {
         LOG(ERROR) << "Error parsing frame_type (-ft/--ft) from command line!"
+                   << "\n Possible values: raw, depth, ir, conf"
                    << "\n Please check help menu";
         return 0;
     }
@@ -377,15 +383,19 @@ int main(int argc, char *argv[]) {
     // Set UVC format type and camera frame details
     if ("raw" == frame_type) {
         camera->setControl("enableDepthCompute", "off");
-    } else if ("depth" == frame_type) {
+    } 
+    else if ("ir" == frame_type)
+    {
+        camera->setControl("enableDepthCompute", "on");
+    }
+    else if ("depth" == frame_type || "conf" == frame_type) {
         if (modeName == "pcm-native") {
             LOG(ERROR) << modeName
-                       << " mode doesn't contain depth data, please set --ft "
+                       << " mode doesn't contain depth/conf data, please set --ft "
                           "(frameType) to raw.";
             return 0;
-        } else {
+        } else
             camera->setControl("enableDepthCompute", "on");
-        }
     } else {
         LOG(ERROR) << "unsupported frame type!";
         return 0;
@@ -497,7 +507,19 @@ int main(int argc, char *argv[]) {
         if (frame_type == "depth") {
             frame_size = sizeof(uint16_t) * height * width;
             frameType = "depth";
-        } else if (frame_type == "raw") {
+        }
+        // Ir data
+        else if (frame_type == "ir") {
+            frame_size = sizeof(uint16_t) * height * width;
+            frameType = "ir";
+        }
+        // Conf data
+        else if (frame_type == "conf"){
+            frame_size = sizeof(float) * height * width;
+            frameType = "conf";
+        } 
+        // Raw data
+        else if (frame_type == "raw") {
             aditof::FrameDataDetails rawFrameDetails;
             frame.getDataDetails("raw", rawFrameDetails);
 
@@ -622,7 +644,6 @@ void fileWriterTask(const thread_params *const pThreadParams) {
     snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05" PRIu64 ".bin",
              pThreadParams->pFolderPath, pThreadParams->pFrame_type,
              pThreadParams->nFileTime, pThreadParams->nFrameCount);
-
     std::ofstream rawFile(out_file, std::ios::out | std::ios::binary |
                                         std::ofstream::trunc);
     rawFile.write((const char *)pThreadParams->pCaptureData,
