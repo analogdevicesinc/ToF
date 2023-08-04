@@ -107,9 +107,12 @@ class DepthSensorInterface {
      * @param buffer - a valid location where the new frame should be stored.
      * The size of the frame is known (cached) internally and gets updated each
      * time setFrameType() is called.
+     * @param bufferSize Writes the size of the buffer to the variable address 
+     * passed by this argumnt.
      * @return Status
      */
-    virtual aditof::Status getFrame(uint16_t *buffer) = 0;
+    virtual aditof::Status getFrame(uint16_t *buffer,
+                                    uint32_t *bufferSize = nullptr) = 0;
 
     /**
      * @brief Read multiple registers from AFE.

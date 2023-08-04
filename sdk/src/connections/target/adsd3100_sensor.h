@@ -54,7 +54,8 @@ class Adsd3100Sensor : public aditof::DepthSensorInterface,
     setFrameType(const aditof::DepthSensorFrameType &type) override;
     virtual aditof::Status program(const uint8_t *firmware,
                                    size_t size) override;
-    virtual aditof::Status getFrame(uint16_t *buffer) override;
+    virtual aditof::Status getFrame(uint16_t *buffer,
+                                    uint32_t *bufferSize = nullptr) override;
     virtual aditof::Status readRegisters(const uint16_t *address,
                                          uint16_t *data, size_t length,
                                          bool burst = true) override;

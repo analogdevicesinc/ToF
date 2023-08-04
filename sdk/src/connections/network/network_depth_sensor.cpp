@@ -370,7 +370,8 @@ aditof::Status NetworkDepthSensor::program(const uint8_t *firmware,
     return status;
 }
 
-aditof::Status NetworkDepthSensor::getFrame(uint16_t *buffer) {
+aditof::Status NetworkDepthSensor::getFrame(uint16_t *buffer,
+                                            uint32_t *bufferSize) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -409,6 +410,10 @@ aditof::Status NetworkDepthSensor::getFrame(uint16_t *buffer) {
     //when using ITOF camera the data is already deinterleaved, so a simple copy is enough
     memcpy(buffer, net->recv_buff[m_sensorIndex].bytes_payload(0).c_str(),
            net->recv_buff[m_sensorIndex].bytes_payload(0).length());
+
+    if (bufferSize)
+        *bufferSize = static_cast<uint32_t>(
+            net->recv_buff[m_sensorIndex].bytes_payload(0).length());
 
     return status;
 }

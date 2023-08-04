@@ -23,7 +23,8 @@ OfflineDepthSensor::~OfflineDepthSensor() {
     m_frameTypes.clear();
 }
 
-aditof::Status OfflineDepthSensor::getFrame(uint16_t *buffer) {
+aditof::Status OfflineDepthSensor::getFrame(uint16_t *buffer,
+                                            uint32_t *bufferSize) {
     auto frame = m_frameTypes.find(m_frameTypeSelected + ".bin");
     if (frame == m_frameTypes.end()) {
         LOG(WARNING) << "get frame error " << m_frameTypeSelected
@@ -31,6 +32,10 @@ aditof::Status OfflineDepthSensor::getFrame(uint16_t *buffer) {
         return aditof::Status::GENERIC_ERROR;
     }
     memcpy(buffer, frame->second.first, frame->second.second);
+
+    if (bufferSize)
+        *bufferSize = frame->second.second;
+
     return aditof::Status::OK;
 }
 

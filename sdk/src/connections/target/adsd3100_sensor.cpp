@@ -698,7 +698,8 @@ void saveFrame(std::string id, char *data, size_t size) {
     g.close();
 }
 
-aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
+aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer,
+                                        uint32_t *bufferSize) {
     using namespace aditof;
     struct v4l2_buffer buf[MAX_SUBFRAMES_COUNT];
     struct VideoDev *dev;
@@ -729,6 +730,9 @@ aditof::Status Adsd3100Sensor::getFrame(uint16_t *buffer) {
 
         memcpy(buffer + (buf_data_len / sizeof(uint16_t)) * idx, pdata,
                buf[idx].bytesused);
+
+        if (bufferSize)
+            *bufferSize = buf[idx].bytesused;
 
         status = enqueueInternalBufferPrivate(buf[idx], dev);
         if (status != Status::OK) {

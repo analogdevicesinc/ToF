@@ -472,7 +472,8 @@ aditof::Status UsbDepthSensor::program(const uint8_t *firmware, size_t size) {
     return Status::OK;
 }
 
-aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
+aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer,
+                                        uint32_t *bufferSize) {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -542,6 +543,10 @@ aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
         static_cast<const char *>(m_implData->buffers[buf.index].start);
 
     memcpy(buffer, pdata, m_implData->buffers[buf.index].length);
+
+    if (bufferSize)
+        *bufferSize =
+            static_cast<uint32_t>(m_implData->buffers[buf.index].length);
 
     if (-1 == UsbLinuxUtils::xioctl(m_implData->fd, VIDIOC_QBUF, &buf)) {
         LOG(WARNING) << "VIDIOC_QBUF, error: " << errno << "("

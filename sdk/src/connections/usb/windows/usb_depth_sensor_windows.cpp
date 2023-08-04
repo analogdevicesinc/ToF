@@ -666,7 +666,8 @@ aditof::Status UsbDepthSensor::program(const uint8_t *firmware, size_t size) {
     return Status::OK;
 }
 
-aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
+aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer,
+                                        uint32_t *bufferSize) {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -680,9 +681,11 @@ aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
 
     while (retryCount < 1000) {
         if (m_implData->handle.pCB->newFrame == 1) {
-            long bufferSize = currentWidth * currentHeight * 2;
+            long bufferSizeTmp = currentWidth * currentHeight * 2;
             hr = m_implData->handle.pGrabber->GetCurrentBuffer(
-                (long *)&bufferSize, (long *)buffer);
+                (long *)&bufferSizeTmp, (long *)buffer);
+            if (bufferSize)
+                *bufferSize = bufferSizeTmp;
             if (hr != S_OK) {
                 LOG(WARNING) << "Incorrect Buffer Size allocated, Allocate "
                                 "bigger buffer";

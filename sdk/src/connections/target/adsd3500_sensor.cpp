@@ -679,7 +679,8 @@ aditof::Status Adsd3500Sensor::program(const uint8_t *firmware, size_t size) {
     return aditof::Status::OK;
 }
 
-aditof::Status Adsd3500Sensor::getFrame(uint16_t *buffer) {
+aditof::Status Adsd3500Sensor::getFrame(uint16_t *buffer,
+                                        uint32_t *bufferSize) {
 
     using namespace aditof;
     struct v4l2_buffer buf[MAX_SUBFRAMES_COUNT];
@@ -706,6 +707,9 @@ aditof::Status Adsd3500Sensor::getFrame(uint16_t *buffer) {
         }
 
         memcpy(buffer, pdata, buf_data_len);
+
+        if (bufferSize)
+            *bufferSize = buf_data_len;
 
         status = enqueueInternalBufferPrivate(buf[idx], dev);
         if (status != Status::OK) {
