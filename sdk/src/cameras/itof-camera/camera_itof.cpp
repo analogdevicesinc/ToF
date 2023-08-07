@@ -667,12 +667,8 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         if (item.type == "xyz" && !m_xyzEnabled) {
             continue;
         }
-        if (m_targetFramesAreComputed) {
-            if (item.type == "raw") {
-                continue;
-            } else if (item.type == "conf") {
-                continue;
-            }
+        if (m_targetFramesAreComputed && item.type == "raw") {
+            continue;
         }
 
         FrameDataDetails fDataDetails;
@@ -697,7 +693,8 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
     }
 
-    if (m_controls["enableDepthCompute"] == "on" && !m_pcmFrame &&
+    if (!m_targetFramesAreComputed &&
+        m_controls["enableDepthCompute"] == "on" && !m_pcmFrame &&
         ((m_details.frameType.totalCaptures > 1) || m_adsd3500Enabled ||
          m_isOffline)) {
         status = initComputeLibrary();
@@ -876,7 +873,8 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         }
     }
 
-    if ((m_controls["enableDepthCompute"] == "on") && !m_pcmFrame &&
+    if (!m_targetFramesAreComputed &&
+        (m_controls["enableDepthCompute"] == "on") && !m_pcmFrame &&
         ((totalCaptures > 1) || m_adsd3500Enabled || m_isOffline)) {
 
         if (NULL == m_tofi_compute_context) {
