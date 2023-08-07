@@ -483,7 +483,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                     height_tmp = it->height;
                 }
             }
-            processedFrameSize = width_tmp * height_tmp * 2;
+            processedFrameSize = width_tmp * height_tmp * 4;
 
             if (processedFrameBuffer != nullptr) {
                 delete[] processedFrameBuffer;
