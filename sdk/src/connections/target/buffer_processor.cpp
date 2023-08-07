@@ -230,11 +230,14 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
 
     uint16_t *tempDepthFrame = m_tofiComputeContext->p_depth_frame;
     uint16_t *tempAbFrame = m_tofiComputeContext->p_ab_frame;
+    float *tempConfFrame = m_tofiComputeContext->p_conf_frame;
 
     if (buffer != nullptr) {
         m_tofiComputeContext->p_depth_frame = buffer;
         m_tofiComputeContext->p_ab_frame =
             buffer + m_outputFrameWidth * m_outputFrameHeight / 4;
+        m_tofiComputeContext->p_conf_frame =
+            (float *)(buffer + m_outputFrameWidth * m_outputFrameHeight / 2);
 
         uint32_t ret =
             TofiCompute((uint16_t *)pdata, m_tofiComputeContext, NULL);
@@ -249,6 +252,9 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
         m_tofiComputeContext->p_depth_frame = m_processedBuffer;
         m_tofiComputeContext->p_ab_frame =
             m_processedBuffer + m_outputFrameWidth * m_outputFrameHeight / 4;
+        m_tofiComputeContext->p_conf_frame =
+            (float *)(m_processedBuffer +
+                      m_outputFrameWidth * m_outputFrameHeight / 2);
 
         uint32_t ret =
             TofiCompute((uint16_t *)pdata, m_tofiComputeContext, NULL);
@@ -264,6 +270,7 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
 
     m_tofiComputeContext->p_depth_frame = tempDepthFrame;
     m_tofiComputeContext->p_ab_frame = tempAbFrame;
+    m_tofiComputeContext->p_conf_frame = tempConfFrame;
 
     status = enqueueInternalBufferPrivate(buf[0], dev);
     if (status != Status::OK) {
