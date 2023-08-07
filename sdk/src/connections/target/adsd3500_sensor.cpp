@@ -691,7 +691,7 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
     //TO DO: update this values when frame_impl gets restructured
     status = m_bufferProcessor->setVideoProperties(type.content.at(1).width *
-                                                       sizeof(uint16_t) * 2,
+                                                       sizeof(uint16_t) * 4,
                                                    type.content.at(1).height);
     if (status != Status::OK) {
         LOG(ERROR) << "Failed to set bufferProcessor properties!";
