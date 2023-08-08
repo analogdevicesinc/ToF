@@ -82,7 +82,7 @@ static const char kUsagePublic[] =
       --ccb <FILE>       The path to store CCB content
       --ip <ip>          Camera IP
       --fw <firmware>    Adsd3500 fw file
-      --ft <format>      Format of saved image (raw/depth/ir/conf) [default: depth]
+      --ft <frameType>   FrameType of saved image (raw/depth/ir/conf) [default: depth]
 
     Note: --m argument supports both index and string (0/sr-native) 
 
@@ -380,25 +380,17 @@ int main(int argc, char *argv[]) {
     std::string sensorName;
     status = depthSensor->getName(sensorName);
 
-    // Set UVC format type and camera frame details
-    if ("raw" == frame_type) {
+    // Disable depth compute for raw frames
+    if (frame_type == "raw") {
         camera->setControl("enableDepthCompute", "off");
-    } 
-    else if ("ir" == frame_type)
-    {
-        camera->setControl("enableDepthCompute", "on");
     }
-    else if ("depth" == frame_type || "conf" == frame_type) {
-        if (modeName == "pcm-native") {
-            LOG(ERROR) << modeName
-                       << " mode doesn't contain depth/conf data, please set --ft "
-                          "(frameType) to raw.";
-            return 0;
-        } else
-            camera->setControl("enableDepthCompute", "on");
-    } else {
-        LOG(ERROR) << "unsupported frame type!";
-        return 0;
+
+    // pcm-native contains ir only
+    if (frame_type != "ir" && modeName == "pcm-native") {
+        LOG(ERROR) << modeName
+                   << " mode doesn't contain depth/conf/raw data, setting --ft "
+                      "(frameType) to ir.";
+        frame_type = "ir";
     }
 
     status = camera->setFrameType(modeName);
@@ -502,22 +494,43 @@ int main(int argc, char *argv[]) {
         width = fDetails.width;
 
         frameType = "raw";
+        std::string pixelCount;
 
         // Depth Data
         if (frame_type == "depth") {
+            status = depthSensor->getControl("phaseDepthBits", pixelCount);
+            if (!std::stoi(pixelCount)) {
+                LOG(ERROR) << "Depth disabled from ini file!";
+                return 0;
+            }
+
             frame_size = sizeof(uint16_t) * height * width;
             frameType = "depth";
         }
         // Ir data
         else if (frame_type == "ir") {
+            if (modeName != "pcm-native") {
+                status = depthSensor->getControl("abBits", pixelCount);
+                if (!std::stoi(pixelCount)) {
+                    LOG(ERROR) << "IR disabled from ini file!";
+                    return 0;
+                }
+            }
+
             frame_size = sizeof(uint16_t) * height * width;
             frameType = "ir";
         }
         // Conf data
-        else if (frame_type == "conf"){
+        else if (frame_type == "conf") {
+            status = depthSensor->getControl("confidenceBits", pixelCount);
+            if (!std::stoi(pixelCount)) {
+                LOG(ERROR) << "Conf disabled from ini file!";
+                return 0;
+            }
+
             frame_size = sizeof(float) * height * width;
             frameType = "conf";
-        } 
+        }
         // Raw data
         else if (frame_type == "raw") {
             aditof::FrameDataDetails rawFrameDetails;
