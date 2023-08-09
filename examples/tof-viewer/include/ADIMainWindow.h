@@ -317,6 +317,9 @@ class ADIMainWindow {
     std::shared_ptr<adiviewer::ADIView> view = nullptr;
     AppLog my_log;
 
+    int frameCounter = 0;
+    int fps = 0;
+
     /**
 		* @brief Rotation of an ImGui texture.
 		*/
@@ -506,6 +509,11 @@ class ADIMainWindow {
 		 *        content. (e.g. 'depth', 'ir', 'xyz', etc.)
 		 */
     bool checkCameraSetToReceiveContent(const std::string &contentType);
+
+    /**
+     * @brief Computes streaming fps
+    */
+    void computeFPS(int &fps);
 
     /**
          * @brief Return the current selected camera object
