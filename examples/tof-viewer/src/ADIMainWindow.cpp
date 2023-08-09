@@ -71,6 +71,7 @@ namespace fs = ghc::filesystem;
 
 using namespace adiMainWindow;
 
+auto startTime = std::chrono::system_clock::now();
 static int numProcessors;
 GLFWimage icons[1];
 GLFWimage logos[1];
@@ -403,6 +404,7 @@ void ADIMainWindow::render() {
         ShowPlaybackTree();
         if (isPlaying) {
             PlayCCD(modeSelection, viewSelection);
+            computeFPS(fps);
             if (view->m_ctrl->panicStop) {
                 stopPlayCCD();
             }
@@ -1316,6 +1318,7 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
         ImGui::Text("%ipx x %ipx -> %ipx x %ipx", view->frameWidth,
                     view->frameHeight, (uint32_t)displayIRDimensions.x,
                     (uint32_t)displayIRDimensions.y);
+        ImGui::Text(" FPS: %i", fps);
     }
     ImGui::End();
 }
@@ -1445,7 +1448,6 @@ void ADIMainWindow::displayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
     //Create a color bar for Point Cloud
     /*createColorBar({ (float)(view->frameWidth * 1.15), 150.0f },
 		{ 200.0, 750.0 });*/
-
     ImGui::End();
 }
 
@@ -2159,6 +2161,18 @@ void ADIMainWindow::MatrixMultiply(mat4x4 out, mat4x4 a, mat4x4 b) {
     mat4x4_dup(atmp, a);
     mat4x4_dup(btmp, b);
     mat4x4_mul(out, a, b);
+}
+
+void ADIMainWindow::computeFPS(int &fps) {
+    frameCounter++;
+    auto currentTime = std::chrono::system_clock::now();
+
+    std::chrono::duration<double> elapsed = currentTime - startTime;
+    if (elapsed.count() >= 2) {
+        fps = frameCounter / (int)elapsed.count();
+        frameCounter = 0;
+        startTime = currentTime;
+    }
 }
 
 bool ADIMainWindow::checkCameraSetToReceiveContent(
