@@ -240,7 +240,7 @@ if %use_depth_compute_stubs%==1 (
 		if %use_depth_compute_opensource%==1 (
 			cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir% -DUSE_DEPTH_COMPUTE_OPENSOURCE=ON -DCMAKE_BUILD_TYPE=%config_type%
 		) else (
-			cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir% 
+			cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir% -DCMAKE_BUILD_TYPE=%config_type%
 		) 
 )
 cmake --build . --config %config_type% -j %threads%
