@@ -35,8 +35,11 @@ import cv2 as cv
 import argparse
 from enum import Enum
 import sys
+import keyboard
 
-ip = "" # Set to "ip:10.42.0.1" if networking is used.
+ip = "10.42.0.1" # Set to "10.42.0.1" if networking is used.
+config = "config/config_adsd3500_adsd3100.json"
+mode = "sr-qnative"
 
 inWidth = 300
 inHeight = 300
@@ -58,6 +61,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description='Script to run MobileNet-SSD object detection network ')
+    parser.add_argument("--ip", default=ip, help="IP address of ToF Device")
+    parser.add_argument("--config", default=config, help="IP address of ToF Device")
     parser.add_argument("--prototxt", default="MobileNetSSD_deploy.prototxt",
                         help='Path to text network file: '
                              'MobileNetSSD_deploy.prototxt')
@@ -82,44 +87,49 @@ if __name__ == "__main__":
     system = tof.System()
 
     cameras = []
-    status = system.getCameraList(cameras, ip)
+    status = system.getCameraList(cameras, "ip:"+args.ip)
     if not status:
-        print("system.getCameraList() failed with status: ", status)
+        print("system.getCameraList(): ", status)
 
-    status = cameras[0].initialize()
+    camera1 = cameras[0]
+        
+    status = camera1.setControl("initialization_config", args.config)
+    print("camera1.setControl()", status)
+
+    status = camera1.initialize()
     if not status:
-        print("cameras[0].initialize() failed with status: ", status)
+        print("camera1.initialize() failed with status: ", status)
 
     modes = []
-    status = cameras[0].getAvailableModes(modes)
+    status = camera1.getAvailableModes(modes)
     if not status:
         print("system.getAvailableModes() failed with status: ", status)
 
-    status = cameras[0].setMode(modes[ModesEnum.MODE_NEAR.value])
+    status = camera1.setMode(modes[ModesEnum.MODE_NEAR.value])
     if not status:
-        print("cameras[0].setMode() failed with status: ", status)
+        print("camera1.setMode() failed with status: ", status)
 
     types = []
-    status = cameras[0].getAvailableFrameTypes(types)
+    status = camera1.getAvailableFrameTypes(types)
     if not status:
         print("system.getAvailableFrameTypes() failed with status: ", status)
-    
-    status = cameras[0].setFrameType(types[2]) # types[2] is 'mp_pcm' type.
+        
+    status = camera1.setFrameType(mode)
     if not status:
-        print("cameras[0].setFrameType() failed with status:", status)
+        print("camera1.setFrameType() failed with status:", status)
     
-    status = cameras[0].start()
+    status = camera1.start()
     if not status:
-        print("cameras[0].start() failed with status:", status)
+        print("camera1.start() failed with status:", status)
    
     camDetails = tof.CameraDetails()
-    status = cameras[0].getDetails(camDetails)
+    status = camera1.getDetails(camDetails)
     if not status:
         print("system.getDetails() failed with status: ", status)
 
     # Enable noise reduction for better results
     smallSignalThreshold = 100
-    cameras[0].setControl("noise_reduction_threshold", str(smallSignalThreshold))
+    camera1.setControl("noise_reduction_threshold", str(smallSignalThreshold))
 
     camera_range = 5000
     bitCount = 9
@@ -130,10 +140,15 @@ if __name__ == "__main__":
     distance_scale = 255.0 / camera_range
 
     while True:
+    
+        if keyboard.is_pressed('q'):
+            print("'q' key pressed. Exiting loop.")
+            break
+            
         # Capture frame-by-frame
-        status = cameras[0].requestFrame(frame)
+        status = camera1.requestFrame(frame)
         if not status:
-            print("cameras[0].requestFrame() failed with status: ", status)
+            print("camera1.requestFrame() failed with status: ", status)
 
         depth_map = np.array(frame.getData("depth"), dtype="uint16", copy=False)
         ir_map = np.array(frame.getData("ir"), dtype="uint16", copy=False)
@@ -242,3 +257,5 @@ if __name__ == "__main__":
 
         if cv.waitKey(1) >= 0:
             break
+            
+    camera1.stop()
