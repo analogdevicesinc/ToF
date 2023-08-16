@@ -516,11 +516,10 @@ void ADIMainWindow::setWindowSize(float width, float height) {
 
 void ADIMainWindow::showOpenDeviceWindow() {
     ImGui::SetNextTreeNodeOpen(true, ImGuiCond_FirstUseEver);
-    // setWindowPosition(0.0, offsetfromtop);
-    // setWindowSize(300.0, 590);
-    // ImGui::Begin("Device", NULL,
-    //              ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
-    ImGui::Begin("Device Options", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+    setWindowPosition(0.0, offsetfromtop);
+    setWindowSize(300.0, 590);
+    ImGui::Begin("Device", NULL,
+                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
     if (ImGui::TreeNode("Open Device")) {
         ImGuiExtensions::ADIComboBox("Device", "(No available devices)",
@@ -539,7 +538,7 @@ void ADIMainWindow::showOpenDeviceWindow() {
         }
 
         bool _noConnected = m_connectedDevices.empty();
-        if (ImGuiExtensions::ADIButton("Refresh Devices", _noConnected)) {
+        if (ImGuiExtensions::ADIButton("Refresh", _noConnected)) {
             _isOpenDevice = false;
             cameraWorkerDone = false;
             RefreshDevices();
@@ -552,7 +551,7 @@ void ADIMainWindow::showOpenDeviceWindow() {
 
             ImGuiExtensions::ButtonColorChanger colorChanger(
                 ImGuiExtensions::ButtonColor::Green, openAvailable);
-            if (ImGuiExtensions::ADIButton("Open Device",
+            if (ImGuiExtensions::ADIButton("Open",
                                            /*openAvailable*/ _isOpenDevice &&
                                                m_configFiles.size() > 0) &&
                 0 <= m_selectedDevice) {
@@ -608,10 +607,9 @@ void ADIMainWindow::showOpenDeviceWindow() {
 
             _isOpenDevice = false;
             if (ImGui::TreeNode("ToF Camera Options")) {
-                ImGui::Text("Mode:");
                 const float width = ImGui::GetWindowWidth();
                 ImGuiExtensions::ADIComboBox(
-                    "##On", "Select Mode", ImGuiSelectableFlags_None,
+                    "Mode", "Select Mode", ImGuiSelectableFlags_None,
                     m_cameraModes, &modeSelection, true);
 
                 ImGui::NewLine();
@@ -689,12 +687,11 @@ void ADIMainWindow::ShowPlaybackTree() {
     /**********/
     //Playback
     ImGui::SetNextTreeNodeOpen(true, ImGuiCond_FirstUseEver);
-    // setWindowPosition(0.0, offsetfromtop + 590);
-    // setWindowSize(300.0, 150);
-    // ImGui::Begin("Playback", NULL,
-    //              ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+    setWindowPosition(0.0, offsetfromtop + 590);
+    setWindowSize(300.0, 150);
+    ImGui::Begin("Playback", NULL,
+                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
-    ImGui::Begin("Playback Options", NULL, ImGuiWindowFlags_AlwaysAutoResize);
     if (ImGui::TreeNode("Playback Options")) {
         float customColorOpenRec = 0.22f;
         ImGuiExtensions::ButtonColorChanger colorChangerPlay(
