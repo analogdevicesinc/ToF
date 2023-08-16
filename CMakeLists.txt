@@ -66,16 +66,16 @@ add_definitions(-DADITOFSDK_GIT_BRANCH="${ADITOFSDK_GIT_BRANCH}")
 
 ########################## Checks and validations #############################
 
-set(DEPTH_COMPUTE_LOCATION 0)
-set(ALL_DEPTH_COMPUTE_OPTIONS USE_DEPTH_COMPUTE_STUBS;USE_DEPTH_COMPUTE_OPENSOURCE;USE_DEPTH_COMPUTE_ON_TARGET)
+set(DEPTH_COMPUTE_TYPE 0)
+set(ALL_DEPTH_COMPUTE_OPTIONS USE_DEPTH_COMPUTE_STUBS;USE_DEPTH_COMPUTE_OPENSOURCE)
 foreach(depth_compute IN LISTS ALL_DEPTH_COMPUTE_OPTIONS)
     if(${depth_compute})
-        math(EXPR DEPTH_COMPUTE_LOCATION "${DEPTH_COMPUTE_LOCATION}+1")
+        math(EXPR DEPTH_COMPUTE_TYPE "${DEPTH_COMPUTE_TYPE}+1")
     endif()
 endforeach()
 
-if(${DEPTH_COMPUTE_LOCATION} GREATER 1)
-        message(FATAL_ERROR "More than one Depth Compute library source was selected. Please selecte at most one or none. Cmake will exit.")
+if(${DEPTH_COMPUTE_TYPE} GREATER 1)
+        message(FATAL_ERROR "More than one Depth Compute library source was selected. Cmake will exit.")
 endif()
 
 ############################## Rest of cmake ##################################
@@ -138,21 +138,19 @@ else()
         add_definitions(-DUSE_PROTOBUF)
 endif()
 
+if(USE_DEPTH_COMPUTE_ON_TARGET)
+        add_definitions(-DDEPTH_COMPUTE_ON_TARGET=1)
+endif()
+
 if(USE_DEPTH_COMPUTE_STUBS)
 	set(LIBTOFI_LIBDIR_PATH "${CMAKE_BINARY_DIR}/sdk/common/adi/depth-compute-stub")
 elseif(USE_DEPTH_COMPUTE_OPENSOURCE)
 	set(LIBTOFI_LIBDIR_PATH "${CMAKE_BINARY_DIR}/sdk/common/adi/depth-compute-opensource")
-elseif(USE_DEPTH_COMPUTE_ON_TARGET)
-        add_definitions(-DDEPTH_COMPUTE_ON_TARGET=1)
-        if(ON_TARGET) # On TARGET link the proper library
-                set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
-        else() # On HOST link stubs to silence the build errors
-                set(LIBTOFI_LIBDIR_PATH "${CMAKE_BINARY_DIR}/sdk/common/adi/depth-compute-stub")
-        endif()
 else()
         set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
 endif()
-if(WIN32 AND (USE_DEPTH_COMPUTE_STUBS OR USE_DEPTH_COMPUTE_OPENSOURCE OR USE_DEPTH_COMPUTE_ON_TARGET))
+
+if(WIN32 AND (USE_DEPTH_COMPUTE_STUBS OR USE_DEPTH_COMPUTE_OPENSOURCE))
         set(LIBTOFI_LIBDIR_PATH "${LIBTOFI_LIBDIR_PATH}/${CMAKE_BUILD_TYPE}")
 endif()
 
