@@ -514,10 +514,11 @@ void ADIMainWindow::setWindowSize(float width, float height) {
 
 void ADIMainWindow::showOpenDeviceWindow() {
     ImGui::SetNextTreeNodeOpen(true, ImGuiCond_FirstUseEver);
-    setWindowPosition(0.0, offsetfromtop);
-    setWindowSize(300.0, 590);
-    ImGui::Begin("Device", NULL,
-                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+    // setWindowPosition(0.0, offsetfromtop);
+    // setWindowSize(300.0, 590);
+    // ImGui::Begin("Device", NULL,
+    //              ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+    ImGui::Begin("Device Options", NULL, ImGuiWindowFlags_AlwaysAutoResize);
 
     if (ImGui::TreeNode("Open Device")) {
         ImGuiExtensions::ADIComboBox("Device", "(No available devices)",
@@ -529,8 +530,14 @@ void ADIMainWindow::showOpenDeviceWindow() {
             m_selectedDevice = 0;
             _isOpenDevice = true;
         }
+        if (!m_connectedDevices.empty()) {
+            ImGuiExtensions::ADIComboBox(
+                "Config", "No Config Files", ImGuiSelectableFlags_None,
+                m_configFiles, &configSelection, _isOpenDevice);
+        }
 
-        if (ImGui::Button("Refresh Devices")) {
+        bool _noConnected = m_connectedDevices.empty();
+        if (ImGuiExtensions::ADIButton("Refresh Devices", _noConnected)) {
             _isOpenDevice = false;
             cameraWorkerDone = false;
             RefreshDevices();
@@ -557,14 +564,6 @@ void ADIMainWindow::showOpenDeviceWindow() {
             }
         }
 
-        if (!m_connectedDevices.empty()) {
-            const float width = ImGui::GetWindowWidth();
-            const float combo_width = width * 0.5f;
-            ImGui::SetNextItemWidth(combo_width);
-            ImGuiExtensions::ADIComboBox(
-                "Config Files", "No Config Files", ImGuiSelectableFlags_None,
-                m_configFiles, &configSelection, _isOpenDevice);
-        }
         //ImGui::SameLine();
 #if defined(Debug) && defined(_WIN32)
         cpuUsage = getCurrentValue();
@@ -609,10 +608,8 @@ void ADIMainWindow::showOpenDeviceWindow() {
             if (ImGui::TreeNode("ToF Camera Options")) {
                 ImGui::Text("Mode:");
                 const float width = ImGui::GetWindowWidth();
-                const float combo_width = width * 0.35f;
-                ImGui::SetNextItemWidth(combo_width);
                 ImGuiExtensions::ADIComboBox(
-                    "Mode Options", "Select Mode", ImGuiSelectableFlags_None,
+                    "##On", "Select Mode", ImGuiSelectableFlags_None,
                     m_cameraModes, &modeSelection, true);
 
                 ImGui::NewLine();
@@ -653,35 +650,35 @@ void ADIMainWindow::showOpenDeviceWindow() {
         ImGui::TreePop();
     }
 
-    //Logo Window
-    setWindowPosition(0.0, 628);
-    setWindowSize(300.0, 90.0);
-    ImGui::Begin("Company Logo", NULL,
-                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar |
-                     ImGuiWindowFlags_NoScrollbar);
+    // //Logo Window
+    // setWindowPosition(0.0, 628);
+    // setWindowSize(300.0, 90.0);
+    // ImGui::Begin("Company Logo", NULL,
+    //              ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar |
+    //                  ImGuiWindowFlags_NoScrollbar);
 
-    float scale = 1.0f;
-    if (logos[0].pixels != nullptr) {
-        if (logos[0].width > 480.0f) {
-            if (_isHighDPI) {
-                scale = 480.0f / logos[0].width;
-            } else {
-                scale = (480.0f / logos[0].width) / 4;
-            }
-        }
-        if ((logos[0].height * scale) > 145.0) {
-            if (_isHighDPI) {
-                scale = 145.0f / logos[0].height;
-            } else {
-                scale = (145.0f / logos[0].height) / 4;
-            }
-        }
+    // float scale = 1.0f;
+    // if (logos[0].pixels != nullptr) {
+    //     if (logos[0].width > 480.0f) {
+    //         if (_isHighDPI) {
+    //             scale = 480.0f / logos[0].width;
+    //         } else {
+    //             scale = (480.0f / logos[0].width) / 4;
+    //         }
+    //     }
+    //     if ((logos[0].height * scale) > 145.0) {
+    //         if (_isHighDPI) {
+    //             scale = 145.0f / logos[0].height;
+    //         } else {
+    //             scale = (145.0f / logos[0].height) / 4;
+    //         }
+    //     }
 
-        ImGui::Image((void *)(intptr_t)logo_texture,
-                     ImVec2(logos[0].width * scale, logos[0].height * scale));
-    }
+    //     ImGui::Image((void *)(intptr_t)logo_texture,
+    //                  ImVec2(logos[0].width * scale, logos[0].height * scale));
+    // }
 
-    ImGui::End(); //Logo END
+    // ImGui::End(); //Logo END
 
     ImGui::End();
 }
@@ -690,11 +687,12 @@ void ADIMainWindow::ShowPlaybackTree() {
     /**********/
     //Playback
     ImGui::SetNextTreeNodeOpen(true, ImGuiCond_FirstUseEver);
-    setWindowPosition(0.0, offsetfromtop + 590);
-    setWindowSize(300.0, 150);
-    ImGui::Begin("Playback", NULL,
-                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+    // setWindowPosition(0.0, offsetfromtop + 590);
+    // setWindowSize(300.0, 150);
+    // ImGui::Begin("Playback", NULL,
+    //              ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
+    ImGui::Begin("Playback Options", NULL, ImGuiWindowFlags_AlwaysAutoResize);
     if (ImGui::TreeNode("Playback Options")) {
         float customColorOpenRec = 0.22f;
         ImGuiExtensions::ButtonColorChanger colorChangerPlay(
