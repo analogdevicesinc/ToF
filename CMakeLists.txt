@@ -139,7 +139,7 @@ else()
 endif()
 
 if(USE_DEPTH_COMPUTE_ON_TARGET)
-        add_definitions(-DDEPTH_COMPUTE_ON_TARGET=1)
+        add_definitions(-DDEPTH_COMPUTE_ON_TARGET)
 endif()
 
 if(USE_DEPTH_COMPUTE_STUBS)
