@@ -431,7 +431,7 @@ static void uvc_events_process_data(struct uvc_device *dev,
                 blob_len_read = false;
             }
         } else {
-            dev->in_buf.len = data->data[0];
+            dev->in_buf.len = *(size_t *)data->data;
             dev->in_buf.data = (char *)malloc(dev->in_buf.len); 
             client_req_bytes_read = 0;
             blob_len_read = true;
