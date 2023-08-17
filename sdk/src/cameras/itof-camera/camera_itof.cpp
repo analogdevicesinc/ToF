@@ -744,7 +744,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
             &(pDealias->camera_intrinsics), pDealias->n_sensor_rows,
             pDealias->n_sensor_cols,
             ModeInfo::getInstance()->getModeInfo(frameType).width,
-            ModeInfo::getInstance()->getModeInfo(frameType).width,
+            ModeInfo::getInstance()->getModeInfo(frameType).height,
             pDealias->n_offset_rows, pDealias->n_offset_cols,
             pDealias->row_bin_factor, pDealias->col_bin_factor,
             GEN_XYZ_ITERATIONS);
