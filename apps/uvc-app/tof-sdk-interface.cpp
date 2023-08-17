@@ -111,11 +111,7 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
     uvc_payload::ServerResponse response;
     std::string serverResponseBlob;
 
-    char str[in_len + 1];
-    memcpy(str, in_buf, in_len);
-    str[in_len] = '\0'; // Null termination.
-
-    request.ParseFromString(str);
+    request.ParseFromString(std::string(in_buf, in_len));
 
     switch (request.func_name()) {
 
