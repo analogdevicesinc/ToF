@@ -648,35 +648,35 @@ void ADIMainWindow::showOpenDeviceWindow() {
         ImGui::TreePop();
     }
 
-    // //Logo Window
-    // setWindowPosition(0.0, 628);
-    // setWindowSize(300.0, 90.0);
-    // ImGui::Begin("Company Logo", NULL,
-    //              ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar |
-    //                  ImGuiWindowFlags_NoScrollbar);
+    //Logo Window
+    setWindowPosition(0.0, 628);
+    setWindowSize(300.0, 90.0);
+    ImGui::Begin("Company Logo", NULL,
+                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar |
+                     ImGuiWindowFlags_NoScrollbar);
 
-    // float scale = 1.0f;
-    // if (logos[0].pixels != nullptr) {
-    //     if (logos[0].width > 480.0f) {
-    //         if (_isHighDPI) {
-    //             scale = 480.0f / logos[0].width;
-    //         } else {
-    //             scale = (480.0f / logos[0].width) / 4;
-    //         }
-    //     }
-    //     if ((logos[0].height * scale) > 145.0) {
-    //         if (_isHighDPI) {
-    //             scale = 145.0f / logos[0].height;
-    //         } else {
-    //             scale = (145.0f / logos[0].height) / 4;
-    //         }
-    //     }
+    float scale = 1.0f;
+    if (logos[0].pixels != nullptr) {
+        if (logos[0].width > 480.0f) {
+            if (_isHighDPI) {
+                scale = 480.0f / logos[0].width;
+            } else {
+                scale = (480.0f / logos[0].width) / 4;
+            }
+        }
+        if ((logos[0].height * scale) > 145.0) {
+            if (_isHighDPI) {
+                scale = 145.0f / logos[0].height;
+            } else {
+                scale = (145.0f / logos[0].height) / 4;
+            }
+        }
 
-    //     ImGui::Image((void *)(intptr_t)logo_texture,
-    //                  ImVec2(logos[0].width * scale, logos[0].height * scale));
-    // }
+        ImGui::Image((void *)(intptr_t)logo_texture,
+                     ImVec2(logos[0].width * scale, logos[0].height * scale));
+    }
 
-    // ImGui::End(); //Logo END
+    ImGui::End(); //Logo END
 
     ImGui::End();
 }
