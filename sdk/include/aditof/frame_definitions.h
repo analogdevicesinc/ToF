@@ -75,6 +75,14 @@ struct FrameDataDetails {
      * together with other elements make up the entire image.
      */
     unsigned int subelementsPerElement;
+
+    /**
+     * @brief The total number of bytes that the data has.
+     * This can be useful when copying data to another location or when saving
+     * data to a file or any other usecase where the size in bytes needs to be
+     * known.
+     */
+    unsigned int bytesCount;
 };
 
 /**
