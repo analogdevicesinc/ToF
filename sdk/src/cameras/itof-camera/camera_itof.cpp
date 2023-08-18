@@ -688,7 +688,12 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
                 (uint16_t *)&fDataDetails.height, &pixFmt);
             fDataDetails.subelementSize = 1;
             fDataDetails.subelementsPerElement = 1;
+        } else if (item.type == "conf") {
+            fDataDetails.subelementSize = sizeof(float);
         }
+        fDataDetails.bytesCount = fDataDetails.width * fDataDetails.height *
+                                  fDataDetails.subelementSize *
+                                  fDataDetails.subelementsPerElement;
 
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
     }
