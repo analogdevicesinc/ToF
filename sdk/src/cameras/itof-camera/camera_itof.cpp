@@ -706,7 +706,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     }
 
     // If we want computed frames (Depth & AB), tell target to initialize depth compute
-    if (m_targetFramesAreComputed) {
+    if (m_targetFramesAreComputed && !m_pcmFrame) {
         if (!m_ini_depth.empty()) {
             size_t dataSize = m_depthINIData.size;
             unsigned char *pData = m_depthINIData.p_data;
@@ -732,7 +732,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     }
 
     // If we compute XYZ then prepare the XYZ tables which depend on the mode
-    if (m_targetFramesAreComputed) {
+    if (m_targetFramesAreComputed && !m_pcmFrame) {
         uint8_t mode =
             ModeInfo::getInstance()->getModeInfo(m_details.frameType.type).mode;
         const int GEN_XYZ_ITERATIONS = 20;
@@ -837,7 +837,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     }
 
     uint16_t *frameDataLocation = nullptr;
-    if (m_targetFramesAreComputed) {
+    if (m_targetFramesAreComputed && !m_pcmFrame) {
         frame->getData("frameData", &frameDataLocation);
     } else {
         if ((m_details.frameType.type == "pcm-native")) {
@@ -932,7 +932,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     }
 
     // The incoming frames frome sensor are already processed. Need to just create XYZ data
-    if (m_targetFramesAreComputed) {
+    if (m_targetFramesAreComputed && !m_pcmFrame) {
         if (m_xyzEnabled) {
             uint16_t *depthFrame;
             uint16_t *xyzFrame;
