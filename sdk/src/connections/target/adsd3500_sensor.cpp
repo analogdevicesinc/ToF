@@ -689,12 +689,14 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
     m_implData->frameType = type;
 
-    //TO DO: update this values when frame_impl gets restructured
-    status = m_bufferProcessor->setVideoProperties(type.content.at(1).width * 4,
-                                                   type.content.at(1).height);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Failed to set bufferProcessor properties!";
-        return status;
+    if (type.type != "pcm-native") {
+        //TO DO: update this values when frame_impl gets restructured
+        status = m_bufferProcessor->setVideoProperties(
+            type.content.at(1).width * 4, type.content.at(1).height);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to set bufferProcessor properties!";
+            return status;
+        }
     }
 
     return status;
@@ -710,7 +712,7 @@ aditof::Status Adsd3500Sensor::getFrame(uint16_t *buffer) {
     using namespace aditof;
     Status status;
 
-    if (m_depthComputeOnTarget) {
+    if (m_depthComputeOnTarget && m_implData->frameType.type != "pcm-native") {
         status = m_bufferProcessor->processBuffer(buffer);
         if (status != Status::OK) {
             LOG(ERROR) << "Failed to process buffer!";
