@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset=utf-8 http-equiv="Content-Language" content="en" />
+	<link rel="stylesheet" type="text/css" href="test.css" />
+	<script type='text/javascript' src="/lws-common.js"></script>
+	<script type='text/javascript' src='test.js'></script>
+	<title>Tof Web App</title>
+	<!-- Neccessary bindings and java-script functions -->
+	<!-- <script src="//cdn.jsdelivr.net/npm/protobufjs@7.X.X/dist/protobuf.js"></script> -->
+	<script src="text.js"></script>
+</head>
+
+<body>
+	<div class="mainFrame">
+		<div class="row_top">
+			<div class="row">
+				<div class="column_left" style="background-color:#dbd8d8;">
+					<table>
+						<tr>
+							<td valign=middle align=center>
+								<a>
+									<img src="CompanyIcon.png">
+								</a>
+								<div id=brow hidden></div>
+							</td>
+							<td width="64" height="64" id="wstransport"></td>
+							<td width="64" height="64" id="transport"></td>
+						</tr>
+					</table>
+
+					<h2>Command Interface</h2>
+					<!-- Camera selection -->
+					<select class="custom-select" id="cameraSelect" name="cameraSelect">
+						<option value="adsd3030">Adsd3030</option>
+						<option value="adsd3100">Adsd3100</option>
+					</select>
+					<input class="button" type=button id=connectCamera value="Open">
+					</br>
+					</br>
+
+					<!-- Frame Type selection -->
+					<select class="custom-select" id="frameTypeSelect" name="frameTypeSelect" disabled = true>
+					</select>
+					<input class="button" type=button id=setFrameType value="Set Frame Type">
+					</br>
+					</br>
+
+					<!-- Format selection -->
+					<select class="custom-select" id="formatSelect" name="formatSelect" disabled = true>
+					</select>
+					<input class="button" type=button id=setFormat value="Set format">
+					</br>
+					</br>
+					<input class="button" type=button id=start value="Start" disabled = true>
+					<input class="button" type=button id=stop value="Stop" disabled = true>
+					</br>
+					</br>
+
+				</div>
+				<div class="column_right" style="background-color:#7f7f7f;">
+					<!-- <h2></h2>
+									<img src="https://upload.wikimedia.org/wikipedia/commons/8/88/Hungarian_Parlament.jpg"
+											alt="" />
+									<img id="my-image" src="" alt="" />
+ 						-->
+						 <div id="count"></div>
+						 <div id="img"></div>
+						 <img id="img2"> </img>
+						</br>
+						</br>
+
+
+					<table>
+						<tr>
+							<td id=wsdi_statustd align=center class="wsstatus">
+								<span id=wsdi_status>Websocket connection not
+									initialized
+								</span>
+							</td>
+						</tr>
+						<tr>
+							<td align=center>
+								<div id=number class="bigger"> </div>
+							</td>
+							<td align=center>
+								<input type=button id=offset value="Reset counter">
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+		<div class="row_bottom">
+			<div id="tofConsole">
+			</div>
+		</div>
+	</div>
+
+</body>
+
+</html>
