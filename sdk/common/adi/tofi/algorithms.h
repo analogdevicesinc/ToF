@@ -26,7 +26,6 @@ SOFTWARE.
 
 #include <cstdint>
 
-#include "aditof/sdk_exports.h"
 #include "tofi_camera_intrinsics.h"
 #include "tofi_config.h"
 
