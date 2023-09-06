@@ -146,8 +146,8 @@ int main(int argc, char *argv[]) {
 
     result = command.checkMandatoryArguments(command_map, arg_error);
     if (result != 0) {
-        LOG(ERROR) << "Mandatory argument: " << arg_error
-                   << " missing. Please check help menu!";
+        LOG(ERROR) << "Mandatory argument: " << arg_error << " missing";
+        LOG(INFO) << kUsagePublic;
         return -1;
     }
 
