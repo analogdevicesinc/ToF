@@ -230,7 +230,11 @@
 				j++;
 			}
 		}
-
+		else
+		{
+			console.log("Unknown format type!");
+			isStreaming = false;
+		}
 		context.putImageData(imgData, 0, 0);
 		isPreparingFrame = false;
 	}
