@@ -139,8 +139,8 @@ int main(int argc, char *argv[]) {
     result = command.checkValue(command_map, arg_error);
     if (result != 0) {
         LOG(ERROR) << "Argument: " << arg_error
-                   << " doesn't have assigned or default value! Please check "
-                      "help menu.";
+                   << " doesn't have assigned or default value!";
+        LOG(INFO) << kUsagePublic;
         return -1;
     }
 
@@ -155,8 +155,8 @@ int main(int argc, char *argv[]) {
     if (result != 0) {
         LOG(ERROR) << "Mandatory argument " << arg_error
                    << " is not on its correct position ("
-                   << command_map[arg_error].position
-                   << "). Please check help menu !";
+                   << command_map[arg_error].position << ").";
+        LOG(INFO) << kUsagePublic;
         return -1;
     }
 
