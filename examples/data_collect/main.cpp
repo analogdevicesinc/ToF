@@ -70,7 +70,7 @@ static const char kUsagePublic[] =
       data_collect (-h | --help)
 
     Arguments:
-      CONFIG            Input config_default.json file (which has *.ccb and *.cfg)
+      CONFIG            Name of a configuration file (with .json extension)
 
     Options:
       -h --help          Show this screen.
