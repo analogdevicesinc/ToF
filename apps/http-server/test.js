@@ -194,6 +194,7 @@ var camera = "";
 var frameType = "";
 var formatType = "";
 var isPreparingFrame = false;
+var isStreaming = false;
 
 
 var mirror_name = "";
@@ -254,7 +255,8 @@ function ws_open_tof()
 			{
 				if (isPreparingFrame == false)
 					blobToBinary(msg.data);
-				socket_tof.send("requestFrame\n");
+				if (isStreaming == true)
+					socket_tof.send("requestFrame\n");
 			}
 			else
 			{
@@ -429,6 +431,7 @@ function startStreaming(){
 	if (socketConnected == true && camera != "" && frameType != "" && formatType != "")
 	{
 		// Start streaming
+		isStreaming = true;
 		console.log("Starting streaming");
 		socket_tof.send("requestFrame\n");
 	}
@@ -443,8 +446,10 @@ function stopStreaming(){
 	if (socketConnected == true && camera != "" && frameType != "" && formatType != "")
 	{
 		// Stop streaming
+		isStreaming = false;
 		console.log("Stop streaming");
 		socket_tof.send("stop\n");
+
 	}
 	else
 	{
