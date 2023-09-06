@@ -146,14 +146,18 @@ int main(int argc, char *argv[]) {
 
     result = command.checkMandatoryArguments(command_map, arg_error);
     if (result != 0) {
-        LOG(ERROR) << "Mandatory argument: " << arg_error << " missing";
+        std::string argName = (arg_error == "-config") ? "CONFIG" : arg_error;
+
+        LOG(ERROR) << "Mandatory argument: " << argName << " missing";
         LOG(INFO) << kUsagePublic;
         return -1;
     }
 
     result = command.checkMandatoryPosition(command_map, arg_error);
     if (result != 0) {
-        LOG(ERROR) << "Mandatory argument " << arg_error
+        std::string argName = (arg_error == "-config") ? "CONFIG" : arg_error;
+
+        LOG(ERROR) << "Mandatory argument " << argName
                    << " is not on its correct position ("
                    << command_map[arg_error].position << ").";
         LOG(INFO) << kUsagePublic;
