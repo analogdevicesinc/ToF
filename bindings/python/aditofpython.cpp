@@ -66,7 +66,8 @@ PYBIND11_MODULE(aditofpython, m) {
         .def_readwrite("subelementSize",
                        &aditof::FrameDataDetails::subelementSize)
         .def_readwrite("subelementsPerElement",
-                       &aditof::FrameDataDetails::subelementsPerElement);
+                       &aditof::FrameDataDetails::subelementsPerElement)
+        .def_readwrite("bytesCount", &aditof::FrameDataDetails::bytesCount);
 
     py::class_<aditof::FrameDetails>(m, "FrameDetails")
         .def(py::init<>())
