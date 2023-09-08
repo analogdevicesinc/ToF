@@ -490,11 +490,14 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                 processedFrameSize = width_tmp * height_tmp * 4;
             }
 
-            if (processedFrameBuffer != nullptr) {
-                delete[] processedFrameBuffer;
+            if (buff_frame_to_send != nullptr) {
+                delete[] buff_frame_to_send;
+                buff_frame_to_send = nullptr;
             }
-            processedFrameBuffer =
-                new uint16_t[processedFrameSize * sizeof(uint16_t)];
+            buff_frame_to_send =
+                new uint8_t[LWS_SEND_BUFFER_PRE_PADDING + 1 +
+                            processedFrameSize * sizeof(uint16_t)];
+            buff_frame_length = processedFrameSize * 2;
         }
 #endif
         buff_send.set_status(static_cast<::payload::Status>(status));
@@ -514,25 +517,13 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         aditof::Status status = aditof::Status::OK;
         //to do: get value of m_depthComputeOnTarget from sensor
 #ifdef DEPTH_COMPUTE_ON_TARGET
-        status = camDepthSensor->getFrame(processedFrameBuffer);
+        status = camDepthSensor->getFrame(
+            (uint16_t *)(buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING + 1));
         if (status != aditof::Status::OK) {
             LOG(ERROR) << "Failed to get frame!";
             buff_send.set_status(static_cast<::payload::Status>(status));
             break;
         }
-        if (buff_frame_to_send != NULL) {
-            free(buff_frame_to_send);
-            buff_frame_to_send = NULL;
-        }
-        buff_frame_length = processedFrameSize * 2;
-        buff_frame_to_send = (uint8_t *)malloc(
-            (buff_frame_length + LWS_SEND_BUFFER_PRE_PADDING + 1) *
-            sizeof(uint8_t));
-
-        memcpy(buff_frame_to_send + (LWS_SEND_BUFFER_PRE_PADDING + 1),
-               (uint8_t *)processedFrameBuffer,
-               buff_frame_length * sizeof(uint8_t));
-
         m_frame_ready = true;
 
         buff_send.set_status(payload::Status::OK);
