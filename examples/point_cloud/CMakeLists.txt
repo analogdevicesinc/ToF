@@ -34,4 +34,4 @@ target_include_directories(point_cloud PRIVATE
         ${SRC_DIR}/
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE doc_opt)
+target_link_libraries(${PROJECT_NAME} PRIVATE aditof command_parser)
