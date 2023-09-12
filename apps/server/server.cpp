@@ -66,7 +66,6 @@ std::unique_ptr<aditof::SensorEnumeratorInterface> sensorsEnumerator;
 /* Server only works with one depth sensor */
 std::shared_ptr<aditof::DepthSensorInterface> camDepthSensor;
 std::shared_ptr<aditof::V4lBufferAccessInterface> sensorV4lBufAccess;
-uint16_t *processedFrameBuffer = nullptr;
 int processedFrameSize;
 
 static payload::ClientRequest buff_recv;
