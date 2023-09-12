@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
 
     result = command.checkValue(command_map, arg_error);
     if (result != 0) {
-        LOG(ERROR) << "Argument: " << arg_error
+        LOG(ERROR) << "Argument: " << command_map[arg_error].long_option
                    << " doesn't have assigned or default value!";
         LOG(INFO) << kUsagePublic;
         return -1;
@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
 
     result = command.checkMandatoryArguments(command_map, arg_error);
     if (result != 0) {
-        std::string argName = (arg_error == "-config") ? "CONFIG" : arg_error;
+        std::string argName = (arg_error == "-config") ? "CONFIG" : command_map[arg_error].long_option;
 
         LOG(ERROR) << "Mandatory argument: " << argName << " missing";
         LOG(INFO) << kUsagePublic;
@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
 
     result = command.checkMandatoryPosition(command_map, arg_error);
     if (result != 0) {
-        std::string argName = (arg_error == "-config") ? "CONFIG" : arg_error;
+        std::string argName = (arg_error == "-config") ? "CONFIG" : command_map[arg_error].long_option;
 
         LOG(ERROR) << "Mandatory argument " << argName
                    << " is not on its correct position ("
