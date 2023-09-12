@@ -112,42 +112,47 @@ int main(int argc, char *argv[]) {
     command.parseArguments(argc, argv, command_map);
     int result = command.checkArgumentExist(command_map, arg_error);
     if (result != 0) {
-        std::cout << "Argument " << arg_error << " doesn't exist."
-                  << "\n"
-                  << Help_Menu;
+        LOG(ERROR) << "Argument " << arg_error << " doesn't exist!";
+        std::cout << Help_Menu;
         return -1;
     }
+
     result = command.helpMenu();
     if (result == 1) {
         std::cout << Help_Menu;
         return 0;
     } else if (result == -1) {
-        std::cout << "Usage of argument -h/--help"
-                  << " is incorrect! Help argument should be used alone."
-                  << "\n"
-                  << Help_Menu;
+        LOG(ERROR) << "Usage of argument -h/--help"
+                   << " is incorrect! Help argument should be used alone!";
+        std::cout << Help_Menu;
         return -1;
     }
+
     result = command.checkValue(command_map, arg_error);
     if (result != 0) {
-        std::cout << "Argument: " << arg_error
-                  << " doesn't have assigned or default value."
-                  << "\n"
-                  << Help_Menu;
+        LOG(ERROR) << "Argument: " << command_map[arg_error].long_option
+                   << " doesn't have assigned or default value!";
+        std::cout << Help_Menu;
         return -1;
     }
+
     result = command.checkMandatoryArguments(command_map, arg_error);
     if (result != 0) {
-        std::cout << "Mandatory argument: " << arg_error << " missing. \n"
-                  << Help_Menu;
+        std::string argName = (arg_error == "-config") ? "CONFIG" : command_map[arg_error].long_option;
+
+        LOG(ERROR) << "Mandatory argument: " << argName << " missing";
+        std::cout << Help_Menu;
         return -1;
     }
+
     result = command.checkMandatoryPosition(command_map, arg_error);
     if (result != 0) {
-        std::cout << "Mandatory argument " << arg_error
-                  << " is not on its correct position ("
-                  << command_map[arg_error].position << "). \n"
-                  << Help_Menu;
+        std::string argName = (arg_error == "-config") ? "CONFIG" : command_map[arg_error].long_option;
+
+        LOG(ERROR) << "Mandatory argument " << argName
+                   << " is not on its correct position ("
+                   << command_map[arg_error].position << ").";
+        std::cout << Help_Menu;
         return -1;
     }
 
