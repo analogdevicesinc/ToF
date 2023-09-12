@@ -1,5 +1,10 @@
 #include <stdio.h>
-#include "docopt.h"
+#include <command_parser.h>
+#ifdef USE_GLOG
+#include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 #include <stdint.h>
 #include <string.h>
 
@@ -22,6 +27,12 @@ R"(PointCloud.
 
 
 int main(int argc, char* argv[]) {
+        std::map<std::string, struct Argument> command_map = {
+        {"-h", {"--help", false, "", ""}},
+        {"-input_file", {"--input_file", true, "1", ""}},
+        {"-ccb_file", {"--ccb_file", true, "2", ""}},
+        {"-mode", {"--mode", true, "3", ""}},
+        {"-output_folder", {"--output_folder", false, "", "./"}}};
 
     int status = 0;
     FILE* finput_depth_file = NULL;
@@ -34,21 +45,66 @@ int main(int argc, char* argv[]) {
     char  input_file_path[MAX_FILE_NAME_SIZE], p_xyz_frame_output_file_path[MAX_FILE_NAME_SIZE];
     char  ccb_filename[MAX_FILE_NAME_SIZE];
 
-    std::map<std::string, docopt::value> args = docopt::docopt(kUsage, { argv + 1, argv + argc }, true);
+    CommandParser command;
+    std::string arg_error;
+    command.parseArguments(argc, argv, command_map);
 
-    
+    int result = command.checkArgumentExist(command_map, arg_error);
+    if (result != 0) {
+        LOG(ERROR) << "Argument " << arg_error << " doesn't exist! "
+                   << "Please check help menu.";
+        LOG(INFO) << kUsage;
+        return -1;
+    }
 
-    int mode = (int)args["--mode"].asLong();
+    result = command.helpMenu();
+    if (result == 1) {
+        LOG(INFO) << kUsage;
+        return 0;
+    } else if (result == -1) {
+        LOG(ERROR) << "Usage of argument -h/--help"
+                   << " is incorrect! Help argument should be used alone!";
+        return -1;
+    }
+
+    result = command.checkValue(command_map, arg_error);
+    if (result != 0) {
+        LOG(ERROR) << "Argument: " << command_map[arg_error].long_option
+                   << " doesn't have assigned or default value!";
+        LOG(INFO) << kUsage;
+        return -1;
+    }
+
+    result = command.checkMandatoryArguments(command_map, arg_error);
+    if (result != 0) {
+        LOG(ERROR) << "Mandatory argument: "
+                   << command_map[arg_error].long_option << " missing";
+        LOG(INFO) << kUsage;
+        return -1;
+    }
+
+    result = command.checkMandatoryPosition(command_map, arg_error);
+    if (result != 0) {
+        LOG(ERROR) << "Mandatory argument "
+                   << command_map[arg_error].long_option
+                   << " is not on its correct position ("
+                   << command_map[arg_error].position << ").";
+        LOG(INFO) << kUsage;
+        return -1;
+    }
+
+    int mode = std::stoi(command_map["-mode"].value);
 
     /*Input Depth file */
-    snprintf(input_file_path, sizeof(input_file_path), "%s", args["--input_file"].asString().c_str());
+    snprintf(input_file_path, sizeof(input_file_path), "%s",
+             command_map["-input_file"].value.c_str());
 
 
     /* ccb calibration_file*/
-    snprintf(ccb_filename, sizeof(ccb_filename), "%s",args["--ccb_file"].asString().c_str());
+    snprintf(ccb_filename, sizeof(ccb_filename), "%s", command_map["-ccb_file"].value.c_str());
 
     
-   std::string output_path = args["--output_folder"].asString();
+   std::string output_path = command_map["-output_folder"].value;
 
     snprintf(p_xyz_frame_output_file_path, sizeof(p_xyz_frame_output_file_path),
         "%s/%s", output_path.c_str(), p_xyz_frame_output_file_name);
