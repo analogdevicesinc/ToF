@@ -19,10 +19,7 @@ struct lws_context *context;
 struct lws_plat_file_ops fops_plat;
 static int test_options;
 
-/* http server gets files from this path */
-#define LOCAL_RESOURCE_PATH "/home/analog/Workspace/ToF/apps/http-server"
-
-char *resource_path = LOCAL_RESOURCE_PATH;
+char *resource_path = HTTP_LOCAL_RESOURCE_PATH;
 #if defined(LWS_WITH_TLS) && defined(LWS_HAVE_SSL_CTX_set1_param)
 char crl_path[1024] = "";
 #endif
@@ -159,8 +156,8 @@ static const struct lws_extension exts[] = {
 static const struct lws_http_mount mount_ziptest = {
     NULL,       /* linked-list pointer to next*/
     "/ziptest", /* mountpoint in URL namespace on this vhost */
-    LOCAL_RESOURCE_PATH "/candide.zip", /* handler */
-    NULL,                               /* default filename if none given */
+    HTTP_LOCAL_RESOURCE_PATH "/candide.zip", /* handler */
+    NULL, /* default filename if none given */
     NULL,
     NULL,
     NULL,
@@ -208,9 +205,9 @@ static const struct lws_http_mount mount_post = {
 
 static const struct lws_http_mount mount = {
     (struct lws_http_mount *)&mount_post, /* linked-list pointer to next*/
-    "/",                 /* mountpoint in URL namespace on this vhost */
-    LOCAL_RESOURCE_PATH, /* where to go on the filesystem for that */
-    "test.html",         /* default filename if none given */
+    "/",                      /* mountpoint in URL namespace on this vhost */
+    HTTP_LOCAL_RESOURCE_PATH, /* where to go on the filesystem for that */
+    "test.html",              /* default filename if none given */
     NULL,
     NULL,
     NULL,
