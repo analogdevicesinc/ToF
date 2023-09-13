@@ -1,6 +1,8 @@
 # Linux Build Instructions
 
-**Please note, use the applicable tag, when cloning, and release version, when getting the latest library files. As of writing, version 4.3.0 of the release is available as well as tage v4.3.0.** 
+**Please note, use the applicable tag, when cloning, and release version, when getting the latest depth compute library files. As of writing, version 4.3.0 of the release is available as well as tag v4.3.0.** 
+
+If you building for a ARM64 Linux host you will need the ARM64 libraries. These are available in the installation package. See
 
 Note, all actities below are assuming to be done in a base folder. Where the **libs**, and its contents, folder is called out.
 
@@ -56,29 +58,36 @@ sudo apt install libgl1-mesa-dev libglfw3-dev
 
 * Glog:
 ```console
+pushd .
 git clone --branch v0.6.0 --depth 1 https://github.com/google/glog
 cd glog
 mkdir build_0_6_0 && cd build_0_6_0
 cmake -DWITH_GFLAGS=off -DCMAKE_INSTALL_PREFIX=/opt/glog ..
 sudo cmake --build . --target install
+popd
 ```
 
 * Libwebsockets:
 ```console
+pushd .
 git clone --branch v3.1-stable --depth 1 https://github.com/warmcat/libwebsockets
 cd libwebsockets
 mkdir build_3_1 && cd build_3_1
 cmake -DLWS_WITH_SSL=OFF -DLWS_STATIC_PIC=ON -DCMAKE_INSTALL_PREFIX=/opt/websockets ..
 sudo cmake --build . --target install
+popd
 ```
 
 * protobuf:
 ```console
+pushd .
 git clone --branch v3.9.0 --depth 1 https://github.com/protocolbuffers/protobuf
 cd protobuf
 mkdir build_3_9_0 && cd build_3_9_0
 cmake -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX=/opt/protobuf ../cmake
 sudo cmake --build . --target install
+cd ../..
+popd
 ```
 
 
