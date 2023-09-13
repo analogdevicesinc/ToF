@@ -1,5 +1,7 @@
 # Linux Build Instructions
 
+**Please note, use the applicable tag, when cloning, and release version, when getting the latest library files. As of writing, version 4.3.0 of the release is available as well as tage v4.3.0.** 
+
 Note, all actities below are assuming to be done in a base folder. Where the **libs**, and its contents, folder is called out.
 
 ```
@@ -19,19 +21,20 @@ You can use the evaluation folder as a reference by over writing the files with 
 
 The following variables must be exported for execution of the examples:
 ```
+export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
+# Only if the OpenCL depth compute libraries are being used.
 export OverrideDefaultFP64Settings=1
 export IGC_EnableDPEmulation=1 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.
 ```
 
 ## Building the SDK only
 
-Download the latest Linux installer - as of writing v4.1.1.
+Download the latest Linux installer - as of writing v4.3.0.
 https://github.com/analogdevicesinc/ToF/releases
 
 * mkdir libs
 * cd libs
-* cp ~/Analog\ Devices/TOF_Evaluation_ADTF3175D-Ubuntu22.04-Rel4.1.1/bin/\*tofi\* .
+* cp ~/Analog\ Devices/TOF_Evaluation_Ubuntu_ADTF3175D-Rel4.3.0/bin_22.04/libaditofi\* .
 
 ### Pre-requisites
 * CMake
@@ -80,8 +83,11 @@ sudo cmake --build . --target install
 
 
 ### Download and build SDK only
+
+Please note, ensure you are using the intended branch.
+
 ```console
-git clone --branch v4.1.1 --depth 1 https://github.com/analogdevicesinc/ToF
+git clone --branch v4.3.0 --depth 1 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
 cmake -DWITH_EXAMPLES=off -DWITH_NETWORK=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
@@ -101,8 +107,11 @@ sudo apt install libopencv-dev
 ```
 
 ### Build SDK with examples
+
+Please note, ensure you are using the intended branch.
+
 ```console
-git clone --branch v4.1.1 --depth 1 https://github.com/analogdevicesinc/ToF
+git clone --branch v4.3.0 --depth 1 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
 cmake -DWITH_EXAMPLES=on -DWITH_NETWORK=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
