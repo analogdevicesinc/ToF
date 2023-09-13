@@ -64,6 +64,8 @@ class Network {
 
     int Thread_Running[MAX_CAMERA_NUM];
 
+    static void *rawPayloads[MAX_CAMERA_NUM];
+
     //! call_lws_service - calls lws_service api to service any websocket
     //! activity
     void call_lws_service();
@@ -80,7 +82,10 @@ class Network {
     int ServerConnect(const std::string &ip);
 
     //! SendCommand() - APi to send SDK apis to connected server
-    int SendCommand();
+    //! If, after the command, we expect the server to send raw (non-protobuf)
+    //! payload, set the 'rawPayload' with the location where the payload
+    //! should be copied. Otherwise, set to null or skip it.
+    int SendCommand(void *rawPayload = nullptr);
 
     //! recv_server_data() - APi to receive data from server
     int recv_server_data();

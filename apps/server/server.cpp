@@ -193,32 +193,26 @@ int Network::callback_function(struct lws *wsi,
             break;
         }
         unsigned int siz = 0;
-        //Setting starting 8 bit to set serialization or not;
-        // pkt_pad[0] = (m_frame_ready == true ? '1' : '0');
+        // Send the frame content without wrapping it in a protobuf message (speed optimization)
         if (m_frame_ready == true) {
             siz = buff_frame_length;
 
-            buff_frame_to_send[0] = '1';
-
             n = lws_write(wsi, buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING,
-                          (buff_frame_length + 1), LWS_WRITE_TEXT);
+                          buff_frame_length, LWS_WRITE_TEXT);
             m_frame_ready = false;
             if (lws_partial_buffered(wsi)) {
                 latest_sent_msg_is_was_buffered = true;
             }
-
         } else {
             siz = buff_send.ByteSize();
             unsigned char *pkt =
-                new unsigned char[siz + LWS_SEND_BUFFER_PRE_PADDING + 1];
+                new unsigned char[siz + LWS_SEND_BUFFER_PRE_PADDING];
             unsigned char *pkt_pad = pkt + LWS_SEND_BUFFER_PRE_PADDING;
 
-            pkt_pad[0] = '0';
-
-            google::protobuf::io::ArrayOutputStream aos(pkt_pad + 1, siz);
+            google::protobuf::io::ArrayOutputStream aos(pkt_pad, siz);
             CodedOutputStream *coded_output = new CodedOutputStream(&aos);
             buff_send.SerializeToCodedStream(coded_output);
-            n = lws_write(wsi, pkt_pad, (siz + 1), LWS_WRITE_TEXT);
+            n = lws_write(wsi, pkt_pad, siz, LWS_WRITE_TEXT);
 
             if (lws_partial_buffered(wsi)) {
                 latest_sent_msg_is_was_buffered = true;
@@ -494,7 +488,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                 buff_frame_to_send = nullptr;
             }
             buff_frame_to_send =
-                new uint8_t[LWS_SEND_BUFFER_PRE_PADDING + 1 +
+                new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
                             processedFrameSize * sizeof(uint16_t)];
             buff_frame_length = processedFrameSize * 2;
         }
@@ -517,7 +511,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         //to do: get value of m_depthComputeOnTarget from sensor
 #ifdef DEPTH_COMPUTE_ON_TARGET
         status = camDepthSensor->getFrame(
-            (uint16_t *)(buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING + 1));
+            (uint16_t *)(buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING));
         if (status != aditof::Status::OK) {
             LOG(ERROR) << "Failed to get frame!";
             buff_send.set_status(static_cast<::payload::Status>(status));
@@ -552,10 +546,10 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             buff_frame_to_send = NULL;
         }
         buff_frame_to_send = (uint8_t *)malloc(
-            (buff_frame_length + LWS_SEND_BUFFER_PRE_PADDING + 1) *
+            (buff_frame_length + LWS_SEND_BUFFER_PRE_PADDING) *
             sizeof(uint8_t));
 
-        memcpy(buff_frame_to_send + (LWS_SEND_BUFFER_PRE_PADDING + 1), buffer,
+        memcpy(buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING, buffer,
                buff_frame_length * sizeof(uint8_t));
 
         m_frame_ready = true;
