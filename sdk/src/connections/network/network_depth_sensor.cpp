@@ -384,7 +384,7 @@ aditof::Status NetworkDepthSensor::getFrame(uint16_t *buffer) {
     net->send_buff[m_sensorIndex].set_func_name("GetFrame");
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 
-    if (net->SendCommand() != 0) {
+    if (net->SendCommand(static_cast<void *>(buffer)) != 0) {
         LOG(WARNING) << "Send Command Failed";
         return Status::INVALID_ARGUMENT;
     }
@@ -405,10 +405,6 @@ aditof::Status NetworkDepthSensor::getFrame(uint16_t *buffer) {
         LOG(WARNING) << "getFrame() failed on target";
         return status;
     }
-
-    //when using ITOF camera the data is already deinterleaved, so a simple copy is enough
-    memcpy(buffer, net->recv_buff[m_sensorIndex].bytes_payload(0).c_str(),
-           net->recv_buff[m_sensorIndex].bytes_payload(0).length());
 
     return status;
 }
