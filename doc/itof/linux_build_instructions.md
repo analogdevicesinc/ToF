@@ -11,9 +11,7 @@ base folder
 ├── glog
 ├── libs
 │   ├── libtofi_compute.so
-│   ├── libtofi_config.so
-│   ├── tofi_compute_depth
-│   └── tofi_processor.obj
+│   └── libtofi_config.so
 ├── libwebsockets
 ├── protobuf
 └── ToF
