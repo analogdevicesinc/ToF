@@ -79,6 +79,8 @@ bool Network::Data_Received[MAX_CAMERA_NUM];
 bool Network::Server_Connected[MAX_CAMERA_NUM];
 bool Network::Thread_Detached[MAX_CAMERA_NUM];
 
+void *Network::rawPayloads[MAX_CAMERA_NUM];
+
 /*
 * isServer_Connected(): checks if server is connected
 * Parameters:        none
@@ -232,7 +234,7 @@ int Network::ServerConnect(const std::string &ip) {
                 -1 -  on error
 * Desription:    This function is used to send the data to connected server.
 */
-int Network::SendCommand() {
+int Network::SendCommand(void *rawPayload) {
     int status = -1;
     uint8_t numRetry = 0;
     int siz = send_buff[m_connectionId].ByteSize();
@@ -275,6 +277,9 @@ int Network::SendCommand() {
 #ifdef NW_DEBUG
             cout << "Write Successful" << endl;
 #endif
+            if (rawPayload) {
+                rawPayloads[m_connectionId] = rawPayload;
+            }
             status = 0;
             break;
         }
@@ -425,10 +430,10 @@ int Network::callback_function(struct lws *wsi,
                 in = static_cast<void *>(clientData->data.data());
                 len = clientData->data.size();
             }
-            if (static_cast<unsigned char *>(in)[0] == '0') {
-                // process message without frame
+            // Expect regular protobuf messages
+            if (rawPayloads[connectionId] == nullptr) {
                 google::protobuf::io::ArrayInputStream ais(
-                    static_cast<char *>(in) + 1, static_cast<int>(len) - 1);
+                    static_cast<char *>(in), static_cast<int>(len));
                 CodedInputStream coded_input(&ais);
                 recv_buff[connectionId].ParseFromCodedStream(&coded_input);
 
@@ -438,12 +443,9 @@ int Network::callback_function(struct lws *wsi,
                 /*Notify the host SDK that data is received from server*/
                 Cond_Var[connectionId].notify_all();
             } else {
-                // process message of only frame data
-                int m_frameLength;
-                m_frameLength = static_cast<int>(len) - 1;
-
-                recv_buff[connectionId].add_bytes_payload(
-                    static_cast<char *>(in) + 1, m_frameLength - 1);
+                //expect content that is not wrapped in a protobuf message
+                memcpy(rawPayloads[connectionId], static_cast<char *>(in), len);
+                rawPayloads[connectionId] == nullptr;
                 recv_data_error = 0;
                 Data_Received[connectionId] = true;
 
