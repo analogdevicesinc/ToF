@@ -126,6 +126,10 @@ add_library(${PROJECT_NAME} SHARED
     $<$<BOOL:${WITH_PROTOBUF_DEPENDENCY}>:${USB_HEADERS}>
 )
 
+target_link_libraries(${PROJECT_NAME} PRIVATE crc32)
+target_link_libraries(${PROJECT_NAME} PRIVATE cjson)
+target_link_libraries(${PROJECT_NAME} PRIVATE ccb)
+
 # Add alias to aditof as aditof::aditof
 add_library(aditof::aditof ALIAS aditof)
 
@@ -212,9 +216,6 @@ else()
     target_link_libraries(${PROJECT_NAME} PRIVATE tofi_config)
 endif()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE crc32)
-target_link_libraries(${PROJECT_NAME} PRIVATE cjson)
-target_link_libraries(${PROJECT_NAME} PRIVATE ccb)
 
 if (CMAKE_COMPILER_IS_GNUCC)
     target_compile_options(${PROJECT_NAME} PUBLIC
