@@ -195,6 +195,9 @@
 	var isPreparingFrame = false;
 	var isStreaming = false;
 
+	// To Remove
+	var prevTime = Date.now();
+	var curTime = Date.now();
 
 	var mirror_name = "";
 	if (params.mirror)
@@ -270,7 +273,13 @@
 					if (isPreparingFrame == false)
 						blobToBinary(msg.data);
 					if (isStreaming == true)
+					{
 						socket_tof.send("requestFrame\n");
+						curTime = Date.now();
+						fps = Math.round((1000.0)/(curTime - prevTime));
+						prevTime = curTime;
+						console.log("FPS: " + fps);
+					}
 				}
 				else {
 					if (msg.data.includes("ft:")) {
