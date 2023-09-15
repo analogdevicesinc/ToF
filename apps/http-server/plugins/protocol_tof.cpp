@@ -8,7 +8,7 @@
 using namespace std;
 
 #define DUMB_PERIOD_US 50000
-#define MAX_MESSAGE_LEN (512 * 512 + 100) // For Quarter Megapixel
+#define MAX_MESSAGE_LEN (512 * 512 + 200) // For Quarter Megapixel
 // #define MAX_MESSAGE_LEN (524 + 100) // For Quarter Megapixel
 
 struct pss__tof {
@@ -148,7 +148,7 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
             char *buffer;
             long size;
             ifstream file(
-                "/home/analog/Workspace/ToF/apps/http-server/out_ir_.bin",
+                "/home/analog/Workspace_Robi/ToF/apps/http-server/out_ir_.bin",
                 ios::in | ios::binary | ios::ate);
             size = file.tellg();
             file.seekg(0, ios::beg);

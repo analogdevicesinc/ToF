@@ -94,10 +94,10 @@ static struct lws_protocols protocols[] = {
         "http-only",
         lws_callback_http,
         0,
-        0,
+        MAX_MESSAGE_LEN,
     },
     {"dumb-increment-protocol", callback_tof, sizeof(struct pss__tof),
-     300, /* rx buf size must be >= permessage-deflate rx size */
+     MAX_MESSAGE_LEN, /* rx buf size must be >= permessage-deflate rx size */
      0, NULL, 0},
     {NULL, NULL, 0, 0} /* terminator */
 };
@@ -237,31 +237,6 @@ static const struct lws_protocol_vhost_options pvo = {
     ""                         /* ignored */
 };
 
-static struct option options[] = {
-    {"help", no_argument, NULL, 'h'},
-    {"debug", required_argument, NULL, 'd'},
-    {"port", required_argument, NULL, 'p'},
-    {"ssl", no_argument, NULL, 's'},
-    {"allow-non-ssl", no_argument, NULL, 'a'},
-    {"interface", required_argument, NULL, 'i'},
-    {"closetest", no_argument, NULL, 'c'},
-    {"ssl-cert", required_argument, NULL, 'C'},
-    {"ssl-key", required_argument, NULL, 'K'},
-    {"ssl-ca", required_argument, NULL, 'A'},
-#if defined(LWS_WITH_TLS)
-    {"ssl-verify-client", no_argument, NULL, 'v'},
-#if defined(LWS_HAVE_SSL_CTX_set1_param)
-    {"ssl-crl", required_argument, NULL, 'R'},
-#endif
-#endif
-    {"libev", no_argument, NULL, 'e'},
-    {"unix-socket", required_argument, NULL, 'U'},
-#ifndef LWS_NO_DAEMONIZE
-    {"daemonize", no_argument, NULL, 'D'},
-#endif
-    {"pingpong-secs", required_argument, NULL, 'P'},
-    {NULL, 0, 0, 0}};
-
 int main(int argc, char **argv) {
     struct lws_context_creation_info info;
     struct lws_vhost *vhost;
@@ -275,9 +250,6 @@ int main(int argc, char **argv) {
     int pp_secs = 0;
     int opts = 0;
     int n = 0;
-#ifndef LWS_NO_DAEMONIZE
-    int daemonize = 0;
-#endif
 
     /*
 	 * take care to zero down the info struct, he contains random garbaage
@@ -285,111 +257,6 @@ int main(int argc, char **argv) {
 	 */
     memset(&info, 0, sizeof info);
     info.port = 7681;
-
-    while (n >= 0) {
-        n = getopt_long(argc, argv, "eci:hsap:d:DC:K:A:R:vu:g:P:kU:n", options,
-                        NULL);
-        if (n < 0)
-            continue;
-        switch (n) {
-        case 'e':
-            opts |= LWS_SERVER_OPTION_LIBEV;
-            break;
-#ifndef LWS_NO_DAEMONIZE
-        case 'D':
-            daemonize = 1;
-            break;
-#endif
-        case 'u':
-            uid = atoi(optarg);
-            break;
-        case 'g':
-            gid = atoi(optarg);
-            break;
-        case 'd':
-            debug_level = atoi(optarg);
-            break;
-        case 'n':
-            /* no dumb increment send */
-            test_options |= 1;
-            break;
-        case 's':
-            use_ssl = 1;
-            opts |= LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
-            break;
-        case 'a':
-            opts |= LWS_SERVER_OPTION_ALLOW_NON_SSL_ON_SSL_PORT;
-            break;
-        case 'p':
-            info.port = atoi(optarg);
-            break;
-        case 'i':
-            lws_strncpy(interface_name, optarg, sizeof interface_name);
-            iface = interface_name;
-            break;
-        case 'U':
-            lws_strncpy(interface_name, optarg, sizeof interface_name);
-            iface = interface_name;
-            opts |= LWS_SERVER_OPTION_UNIX_SOCK;
-            break;
-        case 'k':
-            info.bind_iface = 1;
-#if defined(LWS_HAVE_SYS_CAPABILITY_H) && defined(LWS_HAVE_LIBCAP)
-            info.caps[0] = CAP_NET_RAW;
-            info.count_caps = 1;
-#endif
-            break;
-        case 'c':
-            close_testing = 1;
-            fprintf(stderr, " Close testing mode -- closes on "
-                            "client after 50 dumb increments"
-                            "and suppresses lws_mirror spam\n");
-            break;
-        case 'C':
-            lws_strncpy(cert_path, optarg, sizeof(cert_path));
-            break;
-        case 'K':
-            lws_strncpy(key_path, optarg, sizeof(key_path));
-            break;
-        case 'A':
-            lws_strncpy(ca_path, optarg, sizeof(ca_path));
-            break;
-        case 'P':
-            pp_secs = atoi(optarg);
-            lwsl_notice("Setting pingpong interval to %d\n", pp_secs);
-            break;
-#if defined(LWS_WITH_TLS)
-        case 'v':
-            use_ssl = 1;
-            opts |= LWS_SERVER_OPTION_REQUIRE_VALID_OPENSSL_CLIENT_CERT;
-            break;
-
-#if defined(LWS_HAVE_SSL_CTX_set1_param)
-        case 'R':
-            lws_strncpy(crl_path, optarg, sizeof(crl_path));
-            break;
-#endif
-#endif
-        case 'h':
-            fprintf(stderr, "Usage: test-server "
-                            "[--port=<p>] [--ssl] "
-                            "[-d <log bitfield>]\n");
-            exit(1);
-        }
-    }
-
-#if !defined(LWS_NO_DAEMONIZE) && !defined(WIN32)
-    /*
-	 * normally lock path would be /var/lock/lwsts or similar, to
-	 * simplify getting started without having to take care about
-	 * permissions or running as root, set to /tmp/.lwsts-lock
-	 */
-    if (daemonize && lws_daemonize("/tmp/.lwsts-lock")) {
-        fprintf(stderr, "Failed to daemonize\n");
-        return 10;
-    }
-#endif
-
     signal(SIGINT, sighandler);
 #if !defined(WIN32) && !defined(_WIN32)
     /* because windows is too dumb to have SIGUSR1... */
@@ -400,7 +267,7 @@ int main(int argc, char **argv) {
     /* tell the library what debug level to emit and to send it to stderr */
     lws_set_log_level(debug_level, NULL);
 
-    lwsl_notice("libwebsockets test server - license LGPL2.1+SLE\n");
+    lwsl_notice("libwebsockets test server\n");
 
     printf("Using resource path \"%s\"\n", resource_path);
     info.iface = iface;
@@ -408,47 +275,12 @@ int main(int argc, char **argv) {
     info.ssl_cert_filepath = NULL;
     info.ssl_private_key_filepath = NULL;
     info.ws_ping_pong_interval = pp_secs;
-
-    if (use_ssl) {
-        if (strlen(resource_path) > sizeof(cert_path) - 32) {
-            lwsl_err("resource path too long\n");
-            return -1;
-        }
-        if (!cert_path[0])
-            sprintf(cert_path, "%s/libwebsockets-test-server.pem",
-                    resource_path);
-        if (strlen(resource_path) > sizeof(key_path) - 32) {
-            lwsl_err("resource path too long\n");
-            return -1;
-        }
-        if (!key_path[0])
-            sprintf(key_path, "%s/libwebsockets-test-server.key.pem",
-                    resource_path);
-
-        info.ssl_cert_filepath = cert_path;
-        info.ssl_private_key_filepath = key_path;
-        if (ca_path[0])
-            info.ssl_ca_filepath = ca_path;
-    }
     info.gid = gid;
     info.uid = uid;
     info.options = opts | LWS_SERVER_OPTION_VALIDATE_UTF8 |
                    LWS_SERVER_OPTION_EXPLICIT_VHOSTS;
     info.extensions = exts;
     info.timeout_secs = 5;
-    info.ssl_cipher_list = "ECDHE-ECDSA-AES256-GCM-SHA384:"
-                           "ECDHE-RSA-AES256-GCM-SHA384:"
-                           "DHE-RSA-AES256-GCM-SHA384:"
-                           "ECDHE-RSA-AES256-SHA384:"
-                           "HIGH:!aNULL:!eNULL:!EXPORT:"
-                           "!DES:!MD5:!PSK:!RC4:!HMAC_SHA1:"
-                           "!SHA1:!DHE-RSA-AES128-GCM-SHA256:"
-                           "!DHE-RSA-AES128-SHA256:"
-                           "!AES128-GCM-SHA256:"
-                           "!AES128-SHA256:"
-                           "!DHE-RSA-AES256-SHA256:"
-                           "!AES256-GCM-SHA384:"
-                           "!AES256-SHA256";
     info.mounts = &mount;
     info.ip_limit_ah = 24;   /* for testing */
     info.ip_limit_wsi = 400; /* for testing */
