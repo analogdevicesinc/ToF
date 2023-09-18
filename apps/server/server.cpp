@@ -51,7 +51,6 @@
 using namespace google::protobuf::io;
 
 static int interrupted = 0;
-bool depthComputeOnTarget = false;
 
 /* Available sensors */
 std::vector<std::shared_ptr<aditof::DepthSensorInterface>> depthSensors;
@@ -646,9 +645,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
         delete[] iniFile;
         delete[] calData;
-
-        if (status == aditof::Status::OK)
-            depthComputeOnTarget = true;
 
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
