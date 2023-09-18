@@ -199,6 +199,8 @@ Adsd3500Sensor::~Adsd3500Sensor() {
             }
         }
     }
+
+    delete m_bufferProcessor;
 }
 
 aditof::Status Adsd3500Sensor::open() {
