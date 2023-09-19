@@ -140,6 +140,7 @@ CameraItof::CameraItof(
 CameraItof::~CameraItof() {
     cleanupTempFiles();
     freeConfigData();
+    freeComputeLibrary();
     // m_device->toggleFsync();
     if (m_eepromInitialized) {
         m_eeprom->close();
