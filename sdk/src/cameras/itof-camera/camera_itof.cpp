@@ -720,14 +720,20 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
                 pData = m_depthINIDataMap[m_ini_depth].p_data;
             }
 
-            uint8_t *tempDataParser = new uint8_t[dataSize];
-            memcpy(tempDataParser, pData, dataSize);
+            // Disable the generation of XYZ frames on target
+            std::string s(reinterpret_cast<const char *>(pData), dataSize);
+            std::string::size_type n;
+            n = s.find("xyzEnable=");
+            if (n == std::string::npos) {
+                DLOG(INFO) << "xyzEnable not found in .ini. Can't set it to 0.";
+            } else {
+                s[n + strlen("xyzEnable=")] = '0';
+            }
+
             aditof::Status localStatus;
             localStatus = m_depthSensor->initTargetDepthCompute(
-                (uint8_t *)tempDataParser, dataSize,
-                (uint8_t *)m_xyz_dealias_data, sizeof(TofiXYZDealiasData) * 10);
-            delete[] tempDataParser;
-            tempDataParser = nullptr;
+                (uint8_t *)s.c_str(), dataSize, (uint8_t *)m_xyz_dealias_data,
+                sizeof(TofiXYZDealiasData) * 10);
             if (localStatus != aditof::Status::OK) {
                 LOG(ERROR) << "Failed to initialize depth compute on target!";
                 return localStatus;
