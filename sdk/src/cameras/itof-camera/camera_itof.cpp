@@ -1086,12 +1086,13 @@ aditof::Status CameraItof::initComputeLibrary(void) {
             }
 
             ConfigFileData depth_ini = {pData, dataSize};
-            if (m_adsd3500Enabled || m_isOffline) {
+
+            if ((m_adsd3500Enabled || m_isOffline) && !m_tofi_config) {
                 m_tofi_config = InitTofiConfig_isp((ConfigFileData *)&depth_ini,
                                                    convertedMode, &status,
                                                    m_xyz_dealias_data);
             } else {
-                if (calData.p_data != NULL) {
+                if (calData.p_data != NULL && !m_tofi_config) {
                     m_tofi_config = InitTofiConfig(&calData, NULL, &depth_ini,
                                                    convertedMode, &status);
                 } else {
@@ -1099,8 +1100,10 @@ aditof::Status CameraItof::initComputeLibrary(void) {
                 }
             }
         } else {
-            m_tofi_config =
-                InitTofiConfig(&calData, NULL, NULL, convertedMode, &status);
+            if (!m_tofi_config) {
+                m_tofi_config = InitTofiConfig(&calData, NULL, NULL,
+                                               convertedMode, &status);
+            }
         }
 
         if ((m_tofi_config == NULL) ||
@@ -1110,8 +1113,9 @@ aditof::Status CameraItof::initComputeLibrary(void) {
             return aditof::Status::GENERIC_ERROR;
 
         } else {
-            m_tofi_compute_context =
-                InitTofiCompute(m_tofi_config->p_tofi_cal_config, &status);
+            if (!m_tofi_compute_context)
+                m_tofi_compute_context =
+                    InitTofiCompute(m_tofi_config->p_tofi_cal_config, &status);
             if (m_tofi_compute_context == NULL || status != ADI_TOFI_SUCCESS) {
                 LOG(ERROR) << "InitTofiCompute failed";
                 return aditof::Status::GENERIC_ERROR;
