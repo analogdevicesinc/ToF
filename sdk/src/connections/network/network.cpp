@@ -445,7 +445,7 @@ int Network::callback_function(struct lws *wsi,
             } else {
                 //expect content that is not wrapped in a protobuf message
                 memcpy(rawPayloads[connectionId], static_cast<char *>(in), len);
-                rawPayloads[connectionId] == nullptr;
+                rawPayloads[connectionId] = nullptr;
                 recv_data_error = 0;
                 Data_Received[connectionId] = true;
 
