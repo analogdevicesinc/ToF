@@ -134,6 +134,7 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
       m_firstRun(true), m_adsd3500Queried(false),
       m_depthComputeOnTarget(false) {
     m_sensorName = "adsd3500";
+    m_sensorDetails.connectionType = aditof::ConnectionType::ON_TARGET;
 
 #ifdef DEPTH_COMPUTE_ON_TARGET
     m_depthComputeOnTarget = true;
@@ -934,6 +935,7 @@ aditof::Status Adsd3500Sensor::getControl(const std::string &control,
 aditof::Status
 Adsd3500Sensor::getDetails(aditof::SensorDetails &details) const {
 
+    details = m_sensorDetails;
     return aditof::Status::OK;
 }
 
