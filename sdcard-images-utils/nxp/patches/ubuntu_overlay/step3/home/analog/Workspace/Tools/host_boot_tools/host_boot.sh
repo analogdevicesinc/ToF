@@ -42,6 +42,10 @@ do
 	sleep 1
 done
 
+#Install smbus module
+pip install smbus2-0.4.2-py2.py3-none-any.whl > /dev/null 2>&1
+sleep 3
+
 # Run hostboot script
 python3 host_boot.py host_boot.stream
 
