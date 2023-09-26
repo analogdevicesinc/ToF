@@ -630,21 +630,11 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
 
     case INIT_TARGET_DEPTH_COMPUTE: {
-        uint16_t iniFileLength =
-            static_cast<uint16_t>(buff_recv.func_int32_param(0));
-        uint16_t calDataLength =
-            static_cast<uint16_t>(buff_recv.func_int32_param(1));
-        uint8_t *iniFile = new uint8_t[iniFileLength];
-        uint8_t *calData = new uint8_t[calDataLength];
-
-        memcpy(iniFile, buff_recv.func_bytes_param(0).c_str(), iniFileLength);
-        memcpy(calData, buff_recv.func_bytes_param(1).c_str(), calDataLength);
-
         aditof::Status status = camDepthSensor->initTargetDepthCompute(
-            iniFile, iniFileLength, calData, calDataLength);
-
-        delete[] iniFile;
-        delete[] calData;
+            (uint8_t *)buff_recv.func_bytes_param(0).c_str(),
+            static_cast<uint16_t>(buff_recv.func_int32_param(0)),
+            (uint8_t *)buff_recv.func_bytes_param(1).c_str(),
+            static_cast<uint16_t>(buff_recv.func_int32_param(1)));
 
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
