@@ -53,7 +53,7 @@ void CommandParser::parseArguments(
                          std::string(argv[i]).substr(contains_equal + 1)});
                 } else {
                     m_command_vector.push_back(
-                        {arg_position[j].first, argv[i + 1]});
+                        {arg_position[j].first, argv[i]});
                     i++;
                 }
                 arg_number++;
