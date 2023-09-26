@@ -180,6 +180,7 @@ aditof::Status ModeInfo::setImagerTypeAndModeVersion(int type, int version) {
         m_sensorConfigBits.emplace("bitsInAb", "");
         m_sensorConfigBits.emplace("bitsInConf", "");
         m_sensorConfigBits.emplace("pixelFormat", "");
+        m_sensorConfigBits.emplace("partialDepthEnable", "");
     }
 
     return status;
@@ -325,3 +326,66 @@ aditof::Status ModeInfo::setSensorPixelParam(const std::string &control,
     m_sensorConfigBits[control] = value;
     return aditof::Status::OK;
 };
+
+aditof::Status
+ModeInfo::getProcessedFramesProperties(const std::string &mode, uint16_t *width,
+                                       uint16_t *height,
+                                       size_t *frameTotalBytesCount) {
+    aditof::Status status;
+    uint8_t intMode;
+    status = convertCameraMode(mode, intMode);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Invalid mode!";
+        return status;
+    }
+
+    int depthBytesPerPixel = sizeof(uint16_t);
+    int abBytesPerPixel = sizeof(uint16_t);
+    int confBytesPerPixel = sizeof(float);
+    int baseWidth = ModeInfo::getInstance()->getModeInfo(intMode).width;
+    int baseHeight = ModeInfo::getInstance()->getModeInfo(intMode).height;
+    int totalHeight = 0;
+    size_t totalBytes = 0;
+
+    // TO DO: investigate how to not pass qnative throught depth compute. This
+    // way we can send confidence as uint8 per pixel instead of float
+    // if (m_sensorConfigBits["partialDepthEnable"] == "0") {
+    //     confBytesPerPixel = sizeof(uint8_t);
+    // }
+
+    int depthBits = std::stoi(m_sensorConfigBits["bitsInDepth"]);
+    if (depthBits > 0) {
+        totalHeight += baseHeight;
+        totalBytes += baseWidth * baseHeight * depthBytesPerPixel;
+    }
+
+    int abBits = std::stoi(m_sensorConfigBits["bitsInAb"]);
+    if (abBits > 0) {
+        totalHeight += baseHeight;
+        totalBytes += baseWidth * baseHeight * abBytesPerPixel;
+    }
+
+    int confBits = std::stoi(m_sensorConfigBits["bitsInConf"]);
+    if (confBits > 0) {
+        totalHeight += baseHeight;
+        totalBytes += baseWidth * baseHeight * confBytesPerPixel;
+    }
+
+    // If depth, AB, conf are all 0, we probably are in mode "pcm-native"
+    if (depthBits == 0 && abBits == 0 && confBits == 0) {
+        totalHeight += baseHeight;
+        totalBytes += baseHeight * abBytesPerPixel;
+    }
+
+    if (width) {
+        *width = baseWidth;
+    }
+    if (height) {
+        *height = totalHeight;
+    }
+    if (frameTotalBytesCount) {
+        *frameTotalBytesCount = totalBytes;
+    }
+
+    return aditof::Status::OK;
+}

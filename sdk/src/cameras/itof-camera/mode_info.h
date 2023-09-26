@@ -98,6 +98,19 @@ class ModeInfo {
     aditof::Status setSensorPixelParam(const std::string &control,
                                        const std::string &value);
 
+    /**
+     * Get the post depth compute frame width and height for the provided mode
+     * param[in] modes - the name of the mode (represented as a string)
+     * param[out] width - frame width in bytes
+     * param[out] height - frame height in bytes
+     * param[out] frameTotalBytesCount - the total number of bytes that the frame occupies
+     * @return aditof::Status
+     */
+    aditof::Status getProcessedFramesProperties(const std::string &mode,
+                                                uint16_t *width,
+                                                uint16_t *height,
+                                                size_t *frameTotalBytesCount);
+
     std::vector<std::string> GetAvailableModes() { return m_availableModes; };
 
   private:

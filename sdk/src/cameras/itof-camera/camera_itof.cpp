@@ -1805,6 +1805,9 @@ void CameraItof::configureSensorFrameType() {
         std::string en = (it->second == "0") ? "1" : "0";
         m_depthSensor->setControl("depthEnable", en);
         m_depthSensor->setControl("abAveraging", en);
+        m_depthSensor->setControl("partialDepthEnable", en);
+        ModeInfo::getInstance()->setSensorPixelParam("partialDepthEnable",
+                                                     value);
     } else {
         LOG(WARNING) << "partialDepthEnable was not found in .ini file";
     }
