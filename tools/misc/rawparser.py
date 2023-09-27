@@ -44,8 +44,8 @@ width = 0
 height = 0
 frameNumber = 0
 byteSize = 4
-startOfFrame = 12
-raw_img_dir = '/sample_raw/'
+startOfFrame = 0
+raw_img_dir = '\\sample_raw\\'
 fileName = 'frames202309111819'
 rawFileType = '.RAW'
 binFileType = '.bin'
@@ -64,9 +64,9 @@ def visualize_depth(filename,index):
     ab_frame = np.zeros([height,width])
     with open ('%s' % filename) as file:
         byte_array = np.fromfile(file, dtype=np.uint16)
-        depth_frame = np.reshape(byte_array[height*width*0:height*width*1], [height,width])
+        depth_frame = np.reshape(byte_array[height*width*1:height*width*2], [height,width])
         plt.figure()
-        plt.imshow(depth_frame, cmap = 'jet')
+        plt.imshow(depth_frame, cmap = 'gist_ncar')
         plt.savefig(index+ 'depth_' + args.filename + pngFileType)
 
 if __name__ == "__main__":
@@ -75,16 +75,23 @@ if __name__ == "__main__":
     parser.add_argument("--filename", default = 'frames202309111819', help="filename to parse")
     args = parser.parse_args()
     print(f"filename: {args.filename}")
-
+    dir_path = os.path.dirname( os.path.abspath(__file__)) + raw_img_dir
+    if os.path.exists(dir_path):
+        print(f"The directory {dir_path} already exists.")
+    else:
+        # Create the directory
+        os.makedirs(dir_path)
+        print(f"The directory {dir_path} was created.")
+    
     #identify width, height and number of frames from raw file
-    with open(os.path.dirname( os.path.abspath(__file__)) + raw_img_dir + args.filename + rawFileType, 'rb') as f:
+    with open(os.path.dirname( os.path.abspath(__file__))+ '\\' + args.filename + rawFileType, 'rb') as f:
         data = f.read(12)
         width = int.from_bytes(data[:4], 'little')
         height = int.from_bytes(data[4:8], 'little')
         frameNumber = int.from_bytes(data[8:12], 'little')
         print(f"width: {width} height: {height} # of frames:  {frameNumber}")
         #show frame details
-        file_size = os.path.getsize(os.path.dirname( os.path.abspath(__file__)) + raw_img_dir + args.filename + rawFileType)
+        file_size = os.path.getsize(os.path.dirname( os.path.abspath(__file__)) + '\\' + args.filename + rawFileType)
         print("file size: " + str(file_size))
         sizeOfHeader = 3 * byteSize;
         sizeOfFrame = byteSize * height * width;
@@ -102,7 +109,7 @@ if __name__ == "__main__":
 
     for i in range(0, frameNumber):
         # Create frame folders
-        frameDir = new_dir + '/' + args.filename + '_' + str(i) +'/'
+        frameDir = new_dir + '\\' + args.filename + '_' + str(i) +'\\'
         os.mkdir(frameDir)
         binFileName = frameDir + args.filename + '_' + str(i) + binFileType
         print(binFileName)
