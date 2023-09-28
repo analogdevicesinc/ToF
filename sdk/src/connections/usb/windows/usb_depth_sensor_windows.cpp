@@ -34,8 +34,6 @@
 #include "usb_buffer.pb.h"
 #include "usb_windows_utils.h"
 
-#include "device_utils.h"
-
 #include <atlstr.h>
 #ifdef USE_GLOG
 #include <glog/logging.h>

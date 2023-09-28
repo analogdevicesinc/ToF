@@ -30,7 +30,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "connections/usb/usb_storage.h"
-#include "device_utils.h"
 #include "usb_buffer.pb.h"
 #include "usb_windows_utils.h"
 
