@@ -151,6 +151,7 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     m_controls.emplace("imagerType", "");
     m_controls.emplace("inputFormat", "");
     m_controls.emplace("partialDepthEnable", "");
+    m_controls.emplace("processedFrameSize", "");
 
     // Define the commands that correspond to the sensor controls
     m_implData->controlsCommands["abAveraging"] = 0x9819e5;
@@ -703,6 +704,15 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         }
     }
 
+    size_t processedFrameSize = 0;
+    status = ModeInfo::getInstance()->getProcessedFramesProperties(
+        type.type, nullptr, nullptr, &processedFrameSize);
+    if (status == Status::OK) {
+        setControl("processedFrameSize", std::to_string(processedFrameSize));
+    } else {
+        LOG(ERROR) << "Failed to get the properties of a processed Frame";
+    }
+
     return status;
 }
 
@@ -883,6 +893,9 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
                                                      value);
         return Status::OK;
     }
+    if (control == "processedFrameSize") {
+        return Status::OK;
+    }
 
     // Send the command that sets the control value
     struct v4l2_control ctrl;
@@ -912,6 +925,11 @@ aditof::Status Adsd3500Sensor::getControl(const std::string &control,
 
         if (control == "modeInfoVersion") {
             value = std::to_string((int)m_implData->ccbVersion);
+            return Status::OK;
+        }
+
+        if (control == "processedFrameSize") {
+            value = m_controls.at("processedFrameSize");
             return Status::OK;
         }
 
