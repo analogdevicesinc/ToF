@@ -31,7 +31,6 @@
  */
 #include "network_depth_sensor.h"
 #include "connections/network/network.h"
-#include "device_utils.h"
 
 #ifdef USE_GLOG
 #include <glog/logging.h>

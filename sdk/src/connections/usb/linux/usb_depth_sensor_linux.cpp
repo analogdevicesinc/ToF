@@ -35,8 +35,6 @@
 #include "usb_buffer.pb.h"
 #include "usb_linux_utils.h"
 
-#include "device_utils.h"
-
 #include <cmath>
 #include <fcntl.h>
 #ifdef USE_GLOG
