@@ -1582,10 +1582,25 @@ aditof::Status Adsd3500Sensor::adsd3500InterruptHandler(int signalValue) {
     aditof::Status status = aditof::Status::OK;
 
     status = adsd3500_read_cmd(0x0020, &statusRegister);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to read status register!";
+        return status;
+    }
+
     aditof::Adsd3500Status adsd3500Status =
         convertIdToAdsd3500Status(statusRegister);
     DLOG(INFO) << "statusRegister:" << statusRegister << "(" << adsd3500Status
                << ")";
+
+    if (adsd3500Status == aditof::Adsd3500Status::IMAGER_ERROR) {
+        status = adsd3500_read_cmd(0x0038, &statusRegister);
+        if (status != aditof::Status::OK) {
+            LOG(ERROR) << "Failed to read imager status register!";
+            return status;
+        }
+
+        LOG(ERROR) << "Imager error detected. Error code: " << statusRegister;
+    }
 
     if (m_interruptCallback) {
         m_interruptCallback(adsd3500Status);
