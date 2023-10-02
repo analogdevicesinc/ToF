@@ -31,10 +31,6 @@
  */
 #include "aditof/sensor_enumerator_factory.h"
 
-#if defined(NXP) || defined(NVIDIA)
-#define TARGET
-#endif
-
 /* On target SDK will know only about TargetSensorEnumerator, while
 // on remote, SDK will only know about UsbSensorEnumerator and
 // (optionally) about NetworkSensorEnumerator. */
