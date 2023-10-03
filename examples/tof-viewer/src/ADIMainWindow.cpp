@@ -791,11 +791,11 @@ void ADIMainWindow::ShowPlaybackTree() {
                  sizeof(uint16_t) * 5);
         }
         ImGui::Text("View Options:");
-        ImGuiExtensions::ADIRadioButton("Active Brightness and Depth",
-                                        &viewSelection, 0,
-                                        displayIR || displayDepth);
+        ImGuiExtensions::ADIRadioButton(
+            "Active Brightness and Depth", &viewSelection, 0,
+            (displayIR || displayDepth) && !isPlayRecorded);
         ImGuiExtensions::ADIRadioButton("Point Cloud and Depth", &viewSelection,
-                                        1, pointCloudEnable);
+                                        1, pointCloudEnable && !isPlayRecorded);
         ImGui::NewLine();
 
         // if (0) {
