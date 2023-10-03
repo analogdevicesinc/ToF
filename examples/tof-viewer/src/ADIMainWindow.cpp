@@ -711,11 +711,14 @@ void ADIMainWindow::ShowPlaybackTree() {
                 }
 
                 view->m_ctrl->startPlayback(path, recordingSeconds);
-                initOpenGLIRTexture();
+                if (viewSelection == 0) {
+                    initOpenGLIRTexture();
+                } else {
+                    initOpenGLPointCloudTexture();
+                }
                 initOpenGLDepthTexture();
-                isPlayRecorded = true;
 
-                viewSelection = 0; //default view to depth/ab
+                isPlayRecorded = true;
                 _isOpenDevice = false;
                 cameraOptionsTreeEnabled = false;
 
@@ -786,16 +789,14 @@ void ADIMainWindow::ShowPlaybackTree() {
                 (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
                  ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
                  sizeof(uint16_t) * 5);
-
-            ImGui::Text("View Options:");
-            ImGuiExtensions::ADIRadioButton("Active Brightness and Depth",
-                                            &viewSelection, 0,
-                                            displayIR || displayDepth);
-            ImGui::NewLine();
-            ImGuiExtensions::ADIRadioButton(
-                "Point Cloud and Depth", &viewSelection, 1, pointCloudEnable);
-            ImGui::NewLine();
         }
+        ImGui::Text("View Options:");
+        ImGuiExtensions::ADIRadioButton("Active Brightness and Depth",
+                                        &viewSelection, 0,
+                                        displayIR || displayDepth);
+        ImGuiExtensions::ADIRadioButton("Point Cloud and Depth", &viewSelection,
+                                        1, pointCloudEnable);
+        ImGui::NewLine();
 
         // if (0) {
         // int filterIndex = 0;
@@ -940,11 +941,17 @@ void ADIMainWindow::PlayRecorded() {
 
     const bool imageIsHovered = ImGui::IsItemHovered();
 
-    displayIR = true;
     displayDepth = true;
-    displayPointCloud = false;
-    pointCloudEnable = false;
-    synchronizeDepthIRVideo();
+    pointCloudEnable = true;
+    if (viewSelection == 0) {
+        displayIR = true;
+        displayPointCloud = false;
+        synchronizeDepthIRVideo();
+    } else {
+        displayIR = false;
+        displayPointCloud = true;
+        synchronizePointCloudVideo();
+    }
 
     if (displayIR) {
         displayActiveBrightnessWindow(overlayFlags);
