@@ -279,6 +279,8 @@ void ADIToFRecorder::playbackThread() {
 
         m_playbackCv.wait(lock, [&]() { return m_shouldReadNewFrame; });
         m_shouldReadNewFrame = false;
+        m_frameDetails.dataDetails.clear();
+
         dataDetails.type = "depth";
         dataDetails.width = m_frameDetails.width;
         dataDetails.height = m_frameDetails.height;
