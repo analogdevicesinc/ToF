@@ -776,16 +776,16 @@ void ADIMainWindow::ShowPlaybackTree() {
                 (view->m_ctrl->m_recorder->currentPBPos) /
                 (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
                  ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
-                 sizeof(uint16_t) * 2);
+                 sizeof(uint16_t) * 5);
             ImGuiExtensions::ADISliderInt(
                 "Progress", &rawSeeker, 0,
-                (view->m_ctrl->m_recorder->m_numberOfFrames / 2) - 1, "%d",
+                (view->m_ctrl->m_recorder->m_numberOfFrames / 5) - 1, "%d",
                 true);
             view->m_ctrl->m_recorder->currentPBPos =
                 rawSeeker *
                 (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
                  ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
-                 sizeof(uint16_t) * 2);
+                 sizeof(uint16_t) * 5);
 
             ImGui::Text("View Options:");
             ImGuiExtensions::ADIRadioButton("Active Brightness and Depth",
