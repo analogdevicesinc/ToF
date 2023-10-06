@@ -510,6 +510,12 @@ aditof::Status CameraItof::initialize() {
         }
     }
 
+    status = readAdsd3500CCB();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to read readAdsd3500CCB.";
+        return status;
+    }
+
     LOG(INFO) << "Camera initialized";
 
     return Status::OK;
@@ -1182,6 +1188,31 @@ void CameraItof::freeConfigData(void) {
     // TO DO:
 }
 
+aditof::Status CameraItof::readSerialNumber(std::string &serialNumber,
+                                            bool useCacheValue) {
+    aditof::Status stat;
+    if (useCacheValue == false) {
+        stat = readAdsd3500CCB();
+        serialNumber = m_details.serialNumber;
+    } else {
+        serialNumber = m_details.serialNumber;
+        if (serialNumber == "")
+            stat = aditof::Status::UNAVAILABLE;
+        else
+            stat = aditof::Status::OK;
+    }
+    return stat;
+}
+
+void CameraItof::setSerialNumber(uint8_t *ccbContent, int ccbFileSize) {
+    char buff[32];
+    // 176 = 0xB0
+    const char *data = reinterpret_cast<const char *>(ccbContent);
+    strncpy(buff, data + 176, 32);
+    m_details.serialNumber = std::string(buff);
+    LOG(INFO) << "m_details.serialNumber=" << m_details.serialNumber;
+}
+
 aditof::Status CameraItof::isValidFrame(const int numTotalFrames) {
     using namespace aditof;
 
@@ -1687,6 +1718,7 @@ aditof::Status CameraItof::readAdsd3500CCB() {
                       << numOfChunks + 1 << " chunks for adsd3500!";
         }
     }
+    setSerialNumber(ccbContent, ccbFileSize);
 
     //read last chunk. smaller size than the rest
     if (ccbFileSize % chunkSize != 0) {

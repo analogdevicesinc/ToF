@@ -111,6 +111,7 @@ file(GLOB OFFLINE_HEADERS
 
 # Create target and set properties
 add_library(${PROJECT_NAME} SHARED
+    ${HEADERS}
     ${SOURCES}
     ${PLATFORM_SOURCES}
     ${PLATFORM_HEADERS}

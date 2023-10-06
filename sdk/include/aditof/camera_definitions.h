@@ -190,6 +190,11 @@ struct CameraDetails {
      * @brief The SD card image version on the embedded system that the camera is attached to.
      */
     std::string sdCardImageVersion;
+
+    /**
+     * @brief The serial number of camera
+     */
+    std::string serialNumber;
 };
 
 } // namespace aditof

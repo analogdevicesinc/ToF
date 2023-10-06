@@ -463,6 +463,17 @@ class SDK_API Camera {
      */
     virtual Status adsd3500GetGenericTemplate(uint16_t reg,
                                               uint16_t &value) = 0;
+
+    /**
+   * @brief Read serial number from camera and update cache
+   * @param[out] serialNumber - Will contain serial number
+   * @param[in] useCacheValue - If is false it will
+   *  force read from camera and if is false it will
+   *  return serialNumber from cache
+   * @return Status
+   */
+    virtual aditof::Status readSerialNumber(std::string &serialNumber,
+                                            bool useCacheValue = false) = 0;
 };
 
 } // namespace aditof
