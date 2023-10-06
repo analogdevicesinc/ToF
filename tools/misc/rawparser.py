@@ -37,7 +37,7 @@ import sys
 import os
 import time
 import argparse
-#import cv2 as cv
+import cv2 as cv
 import open3d as o3d
 
 width = 0
@@ -54,20 +54,36 @@ pngFileType = '.png'
 def visualize_ab(filename,index):
     ab_frame = np.zeros([height,width])
     with open ('%s' % filename) as file:
+        #parse the AB data from binary file 
         byte_array = np.fromfile(file, dtype=np.uint16)
         ab_frame = np.reshape(byte_array[height*width*0:height*width*1], [height,width])
-        plt.figure()
-        plt.imshow(ab_frame, cmap = 'gray')
-        plt.savefig(index+ 'ab_' + args.filename + pngFileType)
+
+        #normalize ab data to 8bit image
+        norm_ab_frame = cv.normalize(ab_frame, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
+        norm_ab_frame = np.uint8(norm_ab_frame)
+        norm_ab_frame = cv.cvtColor(norm_ab_frame, cv.COLOR_GRAY2RGB)
+        
+        #save depth frame as
+        img = o3d.geometry.Image(norm_ab_frame)
+        #Save the image to a file
+        o3d.io.write_image(index+ 'ab_' + args.filename + pngFileType, img)
 
 def visualize_depth(filename,index):
     ab_frame = np.zeros([height,width])
     with open ('%s' % filename) as file:
+        #parse the depth data from binary file 
         byte_array = np.fromfile(file, dtype=np.uint16)
         depth_frame = np.reshape(byte_array[height*width*1:height*width*2], [height,width])
-        plt.figure()
-        plt.imshow(depth_frame, cmap = 'gist_ncar')
-        plt.savefig(index+ 'depth_' + args.filename + pngFileType)
+
+        #normalize depth data to 8bit image
+        norm_depth_frame = cv.normalize(depth_frame, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
+        norm_depth_frame = np.uint8(norm_depth_frame)
+        norm_depth_frame = cv.applyColorMap(norm_depth_frame,cv.COLORMAP_TURBO)
+        
+        #save depth frame as
+        img = o3d.geometry.Image(norm_depth_frame)
+        #Save the image to a file
+        o3d.io.write_image(index+ 'depth_' + args.filename + pngFileType, img)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
