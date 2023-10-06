@@ -43,7 +43,7 @@ import open3d as o3d
 width = 0
 height = 0
 frameNumber = 0
-byteSize = 4
+bytePerPx = 10
 startOfFrame = 0
 raw_img_dir = '\\sample_raw\\'
 fileName = 'frames202309111819'
@@ -93,8 +93,8 @@ if __name__ == "__main__":
         #show frame details
         file_size = os.path.getsize(os.path.dirname( os.path.abspath(__file__)) + '\\' + args.filename + rawFileType)
         print("file size: " + str(file_size))
-        sizeOfHeader = 3 * byteSize;
-        sizeOfFrame = byteSize * height * width;
+        sizeOfHeader = 12;
+        sizeOfFrame = bytePerPx * height * width;
         print("frame size: " + str(sizeOfFrame))
         m_numberOfFrames = (file_size - sizeOfHeader) / sizeOfFrame;
         print("number of frames: " + str(m_numberOfFrames))
