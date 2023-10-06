@@ -70,7 +70,7 @@ def visualize_ab(filename,index):
         o3d.io.write_image(index+ 'ab_' + args.filename + pngFileType, img)
 
 def visualize_depth(filename,index):
-    ab_frame = np.zeros([height,width])
+    depth_frame = np.zeros([height,width])
     with open ('%s' % filename) as file:
         #parse the depth data from binary file 
         byte_array = np.fromfile(file, dtype=np.uint16)
