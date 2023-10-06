@@ -50,6 +50,7 @@ fileName = 'frames202309111819'
 rawFileType = '.RAW'
 binFileType = '.bin'
 pngFileType = '.png'
+plyFileType = '.ply'
 
 def visualize_ab(filename,index):
     ab_frame = np.zeros([height,width])
@@ -85,6 +86,26 @@ def visualize_depth(filename,index):
         #Save the image to a file
         o3d.io.write_image(index+ 'depth_' + args.filename + pngFileType, img)
 
+def visualize_pcloud(filename,index):
+    # Create visualizer
+    vis = o3d.visualization.Visualizer()
+    vis.create_window("PointCloud", 1200, 1200)
+
+    point_cloud = o3d.geometry.PointCloud()
+    xyz_frame = np.zeros([height*width,3])
+    with open ('%s' % filename) as file:
+        byte_array = np.fromfile(file, dtype=np.int16)
+        xyz_frame = np.resize(byte_array[height*width*2:height*width*5], (int(len(byte_array[height*width*2:height*width*3])),3))
+
+        point_cloud.points = o3d.utility.Vector3dVector(xyz_frame)
+        point_cloud.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
+        o3d.io.write_point_cloud(index+ 'pointcloud_' + args.filename + plyFileType,point_cloud)
+        vis.add_geometry(point_cloud)
+        vis.update_geometry(point_cloud)
+        vis.run()
+        vis.poll_events()
+        vis.update_renderer()
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Scrip to parse a raw file and extract different frame data ')
@@ -122,7 +143,7 @@ if __name__ == "__main__":
     new_dir = os.path.dirname( os.path.abspath(__file__)) + raw_img_dir + args.filename
     print(new_dir)
     os.mkdir(new_dir)
-
+    first_time_render_pc = 1
     for i in range(0, frameNumber):
         # Create frame folders
         frameDir = new_dir + '\\' + args.filename + '_' + str(i) +'\\'
@@ -136,3 +157,7 @@ if __name__ == "__main__":
             startOfFrame = endOfFrame
         visualize_ab(binFileName,frameDir)
         visualize_depth(binFileName,frameDir)
+        if first_time_render_pc:
+            visualize_pcloud(binFileName,frameDir)
+            first_time_render_pc = 0
+   
