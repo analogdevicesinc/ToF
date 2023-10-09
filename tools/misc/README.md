@@ -13,7 +13,9 @@ first point cloud frame 3d image will be visualized. Close the visualize window 
 `.png` files for each frame of AB and Depth will be found in `sample_raw/[RAW_RECORDING_FILENAME]`
 
 ### Dependencies
+```
 pip install opencv-python
 pip install numpy
 pip install open3d
 pip install argparse
+```
