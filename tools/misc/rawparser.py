@@ -31,8 +31,6 @@
 #
 #import aditofpython as tof
 import numpy as np
-import matplotlib.pyplot as plt
-from PIL import Image
 import sys
 import os
 import time
@@ -52,7 +50,7 @@ binFileType = '.bin'
 pngFileType = '.png'
 plyFileType = '.ply'
 
-def visualize_ab(filename,index):
+def visualize_ab(filename, directory, index):
     ab_frame = np.zeros([height,width])
     with open ('%s' % filename) as file:
         #parse the AB data from binary file 
@@ -67,9 +65,9 @@ def visualize_ab(filename,index):
         #save depth frame as
         img = o3d.geometry.Image(norm_ab_frame)
         #Save the image to a file
-        o3d.io.write_image(index+ 'ab_' + args.filename + pngFileType, img)
+        o3d.io.write_image(directory + 'ab_' + args.filename + '_' + index + pngFileType, img)
 
-def visualize_depth(filename,index):
+def visualize_depth(filename, directory, index):
     depth_frame = np.zeros([height,width])
     with open ('%s' % filename) as file:
         #parse the depth data from binary file 
@@ -84,9 +82,9 @@ def visualize_depth(filename,index):
         #save depth frame as
         img = o3d.geometry.Image(norm_depth_frame)
         #Save the image to a file
-        o3d.io.write_image(index+ 'depth_' + args.filename + pngFileType, img)
+        o3d.io.write_image(directory + 'depth_' + args.filename + '_' + index + pngFileType, img)
 
-def visualize_pcloud(filename,index):
+def visualize_pcloud(filename, directory, index):
     # Create visualizer
     vis = o3d.visualization.Visualizer()
     vis.create_window("PointCloud", 1200, 1200)
@@ -99,7 +97,7 @@ def visualize_pcloud(filename,index):
 
         point_cloud.points = o3d.utility.Vector3dVector(xyz_frame)
         point_cloud.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
-        o3d.io.write_point_cloud(index+ 'pointcloud_' + args.filename + plyFileType,point_cloud)
+        o3d.io.write_point_cloud(directory + 'pointcloud_' + args.filename + '_' + index + plyFileType,point_cloud)
         vis.add_geometry(point_cloud)
         vis.update_geometry(point_cloud)
         vis.run()
@@ -155,9 +153,9 @@ if __name__ == "__main__":
             endOfFrame = startOfFrame +sizeOfFrame
             f.write(m_frameData[startOfFrame : endOfFrame])
             startOfFrame = endOfFrame
-        visualize_ab(binFileName,frameDir)
-        visualize_depth(binFileName,frameDir)
+        visualize_ab(binFileName,frameDir,str(i))
+        visualize_depth(binFileName,frameDir,str(i))
         if first_time_render_pc:
-            visualize_pcloud(binFileName,frameDir)
+            visualize_pcloud(binFileName,frameDir,str(i))
             first_time_render_pc = 0
    
