@@ -342,7 +342,7 @@ Status CalibrationItof::writeSettings(
     using namespace aditof;
     Status status = Status::OK;
 
-    for (int i = 0; i < settings.size(); i++) {
+    for (int i = 0; i < static_cast<int>(settings.size()); i++) {
 
         if (settings[i].first == "LSMOD1_CONFIG_VALUE") {
             uint16_t ldmod1_config = settings[i].second;
