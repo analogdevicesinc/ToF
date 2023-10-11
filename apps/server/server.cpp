@@ -118,7 +118,7 @@ Network ::Network() : context(nullptr) {}
 int Network::callback_function(struct lws *wsi,
                                enum lws_callback_reasons reason, void *user,
                                void *in, size_t len) {
-    int n;
+    uint n;
 
     switch (reason) {
     case LWS_CALLBACK_ESTABLISHED: {

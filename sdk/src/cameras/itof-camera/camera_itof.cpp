@@ -1659,7 +1659,7 @@ aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath) {
         int end = flashPageSize * (i + 1);
 
         for (int j = start; j < end; j++) {
-            if (j < fw_len) {
+            if (j < static_cast<int>(fw_len)) {
                 data_out[j - start] = fw_content[j];
             } else {
                 // padding with 0x00
