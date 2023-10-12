@@ -114,6 +114,6 @@ class BufferProcessor : public aditof::V4lBufferAccessInterface {
     struct v4l2_format m_videoFormat;
     const char *m_videoDeviceName = OUTPUT_DEVICE;
 
-    struct VideoDev *m_outputVideoDev;
     struct VideoDev *m_inputVideoDev;
+    struct VideoDev *m_outputVideoDev;
 };
