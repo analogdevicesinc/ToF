@@ -176,7 +176,6 @@ int main(int argc, char *argv[]) {
     uint32_t warmup_time = 0;
     std::string ip;
     std::string firmware;
-    uint32_t setfps = 0;
 
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
@@ -251,13 +250,6 @@ int main(int argc, char *argv[]) {
     // Parsing firmware
     if (!command_map["-fw"].value.empty()) {
         firmware = command_map["-fw"].value;
-    }
-
-    //set FPS value
-    if (!command_map["-fps"].value.empty()) {
-        setfps = std::stoi(command_map["-fps"].value);
-    } else {
-        setfps = 10;
     }
 
     ext_frame_sync_en = std::stoi(command_map["-ext"].value);
