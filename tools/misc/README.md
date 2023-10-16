@@ -6,7 +6,7 @@ depth frame and AB frame are  saved as `.png` while point cloud data is saved as
 
 Usage:
 - put raw recording files in the same directory of the `rawparser.py`
-- run `python rawparser.py --filename [RAW_RECORDING_FILENAME]`
+- run `python rawparser.py --filename [RAW_RECORDING_FILENAME]` (file extension `.raw` excluded)
 
 `sample_raw` folder will be created
 first point cloud frame 3d image will be visualized. Close the visualize window to proceed saving all data
