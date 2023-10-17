@@ -1099,7 +1099,7 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd,
         return Status::GENERIC_ERROR;
     }
 
-    if (cmd == 0x13) {
+    if (cmd == 0x13 || cmd == 0x19) {
         usleep(1000);
     }
 
