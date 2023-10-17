@@ -79,7 +79,6 @@ CameraItof::CameraItof(
     FloatToLinGenerateTable();
     memset(&m_xyzTable, 0, sizeof(m_xyzTable));
     m_details.mode = "sr-native";
-    m_details.cameraId = "";
     m_details.uBootVersion = ubootVersion;
     m_details.kernelVersion = kernelVersion;
     m_details.sdCardImageVersion = sdCardImageVersion;
@@ -510,12 +509,14 @@ aditof::Status CameraItof::initialize() {
         }
     }
 
-    status = readAdsd3500CCB();
+    std::string serialNumber;
+    status = readSerialNumber(serialNumber);
     if (status != Status::OK) {
-        LOG(ERROR) << "Failed to read readAdsd3500CCB.";
+        LOG(ERROR) << "Failed to read serial number!.";
         return status;
     }
 
+    LOG(INFO) << "Module serial number: " << serialNumber;
     LOG(INFO) << "Camera initialized";
 
     return Status::OK;
@@ -1190,27 +1191,31 @@ void CameraItof::freeConfigData(void) {
 
 aditof::Status CameraItof::readSerialNumber(std::string &serialNumber,
                                             bool useCacheValue) {
-    aditof::Status stat;
-    if (useCacheValue == false) {
-        stat = readAdsd3500CCB();
-        serialNumber = m_details.serialNumber;
-    } else {
-        serialNumber = m_details.serialNumber;
-        if (serialNumber == "")
-            stat = aditof::Status::UNAVAILABLE;
-        else
-            stat = aditof::Status::OK;
-    }
-    return stat;
-}
+    using namespace aditof;
+    Status status = Status::OK;
 
-void CameraItof::setSerialNumber(uint8_t *ccbContent, int ccbFileSize) {
-    char buff[32];
-    // 176 = 0xB0
-    const char *data = reinterpret_cast<const char *>(ccbContent);
-    strncpy(buff, data + 176, 32);
-    m_details.serialNumber = std::string(buff);
-    LOG(INFO) << "m_details.serialNumber=" << m_details.serialNumber;
+    if (useCacheValue) {
+        if (!m_details.serialNumber.empty()) {
+            serialNumber = m_details.serialNumber;
+            return status;
+        } else {
+            LOG(INFO)
+                << "No serial number stored in cache. Reading from memory.";
+        }
+    }
+
+    uint8_t serial[32] = {0};
+
+    status = m_depthSensor->adsd3500_read_payload_cmd(0x19, serial, 32);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to read serial number!";
+        return status;
+    }
+
+    m_details.serialNumber = std::string(reinterpret_cast<char *>(serial), 32);
+    serialNumber = m_details.serialNumber;
+
+    return status;
 }
 
 aditof::Status CameraItof::isValidFrame(const int numTotalFrames) {
@@ -1718,7 +1723,6 @@ aditof::Status CameraItof::readAdsd3500CCB() {
                       << numOfChunks + 1 << " chunks for adsd3500!";
         }
     }
-    setSerialNumber(ccbContent, ccbFileSize);
 
     //read last chunk. smaller size than the rest
     if (ccbFileSize % chunkSize != 0) {

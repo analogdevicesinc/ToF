@@ -181,16 +181,6 @@ class CameraItof : public aditof::Camera {
 
   private:
     /**
-     * @brief Set serial number string from ccbContent array
-     * This is internal function
-     * @param[in] ccbContent - This is an array with ccb data
-     * @param[in] ccbFileSize - This is size of ccb data
-     *
-     * @return void
-     */
-    void setSerialNumber(uint8_t *ccbContent, int ccbFileSize);
-
-    /**
      * @brief Default ADI module flash memory is Macronix MX25U6435F.
      * Override by defining a MODULE_EEPROM_TYPE name in configuration JSON file.
      */
