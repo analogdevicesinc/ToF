@@ -467,8 +467,8 @@ class SDK_API Camera {
     /**
    * @brief Read serial number from camera and update cache
    * @param[out] serialNumber - Will contain serial number
-   * @param[in] useCacheValue - If is false it will
-   *  force read from camera and if is false it will
+   * @param[in] useCacheValue - If it is false it will
+   *  read from camera and if it is true it will
    *  return serialNumber from cache
    * @return Status
    */
