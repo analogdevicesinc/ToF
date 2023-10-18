@@ -488,16 +488,6 @@ aditof::Status CameraItof::initialize() {
             LOG(WARNING) << "enableTempCompenstation is not being set by SDK.";
         }
 
-        if (m_enableMetaDatainAB >= 0) {
-            status = adsd3500SetEnableEmbeddedHeaderinAB(m_enableMetaDatainAB);
-            if (status != Status::OK) {
-                LOG(ERROR) << "Failed to set enableMetaDatainAB.";
-                return status;
-            }
-        } else {
-            LOG(WARNING) << "enableMetaDatainAB is not being set by SDK.";
-        }
-
         if (m_enableEdgeConfidence >= 0) {
             status = adsd3500SetEnableEdgeConfidence(m_enableEdgeConfidence);
             if (status != Status::OK) {
@@ -642,6 +632,24 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         m_pcmFrame = true;
     } else {
         m_pcmFrame = false;
+    }
+
+    if (m_enableMetaDatainAB >= 0) {
+        if (!m_pcmFrame) {
+            status = adsd3500SetEnableEmbeddedHeaderinAB(m_enableMetaDatainAB);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to set enableMetaDatainAB.";
+                return status;
+            }
+        } else {
+            status = adsd3500SetEnableEmbeddedHeaderinAB(0);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to disable enableMetaDatainAB.";
+                return status;
+            }
+        }
+    } else {
+        LOG(WARNING) << "enableMetaDatainAB is not being set by SDK.";
     }
 
     getKeyValuePairsFromIni(m_ini_depth, m_iniKeyValPairs);
@@ -925,6 +933,12 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
             return Status::GENERIC_ERROR;
         }
 
+        if (m_enableMetaDatainAB) {
+            uint16_t *header;
+            frame->getData("embedded_header", &header);
+            memcpy(header, m_tofi_compute_context->p_ab_frame, 128);
+        }
+
         m_tofi_compute_context->p_depth_frame = tempDepthFrame;
         m_tofi_compute_context->p_ab_frame = tempAbFrame;
         m_tofi_compute_context->p_xyz_frame = (int16_t *)tempXyzFrame;
@@ -960,6 +974,14 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
             Algorithms::ComputeXYZ(
                 (const uint16_t *)depthFrame, &m_xyzTable, (int16_t *)xyzFrame,
                 m_details.frameType.height, m_details.frameType.width);
+        }
+
+        if (m_enableMetaDatainAB) {
+            uint16_t *abFrame;
+            uint16_t *header;
+            frame->getData("ir", &abFrame);
+            frame->getData("embedded_header", &header);
+            memcpy(header, abFrame, 128);
         }
     }
 
