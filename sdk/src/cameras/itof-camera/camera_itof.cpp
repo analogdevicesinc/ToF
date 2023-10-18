@@ -634,6 +634,11 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         m_pcmFrame = false;
     }
 
+    getKeyValuePairsFromIni(m_ini_depth, m_iniKeyValPairs);
+    setAdsd3500WithIniParams(m_iniKeyValPairs);
+    configureSensorFrameType();
+    setMode(frameType);
+
     if (m_enableMetaDatainAB >= 0) {
         if (!m_pcmFrame) {
             status = adsd3500SetEnableEmbeddedHeaderinAB(m_enableMetaDatainAB);
@@ -641,21 +646,28 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
                 LOG(ERROR) << "Failed to set enableMetaDatainAB.";
                 return status;
             }
+            LOG(INFO) << "Metadata in AB is enabled and it is stored in the "
+                         "first 128 bytes.";
+
         } else {
             status = adsd3500SetEnableEmbeddedHeaderinAB(0);
             if (status != Status::OK) {
                 LOG(ERROR) << "Failed to disable enableMetaDatainAB.";
                 return status;
             }
+            LOG(INFO) << "Metadata in AB is disabled for this frame type.";
         }
+
     } else {
-        LOG(WARNING) << "enableMetaDatainAB is not being set by SDK.";
+        status = adsd3500SetEnableEmbeddedHeaderinAB(m_enableMetaDatainAB);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to set enableMetaDatainAB.";
+            return status;
+        }
+
+        LOG(WARNING) << "Metadata in AB is disabled.";
     }
 
-    getKeyValuePairsFromIni(m_ini_depth, m_iniKeyValPairs);
-    setAdsd3500WithIniParams(m_iniKeyValPairs);
-    configureSensorFrameType();
-    setMode(frameType);
     LOG(INFO) << "Using ini file: " << m_ini_depth;
 
     status = m_depthSensor->setFrameType(*frameTypeIt);
@@ -1885,6 +1897,19 @@ void CameraItof::configureSensorFrameType() {
             LOG(WARNING) << "xyzEnable was not found in .ini file";
         }
     }
+
+    //Embedded header is being set from the ini file
+    it = m_iniKeyValPairs.find("headerSize");
+    if (it != m_iniKeyValPairs.end()) {
+        value = it->second;
+        if (std::stoi(value) == 128) {
+            m_enableMetaDatainAB = 1;
+        } else {
+            m_enableMetaDatainAB = 0;
+        }
+    } else {
+        LOG(WARNING) << "headerSize was not found in .ini file";
+    }
 }
 
 static int16_t getValueFromJSON(cJSON *config_json, std::string key) {
@@ -2007,8 +2032,6 @@ aditof::Status CameraItof::parseJsonFileContent() {
         m_mipiOutputSpeed = getValueFromJSON(config_json, "mipiSpeed");
         m_enableTempCompenstation =
             getValueFromJSON(config_json, "enableTempCompenstation");
-        m_enableMetaDatainAB =
-            getValueFromJSON(config_json, "enableMetaDatainAB");
         m_enableEdgeConfidence =
             getValueFromJSON(config_json, "enableEdgeConfidence");
 
