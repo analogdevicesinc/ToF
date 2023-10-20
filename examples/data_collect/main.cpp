@@ -637,11 +637,9 @@ int main(int argc, char *argv[]) {
 
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> total_time = end_time - start_time;
-    if (frame_type == "raw") {
-        if (total_time.count() > 0.0) {
-            double fps = (double)n_frames / total_time.count();
-            LOG(INFO) << "FPS: " << fps;
-        }
+    if (total_time.count() > 0.0) {
+        double measured_fps = (double)n_frames / total_time.count();
+        LOG(INFO) << "Measured FPS: " << measured_fps;
     }
 
     status = camera->stop();
