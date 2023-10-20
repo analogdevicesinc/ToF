@@ -24,7 +24,7 @@
 
 #include <aditof/system.h>
 #include <cJSON.h>
-
+#define EMBED_HDR_LENGTH 128
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -778,17 +778,20 @@ void ADIMainWindow::ShowPlaybackTree() {
             rawSeeker =
                 (view->m_ctrl->m_recorder->currentPBPos) /
                 (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
-                 ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
-                 sizeof(uint16_t) * 5);
+                     ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
+                     sizeof(uint16_t) * 5 +
+                 EMBED_HDR_LENGTH);
             ImGuiExtensions::ADISliderInt(
                 "Progress", &rawSeeker, 0,
                 (view->m_ctrl->m_recorder->m_numberOfFrames / 5) - 1, "%d",
                 true);
             view->m_ctrl->m_recorder->currentPBPos =
                 rawSeeker *
-                (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
-                 ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
-                 sizeof(uint16_t) * 5);
+                    (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
+                         ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
+                         sizeof(uint16_t) * 5 +
+                     EMBED_HDR_LENGTH) +
+                view->m_ctrl->m_recorder->m_sizeOfHeader;
         }
         ImGui::Text("View Options:");
         ImGuiExtensions::ADIRadioButton(

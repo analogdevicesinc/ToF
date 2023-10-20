@@ -141,10 +141,10 @@ int ADIToFRecorder::startPlaybackRaw(const std::string &fileName, int &fps) {
     m_playbackFile.read(reinterpret_cast<char *>(&height), sizeof(int));
     m_playbackFile.read(reinterpret_cast<char *>(&width), sizeof(int));
     m_playbackFile.read(reinterpret_cast<char *>(&fps), sizeof(int));
-    int sizeOfHeader = 3 * sizeof(int);
+    m_sizeOfHeader = 3 * sizeof(int);
     int sizeOfFrame = sizeof(uint16_t) * height * width;
-    currentPBPos = sizeOfHeader;
-    m_numberOfFrames = (fileSize - sizeOfHeader) / sizeOfFrame;
+    currentPBPos = m_sizeOfHeader;
+    m_numberOfFrames = (fileSize - m_sizeOfHeader) / sizeOfFrame;
 
     m_frameDetails.height = height;
     m_frameDetails.width = width;
@@ -240,6 +240,9 @@ void ADIToFRecorder::recordThread() {
         uint16_t *rawData;
         frame->getData("raw", &rawData);
 
+        uint16_t *header;
+        frame->getData("embedded_header", &header);
+
         int width = m_frameDetails.width;
         int height = m_frameDetails.height;
         int captures = m_frameDetails.totalCaptures;
@@ -248,6 +251,8 @@ void ADIToFRecorder::recordThread() {
         m_recordFile.write(reinterpret_cast<const char *>(irData), size);
         m_recordFile.write(reinterpret_cast<const char *>(depthData), size);
         m_recordFile.write(reinterpret_cast<const char *>(xyzData), size * 3);
+        m_recordFile.write(reinterpret_cast<const char *>(header),
+                           EMBED_HDR_LENGTH);
 
         //Create a new .bin file for each frame with raw sensor data
         if (m_saveBinaryFormat) {
@@ -297,11 +302,16 @@ void ADIToFRecorder::playbackThread() {
         dataDetails.width = m_frameDetails.width;
         dataDetails.height = m_frameDetails.height;
         m_frameDetails.dataDetails.emplace_back(dataDetails);
+        dataDetails.type = "embedded_header";
+        dataDetails.width = 1;
+        dataDetails.height = EMBED_HDR_LENGTH;
+        m_frameDetails.dataDetails.emplace_back(dataDetails);
 
         frame->setDetails(m_frameDetails);
         frame->getData("ir", &frameDataLocationIR);
         frame->getData("depth", &frameDataLocationDEPTH);
         frame->getData("xyz", &frameDataLocationXYZ);
+        frame->getData("embedded_header", &frameDataLocationHeader);
 
         unsigned int width = m_frameDetails.width;
         unsigned int height = m_frameDetails.height;
@@ -314,14 +324,18 @@ void ADIToFRecorder::playbackThread() {
         } else {
             if (!isPaused && (currentPBPos < (fileSize - (sizeOfFrame)*10))) {
                 int size = static_cast<int>(sizeof(uint16_t) * width * height);
+                LOG(INFO) << "CURRENT BPOS " << currentPBPos;
                 m_playbackFile.seekg(currentPBPos);
-                currentPBPos += size * 5;
+                currentPBPos += size * 5 + EMBED_HDR_LENGTH;
                 m_playbackFile.read(
                     reinterpret_cast<char *>(frameDataLocationIR), size);
                 m_playbackFile.read(
                     reinterpret_cast<char *>(frameDataLocationDEPTH), size);
                 m_playbackFile.read(
                     reinterpret_cast<char *>(frameDataLocationXYZ), size * 3);
+                m_playbackFile.read(
+                    reinterpret_cast<char *>(frameDataLocationHeader),
+                    EMBED_HDR_LENGTH);
 
             } else {
                 m_playbackFile.seekg(currentPBPos);
@@ -332,6 +346,9 @@ void ADIToFRecorder::playbackThread() {
                     reinterpret_cast<char *>(frameDataLocationDEPTH), size);
                 m_playbackFile.read(
                     reinterpret_cast<char *>(frameDataLocationXYZ), size * 3);
+                m_playbackFile.read(
+                    reinterpret_cast<char *>(frameDataLocationHeader),
+                    EMBED_HDR_LENGTH);
             }
         }
 

@@ -165,6 +165,7 @@ class ADIToFRecorder {
     uint16_t *frameDataLocationDEPTH = nullptr;
     uint16_t *frameDataLocationXYZ = nullptr;
     uint16_t *frameDataLocationIR = nullptr;
+    uint16_t *frameDataLocationHeader = nullptr;
     aditof::FrameDetails m_frameDetails;
     bool m_saveBinaryFormat = false;
     bool m_finishRecording = true;
@@ -172,6 +173,7 @@ class ADIToFRecorder {
     int currentPBPos = 0;
     int m_numberOfFrames;
     int fileSize = 0;
+    uint16_t m_sizeOfHeader;
 
   private:
     SafeQueue<std::shared_ptr<aditof::Frame>> m_playbackQueue;
