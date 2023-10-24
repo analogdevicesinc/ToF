@@ -499,14 +499,19 @@ aditof::Status CameraItof::initialize() {
         }
     }
 
-    std::string serialNumber;
-    status = readSerialNumber(serialNumber);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Failed to read serial number!.";
-        return status;
+    if (m_adsd3500FwVersionInt >= 4710) {
+        std::string serialNumber;
+        status = readSerialNumber(serialNumber);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to read serial number!";
+            return status;
+        }
+        LOG(INFO) << "Module serial number: " << serialNumber;
+
+    } else {
+        LOG(INFO) << "Serial read is not supported in this firmware!";
     }
 
-    LOG(INFO) << "Module serial number: " << serialNumber;
     LOG(INFO) << "Camera initialized";
 
     return Status::OK;
@@ -2102,6 +2107,11 @@ aditof::Status CameraItof::adsd3500GetFirmwareVersion(std::string &fwVersion,
 
     m_adsd3500FwGitHash =
         std::make_pair(fwv, std::string((char *)(fwData + 4), 40));
+
+    m_adsd3500FwVersionInt = 0;
+    for (int i = 0; i < 4; i++) {
+        m_adsd3500FwVersionInt = m_adsd3500FwVersionInt * 10 + fwData[i];
+    }
 
     fwVersion = m_adsd3500FwGitHash.first;
     fwHash = m_adsd3500FwGitHash.second;
