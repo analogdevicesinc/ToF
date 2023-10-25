@@ -604,4 +604,9 @@ PYBIND11_MODULE(aditofpython, m) {
 
             return n;
         });
+
+    //SDK version
+    m.def("getApiVersion", &aditof::getApiVersion);
+    m.def("getBranchVersion", &aditof::getBranchVersion);
+    m.def("getCommitVersion", &aditof::getCommitVersion);
 }
