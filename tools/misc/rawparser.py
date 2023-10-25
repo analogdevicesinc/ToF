@@ -40,9 +40,10 @@ import open3d as o3d
 
 width = 0
 height = 0
-frameNumber = 0
+fps = 0
 bytePerPx = 10
 startOfFrame = 0
+embedHeaderLength = 128
 raw_img_dir = '\\sample_raw\\'
 fileName = 'frames202309111819'
 rawFileType = '.RAW'
@@ -103,6 +104,14 @@ def visualize_pcloud(filename, directory, index):
         vis.run()
         vis.poll_events()
         vis.update_renderer()
+        
+def parseMetadata(filename, directory, index):
+    header_data = np.zeros([1,embedHeaderLength])
+    with open ('%s' % filename) as file:
+        byte_array = np.fromfile(file, dtype=np.uint16)
+        print("number of bytes in the file: " + str(len(byte_array)))
+        headerData = byte_array[-int((embedHeaderLength/2)):]
+        np.savetxt(directory + 'metadata_' + args.filename + '_' + index +'.txt', headerData, fmt='%d')
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -123,13 +132,13 @@ if __name__ == "__main__":
         data = f.read(12)
         width = int.from_bytes(data[:4], 'little')
         height = int.from_bytes(data[4:8], 'little')
-        frameNumber = int.from_bytes(data[8:12], 'little')
-        print(f"width: {width} height: {height} # of frames:  {frameNumber}")
+        fps = int.from_bytes(data[8:12], 'little')
+        print(f"width: {width} height: {height} # of frames:  {fps}")
         #show frame details
         file_size = os.path.getsize(os.path.dirname( os.path.abspath(__file__)) + '\\' + args.filename + rawFileType)
         print("file size: " + str(file_size))
         sizeOfHeader = 12;
-        sizeOfFrame = bytePerPx * height * width;
+        sizeOfFrame = (bytePerPx * height * width)+ embedHeaderLength;
         print("frame size: " + str(sizeOfFrame))
         m_numberOfFrames = (file_size - sizeOfHeader) / sizeOfFrame;
         print("number of frames: " + str(m_numberOfFrames))
@@ -142,7 +151,7 @@ if __name__ == "__main__":
     print(new_dir)
     os.mkdir(new_dir)
     first_time_render_pc = 1
-    for i in range(0, frameNumber):
+    for i in range(0, fps):
         # Create frame folders
         frameDir = new_dir + '\\' + args.filename + '_' + str(i) +'\\'
         os.mkdir(frameDir)
@@ -158,4 +167,5 @@ if __name__ == "__main__":
         if first_time_render_pc:
             visualize_pcloud(binFileName,frameDir,str(i))
             first_time_render_pc = 0
+        parseMetadata(binFileName,frameDir,str(i))
    
