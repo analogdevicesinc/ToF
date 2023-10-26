@@ -1362,3 +1362,9 @@ aditof::Status Adsd3100Sensor::adsd3500_register_interrupt_callback(
     LOG(INFO) << "Adsd3500 is not connected to this sensor type!";
     return aditof::Status::UNAVAILABLE;
 }
+
+aditof::Status Adsd3100Sensor::adsd3500_get_status(int &status){
+    using namespace aditof;
+    Status status = Status::UNAVAILABLE;
+    return status;
+}

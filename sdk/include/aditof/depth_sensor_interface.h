@@ -218,6 +218,13 @@ class DepthSensorInterface {
     adsd3500_register_interrupt_callback(SensorInterruptCallback cb) = 0;
 
     /**
+     * @brief Returns the chip status
+     * @param status - chip status (error) value
+     * @return Status
+     */
+    virtual aditof::Status adsd3500_get_status(int &status) = 0;
+
+    /**
      * @brief Gets the sensors's list of controls
      * @param[out] controls
      * @return Status

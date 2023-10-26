@@ -1174,7 +1174,7 @@ aditof::Status UsbDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd,
         LOG(ERROR) << "Read registers operation failed on UVC gadget";
         return static_cast<aditof::Status>(responseMsg.status());
     }
-    LOG(ERROR) << "MESSAGE LENGTH: <<<<< "
+
                << responseMsg.bytes_payload(0).length();
     // If request and response went well, extract data from response
     memcpy(readback_data, responseMsg.bytes_payload(0).c_str(),
@@ -1339,6 +1339,12 @@ aditof::Status UsbDepthSensor::adsd3500_register_interrupt_callback(
     LOG(WARNING) << "Registering an interrupt callback on a USB connection "
                     "is not supported yet!";
     return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status UsbDepthSensor::adsd3500_get_status(int &status){
+    using namespace aditof;
+    Status status = Status::OK;
+    return status;
 }
 
 aditof::Status UsbDepthSensor::initTargetDepthCompute(uint8_t *iniFile,
