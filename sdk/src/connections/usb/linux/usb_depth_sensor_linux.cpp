@@ -1148,6 +1148,12 @@ aditof::Status UsbDepthSensor::adsd3500_register_interrupt_callback(
     return aditof::Status::UNAVAILABLE;
 }
 
+aditof::Status UsbDepthSensor::adsd3500_get_status(int &status){
+    using namespace aditof;
+    Status status = Status::OK;
+    return status;
+}
+
 aditof::Status UsbDepthSensor::initTargetDepthCompute(uint8_t *iniFile,
                                                       uint16_t iniFileLength,
                                                       uint8_t *calData,
