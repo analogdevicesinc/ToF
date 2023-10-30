@@ -1175,7 +1175,6 @@ aditof::Status UsbDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd,
         return static_cast<aditof::Status>(responseMsg.status());
     }
 
-               << responseMsg.bytes_payload(0).length();
     // If request and response went well, extract data from response
     memcpy(readback_data, responseMsg.bytes_payload(0).c_str(),
            responseMsg.bytes_payload(0).length());

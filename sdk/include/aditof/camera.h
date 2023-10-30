@@ -462,6 +462,13 @@ class SDK_API Camera {
      */
     virtual Status adsd3500GetGenericTemplate(uint16_t reg,
                                               uint16_t &value) = 0;
+    /**
+     * @brief Returns the chip status
+     * @param[out] chipStatus - chip status (error) value
+     * @param[out] imagerStatus - imager status (error) value
+     * @return Status
+     */
+    virtual Status adsd3500GetStatus(int &chipStatus, int &imagerStatus) = 0;
 
     /**
    * @brief Read serial number from camera and update cache
