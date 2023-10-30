@@ -193,6 +193,15 @@ class SDK_API Camera {
         std::vector<std::shared_ptr<TemperatureSensorInterface>> &sensors) = 0;
 
     /**
+     * @brief Enable the generation of a XYZ frame. The XYZ frame can be enabled
+     * or disabled through .ini configuration file but if this method is explicitly called
+     * then it will override the option in the .ini file. By default XYZ frame is disabled.
+     * @param[in] enable - set to true to enable the generation of XYZ, set to false otherwise.
+     * @return Status
+     */
+    virtual Status enableXYZframe(bool enable) = 0;
+
+    /**
      * @brief Update the firmware of ADSD3500 with the content found in the specified file.
      * @param[in] fwFilePath - A path to a file (including file name and extension)
      *                         where the firmware for adsd3500 is stored.

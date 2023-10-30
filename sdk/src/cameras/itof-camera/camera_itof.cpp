@@ -66,7 +66,7 @@ CameraItof::CameraItof(
     const std::string &sdCardImageVersion)
     : m_depthSensor(depthSensor), m_devStarted(false),
       m_eepromInitialized(false), m_adsd3500Enabled(false),
-      m_loadedConfigData(false), m_xyzEnabled(false), m_xyzSetViaControl(false),
+      m_loadedConfigData(false), m_xyzEnabled(false), m_xyzSetViaApi(false),
       m_modechange_framedrop_count(0), m_tempFiles{}, m_cameraFps(0),
       m_fsyncMode(-1), m_mipiOutputSpeed(-1), m_enableTempCompenstation(-1),
       m_enableMetaDatainAB(-1), m_enableEdgeConfidence(-1),
@@ -90,7 +90,6 @@ CameraItof::CameraItof(
     m_controls.emplace("saveModuleCFG", "");
     m_controls.emplace("enableDepthCompute",
                        m_targetFramesAreComputed ? "off" : "on");
-    m_controls.emplace("enableXYZframe", "off");
 
     // Check Depth Sensor
     if (!depthSensor) {
@@ -1070,13 +1069,6 @@ aditof::Status CameraItof::setControl(const std::string &control,
             return saveCCBToFile(value);
         } else if (control == "saveModuleCFG") {
             return saveCFGToFile(value);
-        } else if (control == "enableXYZframe") {
-            if (value == "on")
-                return enableXYZframe(true);
-            else if (value == "off")
-                return enableXYZframe(false);
-            else
-                return Status::INVALID_ARGUMENT;
         } else {
             m_controls[control] = value;
         }
@@ -1574,9 +1566,9 @@ aditof::Status CameraItof::saveCFGToFile(const std::string &filePath) const {
     return aditof::Status::OK;
 }
 
-aditof::Status CameraItof::enableXYZframe(bool en) {
-    m_xyzEnabled = en;
-    m_xyzSetViaControl = true;
+aditof::Status CameraItof::enableXYZframe(bool enable) {
+    m_xyzEnabled = enable;
+    m_xyzSetViaApi = true;
 
     return aditof::Status::OK;
 }
@@ -1914,7 +1906,7 @@ void CameraItof::configureSensorFrameType() {
     }
 
     // XYZ set through camera control takes precedence over the setting from .ini file
-    if (!m_xyzSetViaControl) {
+    if (!m_xyzSetViaApi) {
         it = m_iniKeyValPairs.find("xyzEnable");
         if (it != m_iniKeyValPairs.end()) {
             m_xyzEnabled = !(it->second == "0");
