@@ -32,10 +32,10 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include "aditof/adsd_errors.h"
 #include "camera_definitions.h"
 #include "sdk_exports.h"
 #include "status_definitions.h"
-#include "aditof/adsd_errors.h"
 
 #include <functional>
 #include <string>
