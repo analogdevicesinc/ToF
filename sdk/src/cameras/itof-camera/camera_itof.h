@@ -67,11 +67,6 @@
  *   Description:     Enable or disable the depth processing on the frames received from the sensor
  *                    Must be called after getFrame() where the depth processing happens.
  *   Accepted values: One of the following strings: 'on' or 'off'
- *
- * saveModuleCCB
- *   Description:     Save the CCB content which is obtained from module memory to a given file path.
- *                    Must be called after loadModuleData which is responsible for reading the CCB content.
- *   Accepted values: A path to a file (including file name and extension) where CCB should be stored.
  */
 
 class CameraItof : public aditof::Camera {
@@ -116,6 +111,7 @@ class CameraItof : public aditof::Camera {
             &sensors) override;
     aditof::Status enableXYZframe(bool enable) override;
     aditof::Status saveModuleCFG(const std::string &filepath) const override;
+    aditof::Status saveModuleCCB(const std::string &filepath) override;
     aditof::Status adsd3500UpdateFirmware(const std::string &filePath) override;
     aditof::Status adsd3500SetToggleMode(int mode) override;
     aditof::Status adsd3500ToggleFsync() override;
@@ -283,17 +279,6 @@ class CameraItof : public aditof::Camera {
      */
     aditof::Status applyCalibrationToFrame(uint16_t *frame,
                                            const unsigned int mode);
-
-    /**
-     * @brief Save the CCB content from module memory to file.
-     *
-     * Must be called after loadModuleData().
-     * @param[in] filePath - Path to file where the CCB should be stored
-     *
-     * @return Status
-     * @see Status
-     */
-    aditof::Status saveCCBToFile(const std::string &filePath) const;
 
     // Methods available only when Adsd3500 is detected as part of the entire setup
 
