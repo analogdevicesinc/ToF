@@ -729,6 +729,21 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
+    case ADSD3500_GET_STATUS: {
+        int chipStatus;
+        int imagerStatus;
+
+        aditof::Status status =
+            camDepthSensor->adsd3500_get_status(chipStatus, imagerStatus);
+        if (status == aditof::Status::OK) {
+            buff_send.add_int32_payload(chipStatus);
+            buff_send.add_int32_payload(imagerStatus);
+        }
+
+        buff_send.set_status(static_cast<::payload::Status>(status));
+        break;
+    }
+
     case STORAGE_OPEN: {
         aditof::Status status;
         std::string msg;
@@ -919,6 +934,7 @@ void Initialize() {
     s_map_api_Values["Adsd3500ReadPayload"] = ADSD3500_READ_PAYLOAD;
     s_map_api_Values["Adsd3500WritePayloadCmd"] = ADSD3500_WRITE_PAYLOAD_CMD;
     s_map_api_Values["Adsd3500WritePayload"] = ADSD3500_WRITE_PAYLOAD;
+    s_map_api_Values["Adsd3500GetStatus"] = ADSD3500_GET_STATUS;
     s_map_api_Values["StorageOpen"] = STORAGE_OPEN;
     s_map_api_Values["StorageRead"] = STORAGE_READ;
     s_map_api_Values["StorageWrite"] = STORAGE_WRITE;
