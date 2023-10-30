@@ -88,7 +88,9 @@ class ADSDErrors {
              "The JBLF filter size speficied is incorrect."},
             {ADSD3500_STATUS_UNSUPPORTED_CMD,
              "An unsupported command was sent to the ASDD3500."},
-            {ADSD3500_STATUS_INVALID_MEMORY_REGION, ""},
+            {ADSD3500_STATUS_INVALID_MEMORY_REGION,
+             "A register write or read operation does not match any valid "
+             "region."},
             {ADSD3500_STATUS_INVALID_FIRMWARE_CRC,
              "The ADSD3500 firmware CRC check failed."},
             {ADSD3500_STATUS_INVALID_IMAGER,
@@ -105,7 +107,9 @@ class ADSDErrors {
              "ASDSD3500 and the imager."},
             {ADSD3500_STATUS_IMAGER_BOOT_FAILURE, "Unable to boot the imager."},
             {ADSD3500_STATUS_IMAGER_ERROR, "The imager reported an error."},
-            {ADSD3500_STATUS_TIMEOUT_ERROR, ""},
+            {ADSD3500_STATUS_TIMEOUT_ERROR,
+             "This is when timer is expired but ADSD3500 is not able to send "
+             "out frame due to some error."},
             {ADSD3500_STATUS_DYNAMIC_MODE_SWITCHING_NOT_ENABLED,
              "Dynamic mode switching is being set, but it is not enabled."},
             {ADSD3500_STATUS_INVALID_DYNAMIC_MODE_COMPOSITIONS,
@@ -204,7 +208,7 @@ class ADSDErrors {
      */
     static const uint16_t ADSD3500_STATUS_IMAGER_ERROR = 0x0010;
     /**
-     * @brief TODO
+     * @brief This is when timer is expired but ADSD3500 is not able to send out frame due to some error.
      */
     static const uint16_t ADSD3500_STATUS_TIMEOUT_ERROR = 0x0011;
     /**
