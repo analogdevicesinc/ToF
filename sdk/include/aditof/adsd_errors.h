@@ -34,8 +34,8 @@
 #define ADSD3500_DEFS
 
 #include <cstdint>
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
 namespace aditof {
 
@@ -50,61 +50,71 @@ namespace aditof {
  *    LOG(INFO) << err.GetString(ADSDErrors::ADSD3500, 0x0001);
  */
 class ADSDErrors {
-public:
+  public:
     /**
      * @brief The hardware types for the error for GetString.
      */
-    enum ADSD3xxx {
-        ADSD3500,
-        ADSD3100,
-        ADSD3030
-    };
+    enum ADSD3xxx { ADSD3500, ADSD3100, ADSD3030 };
 
     ADSDErrors() {
         m_ADSD3100ErrLookup = {
             {ADSD3100_ERR_MODE_USECASE, "Invalid mode selection."},
-            {ADSD3100_ERR_MODE_MODE_DRIVER ,"Invalid LD mode selection."},
-            {ADSD3100_ERR_PLLLOCK_LOCK1 ,"PLLLOCK error location 1."},
-            {ADSD3100_ERR_PLLLOCK_LOCK2 ,"PLLLOCK error location 2."},
-            {ADSD3100_ERR_PLLLOCK_LOCK3 ,"PLLLOCK error location 3."},
-            {ADSD3100_ERR_OVERHEAT_IMAGER ,"Imager sensor overheat."},
-            {ADSD3100_ERR_OVERHEAT_LD ,"Laser driver overheat."},
-            {ADSD3100_ERR_LASER_CHIPID ,"Laser driver invalid chip ID."},
-            {ADSD3100_ERR_LASER_LPS ,"Corrupted laser driver data."},
-            {ADSD3100_ERR_LASER_NO_DIFFUSER ,"Laser diffuser problem."},
-            {ADSD3100_ERR_LASER_SHORT ,"Laser driver shorted to GND."},
-            {ADSD3100_ERR_LVDS_HIGH_DC ,"Laser driver duty cycle too large."},
-            {ADSD3100_ERR_LVDS_PULSE_LONG ,"Laser driver active time too long."},
-            {ADSD3100_ERR_LVDS_OPEN_SHORT ,"Laser driver input open or short detected."},
-            {ADSD3100_ERR_LASER_LONG_LEN_ON ,"Laser driver enabled for too long of time."},
-            {ADSD3100_ERR_LASER_SHORT_LEN_OFF ,"Laser driver disabled for too short of time."},
-            {ADSD3100_ERR_LASER_LPS_READ ,"Laser driver corrupted data."},
-            {ADSD3100_ERR_LASER_VLD_LOW ,"Laser driver supply too low."},
-            {ADSD3100_ERR_LASER_VLD_HIGH ,"Laser driver supply too high."}
-        };
+            {ADSD3100_ERR_MODE_MODE_DRIVER, "Invalid LD mode selection."},
+            {ADSD3100_ERR_PLLLOCK_LOCK1, "PLLLOCK error location 1."},
+            {ADSD3100_ERR_PLLLOCK_LOCK2, "PLLLOCK error location 2."},
+            {ADSD3100_ERR_PLLLOCK_LOCK3, "PLLLOCK error location 3."},
+            {ADSD3100_ERR_OVERHEAT_IMAGER, "Imager sensor overheat."},
+            {ADSD3100_ERR_OVERHEAT_LD, "Laser driver overheat."},
+            {ADSD3100_ERR_LASER_CHIPID, "Laser driver invalid chip ID."},
+            {ADSD3100_ERR_LASER_LPS, "Corrupted laser driver data."},
+            {ADSD3100_ERR_LASER_NO_DIFFUSER, "Laser diffuser problem."},
+            {ADSD3100_ERR_LASER_SHORT, "Laser driver shorted to GND."},
+            {ADSD3100_ERR_LVDS_HIGH_DC, "Laser driver duty cycle too large."},
+            {ADSD3100_ERR_LVDS_PULSE_LONG,
+             "Laser driver active time too long."},
+            {ADSD3100_ERR_LVDS_OPEN_SHORT,
+             "Laser driver input open or short detected."},
+            {ADSD3100_ERR_LASER_LONG_LEN_ON,
+             "Laser driver enabled for too long of time."},
+            {ADSD3100_ERR_LASER_SHORT_LEN_OFF,
+             "Laser driver disabled for too short of time."},
+            {ADSD3100_ERR_LASER_LPS_READ, "Laser driver corrupted data."},
+            {ADSD3100_ERR_LASER_VLD_LOW, "Laser driver supply too low."},
+            {ADSD3100_ERR_LASER_VLD_HIGH, "Laser driver supply too high."}};
 
         m_ADSD3500StatusLookup = {
             {ADSD3500_STATUS_INVALID_MODE, "Mode selected is invalid."},
-            {ADSD3500_STATUS_INVALID_JBLF_FILTER_SIZE, "The JBLF filter size speficied is incorrect."},
-            {ADSD3500_STATUS_UNSUPPORTED_CMD, "An unsupported command was sent to the ASDD3500."},
+            {ADSD3500_STATUS_INVALID_JBLF_FILTER_SIZE,
+             "The JBLF filter size speficied is incorrect."},
+            {ADSD3500_STATUS_UNSUPPORTED_CMD,
+             "An unsupported command was sent to the ASDD3500."},
             {ADSD3500_STATUS_INVALID_MEMORY_REGION, ""},
-            {ADSD3500_STATUS_INVALID_FIRMWARE_CRC, "The ADSD3500 firmware CRC check failed."},
-            {ADSD3500_STATUS_INVALID_IMAGER, "The imager firmware is not valid."},
+            {ADSD3500_STATUS_INVALID_FIRMWARE_CRC,
+             "The ADSD3500 firmware CRC check failed."},
+            {ADSD3500_STATUS_INVALID_IMAGER,
+             "The imager firmware is not valid."},
             {ADSD3500_STATUS_INVALID_CCB, "The imager CCB file is not valid."},
             {ADSD3500_STATUS_FLASH_HEADER_PARSE_ERROR, "Flash update error."},
             {ADSD3500_STATUS_FLASH_FILE_PARSE_ERROR, "Flash update error."},
-            {ADSD3500_STATUS_SPIM_ERROR, "SPI Master error occured, which this impacts the ADSD3500 - image communication."},
+            {ADSD3500_STATUS_SPIM_ERROR,
+             "SPI Master error occured, which this impacts the ADSD3500 - "
+             "image communication."},
             {ADSD3500_STATUS_INVALID_CHIPID, "The image chip ID is invalid."},
-            {ADSD3500_STATUS_IMAGER_COMMUNICATION_ERROR, "SPI Master error occured during communication between the ASDSD3500 and the imager."},    
+            {ADSD3500_STATUS_IMAGER_COMMUNICATION_ERROR,
+             "SPI Master error occured during communication between the "
+             "ASDSD3500 and the imager."},
             {ADSD3500_STATUS_IMAGER_BOOT_FAILURE, "Unable to boot the imager."},
             {ADSD3500_STATUS_IMAGER_ERROR, "The imager reported an error."},
             {ADSD3500_STATUS_TIMEOUT_ERROR, ""},
-            {ADSD3500_STATUS_DYNAMIC_MODE_SWITCHING_NOT_ENABLED, "Dynamic mode switching is being set, but it is not enabled."},
-            {ADSD3500_STATUS_INVALID_DYNAMIC_MODE_COMPOSITIONS, "The selected dyanamic mode configuration is not valid."},
-            {ADSD3500_STATUS_INVALID_PHASE_INVALID_VALUE, "An incorrect phase invalid value specified."},
-            {ADSD3500_STATUS_FIRMWARE_UPDATE_COMPLETE, "Firmware update is complete."},
-            {ADSD3500_STATUS_NVM_WRITE_COMPLETE,"NVM update is complete."}
-        };
+            {ADSD3500_STATUS_DYNAMIC_MODE_SWITCHING_NOT_ENABLED,
+             "Dynamic mode switching is being set, but it is not enabled."},
+            {ADSD3500_STATUS_INVALID_DYNAMIC_MODE_COMPOSITIONS,
+             "The selected dyanamic mode configuration is not valid."},
+            {ADSD3500_STATUS_INVALID_PHASE_INVALID_VALUE,
+             "An incorrect phase invalid value specified."},
+            {ADSD3500_STATUS_FIRMWARE_UPDATE_COMPLETE,
+             "Firmware update is complete."},
+            {ADSD3500_STATUS_NVM_WRITE_COMPLETE, "NVM update is complete."}};
     }
 
     /**
@@ -135,7 +145,7 @@ public:
         return ret;
     }
 
-public:
+  public:
     // ADSD3500 error codes read via the "Get Status" (0x0020) command
     /**
      * @brief Mode selected is invalid.
@@ -184,7 +194,7 @@ public:
     /**
      * @brief SPI Master error occured during communication between the ASDSD3500 and the imager.    
      */
-    static const uint16_t ADSD3500_STATUS_IMAGER_COMMUNICATION_ERROR = 0x000C; 
+    static const uint16_t ADSD3500_STATUS_IMAGER_COMMUNICATION_ERROR = 0x000C;
     /**
      * @brief Unable to boot the imager.
      */
@@ -200,11 +210,13 @@ public:
     /**
      * @brief Dynamic mode switching is being set, but it is not enabled.
      */
-    static const uint16_t ADSD3500_STATUS_DYNAMIC_MODE_SWITCHING_NOT_ENABLED = 0x0013;
+    static const uint16_t ADSD3500_STATUS_DYNAMIC_MODE_SWITCHING_NOT_ENABLED =
+        0x0013;
     /**
      * @brief The selected dyanamic mode configuration is not valid.
      */
-    static const uint16_t ADSD3500_STATUS_INVALID_DYNAMIC_MODE_COMPOSITIONS = 0x0014;
+    static const uint16_t ADSD3500_STATUS_INVALID_DYNAMIC_MODE_COMPOSITIONS =
+        0x0014;
     /**
      * @brief An incorrect phase invalid value specified.
      */
@@ -219,7 +231,6 @@ public:
      * @brief NVM update is complete.
      */
     static const uint16_t ADSD3500_STATUS_NVM_WRITE_COMPLETE = 0x000F;
-
 
     /**
      * @brief Invalid mode selection.
@@ -244,13 +255,15 @@ public:
      * Imager error codes read via "Get Imager Error Code" (0x0038) command
      * Note, this only valid if "Get Status" (0x0020) reports a value of "ADSD3500_STATUS_IMAGER_ERROR" (0x0010)
      */
-    static const uint16_t ADSD3100_ERR_PLLLOCK_LOCK2 = 0x0008; // PLLLOCK error location 2.
+    static const uint16_t ADSD3100_ERR_PLLLOCK_LOCK2 =
+        0x0008; // PLLLOCK error location 2.
     /**
      * @brief PLLLOCK error location 3.
      * Imager error codes read via "Get Imager Error Code" (0x0038) command
      * Note, this only valid if "Get Status" (0x0020) reports a value of "ADSD3500_STATUS_IMAGER_ERROR" (0x0010)
      */
-    static const uint16_t ADSD3100_ERR_PLLLOCK_LOCK3 = 0x000C; // PLLLOCK error location 3.
+    static const uint16_t ADSD3100_ERR_PLLLOCK_LOCK3 =
+        0x000C; // PLLLOCK error location 3.
     /**
      * @brief Imager sensor overheat.
      * Imager error codes read via "Get Imager Error Code" (0x0038) command
@@ -336,10 +349,10 @@ public:
      */
     static const uint16_t ADSD3100_ERR_LASER_VLD_HIGH = 0x0340;
 
-private:
+  private:
     std::unordered_map<uint16_t, std::string> m_ADSD3500StatusLookup;
     std::unordered_map<uint16_t, std::string> m_ADSD3100ErrLookup;
 };
 
-}
+} // namespace aditof
 #endif //ADSD3500_DEFS
