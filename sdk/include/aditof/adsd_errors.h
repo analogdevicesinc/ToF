@@ -123,10 +123,9 @@ class ADSDErrors {
 
     /**
      * @brief Returns a string for a given target (adsdType) and error code.
-     * @param adsdType - The source of the error: ADSD3500, ADSD3100 or ADSD3030.
-     * @param value - Error value
-     * @param[out] Error string.
-     * @return Status
+     * @param[in] adsdType - The source of the error: ADSD3500, ADSD3100 or ADSD3030.
+     * @param[in] value - Error value
+     * @return Error string
      */
     std::string GetString(ADSD3xxx adsdType, uint16_t value) {
 
