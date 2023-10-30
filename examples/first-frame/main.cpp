@@ -138,7 +138,9 @@ int main(int argc, char *argv[]) {
 
     result = command.checkMandatoryArguments(command_map, arg_error);
     if (result != 0) {
-        std::string argName = (arg_error == "-config") ? "CONFIG" : command_map[arg_error].long_option;
+        std::string argName = (arg_error == "-config")
+                                  ? "CONFIG"
+                                  : command_map[arg_error].long_option;
 
         LOG(ERROR) << "Mandatory argument: " << argName << " missing";
         std::cout << Help_Menu;
@@ -147,7 +149,9 @@ int main(int argc, char *argv[]) {
 
     result = command.checkMandatoryPosition(command_map, arg_error);
     if (result != 0) {
-        std::string argName = (arg_error == "-config") ? "CONFIG" : command_map[arg_error].long_option;
+        std::string argName = (arg_error == "-config")
+                                  ? "CONFIG"
+                                  : command_map[arg_error].long_option;
 
         LOG(ERROR) << "Mandatory argument " << argName
                    << " is not on its correct position ("
@@ -280,6 +284,16 @@ int main(int argc, char *argv[]) {
 
     LOG(INFO) << "Sensor temperature: " << sensorTmp;
     LOG(INFO) << "Laser temperature: " << laserTmp;
+
+    int chipStatus, imagerStatus;
+    status = camera->adsd3500GetStatus(chipStatus, imagerStatus);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not get imager error codes!";
+        return 0;
+    }
+
+    LOG(INFO) << "Chip status error code: " << chipStatus;
+    LOG(INFO) << "Imager status error code: " << imagerStatus;
 
     return 0;
 }
