@@ -77,13 +77,6 @@
  *   Description:     Save the CFG content which is obtained from module memory to a given file path.
  *                    Must be called after loadModuleData which is responsible for reading the CFG content.
  *   Accepted values: A path to a file (including file name and extension) where CFG should be stored.
- * 
- * enableXYZframe
- *   Description:     Enable the generation of a XYZ frame by the depth compute unit. 'enableDepthCompute'
- *                    should be set to 'on' for this option to have any effect. The XYZ frame can be enabled
- *                    or disabled through .ini configuration file but if this control is explicitly called
- *                    then it will override the option in the .ini file. By default XYZ frame is disabled.
- *   Accepted values: One of the following strings: 'on' or 'off'
  */
 
 class CameraItof : public aditof::Camera {
@@ -126,6 +119,7 @@ class CameraItof : public aditof::Camera {
     aditof::Status getTemperatureSensors(
         std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
             &sensors) override;
+    aditof::Status enableXYZframe(bool enable) override;
     aditof::Status adsd3500UpdateFirmware(const std::string &filePath) override;
     aditof::Status adsd3500SetToggleMode(int mode) override;
     aditof::Status adsd3500ToggleFsync() override;
@@ -316,16 +310,6 @@ class CameraItof : public aditof::Camera {
      */
     aditof::Status saveCFGToFile(const std::string &filePath) const;
 
-    /**
-     * @brief Enable/disable the generation of the XYZ frame.
-     *
-     * @param[in] en - Whether to enable or disable
-     *
-     * @return Status
-     * @see Status
-     */
-    aditof::Status enableXYZframe(bool en);
-
     // Methods available only when Adsd3500 is detected as part of the entire setup
 
     /**
@@ -404,7 +388,7 @@ class CameraItof : public aditof::Camera {
     bool m_abEnabled;
     uint8_t m_abBitsPerPixel;
     bool m_xyzEnabled;
-    bool m_xyzSetViaControl;
+    bool m_xyzSetViaApi;
     bool m_pcmFrame;
     uint16_t m_modechange_framedrop_count = 0;
     aditof::TOF_ModuleFiles_t m_tempFiles;
