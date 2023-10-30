@@ -102,6 +102,8 @@ public:
             {ADSD3500_STATUS_DYNAMIC_MODE_SWITCHING_NOT_ENABLED, "Dynamic mode switching is being set, but it is not enabled."},
             {ADSD3500_STATUS_INVALID_DYNAMIC_MODE_COMPOSITIONS, "The selected dyanamic mode configuration is not valid."},
             {ADSD3500_STATUS_INVALID_PHASE_INVALID_VALUE, "An incorrect phase invalid value specified."},
+            {ADSD3500_STATUS_FIRMWARE_UPDATE_COMPLETE, "Firmware update is complete."},
+            {ADSD3500_STATUS_NVM_WRITE_COMPLETE,"NVM update is complete."}
         };
     }
 
