@@ -407,7 +407,22 @@ void ADIMainWindow::render() {
             computeFPS(fps);
             if (view->m_ctrl->panicStop) {
                 stopPlayCCD();
+
+                aditof::Status status = aditof::Status::OK;
+                auto camera =
+                    getActiveCamera(); //already initialized on constructor
+
+                int chipStatus, imagerStatus;
+                status = camera->adsd3500GetStatus(chipStatus, imagerStatus);
+                if (status != aditof::Status::OK) {
+                    LOG(ERROR) << "Failed to read chip status!";
+                } else {
+                    LOG(WARNING) << "Chip status error code: " << chipStatus;
+                    LOG(WARNING)
+                        << "Imager status error code: " << imagerStatus;
+                }
             }
+
         } else if (isPlayRecorded) {
             PlayRecorded();
         }
