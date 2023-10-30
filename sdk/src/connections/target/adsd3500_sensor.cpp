@@ -1099,9 +1099,11 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd,
         return Status::GENERIC_ERROR;
     }
 
-    if (cmd == 0x13 || cmd == 0x19) {
+    if (cmd == 0x13)
         usleep(1000);
-    }
+
+    if (cmd == 0x19)
+        usleep(5000);
 
     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
     extCtrls.controls = &extCtrl;
