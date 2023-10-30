@@ -5,6 +5,7 @@
 #VSYS enable GPIO - GPIO5 / IO01 - Linux GPIO 129
 #VAUX enable GPIO - GPIO4 / IO31 - Linux GPIO 127
 #VDAC enable GPIO - GPIO5 / IO02 - Linux GPIO 130
+#BS0  enable GPIO - GPIO5 / IO11 - Linux GPIO 139
 
 BOARD=$(strings /proc/device-tree/model)
 
@@ -13,6 +14,11 @@ if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier + ADSD3500" ]]; then
 	echo 122 > /sys/class/gpio/export
 	echo out > /sys/class/gpio/gpio122/direction
 	echo 0 > /sys/class/gpio/gpio122/value
+
+	#BS0 Set 0 - Self boot and 1 - Host boot
+	echo 139 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio139/direction
+	echo 0 > /sys/class/gpio/gpio139/value
 
 	# Boot strap MAX7321
 	#OC0
@@ -79,6 +85,12 @@ if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier + ADSD3030" ]]; then
 	echo 122 > /sys/class/gpio/export
 	echo out > /sys/class/gpio/gpio122/direction
 	echo 0 > /sys/class/gpio/gpio122/value
+
+	#BS0 Set 0 - Self boot and 1 - Host boot
+	echo 139 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio139/direction
+	echo 0 > /sys/class/gpio/gpio139/value
+
 
 #U13	#U0 1 - INTERPOSER FLASH / 0 - TEMBIN FLASH
 	echo 492 > /sys/class/gpio/export
