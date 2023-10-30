@@ -84,11 +84,6 @@
  *                    or disabled through .ini configuration file but if this control is explicitly called
  *                    then it will override the option in the .ini file. By default XYZ frame is disabled.
  *   Accepted values: One of the following strings: 'on' or 'off'
- *
- * updateAdsd3500Firmware
- *   Description:     Update the firmware of Adsd3500 with the content found in the specified file.
- *   Accepted values: A path to a file (including file name and extension) where the firmware for
- *                    adsd3500 is stored.
  */
 
 class CameraItof : public aditof::Camera {
@@ -131,6 +126,7 @@ class CameraItof : public aditof::Camera {
     aditof::Status getTemperatureSensors(
         std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
             &sensors) override;
+    aditof::Status adsd3500UpdateFirmware(const std::string &filePath) override;
     aditof::Status adsd3500SetToggleMode(int mode) override;
     aditof::Status adsd3500ToggleFsync() override;
     aditof::Status adsd3500SetABinvalidationThreshold(int threshold) override;
@@ -331,16 +327,6 @@ class CameraItof : public aditof::Camera {
     aditof::Status enableXYZframe(bool en);
 
     // Methods available only when Adsd3500 is detected as part of the entire setup
-
-    /**
-     * @brief Update the adsd3500 with the firmware in the specified file.
-     *
-     * @param[in] filePath - Path to file where the Adsd3500 firmware should be stored
-     *
-     * @return Status
-     * @see Status
-     */
-    aditof::Status updateAdsd3500Firmware(const std::string &filePath);
 
     /**
      * @brief Read the ccb from adsd3500 memory and store it in m_tempFiles.ccbFile

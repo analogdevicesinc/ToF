@@ -146,7 +146,9 @@ int main(int argc, char *argv[]) {
 
     result = command.checkMandatoryArguments(command_map, arg_error);
     if (result != 0) {
-        std::string argName = (arg_error == "-config") ? "CONFIG" : command_map[arg_error].long_option;
+        std::string argName = (arg_error == "-config")
+                                  ? "CONFIG"
+                                  : command_map[arg_error].long_option;
 
         LOG(ERROR) << "Mandatory argument: " << argName << " missing";
         LOG(INFO) << kUsagePublic;
@@ -155,7 +157,9 @@ int main(int argc, char *argv[]) {
 
     result = command.checkMandatoryPosition(command_map, arg_error);
     if (result != 0) {
-        std::string argName = (arg_error == "-config") ? "CONFIG" : command_map[arg_error].long_option;
+        std::string argName = (arg_error == "-config")
+                                  ? "CONFIG"
+                                  : command_map[arg_error].long_option;
 
         LOG(ERROR) << "Mandatory argument " << argName
                    << " is not on its correct position ("
@@ -345,7 +349,7 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
-        status = camera->setControl("updateAdsd3500Firmware", firmware);
+        status = camera->adsd3500UpdateFirmware(firmware);
         if (status != Status::OK) {
             LOG(ERROR) << "Could not update the adsd3500 firmware";
             return 0;
