@@ -131,8 +131,8 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
                                const std::string &captureDev)
     : m_driverPath(driverPath), m_driverSubPath(driverSubPath),
       m_captureDev(captureDev), m_implData(new Adsd3500Sensor::ImplData),
-      m_firstRun(true), m_adsd3500Queried(false),
-      m_depthComputeOnTarget(false) {
+      m_firstRun(true), m_adsd3500Queried(false), m_depthComputeOnTarget(false),
+      m_chipStatus(0), m_imagerStatus(0) {
     m_sensorName = "adsd3500";
     m_sensorDetails.connectionType = aditof::ConnectionType::ON_TARGET;
 
@@ -1592,6 +1592,8 @@ aditof::Status Adsd3500Sensor::adsd3500InterruptHandler(int signalValue) {
     DLOG(INFO) << "statusRegister:" << statusRegister << "(" << adsd3500Status
                << ")";
 
+    m_chipStatus = statusRegister;
+
     if (adsd3500Status == aditof::Adsd3500Status::IMAGER_ERROR) {
         status = adsd3500_read_cmd(0x0038, &statusRegister);
         if (status != aditof::Status::OK) {
@@ -1599,6 +1601,7 @@ aditof::Status Adsd3500Sensor::adsd3500InterruptHandler(int signalValue) {
             return status;
         }
 
+        m_imagerStatus = statusRegister;
         LOG(ERROR) << "Imager error detected. Error code: " << statusRegister;
     }
 
@@ -1613,6 +1616,10 @@ aditof::Status Adsd3500Sensor::adsd3500_get_status(int &chipStatus,
                                                    int &imagerStatus) {
     using namespace aditof;
     Status status = Status::OK;
+
+    chipStatus = m_chipStatus;
+    imagerStatus = m_imagerStatus;
+
     return status;
 }
 

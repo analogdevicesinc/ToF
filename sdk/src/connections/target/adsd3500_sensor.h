@@ -152,6 +152,8 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     std::vector<aditof::DepthSensorFrameType> m_availableFrameTypes;
     BufferProcessor *m_bufferProcessor;
     bool m_depthComputeOnTarget;
+    int m_chipStatus;
+    int m_imagerStatus;
 
     const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
         {
