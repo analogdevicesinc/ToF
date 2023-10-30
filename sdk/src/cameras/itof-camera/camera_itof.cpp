@@ -87,7 +87,6 @@ CameraItof::CameraItof(
     m_controls.emplace("initialization_config", "");
     m_controls.emplace("syncMode", "0, 0");
     m_controls.emplace("saveModuleCCB", "");
-    m_controls.emplace("saveModuleCFG", "");
     m_controls.emplace("enableDepthCompute",
                        m_targetFramesAreComputed ? "off" : "on");
 
@@ -1067,8 +1066,6 @@ aditof::Status CameraItof::setControl(const std::string &control,
                 }
             }
             return saveCCBToFile(value);
-        } else if (control == "saveModuleCFG") {
-            return saveCFGToFile(value);
         } else {
             m_controls[control] = value;
         }
@@ -1547,8 +1544,8 @@ aditof::Status CameraItof::saveCCBToFile(const std::string &filePath) const {
     return aditof::Status::OK;
 }
 
-aditof::Status CameraItof::saveCFGToFile(const std::string &filePath) const {
-    if (filePath.empty()) {
+aditof::Status CameraItof::saveModuleCFG(const std::string &filepath) const {
+    if (filepath.empty()) {
         LOG(ERROR) << "File path where CFG should be written is empty.";
         return aditof::Status::INVALID_ARGUMENT;
     }
@@ -1560,7 +1557,7 @@ aditof::Status CameraItof::saveCFGToFile(const std::string &filePath) const {
     }
 
     std::ifstream source(m_tempFiles.cfgFile.c_str(), std::ios::binary);
-    std::ofstream destination(filePath, std::ios::binary);
+    std::ofstream destination(filepath, std::ios::binary);
     destination << source.rdbuf();
 
     return aditof::Status::OK;
