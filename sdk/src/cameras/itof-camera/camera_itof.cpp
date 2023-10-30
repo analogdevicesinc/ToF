@@ -130,7 +130,6 @@ CameraItof::CameraItof(
 
     // Additional controls
     if (m_adsd3500Enabled) {
-        m_controls.emplace("updateAdsd3500Firmware", "");
         m_controls.emplace("imagerType", "1");
     }
 
@@ -1078,8 +1077,6 @@ aditof::Status CameraItof::setControl(const std::string &control,
                 return enableXYZframe(false);
             else
                 return Status::INVALID_ARGUMENT;
-        } else if (control == "updateAdsd3500Firmware") {
-            return updateAdsd3500Firmware(value);
         } else {
             m_controls[control] = value;
         }
@@ -1598,9 +1595,14 @@ typedef union {
 } cmd_header_t;
 #pragma pack(pop)
 
-aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath) {
+aditof::Status
+CameraItof::adsd3500UpdateFirmware(const std::string &fwFilePath) {
     using namespace aditof;
     Status status = Status::OK;
+
+    if (!m_adsd3500Enabled) {
+        return Status::UNAVAILABLE;
+    }
 
     m_fwUpdated = false;
     m_adsd3500Status = Adsd3500Status::OK;
@@ -1632,7 +1634,7 @@ aditof::Status CameraItof::updateAdsd3500Firmware(const std::string &filePath) {
     const int flashPageSize = 256;
 
     // Read the firmware binary file
-    std::ifstream fw_file(filePath, std::ios::binary);
+    std::ifstream fw_file(fwFilePath, std::ios::binary);
     // copy all data into buffer
     std::vector<uint8_t> buffer(std::istreambuf_iterator<char>(fw_file), {});
 

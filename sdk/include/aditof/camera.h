@@ -193,6 +193,14 @@ class SDK_API Camera {
         std::vector<std::shared_ptr<TemperatureSensorInterface>> &sensors) = 0;
 
     /**
+     * @brief Update the firmware of ADSD3500 with the content found in the specified file.
+     * @param[in] fwFilePath - A path to a file (including file name and extension)
+     *                         where the firmware for adsd3500 is stored.
+     * @return Status
+     */
+    virtual Status adsd3500UpdateFirmware(const std::string &fwFilePath) = 0;
+
+    /**
      * @brief Enables or disables FSYNC toggle for ADSD3500
      * @param[in] mode - 2 = Fsync pin set as HiZ ; 1 = Toggle at user specified framerate ; 0 = Toggle controlled via adsd3500ToggleFsync ; 
      * @return Status
