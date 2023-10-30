@@ -1609,7 +1609,8 @@ aditof::Status Adsd3500Sensor::adsd3500InterruptHandler(int signalValue) {
     return status;
 }
 
-aditof::Status Adsd3500Sensor::adsd3500_get_status(int &status){
+aditof::Status Adsd3500Sensor::adsd3500_get_status(int &chipStatus,
+                                                   int &imagerStatus) {
     using namespace aditof;
     Status status = Status::OK;
     return status;

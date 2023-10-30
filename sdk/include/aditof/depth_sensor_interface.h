@@ -219,10 +219,12 @@ class DepthSensorInterface {
 
     /**
      * @brief Returns the chip status
-     * @param status - chip status (error) value
+     * @param[out] chipStatus - chip status (error) value
+     * @param[out] imagerStatus - imager status (error) value
      * @return Status
      */
-    virtual aditof::Status adsd3500_get_status(int &status) = 0;
+    virtual aditof::Status adsd3500_get_status(int &chipStatus,
+                                               int &imagerStatus) = 0;
 
     /**
      * @brief Gets the sensors's list of controls

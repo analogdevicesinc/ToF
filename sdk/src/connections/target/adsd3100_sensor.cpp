@@ -1363,7 +1363,8 @@ aditof::Status Adsd3100Sensor::adsd3500_register_interrupt_callback(
     return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status Adsd3100Sensor::adsd3500_get_status(int &status){
+aditof::Status Adsd3100Sensor::adsd3500_get_status(int &chipStatus,
+                                                   int &imagerStatus) {
     using namespace aditof;
     Status status = Status::UNAVAILABLE;
     return status;
