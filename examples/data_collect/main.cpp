@@ -419,7 +419,7 @@ int main(int argc, char *argv[]) {
 
     // Store CCB to file
     if (!ccbFilePath.empty()) {
-        status = camera->setControl("saveModuleCCB", ccbFilePath);
+        status = camera->saveModuleCCB(ccbFilePath);
         if (status != Status::OK) {
             LOG(INFO) << "Failed to store CCB to " << ccbFilePath;
         }

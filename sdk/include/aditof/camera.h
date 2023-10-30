@@ -211,6 +211,15 @@ class SDK_API Camera {
     virtual Status saveModuleCFG(const std::string &filepath) const = 0;
 
     /**
+     * @brief Save the CCB content which is obtained from module memory to a given file path.
+     * Must be called after loadModuleData() which is responsible for reading the CCB content.
+     * @param[in] filepath - A path to a file (including file name and extension) where the
+     *                       CCB should be stored.
+     * @return Status
+     */
+    virtual Status saveModuleCCB(const std::string &filepath) = 0;
+
+    /**
      * @brief Update the firmware of ADSD3500 with the content found in the specified file.
      * @param[in] fwFilePath - A path to a file (including file name and extension)
      *                         where the firmware for adsd3500 is stored.

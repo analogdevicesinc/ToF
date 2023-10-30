@@ -86,7 +86,6 @@ CameraItof::CameraItof(
     // Define some of the controls of this camera
     m_controls.emplace("initialization_config", "");
     m_controls.emplace("syncMode", "0, 0");
-    m_controls.emplace("saveModuleCCB", "");
     m_controls.emplace("enableDepthCompute",
                        m_targetFramesAreComputed ? "off" : "on");
 
@@ -1057,15 +1056,6 @@ aditof::Status CameraItof::setControl(const std::string &control,
             uint8_t mode = 0;
             uint8_t level = 0;
             return setCameraSyncMode(mode, level);
-        } else if (control == "saveModuleCCB") {
-            if (m_adsd3500Enabled) {
-                status = readAdsd3500CCB();
-                if (status != Status::OK) {
-                    LOG(ERROR) << "Failed to load ccb from adsd3500 module!";
-                    return Status::GENERIC_ERROR;
-                }
-            }
-            return saveCCBToFile(value);
         } else {
             m_controls[control] = value;
         }
@@ -1525,10 +1515,18 @@ aditof::Status CameraItof::applyCalibrationToFrame(uint16_t *frame,
     return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status CameraItof::saveCCBToFile(const std::string &filePath) const {
-    if (filePath.empty()) {
+aditof::Status CameraItof::saveModuleCCB(const std::string &filepath) {
+    if (filepath.empty()) {
         LOG(ERROR) << "File path where CCB should be written is empty.";
         return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    if (m_adsd3500Enabled) {
+        aditof::Status status = readAdsd3500CCB();
+        if (status != aditof::Status::OK) {
+            LOG(ERROR) << "Failed to read CCB from adsd3500 module!";
+            return aditof::Status::GENERIC_ERROR;
+        }
     }
 
     if (m_tempFiles.ccbFile.empty()) {
@@ -1538,7 +1536,7 @@ aditof::Status CameraItof::saveCCBToFile(const std::string &filePath) const {
     }
 
     std::ifstream source(m_tempFiles.ccbFile.c_str(), std::ios::binary);
-    std::ofstream destination(filePath, std::ios::binary);
+    std::ofstream destination(filepath, std::ios::binary);
     destination << source.rdbuf();
 
     return aditof::Status::OK;
