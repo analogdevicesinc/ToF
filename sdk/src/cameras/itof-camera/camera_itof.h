@@ -175,6 +175,8 @@ class CameraItof : public aditof::Camera {
                                               uint16_t value) override;
     aditof::Status adsd3500GetGenericTemplate(uint16_t reg,
                                               uint16_t &value) override;
+    aditof::Status adsd3500GetStatus(int &chipStatus,
+                                     int &imagerStatus) override;
 
     aditof::Status readSerialNumber(std::string &serialNumber,
                                     bool useCacheValue = false) override;

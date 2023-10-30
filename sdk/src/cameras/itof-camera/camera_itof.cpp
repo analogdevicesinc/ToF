@@ -2310,6 +2310,11 @@ aditof::Status CameraItof::adsd3500GetGenericTemplate(uint16_t reg,
         reg, reinterpret_cast<uint16_t *>(&value));
 }
 
+aditof::Status CameraItof::adsd3500GetStatus(int &chipStatus,
+                                             int &imagerStatus) {
+    return m_depthSensor->adsd3500_get_status(chipStatus, imagerStatus);
+}
+
 aditof::Status CameraItof::adsd3500GetSensorTemperature(uint16_t &tmpValue) {
     using namespace aditof;
     Status status = Status::OK;
