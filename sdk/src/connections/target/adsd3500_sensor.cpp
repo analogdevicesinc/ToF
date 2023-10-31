@@ -1101,8 +1101,7 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd,
 
     if (cmd == 0x13)
         usleep(1000);
-
-    if (cmd == 0x19)
+    else if (cmd == 0x19)
         usleep(5000);
 
     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
