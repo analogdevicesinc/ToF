@@ -86,7 +86,6 @@ CameraItof::CameraItof(
 
     // Define some of the controls of this camera
     m_controls.emplace("initialization_config", "");
-    m_controls.emplace("syncMode", "0, 0");
 
     // Check Depth Sensor
     if (!depthSensor) {
@@ -1048,11 +1047,6 @@ aditof::Status CameraItof::setControl(const std::string &control,
     if (m_controls.count(control) > 0) {
         if (value == "call") {
             return m_noArgCallables.at(control)();
-        } else if (control == "syncMode") {
-            // TO DO: parse value and get the two parameters (mode, level)
-            uint8_t mode = 0;
-            uint8_t level = 0;
-            return setCameraSyncMode(mode, level);
         } else {
             m_controls[control] = value;
         }
@@ -1453,12 +1447,6 @@ aditof::Status CameraItof::cleanupTempFiles() {
     m_tempFiles = {};
 
     return status;
-}
-
-aditof::Status CameraItof::setCameraSyncMode(uint8_t mode, uint8_t level) {
-    //defined in device_interface.h -> depth_sensor_interface.h
-    //return m_depthSensor->setCameraSyncMode(mode, level);
-    return aditof::Status::UNAVAILABLE;
 }
 
 aditof::Status CameraItof::loadModuleData() {

@@ -51,12 +51,6 @@
  *                    Can be omitted if 'loadModuleData' control is executed. This needs to be set
  *                    before calling initialize().
  *   Accepted values: A file name, including extension.
- *
- * syncMode
- *   Description:     Setting frame sync, either internal or external (default is internal)
- *   Accepted values: A string containing two integer values. E.g. '1, 2'
- *                    First integer corresponds to mode. Set to 0 for internal and 2 for
- *                    external. Second integer is level. Set to TDB!!!
  */
 
 class CameraItof : public aditof::Camera {
@@ -244,13 +238,6 @@ class CameraItof : public aditof::Camera {
      * @see m_tempFiles
      */
     aditof::Status cleanupTempFiles();
-
-    /**
-     * @brief Setting frame sync, either internal or external (default is internal)
-     * @param mode - external/internal
-     * @return Status
-     */
-    aditof::Status setCameraSyncMode(uint8_t mode, uint8_t level);
 
     /**
      * @brief Apply calibration to the frame captured
