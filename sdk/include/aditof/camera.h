@@ -220,6 +220,14 @@ class SDK_API Camera {
     virtual Status saveModuleCCB(const std::string &filepath) = 0;
 
     /**
+     * @brief Enable or disable the depth processing on the frames received from the sensor
+     * Must be called after getFrame() where the depth processing happens.
+     * @param[in] enable - set to true to enable depth processing. Set to false otherwise.
+     * @return Status
+     */
+    virtual Status enableDepthCompute(bool enable) = 0;
+
+    /**
      * @brief Update the firmware of ADSD3500 with the content found in the specified file.
      * @param[in] fwFilePath - A path to a file (including file name and extension)
      *                         where the firmware for adsd3500 is stored.
