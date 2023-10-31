@@ -39,6 +39,8 @@
 
 namespace aditof {
 
+enum class ADSD3xxxErrs { ADSD3500, ADSD3100, ADSD3030 };
+
 /**
  * @class ADSDErrors
  * @brief Error codes from the ADSD3500, ADSD3100, ADSD3030
@@ -47,14 +49,13 @@ namespace aditof {
  * For example: 
  *    ADSDErrors err;
  *    LOG(INFO) << ADSDErrors::ADSD3500_STATUS_INVALID_MODE;
- *    LOG(INFO) << err.GetString(ADSDErrors::ADSD3500, 0x0001);
+ *    LOG(INFO) << err.GetString(ADSD3xxxErrs::ADSD3500, 0x0001);
  */
 class ADSDErrors {
   public:
     /**
      * @brief The hardware types for the error for GetString.
      */
-    enum ADSD3xxx { ADSD3500, ADSD3100, ADSD3030 };
 
     ADSDErrors() {
         m_ADSD3100ErrLookup = {
@@ -127,17 +128,17 @@ class ADSDErrors {
      * @param[in] value - Error value
      * @return Error string
      */
-    std::string GetString(ADSD3xxx adsdType, uint16_t value) {
+    std::string GetString(ADSD3xxxErrs adsdType, uint16_t value) {
 
         std::string ret = "";
 
-        if (adsdType == ADSD3500) {
+        if (adsdType == ADSD3xxxErrs::ADSD3500) {
             auto it = m_ADSD3500StatusLookup.find(value);
 
             if (it != m_ADSD3500StatusLookup.end()) {
                 ret = m_ADSD3500StatusLookup[value];
             }
-        } else if (adsdType == ADSD3100) {
+        } else if (adsdType == ADSD3xxxErrs::ADSD3100) {
             auto it = m_ADSD3100ErrLookup.find(value);
 
             if (it != m_ADSD3100ErrLookup.end()) {
