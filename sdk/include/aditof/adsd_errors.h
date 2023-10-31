@@ -39,6 +39,10 @@
 
 namespace aditof {
 
+/**
+ * @class ADSD3xxxErrs
+ * @brief EEnum values used to identifty the ADSD part for used with the ADSDError class.
+ */
 enum class ADSD3xxxErrs { ADSD3500, ADSD3100, ADSD3030 };
 
 /**
