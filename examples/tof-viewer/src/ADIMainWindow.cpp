@@ -76,6 +76,8 @@ static int numProcessors;
 GLFWimage icons[1];
 GLFWimage logos[1];
 GLuint logo_texture;
+uint32_t firstFrame = 0;
+uint32_t frameLost = 0;
 ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
 #if defined(Debug) && defined(_WIN32)
     static HANDLE self;
@@ -378,7 +380,6 @@ static double cpuUsage;
 
 void ADIMainWindow::render() {
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f); //Main Window Color
-    static bool show_app_log = true;
     // Main imGUI loop
     while (!glfwWindowShouldClose(window)) {
         // Poll and handle events (inputs, window resize, etc.)
@@ -400,8 +401,7 @@ void ADIMainWindow::render() {
         /***************************************************/
         //Create windows here:
         showMainMenu();
-        showOpenDeviceWindow();
-        ShowPlaybackTree();
+        showLogoWindow();
         if (isPlaying) {
             PlayCCD(modeSelection, viewSelection);
             computeFPS(fps);
@@ -426,7 +426,6 @@ void ADIMainWindow::render() {
         } else if (isPlayRecorded) {
             PlayRecorded();
         }
-        showLogWindow(&show_app_log);
 
         /***************************************************/
         // Rendering
@@ -438,12 +437,15 @@ void ADIMainWindow::render() {
 					 clear_color.w);*/
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
         glfwSwapBuffers(window);
     }
 }
 
 void ADIMainWindow::showMainMenu() {
+    static bool show_app_log = false;
+    if (show_app_log)
+        showLogWindow(&show_app_log);
+
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("Options")) {
             if (ImGui::MenuItem("Reset") && view != nullptr) {
@@ -462,10 +464,230 @@ void ADIMainWindow::showMainMenu() {
             if (ImGui::MenuItem("Quit")) {
                 glfwSetWindowShouldClose(window, true);
             }
+            ImGui::EndMenu();
+        }
 
+        if (ImGui::BeginMenu("Open Device")) {
+            showDeviceMenu();
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Playback")) {
+            showPlaybackMenu();
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Tools")) {
+            ImGui::MenuItem("Debug Log", NULL, &show_app_log);
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
+    }
+}
+
+void ADIMainWindow::showDeviceMenu() {
+    if (ImGui::BeginMenu("Device")) {
+        ImGuiExtensions::ADIComboBox("Device", "(No available devices)",
+                                     ImGuiComboFlags_None, m_connectedDevices,
+                                     &m_selectedDevice, _isOpenDevice);
+        //If a device is found, then set the first one found
+        if (!m_connectedDevices.empty() && m_selectedDevice == -1) {
+            m_selectedDevice = 0;
+            _isOpenDevice = true;
+        }
+
+        if (!m_connectedDevices.empty()) {
+            ImGuiExtensions::ADIComboBox(
+                "Config", "No Config Files", ImGuiSelectableFlags_None,
+                m_configFiles, &configSelection, _isOpenDevice);
+        }
+
+        bool _noConnected = m_connectedDevices.empty();
+        if (ImGuiExtensions::ADIButton("Refresh", _noConnected)) {
+            _isOpenDevice = false;
+            cameraWorkerDone = false;
+            RefreshDevices();
+        }
+
+        ImGui::SameLine();
+
+        const bool openAvailable = !m_connectedDevices.empty();
+        {
+
+            ImGuiExtensions::ButtonColorChanger colorChanger(
+                ImGuiExtensions::ButtonColor::Green, openAvailable);
+            if (ImGuiExtensions::ADIButton("Open",
+                                           /*openAvailable*/ _isOpenDevice &&
+                                               m_configFiles.size() > 0) &&
+                0 <= m_selectedDevice) {
+                if (isPlayRecorded) {
+                    stopPlayback();
+                }
+
+                _isOpenDevice = false;
+                initCameraWorker =
+                    std::thread(std::bind(&ADIMainWindow::InitCamera, this));
+            }
+        }
+        ImGui::EndMenu();
+    }
+
+#if defined(Debug) && defined(_WIN32)
+    cpuUsage = getCurrentValue();
+    std::string cpu = std::to_string(cpuUsage);
+    ImGui::Text("CPU Usage: %s %%", cpu.c_str());
+
+    /*Total Virtual Memory*/
+    MEMORYSTATUSEX memInfo;
+    memInfo.dwLength = sizeof(MEMORYSTATUSEX);
+    GlobalMemoryStatusEx(&memInfo);
+    DWORDLONG totalVirtualMem = memInfo.ullTotalPageFile;
+
+    /*Total Virtual Memory currently used*/
+    DWORDLONG virtualMemUsed =
+        memInfo.ullTotalPageFile - memInfo.ullAvailPageFile;
+
+    /*Virtual memory by current process*/
+    PROCESS_MEMORY_COUNTERS_EX pmc;
+    GetProcessMemoryInfo(GetCurrentProcess(), (PROCESS_MEMORY_COUNTERS *)&pmc,
+                         sizeof(pmc));
+    SIZE_T virtualMemUsedByMe = pmc.PrivateUsage;
+
+    /*Physical Memory currently used by current process:*/
+    SIZE_T physMemUsedByMe = pmc.WorkingSetSize;
+
+    /*Physical Memory currently used*/
+    DWORDLONG physMemUsed = memInfo.ullTotalPhys - memInfo.ullAvailPhys;
+
+    SIZE_T totalMemUsedByProcess = virtualMemUsedByMe - physMemUsedByMe;
+    //TODO: Find an accurate way of displaying the memory
+    ImGui::Text("Memory Used by Process: %s MB",
+                std::to_string((double)physMemUsedByMe / 1000000).c_str());
+#endif
+
+    if (cameraWorkerDone) {
+        _isOpenDevice = false;
+        if (ImGui::BeginMenu("ToF Camera Options")) {
+            ImGuiExtensions::ADIComboBox("Mode", "Select Mode",
+                                         ImGuiSelectableFlags_None,
+                                         m_cameraModes, &modeSelection, true);
+
+            ImGui::NewLine();
+            ImGui::Text("View Options:");
+            ImGuiExtensions::ADIRadioButton("Active Brightness and Depth",
+                                            &viewSelection, 0);
+            ImGui::NewLine();
+            ImGuiExtensions::ADIRadioButton("Point Cloud and Depth",
+                                            &viewSelection, 1);
+            ImGui::NewLine();
+            ImGui::Text("Video:");
+
+            ImGuiExtensions::ButtonColorChanger colorChangerPlay(
+                customColorPlay, !isPlaying);
+            if (ImGuiExtensions::ADIButton("Play",
+                                           !isPlaying && !isPlayRecorded)) {
+                viewSelectionChanged = viewSelection;
+                isPlaying = true;
+            }
+            ImGui::SameLine();
+            ImGuiExtensions::ButtonColorChanger colorChangerStop(
+                customColorStop, isPlaying);
+            if (ImGuiExtensions::ADIButton("Stop", isPlaying)) {
+                isPlaying = false;
+                isPlayRecorded = false;
+                firstFrame = 0;
+                frameLost = 0;
+                stopPlayCCD();
+                if (isRecording) {
+                    view->m_ctrl->stopRecording();
+                    isRecording = false;
+                }
+            }
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Record Options")) {
+            ImGuiExtensions::ButtonColorChanger colorChangerStartRec(
+                customColorPlay, isPlaying);
+            //Allow the user to choose from 1 to 120 frames. Default value is 5 frames
+            ImGui::InputInt("Frames", &recordingSeconds, 1, 300);
+
+            if (recordingSeconds < 1) {
+                recordingSeconds = 1;
+            } else if (recordingSeconds > 300) {
+                recordingSeconds = 300;
+            }
+
+            ImGui::NewLine();
+
+            if (ImGuiExtensions::ADIButton("Start Recording",
+                                           !isRecording && !isPlayRecorded)) {
+                fs::path NPath = fs::current_path();
+                std::string tempPath = NPath.string();
+                char time_buffer[128];
+                struct tm timeinfo;
+                time_t rawtime;
+                time(&rawtime);
+#ifdef _WIN32
+                localtime_s(&timeinfo, &rawtime);
+#else
+                localtime_r(&rawtime, &timeinfo);
+#endif
+                strftime(time_buffer, sizeof(time_buffer), "%Y%m%d%H%M",
+                         &timeinfo);
+                tempPath += "\\frames" + std::string(time_buffer);
+
+                int filterIndex = 0;
+                char tempbuff[MAX_PATH];
+                tempPath.copy(tempbuff, tempPath.length(), 0);
+                tempbuff[tempPath.length()] = '\0';
+                std::string saveFile =
+                    getADIFileName(NULL, tempbuff, filterIndex);
+                //Check if filename exists and format is corrct
+                if (!saveFile.empty() && filterIndex) {
+                    if (!isPlaying && filterIndex) {
+                        //"Press" the play button, in case it is not pressed.
+                        PlayCCD(
+                            modeSelection,
+                            viewSelection); //Which ever is currently selected
+                        isPlaying = true;
+                    }
+                    //setting binary save option
+                    view->m_ctrl->m_saveBinaryFormat =
+                        view->getSaveBinaryFormat();
+                    view->m_ctrl->startRecording(saveFile, view->frameHeight,
+                                                 view->frameWidth,
+                                                 recordingSeconds);
+                    isRecording = true;
+                }
+            }
+
+            ImGui::SameLine();
+            ImGuiExtensions::ButtonColorChanger colorChangerRecStop(
+                customColorStop, isRecording);
+            if (ImGuiExtensions::ADIButton("Stop Recording", isRecording)) {
+                view->m_ctrl->stopRecording();
+                isRecording = false;
+                isPlayRecorded = false;
+
+                stopPlayCCD(); //TODO: Create a Stop ToF camera
+                isPlaying = false;
+            }
+
+            /* AS 2023-6-6: Temporarily disable.
+            ImGui::NewLine();
+            ImGui::Checkbox("Save Binary records", &m_saveBinaryFormatTmp);
+            if (view != NULL) {
+                view->setSaveBinaryFormat(m_saveBinaryFormatTmp);
+            }
+            */
+            ImGui::EndMenu();
+        }
+
+        if (view != NULL && view->m_ctrl->recordingFinished() && isRecording) {
+            view->m_ctrl->stopRecording();
+            isRecording = false;
+        }
     }
 }
 
@@ -529,145 +751,13 @@ void ADIMainWindow::setWindowSize(float width, float height) {
     ImGui::SetNextWindowSize(m_size);
 }
 
-void ADIMainWindow::showOpenDeviceWindow() {
-    ImGui::SetNextTreeNodeOpen(true, ImGuiCond_FirstUseEver);
-    setWindowPosition(0.0, offsetfromtop);
-    setWindowSize(300.0, 590);
-    ImGui::Begin("Device", NULL,
-                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
-
-    if (ImGui::TreeNode("Open Device")) {
-        ImGuiExtensions::ADIComboBox("Device", "(No available devices)",
-                                     ImGuiComboFlags_None, m_connectedDevices,
-                                     &m_selectedDevice, _isOpenDevice);
-
-        //If a device is found, then set the first one found
-        if (!m_connectedDevices.empty() && m_selectedDevice == -1) {
-            m_selectedDevice = 0;
-            _isOpenDevice = true;
-        }
-        if (!m_connectedDevices.empty()) {
-            ImGuiExtensions::ADIComboBox(
-                "Config", "No Config Files", ImGuiSelectableFlags_None,
-                m_configFiles, &configSelection, _isOpenDevice);
-        }
-
-        bool _noConnected = m_connectedDevices.empty();
-        if (ImGuiExtensions::ADIButton("Refresh", _noConnected)) {
-            _isOpenDevice = false;
-            cameraWorkerDone = false;
-            RefreshDevices();
-        }
-
-        ImGui::SameLine();
-
-        const bool openAvailable = !m_connectedDevices.empty();
-        {
-
-            ImGuiExtensions::ButtonColorChanger colorChanger(
-                ImGuiExtensions::ButtonColor::Green, openAvailable);
-            if (ImGuiExtensions::ADIButton("Open",
-                                           /*openAvailable*/ _isOpenDevice &&
-                                               m_configFiles.size() > 0) &&
-                0 <= m_selectedDevice) {
-                if (isPlayRecorded) {
-                    stopPlayback();
-                }
-
-                _isOpenDevice = false;
-                initCameraWorker =
-                    std::thread(std::bind(&ADIMainWindow::InitCamera, this));
-            }
-        }
-
-        //ImGui::SameLine();
-#if defined(Debug) && defined(_WIN32)
-        cpuUsage = getCurrentValue();
-        std::string cpu = std::to_string(cpuUsage);
-        ImGui::Text("CPU Usage: %s %%", cpu.c_str());
-
-        /*Total Virtual Memory*/
-        MEMORYSTATUSEX memInfo;
-        memInfo.dwLength = sizeof(MEMORYSTATUSEX);
-        GlobalMemoryStatusEx(&memInfo);
-        DWORDLONG totalVirtualMem = memInfo.ullTotalPageFile;
-
-        /*Total Virtual Memory currently used*/
-        DWORDLONG virtualMemUsed =
-            memInfo.ullTotalPageFile - memInfo.ullAvailPageFile;
-
-        /*Virtual memory by current process*/
-        PROCESS_MEMORY_COUNTERS_EX pmc;
-        GetProcessMemoryInfo(GetCurrentProcess(),
-                             (PROCESS_MEMORY_COUNTERS *)&pmc, sizeof(pmc));
-        SIZE_T virtualMemUsedByMe = pmc.PrivateUsage;
-
-        /*Physical Memory currently used by current process:*/
-        SIZE_T physMemUsedByMe = pmc.WorkingSetSize;
-
-        /*Physical Memory currently used*/
-        DWORDLONG physMemUsed = memInfo.ullTotalPhys - memInfo.ullAvailPhys;
-
-        SIZE_T totalMemUsedByProcess = virtualMemUsedByMe - physMemUsedByMe;
-        //TODO: Find an accurate way of displaying the memory
-        ImGui::Text("Memory Used by Process: %s MB",
-                    std::to_string((double)physMemUsedByMe / 1000000).c_str());
-#endif
-        if (cameraWorkerDone) {
-            ImGui::NewLine();
-            ImGui::Separator();
-            ImGui::NewLine();
-            ImGui::SetNextTreeNodeOpen(cameraOptionsTreeEnabled,
-                                       ImGuiCond_FirstUseEver);
-
-            _isOpenDevice = false;
-            if (ImGui::TreeNode("ToF Camera Options")) {
-                const float width = ImGui::GetWindowWidth();
-                ImGuiExtensions::ADIComboBox(
-                    "Mode", "Select Mode", ImGuiSelectableFlags_None,
-                    m_cameraModes, &modeSelection, true);
-
-                ImGui::NewLine();
-                ImGui::Text("View Options:");
-                ImGuiExtensions::ADIRadioButton("Active Brightness and Depth",
-                                                &viewSelection, 0);
-                ImGui::NewLine();
-                ImGuiExtensions::ADIRadioButton("Point Cloud and Depth",
-                                                &viewSelection, 1);
-                ImGui::NewLine();
-                ImGui::Text("Video:");
-
-                ImGuiExtensions::ButtonColorChanger colorChangerPlay(
-                    customColorPlay, !isPlaying);
-                if (ImGuiExtensions::ADIButton("Play",
-                                               !isPlaying && !isPlayRecorded)) {
-                    viewSelectionChanged = viewSelection;
-                    isPlaying = true;
-                }
-                ImGui::SameLine();
-                ImGuiExtensions::ButtonColorChanger colorChangerStop(
-                    customColorStop, isPlaying);
-                if (ImGuiExtensions::ADIButton("Stop", isPlaying)) {
-                    isPlaying = false;
-                    isPlayRecorded = false;
-                    stopPlayCCD();
-                    if (isRecording) {
-                        view->m_ctrl->stopRecording();
-                        isRecording = false;
-                    }
-                }
-
-                ImGui::TreePop();
-                ShowRecordTree();
-            }
-        }
-
-        ImGui::TreePop();
-    }
-
+void ADIMainWindow::showLogoWindow() {
     //Logo Window
-    setWindowPosition(0.0, 628);
-    setWindowSize(300.0, 90.0);
+    float info_width = 900.0f;
+    float info_height = (_isHighDPI) ? 205.0f : 100.0f;
+    setWindowPosition(offsetfromleft + info_width, offsetfromtop);
+    setWindowSize(300.0f, info_height);
+
     ImGui::Begin("Company Logo", NULL,
                  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar |
                      ImGuiWindowFlags_NoScrollbar);
@@ -694,20 +784,12 @@ void ADIMainWindow::showOpenDeviceWindow() {
     }
 
     ImGui::End(); //Logo END
-
-    ImGui::End();
 }
 
-void ADIMainWindow::ShowPlaybackTree() {
+void ADIMainWindow::showPlaybackMenu() {
     /**********/
     //Playback
-    ImGui::SetNextTreeNodeOpen(true, ImGuiCond_FirstUseEver);
-    setWindowPosition(0.0, offsetfromtop + 590);
-    setWindowSize(300.0, 150);
-    ImGui::Begin("Playback", NULL,
-                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
-
-    if (ImGui::TreeNode("Playback Options")) {
+    if (ImGui::BeginMenu("Playback Options")) {
         float customColorOpenRec = 0.22f;
         ImGuiExtensions::ButtonColorChanger colorChangerPlay(
             customColorOpenRec, !isPlayRecorded && !isPlaying);
@@ -832,11 +914,9 @@ void ADIMainWindow::ShowPlaybackTree() {
         //         }
         //     }
         // }
-        // }
-
-        ImGui::TreePop(); //Playback
+        // } //Playback
+        ImGui::EndMenu();
     }
-    ImGui::End();
 }
 
 void ADIMainWindow::stopPlayback() {
@@ -854,94 +934,6 @@ void ADIMainWindow::stopPlayback() {
     stopPlayCCD();
     //view.reset();
     LOG(INFO) << "Stream has been stopped.";
-}
-
-void ADIMainWindow::ShowRecordTree() {
-    /**********/
-    //Recording
-    ImGui::NewLine();
-    ImGui::Separator();
-    ImGui::NewLine();
-    ImGui::SetNextTreeNodeOpen(true, ImGuiCond_FirstUseEver);
-
-    if (ImGui::TreeNode("Record Options")) {
-        ImGuiExtensions::ButtonColorChanger colorChangerStartRec(
-            customColorPlay, isPlaying);
-        //Allow the user to choose from 1 to 120 frames. Default value is 5 frames
-        ImGui::InputInt("Frames", &recordingSeconds, 1, 300);
-
-        if (recordingSeconds < 1) {
-            recordingSeconds = 1;
-        } else if (recordingSeconds > 300) {
-            recordingSeconds = 300;
-        }
-
-        ImGui::NewLine();
-
-        if (ImGuiExtensions::ADIButton("Start Recording",
-                                       !isRecording && !isPlayRecorded)) {
-            fs::path NPath = fs::current_path();
-            std::string tempPath = NPath.string();
-            char time_buffer[128];
-            struct tm timeinfo;
-            time_t rawtime;
-            time(&rawtime);
-#ifdef _WIN32
-            localtime_s(&timeinfo, &rawtime);
-#else
-            localtime_r(&rawtime, &timeinfo);
-#endif
-            strftime(time_buffer, sizeof(time_buffer), "%Y%m%d%H%M", &timeinfo);
-            tempPath += "\\frames" + std::string(time_buffer);
-
-            int filterIndex = 0;
-            char tempbuff[MAX_PATH];
-            tempPath.copy(tempbuff, tempPath.length(), 0);
-            tempbuff[tempPath.length()] = '\0';
-            std::string saveFile = getADIFileName(NULL, tempbuff, filterIndex);
-            //Check if filename exists and format is corrct
-            if (!saveFile.empty() && filterIndex) {
-                if (!isPlaying && filterIndex) {
-                    //"Press" the play button, in case it is not pressed.
-                    PlayCCD(modeSelection,
-                            viewSelection); //Which ever is currently selected
-                    isPlaying = true;
-                }
-                //setting binary save option
-                view->m_ctrl->m_saveBinaryFormat = view->getSaveBinaryFormat();
-                view->m_ctrl->startRecording(saveFile, view->frameHeight,
-                                             view->frameWidth,
-                                             recordingSeconds);
-                isRecording = true;
-            }
-        }
-
-        ImGui::SameLine();
-        ImGuiExtensions::ButtonColorChanger colorChangerRecStop(customColorStop,
-                                                                isRecording);
-        if (ImGuiExtensions::ADIButton("Stop Recording", isRecording)) {
-            view->m_ctrl->stopRecording();
-            isRecording = false;
-            isPlayRecorded = false;
-
-            stopPlayCCD(); //TODO: Create a Stop ToF camera
-            isPlaying = false;
-        }
-
-        /* AS 2023-6-6: Temporarily disable.
-        ImGui::NewLine();
-        ImGui::Checkbox("Save Binary records", &m_saveBinaryFormatTmp);
-        if (view != NULL) {
-            view->setSaveBinaryFormat(m_saveBinaryFormatTmp);
-        }
-        */
-        ImGui::TreePop(); //Record
-    }
-
-    if (view != NULL && view->m_ctrl->recordingFinished() && isRecording) {
-        view->m_ctrl->stopRecording();
-        isRecording = false;
-    }
 }
 
 std::string ADIMainWindow::getCurrentPath() {
@@ -1282,21 +1274,22 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
         setTempWinPositionOnce = false;
     }
 
-    float info_height = (_isHighDPI) ? 205.0f : 80.0f;
+    float info_width = 900.0f;
+    float info_height = (_isHighDPI) ? 205.0f : 100.0f;
 
     if (displayIR)
         dictWinPosition["info"] = std::array<float, 4>(
-            {dictWinPosition["ab"][0], offsetfromtop, 900, info_height});
+            {offsetfromleft, offsetfromtop, info_width, info_height});
     else
         dictWinPosition["info"] = std::array<float, 4>(
-            {dictWinPosition["pc"][0], offsetfromtop, 900, info_height});
+            {offsetfromleft, offsetfromtop, info_width, info_height});
 
     setWindowPosition(dictWinPosition["info"][0], dictWinPosition["info"][1]);
     setWindowSize(dictWinPosition["info"][2], dictWinPosition["info"][3]);
 
     if (ImGui::Begin("Information Window", nullptr,
                      overlayFlags | ImGuiWindowFlags_NoTitleBar)) {
-        //ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+        ImGui::Text(" Camera %s", m_cameraIp);
         ImGui::Text(" Rotate: ");
         ImGui::SameLine();
         bool rotate = ImGui::Button("+");
@@ -1311,7 +1304,6 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
         }
         ImGui::Text("%i", rotationangledegrees);
         ImGui::SameLine();
-        //ImGui::PopItemFlag();
 
         ImGui::Text(" | Scale: ");
         ImGui::SameLine();
@@ -1330,7 +1322,40 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
         ImGui::Text("%ipx x %ipx -> %ipx x %ipx", view->frameWidth,
                     view->frameHeight, (uint32_t)displayIRDimensions.x,
                     (uint32_t)displayIRDimensions.y);
-        ImGui::Text(" FPS: %i", fps);
+        auto camera = getActiveCamera();
+        if (!camera) {
+            LOG(ERROR) << "No camera found";
+            return;
+        }
+        auto frame = view->m_capturedFrame;
+        if (!frame) {
+            LOG(ERROR) << "No frame received";
+            frameLost++;
+            return;
+        }
+        uint16_t *frameHeader = nullptr;
+        frame->getData("embedded_header", &frameHeader);
+        void *metadata = nullptr;
+        metadata = frameHeader + 6; // to get frame number
+        int32_t *frameNum = reinterpret_cast<int32_t *>(metadata);
+        if (!firstFrame) {
+            firstFrame = *frameNum;
+        }
+
+        metadata = frameHeader + 12; // to get sensor temperature;
+        int32_t *sensorTemp = reinterpret_cast<int32_t *>(metadata);
+        metadata = frameHeader + 14; // to get lasor temperature;
+        int32_t *laserTemp = reinterpret_cast<int32_t *>(metadata);
+        ImGui::Text(" Current FPS: %3i", fps);
+        uint32_t totalFrames = *frameNum - firstFrame;
+        uint32_t frameRecvd = totalFrames - frameLost;
+        ImGui::Text(" Number of frames lost: %5i", frameLost);
+        ImGui::SameLine();
+        ImGui::Text(" | Number of frames received: %5i", frameRecvd);
+        ImGui::Text(" Laser Temperature: %5iC", *laserTemp);
+        ImGui::SameLine();
+        ImGui::Text(" | Sensor Temperature: %5iC", *sensorTemp);
+        s
     }
     ImGui::End();
 }
@@ -1364,7 +1389,8 @@ void ADIMainWindow::displayActiveBrightnessWindow(
         return;
 
     dictWinPosition["ab"] = std::array<float, 4>(
-        {300, dictWinPosition["info"][1] + dictWinPosition["info"][3], size.x,
+        {offsetfromleft,
+         dictWinPosition["info"][1] + dictWinPosition["info"][3], size.x,
          size.y});
     setWindowPosition(dictWinPosition["ab"][0], dictWinPosition["ab"][1]);
     setWindowSize(dictWinPosition["ab"][2] + 40, dictWinPosition["ab"][3] + 40);
@@ -1378,6 +1404,13 @@ void ADIMainWindow::displayActiveBrightnessWindow(
         bool autoScale = view->getAutoScale();
         ImGui::Checkbox("Auto-scale", &autoScale);
         view->setAutoScale(autoScale);
+
+        ImVec2 hoveredImagePixel = InvalidHoveredPixel;
+        GetHoveredImagePix(hoveredImagePixel, ImGui::GetCursorScreenPos(),
+                           ImGui::GetIO().MousePos, displayIRDimensions);
+        RenderInfoPane(hoveredImagePixel, view->ir_video_data, view->frameWidth,
+                       ImGui::IsWindowHovered(),
+                       ADI_Image_Format_t::ADI_IMAGE_FORMAT_IR16, " ");
     }
 
     ImGui::End();
@@ -1440,7 +1473,8 @@ void ADIMainWindow::displayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
                                        (float)(view->frameHeight)};
 
     dictWinPosition["pc"] = std::array<float, 4>(
-        {300, dictWinPosition["info"][1] + dictWinPosition["info"][3], size.x,
+        {offsetfromleft,
+         dictWinPosition["info"][1] + dictWinPosition["info"][3], size.x,
          size.y});
 
     setWindowPosition(dictWinPosition["pc"][0], dictWinPosition["pc"][1]);
@@ -1545,7 +1579,8 @@ void ADIMainWindow::preparePointCloudVertices(unsigned int &vbo,
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     //Pass on Image buffer here:
     glBufferData(GL_ARRAY_BUFFER, view->vertexArraySize,
-                 view->normalized_vertices, GL_DYNAMIC_DRAW); //GL_STATIC_DRAW
+                 view->normalized_vertices,
+                 GL_DYNAMIC_DRAW); //GL_STATIC_DRAW
 
     //Image
     glVertexAttribPointer(
@@ -1602,7 +1637,8 @@ void ADIMainWindow::initOpenGLPointCloudTexture() {
 
     //Build and compile our shaders
     adiviewer::ADIShader vertexShader(
-        GL_VERTEX_SHADER, pointCloudVertexShader); //Our vertices (whole image)
+        GL_VERTEX_SHADER,
+        pointCloudVertexShader); //Our vertices (whole image)
     adiviewer::ADIShader fragmentShader(GL_FRAGMENT_SHADER,
                                         pointCloudFragmentShader); //Color map
     view->pcShader.CreateProgram();
@@ -2208,3 +2244,36 @@ std::shared_ptr<aditof::Camera> ADIMainWindow::getActiveCamera() {
     }
     return view->m_ctrl->m_cameras[m_selectedDevice];
 }
+
+// void ADIMainWindow::getKeyValuePairsFromIni(
+//     const std::string &iniFileName,
+//     std::map<std::string, std::string> &iniKeyValPairs) {
+//     using namespace aditof;
+
+//     std::ifstream iniStream(iniFileName);
+//     if (!iniStream.is_open()) {
+//         LOG(ERROR) << "Failed to open: " << iniFileName;
+//         return;
+//     }
+
+//     iniKeyValPairs.clear();
+
+//     std::string line;
+//     while (getline(iniStream, line)) {
+//         size_t equalPos = line.find('=');
+//         if (equalPos == std::string::npos) {
+//             LOG(WARNING) << "Unexpected format on this line:\n"
+//                          << line << "\nExpecting 'key=value' format";
+//             continue;
+//         }
+//         std::string key = line.substr(0, equalPos);
+//         std::string value = line.substr(equalPos + 1);
+//         if (!value.empty()) {
+//             m_iniKeyValPairs.emplace(key, value);
+//         } else {
+//             LOG(WARNING) << "No value found for parameter: " << key;
+//         }
+//     }
+
+//     iniStream.close();
+// }
