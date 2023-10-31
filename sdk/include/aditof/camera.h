@@ -62,9 +62,12 @@ class SDK_API Camera {
     /**
      * @brief Initialize the camera. This is required before performing any
      * operation on the camera.
+     * @param configFilepath - The JSON configuration files which should be specific to the given module.
+     * Can be omitted if 'loadModuleData' control is executed. This needs to be set before calling
+     * initialize(). The expected value is a file name (including extension) or left empty.
      * @return Status
      */
-    virtual Status initialize() = 0;
+    virtual Status initialize(const std::string &configFilepath = {}) = 0;
 
     /**
      * @brief Start the camera. This starts the streaming of data from the

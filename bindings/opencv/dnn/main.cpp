@@ -76,7 +76,8 @@ int main(int argc, char *argv[]) {
     Status status = Status::OK;
 
     if (argc < 2) {
-        LOG(ERROR) << "No config file provided! ./aditof-opencv-dnn <config_file>";
+        LOG(ERROR)
+            << "No config file provided! ./aditof-opencv-dnn <config_file>";
         return 0;
     }
 
@@ -92,14 +93,8 @@ int main(int argc, char *argv[]) {
     }
 
     auto camera = cameras.front();
-    
-    status = camera->setControl("initialization_config", configFile);
-    if(status != Status::OK){
-        LOG(ERROR) << "Failed to set control!";
-        return 0;
-    }
 
-    status = camera->initialize();
+    status = camera->initialize(configFile);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
         return -1;
@@ -152,24 +147,28 @@ int main(int argc, char *argv[]) {
 
     cv::namedWindow("Display Objects Depth and IR", cv::WINDOW_AUTOSIZE);
     cv::namedWindow("Display Objects Depth", cv::WINDOW_AUTOSIZE);
-	
-	//TODO review usage of frame details
+
+    //TODO review usage of frame details
     cv::Size cropSize;
-	if ((float)frameDetails.dataDetails.front().width / (float)(frameDetails.dataDetails.front().height) >
+    if ((float)frameDetails.dataDetails.front().width /
+            (float)(frameDetails.dataDetails.front().height) >
         WHRatio) {
         cropSize = cv::Size(
-            static_cast<int>((float)(frameDetails.dataDetails.front().height) * WHRatio),
+            static_cast<int>((float)(frameDetails.dataDetails.front().height) *
+                             WHRatio),
             (frameDetails.dataDetails.front().height));
     } else {
-        cropSize =
-            cv::Size(frameDetails.dataDetails.front().width,
-                     static_cast<int>((float)frameDetails.dataDetails.front().width / WHRatio));
+        cropSize = cv::Size(
+            frameDetails.dataDetails.front().width,
+            static_cast<int>((float)frameDetails.dataDetails.front().width /
+                             WHRatio));
     }
 
-    cv::Rect crop(cv::Point(frameDetails.dataDetails.front().width - cropSize.width,
-                            frameDetails.dataDetails.front().height - cropSize.height),
-                  cropSize);
-	
+    cv::Rect crop(
+        cv::Point(frameDetails.dataDetails.front().width - cropSize.width,
+                  frameDetails.dataDetails.front().height - cropSize.height),
+        cropSize);
+
     // Look up table to adjust image => use gamma correction
     float gamma = 0.4f;
     cv::Mat lookUpTable(1, 256, CV_8U);

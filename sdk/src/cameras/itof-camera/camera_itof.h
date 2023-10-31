@@ -44,15 +44,6 @@
 #include <map>
 #include <unordered_map>
 
-/* Camera controls
- *
- * initialization_config
- *   Description:     The JSON configuration files which should be specific to the given module.
- *                    Can be omitted if 'loadModuleData' control is executed. This needs to be set
- *                    before calling initialize().
- *   Accepted values: A file name, including extension.
- */
-
 class CameraItof : public aditof::Camera {
   public:
     CameraItof(std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
@@ -65,7 +56,7 @@ class CameraItof : public aditof::Camera {
     ~CameraItof();
 
   public: // implements Camera
-    aditof::Status initialize() override;
+    aditof::Status initialize(const std::string &configFilepath = {}) override;
     aditof::Status start() override;
     aditof::Status stop() override;
     aditof::Status setMode(const std::string &mode,
@@ -351,6 +342,7 @@ class CameraItof : public aditof::Camera {
     bool m_targetFramesAreComputed;
     XYZTable m_xyzTable;
     bool m_enableDepthCompute;
+    std::string m_initConfigFilePath;
 };
 
 #endif // CAMERA_ITOF_H

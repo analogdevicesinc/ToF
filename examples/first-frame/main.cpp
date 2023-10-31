@@ -204,13 +204,7 @@ int main(int argc, char *argv[]) {
 
     auto camera = cameras.front();
 
-    status = camera->setControl("initialization_config", configFile);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Failed to set control!";
-        return 0;
-    }
-
-    status = camera->initialize();
+    status = camera->initialize(configFile);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
         return 0;

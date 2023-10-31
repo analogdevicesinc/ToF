@@ -1052,15 +1052,7 @@ void ADIMainWindow::InitCamera() {
         return;
     }
 
-    // user can pass any config.json stored anywhere in HW
-    status = camera->setControl("initialization_config",
-                                m_configFiles[configSelection].second);
-    if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Could not set the initialization config file!";
-        return;
-    }
-
-    status = camera->initialize();
+    status = camera->initialize(m_configFiles[configSelection].second);
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
         return;
