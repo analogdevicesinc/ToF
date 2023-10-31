@@ -40,12 +40,6 @@
 namespace aditof {
 
 /**
- * @class ADSD3xxxErrs
- * @brief EEnum values used to identifty the ADSD part for used with the ADSDError class.
- */
-enum class ADSD3xxxErrs { ADSD3500, ADSD3100, ADSD3030 };
-
-/**
  * @class ADSDErrors
  * @brief Error codes from the ADSD3500, ADSD3100, ADSD3030
  * Usage:
@@ -53,14 +47,10 @@ enum class ADSD3xxxErrs { ADSD3500, ADSD3100, ADSD3030 };
  * For example: 
  *    ADSDErrors err;
  *    LOG(INFO) << ADSDErrors::ADSD3500_STATUS_INVALID_MODE;
- *    LOG(INFO) << err.GetString(ADSD3xxxErrs::ADSD3500, 0x0001);
+ *    LOG(INFO) << err.GetStringADSD3500(0x0001);
  */
 class ADSDErrors {
   public:
-    /**
-     * @brief The hardware types for the error for GetString.
-     */
-
     ADSDErrors() {
         m_ADSD3100ErrLookup = {
             {ADSD3100_ERR_MODE_USECASE, "Invalid mode selection."},
@@ -127,28 +117,49 @@ class ADSDErrors {
     }
 
     /**
-     * @brief Returns a string for a given target (adsdType) and error code.
-     * @param[in] adsdType - The source of the error: ADSD3500, ADSD3100 or ADSD3030.
+     * @brief Returns a string for a given target (adsdType) and error code for the ADSD3500.
      * @param[in] value - Error value
      * @return Error string
      */
-    std::string GetString(ADSD3xxxErrs adsdType, uint16_t value) {
+    std::string GetStringADSD3500(uint16_t value) {
 
         std::string ret = "";
 
-        if (adsdType == ADSD3xxxErrs::ADSD3500) {
-            auto it = m_ADSD3500StatusLookup.find(value);
+        auto it = m_ADSD3500StatusLookup.find(value);
 
-            if (it != m_ADSD3500StatusLookup.end()) {
-                ret = m_ADSD3500StatusLookup[value];
-            }
-        } else if (adsdType == ADSD3xxxErrs::ADSD3100) {
-            auto it = m_ADSD3100ErrLookup.find(value);
-
-            if (it != m_ADSD3100ErrLookup.end()) {
-                ret = m_ADSD3100ErrLookup[value];
-            }
+        if (it != m_ADSD3500StatusLookup.end()) {
+            ret = m_ADSD3500StatusLookup[value];
         }
+
+        return ret;
+    }
+
+    /**
+     * @brief Returns a string for a given target (adsdType) and error code for the ADSD3100.
+     * @param[in] value - Error value
+     * @return Error string
+     */
+    std::string GetStringADSD3100(uint16_t value) {
+
+        std::string ret = "";
+
+        auto it = m_ADSD3100ErrLookup.find(value);
+
+        if (it != m_ADSD3100ErrLookup.end()) {
+            ret = m_ADSD3100ErrLookup[value];
+        }
+
+        return ret;
+    }
+
+    /**
+     * @brief Returns a string for a given target (adsdType) and error code for the ADSD3030.
+     * @param[in] value - Error value
+     * @return Error string
+     */
+    std::string GetStringADSD3030(uint16_t value) {
+
+        std::string ret = "";
 
         return ret;
     }
