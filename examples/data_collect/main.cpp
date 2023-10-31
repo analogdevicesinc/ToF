@@ -316,14 +316,7 @@ int main(int argc, char *argv[]) {
 
     auto camera = cameras.front();
 
-    // user can pass any config.json stored anywhere in HW
-    status = camera->setControl("initialization_config", json_file_path);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not set the initialization config file!";
-        return 0;
-    }
-
-    status = camera->initialize();
+    status = camera->initialize(json_file_path);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
         return 0;

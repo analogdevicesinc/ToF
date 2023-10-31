@@ -138,7 +138,9 @@ int main(int argc, char *argv[]) {
 
     result = command.checkMandatoryArguments(command_map, arg_error);
     if (result != 0) {
-        std::string argName = (arg_error == "-config") ? "CONFIG" : command_map[arg_error].long_option;
+        std::string argName = (arg_error == "-config")
+                                  ? "CONFIG"
+                                  : command_map[arg_error].long_option;
 
         LOG(ERROR) << "Mandatory argument: " << argName << " missing";
         std::cout << Help_Menu;
@@ -147,7 +149,9 @@ int main(int argc, char *argv[]) {
 
     result = command.checkMandatoryPosition(command_map, arg_error);
     if (result != 0) {
-        std::string argName = (arg_error == "-config") ? "CONFIG" : command_map[arg_error].long_option;
+        std::string argName = (arg_error == "-config")
+                                  ? "CONFIG"
+                                  : command_map[arg_error].long_option;
 
         LOG(ERROR) << "Mandatory argument " << argName
                    << " is not on its correct position ("
@@ -200,13 +204,7 @@ int main(int argc, char *argv[]) {
 
     auto camera = cameras.front();
 
-    status = camera->setControl("initialization_config", configFile);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Failed to set control!";
-        return 0;
-    }
-
-    status = camera->initialize();
+    status = camera->initialize(configFile);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
         return 0;

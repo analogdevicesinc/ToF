@@ -85,7 +85,8 @@ CameraItof::CameraItof(
     m_details.sdCardImageVersion = sdCardImageVersion;
 
     // Define some of the controls of this camera
-    m_controls.emplace("initialization_config", "");
+    // For now there are none. To add one use: m_controls.emplace("your_control_name", "default_control_value");
+    // And handle the control action in setControl()
 
     // Check Depth Sensor
     if (!depthSensor) {
@@ -142,11 +143,13 @@ CameraItof::~CameraItof() {
     cleanupXYZtables();
 }
 
-aditof::Status CameraItof::initialize() {
+aditof::Status CameraItof::initialize(const std::string &configFilepath) {
     using namespace aditof;
     Status status = Status::OK;
 
     LOG(INFO) << "Initializing camera";
+
+    m_initConfigFilePath = configFilepath;
 
     // Setting up the UVC filters, samplegrabber interface, Video renderer and filters
     // Setting UVC mediaformat and Running the stream is done once mode is set
@@ -401,7 +404,7 @@ aditof::Status CameraItof::initialize() {
                          "from JSON config file...";
         } else {
             //CCB and CFG files will be taken from module memory if
-            //they are not passed in the initialization_config json file
+            //they are not passed in the m_initConfigFilePath json file
             status = parseJsonFileContent();
             if (status != Status::OK) {
                 LOG(ERROR) << "Failed to parse Json file!";
@@ -1487,7 +1490,7 @@ aditof::Status CameraItof::loadModuleData() {
     // m_depthSensor->cameraReset(); TO DO: figure out if this is required or how to do the reset since there is currenlty no cameraReset() in DepthSensorInterface
 
     if (!tempJsonFile.empty()) {
-        setControl("initialization_config", tempJsonFile);
+        m_initConfigFilePath = tempJsonFile;
         return status;
     } else {
         LOG(ERROR) << "Error loading module data";
@@ -1929,7 +1932,7 @@ aditof::Status CameraItof::parseJsonFileContent() {
     Status status = Status::OK;
 
     // Parse config.json
-    std::string config = m_controls["initialization_config"];
+    std::string config = m_initConfigFilePath;
     std::ifstream ifs(config.c_str());
     std::string content((std::istreambuf_iterator<char>(ifs)),
                         (std::istreambuf_iterator<char>()));
