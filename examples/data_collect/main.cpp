@@ -66,7 +66,7 @@ static const char kUsagePublic[] =
     R"(Data Collect.
     Usage:
       data_collect CONFIG
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] CONFIG
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] CONFIG
       data_collect (-h | --help)
 
     Arguments:
@@ -77,7 +77,6 @@ static const char kUsagePublic[] =
       --f <folder>       Output folder (max name 512) [default: ./]
       --n <ncapture>     Capture frame num. [default: 1]
       --m <mode>         Mode to capture data in. [default: 0]
-      --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
       --wt <warmup>      Warmup Time (sec) [default: 0]
       --ccb <FILE>       The path to store CCB content
       --ip <ip>          Camera IP
@@ -106,7 +105,6 @@ int main(int argc, char *argv[]) {
         {"-f", {"--f", false, "", "."}},
         {"-n", {"--n", false, "", "1"}},
         {"-m", {"--m", false, "", "0"}},
-        {"-ext", {"--ext_fsync", false, "", "0"}},
         {"-wt", {"--wt", false, "", "0"}},
         {"-ip", {"--ip", false, "", ""}},
         {"-fw", {"--fw", false, "", ""}},
@@ -176,7 +174,6 @@ int main(int argc, char *argv[]) {
     uint16_t err = 0;
     uint32_t n_frames = 0;
     uint32_t mode = 0;
-    uint32_t ext_frame_sync_en = 0;
     uint32_t warmup_time = 0;
     std::string ip;
     std::string firmware;
@@ -255,8 +252,6 @@ int main(int argc, char *argv[]) {
     if (!command_map["-fw"].value.empty()) {
         firmware = command_map["-fw"].value;
     }
-
-    ext_frame_sync_en = std::stoi(command_map["-ext"].value);
 
     frame_type = command_map["-ft"].value;
 
@@ -430,15 +425,6 @@ int main(int argc, char *argv[]) {
     if (status != Status::OK) {
         LOG(ERROR) << "Could not start camera!";
         return 0;
-    }
-
-    if (ext_frame_sync_en == 0) {
-        status = camera->setControl("syncMode", "0, 0"); // Master, timer driven
-
-    } else if (ext_frame_sync_en == 1) {
-        status = camera->setControl(
-            "syncMode",
-            "2, 0"); // Slave, 1.8v  // TODO: This configuration is required by oFilm, expand for finer control
     }
 
     aditof::Frame frame;
