@@ -228,6 +228,14 @@ class SDK_API Camera {
     virtual Status enableDepthCompute(bool enable) = 0;
 
     /**
+     * @brief Read camera module memory and initialize camera with loaded data.
+     * Called inside initialize() function. Calibration or Firmware data are NOT
+     * loaded if already defined in json config file.
+     * @return Status
+     */
+    virtual Status loadModuleData() = 0;
+
+    /**
      * @brief Update the firmware of ADSD3500 with the content found in the specified file.
      * @param[in] fwFilePath - A path to a file (including file name and extension)
      *                         where the firmware for adsd3500 is stored.
