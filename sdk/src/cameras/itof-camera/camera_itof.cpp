@@ -76,6 +76,7 @@ CameraItof::CameraItof(
 #ifdef DEPTH_COMPUTE_ON_TARGET
     m_targetFramesAreComputed = true;
 #endif
+    m_enableDepthCompute = !m_targetFramesAreComputed;
     FloatToLinGenerateTable();
     memset(&m_xyzTable, 0, sizeof(m_xyzTable));
     m_details.mode = "sr-native";
@@ -86,8 +87,6 @@ CameraItof::CameraItof(
     // Define some of the controls of this camera
     m_controls.emplace("initialization_config", "");
     m_controls.emplace("syncMode", "0, 0");
-    m_controls.emplace("enableDepthCompute",
-                       m_targetFramesAreComputed ? "off" : "on");
 
     // Check Depth Sensor
     if (!depthSensor) {
@@ -723,8 +722,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
     }
 
-    if (!m_targetFramesAreComputed &&
-        m_controls["enableDepthCompute"] == "on" && !m_pcmFrame &&
+    if (!m_targetFramesAreComputed && m_enableDepthCompute && !m_pcmFrame &&
         ((m_details.frameType.totalCaptures > 1) || m_adsd3500Enabled ||
          m_isOffline)) {
         status = initComputeLibrary();
@@ -909,8 +907,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         }
     }
 
-    if (!m_targetFramesAreComputed &&
-        (m_controls["enableDepthCompute"] == "on") && !m_pcmFrame &&
+    if (!m_targetFramesAreComputed && m_enableDepthCompute && !m_pcmFrame &&
         ((totalCaptures > 1) || m_adsd3500Enabled || m_isOffline)) {
 
         if (NULL == m_tofi_compute_context) {
@@ -1565,6 +1562,11 @@ aditof::Status CameraItof::enableXYZframe(bool enable) {
     m_xyzEnabled = enable;
     m_xyzSetViaApi = true;
 
+    return aditof::Status::OK;
+}
+
+aditof::Status CameraItof::enableDepthCompute(bool enable) {
+    m_enableDepthCompute = enable;
     return aditof::Status::OK;
 }
 

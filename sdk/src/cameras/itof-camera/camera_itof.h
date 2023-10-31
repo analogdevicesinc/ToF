@@ -62,11 +62,6 @@
  *                    Must be called after initialize(). Calibration or Firmware
  *                    data are NOT loaded if already defined by initialize() config file.
  *   Accepted values: A string with this exact value: 'call'
- *
- * enableDepthCompute
- *   Description:     Enable or disable the depth processing on the frames received from the sensor
- *                    Must be called after getFrame() where the depth processing happens.
- *   Accepted values: One of the following strings: 'on' or 'off'
  */
 
 class CameraItof : public aditof::Camera {
@@ -112,6 +107,7 @@ class CameraItof : public aditof::Camera {
     aditof::Status enableXYZframe(bool enable) override;
     aditof::Status saveModuleCFG(const std::string &filepath) const override;
     aditof::Status saveModuleCCB(const std::string &filepath) override;
+    aditof::Status enableDepthCompute(bool enable) override;
     aditof::Status adsd3500UpdateFirmware(const std::string &filePath) override;
     aditof::Status adsd3500SetToggleMode(int mode) override;
     aditof::Status adsd3500ToggleFsync() override;
@@ -380,6 +376,7 @@ class CameraItof : public aditof::Camera {
     aditof::Adsd3500Status m_adsd3500Status;
     bool m_targetFramesAreComputed;
     XYZTable m_xyzTable;
+    bool m_enableDepthCompute;
 };
 
 #endif // CAMERA_ITOF_H

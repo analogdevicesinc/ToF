@@ -382,7 +382,7 @@ int main(int argc, char *argv[]) {
 
     // Disable depth compute for raw frames
     if (frame_type == "raw") {
-        camera->setControl("enableDepthCompute", "off");
+        camera->enableDepthCompute(false);
     }
 
     // pcm-native contains ir only
