@@ -57,11 +57,6 @@
  *   Accepted values: A string containing two integer values. E.g. '1, 2'
  *                    First integer corresponds to mode. Set to 0 for internal and 2 for
  *                    external. Second integer is level. Set to TDB!!!
- * loadModuleData
- *   Description:     Read camera module memory and initialize camera with loaded data.
- *                    Must be called after initialize(). Calibration or Firmware
- *                    data are NOT loaded if already defined by initialize() config file.
- *   Accepted values: A string with this exact value: 'call'
  */
 
 class CameraItof : public aditof::Camera {
@@ -108,6 +103,7 @@ class CameraItof : public aditof::Camera {
     aditof::Status saveModuleCFG(const std::string &filepath) const override;
     aditof::Status saveModuleCCB(const std::string &filepath) override;
     aditof::Status enableDepthCompute(bool enable) override;
+    aditof::Status loadModuleData() override;
     aditof::Status adsd3500UpdateFirmware(const std::string &filePath) override;
     aditof::Status adsd3500SetToggleMode(int mode) override;
     aditof::Status adsd3500ToggleFsync() override;
@@ -253,17 +249,6 @@ class CameraItof : public aditof::Camera {
      * @return Status
      */
     aditof::Status setCameraSyncMode(uint8_t mode, uint8_t level);
-
-    /**
-     * @brief Read camera module memory and initialize camera with loaded data.
-     *
-     * Called inside initialize() function. Calibration or Firmware
-     * data are NOT loaded if already defined in json config file.
-     *
-     * @return Status
-     * @see Status
-     */
-    aditof::Status loadModuleData();
 
     /**
      * @brief Apply calibration to the frame captured
