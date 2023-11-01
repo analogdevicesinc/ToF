@@ -77,7 +77,7 @@ GLFWimage icons[1];
 GLFWimage logos[1];
 GLuint logo_texture;
 uint32_t firstFrame = 0;
-uint32_t frameLost = 0;
+uint32_t frameRecvd = 0;
 ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
 #if defined(Debug) && defined(_WIN32)
     static HANDLE self;
@@ -576,7 +576,6 @@ void ADIMainWindow::showDeviceMenu() {
             ImGui::Text("View Options:");
             ImGuiExtensions::ADIRadioButton("Active Brightness and Depth",
                                             &viewSelection, 0);
-            ImGui::NewLine();
             ImGuiExtensions::ADIRadioButton("Point Cloud and Depth",
                                             &viewSelection, 1);
             ImGui::NewLine();
@@ -596,7 +595,7 @@ void ADIMainWindow::showDeviceMenu() {
                 isPlaying = false;
                 isPlayRecorded = false;
                 firstFrame = 0;
-                frameLost = 0;
+                frameRecvd = 0;
                 stopPlayCCD();
                 if (isRecording) {
                     view->m_ctrl->stopRecording();
@@ -669,7 +668,7 @@ void ADIMainWindow::showDeviceMenu() {
                 view->m_ctrl->stopRecording();
                 isRecording = false;
                 isPlayRecorded = false;
-
+                firstFrame = 0;
                 stopPlayCCD(); //TODO: Create a Stop ToF camera
                 isPlaying = false;
             }
@@ -867,6 +866,7 @@ void ADIMainWindow::showPlaybackMenu() {
         ImGuiExtensions::ButtonColorChanger colorChangerStopPB(customColorStop,
                                                                isPlayRecorded);
         if (ImGuiExtensions::ADIButton("Close Recording", isPlayRecorded)) {
+            firstFrame = 0;
             stopPlayback();
         }
 
@@ -890,13 +890,13 @@ void ADIMainWindow::showPlaybackMenu() {
                      EMBED_HDR_LENGTH) +
                 view->m_ctrl->m_recorder->m_sizeOfHeader;
         }
+        ImGui::NewLine();
         ImGui::Text("View Options:");
         ImGuiExtensions::ADIRadioButton(
             "Active Brightness and Depth", &viewSelection, 0,
             (displayIR || displayDepth) && !isPlayRecorded);
         ImGuiExtensions::ADIRadioButton("Point Cloud and Depth", &viewSelection,
                                         1, pointCloudEnable && !isPlayRecorded);
-        ImGui::NewLine();
 
         // if (0) {
         // int filterIndex = 0;
@@ -1328,9 +1328,9 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
             return;
         }
         auto frame = view->m_capturedFrame;
+        frameRecvd++;
         if (!frame) {
             LOG(ERROR) << "No frame received";
-            frameLost++;
             return;
         }
         uint16_t *frameHeader = nullptr;
@@ -1341,20 +1341,126 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
         if (!firstFrame) {
             firstFrame = *frameNum;
         }
-
         metadata = frameHeader + 12; // to get sensor temperature;
         int32_t *sensorTemp = reinterpret_cast<int32_t *>(metadata);
         metadata = frameHeader + 14; // to get lasor temperature;
         int32_t *laserTemp = reinterpret_cast<int32_t *>(metadata);
-        ImGui::Text(" Current FPS: %3i", fps);
+        ImGui::Text(" Current FPS: %i", fps);
         uint32_t totalFrames = *frameNum - firstFrame;
-        uint32_t frameRecvd = totalFrames - frameLost;
-        ImGui::Text(" Number of frames lost: %5i", frameLost);
+        uint32_t frameLost = totalFrames - frameRecvd;
+        ImGui::Text(" Number of frames lost: %i", frameLost);
         ImGui::SameLine();
-        ImGui::Text(" | Number of frames received: %5i", frameRecvd);
-        ImGui::Text(" Laser Temperature: %5iC", *laserTemp);
+        ImGui::Text(" | Number of frames received: %i", frameRecvd);
+        ImGui::Text(" Laser Temperature: %iC", *laserTemp);
         ImGui::SameLine();
-        ImGui::Text(" | Sensor Temperature: %5iC", *sensorTemp);
+        ImGui::Text(" | Sensor Temperature: %iC", *sensorTemp);
+        ImGui::NewLine();
+
+        // "Stop" button
+        ImGuiExtensions::ButtonColorChanger colorChangerStop(customColorStop,
+                                                             isPlaying);
+        if (isPlaying && !isRecording) {
+            ImGui::Text(" View Options:");
+            ImGui::SameLine();
+            ImGuiExtensions::ADIRadioButton("Active Brightness and Depth",
+                                            &viewSelection, 0);
+            ImGui::SameLine();
+            ImGuiExtensions::ADIRadioButton("Point Cloud and Depth",
+                                            &viewSelection, 1);
+            if (ImGuiExtensions::ADIButton("Stop Streaming", isPlaying)) {
+                isPlaying = false;
+                isPlayRecorded = false;
+                firstFrame = 0;
+                frameRecvd = 0;
+                stopPlayCCD();
+                if (isRecording) {
+                    view->m_ctrl->stopRecording();
+                    isRecording = false;
+                }
+            }
+        }
+        if (isRecording) {
+            ImGui::Text(" View Options:");
+            ImGui::SameLine();
+            ImGuiExtensions::ADIRadioButton("Active Brightness and Depth",
+                                            &viewSelection, 0);
+            ImGui::SameLine();
+            ImGuiExtensions::ADIRadioButton("Point Cloud and Depth",
+                                            &viewSelection, 1);
+            if (ImGuiExtensions::ADIButton("Stop Recording", isPlaying)) {
+                isPlaying = false;
+                isPlayRecorded = false;
+                firstFrame = 0;
+                frameRecvd = 0;
+                stopPlayCCD();
+                if (isRecording) {
+                    view->m_ctrl->stopRecording();
+                    isRecording = false;
+                }
+            }
+        }
+        if (isPlayRecorded) {
+            std::string playbackButtonText =
+                isPlayRecordPaused ? "Paused" : "Pause";
+            float recordPlaybackColor = customColorPause;
+            bool isPlayRecordDone = false;
+            if (isPlayRecorded && view && view->m_ctrl->playbackFinished()) {
+                isPlayRecordDone = true;
+                isPlayRecordPaused = true;
+                view->m_ctrl->pausePlayback(true);
+                playbackButtonText = "Play";
+                recordPlaybackColor = customColorPlay;
+            }
+            ImGui::SameLine();
+            ImGuiExtensions::ButtonColorChanger colorChangerPausePB(
+                recordPlaybackColor, isPlayRecorded && isPlayRecordPaused);
+
+            if (ImGuiExtensions::ADIButton(playbackButtonText.c_str(),
+                                           isPlayRecorded)) {
+                isPlayRecordPaused = !isPlayRecordPaused;
+                if (isPlayRecordPaused) {
+                    view->m_ctrl->pausePlayback(true);
+                    LOG(INFO) << "Stream has been paused...";
+                } else {
+                    if (isPlayRecordDone) {
+                        view->m_ctrl->m_recorder->currentPBPos = 0;
+                        isPlayRecordDone = false;
+                    }
+                    view->m_ctrl->pausePlayback(false);
+                    LOG(INFO) << "Streaming.";
+                }
+                view->m_ctrl->playbackPaused();
+            }
+            ImGui::SameLine();
+            if (view != nullptr && view->m_ctrl->m_recorder->_stopPlayback) {
+                stopPlayback();
+                view->m_ctrl->m_recorder->_stopPlayback = false;
+            }
+
+            ImGuiExtensions::ButtonColorChanger colorChangerStopPB(
+                customColorStop, isPlayRecorded);
+            if (ImGuiExtensions::ADIButton("Close Recording", isPlayRecorded)) {
+                firstFrame = 0;
+                stopPlayback();
+            }
+            rawSeeker =
+                (view->m_ctrl->m_recorder->currentPBPos) /
+                (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
+                     ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
+                     sizeof(uint16_t) * 5 +
+                 EMBED_HDR_LENGTH);
+            ImGuiExtensions::ADISliderInt(
+                "Progress", &rawSeeker, 0,
+                (view->m_ctrl->m_recorder->m_numberOfFrames / 5) - 1, "%d",
+                true);
+            view->m_ctrl->m_recorder->currentPBPos =
+                rawSeeker *
+                    (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
+                         ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
+                         sizeof(uint16_t) * 5 +
+                     EMBED_HDR_LENGTH) +
+                view->m_ctrl->m_recorder->m_sizeOfHeader;
+        }
     }
     ImGui::End();
 }
