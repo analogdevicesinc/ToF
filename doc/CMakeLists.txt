@@ -26,7 +26,7 @@ set(DOCUMENTED_FILES "${SOURCES_DIR}/frame.h \\
                       ${SOURCES_DIR}/temperature_sensor_interface.h \\
                       ${SOURCES_DIR}/sensor_enumerator_interface.h \\
                       ${SOURCES_DIR}/sensor_enumerator_factory.h \\
-                      ${SOURCES_DIR}/adsd_errors.h \\
+                      ${SOURCES_DIR}/adsd_errs.h \\
                       ${CMAKE_CURRENT_SOURCE_DIR}/mainpage.dox
                       "
 )
