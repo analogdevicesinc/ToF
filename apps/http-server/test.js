@@ -310,8 +310,8 @@
 						const formats = message.split(',');
 						if (formats.length == 2) {
 							canvas = document.getElementById("canvas");
-							canvas.width = 512;//formats[0];
-							canvas.height = 640;//formats[1];
+							canvas.width = formats[0];
+							canvas.height = formats[1];
 
 							// Update variables for frame drawing
 							context = canvas.getContext('2d');

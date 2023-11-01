@@ -12,7 +12,8 @@ using namespace std;
 using namespace aditof;
 
 #define DUMB_PERIOD_US 50000
-#define MAX_MESSAGE_LEN (512 * 640 * 4 + 200) // For Quarter Megapixel
+
+#define MAX_MESSAGE_LEN (1042 * 1024 * 4 + 200) // For Quarter Megapixel
 // #define MAX_MESSAGE_LEN (524 + 100) // For Quarter Megapixel
 
 struct pss__tof {
@@ -34,6 +35,9 @@ static aditof::Frame frame;
 aditof::Status status;
 static bool cameraStarted = false;
 static std::string frameContent;
+static aditof::FrameDetails frameDetalis;
+static int minRange = 30;
+static int maxRange = 4000;
 
 static const uint8_t colormap[3 * 256] = {
 #include "colormap.txt"
@@ -69,7 +73,6 @@ uint8_t buf[LWS_PRE + MAX_MESSAGE_LEN], *p = &buf[LWS_PRE];
 
 //Available frametypes
 string availableFrameTypes = "ft:sr-native,sr-qnative,lr-native,lr-qnative";
-string availableSize = "size:512,640";
 string availableFormats = "format:depth,ir";
 
 /**
@@ -172,6 +175,9 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
             int pos = message.find(":");
             camera->setFrameType(message.substr(pos + 1));
 
+            //TO DO: create this dinamicaly
+            std::string availableSize = "size:512,640";
+
             // Send available size for the frame:
             send_message(wsi, availableSize.c_str(), availableSize.length());
             // Send available formats (depth/ir)
@@ -199,24 +205,28 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
                 cameraStarted = true;
             }
 
-            camera->requestFrame(&frame);
+            status = camera->requestFrame(&frame);
+            status = frame.getDetails(frameDetalis);
+
+            int width = frameDetalis.width;
+            int height = frameDetalis.height;
 
             uint16_t *frameData;
             frame.getData(frameContent, &frameData);
 
             uint8_t *frameToSend =
-                (uint8_t *)malloc(sizeof(uint8_t) * 512 * 640 * 4);
+                (uint8_t *)malloc(sizeof(uint8_t) * width * height * 4);
 
             if (frameContent == "depth") {
-                for (int i = 0; i < 512 * 640 * 4; i = i + 4) {
-                    frameData[i / 4] =
-                        (frameData[i / 4] - 30) * 255 / (3000 - 30);
+                for (int i = 0; i < width * height * 4; i = i + 4) {
+                    frameData[i / 4] = (frameData[i / 4] - minRange) * 255 /
+                                       (maxRange - minRange);
                     memcpy(frameToSend + i,
                            &colormap[(uint8_t)(frameData[i / 4] * 3)], 3);
                     frameToSend[i + 3] = 255;
                 }
             } else {
-                for (int i = 0; i < 512 * 640 * 4; i = i + 4) {
+                for (int i = 0; i < width * height * 4; i = i + 4) {
                     frameToSend[i] = (uint8_t)frameData[i / 4];
                     frameToSend[i + 1] = (uint8_t)frameData[i / 4];
                     frameToSend[i + 2] = (uint8_t)frameData[i / 4];
@@ -224,7 +234,8 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
                 }
             }
 
-            send_frame(wsi, (const char *)frameToSend, MAX_MESSAGE_LEN);
+            send_frame(wsi, (const char *)frameToSend,
+                       (width * height * 4 + 200));
 
             free(frameToSend);
         } else if (strncmp((const char *)in, "stop\n", 5) == 0) {
