@@ -92,11 +92,8 @@ if __name__ == "__main__":
         print("system.getCameraList(): ", status)
 
     camera1 = cameras[0]
-        
-    status = camera1.setControl("initialization_config", args.config)
-    print("camera1.setControl()", status)
 
-    status = camera1.initialize()
+    status = camera1.initialize(args.config)
     if not status:
         print("camera1.initialize() failed with status: ", status)
 
