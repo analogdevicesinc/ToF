@@ -3,16 +3,16 @@
 #define LWS_INTERNAL
 #include <libwebsockets.h>
 #endif
-#include <iostream>
-#include <string>
 #include <aditof/camera.h>
 #include <aditof/frame.h>
 #include <aditof/system.h>
+#include <iostream>
+#include <string>
 using namespace std;
 using namespace aditof;
 
 #define DUMB_PERIOD_US 50000
-#define MAX_MESSAGE_LEN (512 * 512 + 200) // For Quarter Megapixel
+#define MAX_MESSAGE_LEN (512 * 640 * 4 + 200) // For Quarter Megapixel
 // #define MAX_MESSAGE_LEN (524 + 100) // For Quarter Megapixel
 
 struct pss__tof {
@@ -30,19 +30,24 @@ struct vhd__tof {
 aditof::System tofSystem;
 std::vector<std::shared_ptr<aditof::Camera>> cameras;
 shared_ptr<aditof::Camera> camera;
-aditof::Frame frame;
+static aditof::Frame frame;
 aditof::Status status;
-bool cameraStarted = false;
+static bool cameraStarted = false;
+static std::string frameContent;
+
+static const uint8_t colormap[3 * 256] = {
+#include "colormap.txt"
+};
 
 //ToF init function
-int initializeSystem(string configFile){
+int initializeSystem(string configFile) {
     status = tofSystem.getCameraList(cameras);
     if (status != aditof::Status::OK) {
         cout << "Failed to get camera list!";
         return -1;
     }
 
-    auto camera = cameras.front();
+    camera = cameras.front();
 
     status = camera->setControl("initialization_config", configFile);
     if (status != Status::OK) {
@@ -59,14 +64,12 @@ int initializeSystem(string configFile){
     return 0;
 }
 
-
-
 //Message to Host
 uint8_t buf[LWS_PRE + MAX_MESSAGE_LEN], *p = &buf[LWS_PRE];
 
 //Available frametypes
 string availableFrameTypes = "ft:sr-native,sr-qnative,lr-native,lr-qnative";
-string availableSize = "size:512,512";
+string availableSize = "size:512,640";
 string availableFormats = "format:depth,ir";
 
 /**
@@ -151,10 +154,10 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
             // Initialize camera
             std::string message = process_message((char *)in);
             std::cout << "Messeage from HOST: " << message << "\n";
-            if(message == "open:adsd3100"){
+            if (message == "open:adsd3100") {
                 initializeSystem("config/config_adsd3500_adsd3100.json");
-            } else if (message == "open:adsd3030"){
-                initializeSystem("config/config_adsd3500_adsd3100.json");
+            } else if (message == "open:adsd3030") {
+                initializeSystem("config/config_adsd3500_adsd3030.json");
             }
 
             // Send available frame types
@@ -167,7 +170,7 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
             std::cout << "Messeage from HOST: " << message << "\n";
 
             int pos = message.find(":");
-            camera->setFrameType(message.substr(pos));
+            camera->setFrameType(message.substr(pos + 1));
 
             // Send available size for the frame:
             send_message(wsi, availableSize.c_str(), availableSize.length());
@@ -180,6 +183,9 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
             std::string message = process_message((char *)in);
             std::cout << "Messeage from HOST: " << message << "\n";
 
+            int pos = message.find(":");
+            frameContent = message.substr(pos + 1);
+
             // Send state
             string state = "ready\n";
             send_message(wsi, state.c_str(), state.length());
@@ -188,53 +194,46 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
             // Set chosen frame type
             std::string message = process_message((char *)in);
             std::cout << "Messeage from HOST: " << message << "\n";
-            if(!cameraStarted){
+            if (!cameraStarted) {
                 camera->start();
+                cameraStarted = true;
             }
 
             camera->requestFrame(&frame);
-           // // To remove
-           // std::cout << "Reding in binary file\n";
-           // char *buffer;
-           // long size;
-           // ifstream file(
-           //     "/home/analog/Workspace_Robi/ToF/apps/http-server/out_ir_.bin",
-           //     ios::in | ios::binary | ios::ate);
-           // size = file.tellg();
-           // file.seekg(0, ios::beg);
-           uint16_t *irData;
-           frame.getData("ir", &irData);
-           // file.read(buffer, size);
-           // file.close();
-           // std::cout << "Read in: " << size << "\n";
-           // // const char buff2 = (1, 2, 3);
-           // // send_frame(wsi, &buff2, 3);
-//
-           // // Change endianness
-           // // char tmp;
-           // // for (int i = 0; i <size-1; i=i+2)
-           // // {
-           // //     tmp = buffer[i];
-           // //     buffer[i] = buffer[i+1];
-           // //     buffer[i+1] = tmp;
-           // // }
+
+            uint16_t *frameData;
+            frame.getData(frameContent, &frameData);
 
             uint8_t *frameToSend =
-                (uint8_t *)malloc(sizeof(uint8_t) * 512 * 512);
-            for (int i = 0; i < 512 * 512; i++) {
-                uint16_t var =
-                    (uint16_t)irData[i * 2] << 8 | (uint16_t)irData[i * 2 + 1];
-                frameToSend[i] = (var / 255) & 0xff;
+                (uint8_t *)malloc(sizeof(uint8_t) * 512 * 640 * 4);
+
+            if (frameContent == "depth") {
+                for (int i = 0; i < 512 * 640 * 4; i = i + 4) {
+                    frameData[i / 4] =
+                        (frameData[i / 4] - 30) * 255 / (3000 - 30);
+                    memcpy(frameToSend + i,
+                           &colormap[(uint8_t)(frameData[i / 4] * 3)], 3);
+                    frameToSend[i + 3] = 255;
+                }
+            } else {
+                for (int i = 0; i < 512 * 640 * 4; i = i + 4) {
+                    frameToSend[i] = (uint8_t)frameData[i / 4];
+                    frameToSend[i + 1] = (uint8_t)frameData[i / 4];
+                    frameToSend[i + 2] = (uint8_t)frameData[i / 4];
+                    frameToSend[i + 3] = 255;
+                }
             }
-            int i = 0;
+
             send_frame(wsi, (const char *)frameToSend, MAX_MESSAGE_LEN);
 
             free(frameToSend);
-
         } else if (strncmp((const char *)in, "stop\n", 5) == 0) {
             // Set chosen frame type
             std::string message = process_message((char *)in);
             std::cout << "Messeage from HOST: " << message << "\n";
+
+            status = camera->stop();
+            cameraStarted = false;
 
         } else if (strncmp((const char *)in, "close\n", 6) == 0) {
             //close camera
@@ -257,5 +256,6 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
     default:
         break;
     }
+
     return 0;
 }
