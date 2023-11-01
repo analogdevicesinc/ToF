@@ -215,29 +215,11 @@
 		data = imgData.data;
 		var j = 0;
 
-		if (formatType == "ir") {
-			for (var i = 0; i < data.length; i += 4) {
-				data[i] = binaryArray[j];
-				data[i + 1] = binaryArray[j];
-				data[i + 2] = binaryArray[j];
-				data[i + 3] = 255;
-				j++;
-			}
+
+		for (var i = 0; i < data.length; i++) {
+			data[i] = binaryArray[i];
 		}
-		else if (formatType == "depth") {
-			for (var i = 0; i < data.length; i += 4) {
-				data[i] = 255 - binaryArray[j];
-				data[i + 1] = 0;
-				data[i + 2] = binaryArray[j];
-				data[i + 3] = 255;
-				j++;
-			}
-		}
-		else
-		{
-			console.log("Unknown format type!");
-			isStreaming = false;
-		}
+
 		context.putImageData(imgData, 0, 0);
 		isPreparingFrame = false;
 	}
@@ -328,8 +310,8 @@
 						const formats = message.split(',');
 						if (formats.length == 2) {
 							canvas = document.getElementById("canvas");
-							canvas.width = formats[0];
-							canvas.height = formats[1];
+							canvas.width = 512;//formats[0];
+							canvas.height = 640;//formats[1];
 
 							// Update variables for frame drawing
 							context = canvas.getContext('2d');
