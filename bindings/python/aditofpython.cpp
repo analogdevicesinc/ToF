@@ -195,7 +195,8 @@ PYBIND11_MODULE(aditofpython, m) {
 
     // Camera
     py::class_<aditof::Camera, std::shared_ptr<aditof::Camera>>(m, "Camera")
-        .def("initialize", &aditof::Camera::initialize)
+        .def("initialize", &aditof::Camera::initialize,
+             py::arg("configFilepath") = "")
         .def("start", &aditof::Camera::start)
         .def("stop", &aditof::Camera::stop)
         .def("setMode", &aditof::Camera::setMode, py::arg("mode"),

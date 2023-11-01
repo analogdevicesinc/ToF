@@ -79,10 +79,7 @@ if __name__ == "__main__":
 
     camera1 = cameras[0]
 
-    status = camera1.setControl("initialization_config", config)
-    print("camera1.setControl()", status)
-
-    status = cameras[0].initialize()
+    status = cameras[0].initialize(config)
     if not status:
         print("cameras[0].initialize() failed with status: ", status)
 
