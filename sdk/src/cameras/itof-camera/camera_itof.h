@@ -37,6 +37,7 @@
 #include "tofi/tofi_compute.h"
 #include "tofi/tofi_config.h"
 #include "tofi/tofi_util.h"
+#include <aditof/adsd_errs.h>
 #include <aditof/camera.h>
 #include <aditof/depth_sensor_interface.h>
 #include <aditof/storage_interface.h>
@@ -293,6 +294,7 @@ class CameraItof : public aditof::Camera {
     std::shared_ptr<aditof::TemperatureSensorInterface> m_tempSensor;
     std::unordered_map<std::string, std::string> m_controls;
     std::map<std::string, noArgCallable> m_noArgCallables;
+    aditof::ADSDErrors m_adsdErrors;
 
     bool m_devStarted;
     bool m_eepromInitialized;

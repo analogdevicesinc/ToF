@@ -2298,7 +2298,34 @@ aditof::Status CameraItof::adsd3500GetGenericTemplate(uint16_t reg,
 
 aditof::Status CameraItof::adsd3500GetStatus(int &chipStatus,
                                              int &imagerStatus) {
-    return m_depthSensor->adsd3500_get_status(chipStatus, imagerStatus);
+    aditof::Status status = aditof::Status::OK;
+    status = m_depthSensor->adsd3500_get_status(chipStatus, imagerStatus);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to read chip/imager status!";
+        return status;
+    }
+
+    if (chipStatus != 0) {
+        LOG(ERROR) << "ADSD3500 error detected: "
+                   << m_adsdErrors.GetStringADSD3500(chipStatus);
+
+        if (chipStatus == m_adsdErrors.ADSD3500_STATUS_IMAGER_ERROR) {
+            if (m_adsd3500ImagerType == 1) {
+                LOG(ERROR) << "ADSD3100 imager error detected: "
+                           << m_adsdErrors.GetStringADSD3100(imagerStatus);
+            } else if (m_adsd3500ImagerType = 2) {
+                LOG(ERROR) << "ADSD3030 imager error detected: "
+                           << m_adsdErrors.GetStringADSD3030(imagerStatus);
+            } else {
+                LOG(ERROR) << "Imager error detected. Cannot be displayed "
+                              "because imager type is unknown";
+            }
+        }
+    } else {
+        LOG(INFO) << "No chip/imager errors detected.";
+    }
+
+    return status;
 }
 
 aditof::Status CameraItof::adsd3500GetSensorTemperature(uint16_t &tmpValue) {
