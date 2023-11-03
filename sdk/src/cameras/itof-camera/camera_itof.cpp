@@ -35,7 +35,6 @@
 #include "aditof_internal.h"
 
 #include "cJSON.h"
-#include "calibration_itof.h"
 #include "crc.h"
 #include "module_memory.h"
 #include "tofi/algorithms.h"
@@ -515,58 +514,11 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
 
 aditof::Status CameraItof::start() {
     using namespace aditof;
-    Status status = Status::OK;
 
-    if (m_adsd3500Enabled || m_isOffline) {
-        m_CameraProgrammed = true;
-        status = m_depthSensor->start();
-        if (Status::OK != status) {
-            LOG(ERROR) << "Error starting adsd3500.";
-            return Status::GENERIC_ERROR;
-        }
-        return aditof::Status::OK;
-    }
-
-    // Program the camera firmware only once, re-starting requires
-    // only setmode and start the camera.
-    uint16_t reg_address = 0x256;
-    uint16_t reg_data;
-    m_depthSensor->readRegisters(&reg_address, &reg_data, 1);
-
-    if (reg_data) {
-        m_CameraProgrammed = true;
-        LOG(INFO) << "USEQ running. Skip CFG & CCB "
-                     "programming step\n";
-    }
-
-    if (!m_CameraProgrammed) {
-        CalibrationItof calib(m_depthSensor);
-
-        status = calib.writeConfiguration(m_sensorFirmwareFile);
-        if (Status::OK != status) {
-            LOG(ERROR) << "Error writing camera firmware.";
-            return status;
-        }
-
-        status = calib.writeCalibration(m_ccb_calibrationFile);
-        if (Status::OK != status) {
-            LOG(ERROR) << "Error writing camera calibration data.";
-            return status;
-        }
-
-        status = calib.writeSettings(m_sensor_settings);
-        if (Status::OK != status) {
-            LOG(ERROR) << "Error writing camera settings.";
-            return status;
-        }
-
-        m_CameraProgrammed = true;
-    }
-
-    status = m_depthSensor->start();
+    Status status = m_depthSensor->start();
     if (Status::OK != status) {
-        LOG(ERROR) << "Error starting image sensor.";
-        return Status::GENERIC_ERROR;
+        LOG(ERROR) << "Error starting adsd3500.";
+        return status;
     }
 
     return aditof::Status::OK;
