@@ -33,7 +33,6 @@
 #define CAMERA_ITOF_H
 
 #include "mode_info.h"
-#include "module_memory.h"
 #include "tofi/tofi_compute.h"
 #include "tofi/tofi_config.h"
 #include "tofi/tofi_util.h"
@@ -89,7 +88,6 @@ class CameraItof : public aditof::Camera {
     aditof::Status saveModuleCFG(const std::string &filepath) const override;
     aditof::Status saveModuleCCB(const std::string &filepath) override;
     aditof::Status enableDepthCompute(bool enable) override;
-    aditof::Status loadModuleData() override;
     aditof::Status adsd3500UpdateFirmware(const std::string &filePath) override;
     aditof::Status adsd3500SetToggleMode(int mode) override;
     aditof::Status adsd3500ToggleFsync() override;
@@ -225,13 +223,6 @@ class CameraItof : public aditof::Camera {
     aditof::Status getCurrentModeInfo(ModeInfo::modeInfo &info);
 
     /**
-     * @brief Delete any temporary files created in camera initialization
-     * @return aditof::Status
-     * @see m_tempFiles
-     */
-    aditof::Status cleanupTempFiles();
-
-    /**
      * @brief Apply calibration to the frame captured
      * Based on the platform the camera is connected to Windows/Linux/Mac corresponding implementation of applyCalibrationToFrame is done.
      * @param[in] frame - Frame captured
@@ -323,7 +314,6 @@ class CameraItof : public aditof::Camera {
     bool m_xyzSetViaApi;
     bool m_pcmFrame;
     uint16_t m_modechange_framedrop_count = 0;
-    aditof::TOF_ModuleFiles_t m_tempFiles;
     std::vector<aditof::DepthSensorFrameType> m_availableSensorFrameTypes;
     std::vector<std::pair<std::string, int32_t>> m_sensor_settings;
     int16_t m_cameraFps;
@@ -344,6 +334,7 @@ class CameraItof : public aditof::Camera {
     XYZTable m_xyzTable;
     bool m_enableDepthCompute;
     std::string m_initConfigFilePath;
+    std::string m_ccbFile;
 };
 
 #endif // CAMERA_ITOF_H
