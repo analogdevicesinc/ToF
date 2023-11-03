@@ -1539,6 +1539,7 @@ aditof::Status CameraItof::saveModuleCFG(const std::string &filepath) const {
     if (!m_adsd3500Enabled) {
         LOG(WARNING) << "ADSD3500 not present in this setup. Saving CFG is not "
                         "available.";
+        return aditof::Status::UNAVAILABLE;
     } else if (m_tempFiles.cfgFile.empty()) {
         LOG(ERROR) << "CFG files is unavailable. Perhaps CFG content was not "
                       "read from module.";
