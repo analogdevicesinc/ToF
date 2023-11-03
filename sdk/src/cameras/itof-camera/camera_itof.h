@@ -311,7 +311,6 @@ class CameraItof : public aditof::Camera {
     TofiXYZDealiasData m_xyz_dealias_data[MAX_N_MODES + 1];
     bool m_loadedConfigData;
 
-    bool m_CameraProgrammed = false;
     std::string m_sensorFirmwareFile;
     std::string m_ccb_calibrationFile;
     std::string m_ini_depth;
