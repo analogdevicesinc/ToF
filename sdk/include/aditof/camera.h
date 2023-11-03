@@ -63,8 +63,7 @@ class SDK_API Camera {
      * @brief Initialize the camera. This is required before performing any
      * operation on the camera.
      * @param configFilepath - The JSON configuration files which should be specific to the given module.
-     * Can be omitted if 'loadModuleData' control is executed. This needs to be set before calling
-     * initialize(). The expected value is a file name (including extension) or left empty.
+     * The expected value is a file name (including extension) or left empty.
      * @return Status
      */
     virtual Status initialize(const std::string &configFilepath = {}) = 0;
@@ -206,7 +205,6 @@ class SDK_API Camera {
 
     /**
      * @brief Save the CFG content which is obtained from module memory to a given file path.
-     * Must be called after loadModuleData() which is responsible for reading the CFG content.
      * @param[in] filepath - A path to a file (including file name and extension) where the
      *                       CFG should be stored.
      * @return Status
@@ -215,7 +213,6 @@ class SDK_API Camera {
 
     /**
      * @brief Save the CCB content which is obtained from module memory to a given file path.
-     * Must be called after loadModuleData() which is responsible for reading the CCB content.
      * @param[in] filepath - A path to a file (including file name and extension) where the
      *                       CCB should be stored.
      * @return Status
@@ -229,14 +226,6 @@ class SDK_API Camera {
      * @return Status
      */
     virtual Status enableDepthCompute(bool enable) = 0;
-
-    /**
-     * @brief Read camera module memory and initialize camera with loaded data.
-     * Called inside initialize() function. Calibration or Firmware data are NOT
-     * loaded if already defined in json config file.
-     * @return Status
-     */
-    virtual Status loadModuleData() = 0;
 
     /**
      * @brief Update the firmware of ADSD3500 with the content found in the specified file.

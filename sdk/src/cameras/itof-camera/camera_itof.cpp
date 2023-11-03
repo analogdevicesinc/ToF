@@ -36,7 +36,6 @@
 
 #include "cJSON.h"
 #include "crc.h"
-#include "module_memory.h"
 #include "tofi/algorithms.h"
 #include "tofi/floatTolin.h"
 #include "tofi/tofi_config.h"
@@ -66,8 +65,8 @@ CameraItof::CameraItof(
     : m_depthSensor(depthSensor), m_devStarted(false),
       m_eepromInitialized(false), m_adsd3500Enabled(false),
       m_loadedConfigData(false), m_xyzEnabled(false), m_xyzSetViaApi(false),
-      m_modechange_framedrop_count(0), m_tempFiles{}, m_cameraFps(0),
-      m_fsyncMode(-1), m_mipiOutputSpeed(-1), m_enableTempCompenstation(-1),
+      m_modechange_framedrop_count(0), m_cameraFps(0), m_fsyncMode(-1),
+      m_mipiOutputSpeed(-1), m_enableTempCompenstation(-1),
       m_enableMetaDatainAB(-1), m_enableEdgeConfidence(-1),
       m_adsd3500ImagerType(0), m_modesVersion(0),
       m_targetFramesAreComputed(false),
@@ -132,7 +131,6 @@ CameraItof::CameraItof(
 }
 
 CameraItof::~CameraItof() {
-    cleanupTempFiles();
     freeConfigData();
     freeComputeLibrary();
     // m_device->toggleFsync();
@@ -393,23 +391,6 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
     if (status != Status::OK) {
         LOG(ERROR) << "Failed to parse Json file!";
         return status;
-    }
-
-    if (!m_adsd3500Enabled) {
-        status = loadModuleData();
-        if (status != Status::OK) {
-            LOG(INFO) << "No CCB/CFG data found in camera module,";
-            LOG(INFO) << "Loading calibration(ccb) and configuration(cfg) data "
-                         "from JSON config file...";
-        } else {
-            //CCB and CFG files will be taken from module memory if
-            //they are not passed in the m_initConfigFilePath json file
-            status = parseJsonFileContent();
-            if (status != Status::OK) {
-                LOG(ERROR) << "Failed to parse Json file!";
-                return status;
-            }
-        }
     }
 
     aditof::Status configStatus = loadConfigData();
@@ -1371,85 +1352,6 @@ aditof::Status CameraItof::getCurrentModeInfo(ModeInfo::modeInfo &info) {
     return Status::GENERIC_ERROR;
 }
 
-aditof::Status CameraItof::cleanupTempFiles() {
-    using namespace aditof;
-    Status status = Status::OK;
-
-    std::string filename = m_tempFiles.jsonFile;
-    if (!filename.empty()) {
-        if (std::remove(filename.c_str()) != 0) {
-            LOG(WARNING) << "Failed temp file delete: " << filename;
-            status = Status::GENERIC_ERROR;
-        }
-    }
-
-    filename = m_tempFiles.ccbFile;
-    if (!filename.empty()) {
-        if (std::remove(filename.c_str()) != 0) {
-            LOG(WARNING) << "Failed temp file delete: " << filename;
-            status = Status::GENERIC_ERROR;
-        }
-    }
-
-    filename = m_tempFiles.cfgFile;
-    if (!filename.empty()) {
-        if (std::remove(filename.c_str()) != 0) {
-            LOG(WARNING) << "Failed temp file delete: " << filename;
-            status = Status::GENERIC_ERROR;
-        }
-    }
-
-    m_tempFiles = {};
-
-    return status;
-}
-
-aditof::Status CameraItof::loadModuleData() {
-    using namespace aditof;
-    Status status = Status::OK;
-
-    if (m_details.connection == aditof::ConnectionType::OFFLINE) {
-        return status;
-    }
-
-    if (m_adsd3500Enabled) {
-        return status;
-    }
-
-    cleanupTempFiles();
-    if (!m_eepromInitialized) {
-        LOG(ERROR) << "Memory interface can't be accessed";
-        return Status::GENERIC_ERROR;
-    }
-    std::string tempJsonFile;
-
-    ModuleMemory flashLoader(m_eeprom);
-    flashLoader.readModuleData(tempJsonFile, m_tempFiles);
-
-    std::string serialNumber;
-    flashLoader.getSerialNumber(serialNumber);
-    int prefixCount =
-        2; // I'm asuming the first 2 characters are "D:" which we don't need
-    std::string shortName = "";
-    if (serialNumber != "")
-        shortName = serialNumber.substr(prefixCount,
-                                        serialNumber.find(" ") - prefixCount);
-    else
-        shortName =
-            "default"; //This name is given when there has been an error on CRC
-    m_details.cameraId = shortName;
-
-    // m_depthSensor->cameraReset(); TO DO: figure out if this is required or how to do the reset since there is currenlty no cameraReset() in DepthSensorInterface
-
-    if (!tempJsonFile.empty()) {
-        m_initConfigFilePath = tempJsonFile;
-        return status;
-    } else {
-        LOG(ERROR) << "Error loading module data";
-        return Status::GENERIC_ERROR;
-    }
-}
-
 aditof::Status CameraItof::applyCalibrationToFrame(uint16_t *frame,
                                                    const unsigned int mode) {
     return aditof::Status::UNAVAILABLE;
@@ -1469,13 +1371,13 @@ aditof::Status CameraItof::saveModuleCCB(const std::string &filepath) {
         }
     }
 
-    if (m_tempFiles.ccbFile.empty()) {
+    if (m_ccbFile.empty()) {
         LOG(ERROR) << "CCB files is unavailable. Perhaps CCB content was not "
                       "read from module.";
         return aditof::Status::UNAVAILABLE;
     }
 
-    std::ifstream source(m_tempFiles.ccbFile.c_str(), std::ios::binary);
+    std::ifstream source(m_ccbFile.c_str(), std::ios::binary);
     std::ofstream destination(filepath, std::ios::binary);
     destination << source.rdbuf();
 
@@ -1488,21 +1390,8 @@ aditof::Status CameraItof::saveModuleCFG(const std::string &filepath) const {
         return aditof::Status::INVALID_ARGUMENT;
     }
 
-    if (!m_adsd3500Enabled) {
-        LOG(WARNING) << "ADSD3500 not present in this setup. Saving CFG is not "
-                        "available.";
-        return aditof::Status::UNAVAILABLE;
-    } else if (m_tempFiles.cfgFile.empty()) {
-        LOG(ERROR) << "CFG files is unavailable. Perhaps CFG content was not "
-                      "read from module.";
-        return aditof::Status::UNAVAILABLE;
-    }
-
-    std::ifstream source(m_tempFiles.cfgFile.c_str(), std::ios::binary);
-    std::ofstream destination(filepath, std::ios::binary);
-    destination << source.rdbuf();
-
-    return aditof::Status::OK;
+    LOG(ERROR) << "CFG files is unavailable";
+    return aditof::Status::UNAVAILABLE;
 }
 
 aditof::Status CameraItof::enableXYZframe(bool enable) {
@@ -1762,7 +1651,7 @@ aditof::Status CameraItof::readAdsd3500CCB() {
 
     tempFile << fileContent;
 
-    m_tempFiles.ccbFile = fileName;
+    m_ccbFile = fileName;
     delete[] ccbContent;
     tempFile.close();
 
