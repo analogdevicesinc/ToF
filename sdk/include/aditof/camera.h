@@ -45,8 +45,6 @@ namespace aditof {
 
 class Frame;
 class DepthSensorInterface;
-class StorageInterface;
-class TemperatureSensorInterface;
 
 /**
  * @class Camera
@@ -175,24 +173,6 @@ class SDK_API Camera {
      * @return std::shared_ptr<DepthSensorInterface>
      */
     virtual std::shared_ptr<DepthSensorInterface> getSensor() = 0;
-
-    /**
-     * @brief Gets the eeprom(s) used internally by the camera. This gives
-     * direct access to the eeprom(s) of the camera.
-     * @param[out] eeproms - List of internal eeproms
-     * @return Status
-     */
-    virtual Status
-    getEeproms(std::vector<std::shared_ptr<StorageInterface>> &eeproms) = 0;
-
-    /**
-     * @brief Gets the temperature sensors used internally by the camera.
-     * This gives direct access to the temperature sensor(s) of the camera.
-     * @param[out] sensors - List of internal temperature sensors
-     * @return Status
-     */
-    virtual Status getTemperatureSensors(
-        std::vector<std::shared_ptr<TemperatureSensorInterface>> &sensors) = 0;
 
     /**
      * @brief Enable the generation of a XYZ frame. The XYZ frame can be enabled

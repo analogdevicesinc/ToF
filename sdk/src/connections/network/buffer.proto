@@ -30,22 +30,8 @@ message CardImageVersion
   string ubootversion = 30;
 }
 
-message StorageInfo
-{
-  string name = 10;
-  int32 id = 20;
-}
-
-message TemperatureSensorInfo
-{
-  string name = 10;
-  int32 id = 20;
-}
-
 message SensorsInfo
 {
-  repeated StorageInfo storages = 10;               // Information about available storages
-  repeated TemperatureSensorInfo temp_sensors = 20; // Information about available temperature sensors
   ImagerInfo image_sensors = 30;                  // Information abouth available depth sensors
 }
 

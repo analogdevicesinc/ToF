@@ -19,17 +19,6 @@ aditof::Status OfflineSensorEnumerator::searchSensors() {
     return aditof::Status::OK;
 }
 
-aditof::Status OfflineSensorEnumerator::getStorages(
-    std::vector<std::shared_ptr<aditof::StorageInterface>> &storages) {
-    return aditof::Status::UNAVAILABLE;
-}
-
-aditof::Status OfflineSensorEnumerator::getTemperatureSensors(
-    std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
-        &temperatureSensors) {
-    return aditof::Status::UNAVAILABLE;
-}
-
 aditof::Status
 OfflineSensorEnumerator::getUbootVersion(std::string &uBootVersion) const {
     return aditof::Status::UNAVAILABLE;

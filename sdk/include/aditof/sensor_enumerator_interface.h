@@ -34,8 +34,6 @@
 
 #include "aditof/depth_sensor_interface.h"
 #include "aditof/status_definitions.h"
-#include "aditof/storage_interface.h"
-#include "aditof/temperature_sensor_interface.h"
 
 #include <memory>
 #include <vector>
@@ -67,23 +65,6 @@ class SensorEnumeratorInterface {
     virtual aditof::Status
     getDepthSensors(std::vector<std::shared_ptr<aditof::DepthSensorInterface>>
                         &depthSensors) = 0;
-
-    /**
-     * @brief Get the available storage.
-     * @param[out] storages - list of found storages
-     * @return Status
-     */
-    virtual aditof::Status getStorages(
-        std::vector<std::shared_ptr<aditof::StorageInterface>> &storages) = 0;
-
-    /**
-     * @brief Get the available temperature sensors.
-     * @param[out] temperatureSensors - list of found sensors
-     * @return Status
-     */
-    virtual aditof::Status getTemperatureSensors(
-        std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
-            &temperatureSensors) = 0;
 
     /**
      * @brief Get the U-Boot version that is installed on the embedded system

@@ -248,33 +248,6 @@ PYBIND11_MODULE(aditofpython, m) {
         .def("getControl", &aditof::Camera::getControl, py::arg("control"),
              py::arg("value"))
         .def("getSensor", &aditof::Camera::getSensor)
-        .def(
-            "getEeproms",
-            [](aditof::Camera &camera, py::list eeproms) {
-                std::vector<std::shared_ptr<aditof::StorageInterface>>
-                    eepromList;
-                aditof::Status status = camera.getEeproms(eepromList);
-
-                for (const auto &e : eepromList)
-                    eeproms.append(e);
-
-                return status;
-            },
-            py::arg("eeproms"))
-        .def(
-            "getTemperatureSensors",
-            [](aditof::Camera &camera, py::list tempSensors) {
-                std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
-                    sensorList;
-                aditof::Status status =
-                    camera.getTemperatureSensors(sensorList);
-
-                for (const auto &s : sensorList)
-                    tempSensors.append(s);
-
-                return status;
-            },
-            py::arg("tempSensors"))
         .def("adsd3500SetToggleMode", &aditof::Camera::adsd3500SetToggleMode,
              py::arg("mode"))
         .def("adsd3500ToggleFsync", &aditof::Camera::adsd3500ToggleFsync)
@@ -548,63 +521,6 @@ PYBIND11_MODULE(aditofpython, m) {
                 return device.writeRegisters(addrPtr, dataPtr, length);
             },
             py::arg("address"), py::arg("data"), py::arg("length"));
-
-    // StorageInterface
-    py::class_<aditof::StorageInterface,
-               std::shared_ptr<aditof::StorageInterface>>(m, "StorageInterface")
-        .def("open", &aditof::StorageInterface::open)
-        .def(
-            "read",
-            [](aditof::StorageInterface &eeprom, uint32_t address,
-               py::array_t<uint8_t> data, size_t length) {
-                py::buffer_info buffInfo = data.request(true);
-                uint8_t *ptr = static_cast<uint8_t *>(buffInfo.ptr);
-
-                return eeprom.read(address, ptr, length);
-            },
-            py::arg("address"), py::arg("data"), py::arg("length"))
-        .def(
-            "write",
-            [](aditof::StorageInterface &eeprom, uint32_t address,
-               py::array_t<uint8_t> data, size_t length) {
-                py::buffer_info buffInfo = data.request();
-                uint8_t *ptr = static_cast<uint8_t *>(buffInfo.ptr);
-
-                return eeprom.write(address, ptr, length);
-            },
-            py::arg("address"), py::arg("data"), py::arg("length"))
-        .def("close", &aditof::StorageInterface::close)
-        .def("getName", [](aditof::StorageInterface &eeprom) {
-            std::string n;
-            eeprom.getName(n);
-
-            return n;
-        });
-
-    // TemperatureSensorInterface
-    py::class_<aditof::TemperatureSensorInterface,
-               std::shared_ptr<aditof::TemperatureSensorInterface>>(
-        m, "TemperatureSensorInterface")
-        .def("open", &aditof::TemperatureSensorInterface::open)
-        .def(
-            "read",
-            [](aditof::TemperatureSensorInterface &sensor,
-               py::list temperature) {
-                float temp;
-                aditof::Status status = sensor.read(temp);
-                if (status == aditof::Status::OK) {
-                    temperature.append(temp);
-                }
-                return status;
-            },
-            py::arg("temperature"))
-        .def("close", &aditof::TemperatureSensorInterface::close)
-        .def("getName", [](aditof::TemperatureSensorInterface &sensor) {
-            std::string n;
-            sensor.getName(n);
-
-            return n;
-        });
 
     //SDK version
     m.def("getApiVersion", &aditof::getApiVersion);

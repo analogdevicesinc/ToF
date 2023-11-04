@@ -32,8 +32,6 @@
 #include "network_sensor_enumerator.h"
 #include "connections/network/network.h"
 #include "connections/network/network_depth_sensor.h"
-#include "connections/network/network_storage.h"
-#include "connections/network/network_temperature_sensor.h"
 
 #ifdef USE_GLOG
 #include <glog/logging.h>
@@ -90,20 +88,6 @@ Status NetworkSensorEnumerator::searchSensors() {
 
     m_imageSensorsInfo = pbSensorsInfo.image_sensors().name();
 
-    for (int i = 0; i < pbSensorsInfo.storages().size(); ++i) {
-        std::string name = pbSensorsInfo.storages(i).name();
-        unsigned int id = pbSensorsInfo.storages(i).id();
-        m_storagesInfo.emplace_back(
-            std::pair<std::string, unsigned int>(name, id));
-    }
-
-    for (int i = 0; i < pbSensorsInfo.temp_sensors().size(); ++i) {
-        std::string name = pbSensorsInfo.temp_sensors(i).name();
-        unsigned int id = pbSensorsInfo.temp_sensors(i).id();
-        m_temperatureSensorsInfo.emplace_back(
-            std::pair<std::string, unsigned int>(name, id));
-    }
-
     m_kernelVersion = msg.card_image_version().kernelversion();
     m_sdVersion = msg.card_image_version().sdversion();
     m_uBootVersion = msg.card_image_version().ubootversion();
@@ -121,35 +105,6 @@ Status NetworkSensorEnumerator::getDepthSensors(
     auto sensor =
         std::make_shared<NetworkDepthSensor>(m_imageSensorsInfo, m_ip);
     depthSensors.emplace_back(sensor);
-
-    return Status::OK;
-}
-
-Status NetworkSensorEnumerator::getStorages(
-    std::vector<std::shared_ptr<StorageInterface>> &storages) {
-
-    storages.clear();
-
-    for (const auto &nameAndId : m_storagesInfo) {
-        auto storage =
-            std::make_shared<NetworkStorage>(nameAndId.first, nameAndId.second);
-        storages.emplace_back(storage);
-    }
-
-    return Status::OK;
-}
-
-Status NetworkSensorEnumerator::getTemperatureSensors(
-    std::vector<std::shared_ptr<TemperatureSensorInterface>>
-        &temperatureSensors) {
-
-    temperatureSensors.clear();
-
-    for (const auto &nameAndId : m_temperatureSensorsInfo) {
-        auto tSensor = std::make_shared<NetworkTemperatureSensor>(
-            nameAndId.first, nameAndId.second);
-        temperatureSensors.emplace_back(tSensor);
-    }
 
     return Status::OK;
 }

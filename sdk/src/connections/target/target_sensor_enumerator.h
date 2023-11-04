@@ -44,12 +44,6 @@ class TargetSensorEnumerator : public aditof::SensorEnumeratorInterface {
     virtual aditof::Status
     getDepthSensors(std::vector<std::shared_ptr<aditof::DepthSensorInterface>>
                         &depthSensors) override;
-    virtual aditof::Status getStorages(
-        std::vector<std::shared_ptr<aditof::StorageInterface>> &storages)
-        override;
-    virtual aditof::Status getTemperatureSensors(
-        std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
-            &temperatureSensors) override;
     virtual aditof::Status
     getUbootVersion(std::string &uBootVersion) const override;
     virtual aditof::Status
@@ -61,15 +55,7 @@ class TargetSensorEnumerator : public aditof::SensorEnumeratorInterface {
 
   private:
     enum class SensorType {
-        SENSOR_ADSD3100, //!< ADSD ITOF sensor
-        SENSOR_ADSD3500  //!< ADSD3500 sensor
-    };
-
-    enum class TempSensorType { NO_TYPE };
-
-    struct StorageInfo {
-        std::string driverName;
-        std::string driverPath;
+        SENSOR_ADSD3500 //!< ADSD3500 sensor
     };
 
     struct SensorInfo {
@@ -79,13 +65,6 @@ class TargetSensorEnumerator : public aditof::SensorEnumeratorInterface {
         std::string captureDev;
     };
 
-    struct TemperatureSensorInfo {
-        TempSensorType sensorType;
-        std::string driverPath;
-        int i2c_address;
-        std::string name;
-    };
-
     struct SoftwareVersions {
         std::string cardVersion;
         std::string kernelVersion;
@@ -93,8 +72,6 @@ class TargetSensorEnumerator : public aditof::SensorEnumeratorInterface {
     };
 
     std::vector<SensorInfo> m_sensorsInfo;
-    std::vector<StorageInfo> m_storagesInfo;
-    std::vector<TemperatureSensorInfo> m_temperatureSensorsInfo;
     std::string m_cardImageVersion;
     std::string m_uBootVersion;
     std::string m_kernelVersion;

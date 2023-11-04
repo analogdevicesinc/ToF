@@ -34,7 +34,4 @@
 
 static const char *CAPTURE_DEVICE_NAME = "vi-output, adsd3500";
 
-static const char *EEPROM_DEV_PATH = "/dev/mtdblock0";
-static const char *EEPROM_NAME = "MX25U6435F";
-
 #endif // TARGET_DEFINITIONS_H

@@ -58,12 +58,9 @@
 
 CameraItof::CameraItof(
     std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
-    std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms,
-    std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &tSensors,
     const std::string &ubootVersion, const std::string &kernelVersion,
     const std::string &sdCardImageVersion)
-    : m_depthSensor(depthSensor), m_devStarted(false),
-      m_eepromInitialized(false), m_adsd3500Enabled(false),
+    : m_depthSensor(depthSensor), m_devStarted(false), m_adsd3500Enabled(false),
       m_loadedConfigData(false), m_xyzEnabled(false), m_xyzSetViaApi(false),
       m_modechange_framedrop_count(0), m_cameraFps(0), m_fsyncMode(-1),
       m_mipiOutputSpeed(-1), m_enableTempCompenstation(-1),
@@ -104,24 +101,6 @@ CameraItof::CameraItof(
         m_isOffline = true;
     }
 
-    // Look for EEPROM
-    auto eeprom_iter =
-        std::find_if(eeproms.begin(), eeproms.end(),
-                     [this](std::shared_ptr<aditof::StorageInterface> e) {
-                         std::string name;
-                         e->getName(name);
-                         return name == m_eepromDeviceName;
-                     });
-    if (eeprom_iter == eeproms.end()) {
-        if (!m_adsd3500Enabled) {
-            LOG(WARNING) << "Could not find " << m_eepromDeviceName
-                         << " while looking for storage";
-        }
-        m_eeprom = NULL;
-    } else {
-        m_eeprom = *eeprom_iter;
-    }
-
     // Additional controls
     if (m_adsd3500Enabled) {
         m_controls.emplace("imagerType", "1");
@@ -134,9 +113,6 @@ CameraItof::~CameraItof() {
     freeConfigData();
     freeComputeLibrary();
     // m_device->toggleFsync();
-    if (m_eepromInitialized) {
-        m_eeprom->close();
-    }
     cleanupXYZtables();
 }
 
@@ -366,24 +342,6 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
                       << m_adsd3500FwGitHash.second;
         } else
             return status;
-    }
-
-    if (m_eeprom) {
-        void *handle;
-        status = m_depthSensor->getHandle(&handle);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Failed to obtain the handle";
-            return status;
-        }
-        // Open communication with EEPROM
-        status = m_eeprom->open(handle);
-        if (status != Status::OK) {
-            std::string name;
-            m_eeprom->getName(name);
-            LOG(ERROR) << "Failed to open EEPROM with name " << name;
-        } else {
-            m_eepromInitialized = true;
-        }
     }
 
     //Populate the data from the json file provided
@@ -943,22 +901,6 @@ aditof::Status CameraItof::getDetails(aditof::CameraDetails &details) const {
 
 std::shared_ptr<aditof::DepthSensorInterface> CameraItof::getSensor() {
     return m_depthSensor;
-}
-
-aditof::Status CameraItof::getEeproms(
-    std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms) {
-    eeproms.clear();
-    eeproms.emplace_back(m_eeprom);
-
-    return aditof::Status::OK;
-}
-
-aditof::Status CameraItof::getTemperatureSensors(
-    std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>> &sensors) {
-    sensors.clear();
-    sensors.emplace_back(m_tempSensor);
-
-    return aditof::Status::OK;
 }
 
 aditof::Status
@@ -1816,14 +1758,6 @@ aditof::Status CameraItof::parseJsonFileContent() {
                 LOG(WARNING) << "Duplicate calibration file ignored: "
                              << json_ccb_calibration_file->valuestring;
             }
-        }
-
-        // Get optional eeprom type name
-        const cJSON *eeprom_type_name =
-            cJSON_GetObjectItemCaseSensitive(config_json, "MODULE_EEPROM_TYPE");
-        if (cJSON_IsString(eeprom_type_name) &&
-            (eeprom_type_name->valuestring != NULL)) {
-            m_eepromDeviceName = eeprom_type_name->valuestring;
         }
 
         // Get depth ini file location
