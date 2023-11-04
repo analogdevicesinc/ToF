@@ -39,17 +39,12 @@
 #include <aditof/adsd_errs.h>
 #include <aditof/camera.h>
 #include <aditof/depth_sensor_interface.h>
-#include <aditof/storage_interface.h>
-#include <aditof/temperature_sensor_interface.h>
 #include <map>
 #include <unordered_map>
 
 class CameraItof : public aditof::Camera {
   public:
     CameraItof(std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
-               std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms,
-               std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
-                   &tSensors,
                const std::string &ubootVersion,
                const std::string &kernelVersion,
                const std::string &sdCardImageVersion);
@@ -78,12 +73,6 @@ class CameraItof : public aditof::Camera {
     aditof::Status getControl(const std::string &control,
                               std::string &value) const override;
     std::shared_ptr<aditof::DepthSensorInterface> getSensor() override;
-    aditof::Status
-    getEeproms(std::vector<std::shared_ptr<aditof::StorageInterface>> &eeproms)
-        override;
-    aditof::Status getTemperatureSensors(
-        std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
-            &sensors) override;
     aditof::Status enableXYZframe(bool enable) override;
     aditof::Status saveModuleCFG(const std::string &filepath) const override;
     aditof::Status saveModuleCCB(const std::string &filepath) override;
@@ -281,14 +270,11 @@ class CameraItof : public aditof::Camera {
 
     aditof::CameraDetails m_details;
     std::shared_ptr<aditof::DepthSensorInterface> m_depthSensor;
-    std::shared_ptr<aditof::StorageInterface> m_eeprom;
-    std::shared_ptr<aditof::TemperatureSensorInterface> m_tempSensor;
     std::unordered_map<std::string, std::string> m_controls;
     std::map<std::string, noArgCallable> m_noArgCallables;
     aditof::ADSDErrors m_adsdErrors;
 
     bool m_devStarted;
-    bool m_eepromInitialized;
     bool m_tempSensorInitialized;
     bool m_adsd3500Enabled;
     bool m_adsd3500_master;

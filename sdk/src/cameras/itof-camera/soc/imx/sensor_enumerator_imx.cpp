@@ -96,12 +96,6 @@ aditof::Status findDevicePathsAtVideo(const std::string &video,
         pos = str.find("adsd3500");
         subdev_path = str.substr(pos + strlen("adsd3500") + 9,
                                  strlen("/dev/v4l-subdevX"));
-
-    } else if (str.find("adsd3100") != string::npos) {
-        device_name = "addicmos";
-        pos = str.find("adsd3100");
-        subdev_path = str.substr(pos + strlen("adsd3100") + 9,
-                                 strlen("/dev/v4l-subdevX"));
     } else {
         return Status::GENERIC_ERROR;
     }
@@ -156,23 +150,12 @@ Status TargetSensorEnumerator::searchSensors() {
 
         if (deviceName == "adsd3500") {
             sInfo.sensorType = SensorType::SENSOR_ADSD3500;
-        } else if (deviceName == "addicmos") {
-            sInfo.sensorType = SensorType::SENSOR_ADSD3100;
         }
 
         sInfo.driverPath = devPath;
         sInfo.subDevPath = subdevPath;
         sInfo.captureDev = CAPTURE_DEVICE_NAME;
         m_sensorsInfo.emplace_back(sInfo);
-    }
-
-    // Check if EEPROM is available
-    struct stat st;
-    if (stat(EEPROM_DEV_PATH, &st) == 0) {
-        StorageInfo eepromInfo;
-        eepromInfo.driverName = EEPROM_NAME;
-        eepromInfo.driverPath = EEPROM_DEV_PATH;
-        m_storagesInfo.emplace_back(eepromInfo);
     }
 
     return status;

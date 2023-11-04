@@ -114,23 +114,12 @@ Status TargetSensorEnumerator::searchSensors() {
 
         if (deviceName == "adsd3500") {
             sInfo.sensorType = SensorType::SENSOR_ADSD3500;
-        } else if (deviceName == "addicmos") {
-            sInfo.sensorType = SensorType::SENSOR_ADSD3100;
         }
 
         sInfo.driverPath = devPath;
         sInfo.subDevPath = subdevPath;
         sInfo.captureDev = CAPTURE_DEVICE_NAME;
         m_sensorsInfo.emplace_back(sInfo);
-    }
-
-    // Check if EEPROM is available
-    struct stat st;
-    if (stat(EEPROM_DEV_PATH, &st) == 0) {
-        StorageInfo eepromInfo;
-        eepromInfo.driverName = EEPROM_NAME;
-        eepromInfo.driverPath = EEPROM_DEV_PATH;
-        m_storagesInfo.emplace_back(eepromInfo);
     }
 
     return status;

@@ -36,7 +36,5 @@
 #include <aditof/frame_definitions.h>
 #include <aditof/frame_operations.h>
 #include <aditof/status_definitions.h>
-#include <aditof/storage_interface.h>
 #include <aditof/system.h>
-#include <aditof/temperature_sensor_interface.h>
 #include <aditof/version.h>

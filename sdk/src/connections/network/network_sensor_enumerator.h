@@ -46,12 +46,6 @@ class NetworkSensorEnumerator : public aditof::SensorEnumeratorInterface {
     virtual aditof::Status
     getDepthSensors(std::vector<std::shared_ptr<aditof::DepthSensorInterface>>
                         &depthSensors) override;
-    virtual aditof::Status getStorages(
-        std::vector<std::shared_ptr<aditof::StorageInterface>> &storages)
-        override;
-    virtual aditof::Status getTemperatureSensors(
-        std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
-            &temperatureSensors) override;
     virtual aditof::Status
     getUbootVersion(std::string &uBootVersion) const override;
     virtual aditof::Status
@@ -61,8 +55,6 @@ class NetworkSensorEnumerator : public aditof::SensorEnumeratorInterface {
   private:
     std::string m_ip;
     std::string m_imageSensorsInfo;
-    std::vector<std::pair<std::string, unsigned int>> m_storagesInfo;
-    std::vector<std::pair<std::string, unsigned int>> m_temperatureSensorsInfo;
 
     static int sensorCount;
     std::string m_uBootVersion;

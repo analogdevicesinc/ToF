@@ -47,23 +47,6 @@ Status UsbSensorEnumerator::getDepthSensors(
     return Status::OK;
 }
 
-Status UsbSensorEnumerator::getStorages(
-    std::vector<std::shared_ptr<StorageInterface>> & /*storages*/) {
-
-    // TO DO: implement this when enabling macos support
-
-    return Status::OK;
-}
-
-Status UsbSensorEnumerator::getTemperatureSensors(
-    std::vector<std::shared_ptr<TemperatureSensorInterface>>
-        & /*temperatureSensors*/) {
-
-    // TO DO: implement this when enabling macos support
-
-    return Status::OK;
-}
-
 aditof::Status
 UsbSensorEnumerator::getUbootVersion(std::string &uBootVersion) const {
     uBootVersion = m_uBootVersion;
