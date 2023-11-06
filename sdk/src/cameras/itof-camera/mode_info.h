@@ -63,7 +63,7 @@ class ModeInfo {
     /**
      * @brief Set imager type. Set mode version.
      * param[in] type - 1 ADSD3100, 2 ADSD3030
-     * param[in] version - 0 Old table, 1 new adsd3100 table, 2 new adsd3500 table
+     * param[in] version - 2 new adsd3500 table, 3 new mixed adsd3500 table
      * @return aditof::Status
      */
     aditof::Status setImagerTypeAndModeVersion(int version, int type);
@@ -102,7 +102,6 @@ class ModeInfo {
 
   private:
     static std::vector<modeInfo> g_modeInfoData;
-    static modeInfo g_newModesAdsd3100[];
     static modeInfo g_newModesAdsd3500Adsd3100[];
     static modeInfo g_newModesAdsd3500Adsd3030[];
     static modeInfo g_newMixedModesAdsd3500Adsd3100[];
