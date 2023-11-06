@@ -169,17 +169,6 @@ class CameraItof : public aditof::Camera {
      */
     aditof::Status getCurrentModeInfo(ModeInfo::modeInfo &info);
 
-    /**
-     * @brief Apply calibration to the frame captured
-     * Based on the platform the camera is connected to Windows/Linux/Mac corresponding implementation of applyCalibrationToFrame is done.
-     * @param[in] frame - Frame captured
-     * @param[in] mode - Mode the camera is set work in
-     * @return aditof::Status
-     * @see aditof::Status
-     */
-    aditof::Status applyCalibrationToFrame(uint16_t *frame,
-                                           const unsigned int mode);
-
     // Methods available only when Adsd3500 is detected as part of the entire setup
 
     /**

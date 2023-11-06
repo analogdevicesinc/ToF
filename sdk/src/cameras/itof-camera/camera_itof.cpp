@@ -1140,11 +1140,6 @@ aditof::Status CameraItof::getCurrentModeInfo(ModeInfo::modeInfo &info) {
     return Status::GENERIC_ERROR;
 }
 
-aditof::Status CameraItof::applyCalibrationToFrame(uint16_t *frame,
-                                                   const unsigned int mode) {
-    return aditof::Status::UNAVAILABLE;
-}
-
 aditof::Status CameraItof::saveModuleCCB(const std::string &filepath) {
     if (filepath.empty()) {
         LOG(ERROR) << "File path where CCB should be written is empty.";
