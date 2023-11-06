@@ -273,14 +273,14 @@ class ADSDErrors {
      */
     const uint16_t ADSD3100_ERR_PLLLOCK_LOCK2 =
         0x0008; // PLLLOCK error location 2.
-                /**
+    /**
      * @brief PLLLOCK error location 3.
      * Imager error codes read via "Get Imager Error Code" (0x0038) command
      * Note, this only valid if "Get Status" (0x0020) reports a value of "ADSD3500_STATUS_IMAGER_ERROR" (0x0010)
      */
     const uint16_t ADSD3100_ERR_PLLLOCK_LOCK3 =
         0x000C; // PLLLOCK error location 3.
-                /**
+    /**
      * @brief Imager sensor overheat.
      * Imager error codes read via "Get Imager Error Code" (0x0038) command
      * Note, this only valid if "Get Status" (0x0020) reports a value of "ADSD3500_STATUS_IMAGER_ERROR" (0x0010)
