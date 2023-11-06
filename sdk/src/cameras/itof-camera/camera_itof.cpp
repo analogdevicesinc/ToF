@@ -63,10 +63,9 @@ CameraItof::CameraItof(
     const std::string &sdCardImageVersion)
     : m_depthSensor(depthSensor), m_devStarted(false), m_adsd3500Enabled(false),
       m_loadedConfigData(false), m_xyzEnabled(false), m_xyzSetViaApi(false),
-      m_modechange_framedrop_count(0), m_cameraFps(0), m_fsyncMode(-1),
-      m_mipiOutputSpeed(-1), m_enableTempCompenstation(-1),
-      m_enableMetaDatainAB(-1), m_enableEdgeConfidence(-1),
-      m_adsd3500ImagerType(0), m_modesVersion(0),
+      m_cameraFps(0), m_fsyncMode(-1), m_mipiOutputSpeed(-1),
+      m_enableTempCompenstation(-1), m_enableMetaDatainAB(-1),
+      m_enableEdgeConfidence(-1), m_adsd3500ImagerType(0), m_modesVersion(0),
       m_targetFramesAreComputed(false),
       m_xyzTable({nullptr, nullptr, nullptr}) {
 #ifdef DEPTH_COMPUTE_ON_TARGET
