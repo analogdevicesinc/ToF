@@ -2088,7 +2088,7 @@ aditof::Status CameraItof::adsd3500GetStatus(int &chipStatus,
             if (m_adsd3500ImagerType == 1) {
                 LOG(ERROR) << "ADSD3100 imager error detected: "
                            << m_adsdErrors.GetStringADSD3100(imagerStatus);
-            } else if (m_adsd3500ImagerType = 2) {
+            } else if (m_adsd3500ImagerType == 2) {
                 LOG(ERROR) << "ADSD3030 imager error detected: "
                            << m_adsdErrors.GetStringADSD3030(imagerStatus);
             } else {
