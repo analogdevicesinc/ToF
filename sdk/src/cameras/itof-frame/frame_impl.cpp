@@ -32,7 +32,6 @@
 
 #include "frame_impl.h"
 #include "aditof/frame_operations.h"
-#include "aditof_internal.h"
 
 #include <algorithm>
 #include <cmath>
@@ -44,6 +43,8 @@
 #include <aditof/log.h>
 #endif
 #include <unordered_map>
+
+static const int skMetaDataBytesCount = 128;
 
 const std::vector<std::string> availableAttributes = {
     "mode",       "width",          "height",
@@ -60,7 +61,7 @@ FrameImpl::FrameImpl() : m_implData(new FrameImpl::ImplData) {
     for (auto attributeKey : availableAttributes) {
         m_attributes.emplace(attributeKey, "");
         if (attributeKey == "embed_hdr_length") {
-            m_attributes[attributeKey] = std::to_string(EMBED_HDR_LENGTH);
+            m_attributes[attributeKey] = std::to_string(skMetaDataBytesCount);
         }
     }
 }

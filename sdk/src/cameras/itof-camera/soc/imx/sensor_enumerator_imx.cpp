@@ -31,7 +31,6 @@
  */
 
 #include "connections/target/target_sensor_enumerator.h"
-#include "sensor_names.h"
 #include "target_definitions.h"
 
 #include <dirent.h>

@@ -32,7 +32,6 @@
 #include "camera_itof.h"
 #include "aditof/frame.h"
 #include "aditof/frame_operations.h"
-#include "aditof_internal.h"
 
 #include "cJSON.h"
 #include "crc.h"
@@ -55,6 +54,8 @@
 #include <iterator>
 #include <thread>
 #include <vector>
+
+static const int skMetaDataBytesCount = 128;
 
 CameraItof::CameraItof(
     std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
@@ -718,7 +719,8 @@ aditof::Status setAttributesByMode(aditof::Frame &frame,
                                    const ModeInfo::modeInfo &modeInfo) {
     aditof::Status status = aditof::Status::OK;
 
-    frame.setAttribute("embed_hdr_length", std::to_string(EMBED_HDR_LENGTH));
+    frame.setAttribute("embed_hdr_length",
+                       std::to_string(skMetaDataBytesCount));
     frame.setAttribute("mode", std::to_string(modeInfo.mode));
     frame.setAttribute("width", std::to_string(modeInfo.width));
     frame.setAttribute("height", std::to_string(modeInfo.height));
