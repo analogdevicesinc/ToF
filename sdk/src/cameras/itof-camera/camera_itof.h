@@ -160,15 +160,6 @@ class CameraItof : public aditof::Camera {
     void freeConfigData(void);
 
     /**
-     * @brief Tests whether SDK received valid frame feild with valid totalcaptures set for particular mode.
-     * @param[in] numTotalFrames - This is received Totalcaptures value after parsing the incoming frame.
-     *                             This will be verified aganist the expected Totalcaptures for a particular mode set
-     * @return aditof::Status
-     * @see aditof::Status
-     */
-    aditof::Status isValidFrame(const int numTotalFrames);
-
-    /**
      * @brief Gets the information about the current mode set
      * @param[out] info - This gets filled with all the mode information (width, height, subframes, embed_width, embed_height)
      * @return aditof::Status
