@@ -130,12 +130,6 @@ class CameraItof : public aditof::Camera {
 
   private:
     /**
-     * @brief Default ADI module flash memory is Macronix MX25U6435F.
-     * Override by defining a MODULE_EEPROM_TYPE name in configuration JSON file.
-     */
-    std::string m_eepromDeviceName = "MX25U6435F";
-
-    /**
      * @brief Initializes the Depth compute libraries
      * @return aditof::Status
      * @see aditof::Status
