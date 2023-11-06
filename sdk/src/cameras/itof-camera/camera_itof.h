@@ -185,23 +185,6 @@ class CameraItof : public aditof::Camera {
     aditof::Status isValidMode(const uint8_t hdr_mode);
 
     /**
-     * @brief Processes the incoming frame, verifies whether the frame has all valid subcaptures, parses through each subcapture and verifies each sub-capture has valid
-     *        CHIP_ID, CaptureID, Frame number. It stores the raw capture, embedded header in separate buffer passed in
-     * @param[in] rawFrame - Incoming Raw frame with headers and actual capture data
-     * @param[in] embed_height - rawFrame height
-     * @param[in] embed_width - rawFrame width
-     * @param[in/out] frameDetails - send in the frameDetails for a particular frame, frameNumber for a frame is updated
-     * @param[out] captureData - Valid buffer passed in to store the capture data, later this will be used to calculate the depth.
-     * @param[out] head - Valid buffer passed in to store the cheader feilds.
-     * @return aditof::Status
-     * @see aditof::Status
-     */
-    aditof::Status processFrame(uint8_t *rawFrame, uint16_t *captureData,
-                                uint8_t *head, const uint16_t embed_height,
-                                const uint16_t embed_width,
-                                aditof::Frame *frame);
-
-    /**
      * @brief Gets the information about the current mode set
      * @param[out] info - This gets filled with all the mode information (width, height, subframes, embed_width, embed_height)
      * @return aditof::Status
