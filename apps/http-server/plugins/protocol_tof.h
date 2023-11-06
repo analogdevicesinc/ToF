@@ -63,7 +63,7 @@ string availableFrameTypes_prefix = "ft:";
 string availableFrameTypes = "";
 // This string is returned upon reqest from application. Needs data populated with supported frame formats
 string availableFormats_prefix = "format:";
-string availableFormats = "depth,ab,depth+ab";
+string availableFormats = "";
 
 string process_message(char *in) {
     std::string message = (const char *)in;
@@ -83,6 +83,7 @@ aditof::Status stopCamera();
 aditof::Status requestFrame();
 aditof::Status setFrameType(std::string frameTypeNew);
 aditof::Status setFormat(std::string formatTypeNew);
+aditof::Status getMetadataInfo();
 static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
                         void *user, void *in, size_t len);
 

@@ -154,12 +154,62 @@ aditof::Status requestFrame() {
     return status;
 }
 
+aditof::Status getMetadataInfo() {
+    status = aditof::Status::OK;
+    if (!cameraStarted) {
+        camera->start();
+        cameraStarted = true;
+    }
+    status = camera->requestFrame(frame.get());
+    if (status != aditof::Status::OK) {
+        send_error_message(std::string("Error requesting frame"));
+        return status;
+    }
+
+    // Updating metadata in case frame has changed
+    if (metaDataInfo == NULL) {
+        metaDataInfo = (aditof::Metadata *)malloc(sizeof(aditof::Metadata));
+        status = frame.get()->getMetadataStruct(*metaDataInfo);
+        if (status != aditof::Status::OK) {
+            send_error_message(std::string("Error requesting frame metadata"));
+            return status;
+        }
+    }
+
+    availableFormats = "";
+
+    if (metaDataInfo->bitsInDepth != 0) {
+        availableFormats += "depth";
+    }
+    if (metaDataInfo->bitsInAb != 0) {
+        if (!availableFormats.empty())
+            availableFormats += ",";
+        availableFormats += "ab";
+    }
+    if (metaDataInfo->bitsInAb != 0 && metaDataInfo->bitsInDepth != 0) {
+        if (!availableFormats.empty())
+            availableFormats += ",";
+        availableFormats += "depth+ab";
+    }
+
+    frameWidth = metaDataInfo->width;
+    frameHeight = metaDataInfo->height;
+
+    return status;
+}
+
 aditof::Status setFrameType(std::string frameTypeNew) {
     status = aditof::Status::OK;
 
     status = camera->setFrameType(frameTypeNew);
     if (status != aditof::Status::OK) {
         send_error_message(std::string("Error while selecting frame type"));
+        return status;
+    }
+
+    status = getMetadataInfo();
+    if (status != aditof::Status::OK) {
+        send_error_message(std::string("Error while getting metadata info"));
         return status;
     }
 
@@ -171,30 +221,6 @@ aditof::Status setFrameType(std::string frameTypeNew) {
         depthShiftValue = 0;
         irShiftValue = 0;
     }
-
-    CameraDetails details;
-    status = camera->getDetails(details);
-    if (status != aditof::Status::OK) {
-        send_error_message(
-            std::string("Error while requesting camera details"));
-        return status;
-    }
-    std::vector<FrameDataDetails> tmp_frameDetails =
-        details.frameType.dataDetails;
-    std::string dataType = "depth";
-
-    auto detailsIter =
-        std::find_if(tmp_frameDetails.begin(), tmp_frameDetails.end(),
-                     [&dataType](const aditof::FrameDataDetails &details) {
-                         return dataType == details.type;
-                     });
-    if (detailsIter == tmp_frameDetails.end()) {
-        send_error_message(std::string("Error while requesting frame details"));
-        return aditof::Status::GENERIC_ERROR;
-    }
-
-    frameWidth = detailsIter->width;
-    frameHeight = detailsIter->height;
 
     std::cout << "Sending width and height: " << frameWidth << ", "
               << frameHeight << std::endl;
