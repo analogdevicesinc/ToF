@@ -101,11 +101,6 @@ CameraItof::CameraItof(
         m_isOffline = true;
     }
 
-    // Additional controls
-    if (m_adsd3500Enabled) {
-        m_controls.emplace("imagerType", "1");
-    }
-
     m_adsd3500_master = true;
 }
 
@@ -283,7 +278,6 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
                           "previoud LOG message.";
             return status;
         }
-        setControl("imagerType", std::to_string(m_adsd3500ImagerType));
         status = m_depthSensor->setControl("modeInfoVersion",
                                            std::to_string(m_modesVersion));
         if (status != Status::OK) {
