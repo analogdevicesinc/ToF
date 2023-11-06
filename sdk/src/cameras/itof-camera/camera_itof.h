@@ -246,7 +246,6 @@ class CameraItof : public aditof::Camera {
     bool m_xyzEnabled;
     bool m_xyzSetViaApi;
     bool m_pcmFrame;
-    uint16_t m_modechange_framedrop_count = 0;
     std::vector<aditof::DepthSensorFrameType> m_availableSensorFrameTypes;
     std::vector<std::pair<std::string, int32_t>> m_sensor_settings;
     int16_t m_cameraFps;
