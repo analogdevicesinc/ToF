@@ -1122,21 +1122,6 @@ aditof::Status CameraItof::readSerialNumber(std::string &serialNumber,
     return status;
 }
 
-aditof::Status CameraItof::isValidFrame(const int numTotalFrames) {
-    using namespace aditof;
-
-    ModeInfo::modeInfo aModeInfo;
-    if (Status::OK != getCurrentModeInfo(aModeInfo)) {
-        return Status::GENERIC_ERROR;
-    }
-
-    if (aModeInfo.subframes == numTotalFrames) {
-        return (aditof::Status::OK);
-    }
-
-    return (aditof::Status::GENERIC_ERROR);
-}
-
 aditof::Status CameraItof::getCurrentModeInfo(ModeInfo::modeInfo &info) {
     using namespace aditof;
     Status status = Status::OK;
