@@ -1137,19 +1137,6 @@ aditof::Status CameraItof::isValidFrame(const int numTotalFrames) {
     return (aditof::Status::GENERIC_ERROR);
 }
 
-aditof::Status CameraItof::isValidMode(const uint8_t /*hdr_mode*/) {
-    /*  using namespace aditof;
-    unsigned int mode = 0;
-    m_depthSensor->getMode(mode);
-
-    if ((static_cast<uint8_t>(mode)) == (hdr_mode)) {
-        return (aditof::Status::OK);
-    }
-
-    return (aditof::Status::GENERIC_ERROR);*/
-    return aditof::Status::UNAVAILABLE;
-}
-
 aditof::Status CameraItof::getCurrentModeInfo(ModeInfo::modeInfo &info) {
     using namespace aditof;
     Status status = Status::OK;
