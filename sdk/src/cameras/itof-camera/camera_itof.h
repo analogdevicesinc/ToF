@@ -175,16 +175,6 @@ class CameraItof : public aditof::Camera {
     aditof::Status isValidFrame(const int numTotalFrames);
 
     /**
-     * @brief Tests whether SDK received valid mode feild based on what mode user has set.
-     * @param[in] hdr_mode - This is received Mode value after parsing the incoming frame.
-     *                       This will be verified aganist the expected Mode value. This is make sure when the user changes the mode, there might be
-     *                       still some frames stored in UVC pipe for previous mode, this check drops those frames until we get new frame with the new mode feild in the embedded header
-     * @return aditof::Status
-     * @see aditof::Status
-     */
-    aditof::Status isValidMode(const uint8_t hdr_mode);
-
-    /**
      * @brief Gets the information about the current mode set
      * @param[out] info - This gets filled with all the mode information (width, height, subframes, embed_width, embed_height)
      * @return aditof::Status
