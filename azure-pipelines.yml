@@ -14,7 +14,8 @@ variables:
                         -DWITH_OPENCV=1 \ 
                         -DWITH_EXAMPLES=1 \
                         -DWITH_DOC=0 \
-                        -DWITH_OPEN3D=0"
+                        -DWITH_OPEN3D=0 \ 
+                        -DCI_BUILD=1"
   NUM_JOBS: 4
   IS_PULL_REQUEST: ${{ eq('$(Build.Reason)', 'PullRequest') }}
   BRANCH_NAME: $(Build.SourceBranchName)
