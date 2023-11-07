@@ -29,6 +29,8 @@ export IGC_EnableDPEmulation=1 
 
 ## Building the SDK only
 
+See [here](../../cmake/readme.md) for details on the cmake options.
+
 Download the latest Linux installer - as of writing v4.3.0.
 https://github.com/analogdevicesinc/ToF/releases
 
