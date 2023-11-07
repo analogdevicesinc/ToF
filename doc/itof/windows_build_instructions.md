@@ -78,6 +78,8 @@ cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_6_0\local_path\glog
 
 ## Building the SDK with examples
 
+See [here](../../cmake/readme.md) for details on the cmake options.
+
 ### Additional pre-requisites
 * None
 
