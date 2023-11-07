@@ -12,9 +12,8 @@ using namespace std;
 using namespace aditof;
 
 #define DUMB_PERIOD_US 50000
-
-#define MAX_MESSAGE_LEN (1042 * 1024 * 4 + 200) // For Quarter Megapixel
-// #define MAX_MESSAGE_LEN (524 + 100) // For Quarter Megapixel
+#define HEADER_SIZE LWS_PRE
+#define MAX_MESSAGE_LEN (1042 * 1024 * 2 + HEADER_SIZE) // For Megapixel
 
 struct pss__tof {
     int number;
@@ -31,17 +30,22 @@ struct vhd__tof {
 aditof::System tofSystem;
 std::vector<std::shared_ptr<aditof::Camera>> cameras;
 shared_ptr<aditof::Camera> camera;
+
+// Frame related variables
 static aditof::Frame frame;
+uint16_t frameWidth;
+uint16_t frameHeight;
+uint16_t *frameData = NULL;
+uint16_t *frameDataDepth;
+uint16_t *frameDataIr;
+// uint8_t *frameToSend = NULL;
+
 aditof::Status status;
 static bool cameraStarted = false;
 static std::string frameContent;
 static aditof::FrameDetails frameDetalis;
 static int minRange = 30;
 static int maxRange = 4000;
-
-static const uint8_t colormap[3 * 256] = {
-#include "colormap.txt"
-};
 
 //ToF init function
 int initializeSystem(string configFile) {
@@ -73,7 +77,7 @@ uint8_t buf[LWS_PRE + MAX_MESSAGE_LEN], *p = &buf[LWS_PRE];
 
 //Available frametypes
 string availableFrameTypes = "ft:sr-native,sr-qnative,lr-native,lr-qnative";
-string availableFormats = "format:depth,ir";
+string availableFormats = "format:depth,ir,depth+ir";
 
 /**
  * according to protocol take into consideration messages until the first '\n' character
@@ -108,6 +112,11 @@ int send_frame(struct lws *wsi, const char *msg, int len) {
     }
     std::cout << "Response sent to Host\n";
     return 0;
+}
+
+void send_error_message(struct lws *wsi, std::string msg) {
+    msg = std::string("error_log:") + msg;
+    send_message(wsi, msg.c_str(), msg.length());
 }
 
 static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
@@ -161,6 +170,9 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
                 initializeSystem("config/config_adsd3500_adsd3100.json");
             } else if (message == "open:adsd3030") {
                 initializeSystem("config/config_adsd3500_adsd3030.json");
+            } else {
+                send_error_message(wsi, std::string("Unsupported camera type"));
+                break;
             }
 
             // Send available frame types
@@ -173,10 +185,30 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
             std::cout << "Messeage from HOST: " << message << "\n";
 
             int pos = message.find(":");
-            camera->setFrameType(message.substr(pos + 1));
+            status = camera->setFrameType(message.substr(pos + 1));
+            if (status != aditof::Status::OK) {
+                send_error_message(
+                    wsi, std::string("Error while selecting frame type"));
+                break;
+            }
+            status = camera->requestFrame(&frame);
+            if (status != aditof::Status::OK) {
+                send_error_message(wsi,
+                                   std::string("Error while requesting frame"));
+                //     SOLVE THIS !!!!
+                // break;
+            }
+            status = frame.getDetails(frameDetalis);
+            if (status != aditof::Status::OK) {
+                send_error_message(
+                    wsi, std::string("Error while getting frame details"));
+                break;
+            }
+            frameWidth = frameDetalis.width;
+            frameHeight = frameDetalis.height;
 
-            //TO DO: create this dinamicaly
-            std::string availableSize = "size:512,640";
+            std::string availableSize = "size:" + std::to_string(frameWidth) +
+                                        "," + std::to_string(frameHeight);
 
             // Send available size for the frame:
             send_message(wsi, availableSize.c_str(), availableSize.length());
@@ -204,44 +236,62 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
                 camera->start();
                 cameraStarted = true;
             }
-
             status = camera->requestFrame(&frame);
-            status = frame.getDetails(frameDetalis);
-
-            int width = frameDetalis.width;
-            int height = frameDetalis.height;
-
-            uint16_t *frameData;
-            frame.getData(frameContent, &frameData);
-
-            uint8_t *frameToSend =
-                (uint8_t *)malloc(sizeof(uint8_t) * width * height * 4);
-
-            if (frameContent == "depth") {
-                for (int i = 0; i < width * height * 4; i = i + 4) {
-                    frameData[i / 4] = (frameData[i / 4] - minRange) * 255 /
-                                       (maxRange - minRange);
-                    memcpy(frameToSend + i,
-                           &colormap[(uint8_t)(frameData[i / 4] * 3)], 3);
-                    frameToSend[i + 3] = 255;
-                }
-            } else {
-                for (int i = 0; i < width * height * 4; i = i + 4) {
-                    frameToSend[i] = (uint8_t)frameData[i / 4];
-                    frameToSend[i + 1] = (uint8_t)frameData[i / 4];
-                    frameToSend[i + 2] = (uint8_t)frameData[i / 4];
-                    frameToSend[i + 3] = 255;
-                }
+            if (status != aditof::Status::OK) {
+                send_error_message(wsi, std::string("Error requesting frame"));
+                break;
             }
 
-            send_frame(wsi, (const char *)frameToSend,
-                       (width * height * 4 + 200));
+            if (frameContent == std::string("depth") ||
+                frameContent == std::string("ir")) {
 
-            free(frameToSend);
+                status = frame.getData(frameContent, &frameData);
+
+                if (status != aditof::Status::OK) {
+                    send_error_message(wsi,
+                                       std::string("Failed to get frame data"));
+                }
+
+                uint8_t *frameToSend = (uint8_t *)malloc(
+                    sizeof(uint8_t) * frameWidth * frameHeight);
+                for (int i = 0; i < frameWidth * frameHeight; i++) {
+                    frameToSend[i] = (uint8_t)((frameData[i] >> 4) & 0xff);
+                }
+                send_frame(wsi, (const char *)frameToSend,
+                           frameWidth * frameHeight);
+                free(frameToSend);
+            } else if (frameContent == std::string("depth+ir")) {
+
+                status = frame.getData(std::string("depth"), &frameDataDepth);
+                status = frame.getData(std::string("ir"), &frameDataIr);
+
+                if (status != aditof::Status::OK) {
+                    send_error_message(wsi,
+                                       std::string("Failed to get frame data"));
+                }
+
+                uint8_t *frameToSend = (uint8_t *)malloc(
+                    sizeof(uint8_t) * frameWidth * frameHeight * 2);
+
+                for (int i = 0; i < frameWidth * frameHeight; i++) {
+                    frameToSend[i] = (uint8_t)((frameDataDepth[i] >> 4) & 0xff);
+                    frameToSend[i + frameWidth * frameHeight] =
+                        (uint8_t)((frameDataIr[i] >> 4) & 0xff);
+                }
+
+                send_frame(wsi, (const char *)frameToSend,
+                           frameWidth * frameHeight * 2);
+                free(frameToSend);
+
+            } else {
+                send_error_message(wsi,
+                                   std::string("Unsupported data format type"));
+            }
+
         } else if (strncmp((const char *)in, "stop\n", 5) == 0) {
             // Set chosen frame type
             std::string message = process_message((char *)in);
-            std::cout << "Messeage from HOST: " << message << "\n";
+            std::cout << "Message from HOST: " << message << "\n";
 
             status = camera->stop();
             cameraStarted = false;

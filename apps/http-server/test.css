@@ -197,13 +197,14 @@ td.t { vertical-align:middle;
 .column_left {
 		float: left;
 		width: 25%;
+                max-width: 200px;
 		padding: 10px;
 		height: 100vh;
 }
 
 .column_right {
 		float: left;
-		width: 75%;
+		width: calc(100% - 200px);
 		padding: 10px;
 		height: 100vh;
 }
