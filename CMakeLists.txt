@@ -26,12 +26,13 @@ option(WITH_ROS "Build ros bindings?" OFF)
 option(WITH_ROS2 "Build ros2 bindings?" OFF)
 option(WITH_NETWORK "Build network interface?" ON)
 option(WITH_OFFLINE "Build offline interface?" OFF)
-option(USE_DEPTH_COMPUTE_STUBS "Use empty generated libs?" OFF)
+option(USE_DEPTH_COMPUTE_STUBS "Use empty generated libs?" ON)
 option(USE_DEPTH_COMPUTE_OPENSOURCE "Use an open source implementation?" OFF)
 option(USE_DEPTH_COMPUTE_ON_TARGET "Use depth compute on target?" ON)
 option(WITH_GLOG_DEPENDENCY "Build with GLOG dependency to be used for logging" ON)
 option(WITH_PROTOBUF_DEPENDENCY "Build with PROTOBUF dependency to be used for serializing messages" ON)
 option(WITH_COMMAND_LINE_TOOLS "Build with embedded Linux command line tools" ON)
+option(CI_BUILD "Build for CI" OFF)
 
 
 ################################## Git ########################################
@@ -95,6 +96,11 @@ if(${SELECTED_PLATFORMS} GREATER 1)
 elseif(${SELECTED_PLATFORMS} EQUAL 1)
     add_definitions(-DTARGET)
     set(ON_TARGET TRUE)
+    set(USE_DEPTH_COMPUTE_STUBS OFF)
+endif()
+
+if(CI_BUILD)
+    set(USE_DEPTH_COMPUTE_STUBS ON)
 endif()
 
 if (USE_ADSD3030)
