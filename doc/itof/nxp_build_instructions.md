@@ -21,6 +21,8 @@ Other dependencies are already installed on the NXP.
 
 ## Building the SDK only
 
+See [here](../../cmake/readme.md) for details on the cmake options.
+
 ### Pre-requisites
 * CMake
 * Glog v0.6.0
