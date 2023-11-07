@@ -532,7 +532,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     configureSensorFrameType();
     setMode(frameType);
 
-    if (m_enableMetaDatainAB >= 0) {
+    if (m_enableMetaDatainAB > 0) {
         if (!m_pcmFrame) {
             status = adsd3500SetEnableEmbeddedHeaderinAB(m_enableMetaDatainAB);
             if (status != Status::OK) {
