@@ -12,7 +12,7 @@ using namespace std;
 using namespace aditof;
 
 #define DUMB_PERIOD_US 50000
-#define HEADER_SIZE LWS_PRE
+#define HEADER_SIZE 0
 #define MAX_MESSAGE_LEN (1042 * 1024 * 2 + HEADER_SIZE) // For Megapixel
 
 struct pss__tof {
@@ -255,10 +255,12 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
                 uint8_t *frameToSend = (uint8_t *)malloc(
                     sizeof(uint8_t) * frameWidth * frameHeight);
                 for (int i = 0; i < frameWidth * frameHeight; i++) {
-                    frameToSend[i] = (uint8_t)((frameData[i] >> 4) & 0xff);
+                    if (frameContent == std::string("depth"))
+                        frameToSend[i] = (uint8_t)((frameData[i] >> 2) & 0xff);
+                    else
+                        frameToSend[i] = (uint8_t)((frameData[i] >> 4) & 0xff);
                 }
-                send_frame(wsi, (const char *)frameToSend,
-                           frameWidth * frameHeight);
+                send_frame(wsi, (const char *)frameToSend, MAX_MESSAGE_LEN);
                 free(frameToSend);
             } else if (frameContent == std::string("depth+ir")) {
 
@@ -274,13 +276,12 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
                     sizeof(uint8_t) * frameWidth * frameHeight * 2);
 
                 for (int i = 0; i < frameWidth * frameHeight; i++) {
-                    frameToSend[i] = (uint8_t)((frameDataDepth[i] >> 4) & 0xff);
+                    frameToSend[i] = (uint8_t)((frameDataDepth[i] >> 2) & 0xff);
                     frameToSend[i + frameWidth * frameHeight] =
                         (uint8_t)((frameDataIr[i] >> 4) & 0xff);
                 }
 
-                send_frame(wsi, (const char *)frameToSend,
-                           frameWidth * frameHeight * 2);
+                send_frame(wsi, (const char *)frameToSend, MAX_MESSAGE_LEN);
                 free(frameToSend);
 
             } else {
