@@ -63,7 +63,7 @@ Based on the following scenarios you will be able to do the following:
 ### Download and build SDK only
 * Follow below steps to download the SDK, generate MS Visual Studio project and build it directly from command line
 ```console
-git clone https://github.com/analogdevicesinc/ToF
+git clone --branch v4.4.0 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build
 cd build
@@ -84,6 +84,7 @@ See [here](../../cmake/readme.md) for details on the cmake options.
 ### Build SDK with examples and in Visual Studio
 - Generate the VisualStudio solution
 ```console
+git clone --branch v4.4.0 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build
 cd build
