@@ -7,8 +7,7 @@ variables:
   WORK_DIR: "$(Agent.BuildDirectory)/s"  
   BUILD_DIR:  "$(WORK_DIR)/build"
   DEPS_DIR: "$(BUILD_DIR)/deps"
-  DEFAULT_CMAKE_FLAGS: "-DUSE_DEPTH_COMPUTE_STUBS=1 \
-                        -DWITH_NETWORK=1 \
+  DEFAULT_CMAKE_FLAGS: "-DWITH_NETWORK=1 \
                         -DWITH_PYTHON=1 \
                         -DWITH_ROS=0 \
                         -DWITH_OPENCV=1 \ 
