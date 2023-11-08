@@ -294,6 +294,8 @@ PYBIND11_MODULE(aditofpython, m) {
              py::arg("value"))
         .def("getControl", &aditof::Camera::getControl, py::arg("control"),
              py::arg("value"))
+        .def("saveModuleCCB", &aditof::Camera::saveModuleCCB,
+             py::arg("filepath"))
         .def("getSensor", &aditof::Camera::getSensor)
         .def("enableXYZframe", &aditof::Camera::enableXYZframe,
              py::arg("enable"))

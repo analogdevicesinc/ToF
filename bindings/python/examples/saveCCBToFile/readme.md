@@ -1,11 +1,11 @@
 # First frame Example
 
 ### Overview
-This example saves the hardwares's CCB to a file
+This tool saves the CCB of the imager's module to a file.
 
 Usage:
 - make sure that the hardware is connected to PC
-- run `python saveCCBToFile.py  [IP ADDRESS OF Camera connected] [Config file]` 
+- run `python saveCCBToFile.py  [IP ADDRESS of module connected] [Config file]` 
 
 Example:
 ```

@@ -45,8 +45,6 @@ if __name__ == "__main__":
         print("Network connection: save_ccb.py <ip> <config>")
         exit(1)
 
-    system = tof.System()
-
     cameras = []
     ip = ""
     if len(sys.argv) == 3 :
@@ -69,16 +67,15 @@ if __name__ == "__main__":
         os.makedirs(dir_path)
         print(f"The directory {dir_path} was created.")
 
+    system = tof.System()
+
     status = system.getCameraList(cameras, ip)
     print("system.getCameraList()", status)
 
     camera1 = cameras[0]
 
-    status = camera1.setControl("initialization_config", config)
-    print("camera1.setControl()", status)
-
-    status = camera1.initialize()
-    print("camera1.initialize()", status)
+    status = camera1.initialize(config)
+    print(f"camera1.initialize({config})", status)
 
     camDetails = tof.CameraDetails()
     status = camera1.getDetails(camDetails)
@@ -107,6 +104,13 @@ if __name__ == "__main__":
     print("p2: ",intrinsicParameters.p2)
     print("p1: ",intrinsicParameters.p1)
 
-    timestamp =  time.strftime('%y%m%d%H%M')
-    status = camera1.setControl("saveModuleCCB",dir_path + ccb_prefix +  timestamp + '.ccb')
-    print("camera1.setControl()", status)
+    ccb_filename = ccb_prefix + time.strftime('%y%m%d%H%M') + '.ccb'
+    status = camera1.saveModuleCCB(dir_path + ccb_filename)
+    print("camera1.saveModuleCCB()", status)
+
+    file_exists = os.path.isfile(dir_path + ccb_filename)
+    if (file_exists):
+        print(f"{ccb_filename} saved in {dir_path}")
+    else:
+        print("ccb not saved")
+        
