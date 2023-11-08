@@ -65,9 +65,9 @@ CameraItof::CameraItof(
       m_loadedConfigData(false), m_xyzEnabled(false), m_xyzSetViaApi(false),
       m_cameraFps(0), m_fsyncMode(-1), m_mipiOutputSpeed(-1),
       m_enableTempCompenstation(-1), m_enableMetaDatainAB(-1),
-      m_enableEdgeConfidence(-1), m_adsd3500ImagerType(0), m_modesVersion(0),
-      m_targetFramesAreComputed(false),
-      m_xyzTable({nullptr, nullptr, nullptr}) {
+      m_enableEdgeConfidence(-1), m_modesVersion(0),
+      m_targetFramesAreComputed(false), m_xyzTable({nullptr, nullptr, nullptr}),
+      m_imagerType(aditof::ImagerType::UNSET) {
 #ifdef DEPTH_COMPUTE_ON_TARGET
     m_targetFramesAreComputed = true;
 #endif
@@ -137,9 +137,12 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
         std::string controlValue;
         status = m_depthSensor->getControl("imagerType", controlValue);
         if (status == Status::OK) {
-            if (controlValue == "1" || controlValue == "2") {
-                m_adsd3500ImagerType = std::stoi(controlValue);
+            if (controlValue == "1") {
+                m_imagerType = ImagerType::ADSD3100;
+            } else if (controlValue == "2") {
+                m_imagerType = ImagerType::ADSD3030;
             } else {
+                m_imagerType = ImagerType::UNSET;
                 LOG(ERROR) << "Unkown imager type: " << controlValue;
                 return Status::UNAVAILABLE;
             }
@@ -163,7 +166,8 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
 
         // If depth sensor knows the modes version, use it, otherwise fallback to old workaround
         if (m_modesVersion != 0) {
-            if (m_adsd3500ImagerType == 1 || m_adsd3500ImagerType == 2) {
+            if (m_imagerType == ImagerType::ADSD3100 ||
+                m_imagerType == ImagerType::ADSD3030) {
                 if (m_modesVersion == 1) {
                     m_modesVersion = 0;
                 } else if (m_modesVersion == 2) {
@@ -171,7 +175,7 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
                 }
             }
         } else { // The depth sensor doesn't know the modes version. Use the dealias info from NVM to figure it out
-            if (m_adsd3500ImagerType == 1) { // Find for Crosby
+            if (m_imagerType == ImagerType::ADSD3100) { // Find for Crosby
                 uint8_t tempDealiasParams[32] = {0};
                 tempDealiasParams[0] = 1;
 
@@ -200,7 +204,8 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
                 } else {
                     m_modesVersion = 2;
                 }
-            } else if (m_adsd3500ImagerType == 2) { // Find for Tembin
+            } else if (m_imagerType ==
+                       ImagerType::ADSD3030) { // Find for Tembin
                 int modeToTest =
                     0; // We are looking at width and height for mode 0
                 uint8_t tempDealiasParams[32] = {0};
@@ -271,8 +276,14 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
             return Status::GENERIC_ERROR;
         }
 
+        int imgTypeId = 0;
+        if (m_imagerType == ImagerType::ADSD3100) {
+            imgTypeId = 1;
+        } else if (m_imagerType == ImagerType::ADSD3030) {
+            imgTypeId = 2;
+        }
         status = ModeInfo::getInstance()->setImagerTypeAndModeVersion(
-            m_adsd3500ImagerType, m_modesVersion);
+            imgTypeId, m_modesVersion);
         if (status != Status::OK) {
             LOG(ERROR) << "Call to setImagerTypeAndModeVersion failed, see "
                           "previoud LOG message.";
@@ -841,7 +852,8 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         m_tofi_compute_context->p_xyz_frame = (int16_t *)tempXyzFrame;
         // m_tofi_compute_context->p_conf_frame = (float *)tempConfFrame;
 
-        if ((m_adsd3500Enabled && m_abEnabled && (m_adsd3500ImagerType == 1) &&
+        if ((m_adsd3500Enabled && m_abEnabled &&
+             (m_imagerType == ImagerType::ADSD3100) &&
              (m_abBitsPerPixel < 16) &&
              (m_details.frameType.type == "lr-native" ||
               m_details.frameType.type == "sr-native")) ||
@@ -1907,9 +1919,10 @@ aditof::Status CameraItof::adsd3500GetGenericTemplate(uint16_t reg,
 
 aditof::Status CameraItof::adsd3500GetStatus(int &chipStatus,
                                              int &imagerStatus) {
-    aditof::Status status = aditof::Status::OK;
+    using namespace aditof;
+    Status status = Status::OK;
     status = m_depthSensor->adsd3500_get_status(chipStatus, imagerStatus);
-    if (status != aditof::Status::OK) {
+    if (status != Status::OK) {
         LOG(ERROR) << "Failed to read chip/imager status!";
         return status;
     }
@@ -1919,10 +1932,10 @@ aditof::Status CameraItof::adsd3500GetStatus(int &chipStatus,
                    << m_adsdErrors.GetStringADSD3500(chipStatus);
 
         if (chipStatus == m_adsdErrors.ADSD3500_STATUS_IMAGER_ERROR) {
-            if (m_adsd3500ImagerType == 1) {
+            if (m_imagerType == ImagerType::ADSD3100) {
                 LOG(ERROR) << "ADSD3100 imager error detected: "
                            << m_adsdErrors.GetStringADSD3100(imagerStatus);
-            } else if (m_adsd3500ImagerType == 2) {
+            } else if (m_imagerType == ImagerType::ADSD3030) {
                 LOG(ERROR) << "ADSD3030 imager error detected: "
                            << m_adsdErrors.GetStringADSD3030(imagerStatus);
             } else {
@@ -2124,4 +2137,10 @@ void CameraItof::cleanupXYZtables() {
         free((void *)m_xyzTable.p_z_table);
         m_xyzTable.p_z_table = nullptr;
     }
+}
+
+aditof::Status CameraItof::getImagerType(aditof::ImagerType &imagerType) const {
+    imagerType = m_imagerType;
+
+    return aditof::Status::OK;
 }
