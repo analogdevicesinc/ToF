@@ -270,14 +270,14 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "Could not read laser temperature!";
     }
 
+    LOG(INFO) << "Sensor temperature: " << sensorTmp;
+    LOG(INFO) << "Laser temperature: " << laserTmp;
+
     status = camera->stop();
     if (status != Status::OK) {
         LOG(ERROR) << "Could not stop the camera!";
         return 0;
     }
-
-    LOG(INFO) << "Sensor temperature: " << sensorTmp;
-    LOG(INFO) << "Laser temperature: " << laserTmp;
 
     int chipStatus, imagerStatus;
     status = camera->adsd3500GetStatus(chipStatus, imagerStatus);
@@ -288,6 +288,19 @@ int main(int argc, char *argv[]) {
 
     LOG(INFO) << "Chip status error code: " << chipStatus;
     LOG(INFO) << "Imager status error code: " << imagerStatus;
+
+    //Example of reading temperature from frame metadata
+    uint32_t sensorTmpMetadata, laserTempMetadata;
+    status = frame.getTemperature(sensorTmpMetadata, laserTempMetadata);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not get temperature from metadata!";
+        return 0;
+    }
+
+    LOG(INFO) << "Sensor temperature read from metadata of latest frame: "
+              << sensorTmpMetadata;
+    LOG(INFO) << "Laser temperature read from metadata of latest frame:"
+              << laserTempMetadata;
 
     return 0;
 }
