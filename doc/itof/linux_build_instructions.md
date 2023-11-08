@@ -31,7 +31,7 @@ export IGC_EnableDPEmulation=1 
 
 See [here](../../cmake/readme.md) for details on the cmake options.
 
-Download the latest Linux installer - as of writing v4.3.0.
+Download the latest Linux installer - as of writing v4.4.0.
 https://github.com/analogdevicesinc/ToF/releases
 
 * mkdir libs
@@ -96,11 +96,11 @@ popd
 Please note, ensure you are using the intended branch.
 
 ```console
-git clone --branch v4.3.0 --depth 1 https://github.com/analogdevicesinc/ToF
+git clone --branch v4.4.0 --depth 1 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
 cmake -DWITH_EXAMPLES=off -DWITH_NETWORK=on -DUSE_DEPTH_COMPUTE_ON_TARGET=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
-make
+make -j4
 ```
 
 ## SDK with examples
@@ -120,11 +120,11 @@ sudo apt install libopencv-dev
 Please note, ensure you are using the intended branch.
 
 ```console
-git clone --branch v4.3.0 --depth 1 https://github.com/analogdevicesinc/ToF
+git clone --branch v4.4.0 --depth 1 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
 cmake -DWITH_EXAMPLES=on -DWITH_NETWORK=on -DUSE_DEPTH_COMPUTE_ON_TARGET=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
-make
+make -j4
 ```
 
 ## SDK with bindings
