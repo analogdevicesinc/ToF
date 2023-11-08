@@ -80,7 +80,7 @@ BufferProcessor::~BufferProcessor() {
         m_tofiConfig = NULL;
     }
 
-    if (m_outputVideoDev->fd != 0) {
+    if (m_outputVideoDev->fd != -1) {
         if (::close(m_outputVideoDev->fd) == -1) {
             LOG(ERROR) << "Failed to close " << m_videoDeviceName
                        << " error: " << strerror(errno);
