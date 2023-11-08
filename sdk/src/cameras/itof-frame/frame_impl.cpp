@@ -259,5 +259,22 @@ aditof::Status FrameImpl::getAttribute(const std::string &attribute,
 aditof::Status FrameImpl::getTemperature(uint32_t &sensorTemp,
                                          uint32_t &laserTemp) const {
 
+    aditof::Status status = aditof::Status::OK;
+    uint8_t *header;
+
+    if (m_implData->m_dataLocations.count("embedded_header") > 0) {
+        header = reinterpret_cast<uint8_t *>(
+            m_implData->m_dataLocations["embedded_header"]);
+    } else {
+        LOG(ERROR) << "Metadata is not enabled in this frame!";
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    //switch from little endian to big endian
+    sensorTemp = (header[28] << 0) | (header[29] << 8) | (header[30] << 16) |
+                 (header[31] << 24);
+    laserTemp = (header[32] << 0) | (header[33] << 8) | (header[34] << 16) |
+                (header[35] << 24);
+
     return aditof::Status::OK;
 }
