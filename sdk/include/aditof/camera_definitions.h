@@ -197,6 +197,16 @@ struct CameraDetails {
     std::string serialNumber;
 };
 
+/**
+ * @enum ImagerType
+ * @brief Types of imagers
+ */
+enum class ImagerType {
+    UNSET,    //!< Value for when the type is unset
+    ADSD3100, //!< The ADSD3100 imager
+    ADSD3030, //!< The ADSD3030 imager
+};
+
 } // namespace aditof
 
 #endif // CAMERA_DEFINITIONS_H

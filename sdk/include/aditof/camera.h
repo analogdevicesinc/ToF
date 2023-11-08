@@ -495,15 +495,22 @@ class SDK_API Camera {
     virtual Status adsd3500GetStatus(int &chipStatus, int &imagerStatus) = 0;
 
     /**
-   * @brief Read serial number from camera and update cache
-   * @param[out] serialNumber - Will contain serial number
-   * @param[in] useCacheValue - If it is false it will
-   *  read from camera and if it is true it will
-   *  return serialNumber from cache
-   * @return Status
-   */
-    virtual aditof::Status readSerialNumber(std::string &serialNumber,
-                                            bool useCacheValue = false) = 0;
+    * @brief Read serial number from camera and update cache
+    * @param[out] serialNumber - Will contain serial number
+    * @param[in] useCacheValue - If it is false it will
+    *  read from camera and if it is true it will
+    *  return serialNumber from cache
+    * @return Status
+    */
+    virtual Status readSerialNumber(std::string &serialNumber,
+                                    bool useCacheValue = false) = 0;
+
+    /**
+     * @brief Provides the type of the imager
+     * @param[out] imagerType - Will be set with the imager type
+     * @return Status
+     */
+    virtual Status getImagerType(ImagerType &imagerType) const = 0;
 };
 
 } // namespace aditof

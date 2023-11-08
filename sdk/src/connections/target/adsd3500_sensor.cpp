@@ -95,7 +95,11 @@ struct ConfigurationData {
 //          started(false) {}
 //};
 
-enum class ImagerType { IMAGER_UNKNOWN, IMAGER_ADSD3100, IMAGER_ADSD3030 };
+enum class SensorImagerType {
+    IMAGER_UNKNOWN,
+    IMAGER_ADSD3100,
+    IMAGER_ADSD3030
+};
 enum class CCBVersion { CCB_UNKNOWN, CCB_VERSION0, CCB_VERSION1 };
 
 struct Adsd3500Sensor::ImplData {
@@ -103,13 +107,13 @@ struct Adsd3500Sensor::ImplData {
     struct VideoDev *videoDevs;
     aditof::DepthSensorFrameType frameType;
     std::unordered_map<std::string, __u32> controlsCommands;
-    ImagerType imagerType;
+    SensorImagerType imagerType;
     CCBVersion ccbVersion;
     std::string fw_ver;
 
     ImplData()
         : numVideoDevs(1), videoDevs(nullptr), frameType{"", {}, 0, 0},
-          imagerType{ImagerType::IMAGER_UNKNOWN},
+          imagerType{SensorImagerType::IMAGER_UNKNOWN},
           ccbVersion{CCBVersion::CCB_UNKNOWN} {}
 };
 
@@ -804,9 +808,10 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
             return Status::INVALID_ARGUMENT;
         } else if (n == 2) {
             m_implData->ccbVersion = CCBVersion::CCB_VERSION1;
-            if (m_implData->imagerType == ImagerType::IMAGER_ADSD3100) {
+            if (m_implData->imagerType == SensorImagerType::IMAGER_ADSD3100) {
                 m_availableFrameTypes = availableFrameTypes;
-            } else if (m_implData->imagerType == ImagerType::IMAGER_ADSD3030) {
+            } else if (m_implData->imagerType ==
+                       SensorImagerType::IMAGER_ADSD3030) {
                 m_availableFrameTypes = availableFrameTypesAdsd3030;
             } else {
                 LOG(ERROR) << "Unknown imager type. Because of this, cannot "
@@ -1481,7 +1486,7 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
     using namespace aditof;
     Status status = Status::OK;
     // Ask ADSD3500 what imager is being used and whether we're using the old or new modes (CCB version)
-    if (m_implData->imagerType == ImagerType::IMAGER_UNKNOWN ||
+    if (m_implData->imagerType == SensorImagerType::IMAGER_UNKNOWN ||
         m_implData->ccbVersion == CCBVersion::CCB_UNKNOWN) {
 
         uint8_t fwData[44] = {0};
@@ -1525,11 +1530,11 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
             uint8_t imager_version = (readValue & 0xFF00) >> 8;
             switch (imager_version) {
             case 1: {
-                m_implData->imagerType = ImagerType::IMAGER_ADSD3100;
+                m_implData->imagerType = SensorImagerType::IMAGER_ADSD3100;
                 break;
             }
             case 2: {
-                m_implData->imagerType = ImagerType::IMAGER_ADSD3030;
+                m_implData->imagerType = SensorImagerType::IMAGER_ADSD3030;
                 break;
             }
             default: {
@@ -1546,13 +1551,13 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
         }
     }
 
-    if (m_implData->imagerType == ImagerType::IMAGER_UNKNOWN) {
+    if (m_implData->imagerType == SensorImagerType::IMAGER_UNKNOWN) {
         LOG(WARNING) << "Since the image type is unknown, fall back on compile "
                         "flag to determine imager type";
 #ifdef ADSD3030 // TO DO: remove this fallback mechanism once we no longer support old firmwares that don't support command 0x32
-        m_implData->imagerType = ImagerType::IMAGER_ADSD3030;
+        m_implData->imagerType = SensorImagerType::IMAGER_ADSD3030;
 #else
-        m_implData->imagerType = ImagerType::IMAGER_ADSD3100;
+        m_implData->imagerType = SensorImagerType::IMAGER_ADSD3100;
 #endif
     }
 

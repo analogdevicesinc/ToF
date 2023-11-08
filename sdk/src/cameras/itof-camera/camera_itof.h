@@ -127,6 +127,7 @@ class CameraItof : public aditof::Camera {
 
     aditof::Status readSerialNumber(std::string &serialNumber,
                                     bool useCacheValue = false) override;
+    aditof::Status getImagerType(aditof::ImagerType &imagerType) const override;
 
   private:
     /**
@@ -258,7 +259,6 @@ class CameraItof : public aditof::Camera {
     //pair between firmware version and git hash
     std::pair<std::string, std::string> m_adsd3500FwGitHash;
     int m_adsd3500FwVersionInt;
-    int m_adsd3500ImagerType;
     int m_modesVersion;
     bool m_fwUpdated;
     aditof::Adsd3500Status m_adsd3500Status;
@@ -267,6 +267,7 @@ class CameraItof : public aditof::Camera {
     bool m_enableDepthCompute;
     std::string m_initConfigFilePath;
     std::string m_ccbFile;
+    aditof::ImagerType m_imagerType;
 };
 
 #endif // CAMERA_ITOF_H
