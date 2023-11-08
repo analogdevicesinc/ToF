@@ -136,6 +136,15 @@ class Frame {
     SDK_API virtual Status getAttribute(const std::string &attribute,
                                         std::string &value) const;
 
+    /**
+     * @brief Gets the temperature values stored in the metadata for each frame
+     * @param[out] sensorTemp - Sensor temperature
+     * @param[out] laserTemp - Laser temperature
+     * @return Status
+     */
+    SDK_API virtual Status getTemperature(uint32_t &sensorTemp,
+                                          uint32_t &laserTemp) const;
+
   private:
     std::unique_ptr<FrameImpl> m_impl;
     Status allocFrameData();

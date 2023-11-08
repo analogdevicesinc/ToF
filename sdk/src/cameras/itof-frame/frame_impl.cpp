@@ -255,3 +255,9 @@ aditof::Status FrameImpl::getAttribute(const std::string &attribute,
     value = m_attributes[attribute];
     return aditof::Status::OK;
 }
+
+aditof::Status FrameImpl::getTemperature(uint32_t &sensorTemp,
+                                         uint32_t &laserTemp) const {
+
+    return aditof::Status::OK;
+}
