@@ -137,9 +137,9 @@ class Frame {
                                         std::string &value) const;
 
     /**
-     * @brief Gets the temperature values stored in the metadata for each frame
-     * @param[out] sensorTemp - Sensor temperature
-     * @param[out] laserTemp - Laser temperature
+     * @brief Extracts the sensor and laser temperatures from metadata within this frame.
+     * @param[out] sensorTemp - Sensor temperature in degrees Celsius
+     * @param[out] laserTemp - Laser temperature in degrees Celsius
      * @return Status
      */
     SDK_API virtual Status getTemperature(uint32_t &sensorTemp,
