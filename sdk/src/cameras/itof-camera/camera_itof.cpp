@@ -66,12 +66,9 @@ CameraItof::CameraItof(
       m_cameraFps(0), m_fsyncMode(-1), m_mipiOutputSpeed(-1),
       m_enableTempCompenstation(-1), m_enableMetaDatainAB(-1),
       m_enableEdgeConfidence(-1), m_modesVersion(0),
-      m_targetFramesAreComputed(false), m_xyzTable({nullptr, nullptr, nullptr}),
+      m_targetFramesAreComputed(true), m_xyzTable({nullptr, nullptr, nullptr}),
       m_imagerType(aditof::ImagerType::UNSET) {
-#ifdef DEPTH_COMPUTE_ON_TARGET
-    m_targetFramesAreComputed = true;
-#endif
-    m_enableDepthCompute = !m_targetFramesAreComputed;
+
     FloatToLinGenerateTable();
     memset(&m_xyzTable, 0, sizeof(m_xyzTable));
     m_details.mode = "sr-native";
@@ -620,7 +617,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
     }
 
-    if (!m_targetFramesAreComputed && m_enableDepthCompute && !m_pcmFrame &&
+    if (!m_targetFramesAreComputed && !m_pcmFrame &&
         ((m_details.frameType.totalCaptures > 1) || m_adsd3500Enabled ||
          m_isOffline)) {
         status = initComputeLibrary();
@@ -806,7 +803,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         }
     }
 
-    if (!m_targetFramesAreComputed && m_enableDepthCompute && !m_pcmFrame &&
+    if (!m_targetFramesAreComputed && !m_pcmFrame &&
         ((totalCaptures > 1) || m_adsd3500Enabled || m_isOffline)) {
 
         if (NULL == m_tofi_compute_context) {
@@ -1190,8 +1187,7 @@ aditof::Status CameraItof::enableXYZframe(bool enable) {
 }
 
 aditof::Status CameraItof::enableDepthCompute(bool enable) {
-    m_enableDepthCompute = enable;
-    return aditof::Status::OK;
+    return aditof::Status::UNAVAILABLE;
 }
 
 #pragma pack(push, 1)

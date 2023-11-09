@@ -57,10 +57,6 @@
 
 #define ADI_DEBUG 1
 #define REQ_COUNT 10
-//struct buffer {
-//    void *start;
-//    size_t length;
-//};
 
 struct CalibrationData {
     std::string mode;
@@ -80,20 +76,6 @@ struct ConfigurationData {
     uint16_t rsvd;
     uint32_t values;
 };
-
-//struct VideoDev {
-//    int fd;
-//    int sfd;
-//    struct buffer *videoBuffers;
-//    unsigned int nVideoBuffers;
-//    struct v4l2_plane planes[8];
-//    enum v4l2_buf_type videoBuffersType;
-//    bool started;
-//
-//    VideoDev()
-//        : fd(-1), sfd(-1), videoBuffers(nullptr), nVideoBuffers(0),
-//          started(false) {}
-//};
 
 enum class SensorImagerType {
     IMAGER_UNKNOWN,
@@ -135,14 +117,10 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
                                const std::string &captureDev)
     : m_driverPath(driverPath), m_driverSubPath(driverSubPath),
       m_captureDev(captureDev), m_implData(new Adsd3500Sensor::ImplData),
-      m_firstRun(true), m_adsd3500Queried(false), m_depthComputeOnTarget(false),
+      m_firstRun(true), m_adsd3500Queried(false), m_depthComputeOnTarget(true),
       m_chipStatus(0), m_imagerStatus(0) {
     m_sensorName = "adsd3500";
     m_sensorDetails.connectionType = aditof::ConnectionType::ON_TARGET;
-
-#ifdef DEPTH_COMPUTE_ON_TARGET
-    m_depthComputeOnTarget = true;
-#endif
 
     // Define the controls that this sensor has available
     m_controls.emplace("abAveraging", "0");
