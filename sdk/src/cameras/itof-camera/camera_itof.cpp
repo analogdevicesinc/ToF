@@ -114,6 +114,11 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
 
     LOG(INFO) << "Initializing camera";
 
+    if (!m_adsd3500Enabled) {
+        LOG(ERROR) << "This usecase is no longer supported.";
+        return aditof::Status::UNAVAILABLE;
+    }
+
     m_initConfigFilePath = configFilepath;
 
     // Setting up the UVC filters, samplegrabber interface, Video renderer and filters
@@ -127,24 +132,17 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
         m_devStarted = true;
     }
 
-    //get intrinsics for adsd3500 TO DO: check endianess of intrinsics
-    if (m_adsd3500Enabled || m_isOffline) {
-
-        // get imager type that is used toghether with ADSD3500
-        std::string controlValue;
-        status = m_depthSensor->getControl("imagerType", controlValue);
-        if (status == Status::OK) {
-            if (controlValue == "1") {
-                m_imagerType = ImagerType::ADSD3100;
-            } else if (controlValue == "2") {
-                m_imagerType = ImagerType::ADSD3030;
-            } else {
-                m_imagerType = ImagerType::UNSET;
-                LOG(ERROR) << "Unkown imager type: " << controlValue;
-                return Status::UNAVAILABLE;
-            }
+    // get imager type that is used toghether with ADSD3500
+    std::string controlValue;
+    status = m_depthSensor->getControl("imagerType", controlValue);
+    if (status == Status::OK) {
+        if (controlValue == "1") {
+            m_imagerType = ImagerType::ADSD3100;
+        } else if (controlValue == "2") {
+            m_imagerType = ImagerType::ADSD3030;
         } else {
-            LOG(ERROR) << "Failed to read the imager type";
+            m_imagerType = ImagerType::UNSET;
+            LOG(ERROR) << "Unkown imager type: " << controlValue;
             return Status::UNAVAILABLE;
         }
 
@@ -361,47 +359,45 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
         return Status::GENERIC_ERROR;
     }
 
-    if (m_adsd3500Enabled) {
-        if (m_fsyncMode >= 0) {
-            status = adsd3500SetToggleMode(m_fsyncMode);
-            if (status != Status::OK) {
-                LOG(ERROR) << "Failed to set fsyncMode.";
-                return status;
-            }
-        } else {
-            LOG(WARNING) << "fsyncMode is not being set by SDK.";
+    if (m_fsyncMode >= 0) {
+        status = adsd3500SetToggleMode(m_fsyncMode);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to set fsyncMode.";
+            return status;
         }
+    } else {
+        LOG(WARNING) << "fsyncMode is not being set by SDK.";
+    }
 
-        if (m_mipiOutputSpeed >= 0) {
-            status = adsd3500SetMIPIOutputSpeed(m_mipiOutputSpeed);
-            if (status != Status::OK) {
-                LOG(ERROR) << "Failed to set mipiOutputSpeed.";
-                return status;
-            }
-        } else {
-            LOG(WARNING) << "mipiSpeed is not being set by SDK.";
+    if (m_mipiOutputSpeed >= 0) {
+        status = adsd3500SetMIPIOutputSpeed(m_mipiOutputSpeed);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to set mipiOutputSpeed.";
+            return status;
         }
+    } else {
+        LOG(WARNING) << "mipiSpeed is not being set by SDK.";
+    }
 
-        if (m_enableTempCompenstation >= 0) {
-            status = adsd3500SetEnableTemperatureCompensation(
-                m_enableTempCompenstation);
-            if (status != Status::OK) {
-                LOG(ERROR) << "Failed to set enableTempCompenstation.";
-                return status;
-            }
-        } else {
-            LOG(WARNING) << "enableTempCompenstation is not being set by SDK.";
+    if (m_enableTempCompenstation >= 0) {
+        status =
+            adsd3500SetEnableTemperatureCompensation(m_enableTempCompenstation);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to set enableTempCompenstation.";
+            return status;
         }
+    } else {
+        LOG(WARNING) << "enableTempCompenstation is not being set by SDK.";
+    }
 
-        if (m_enableEdgeConfidence >= 0) {
-            status = adsd3500SetEnableEdgeConfidence(m_enableEdgeConfidence);
-            if (status != Status::OK) {
-                LOG(ERROR) << "Failed to set enableEdgeConfidence.";
-                return status;
-            }
-        } else {
-            LOG(WARNING) << "enableEdgeConfidence is not being set by SDK.";
+    if (m_enableEdgeConfidence >= 0) {
+        status = adsd3500SetEnableEdgeConfidence(m_enableEdgeConfidence);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to set enableEdgeConfidence.";
+            return status;
         }
+    } else {
+        LOG(WARNING) << "enableEdgeConfidence is not being set by SDK.";
     }
 
     std::string serialNumber;
@@ -579,9 +575,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
     }
 
-    if (!m_targetFramesAreComputed && !m_pcmFrame &&
-        ((m_details.frameType.totalCaptures > 1) || m_adsd3500Enabled ||
-         m_isOffline)) {
+    if (!m_targetFramesAreComputed && !m_pcmFrame) {
         status = initComputeLibrary();
         if (Status::OK != status) {
             LOG(ERROR) << "Initializing compute libraries failed.";
@@ -748,8 +742,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         return status;
     }
 
-    if (!m_targetFramesAreComputed && !m_pcmFrame &&
-        ((totalCaptures > 1) || m_adsd3500Enabled || m_isOffline)) {
+    if (!m_targetFramesAreComputed && !m_pcmFrame) {
 
         if (NULL == m_tofi_compute_context) {
             LOG(ERROR) << "Depth compute libray not initialized";
@@ -794,8 +787,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         m_tofi_compute_context->p_xyz_frame = (int16_t *)tempXyzFrame;
         // m_tofi_compute_context->p_conf_frame = (float *)tempConfFrame;
 
-        if ((m_adsd3500Enabled && m_abEnabled &&
-             (m_imagerType == ImagerType::ADSD3100) &&
+        if ((m_abEnabled && (m_imagerType == ImagerType::ADSD3100) &&
              (m_abBitsPerPixel < 16) &&
              (m_details.frameType.type == "lr-native" ||
               m_details.frameType.type == "sr-native")) ||
@@ -916,7 +908,7 @@ aditof::Status CameraItof::initComputeLibrary(void) {
         return aditof::Status::GENERIC_ERROR;
     }
 
-    if (m_loadedConfigData || m_adsd3500Enabled || m_isOffline) {
+    if (m_loadedConfigData) {
         ConfigFileData calData = {m_calData.p_data, m_calData.size};
         uint32_t status = ADI_TOFI_SUCCESS;
 
@@ -931,7 +923,7 @@ aditof::Status CameraItof::initComputeLibrary(void) {
 
             ConfigFileData depth_ini = {pData, dataSize};
 
-            if ((m_adsd3500Enabled || m_isOffline) && !m_tofi_config) {
+            if (!m_tofi_config) {
                 m_tofi_config = InitTofiConfig_isp((ConfigFileData *)&depth_ini,
                                                    convertedMode, &status,
                                                    m_xyz_dealias_data);
@@ -1093,12 +1085,10 @@ aditof::Status CameraItof::saveModuleCCB(const std::string &filepath) {
         return aditof::Status::INVALID_ARGUMENT;
     }
 
-    if (m_adsd3500Enabled) {
-        aditof::Status status = readAdsd3500CCB();
-        if (status != aditof::Status::OK) {
-            LOG(ERROR) << "Failed to read CCB from adsd3500 module!";
-            return aditof::Status::GENERIC_ERROR;
-        }
+    aditof::Status status = readAdsd3500CCB();
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to read CCB from adsd3500 module!";
+        return aditof::Status::GENERIC_ERROR;
     }
 
     if (m_ccbFile.empty()) {
