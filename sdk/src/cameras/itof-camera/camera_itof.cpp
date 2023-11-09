@@ -114,7 +114,7 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
 
     LOG(INFO) << "Initializing camera";
 
-    if (!m_adsd3500Enabled || !m_isOffline) {
+    if (!m_adsd3500Enabled && !m_isOffline) {
         LOG(ERROR) << "This usecase is no longer supported.";
         return aditof::Status::UNAVAILABLE;
     }
