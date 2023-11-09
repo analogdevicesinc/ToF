@@ -114,7 +114,7 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
 
     LOG(INFO) << "Initializing camera";
 
-    if (!m_adsd3500Enabled) {
+    if (!m_adsd3500Enabled || !m_isOffline) {
         LOG(ERROR) << "This usecase is no longer supported.";
         return aditof::Status::UNAVAILABLE;
     }
@@ -790,8 +790,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         if ((m_abEnabled && (m_imagerType == ImagerType::ADSD3100) &&
              (m_abBitsPerPixel < 16) &&
              (m_details.frameType.type == "lr-native" ||
-              m_details.frameType.type == "sr-native")) ||
-            m_isOffline) {
+              m_details.frameType.type == "sr-native"))) {
             uint16_t *mpAbFrame;
             frame->getData("ir", &mpAbFrame);
 
