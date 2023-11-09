@@ -266,7 +266,6 @@ aditof::Status FrameImpl::getTemperature(uint32_t &sensorTemp,
         header = reinterpret_cast<uint8_t *>(
             m_implData->m_dataLocations["embedded_header"]);
     } else {
-        LOG(WARNING) << "Metadata is not enabled in this frame!";
         return aditof::Status::UNAVAILABLE;
     }
 
