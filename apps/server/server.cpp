@@ -427,7 +427,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         }
 
         aditof::Status status = camDepthSensor->setFrameType(aditofFrameType);
-#ifdef DEPTH_COMPUTE_ON_TARGET
+
         if (status == aditof::Status::OK) {
             //width * height * 2 bytes/pixel * 2 frames(depth/ir)
             //Looking for depth resolution
@@ -457,7 +457,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                             processedFrameSize * sizeof(uint16_t)];
             buff_frame_length = processedFrameSize * 2;
         }
-#endif
+
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
@@ -473,8 +473,8 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
     case GET_FRAME: {
         aditof::Status status = aditof::Status::OK;
-        //to do: get value of m_depthComputeOnTarget from sensor
-#ifdef DEPTH_COMPUTE_ON_TARGET
+
+        //TO DO: get value of m_depthComputeOnTarget from sensor
         status = camDepthSensor->getFrame(
             (uint16_t *)(buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING));
         if (status != aditof::Status::OK) {
@@ -486,7 +486,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
         buff_send.set_status(payload::Status::OK);
         break;
-#else
+
         status = sensorV4lBufAccess->waitForBuffer();
 
         if (status != aditof::Status::OK) {
@@ -532,7 +532,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
         buff_send.set_status(payload::Status::OK);
         break;
-#endif
     }
 
     case READ_REGISTERS: {
