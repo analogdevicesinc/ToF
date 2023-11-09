@@ -24,7 +24,6 @@ which will generate all the necessary recipes for building and installing. Usefu
 | WITH_NETWORK | on/off | off | Build the network interface for a Linux or Windows host build; use **off** for building on the target. |
 | USE_DEPTH_COMPUTE_STUBS | on/off | off | Use depth compute stubs instead of the depth compute libraries. On the target set to **on**. On the host set tof **off**. |
 | USE_DEPTH_COMPUTE_OPENSOURCE | on/off | off | When **on** the open source radial to XYZ (point cloud) generation is used. Otherwise the closed source partial depth compute library is required. |
-| USE_DEPTH_COMPUTE_ON_TARGET | on/off | on | When on depth compute is performed on the target. This is specific to the eval kit. | 
 | WITH_GLOG_DEPENDENCY | on/off | on | Build the sdk with GLOG dependency. Used for logging. |
 | WITH_PROTOBUF_DEPENDENCY | on/off | on | Build the sdk with Protobuf dependency. Used for serializing the messages sent over network. |
 | WITH_COMMAND_LINE_TOOLS | on/off | on | Build the command line tools. |
