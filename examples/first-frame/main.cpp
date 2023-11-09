@@ -292,15 +292,14 @@ int main(int argc, char *argv[]) {
     //Example of reading temperature from frame metadata
     uint32_t sensorTmpMetadata, laserTempMetadata;
     status = frame.getTemperature(sensorTmpMetadata, laserTempMetadata);
-    if (status != Status::OK) {
+    if (status == Status::OK) {
+        LOG(INFO) << "Sensor temperature read from metadata of latest frame: "
+                  << sensorTmpMetadata;
+        LOG(INFO) << "Laser temperature read from metadata of latest frame:"
+                  << laserTempMetadata;
+    } else {
         LOG(ERROR) << "Could not get temperature from metadata!";
-        return 0;
     }
-
-    LOG(INFO) << "Sensor temperature read from metadata of latest frame: "
-              << sensorTmpMetadata;
-    LOG(INFO) << "Laser temperature read from metadata of latest frame:"
-              << laserTempMetadata;
 
     return 0;
 }
