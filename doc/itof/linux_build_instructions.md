@@ -99,7 +99,7 @@ Please note, ensure you are using the intended branch.
 git clone --branch v4.4.0 --depth 1 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
-cmake -DWITH_EXAMPLES=off -DWITH_NETWORK=on -DUSE_DEPTH_COMPUTE_ON_TARGET=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
+cmake -DWITH_EXAMPLES=off -DWITH_NETWORK=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
 make -j4
 ```
 
@@ -123,7 +123,7 @@ Please note, ensure you are using the intended branch.
 git clone --branch v4.4.0 --depth 1 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
-cmake -DWITH_EXAMPLES=on -DWITH_NETWORK=on -DUSE_DEPTH_COMPUTE_ON_TARGET=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
+cmake -DWITH_EXAMPLES=on -DWITH_NETWORK=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
 make -j4
 ```
 
