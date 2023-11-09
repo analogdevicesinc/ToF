@@ -67,7 +67,7 @@ git clone --branch v4.4.0 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build
 cd build
-cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_6_0\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=off -DUSE_DEPTH_COMPUTE_ON_TARGET=off ..
+cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_6_0\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=off ..
 cmake --build . --config Release
 ```
 
@@ -88,7 +88,7 @@ git clone --branch v4.4.0 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build
 cd build
-cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_6_0\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=on -DUSE_DEPTH_COMPUTE_ON_TARGET=off ..
+cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_6_0\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=on ..
 ```
 - Open 'adi_tof_project.sln' generated in 'ToF\build' in MS Visual Studio 2019
 - Select 'Release' build
