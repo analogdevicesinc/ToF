@@ -361,39 +361,6 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
         return Status::GENERIC_ERROR;
     }
 
-    ////check first mode to set ModeInfo table version for non adsd3500
-    if (m_loadedConfigData && !m_adsd3500Enabled && !m_isOffline) {
-        TofiXYZDealiasData tempDealiasStruct[11];
-        uint16_t width = ModeInfo::getInstance()->getModeInfo(1).width;
-        uint16_t height = ModeInfo::getInstance()->getModeInfo(1).height;
-
-        uint32_t err =
-            GetXYZ_DealiasData((ConfigFileData *)&m_calData, tempDealiasStruct);
-        if (err != ADI_TOFI_SUCCESS) {
-            LOG(ERROR) << "Failed to get dealias data from ccb!";
-            return Status::GENERIC_ERROR;
-        }
-
-        if (tempDealiasStruct[1].n_rows != width &&
-            tempDealiasStruct[1].n_cols != height) {
-            ModeInfo::getInstance()->setImagerTypeAndModeVersion(1, 0);
-            status = m_depthSensor->setControl("modeInfoVersion", "0");
-            if (status != Status::OK) {
-                LOG(ERROR) << "Failed to set target mode info for adsd3100!";
-                return status;
-            }
-        } else {
-            ModeInfo::getInstance()->setImagerTypeAndModeVersion(1, 1);
-            status = m_depthSensor->setControl("modeInfoVersion", "1");
-            if (status != Status::OK) {
-                LOG(ERROR) << "Failed to set target mode info for adsd3100!";
-                return status;
-            }
-        }
-
-        m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
-    }
-
     if (m_adsd3500Enabled) {
         if (m_fsyncMode >= 0) {
             status = adsd3500SetToggleMode(m_fsyncMode);
@@ -577,12 +544,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         ModeInfo::getInstance()->getModeInfo(frameType).width;
     m_details.frameType.height =
         ModeInfo::getInstance()->getModeInfo(frameType).height;
-    if (!m_adsd3500Enabled) {
-        m_details.frameType.totalCaptures =
-            ModeInfo::getInstance()->getModeInfo(frameType).subframes;
-    } else {
-        m_details.frameType.totalCaptures = 1;
-    }
+    m_details.frameType.totalCaptures = 1;
     m_details.frameType.dataDetails.clear();
     for (const auto &item : (*frameTypeIt).content) {
         if (item.type == "xyz" && !m_xyzEnabled) {
@@ -760,12 +722,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         frame->setDetails(m_details.frameType);
     }
 
-    if (!m_adsd3500Enabled) {
-        frame->getAttribute("total_captures", totalCapturesStr);
-        totalCaptures = std::atoi(totalCapturesStr.c_str());
-    } else {
-        totalCaptures = 1;
-    }
+    totalCaptures = 1;
 
     uint16_t *frameDataLocation = nullptr;
     if (m_targetFramesAreComputed && !m_pcmFrame) {
@@ -789,18 +746,6 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to get frame from device";
         return status;
-    }
-
-    if (!m_adsd3500Enabled && !m_isOffline &&
-        (m_details.frameType.type != "pcm-native")) {
-        for (unsigned int i = 0;
-             i < (m_details.frameType.height * m_details.frameType.width *
-                  totalCaptures);
-             ++i) {
-            frameDataLocation[i] = frameDataLocation[i] >> 4;
-            frameDataLocation[i] =
-                Convert11bitFloat2LinearVal(frameDataLocation[i]);
-        }
     }
 
     if (!m_targetFramesAreComputed && !m_pcmFrame &&
@@ -1208,10 +1153,6 @@ aditof::Status
 CameraItof::adsd3500UpdateFirmware(const std::string &fwFilePath) {
     using namespace aditof;
     Status status = Status::OK;
-
-    if (!m_adsd3500Enabled) {
-        return Status::UNAVAILABLE;
-    }
 
     m_fwUpdated = false;
     m_adsd3500Status = Adsd3500Status::OK;
