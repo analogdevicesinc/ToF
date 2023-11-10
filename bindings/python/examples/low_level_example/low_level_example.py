@@ -41,6 +41,8 @@ if len(sys.argv) < 2  or sys.argv[1] == "--help" or sys.argv[1] == "-h" :
 
 system = tof.System()
 
+print("SDK version: ", tof.getApiVersion(), " | branch: ", tof.getBranchVersion(), " | commit: ", tof.getCommitVersion())
+
 cameras = []
 if len(sys.argv) == 3 :
     status = system.getCameraListAtIp(cameras,sys.argv[1])

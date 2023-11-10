@@ -59,6 +59,8 @@ if __name__ == "__main__":
         exit(1)
 
     system = tof.System()
+
+    print("SDK version: ", tof.getApiVersion(), " | branch: ", tof.getBranchVersion(), " | commit: ", tof.getCommitVersion())
     
     cameras = []
     ip = ""
