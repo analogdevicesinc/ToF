@@ -69,6 +69,8 @@ if __name__ == "__main__":
 
     system = tof.System()
 
+    print("SDK version: ", tof.getApiVersion(), " | branch: ", tof.getBranchVersion(), " | commit: ", tof.getCommitVersion())
+
     status = system.getCameraList(cameras, ip)
     print("system.getCameraList()", status)
 

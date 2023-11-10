@@ -173,6 +173,8 @@ if __name__ == "__main__":
     # Initialize ToF camera
     system = tof.System()
 
+    print("SDK version: ", tof.getApiVersion(), " | branch: ", tof.getBranchVersion(), " | commit: ", tof.getCommitVersion())
+
     cameras = []
     status = system.getCameraList(cameras, ip)
     if not status:

@@ -55,6 +55,8 @@ viridis = plt.get_cmap('viridis')
 
 system = tof.System()
 
+print("SDK version: ", tof.getApiVersion(), " | branch: ", tof.getBranchVersion(), " | commit: ", tof.getCommitVersion())
+
 cameras = []
 ip = ""
 if len(sys.argv) == 3 :
