@@ -44,6 +44,7 @@ fps = 0
 bytePerPx = 10
 startOfFrame = 0
 embedHeaderLength = 128
+modifyContrast = False
 raw_img_dir = '\\sample_raw\\'
 fileName = 'frames202309111819'
 rawFileType = '.RAW'
@@ -63,6 +64,12 @@ def visualize_ab(filename, directory, index):
         norm_ab_frame = np.uint8(norm_ab_frame)
         norm_ab_frame = cv.cvtColor(norm_ab_frame, cv.COLOR_GRAY2RGB)
         
+        #Modify Contrast and Brightness if modifyContrast is true
+        if modifyContrast == True:
+            alpha = 1 # Contrast control (1.0-3.0)
+            beta = 50 # Brightness control (0-100)
+            norm_ab_frame = cv.convertScaleAbs(norm_ab_frame, alpha=alpha, beta=beta)
+            
         #save depth frame as
         img = o3d.geometry.Image(norm_ab_frame)
         #Save the image to a file
@@ -113,6 +120,28 @@ def parseMetadata(filename, directory, index):
         headerData = byte_array[-int((embedHeaderLength/2)):]
         np.savetxt(directory + 'metadata_' + args.filename + '_' + index +'.txt', headerData, fmt='%d')
     
+def combine_ab_depth(mainDir,fps,width,height):
+    #create video directory
+    vidDir = new_dir + '\\vid_' + args.filename
+    os.mkdir(vidDir)
+    
+    #Create a video writer object
+    video = cv.VideoWriter(vidDir + '\\vid_' + args.filename + '.mp4', cv.VideoWriter_fourcc(*"mp4v"), 10, (width*2, height))
+    
+    #Loop over the AB and depth images and and write them to video
+    for i in range(0,fps):
+        binDir = mainDir +  '\\' + args.filename + '_' + str(i) +'\\' 
+        depth_img = cv.imread(binDir + 'depth_' + args.filename + '_' + str(i) + pngFileType)
+        ab_img = cv.imread(binDir + 'ab_' + args.filename + '_' + str(i) + pngFileType)
+
+        # concatenate the images horizontally
+        new_img = cv.hconcat([depth_img, ab_img])
+        new_img = cv.resize(new_img, (width*2,height))
+        # save and show the new image 
+        video.write(new_img)
+ 
+    
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Scrip to parse a raw file and extract different frame data ')
@@ -146,11 +175,12 @@ if __name__ == "__main__":
         data = f.read(file_size - sizeOfHeader)
         m_frameData = np.frombuffer(data, dtype=np.uint8)
 
-    #create directory for output frames
+    #create directory for output frames mp4 file
     new_dir = os.path.dirname( os.path.abspath(__file__)) + raw_img_dir + args.filename
     print(new_dir)
     os.mkdir(new_dir)
     first_time_render_pc = 1
+    
     for i in range(0, fps):
         # Create frame folders
         frameDir = new_dir + '\\' + args.filename + '_' + str(i) +'\\'
@@ -168,4 +198,5 @@ if __name__ == "__main__":
             visualize_pcloud(binFileName,frameDir,str(i))
             first_time_render_pc = 0
         parseMetadata(binFileName,frameDir,str(i))
+    combine_ab_depth(new_dir,fps,width,height)
    

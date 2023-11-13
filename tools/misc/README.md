@@ -2,7 +2,9 @@
 
 ### Overview
 This example takes raw file as an input and extracts the depth absolute brightness and point cloud data.
-depth frame and AB frame are  saved as `.png` while point cloud data is saved as `.ply`
+depth frame and AB frame are  saved as `.png` while point cloud data is saved as `.ply` 
+An `.mp4` file is also generated showing  both AB and depth frames.
+metadata is saved as a text file.
 
 Usage:
 - put raw recording files in the same directory of the `rawparser.py`
