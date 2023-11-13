@@ -81,7 +81,7 @@ static const char kUsagePublic[] =
       --ccb <FILE>       The path to store CCB content
       --ip <ip>          Camera IP
       --fw <firmware>    Adsd3500 fw file
-      --ft <frameType>   FrameType of saved image (raw/depth/ir/conf) [default: depth]
+      --ft <frameType>   FrameType of saved image (depth/ir/conf) [default: depth]
 
     Note: --m argument supports both index and string (0/sr-native) 
 
@@ -166,10 +166,10 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    char folder_path[MAX_FILE_PATH_SIZE]; // Path to store the raw/depth frames
+    char folder_path[MAX_FILE_PATH_SIZE]; // Path to store the depth frames
     char json_file_path
         [MAX_FILE_PATH_SIZE]; // Get the .json file from command line
-    std::string frame_type; // Type of frame need to be captured (Raw/Depth/IR)
+    std::string frame_type;   // Type of frame need to be captured (Depth/IR)
 
     uint16_t err = 0;
     uint32_t n_frames = 0;
@@ -256,12 +256,11 @@ int main(int argc, char *argv[]) {
     frame_type = command_map["-ft"].value;
 
     if (frame_type.length() <= 0 &&
-        (!frame_type.compare(std::string("raw")) ||
-         !frame_type.compare(std::string("depth")) ||
+        (!frame_type.compare(std::string("depth")) ||
          !frame_type.compare(std::string("ir")) ||
          !frame_type.compare(std::string("conf")))) {
         LOG(ERROR) << "Error parsing frame_type (-ft/--ft) from command line!"
-                   << "\n Possible values: raw, depth, ir, conf"
+                   << "\n Possible values: depth, ir, conf"
                    << "\n Please check help menu";
         return 0;
     }
@@ -368,15 +367,10 @@ int main(int argc, char *argv[]) {
     std::string sensorName;
     status = depthSensor->getName(sensorName);
 
-    // Disable depth compute for raw frames
-    if (frame_type == "raw") {
-        camera->enableDepthCompute(false);
-    }
-
     // pcm-native contains ir only
     if (frame_type != "ir" && modeName == "pcm-native") {
         LOG(ERROR) << modeName
-                   << " mode doesn't contain depth/conf/raw data, setting --ft "
+                   << " mode doesn't contain depth/conf data, setting --ft "
                       "(frameType) to ir.";
         frame_type = "ir";
     }
@@ -422,7 +416,6 @@ int main(int argc, char *argv[]) {
 
     aditof::Frame frame;
     FrameDetails fDetails;
-    std::string frameType;
 
     uint16_t *frameBuffer;
     uint8_t *headerBuffer;
@@ -436,16 +429,16 @@ int main(int argc, char *argv[]) {
     // Wait until the warmup time is finished
     if (warmup_time > 0) {
         do {
-            frameType = "raw";
             uint16_t *pRawFrame;
             status = camera->requestFrame(&frame);
             if (status != Status::OK) {
                 LOG(ERROR) << "Could not request frame!";
                 return 0;
             }
-            status = frame.getData(frameType, &pRawFrame);
+            status = frame.getData(frame_type, &pRawFrame);
             if (status != Status::OK) {
-                LOG(ERROR) << "Could not get Raw frame type data!";
+                LOG(ERROR) << "Could not get " << frame_type
+                           << " frame type data!";
                 return 0;
             }
 
@@ -472,7 +465,6 @@ int main(int argc, char *argv[]) {
         height = fDetails.height;
         width = fDetails.width;
 
-        frameType = "raw";
         std::string pixelCount;
 
         // Depth Data
@@ -484,7 +476,6 @@ int main(int argc, char *argv[]) {
             }
 
             frame_size = sizeof(uint16_t) * height * width;
-            frameType = "depth";
         }
         // Ir data
         else if (frame_type == "ir") {
@@ -497,7 +488,6 @@ int main(int argc, char *argv[]) {
             }
 
             frame_size = sizeof(uint16_t) * height * width;
-            frameType = "ir";
         }
         // Conf data
         else if (frame_type == "conf") {
@@ -508,22 +498,11 @@ int main(int argc, char *argv[]) {
             }
 
             frame_size = sizeof(float) * height * width;
-            frameType = "conf";
-        }
-        // Raw data
-        else if (frame_type == "raw") {
-            aditof::FrameDataDetails rawFrameDetails;
-            frame.getDataDetails("raw", rawFrameDetails);
-
-            frame_size = rawFrameDetails.width * rawFrameDetails.height *
-                         rawFrameDetails.subelementsPerElement *
-                         rawFrameDetails.subelementSize;
-            frameType = "raw";
         } else {
             LOG(WARNING) << "Can't recognize frame data type!";
         }
 
-        /* Since getData returns the pointer to the depth/raw data, which only main thread has access to,
+        /* Since getData returns the pointer to the depth data, which only main thread has access to,
             we need to copy depth frame to local memory and pass that to thread for file I/O, there is no drop in the throughput with this. */
         frameBuffer = new uint16_t[frame_size];
         if (frameBuffer == NULL) {
@@ -532,7 +511,7 @@ int main(int argc, char *argv[]) {
         }
 
         uint16_t *pData;
-        status = frame.getData(frameType, &pData);
+        status = frame.getData(frame_type, &pData);
         if (status != Status::OK) {
             LOG(ERROR) << "Could not get frame type data!";
             return 0;
@@ -564,7 +543,7 @@ int main(int argc, char *argv[]) {
         memcpy(headerBuffer, (uint8_t *)pHeader, header_data_size);
 #endif
 
-        // Create thread to handle the file I/O of copying raw/depth images to file
+        // Create thread to handle the file I/O of copying depth images to file
 #ifdef MULTI_THREADED
         thread_params *pThreadParams = new thread_params();
         if (pThreadParams == nullptr) {
@@ -581,7 +560,7 @@ int main(int argc, char *argv[]) {
         pThreadParams->pFrame_type = frame_type.c_str();
         pThreadParams->pFramesize = height * width;
 
-        /* fileWriterThread handles the copying of raw/depth frames to a file */
+        /* fileWriterThread handles the copying of depth frames to a file */
         std::thread fileWriterThread(
             fileWriterTask,
             const_cast<const thread_params *const>(pThreadParams));
