@@ -225,9 +225,27 @@ aditof::Status ModeInfo::getSensorProperties(const std::string mode,
         return aditof::Status::OK;
     }
 
-    //ADSD3500 + ADSD3030
+    //ADSD3500 + ADSD3100
     if (g_imagerType == 1) {
-        if (pixelFormat == "raw16_bits12_shift4") {
+        if (pixelFormat == "raw16") {
+            if (depthBits == 16 && abBits == 16 && confBits == 0) {
+                if (mode == "lr-native") {
+                    *width = 1024;
+                    *height = 4096;
+                    *pixelFormatIndex = 1;
+                } else if (mode == "sr-native") {
+                    *width = 1024;
+                    *height = 3072;
+                    *pixelFormatIndex = 1;
+                } else {
+                    LOG(ERROR) << "Invalid configuration!";
+                    return aditof::Status::INVALID_ARGUMENT;
+                }
+            } else {
+                LOG(ERROR) << "Invalid configuration!";
+                return aditof::Status::INVALID_ARGUMENT;
+            }
+        } else if (pixelFormat == "raw16_bits12_shift4") {
             if (depthBits == 12 && abBits == 12 && confBits == 0) {
                 if (mode == "lr-native") {
                     *width = 1024;
