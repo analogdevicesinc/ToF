@@ -64,17 +64,15 @@ std::vector<std::string> frameTypes;
 camera1->getAvailableFrameTypes(frameTypes);
 status = camera1->setFrameType(frameTypes.front());
 
-// Place the camera in a specific mode
-std::vector<std::string> modes;
-camera1->getAvailableModes(modes);
-status = camera1->setMode(modes.front());
-
 // Create a TOF frame and request data from the TOF camera
 aditof::Frame frame;
  
 status = camera1->start();
 status = camera1->requestFrame(&frame);
 status = camera1->stop();
+
+uint16_t *frameData;
+status = frame.getData("depth", &frameData);
 ~~~
 
  */
