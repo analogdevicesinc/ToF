@@ -693,8 +693,6 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
                                         aditof::FrameUpdateCallback /*cb*/) {
     using namespace aditof;
     Status status = Status::OK;
-    std::string totalCapturesStr;
-    uint8_t totalCaptures;
     ModeInfo::modeInfo aModeInfo;
 
     if (frame == nullptr) {
@@ -716,8 +714,6 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         frame->setDetails(m_details.frameType);
     }
 
-    totalCaptures = 1;
-
     uint16_t *frameDataLocation = nullptr;
     if (m_targetFramesAreComputed && !m_pcmFrame) {
         frame->getData("frameData", &frameDataLocation);
@@ -727,8 +723,6 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         } else if (m_details.frameType.type == "") {
             LOG(ERROR) << "Frame type not found!";
             return Status::INVALID_ARGUMENT;
-        } else {
-            frame->getData("raw", &frameDataLocation);
         }
     }
     if (!frameDataLocation) {
@@ -742,89 +736,30 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         return status;
     }
 
-    if (!m_targetFramesAreComputed && !m_pcmFrame) {
-
-        if (NULL == m_tofi_compute_context) {
-            LOG(ERROR) << "Depth compute libray not initialized";
-            return Status::GENERIC_ERROR;
-        }
-        uint16_t *tempDepthFrame = m_tofi_compute_context->p_depth_frame;
-        uint16_t *tempAbFrame = m_tofi_compute_context->p_ab_frame;
-        uint16_t *tempXyzFrame =
-            (uint16_t *)m_tofi_compute_context->p_xyz_frame;
-        // uint16_t *tempConfFrame =
-        //     (uint16_t *)m_tofi_compute_context->p_conf_frame; // TO DO: Uncomment this and figure out why depth compute is crashing
-
-        frame->getData("depth", &m_tofi_compute_context->p_depth_frame);
-        frame->getData("ir", &m_tofi_compute_context->p_ab_frame);
-
-        // uint16_t *confFrame;
-        // frame->getData("conf", &confFrame);
-        // m_tofi_compute_context->p_conf_frame = (float *)confFrame; // TO DO: Uncomment this and figure out why depth compute is crashing
-
-        if (m_xyzEnabled) {
-            uint16_t *xyzFrame;
-            frame->getData("xyz", &xyzFrame);
-            m_tofi_compute_context->p_xyz_frame = (int16_t *)xyzFrame;
-        }
-
-        uint32_t ret =
-            TofiCompute(frameDataLocation, m_tofi_compute_context, NULL);
-
-        if (ret != ADI_TOFI_SUCCESS) {
-            LOG(ERROR) << "TofiCompute failed";
-            return Status::GENERIC_ERROR;
-        }
-
-        if (m_enableMetaDatainAB) {
-            uint16_t *header;
-            frame->getData("embedded_header", &header);
-            memcpy(header, m_tofi_compute_context->p_ab_frame, 128);
-        }
-
-        m_tofi_compute_context->p_depth_frame = tempDepthFrame;
-        m_tofi_compute_context->p_ab_frame = tempAbFrame;
-        m_tofi_compute_context->p_xyz_frame = (int16_t *)tempXyzFrame;
-        // m_tofi_compute_context->p_conf_frame = (float *)tempConfFrame;
-
-        if ((m_abEnabled && (m_imagerType == ImagerType::ADSD3100) &&
-             (m_abBitsPerPixel < 16) &&
-             (m_details.frameType.type == "lr-native" ||
-              m_details.frameType.type == "sr-native"))) {
-            uint16_t *mpAbFrame;
-            frame->getData("ir", &mpAbFrame);
-
-            //TO DO: shift with 4 because we use only 12 bits
-            uint8_t bitsToShift = 16 - m_abBitsPerPixel;
-            for (unsigned int i = 0;
-                 i < (m_details.frameType.height * m_details.frameType.width);
-                 ++i) {
-                mpAbFrame[i] = mpAbFrame[i] >> bitsToShift;
-            }
-        }
+    // For frame with PCM content only there is nothing else to do
+    if (m_pcmFrame) {
+        return Status::OK;
     }
 
-    // The incoming frames frome sensor are already processed. Need to just create XYZ data
-    if (m_targetFramesAreComputed && !m_pcmFrame) {
-        if (m_xyzEnabled) {
-            uint16_t *depthFrame;
-            uint16_t *xyzFrame;
+    // The incoming sensor frames are already processed. Need to just create XYZ data
+    if (m_xyzEnabled) {
+        uint16_t *depthFrame;
+        uint16_t *xyzFrame;
 
-            frame->getData("depth", &depthFrame);
-            frame->getData("xyz", &xyzFrame);
+        frame->getData("depth", &depthFrame);
+        frame->getData("xyz", &xyzFrame);
 
-            Algorithms::ComputeXYZ(
-                (const uint16_t *)depthFrame, &m_xyzTable, (int16_t *)xyzFrame,
-                m_details.frameType.height, m_details.frameType.width);
-        }
+        Algorithms::ComputeXYZ((const uint16_t *)depthFrame, &m_xyzTable,
+                               (int16_t *)xyzFrame, m_details.frameType.height,
+                               m_details.frameType.width);
+    }
 
-        if (m_enableMetaDatainAB) {
-            uint16_t *abFrame;
-            uint16_t *header;
-            frame->getData("ir", &abFrame);
-            frame->getData("embedded_header", &header);
-            memcpy(header, abFrame, 128);
-        }
+    if (m_enableMetaDatainAB) {
+        uint16_t *abFrame;
+        uint16_t *header;
+        frame->getData("ir", &abFrame);
+        frame->getData("embedded_header", &header);
+        memcpy(header, abFrame, 128);
     }
 
     return Status::OK;
