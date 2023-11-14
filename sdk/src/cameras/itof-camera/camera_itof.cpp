@@ -66,7 +66,7 @@ CameraItof::CameraItof(
       m_cameraFps(0), m_fsyncMode(-1), m_mipiOutputSpeed(-1),
       m_enableTempCompenstation(-1), m_enableMetaDatainAB(-1),
       m_enableEdgeConfidence(-1), m_modesVersion(0),
-      m_targetFramesAreComputed(true), m_xyzTable({nullptr, nullptr, nullptr}),
+      m_xyzTable({nullptr, nullptr, nullptr}),
       m_imagerType(aditof::ImagerType::UNSET) {
 
     FloatToLinGenerateTable();
@@ -546,7 +546,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         if (item.type == "xyz" && !m_xyzEnabled) {
             continue;
         }
-        if (m_targetFramesAreComputed && item.type == "raw") {
+        if (item.type == "raw") { // "raw" is not supported right now
             continue;
         }
 
@@ -575,18 +575,8 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
     }
 
-    if (!m_targetFramesAreComputed && !m_pcmFrame) {
-        status = initComputeLibrary();
-        if (Status::OK != status) {
-            LOG(ERROR) << "Initializing compute libraries failed.";
-            return Status::GENERIC_ERROR;
-        }
-    } else {
-        freeComputeLibrary();
-    }
-
-    // If we want computed frames (Depth & AB), tell target to initialize depth compute
-    if (m_targetFramesAreComputed && !m_pcmFrame) {
+    // We want computed frames (Depth & AB). Tell target to initialize depth compute
+    if (!m_pcmFrame) {
         if (!m_ini_depth.empty()) {
             size_t dataSize = m_depthINIData.size;
             unsigned char *pData = m_depthINIData.p_data;
@@ -618,7 +608,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     }
 
     // If we compute XYZ then prepare the XYZ tables which depend on the mode
-    if (m_targetFramesAreComputed && !m_pcmFrame) {
+    if (!m_pcmFrame) {
         uint8_t mode =
             ModeInfo::getInstance()->getModeInfo(m_details.frameType.type).mode;
         const int GEN_XYZ_ITERATIONS = 20;
@@ -715,7 +705,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     }
 
     uint16_t *frameDataLocation = nullptr;
-    if (m_targetFramesAreComputed && !m_pcmFrame) {
+    if (!m_pcmFrame) {
         frame->getData("frameData", &frameDataLocation);
     } else {
         if ((m_details.frameType.type == "pcm-native")) {

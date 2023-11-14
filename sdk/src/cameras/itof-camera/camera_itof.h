@@ -262,7 +262,6 @@ class CameraItof : public aditof::Camera {
     int m_modesVersion;
     bool m_fwUpdated;
     aditof::Adsd3500Status m_adsd3500Status;
-    bool m_targetFramesAreComputed;
     XYZTable m_xyzTable;
     bool m_enableDepthCompute;
     std::string m_initConfigFilePath;
