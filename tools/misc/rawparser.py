@@ -43,8 +43,8 @@ height = 0
 fps = 0
 bytePerPx = 10
 startOfFrame = 0
-embedHeaderLength = 128
-modifyContrast = False
+metadataLength = 128
+logImage = False
 raw_img_dir = '\\sample_raw\\'
 fileName = 'frames202309111819'
 rawFileType = '.RAW'
@@ -61,14 +61,14 @@ def visualize_ab(filename, directory, index):
 
         #normalize ab data to 8bit image
         norm_ab_frame = cv.normalize(ab_frame, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
-        norm_ab_frame = np.uint8(norm_ab_frame)
+        #Apply log transform if logImage is true
+        if logImage == True:
+            c = 255 / np.log(1 + np.max(norm_ab_frame)) 
+            norm_ab_frame = c * (np.log(norm_ab_frame + 1)) 
+            norm_ab_frame = np.array(norm_ab_frame, dtype = np.uint8)
+        else:
+            norm_ab_frame = np.uint8(norm_ab_frame)
         norm_ab_frame = cv.cvtColor(norm_ab_frame, cv.COLOR_GRAY2RGB)
-        
-        #Modify Contrast and Brightness if modifyContrast is true
-        if modifyContrast == True:
-            alpha = 1 # Contrast control (1.0-3.0)
-            beta = 50 # Brightness control (0-100)
-            norm_ab_frame = cv.convertScaleAbs(norm_ab_frame, alpha=alpha, beta=beta)
             
         #save depth frame as
         img = o3d.geometry.Image(norm_ab_frame)
@@ -112,15 +112,15 @@ def visualize_pcloud(filename, directory, index):
         vis.poll_events()
         vis.update_renderer()
         
-def parseMetadata(filename, directory, index):
-    header_data = np.zeros([1,embedHeaderLength])
+def parse_metadata(filename, directory, index):
+    metadata = np.zeros([1,metadataLength])
     with open ('%s' % filename) as file:
         byte_array = np.fromfile(file, dtype=np.uint16)
         print("number of bytes in the file: " + str(len(byte_array)))
-        headerData = byte_array[-int((embedHeaderLength/2)):]
-        np.savetxt(directory + 'metadata_' + args.filename + '_' + index +'.txt', headerData, fmt='%d')
+        metadata = byte_array[-int((metadataLength/2)):]
+        np.savetxt(directory + 'metadata_' + args.filename + '_' + index +'.txt', metadata, fmt='%d')
     
-def combine_ab_depth(mainDir,fps,width,height):
+def generate_vid(mainDir,numberOfFrames,width,height):
     #create video directory
     vidDir = new_dir + '\\vid_' + args.filename
     os.mkdir(vidDir)
@@ -129,7 +129,7 @@ def combine_ab_depth(mainDir,fps,width,height):
     video = cv.VideoWriter(vidDir + '\\vid_' + args.filename + '.mp4', cv.VideoWriter_fourcc(*"mp4v"), 10, (width*2, height))
     
     #Loop over the AB and depth images and and write them to video
-    for i in range(0,fps):
+    for i in range(0,numberOfFrames):
         binDir = mainDir +  '\\' + args.filename + '_' + str(i) +'\\' 
         depth_img = cv.imread(binDir + 'depth_' + args.filename + '_' + str(i) + pngFileType)
         ab_img = cv.imread(binDir + 'ab_' + args.filename + '_' + str(i) + pngFileType)
@@ -167,7 +167,7 @@ if __name__ == "__main__":
         file_size = os.path.getsize(os.path.dirname( os.path.abspath(__file__)) + '\\' + args.filename + rawFileType)
         print("file size: " + str(file_size))
         sizeOfHeader = 12;
-        sizeOfFrame = (bytePerPx * height * width)+ embedHeaderLength;
+        sizeOfFrame = (bytePerPx * height * width)+ metadataLength;
         print("frame size: " + str(sizeOfFrame))
         m_numberOfFrames = (file_size - sizeOfHeader) / sizeOfFrame;
         print("number of frames: " + str(m_numberOfFrames))
@@ -175,7 +175,7 @@ if __name__ == "__main__":
         data = f.read(file_size - sizeOfHeader)
         m_frameData = np.frombuffer(data, dtype=np.uint8)
 
-    #create directory for output frames mp4 file
+    #create directory for output frames
     new_dir = os.path.dirname( os.path.abspath(__file__)) + raw_img_dir + args.filename
     print(new_dir)
     os.mkdir(new_dir)
@@ -189,7 +189,7 @@ if __name__ == "__main__":
         print(binFileName)
         # Open the file in binary mode
         with open(binFileName , "wb") as f:
-            endOfFrame = startOfFrame +sizeOfFrame
+            endOfFrame = startOfFrame + sizeOfFrame
             f.write(m_frameData[startOfFrame : endOfFrame])
             startOfFrame = endOfFrame
         visualize_ab(binFileName,frameDir,str(i))
@@ -197,6 +197,6 @@ if __name__ == "__main__":
         if first_time_render_pc:
             visualize_pcloud(binFileName,frameDir,str(i))
             first_time_render_pc = 0
-        parseMetadata(binFileName,frameDir,str(i))
-    combine_ab_depth(new_dir,fps,width,height)
+        parse_metadata(binFileName,frameDir,str(i))
+    generate_vid(new_dir,fps,width,height)
    
