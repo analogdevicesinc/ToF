@@ -6,11 +6,6 @@ function(PopulateforPython targetdir)
     file(GLOB PythonSources "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/*.py")
     
     if(WIN32)
-        if (EXISTS "${LIBTOFI_LIBDIR_PATH}")
-            add_custom_command( TARGET aditofpython POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_directory ${LIBTOFI_LIBDIR_PATH} "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>"
-            )
-        endif()
         add_custom_command( TARGET aditofpython POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/sdk/$<CONFIG>" "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>"
             COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../../sdk/src/cameras/itof-camera/config "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>/config"
@@ -18,11 +13,6 @@ function(PopulateforPython targetdir)
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${TARGET_OUTPUT_NAME}" "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>"
         )
     elseif(UNIX)
-        if (EXISTS "${LIBTOFI_LIBDIR_PATH}")
-            add_custom_command( TARGET aditofpython POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_directory ${LIBTOFI_LIBDIR_PATH} "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/"
-            )
-        endif()
         add_custom_command( TARGET aditofpython POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/sdk/" "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/"
             COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../../sdk/src/cameras/itof-camera/config "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/config"

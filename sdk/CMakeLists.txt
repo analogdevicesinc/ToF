@@ -179,43 +179,27 @@ if (WITH_GLOG_DEPENDENCY)
 endif()
 
 #LIBTOFI_LIBDIR_PATH - path to libtofi_config.so and libtofi_compute.so folder	
-if ( UNIX )
+if ( ON_TARGET AND UNIX )
 	if (NOT USE_DEPTH_COMPUTE_STUBS AND NOT USE_DEPTH_COMPUTE_OPENSOURCE)
-			add_library(libtofi_compute SHARED IMPORTED)
-			set_target_properties(libtofi_compute PROPERTIES
- 			IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_compute.so"
-     			IMPORTED_NO_SONAME 1
-			)
+        add_library(libtofi_compute SHARED IMPORTED)
+        set_target_properties(libtofi_compute PROPERTIES
+            IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_compute.so"
+            IMPORTED_NO_SONAME 1
+        )
 
-   			add_library(libtofi_config SHARED IMPORTED)
-   			set_target_properties(libtofi_config PROPERTIES
-        			IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_config.so"
-        			IMPORTED_NO_SONAME 1
-		)
+        add_library(libtofi_config SHARED IMPORTED)
+        set_target_properties(libtofi_config PROPERTIES
+                IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_config.so"
+                IMPORTED_NO_SONAME 1
+		    )
+
+        target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_compute)
+        target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_config)
+    else()
+        target_link_libraries(${PROJECT_NAME} PRIVATE tofi_compute)
+        target_link_libraries(${PROJECT_NAME} PRIVATE tofi_config)
     endif()
-elseif( WIN32 )
-    if (NOT USE_DEPTH_COMPUTE_STUBS AND NOT USE_DEPTH_COMPUTE_OPENSOURCE)
-   		add_library(libtofi_compute SHARED IMPORTED)
-   		set_target_properties(libtofi_compute PROPERTIES
- 		IMPORTED_IMPLIB "${LIBTOFI_LIBDIR_PATH}/tofi_compute.lib"
-        		IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/tofi_compute.dll")
-    		
-   		add_library(libtofi_config SHARED IMPORTED)
-   		set_target_properties(libtofi_config PROPERTIES
-        		IMPORTED_IMPLIB "${LIBTOFI_LIBDIR_PATH}/tofi_config.lib"
-        		IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/tofi_config.dll")
-    endif()
-else()
-	message( FATAL_ERROR "Unsupported platform for libtofi_compute and libtofi_config. CMake will exit." )
 endif()	
-
-if (NOT USE_DEPTH_COMPUTE_STUBS AND NOT USE_DEPTH_COMPUTE_OPENSOURCE)
-    target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_compute)
-    target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_config)
-else()
-    target_link_libraries(${PROJECT_NAME} PRIVATE tofi_compute)
-    target_link_libraries(${PROJECT_NAME} PRIVATE tofi_config)
-endif()
 
 
 if (CMAKE_COMPILER_IS_GNUCC)
