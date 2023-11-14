@@ -364,7 +364,6 @@ void Network::call_lws_service() {
         } else if (Connection_Closed[m_connectionId] == true &&
                    Server_Connected[m_connectionId] == false) {
             Connection_Closed[m_connectionId] = false;
-            break;
         }
         /*Complete the thread if destructor is called*/
         std::lock_guard<std::mutex> guard(thread_mutex[m_connectionId]);
