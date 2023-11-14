@@ -103,7 +103,6 @@ CameraItof::CameraItof(
 
 CameraItof::~CameraItof() {
     freeConfigData();
-    freeComputeLibrary();
     // m_device->toggleFsync();
     cleanupXYZtables();
 }
@@ -814,96 +813,6 @@ aditof::Status CameraItof::getControl(const std::string &control,
     }
 
     return status;
-}
-
-aditof::Status CameraItof::initComputeLibrary(void) {
-    aditof::Status status = aditof::Status::OK;
-
-    LOG(INFO) << "initComputeLibrary";
-
-    freeComputeLibrary();
-    uint8_t convertedMode;
-
-    status = ModeInfo::getInstance()->convertCameraMode(m_details.mode,
-                                                        convertedMode);
-
-    if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Invalid mode!";
-        return aditof::Status::GENERIC_ERROR;
-    }
-
-    if (m_loadedConfigData) {
-        ConfigFileData calData = {m_calData.p_data, m_calData.size};
-        uint32_t status = ADI_TOFI_SUCCESS;
-
-        if (!m_ini_depth.empty()) {
-            size_t dataSize = m_depthINIData.size;
-            unsigned char *pData = m_depthINIData.p_data;
-
-            if (m_depthINIDataMap.size() > 1) {
-                dataSize = m_depthINIDataMap[m_ini_depth].size;
-                pData = m_depthINIDataMap[m_ini_depth].p_data;
-            }
-
-            ConfigFileData depth_ini = {pData, dataSize};
-
-            if (!m_tofi_config) {
-                m_tofi_config = InitTofiConfig_isp((ConfigFileData *)&depth_ini,
-                                                   convertedMode, &status,
-                                                   m_xyz_dealias_data);
-            } else {
-                if (calData.p_data != NULL && !m_tofi_config) {
-                    m_tofi_config = InitTofiConfig(&calData, NULL, &depth_ini,
-                                                   convertedMode, &status);
-                } else {
-                    LOG(ERROR) << "Failed to get calibration data";
-                }
-            }
-        } else {
-            if (!m_tofi_config) {
-                m_tofi_config = InitTofiConfig(&calData, NULL, NULL,
-                                               convertedMode, &status);
-            }
-        }
-
-        if ((m_tofi_config == NULL) ||
-            (m_tofi_config->p_tofi_cal_config == NULL) ||
-            (status != ADI_TOFI_SUCCESS)) {
-            LOG(ERROR) << "InitTofiConfig failed";
-            return aditof::Status::GENERIC_ERROR;
-
-        } else {
-            if (!m_tofi_compute_context)
-                m_tofi_compute_context =
-                    InitTofiCompute(m_tofi_config->p_tofi_cal_config, &status);
-            if (m_tofi_compute_context == NULL || status != ADI_TOFI_SUCCESS) {
-                LOG(ERROR) << "InitTofiCompute failed";
-                return aditof::Status::GENERIC_ERROR;
-            }
-        }
-    } else {
-        LOG(ERROR) << "Could not initialize compute library because config "
-                      "data hasn't been loaded";
-        return aditof::Status::GENERIC_ERROR;
-    }
-
-    if (status != aditof::Status::OK) {
-        freeComputeLibrary();
-    }
-    return status;
-}
-
-aditof::Status CameraItof::freeComputeLibrary(void) {
-
-    if (m_tofi_compute_context != NULL) {
-        FreeTofiCompute(m_tofi_compute_context);
-        m_tofi_compute_context = NULL;
-    }
-    if (m_tofi_config != NULL) {
-        FreeTofiConfig(m_tofi_config);
-        m_tofi_config = NULL;
-    }
-    return aditof::Status::OK;
 }
 
 aditof::Status CameraItof::loadConfigData(void) {
