@@ -26,13 +26,17 @@ option(WITH_ROS "Build ros bindings?" OFF)
 option(WITH_ROS2 "Build ros2 bindings?" OFF)
 option(WITH_NETWORK "Build network interface?" ON)
 option(WITH_OFFLINE "Build offline interface?" OFF)
-option(USE_DEPTH_COMPUTE_STUBS "Use empty generated libs?" OFF)
-option(USE_DEPTH_COMPUTE_OPENSOURCE "Use an open source implementation?" OFF)
-option(WITH_GLOG_DEPENDENCY "Build with GLOG dependency to be used for logging" ON)
-option(WITH_PROTOBUF_DEPENDENCY "Build with PROTOBUF dependency to be used for serializing messages" ON)
-option(WITH_COMMAND_LINE_TOOLS "Build with embedded Linux command line tools" ON)
+option(WITH_GLOG_DEPENDENCY "Build with GLOG dependency to be used for logging?" ON)
+option(WITH_COMMAND_LINE_TOOLS "Build with command line tools?" ON)
 option(CI_BUILD "Build for CI" OFF)
 
+######################### Target based Options ################################
+option(NXP "Set to ON when building on NXP" OFF)
+option(NVIDIA "Set to ON when building on NVIDIA" OFF)
+option(WITH_PROTOBUF_DEPENDENCY "Build with PROTOBUF dependency?" ON)
+option(USE_DEPTH_COMPUTE_STUBS "Use empty generated libs?" OFF)
+option(USE_DEPTH_COMPUTE_OPENSOURCE "Use an open source implementation?" OFF)
+option(USE_ADSD3030 "Is the imager of type ADSD3030?" OFF)
 
 ################################## Git ########################################
 include(FindGit OPTIONAL)
