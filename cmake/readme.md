@@ -12,6 +12,7 @@ After creating a build folder and moving into it `mkdir -p build && cd build`, w
 
 which will generate all the necessary recipes for building and installing. Useful cmake options are:
 
+##### General custom options
 | \<option\> | value | default | description |
 | --------- | ----------- | ----------- | ----------- |
 | WITH_EXAMPLES | on/off | on | Build the examples. |
@@ -22,11 +23,24 @@ which will generate all the necessary recipes for building and installing. Usefu
 | WITH_ROS | on/off | off | Build the ROS bindings. |
 | WITH_ROS2 | on/off | off | Build the ROS2 bindings. |
 | WITH_NETWORK | on/off | off | Build the network interface for a Linux or Windows host build; use **off** for building on the target. |
-| USE_DEPTH_COMPUTE_STUBS | on/off | off | Use depth compute stubs instead of the depth compute libraries. On the target set to **on**. On the host set tof **off**. |
-| USE_DEPTH_COMPUTE_OPENSOURCE | on/off | off | When **on** the open source radial to XYZ (point cloud) generation is used. Otherwise the closed source partial depth compute library is required. |
+| WITH_OFFLINE | on/off | off | Build the offline mode. No hardware is required. |
 | WITH_GLOG_DEPENDENCY | on/off | on | Build the sdk with GLOG dependency. Used for logging. |
-| WITH_PROTOBUF_DEPENDENCY | on/off | on | Build the sdk with Protobuf dependency. Used for serializing the messages sent over network. |
 | WITH_COMMAND_LINE_TOOLS | on/off | on | Build the command line tools. |
+| WITH_COMMAND_LINE_TOOLS | on/off | on | Build the command line tools. |
+| CI_BUILD | on/off | off | Only used for continuous integrations builds. Can overwrite other cmake options. |
+
+##### Target-only custom options
+| \<option\> | value | default | description |
+ --------- | ----------- | ----------- | ----------- |
+| NXP | on/off | off | Builds in a specific way targeting the NXP system. |
+| NVIDIA | on/off | off | Builds in a specific way targeting the NVIDIA system. |
+| WITH_PROTOBUF_DEPENDENCY | on/off | on | Build the sdk with Protobuf dependency. Used for serializing the messages sent over network. |
+| USE_DEPTH_COMPUTE_STUBS | on/off | off | When **on** an empty implementation of depth compute is used. |
+| USE_DEPTH_COMPUTE_OPENSOURCE | on/off | off | When **on** the open source radial to XYZ (point cloud) generation is used. Otherwise the closed source partial depth compute library is required. |
+
+##### CMake options
+| \<option\> | value | default | description |
+ --------- | ----------- | ----------- | ----------- |
 | CMAKE_PREFIX_PATH | \<path\> | Empty | Specifies a path which will be used by the FIND_XXX() commands. |
 | CMAKE_INSTALL_PREFIX | \<path\> |  /usr/local on UNIX, c:/Program Files on Windows | Installation directory used by `cmake install`. |
 | PYTHON_EXECUTABLE | \<path\> | Path to default python executable used | Specify which python executable should be used for building the python bindings. |
