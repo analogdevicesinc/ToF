@@ -81,7 +81,7 @@ static const char kUsagePublic[] =
       --ccb <FILE>       The path to store CCB content
       --ip <ip>          Camera IP
       --fw <firmware>    Adsd3500 fw file
-      --ft <frameType>   FrameType of saved image (depth/ir/conf) [default: depth]
+      --ft <frameType>   FrameType of saved image (depth/ir/conf/full-frame) [default: depth]
 
     Note: --m argument supports both index and string (0/sr-native) 
 
@@ -169,7 +169,7 @@ int main(int argc, char *argv[]) {
     char folder_path[MAX_FILE_PATH_SIZE]; // Path to store the depth frames
     char json_file_path
         [MAX_FILE_PATH_SIZE]; // Get the .json file from command line
-    std::string frame_type;   // Type of frame need to be captured (Depth/IR)
+    std::string frame_type;   // Type of frame need to be captured (Depth/IR/full-frame)
 
     uint16_t err = 0;
     uint32_t n_frames = 0;
@@ -256,11 +256,12 @@ int main(int argc, char *argv[]) {
     frame_type = command_map["-ft"].value;
 
     if (frame_type.length() <= 0 &&
-        (!frame_type.compare(std::string("depth")) ||
+        (!frame_type.compare(std::string("full-frame")) ||
+         !frame_type.compare(std::string("depth")) ||
          !frame_type.compare(std::string("ir")) ||
          !frame_type.compare(std::string("conf")))) {
         LOG(ERROR) << "Error parsing frame_type (-ft/--ft) from command line!"
-                   << "\n Possible values: depth, ir, conf"
+                   << "\n Possible values: depth, ir, conf, full-frame"
                    << "\n Please check help menu";
         return 0;
     }
@@ -285,6 +286,10 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "Json file: " << json_file_path;
     LOG(INFO) << "Frame type is: " << frame_type;
     LOG(INFO) << "Warm Up Time is: " << warmup_time << " seconds";
+
+    if(frame_type == "full-frame"){
+        frame_type = "frameData";
+    }
 
     if (!ip.empty()) {
         LOG(INFO) << "Ip address is: " << ip;
@@ -370,7 +375,7 @@ int main(int argc, char *argv[]) {
     // pcm-native contains ir only
     if (frame_type != "ir" && modeName == "pcm-native") {
         LOG(ERROR) << modeName
-                   << " mode doesn't contain depth/conf data, setting --ft "
+                   << " mode doesn't contain depth/conf/full-frame data, setting --ft "
                       "(frameType) to ir.";
         frame_type = "ir";
     }
@@ -429,13 +434,13 @@ int main(int argc, char *argv[]) {
     // Wait until the warmup time is finished
     if (warmup_time > 0) {
         do {
-            uint16_t *pRawFrame;
+            uint16_t *pFrame;
             status = camera->requestFrame(&frame);
             if (status != Status::OK) {
                 LOG(ERROR) << "Could not request frame!";
                 return 0;
             }
-            status = frame.getData(frame_type, &pRawFrame);
+            status = frame.getData(frame_type, &pFrame);
             if (status != Status::OK) {
                 LOG(ERROR) << "Could not get " << frame_type
                            << " frame type data!";
@@ -498,6 +503,11 @@ int main(int argc, char *argv[]) {
             }
 
             frame_size = sizeof(float) * height * width;
+        } else if (frame_type == "frameData") {
+            FrameDetails frameDetails;
+            frame.getDetails(frameDetails);
+            frame_size =
+                sizeof(uint16_t) * frameDetails.height * frameDetails.width;
         } else {
             LOG(WARNING) << "Can't recognize frame data type!";
         }
