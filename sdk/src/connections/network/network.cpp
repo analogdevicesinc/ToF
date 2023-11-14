@@ -366,9 +366,8 @@ void Network::call_lws_service() {
             Connection_Closed[m_connectionId] = false;
         }
         /*Complete the thread if destructor is called*/
-        std::lock_guard<std::mutex> guard(thread_mutex[m_connectionId]);
-
         if (Thread_Running[m_connectionId] == 1) {
+            std::lock_guard<std::mutex> guard(thread_mutex[m_connectionId]);
 #ifdef NW_DEBUG
             cout << "Thread exited" << endl;
 #endif
