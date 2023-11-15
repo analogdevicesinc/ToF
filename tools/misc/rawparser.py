@@ -37,6 +37,7 @@ import time
 import argparse
 import cv2 as cv
 import open3d as o3d
+import struct
 
 width = 0
 height = 0
@@ -113,13 +114,40 @@ def visualize_pcloud(filename, directory, index):
         vis.update_renderer()
         
 def parse_metadata(filename, directory, index):
-    metadata = np.zeros([1,metadataLength])
-    with open ('%s' % filename) as file:
-        byte_array = np.fromfile(file, dtype=np.uint16)
-        print("number of bytes in the file: " + str(len(byte_array)))
-        metadata = byte_array[-int((metadataLength/2)):]
-        np.savetxt(directory + 'metadata_' + args.filename + '_' + index +'.txt', metadata, fmt='%d')
-    
+    elemsList = [
+        ('frameWidth',             'H'),
+        ('frameHeight',            'H'),
+        ('outputconfig',           'B'),
+        ('depthPhaseBits',         'B'),
+        ('ABBits',                 'B'),
+        ('confidenceBits',         'B'),
+        ('invalidPhaseValue',      'H'),
+        ('frequencyIndex',         'B'),
+        ('ABFrequencyIndex',       'B'),
+        ('frameNumber',            'L'),
+        ('imagerMode',             'B'),
+        ('noOfPhases',             'B'),
+        ('noOfFrequencies',        'H'),
+        ('ElapsedTimeinFrac',      'L'),
+        ('ElapsedTimeinSec',       'L'),
+        ('sensorTemp',             'L'),
+        ('laserTemp',              'L'),
+        ('paddingBytes',         '92x'),
+    ]
+    format_string = "".join(fmt for name, fmt in elemsList)
+    #with open ('%s' % filename) as file:
+    with open(filename, "rb") as file:
+        file.seek(-(metadataLength),2)
+        data = file.read(metadataLength)
+        values = struct.unpack(format_string, data)
+        
+        # Create a list of elements with names and values
+        elements = [(name, value) for (name, fmt), value in zip(elemsList, values)]
+        
+        # Save the elements list
+        with open(directory + 'metadata_' + args.filename + '_' + index +'.txt', 'w') as outfile:
+            outfile.writelines([str(i)+'\n' for i in elements])
+
 def generate_vid(mainDir,numberOfFrames,width,height):
     #create video directory
     vidDir = new_dir + '\\vid_' + args.filename
