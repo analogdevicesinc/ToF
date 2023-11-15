@@ -459,14 +459,13 @@ PYBIND11_MODULE(aditofpython, m) {
         .def("adsd3500SetEnableTemperatureCompensation",
              &aditof::Camera::adsd3500SetEnableTemperatureCompensation,
              py::arg("value"))
-        .def("adsd3500SetEnableEmbeddedHeaderinAB",
-             &aditof::Camera::adsd3500SetEnableEmbeddedHeaderinAB,
-             py::arg("value"))
-        .def("adsd3500GetEnableEmbeddedHeaderinAB",
+        .def("adsd3500SetEnableMetadatainAB",
+             &aditof::Camera::adsd3500SetEnableMetadatainAB, py::arg("value"))
+        .def("adsd3500GetEnableMetadatainAB",
              [](aditof::Camera &camera) {
                  uint16_t value;
                  aditof::Status status =
-                     camera.adsd3500GetEnableEmbeddedHeaderinAB(value);
+                     camera.adsd3500GetEnableMetadatainAB(value);
                  return std::make_pair(status, value);
              })
         .def("adsd3500SetGenericTemplate",
