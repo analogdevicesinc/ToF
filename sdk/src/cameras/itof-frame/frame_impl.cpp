@@ -262,9 +262,9 @@ aditof::Status FrameImpl::getTemperature(uint32_t &sensorTemp,
     aditof::Status status = aditof::Status::OK;
     uint8_t *header;
 
-    if (m_implData->m_dataLocations.count("embedded_header") > 0) {
+    if (m_implData->m_dataLocations.count("metadata") > 0) {
         header = reinterpret_cast<uint8_t *>(
-            m_implData->m_dataLocations["embedded_header"]);
+            m_implData->m_dataLocations["metadata"]);
     } else {
         return aditof::Status::UNAVAILABLE;
     }

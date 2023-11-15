@@ -241,7 +241,7 @@ void ADIToFRecorder::recordThread() {
         frame->getData("raw", &rawData);
 
         uint16_t *header;
-        frame->getData("embedded_header", &header);
+        frame->getData("metadata", &header);
 
         int width = m_frameDetails.width;
         int height = m_frameDetails.height;
@@ -302,7 +302,7 @@ void ADIToFRecorder::playbackThread() {
         dataDetails.width = m_frameDetails.width;
         dataDetails.height = m_frameDetails.height;
         m_frameDetails.dataDetails.emplace_back(dataDetails);
-        dataDetails.type = "embedded_header";
+        dataDetails.type = "metadata";
         dataDetails.width = 1;
         dataDetails.height = EMBED_HDR_LENGTH;
         m_frameDetails.dataDetails.emplace_back(dataDetails);
@@ -311,7 +311,7 @@ void ADIToFRecorder::playbackThread() {
         frame->getData("ir", &frameDataLocationIR);
         frame->getData("depth", &frameDataLocationDEPTH);
         frame->getData("xyz", &frameDataLocationXYZ);
-        frame->getData("embedded_header", &frameDataLocationHeader);
+        frame->getData("metadata", &frameDataLocationHeader);
 
         unsigned int width = m_frameDetails.width;
         unsigned int height = m_frameDetails.height;
