@@ -455,20 +455,18 @@ class SDK_API Camera {
     virtual Status adsd3500SetEnableTemperatureCompensation(uint16_t value) = 0;
 
     /**
-     * @brief Set Enable Embedded Header in the AB frame
-     * @param[in] value - See "Enable/Disable Output Embedded Header in AB Frame" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @brief Set Enable Metadata in the AB frame
+     * @param[in] value - See "Enable/Disable Output Metadata in AB Frame" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
      * @return Status
      */
-    virtual aditof::Status
-    adsd3500SetEnableEmbeddedHeaderinAB(uint16_t value) = 0;
+    virtual aditof::Status adsd3500SetEnableMetadatainAB(uint16_t value) = 0;
 
     /**
-     * @brief Get state of Enable Embedded Header in the AB frame
-     * @param[out] value - See "Get Output Embedded Header in AB Frame status" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @brief Get state of Enable Metadata in the AB frame
+     * @param[out] value - See "Get Output Metadata in AB Frame status" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
      * @return Status
      */
-    virtual aditof::Status
-    adsd3500GetEnableEmbeddedHeaderinAB(uint16_t &value) = 0;
+    virtual aditof::Status adsd3500GetEnableMetadatainAB(uint16_t &value) = 0;
 
     /**
      * @brief Generic ADSD3500 function for commands not defined in the SDK (yet)

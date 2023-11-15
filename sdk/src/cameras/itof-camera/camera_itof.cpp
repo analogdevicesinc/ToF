@@ -497,7 +497,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
 
     if (m_enableMetaDatainAB > 0) {
         if (!m_pcmFrame) {
-            status = adsd3500SetEnableEmbeddedHeaderinAB(m_enableMetaDatainAB);
+            status = adsd3500SetEnableMetadatainAB(m_enableMetaDatainAB);
             if (status != Status::OK) {
                 LOG(ERROR) << "Failed to set enableMetaDatainAB.";
                 return status;
@@ -506,7 +506,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
                          "first 128 bytes.";
 
         } else {
-            status = adsd3500SetEnableEmbeddedHeaderinAB(0);
+            status = adsd3500SetEnableMetadatainAB(0);
             if (status != Status::OK) {
                 LOG(ERROR) << "Failed to disable enableMetaDatainAB.";
                 return status;
@@ -515,7 +515,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         }
 
     } else {
-        status = adsd3500SetEnableEmbeddedHeaderinAB(m_enableMetaDatainAB);
+        status = adsd3500SetEnableMetadatainAB(m_enableMetaDatainAB);
         if (status != Status::OK) {
             LOG(ERROR) << "Failed to set enableMetaDatainAB.";
             return status;
@@ -1656,12 +1656,11 @@ CameraItof::adsd3500SetEnableTemperatureCompensation(uint16_t value) {
     return m_depthSensor->adsd3500_write_cmd(0x0021, value);
 }
 
-aditof::Status CameraItof::adsd3500SetEnableEmbeddedHeaderinAB(uint16_t value) {
+aditof::Status CameraItof::adsd3500SetEnableMetadatainAB(uint16_t value) {
     return m_depthSensor->adsd3500_write_cmd(0x0036, value);
 }
 
-aditof::Status
-CameraItof::adsd3500GetEnableEmbeddedHeaderinAB(uint16_t &value) {
+aditof::Status CameraItof::adsd3500GetEnableMetadatainAB(uint16_t &value) {
     return m_depthSensor->adsd3500_read_cmd(
         0x0037, reinterpret_cast<uint16_t *>(&value));
 }

@@ -115,9 +115,8 @@ class CameraItof : public aditof::Camera {
     aditof::Status adsd3500SetEnablePhaseInvalidation(uint16_t value) override;
     aditof::Status
     adsd3500SetEnableTemperatureCompensation(uint16_t value) override;
-    aditof::Status adsd3500SetEnableEmbeddedHeaderinAB(uint16_t value) override;
-    aditof::Status
-    adsd3500GetEnableEmbeddedHeaderinAB(uint16_t &value) override;
+    aditof::Status adsd3500SetEnableMetadatainAB(uint16_t value) override;
+    aditof::Status adsd3500GetEnableMetadatainAB(uint16_t &value) override;
     aditof::Status adsd3500SetGenericTemplate(uint16_t reg,
                                               uint16_t value) override;
     aditof::Status adsd3500GetGenericTemplate(uint16_t reg,
