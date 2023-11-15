@@ -747,7 +747,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         uint16_t *abFrame;
         uint16_t *header;
         frame->getData("ir", &abFrame);
-        frame->getData("embedded_header", &header);
+        frame->getData("metadata", &header);
         memcpy(header, abFrame, 128);
     }
 

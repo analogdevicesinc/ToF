@@ -79,7 +79,7 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
              {"xyz", 512, 512},
              {"depth", 512, 512},
              {"conf", 512, 512},
-             {"embedded_header", 1, 128}},
+             {"metadata", 1, 128}},
             2560,
             512, //TODO header size not counted here
         },
@@ -90,7 +90,7 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
              {"xyz", 512, 512},
              {"depth", 512, 512},
              {"conf", 512, 512},
-             {"embedded_header", 1, 128}},
+             {"metadata", 1, 128}},
             2560,
             512,
         },
