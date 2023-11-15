@@ -41,7 +41,7 @@ enum : uint16_t {
 
 #define MULTI_THREADED 1
 #define DATA_COLLECT_VERSION "1.3.0"
-#define EMBED_HDR_LENGTH 128
+#define METADATA_LENGTH 128
 
 using namespace aditof;
 
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]);
 
 typedef struct thread_params {
     uint16_t *pCaptureData;
-    uint8_t *pHeaderData;
+    uint8_t *pMetadata;
     uint16_t nframes;
     uint32_t nFrameNum;
     uint64_t nTotalCaptureSize;
@@ -425,7 +425,7 @@ int main(int argc, char *argv[]) {
     std::string frameType;
 
     uint16_t *frameBuffer;
-    uint8_t *headerBuffer;
+    uint8_t *metadataBuffer;
     uint32_t height;
     uint32_t width;
     uint64_t frame_size = 0;
@@ -543,25 +543,25 @@ int main(int argc, char *argv[]) {
         }
         memcpy(frameBuffer, (uint8_t *)pData, frame_size);
 
-        uint32_t header_data_size = EMBED_HDR_LENGTH;
-        headerBuffer = new uint8_t[header_data_size];
-        if (headerBuffer == NULL) {
-            LOG(ERROR) << "Can't allocate Memory for frame header data!";
+        uint32_t metadata_size = METADATA_LENGTH;
+        metadataBuffer = new uint8_t[metadata_size];
+        if (metadataBuffer == NULL) {
+            LOG(ERROR) << "Can't allocate Memory for frame metadata!";
             return 0;
         }
 
-#if 0 // TO DO: uncomment this one the header becomes available
-        uint16_t *pHeader = nullptr;
-        status = frame.getData("embeded_header", &pHeader);
+#if 0 // TO DO: uncomment this one the metadata becomes available
+        uint16_t *pMetadata = nullptr;
+        status = frame.getData("metadata", &pMetadata);
         if (status != Status::OK) {
-            LOG(ERROR) << "Could not get frame header data!";
+            LOG(ERROR) << "Could not get frame metadata!";
             return 0;
         }
-        if (!pHeader) {
-            LOG(ERROR) << "no memory allocated in frame header";
+        if (!pMetadata) {
+            LOG(ERROR) << "no memory allocated in frame metadata";
             return 0;
         }
-        memcpy(headerBuffer, (uint8_t *)pHeader, header_data_size);
+        memcpy(metadataBuffer, (uint8_t *)pMetadata, metadata_size);
 #endif
 
         // Create thread to handle the file I/O of copying raw/depth images to file
@@ -572,7 +572,7 @@ int main(int argc, char *argv[]) {
             return 0;
         }
         pThreadParams->pCaptureData = frameBuffer;
-        pThreadParams->pHeaderData = headerBuffer;
+        pThreadParams->pMetadata = metadataBuffer;
         pThreadParams->nTotalCaptureSize = frame_size;
         pThreadParams->pFolderPath = folder_path;
         pThreadParams->nFileTime = time_buffer;
@@ -604,8 +604,8 @@ int main(int argc, char *argv[]) {
         if (frameBuffer != NULL) {
             free((void *)frameBuffer);
         }
-        if (headerBuffer != NULL) {
-            free((void *)headerBuffer);
+        if (metadataBuffer != NULL) {
+            free((void *)metadataBuffer);
         }
 #endif
     } // End of for Loop
@@ -643,8 +643,8 @@ void fileWriterTask(const thread_params *const pThreadParams) {
     if (pThreadParams->pCaptureData != nullptr) {
         delete[] pThreadParams->pCaptureData;
     }
-    if (pThreadParams->pHeaderData != nullptr) {
-        delete[] pThreadParams->pHeaderData;
+    if (pThreadParams->pMetadata != nullptr) {
+        delete[] pThreadParams->pMetadata;
     }
     delete pThreadParams;
 }
