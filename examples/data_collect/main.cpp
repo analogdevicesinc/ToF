@@ -81,7 +81,7 @@ static const char kUsagePublic[] =
       --ccb <FILE>       The path to store CCB content
       --ip <ip>          Camera IP
       --fw <firmware>    Adsd3500 fw file
-      --ft <frameType>   FrameType of saved image (depth/ir/conf/full-frame) [default: depth]
+      --ft <frameType>   FrameType of saved image (depth/ir/conf/full-frame/metadata) [default: depth]
 
     Note: --m argument supports both index and string (0/sr-native) 
 
@@ -256,12 +256,13 @@ int main(int argc, char *argv[]) {
     frame_type = command_map["-ft"].value;
 
     if (frame_type.length() <= 0 &&
-        (!frame_type.compare(std::string("full-frame")) ||
+        (!frame_type.compare(std::string("metadata")) ||
+         !frame_type.compare(std::string("full-frame")) ||
          !frame_type.compare(std::string("depth")) ||
          !frame_type.compare(std::string("ir")) ||
          !frame_type.compare(std::string("conf")))) {
         LOG(ERROR) << "Error parsing frame_type (-ft/--ft) from command line!"
-                   << "\n Possible values: depth, ir, conf, full-frame"
+                   << "\n Possible values: depth, ir, conf, full-frame, metadata"
                    << "\n Please check help menu";
         return 0;
     }
@@ -375,7 +376,7 @@ int main(int argc, char *argv[]) {
     // pcm-native contains ir only
     if (frame_type != "ir" && modeName == "pcm-native") {
         LOG(ERROR) << modeName
-                   << " mode doesn't contain depth/conf/full-frame data, setting --ft "
+                   << " mode doesn't contain depth/conf/full-frame/metadata data, setting --ft "
                       "(frameType) to ir.";
         frame_type = "ir";
     }
@@ -383,6 +384,13 @@ int main(int argc, char *argv[]) {
     status = camera->setFrameType(modeName);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
+        return 0;
+    }
+
+    uint16_t value;
+    status = camera->adsd3500GetEnableMetadatainAB(value);
+    if(value == 0){
+        LOG(WARNING) << "Metadata is unvailable for this camera";
         return 0;
     }
 
@@ -508,7 +516,11 @@ int main(int argc, char *argv[]) {
             frame.getDetails(frameDetails);
             frame_size =
                 sizeof(uint16_t) * frameDetails.height * frameDetails.width;
-        } else {
+        } else if(frame_type == "metadata"){
+            FrameDataDetails frameDetails;
+            frame.getDataDetails(frame_type, frameDetails);
+            frame_size = frameDetails.bytesCount;
+        }else {
             LOG(WARNING) << "Can't recognize frame data type!";
         }
 
@@ -539,7 +551,6 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
-#if 0 // TO DO: uncomment this one the metadata becomes available
         uint16_t *pMetadata = nullptr;
         status = frame.getData("metadata", &pMetadata);
         if (status != Status::OK) {
@@ -551,7 +562,6 @@ int main(int argc, char *argv[]) {
             return 0;
         }
         memcpy(metadataBuffer, (uint8_t *)pMetadata, metadata_size);
-#endif
 
         // Create thread to handle the file I/O of copying depth images to file
 #ifdef MULTI_THREADED
