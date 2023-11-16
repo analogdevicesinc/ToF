@@ -277,3 +277,22 @@ aditof::Status FrameImpl::getTemperature(uint32_t &sensorTemp,
 
     return aditof::Status::OK;
 }
+
+aditof::Status FrameImpl::getFrameNumber(uint32_t &frameNumber) const {
+
+    aditof::Status status = aditof::Status::OK;
+    uint8_t *header;
+
+    if (m_implData->m_dataLocations.count("metadata") > 0) {
+        header = reinterpret_cast<uint8_t *>(
+            m_implData->m_dataLocations["metadata"]);
+    } else {
+        return aditof::Status::UNAVAILABLE;
+    }
+
+    //switch from little endian to big endian
+    frameNumber = (header[12] << 0) | (header[13] << 8) | (header[14] << 16) |
+                  (header[15] << 24);
+
+    return aditof::Status::OK;
+}

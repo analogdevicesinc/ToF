@@ -144,6 +144,12 @@ class Frame {
      */
     SDK_API virtual Status getTemperature(uint32_t &sensorTemp,
                                           uint32_t &laserTemp) const;
+    /**
+     * @brief Extracts the frame number from metadata within this frame.
+     * @param[out] frameNumber - frame number
+     * @return Status
+     */
+    SDK_API virtual Status getFrameNumber(uint32_t &frameNumber) const;
 
   private:
     std::unique_ptr<FrameImpl> m_impl;

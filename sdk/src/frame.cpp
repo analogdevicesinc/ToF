@@ -89,4 +89,8 @@ Status Frame::getTemperature(uint32_t &sensorTemp, uint32_t &laserTemp) const {
     return m_impl->getTemperature(sensorTemp, laserTemp);
 }
 
+Status Frame::getFrameNumber(uint32_t &frameNumber) const {
+    return m_impl->getFrameNumber(frameNumber);
+}
+
 } // namespace aditof
