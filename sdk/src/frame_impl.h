@@ -62,6 +62,7 @@ class FrameImpl {
                                 std::string &value);
     aditof::Status getTemperature(uint32_t &sensorTemp,
                                   uint32_t &laserTemp) const;
+    aditof::Status getFrameNumber(uint32_t &frameNumber) const;
 
   private:
     void allocFrameData(const aditof::FrameDetails &details);
