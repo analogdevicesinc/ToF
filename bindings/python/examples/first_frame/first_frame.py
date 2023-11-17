@@ -108,6 +108,18 @@ print("frameNumber: ", frameNumber)
 
 image = np.array(frame.getData("depth"), copy=False)
 
+metadata = np.array(frame.getData("metadata"), copy=False, dtype=np.uint8)
+
+sensorTemperature = metadata[14] << 8 | metadata[14] << 0 | metadata[15] << 8 | metadata[15]
+laserTemperature = metadata[16] << 8 | metadata[16] << 0 | metadata[17] << 8 | metadata[17]
+frameNumber = metadata[6] << 8 | metadata[6] << 0 | metadata[7] << 8 | metadata[7]
+modeMetadata = metadata[8]
+
+print("Sensor temperature from metadata: ", sensorTemperature)
+print("Laser temperature from metadata: ", laserTemperature)
+print("Frame number from metadata: ", frameNumber)
+print("Mode from metadata: ", modeMetadata)
+
 plt.figure()
 plt.imshow(image)
 plt.colorbar()
