@@ -389,7 +389,7 @@ int main(int argc, char *argv[]) {
 
     uint16_t value;
     status = camera->adsd3500GetEnableMetadatainAB(value);
-    if(value == 0){
+    if (value == 0) {
         LOG(WARNING) << "Metadata is unvailable for this camera";
         return 0;
     }
@@ -516,11 +516,11 @@ int main(int argc, char *argv[]) {
             frame.getDetails(frameDetails);
             frame_size =
                 sizeof(uint16_t) * frameDetails.height * frameDetails.width;
-        } else if(frame_type == "metadata"){
+        } else if (frame_type == "metadata") {
             FrameDataDetails frameDetails;
             frame.getDataDetails(frame_type, frameDetails);
             frame_size = frameDetails.bytesCount;
-        }else {
+        } else {
             LOG(WARNING) << "Can't recognize frame data type!";
         }
 
