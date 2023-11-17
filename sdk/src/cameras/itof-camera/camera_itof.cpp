@@ -549,6 +549,10 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
             continue;
         }
 
+        if (item.type == "metadata" && !m_enableMetaDatainAB) {
+            continue;
+        }
+
         FrameDataDetails fDataDetails;
         fDataDetails.type = item.type;
         fDataDetails.width = item.width;
@@ -566,6 +570,10 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
                 (uint16_t *)&fDataDetails.height, &pixFmt);
             fDataDetails.subelementSize = 1;
             fDataDetails.subelementsPerElement = 1;
+        } else if (item.type == "metadata") {
+            fDataDetails.subelementSize = 1;
+            fDataDetails.width = 128;
+            fDataDetails.height = 1;
         }
         fDataDetails.bytesCount = fDataDetails.width * fDataDetails.height *
                                   fDataDetails.subelementSize *
