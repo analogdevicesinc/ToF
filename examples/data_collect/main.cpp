@@ -474,8 +474,9 @@ int main(int argc, char *argv[]) {
 
         // Depth Data
         if (frame_type == "depth") {
-            status = depthSensor->getControl("phaseDepthBits", pixelCount);
-            if (!std::stoi(pixelCount)) {
+            FrameDataDetails FrameDataDetails;
+            status = frame.getDataDetails(frame_type, FrameDataDetails);
+            if (status != Status::OK) {
                 LOG(ERROR) << "Depth disabled from ini file!";
                 return 0;
             }
@@ -485,8 +486,9 @@ int main(int argc, char *argv[]) {
         // Ir data
         else if (frame_type == "ir") {
             if (modeName != "pcm-native") {
-                status = depthSensor->getControl("abBits", pixelCount);
-                if (!std::stoi(pixelCount)) {
+                FrameDataDetails FrameDataDetails;
+                status = frame.getDataDetails(frame_type, FrameDataDetails);
+                if (status != Status::OK) {
                     LOG(ERROR) << "IR disabled from ini file!";
                     return 0;
                 }
@@ -496,8 +498,9 @@ int main(int argc, char *argv[]) {
         }
         // Conf data
         else if (frame_type == "conf") {
-            status = depthSensor->getControl("confidenceBits", pixelCount);
-            if (!std::stoi(pixelCount)) {
+            FrameDataDetails FrameDataDetails;
+            status = frame.getDataDetails(frame_type, FrameDataDetails);
+            if (status != Status::OK) {
                 LOG(ERROR) << "Conf disabled from ini file!";
                 return 0;
             }
