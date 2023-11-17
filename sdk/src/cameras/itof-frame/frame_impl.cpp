@@ -269,11 +269,8 @@ aditof::Status FrameImpl::getTemperature(uint32_t &sensorTemp,
         return aditof::Status::UNAVAILABLE;
     }
 
-    //switch from little endian to big endian
-    sensorTemp = (header[28] << 0) | (header[29] << 8) | (header[30] << 16) |
-                 (header[31] << 24);
-    laserTemp = (header[32] << 0) | (header[33] << 8) | (header[34] << 16) |
-                (header[35] << 24);
+    sensorTemp = *((uint32_t *)(header + 28));
+    laserTemp = *((uint32_t *)(header + 32));
 
     return aditof::Status::OK;
 }
@@ -290,9 +287,7 @@ aditof::Status FrameImpl::getFrameNumber(uint32_t &frameNumber) const {
         return aditof::Status::UNAVAILABLE;
     }
 
-    //switch from little endian to big endian
-    frameNumber = (header[12] << 0) | (header[13] << 8) | (header[14] << 16) |
-                  (header[15] << 24);
+    frameNumber = *((uint32_t *)(header + 12));
 
     return aditof::Status::OK;
 }
