@@ -30,6 +30,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <aditof/camera.h>
+#include <aditof/depth_sensor_interface.h>
 #include <aditof/frame.h>
 #include <aditof/system.h>
 #include <aditof/version.h>
@@ -204,6 +205,20 @@ int main(int argc, char *argv[]) {
 
     auto camera = cameras.front();
 
+    // Registering a callback to be executed when ADSD3500 issues an interrupt. This works only on target (NXP).
+    std::shared_ptr<DepthSensorInterface> sensor = camera->getSensor();
+    aditof::SensorInterruptCallback callback = [](Adsd3500Status status) {
+        LOG(INFO) << "Running the callback for which the status of ADSD3500 "
+                     "has been "
+                     "forwarded. ADSD3500 status = "
+                  << status;
+    };
+    Status registerCbStatus =
+        sensor->adsd3500_register_interrupt_callback(callback);
+    if (status != Status::OK) {
+        LOG(WARNING) << "Could not register callback";
+    }
+
     status = camera->initialize(configFile);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
@@ -299,6 +314,11 @@ int main(int argc, char *argv[]) {
                   << laserTempMetadata;
     } else {
         LOG(ERROR) << "Could not get temperature from metadata!";
+    }
+
+    // Suppose it is needed to unregister from ADSD3500 interupts
+    if (registerCbStatus == Status::OK) {
+        sensor->adsd3500_register_interrupt_callback(nullptr);
     }
 
     return 0;
