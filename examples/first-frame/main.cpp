@@ -310,11 +310,43 @@ int main(int argc, char *argv[]) {
     if (status == Status::OK) {
         LOG(INFO) << "Sensor temperature read from metadata of latest frame: "
                   << sensorTmpMetadata;
-        LOG(INFO) << "Laser temperature read from metadata of latest frame:"
+        LOG(INFO) << "Laser temperature read from metadata of latest frame: "
                   << laserTempMetadata;
     } else {
         LOG(ERROR) << "Could not get temperature from metadata!";
     }
+
+    uint32_t frameCount;
+    status = frame.getFrameNumber(frameCount);
+    if (status == Status::OK) {
+        LOG(INFO) << "Frame number of latest frame: " << frameCount;
+    } else {
+        LOG(INFO)
+            << "Failed to read frame number from metadata of latest frame.";
+    }
+
+    //Example on how to extract data from metadata
+    uint16_t *metadataFrame;
+    uint8_t *metadataContent;
+    status = frame.getData("metadata", &metadataFrame);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not get frame metadata!";
+        return 0;
+    }
+
+    metadataContent = reinterpret_cast<uint8_t *>(metadataFrame);
+
+    uint32_t sensorTemperature, laserTemperature, frameNumber, modeFromMetadata;
+    sensorTemperature = *((uint32_t *)(metadataContent + 28));
+    laserTemperature = *((uint32_t *)(metadataContent + 32));
+    frameNumber = *((uint32_t *)(metadataContent + 12));
+    modeFromMetadata = *(metadataContent + 16);
+
+    LOG(INFO) << "Values read from metadata frame: ";
+    LOG(INFO) << "SensorTemperature: " << sensorTemperature;
+    LOG(INFO) << "LaserTemperature: " << laserTemperature;
+    LOG(INFO) << "Frame Number: " << frameNumber;
+    LOG(INFO) << "Mode:  " << modeFromMetadata;
 
     // Suppose it is needed to unregister from ADSD3500 interupts
     if (registerCbStatus == Status::OK) {
