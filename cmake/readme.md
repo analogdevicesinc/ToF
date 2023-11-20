@@ -20,7 +20,6 @@ which will generate all the necessary recipes for building and installing. Usefu
 | WITH_PYTHON | on/off | off | Build the python bindings. |
 | WITH_OPENCV | on/off | off | Build the opencv bindings. |
 | WITH_OPEN3D | on/off | off | Build the open3D bindings. |
-| WITH_ROS | on/off | off | Build the ROS bindings. |
 | WITH_ROS2 | on/off | off | Build the ROS2 bindings. |
 | WITH_NETWORK | on/off | off | Build the network interface for a Linux or Windows host build; use **off** for building on the target. |
 | WITH_OFFLINE | on/off | off | Build the offline mode. No hardware is required. |
@@ -134,10 +133,6 @@ Download and install open3d-devel-windows-amd64-0.15.1.zip from https://github.c
 It is important the Open3D_DIR environment variable be set:
 * For a permananet addition for the current and future shells (note close and reopen shell): **setx Open3D_DIR C:\dev\open3d\CMake**
 * For a temporary addition for the current shell: **set Open3D_DIR=C:\dev\open3d\CMake**
-
-##### WITH_ROS = ON
-
-See [here](../bindings/ros/README.md) for more details.
 
 ##### WITH_ROS2 = ON
 

@@ -9,7 +9,6 @@ variables:
   DEPS_DIR: "$(BUILD_DIR)/deps"
   DEFAULT_CMAKE_FLAGS: "-DWITH_NETWORK=1 \
                         -DWITH_PYTHON=1 \
-                        -DWITH_ROS=0 \
                         -DWITH_OPENCV=1 \ 
                         -DWITH_EXAMPLES=1 \
                         -DWITH_DOC=0 \
