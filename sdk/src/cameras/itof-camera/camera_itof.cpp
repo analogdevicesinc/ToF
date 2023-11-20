@@ -642,12 +642,8 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     return status;
 }
 
-aditof::Status CameraItof::getIniParams(void *params) {
-    auto ab_params = reinterpret_cast<ABThresholdsParams *>(params);
-    std::map<std::string, float> param_map;
-    m_depthSensor->getIniParams(param_map);
-    ab_params->ab_thresh_min = param_map["ab_thresh_min"];
-    ab_params->ab_sum_thresh = param_map["ab_sum_thresh"];
+aditof::Status CameraItof::getIniParams(std::map<std::string, float> &params) {
+    m_depthSensor->getIniParams(params);
     return aditof::Status::OK;
 }
 

@@ -443,8 +443,12 @@ void ADIMainWindow::render() {
 
 void ADIMainWindow::showMainMenu() {
     static bool show_app_log = false;
+    static bool show_ini_window = false;
+
     if (show_app_log)
         showLogWindow(&show_app_log);
+    if (show_ini_window)
+        showIniWindow(&show_ini_window);
 
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("Options")) {
@@ -479,6 +483,7 @@ void ADIMainWindow::showMainMenu() {
 
         if (ImGui::BeginMenu("Tools")) {
             ImGui::MenuItem("Debug Log", NULL, &show_app_log);
+            ImGui::MenuItem("Ini Params", NULL, &show_ini_window);
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
@@ -1021,44 +1026,61 @@ void ADIMainWindow::showLogWindow(bool *p_open) {
 }
 
 void ADIMainWindow::showIniWindow(bool *p_open) {
+    aditof::Status status;
+    std::map<std::string, float> ini_params;
+
+    static float abThreshMin = 0;
+    static float abSumThresh = 0;
+    static float confThresh = 0;
+    static float radialThreshMin = 0;
+    static float radialThreshMax = 0;
+    static int jblfApplyFlag = 0;
+    static int jblfWindowSize = 0;
+    static float jblfGaussianSigma = 0;
+    static float jblfExponentialTerm = 0;
+    static float jblfMaxEdge = 0;
+    static float jblfABThreshold = 0;
+    static int headerSize = 0;
+
+    if (isPlaying) {
+        status = getActiveCamera()->getIniParams(ini_params);
+        if (status != aditof::Status::OK) {
+            LOG(ERROR) << "Could not get ini params";
+        }
+    }
+    if (!ini_params.empty()) {
+        abThreshMin = ini_params["ab_thresh_min"];
+        abSumThresh = ini_params["ab_sum_thresh"];
+        confThresh = ini_params["conf_thresh"];
+        radialThreshMin = ini_params["radial_thresh_min"];
+        radialThreshMax = ini_params["radial_thresh_max"];
+        jblfApplyFlag =
+            static_cast<int>(std::round(ini_params["jblf_apply_flag"]));
+        jblfWindowSize =
+            static_cast<int>(std::round(ini_params["jblf_window_size"]));
+        jblfGaussianSigma = ini_params["jblf_gaussian_sigma"];
+        jblfExponentialTerm = ini_params["jblf_exponential_term"];
+        jblfMaxEdge = ini_params["jblf_max_edge"];
+        jblfABThreshold = ini_params["jblf_ab_threshold"];
+        headerSize = static_cast<int>(std::round(ini_params["headerSize"]));
+    }
+
     if (ImGui::Begin("ini Params Window", nullptr)) {
         ImGui::PushItemWidth(100 * dpiScaleFactor);
 
-        static char abThreshMin[128] = "";
-        static char abSumThresh[128] = "";
-        static char confThresh[128] = "";
-        static char radialThreshMin[128] = "";
-        static char radialThreshMax[128] = "";
-        static char jblfWindowSize[128] = "";
-        static char jblfGaussianSigma[128] = "";
-        static char jblfExponentialTerm[128] = "";
-        static char jblfABThreshold[128] = "";
-        static char headerSize[128] = "";
-        static char fps[128] = "";
+        ImGui::InputFloat("abThreshMin", &abThreshMin);
+        ImGui::InputFloat("abSumThresh", &abSumThresh);
 
-        ImGui::InputTextWithHint("abThreshMin", "1 - 10", abThreshMin,
-                                 IM_ARRAYSIZE(abThreshMin));
-        ImGui::InputTextWithHint("abSumThresh", "1 - 10", abSumThresh,
-                                 IM_ARRAYSIZE(abSumThresh));
-        ImGui::InputTextWithHint("confThresh", "1 - 10", confThresh,
-                                 IM_ARRAYSIZE(confThresh));
-        ImGui::InputTextWithHint("radialThreshMin", "1 - 10", radialThreshMin,
-                                 IM_ARRAYSIZE(radialThreshMin));
-        ImGui::InputTextWithHint("radialThreshMax", "1 - 10", radialThreshMax,
-                                 IM_ARRAYSIZE(radialThreshMax));
-        ImGui::InputTextWithHint("jblfWindowSize", "1 - 10", jblfWindowSize,
-                                 IM_ARRAYSIZE(jblfWindowSize));
-        ImGui::InputTextWithHint("jblfGaussianSigma", "1 - 10",
-                                 jblfGaussianSigma,
-                                 IM_ARRAYSIZE(jblfGaussianSigma));
-        ImGui::InputTextWithHint("jblfExponentialTerm", "1 - 10",
-                                 jblfExponentialTerm,
-                                 IM_ARRAYSIZE(jblfExponentialTerm));
-        ImGui::InputTextWithHint("jblfABThreshold", "1 - 10", jblfABThreshold,
-                                 IM_ARRAYSIZE(jblfABThreshold));
-        ImGui::InputTextWithHint("headerSize", "0 or 128", headerSize,
-                                 IM_ARRAYSIZE(headerSize));
-        ImGui::InputTextWithHint("fps", "1 - 10", fps, IM_ARRAYSIZE(fps));
+        ImGui::InputFloat("confThresh", &confThresh);
+        ImGui::InputFloat("radialThreshMin", &radialThreshMin);
+        ImGui::InputFloat("radialThreshMax", &radialThreshMax);
+        ImGui::InputInt("jblfApplyFlag", &jblfApplyFlag);
+        ImGui::InputInt("jblfWindowSize", &jblfWindowSize);
+        ImGui::InputFloat("jblfGaussianSigma", &jblfGaussianSigma);
+        ImGui::InputFloat("jblfExponentialTerm", &jblfExponentialTerm);
+        ImGui::InputFloat("jblfMaxEdge", &jblfMaxEdge);
+        ImGui::InputFloat("jblfABThreshold", &jblfABThreshold);
+        ImGui::InputInt("headerSize", &headerSize);
         if (ImGui::Button("Done")) {
         }
     }
@@ -1215,16 +1237,6 @@ void ADIMainWindow::prepareCamera(std::string mode) {
         my_log.AddLog("Could not set camera mode!");
         return;
     }
-
-    typedef struct {
-        float ab_thresh_min;
-        float ab_sum_thresh;
-    } ABThresholdsParams;
-
-    ABThresholdsParams param;
-    status = getActiveCamera()->getIniParams(&param);
-    LOG(INFO) << "ab_thresh_min is " << param.ab_thresh_min;
-    LOG(INFO) << "ab_sum_thresh " << param.ab_sum_thresh;
 
     aditof::CameraDetails camDetails;
     status = getActiveCamera()->getDetails(camDetails);
@@ -1391,7 +1403,12 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
             return;
         }
         uint16_t *frameHeader = nullptr;
-        frame->getData("metadata", &frameHeader);
+        aditof::CameraDetails cameraDetails;
+        camera->getDetails(cameraDetails);
+        std::string camera_mode = cameraDetails.mode;
+        if (camera_mode != "pcm-native") {
+            frame->getData("metadata", &frameHeader);
+        }
         if (frameHeader) {
             void *metadata = nullptr;
             metadata = frameHeader + 6; // to get frame number
@@ -1413,8 +1430,6 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
             ImGui::SameLine();
             ImGui::Text(" | Sensor Temperature: %iC", *sensorTemp);
         }
-
-        ImGui::Checkbox("Show ini Prarms", &show_ini_window);
         ImGui::NewLine();
 
         // "Stop" button
@@ -1522,9 +1537,6 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                      EMBED_HDR_LENGTH) +
                 view->m_ctrl->m_recorder->m_sizeOfHeader;
         }
-    }
-    if (show_ini_window) {
-        showIniWindow(&show_ini_window);
     }
     ImGui::End();
 }
@@ -2413,36 +2425,3 @@ std::shared_ptr<aditof::Camera> ADIMainWindow::getActiveCamera() {
     }
     return view->m_ctrl->m_cameras[m_selectedDevice];
 }
-
-// void ADIMainWindow::getKeyValuePairsFromIni(
-//     const std::string &iniFileName,
-//     std::map<std::string, std::string> &iniKeyValPairs) {
-//     using namespace aditof;
-
-//     std::ifstream iniStream(iniFileName);
-//     if (!iniStream.is_open()) {
-//         LOG(ERROR) << "Failed to open: " << iniFileName;
-//         return;
-//     }
-
-//     iniKeyValPairs.clear();
-
-//     std::string line;
-//     while (getline(iniStream, line)) {
-//         size_t equalPos = line.find('=');
-//         if (equalPos == std::string::npos) {
-//             LOG(WARNING) << "Unexpected format on this line:\n"
-//                          << line << "\nExpecting 'key=value' format";
-//             continue;
-//         }
-//         std::string key = line.substr(0, equalPos);
-//         std::string value = line.substr(equalPos + 1);
-//         if (!value.empty()) {
-//             m_iniKeyValPairs.emplace(key, value);
-//         } else {
-//             LOG(WARNING) << "No value found for parameter: " << key;
-//         }
-//     }
-
-//     iniStream.close();
-// }

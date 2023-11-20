@@ -719,13 +719,24 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
     case GET_INI_PARAM: {
 
-        std::map<std::string, float> params;
-        aditof::Status status = camDepthSensor->getIniParams(params);
-        DLOG(INFO) << "Read " << params["ab_thresh_min"] << " "
-                   << params["ab_sum_thresh"];
+        std::map<std::string, float> ini_params;
+        aditof::Status status = camDepthSensor->getIniParams(ini_params);
+        DLOG(INFO) << "Read " << ini_params["ab_thresh_min"] << " "
+                   << ini_params["headerSize"];
         if (status == aditof::Status::OK) {
-            buff_send.add_float_payload(params["ab_thresh_min"]);
-            buff_send.add_float_payload(params["ab_sum_thresh"]);
+            DLOG(INFO) << "Status ok ";
+            buff_send.add_float_payload(ini_params["ab_thresh_min"]);
+            buff_send.add_float_payload(ini_params["ab_sum_thresh"]);
+            buff_send.add_float_payload(ini_params["conf_thresh"]);
+            buff_send.add_float_payload(ini_params["radial_thresh_min"]);
+            buff_send.add_float_payload(ini_params["radial_thresh_max"]);
+            buff_send.add_float_payload(ini_params["jblf_apply_flag"]);
+            buff_send.add_float_payload(ini_params["jblf_window_size"]);
+            buff_send.add_float_payload(ini_params["jblf_gaussian_sigma"]);
+            buff_send.add_float_payload(ini_params["jblf_exponential_term"]);
+            buff_send.add_float_payload(ini_params["jblf_max_edge"]);
+            buff_send.add_float_payload(ini_params["jblf_ab_threshold"]);
+            buff_send.add_float_payload(ini_params["headerSize"]);
         }
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;

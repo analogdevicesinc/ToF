@@ -38,6 +38,7 @@
 #include "status_definitions.h"
 
 #include <functional>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -105,7 +106,7 @@ class SDK_API Camera {
      */
     virtual Status setFrameType(const std::string &frameType) = 0;
 
-    virtual Status getIniParams(void *params) = 0;
+    virtual Status getIniParams(std::map<std::string, float> &params) = 0;
 
     /**
      * @brief Returns all the frame types that are supported by the camera

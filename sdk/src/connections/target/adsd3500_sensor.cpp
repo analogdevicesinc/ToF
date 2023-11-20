@@ -1336,14 +1336,36 @@ aditof::Status Adsd3500Sensor::initTargetDepthCompute(uint8_t *iniFile,
 aditof::Status
 Adsd3500Sensor::getIniParams(std::map<std::string, float> &params) {
     TofiConfig *config = m_bufferProcessor->getTofiCongfig();
-    int type = 3;
     LOG(INFO) << "p_tofi_cal_config = " << config->p_tofi_cal_config;
+
     ABThresholdsParams ab_params;
+    int type = 3;
     getIniParamsImpl(&ab_params, type, config->p_tofi_cal_config);
     params["ab_thresh_min"] = ab_params.ab_thresh_min;
     params["ab_sum_thresh"] = ab_params.ab_sum_thresh;
-    LOG(INFO) << "ab_thresh_min " << ab_params.ab_thresh_min
-              << " ab_sum_thresh " << ab_params.ab_sum_thresh;
+
+    DepthRangeParams dr_params;
+    type = 4;
+    getIniParamsImpl(&dr_params, type, config->p_tofi_cal_config);
+    params["conf_thresh"] = dr_params.conf_thresh;
+    params["radial_thresh_min"] = dr_params.radial_thresh_min;
+    params["radial_thresh_max"] = dr_params.radial_thresh_max;
+
+    JBLFConfigParams jblf_params;
+    type = 2;
+    getIniParamsImpl(&jblf_params, type, config->p_tofi_cal_config);
+    params["jblf_apply_flag"] = static_cast<float>(jblf_params.jblf_apply_flag);
+    params["jblf_window_size"] = static_cast<float>(jblf_params.jblf_window_size);
+    params["jblf_gaussian_sigma"] = jblf_params.jblf_gaussian_sigma;
+    params["jblf_exponential_term"] = jblf_params.jblf_exponential_term;
+    params["jblf_max_edge"] = jblf_params.jblf_max_edge;
+    params["jblf_ab_threshold"] = jblf_params.jblf_ab_threshold;
+
+    InputRawDataParams ir_params;
+    type = 1;
+    getIniParamsImpl(&ir_params, type, config->p_tofi_cal_config);
+    params["headerSize"] = static_cast<float>(ir_params.headerSize);
+
     return aditof::Status::OK;
 }
 

@@ -196,7 +196,11 @@ class CameraItof : public aditof::Camera {
      */
     void cleanupXYZtables();
 
-    virtual aditof::Status getIniParams(void *params) override;
+    /**
+     * @brief get ini params from depth sensor interface
+    */
+    virtual aditof::Status
+    getIniParams(std::map<std::string, float> &params) override;
 
   private:
     using noArgCallable = std::function<aditof::Status()>;

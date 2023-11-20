@@ -134,6 +134,26 @@ NetworkDepthSensor::getIniParams(std::map<std::string, float> &params) {
             static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(0));
         params["ab_sum_thresh"] =
             static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(1));
+        params["conf_thresh"] =
+            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(2));
+        params["radial_thresh_min"] =
+            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(3));
+        params["radial_thresh_max"] =
+            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(4));
+        params["jblf_apply_flag"] =
+            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(5));
+        params["jblf_window_size"] =
+            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(6));
+        params["jblf_gaussian_sigma"] =
+            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(7));
+        params["jblf_exponential_term"] =
+            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(8));
+        params["jblf_max_edge"] =
+            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(9));
+        params["jblf_ab_threshold"] =
+            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(10));
+        params["headerSize"] =
+            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(11));
     }
 
     return status;
