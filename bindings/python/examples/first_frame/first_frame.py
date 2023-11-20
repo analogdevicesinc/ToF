@@ -84,6 +84,7 @@ status = camera1.start()
 print("camera1.start()", status)
 
 frame = tof.Frame()
+
 status = camera1.requestFrame(frame)
 print("camera1.requestFrame()", status)
 
@@ -110,9 +111,9 @@ image = np.array(frame.getData("depth"), copy=False)
 
 metadata = np.array(frame.getData("metadata"), copy=False, dtype=np.uint8)
 
-sensorTemperature = metadata[14] << 8 | metadata[14] << 0 | metadata[15] << 8 | metadata[15]
-laserTemperature = metadata[16] << 8 | metadata[16] << 0 | metadata[17] << 8 | metadata[17]
-frameNumber = metadata[6] << 8 | metadata[6] << 0 | metadata[7] << 8 | metadata[7]
+sensorTemperature = np.uint32(metadata[15] << 24 | metadata[15] << 16 | metadata[14] << 8 | metadata[14])
+laserTemperature = np.uint32(metadata[17] << 24 | metadata[17] << 16 | metadata[16] << 8 | metadata[16])
+frameNumber = np.uint32(metadata[7] << 24 | metadata[7] << 16 | metadata[6] << 8 | metadata[6])
 modeMetadata = metadata[8]
 
 print("Sensor temperature from metadata: ", sensorTemperature)
