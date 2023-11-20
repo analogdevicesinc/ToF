@@ -1065,12 +1065,14 @@ void ADIMainWindow::showIniWindow(bool *p_open) {
         headerSize = static_cast<int>(std::round(ini_params["headerSize"]));
     }
 
-    if (ImGui::Begin("ini Params Window", nullptr)) {
+    if (!ImGui::Begin("ini Params Window", p_open)) {
+        ImGui::End();
+        return;
+    } else {
         ImGui::PushItemWidth(100 * dpiScaleFactor);
 
         ImGui::InputFloat("abThreshMin", &abThreshMin);
         ImGui::InputFloat("abSumThresh", &abSumThresh);
-
         ImGui::InputFloat("confThresh", &confThresh);
         ImGui::InputFloat("radialThreshMin", &radialThreshMin);
         ImGui::InputFloat("radialThreshMax", &radialThreshMax);
@@ -1081,6 +1083,7 @@ void ADIMainWindow::showIniWindow(bool *p_open) {
         ImGui::InputFloat("jblfMaxEdge", &jblfMaxEdge);
         ImGui::InputFloat("jblfABThreshold", &jblfABThreshold);
         ImGui::InputInt("headerSize", &headerSize);
+
         if (ImGui::Button("Done")) {
         }
     }
