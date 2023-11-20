@@ -34,7 +34,6 @@ which will generate all the necessary recipes for building and installing. Usefu
 | NXP | on/off | off | Builds in a specific way targeting the NXP system. |
 | NVIDIA | on/off | off | Builds in a specific way targeting the NVIDIA system. |
 | WITH_PROTOBUF_DEPENDENCY | on/off | on | Build the sdk with Protobuf dependency. Used for serializing the messages sent over network. |
-| USE_DEPTH_COMPUTE_STUBS | on/off | off | When **on** an empty implementation of depth compute is used. |
 | USE_DEPTH_COMPUTE_OPENSOURCE | on/off | off | When **on** the open source radial to XYZ (point cloud) generation is used. Otherwise the closed source partial depth compute library is required. |
 
 ##### CMake options
@@ -138,11 +137,11 @@ It is important the Open3D_DIR environment variable be set:
 
 See [here](../bindings/ros2/README.md) for more details.
 
-##### USE_DEPTH_COMPUTE_STUBS = ON
+##### USE_DEPTH_COMPUTE_OPENSOURCE = ON
 
 Building with the Depth Compute Libraries
 
-If USE_DEPTH_COMPUTE_STUBS is set to OFF in CMakeLists.txt the depth compute libraries (.lib and .dll) files must be provided for the build. The depth compute libraries are included in the evaluation platform release. From the ADTF3175x installation path, navigate to the folder **depth_compute_installer**, then execute the TOF_Depth_CompteEngine_Windows installer. From here on we will assume the depth compute installer is TOF_DepthComputeEngine_Windows-Rel3.0.0.exe.
+If USE_DEPTH_COMPUTE_OPENSOURCE is set to OFF in CMakeLists.txt the depth compute libraries (.lib and .dll) files must be provided for the build. The depth compute libraries are included in the evaluation platform release. From the ADTF3175x installation path, navigate to the folder **depth_compute_installer**, then execute the TOF_Depth_CompteEngine_Windows installer. From here on we will assume the depth compute installer is TOF_DepthComputeEngine_Windows-Rel3.0.0.exe.
 
 Assuming the installation path for the depth compute installation was not changed, navigate to *C:\Analog Devices\TOF_DepthComputeEngine_Windows-Rel3.0.0\lib*.
 

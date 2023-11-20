@@ -5,9 +5,7 @@ if(UNIX)
     set(CMAKE_POSITION_INDEPENDENT_CODE "1")
 endif()
 
-if(USE_DEPTH_COMPUTE_STUBS)
-    add_subdirectory(common/adi/depth-compute-stub)
-elseif(USE_DEPTH_COMPUTE_OPENSOURCE)
+if(USE_DEPTH_COMPUTE_OPENSOURCE AND ON_TARGET)
     add_subdirectory(common/adi/depth-compute-opensource)
 endif()
 add_subdirectory(common/adi/ccb)
@@ -180,7 +178,7 @@ endif()
 
 #LIBTOFI_LIBDIR_PATH - path to libtofi_config.so and libtofi_compute.so folder	
 if ( ON_TARGET AND UNIX )
-	if (NOT USE_DEPTH_COMPUTE_STUBS AND NOT USE_DEPTH_COMPUTE_OPENSOURCE)
+	if (NOT USE_DEPTH_COMPUTE_OPENSOURCE)
         add_library(libtofi_compute SHARED IMPORTED)
         set_target_properties(libtofi_compute PROPERTIES
             IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_compute.so"
@@ -227,7 +225,7 @@ include(GNUInstallDirs)
 set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/aditof)
 
 # export targets for the config cmake to use
-if (NOT USE_DEPTH_COMPUTE_STUBS AND NOT USE_DEPTH_COMPUTE_OPENSOURCE)
+if (NOT ON_TARGET)
     install(TARGETS aditof
         EXPORT aditof-targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
