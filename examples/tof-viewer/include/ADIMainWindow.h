@@ -376,6 +376,8 @@ class ADIMainWindow {
 		*/
     void showLogWindow(bool *p_open);
 
+    void showIniWindow(bool *p_open);
+
     /**
 		* @brief Will poll the USB interface to look
 		*        for supported devices

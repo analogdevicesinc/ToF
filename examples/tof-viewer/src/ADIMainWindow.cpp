@@ -1020,6 +1020,51 @@ void ADIMainWindow::showLogWindow(bool *p_open) {
     }
 }
 
+void ADIMainWindow::showIniWindow(bool *p_open) {
+    if (ImGui::Begin("ini Params Window", nullptr)) {
+        ImGui::PushItemWidth(100 * dpiScaleFactor);
+
+        static char abThreshMin[128] = "";
+        static char abSumThresh[128] = "";
+        static char confThresh[128] = "";
+        static char radialThreshMin[128] = "";
+        static char radialThreshMax[128] = "";
+        static char jblfWindowSize[128] = "";
+        static char jblfGaussianSigma[128] = "";
+        static char jblfExponentialTerm[128] = "";
+        static char jblfABThreshold[128] = "";
+        static char headerSize[128] = "";
+        static char fps[128] = "";
+
+        ImGui::InputTextWithHint("abThreshMin", "1 - 10", abThreshMin,
+                                 IM_ARRAYSIZE(abThreshMin));
+        ImGui::InputTextWithHint("abSumThresh", "1 - 10", abSumThresh,
+                                 IM_ARRAYSIZE(abSumThresh));
+        ImGui::InputTextWithHint("confThresh", "1 - 10", confThresh,
+                                 IM_ARRAYSIZE(confThresh));
+        ImGui::InputTextWithHint("radialThreshMin", "1 - 10", radialThreshMin,
+                                 IM_ARRAYSIZE(radialThreshMin));
+        ImGui::InputTextWithHint("radialThreshMax", "1 - 10", radialThreshMax,
+                                 IM_ARRAYSIZE(radialThreshMax));
+        ImGui::InputTextWithHint("jblfWindowSize", "1 - 10", jblfWindowSize,
+                                 IM_ARRAYSIZE(jblfWindowSize));
+        ImGui::InputTextWithHint("jblfGaussianSigma", "1 - 10",
+                                 jblfGaussianSigma,
+                                 IM_ARRAYSIZE(jblfGaussianSigma));
+        ImGui::InputTextWithHint("jblfExponentialTerm", "1 - 10",
+                                 jblfExponentialTerm,
+                                 IM_ARRAYSIZE(jblfExponentialTerm));
+        ImGui::InputTextWithHint("jblfABThreshold", "1 - 10", jblfABThreshold,
+                                 IM_ARRAYSIZE(jblfABThreshold));
+        ImGui::InputTextWithHint("headerSize", "0 or 128", headerSize,
+                                 IM_ARRAYSIZE(headerSize));
+        ImGui::InputTextWithHint("fps", "1 - 10", fps, IM_ARRAYSIZE(fps));
+        if (ImGui::Button("Done")) {
+        }
+    }
+    ImGui::End();
+}
+
 void ADIMainWindow::InitCamera() {
     if (view != NULL) { //Reset current imager
         LOG(INFO) << "Imager is reseting.";
@@ -1171,6 +1216,16 @@ void ADIMainWindow::prepareCamera(std::string mode) {
         return;
     }
 
+    typedef struct {
+        float ab_thresh_min;
+        float ab_sum_thresh;
+    } ABThresholdsParams;
+
+    ABThresholdsParams param;
+    status = getActiveCamera()->getIniParams(&param);
+    LOG(INFO) << "ab_thresh_min is " << param.ab_thresh_min;
+    LOG(INFO) << "ab_sum_thresh " << param.ab_sum_thresh;
+
     aditof::CameraDetails camDetails;
     status = getActiveCamera()->getDetails(camDetails);
     int totalCaptures = camDetails.frameType.totalCaptures;
@@ -1263,6 +1318,8 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect) {
 }
 
 void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
+    static bool show_ini_window = false;
+
     if ((float)view->frameWidth == 0.0 && (float)(view->frameHeight == 0.0)) {
         return;
     }
@@ -1334,26 +1391,30 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
             return;
         }
         uint16_t *frameHeader = nullptr;
-        frame->getData("embedded_header", &frameHeader);
-        void *metadata = nullptr;
-        metadata = frameHeader + 6; // to get frame number
-        int32_t *frameNum = reinterpret_cast<int32_t *>(metadata);
-        if (!firstFrame) {
-            firstFrame = *frameNum;
+        frame->getData("metadata", &frameHeader);
+        if (frameHeader) {
+            void *metadata = nullptr;
+            metadata = frameHeader + 6; // to get frame number
+            int32_t *frameNum = reinterpret_cast<int32_t *>(metadata);
+            if (!firstFrame) {
+                firstFrame = *frameNum;
+            }
+            metadata = frameHeader + 12; // to get sensor temperature;
+            int32_t *sensorTemp = reinterpret_cast<int32_t *>(metadata);
+            metadata = frameHeader + 14; // to get lasor temperature;
+            int32_t *laserTemp = reinterpret_cast<int32_t *>(metadata);
+            ImGui::Text(" Current FPS: %i", fps);
+            uint32_t totalFrames = *frameNum - firstFrame;
+            uint32_t frameLost = totalFrames - frameRecvd;
+            ImGui::Text(" Number of frames lost: %i", frameLost);
+            ImGui::SameLine();
+            ImGui::Text(" | Number of frames received: %i", frameRecvd);
+            ImGui::Text(" Laser Temperature: %iC", *laserTemp);
+            ImGui::SameLine();
+            ImGui::Text(" | Sensor Temperature: %iC", *sensorTemp);
         }
-        metadata = frameHeader + 12; // to get sensor temperature;
-        int32_t *sensorTemp = reinterpret_cast<int32_t *>(metadata);
-        metadata = frameHeader + 14; // to get lasor temperature;
-        int32_t *laserTemp = reinterpret_cast<int32_t *>(metadata);
-        ImGui::Text(" Current FPS: %i", fps);
-        uint32_t totalFrames = *frameNum - firstFrame;
-        uint32_t frameLost = totalFrames - frameRecvd;
-        ImGui::Text(" Number of frames lost: %i", frameLost);
-        ImGui::SameLine();
-        ImGui::Text(" | Number of frames received: %i", frameRecvd);
-        ImGui::Text(" Laser Temperature: %iC", *laserTemp);
-        ImGui::SameLine();
-        ImGui::Text(" | Sensor Temperature: %iC", *sensorTemp);
+
+        ImGui::Checkbox("Show ini Prarms", &show_ini_window);
         ImGui::NewLine();
 
         // "Stop" button
@@ -1461,6 +1522,9 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                      EMBED_HDR_LENGTH) +
                 view->m_ctrl->m_recorder->m_sizeOfHeader;
         }
+    }
+    if (show_ini_window) {
+        showIniWindow(&show_ini_window);
     }
     ImGui::End();
 }

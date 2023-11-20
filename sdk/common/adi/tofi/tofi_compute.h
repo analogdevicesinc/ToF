@@ -5,8 +5,8 @@
 #define TOFI_COMPUTE_H
 
 #ifdef __cplusplus
-extern "C" { // only need to export C interface if
-             // used by C++ source code
+extern "C" {  // only need to export C interface if
+              // used by C++ source code
 #endif
 
 #ifdef _WIN32
@@ -22,26 +22,36 @@ extern "C" { // only need to export C interface if
 #include <stdint.h>
 
 #include "tofi_error.h"
-
+#include "tofi_util.h"
 // TODO: Confirm if its fine to hardcode
 // number of phases as 3, else make it a pointer
 #define NO_OF_PHASES 3
 
 typedef struct {
-    float sensor_temp[NO_OF_PHASES];
-    float laser_temp[NO_OF_PHASES];
+  float sensor_temp[NO_OF_PHASES];
+  float laser_temp[NO_OF_PHASES];
 } TemperatureInfo;
 
+
+// char ver_info[] =
+//    "VERSIONINFO:"
+//    "TOF_DepthComputeEngine_ARM64-Added_API_INI";
+///
+/// @brief Function to get the version for TOF Depth Compute Engine Library
+/// @param[in] char *depth_compute_version: Pointer to store thelibrary version
+//TOFI_COMPUTE_API uint32_t GetVersion(char *depth_compute_version);
+
+
 typedef struct {
-    uint32_t n_rows;               ///< Number of rows
-    uint32_t n_cols;               ///< Number of columns
-    uint16_t *p_depth_frame;       ///< Pointer to the Depth Frame
-    uint16_t *p_ab_frame;          ///< Pointer to the AB Frame
-    float *p_conf_frame;           ///< Pointer to the Confidence Frame
-    int16_t *p_xyz_frame;          ///< Pointer to the XYZ Frame
-    void *p_tofi_processor_config; ///< Pointer to the Processor Config
-    void *p_cal_config;            ///< Pointer to the Calibration config data
-    uint16_t *p_depth16_frame;     ///< Pointer to the Depth16 Frame
+  uint32_t n_rows;                ///< Number of rows
+  uint32_t n_cols;                ///< Number of columns
+  uint16_t *p_depth_frame;        ///< Pointer to the Depth Frame
+  uint16_t *p_ab_frame;           ///< Pointer to the AB Frame
+  float *p_conf_frame;            ///< Pointer to the Confidence Frame
+  int16_t *p_xyz_frame;           ///< Pointer to the XYZ Frame
+  void *p_tofi_processor_config;  ///< Pointer to the Processor Config
+  void *p_cal_config;             ///< Pointer to the Calibration config data
+  uint16_t *p_depth16_frame;      ///< Pointer to the Depth16 Frame
 } TofiComputeContext;
 
 /// Function to Initialize the configuration for TOFI compute context
@@ -53,8 +63,8 @@ typedef struct {
 ///    ADI_TOFI_SUCCESS on success, assigned as error code incase of failure
 /// @return TofiComputeContext *: returns pointer to TofiComputeContext on
 /// success, returns NULL on failure
-TOFI_COMPUTE_API TofiComputeContext *
-InitTofiCompute(const void *p_tofi_cal_config, uint32_t *p_status);
+TOFI_COMPUTE_API TofiComputeContext *InitTofiCompute(
+    const void *p_tofi_cal_config, uint32_t *p_status);
 
 /// Function to process input frame data and output Depth/AB/Confidence frame
 /// data.
@@ -67,27 +77,27 @@ InitTofiCompute(const void *p_tofi_cal_config, uint32_t *p_status);
 /// is applied if this pointer is NULL
 /// @return int: returns ADI_TOFI_SUCCESS(0) on success, returns error code (>1)
 /// on failure
-TOFI_COMPUTE_API int
-TofiCompute(const uint16_t *const input_frame,
-            TofiComputeContext *const p_tofi_compute_context,
-            TemperatureInfo *p_temperature);
+TOFI_COMPUTE_API int TofiCompute(
+    const uint16_t *const input_frame,
+    TofiComputeContext *const p_tofi_compute_context,
+    TemperatureInfo *p_temperature);
 
 /// Function to release memory for TOFI compute
 /// context structure including its parameters
 /// like Depth/AB/Confidence memory buffers
 /// @param[in, out] TofiComputeContext *p_tofi_compute_context: pointer to the
 /// TOFI compute context structure to be freed
-TOFI_COMPUTE_API void
-FreeTofiCompute(TofiComputeContext *p_tofi_compute_context);
+TOFI_COMPUTE_API void FreeTofiCompute(
+    TofiComputeContext *p_tofi_compute_context);
 
 /// Function to enable/disable AB only output
 /// @param[in] TofiConfig *p_tofi_cal_config: pointer to the TOFI
 /// @param[in] int option: '1' for enable & '0' for disable
-TOFI_COMPUTE_API void
-TofiSetABOnly(TofiComputeContext *const p_tofi_compute_context, int option);
+TOFI_COMPUTE_API void TofiSetABOnly(
+    TofiComputeContext *const p_tofi_compute_context, int option);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // TOFI_COMPUTE_H
+#endif  // TOFI_COMPUTE_H

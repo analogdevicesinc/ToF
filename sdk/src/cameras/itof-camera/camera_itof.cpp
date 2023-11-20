@@ -92,6 +92,7 @@ CameraItof::CameraItof(
 
     std::string sensorName;
     m_depthSensor->getName(sensorName);
+    LOG(INFO) << "Sensor name = " << sensorName;
     if (sensorName == "adsd3500") {
         m_adsd3500Enabled = true;
     } else if (sensorName == "offline") {
@@ -639,6 +640,15 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     }
 
     return status;
+}
+
+aditof::Status CameraItof::getIniParams(void *params) {
+    auto ab_params = reinterpret_cast<ABThresholdsParams *>(params);
+    std::map<std::string, float> param_map;
+    m_depthSensor->getIniParams(param_map);
+    ab_params->ab_thresh_min = param_map["ab_thresh_min"];
+    ab_params->ab_sum_thresh = param_map["ab_sum_thresh"];
+    return aditof::Status::OK;
 }
 
 aditof::Status CameraItof::getAvailableFrameTypes(

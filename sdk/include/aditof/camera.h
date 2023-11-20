@@ -105,6 +105,8 @@ class SDK_API Camera {
      */
     virtual Status setFrameType(const std::string &frameType) = 0;
 
+    virtual Status getIniParams(void *params) = 0;
+
     /**
      * @brief Returns all the frame types that are supported by the camera
      * @param[out] availableFrameTypes
@@ -217,7 +219,7 @@ class SDK_API Camera {
 
     /**
      * @brief Enables or disables FSYNC toggle for ADSD3500
-     * @param[in] mode - 2 = Fsync pin set as HiZ ; 1 = Toggle at user specified framerate ; 0 = Toggle controlled via adsd3500ToggleFsync ; 
+     * @param[in] mode - 2 = Fsync pin set as HiZ ; 1 = Toggle at user specified framerate ; 0 = Toggle controlled via adsd3500ToggleFsync ;
      * @return Status
      */
     virtual Status adsd3500SetToggleMode(int mode) = 0;

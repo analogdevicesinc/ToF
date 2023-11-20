@@ -196,6 +196,8 @@ class CameraItof : public aditof::Camera {
      */
     void cleanupXYZtables();
 
+    virtual aditof::Status getIniParams(void *params) override;
+
   private:
     using noArgCallable = std::function<aditof::Status()>;
 

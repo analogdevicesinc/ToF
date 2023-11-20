@@ -97,6 +97,48 @@ NetworkDepthSensor::~NetworkDepthSensor() {
     }
 }
 
+aditof::Status
+NetworkDepthSensor::getIniParams(std::map<std::string, float> &params) {
+    using namespace aditof;
+    Network *net = m_implData->handle.net;
+    std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
+
+    if (!net->isServer_Connected()) {
+        LOG(WARNING) << "Not connected to server";
+        return Status::UNREACHABLE;
+    }
+
+    net->send_buff[m_sensorIndex].set_func_name("GetIniParam");
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
+
+    if (net->SendCommand() != 0) {
+        LOG(WARNING) << "Send Command Failed";
+        return Status::INVALID_ARGUMENT;
+    }
+
+    if (net->recv_server_data() != 0) {
+        LOG(WARNING) << "Receive Data Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    if (net->recv_buff[m_sensorIndex].server_status() !=
+        payload::ServerStatus::REQUEST_ACCEPTED) {
+        LOG(WARNING) << "API execution on Target Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
+
+    if (status == Status::OK) {
+        params["ab_thresh_min"] =
+            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(0));
+        params["ab_sum_thresh"] =
+            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(1));
+    }
+
+    return status;
+}
+
 aditof::Status NetworkDepthSensor::open() {
     using namespace aditof;
 
