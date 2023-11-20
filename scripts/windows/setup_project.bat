@@ -10,8 +10,6 @@ set /a answer_yes=0
 set /a set_build=0
 set /a set_deps=0
 set /a set_deps_install=0
-set /a use_depth_compute_stubs=0
-set /a use_depth_compute_opensource=0
 set /a threads=4
 
 set build_dire=""
@@ -117,16 +115,6 @@ if "%1" neq "" (
    shift
    goto :interpret_arg
    )
-   if /I "%1" EQU "--use_depth_compute_stubs" (
-   set /a use_depth_compute_stubs=1
-   shift
-   goto :interpret_arg
-   )
-   if /I "%1" EQU "--use_depth_compute_opensource" (
-   set /a use_depth_compute_opensource=1
-   shift
-   goto :interpret_arg
-   )
    if /I "%1" EQU "-j" (
    set threads=%2
    shift
@@ -141,13 +129,7 @@ if %display_help%==1 (
    call :print_help
    EXIT /B 0
    )
-   
-if %use_depth_compute_opensource%==1 (
-	if %use_depth_compute_stubs%==1 (
-		echo Please choose only one between stubs and opensource
-		EXIT /B %ERRORLEVEL%
-	)
-)
+
 ::check if the configuration is correct
 set /a opt=0
 if "%config_type%"=="Release" (
@@ -234,15 +216,7 @@ CALL :install_websockets %config_type% %generator%
 
 ::build the project with the selected options
 pushd %build_dire%
-if %use_depth_compute_stubs%==1 (
-   cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir% -DUSE_DEPTH_COMPUTE_STUBS=ON -DCMAKE_BUILD_TYPE=%config_type%
-   ) else (
-		if %use_depth_compute_opensource%==1 (
-			cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir% -DUSE_DEPTH_COMPUTE_OPENSOURCE=ON -DCMAKE_BUILD_TYPE=%config_type%
-		) else (
-			cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir% -DCMAKE_BUILD_TYPE=%config_type%
-		) 
-)
+cmake -G %generator% -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="%deps_install_dir%\glog;%deps_install_dir%\protobuf;%deps_install_dir%\libwebsockets" %source_dir% -DCMAKE_BUILD_TYPE=%config_type%
 cmake --build . --config %config_type% -j %threads%
 popd
 EXIT /B %ERRORLEVEL%
@@ -266,10 +240,6 @@ ECHO        Visual Studio 14 2015 Win64 = Generates Visual Studio 2015 project f
 ECHO -c^|--configuration
 ECHO        Release = Configuration for Release build.
 ECHO        Debug   = Configuration for Debug build.
-ECHO --use_depth_compute_stubs
-ECHO        Used when building with stubs in place of the depth compute libraries.
-ECHO --use_depth_compute_opensource
-ECHO        Used when building with opensource in place of the depth compute libraries.
 ECHO -j
 ECHO        Set the number of threads used for building, by default is set to 4.
 EXIT /B 0

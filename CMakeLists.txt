@@ -34,7 +34,6 @@ option(CI_BUILD "Build for CI" OFF)
 option(NXP "Set to ON when building on NXP" OFF)
 option(NVIDIA "Set to ON when building on NVIDIA" OFF)
 option(WITH_PROTOBUF_DEPENDENCY "Build with PROTOBUF dependency?" ON)
-option(USE_DEPTH_COMPUTE_STUBS "Use empty generated libs?" OFF)
 option(USE_DEPTH_COMPUTE_OPENSOURCE "Use an open source implementation?" OFF)
 option(USE_ADSD3030 "Is the imager of type ADSD3030?" OFF)
 
@@ -68,20 +67,6 @@ endif()
 add_definitions(-DADITOFSDK_GIT_COMMIT="${ADITOFSDK_GIT_COMMIT}")
 add_definitions(-DADITOFSDK_GIT_BRANCH="${ADITOFSDK_GIT_BRANCH}")
 
-########################## Checks and validations #############################
-
-set(DEPTH_COMPUTE_TYPE 0)
-set(ALL_DEPTH_COMPUTE_OPTIONS USE_DEPTH_COMPUTE_STUBS;USE_DEPTH_COMPUTE_OPENSOURCE)
-foreach(depth_compute IN LISTS ALL_DEPTH_COMPUTE_OPTIONS)
-    if(${depth_compute})
-        math(EXPR DEPTH_COMPUTE_TYPE "${DEPTH_COMPUTE_TYPE}+1")
-    endif()
-endforeach()
-
-if(${DEPTH_COMPUTE_TYPE} GREATER 1)
-        message(FATAL_ERROR "More than one Depth Compute library source was selected. Cmake will exit.")
-endif()
-
 ############################## Rest of cmake ##################################
 
 # Check whether we configure things for remote or we're on target
@@ -101,8 +86,12 @@ elseif(${SELECTED_PLATFORMS} EQUAL 1)
     set(ON_TARGET TRUE)
 endif()
 
+if(NOT ON_TARGET AND USE_DEPTH_COMPUTE_OPENSOURCE)
+        message (STATUS "USE_DEPRH_COMPUTE_OPENSOURCE is not used on host")
+endif()
+
 if(CI_BUILD)
-    set(USE_DEPTH_COMPUTE_STUBS ON)
+    set(USE_DEPTH_COMPUTE_OPENSOURCE ON)
 endif()
 
 if (USE_ADSD3030)
@@ -147,9 +136,7 @@ else()
 endif()
 
 if(${ON_TARGET})
-        if(USE_DEPTH_COMPUTE_STUBS)
-	        set(LIBTOFI_LIBDIR_PATH "${CMAKE_BINARY_DIR}/sdk/common/adi/depth-compute-stub")
-        elseif(USE_DEPTH_COMPUTE_OPENSOURCE)
+        if(USE_DEPTH_COMPUTE_OPENSOURCE)
 	        set(LIBTOFI_LIBDIR_PATH "${CMAKE_BINARY_DIR}/sdk/common/adi/depth-compute-opensource")
         else()
                 set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
