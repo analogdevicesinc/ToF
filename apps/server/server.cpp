@@ -717,6 +717,20 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
+    case GET_INI_PARAM: {
+
+        std::map<std::string, float> params;
+        aditof::Status status = camDepthSensor->getIniParams(params);
+        DLOG(INFO) << "Read " << params["ab_thresh_min"] << " "
+                   << params["ab_sum_thresh"];
+        if (status == aditof::Status::OK) {
+            buff_send.add_float_payload(params["ab_thresh_min"]);
+            buff_send.add_float_payload(params["ab_sum_thresh"]);
+        }
+        buff_send.set_status(static_cast<::payload::Status>(status));
+        break;
+    }
+
     default: {
         std::string msgErr = "Function not found";
         std::cout << msgErr << "\n";
@@ -753,4 +767,6 @@ void Initialize() {
     s_map_api_Values["Adsd3500WritePayload"] = ADSD3500_WRITE_PAYLOAD;
     s_map_api_Values["Adsd3500GetStatus"] = ADSD3500_GET_STATUS;
     s_map_api_Values["HangUp"] = HANG_UP;
+    s_map_api_Values["GetIniParam"] = GET_INI_PARAM;
+    s_map_api_Values["SetIniParam"] = SET_INI_PARAM;
 }

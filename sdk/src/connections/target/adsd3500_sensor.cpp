@@ -23,6 +23,7 @@
 #include <cstring>
 #include <unistd.h>
 #endif
+#include "tofi/tofi_config.h"
 #include <linux/videodev2.h>
 #include <signal.h>
 #include <sstream>
@@ -1332,6 +1333,20 @@ aditof::Status Adsd3500Sensor::initTargetDepthCompute(uint8_t *iniFile,
     return aditof::Status::OK;
 }
 
+aditof::Status
+Adsd3500Sensor::getIniParams(std::map<std::string, float> &params) {
+    TofiConfig *config = m_bufferProcessor->getTofiCongfig();
+    int type = 3;
+    LOG(INFO) << "p_tofi_cal_config = " << config->p_tofi_cal_config;
+    ABThresholdsParams ab_params;
+    getIniParamsImpl(&ab_params, type, config->p_tofi_cal_config);
+    params["ab_thresh_min"] = ab_params.ab_thresh_min;
+    params["ab_sum_thresh"] = ab_params.ab_sum_thresh;
+    LOG(INFO) << "ab_thresh_min " << ab_params.ab_thresh_min
+              << " ab_sum_thresh " << ab_params.ab_sum_thresh;
+    return aditof::Status::OK;
+}
+
 aditof::Status Adsd3500Sensor::waitForBufferPrivate(struct VideoDev *dev) {
     fd_set fds;
     struct timeval tv;
@@ -1667,4 +1682,21 @@ aditof::Adsd3500Status Adsd3500Sensor::convertIdToAdsd3500Status(int status) {
         return Adsd3500Status::UNKNOWN_ERROR_ID;
     }
     }
+}
+
+aditof::Status Adsd3500Sensor::getIniParamsImpl(void *p_config_params,
+                                                int params_group,
+                                                const void *p_tofi_cal_config) {
+    using namespace aditof;
+    Status status = Status::OK;
+    uint32_t ret;
+    ret = TofiGetINIParams(p_config_params, params_group, p_tofi_cal_config);
+    status = static_cast<Status>(ret);
+
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed getting ini parameters";
+        return Status::GENERIC_ERROR;
+    }
+
+    return status;
 }
