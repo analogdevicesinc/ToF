@@ -1336,7 +1336,6 @@ aditof::Status Adsd3500Sensor::initTargetDepthCompute(uint8_t *iniFile,
 aditof::Status
 Adsd3500Sensor::getIniParams(std::map<std::string, float> &params) {
     TofiConfig *config = m_bufferProcessor->getTofiCongfig();
-    LOG(INFO) << "p_tofi_cal_config = " << config->p_tofi_cal_config;
 
     ABThresholdsParams ab_params;
     int type = 3;
@@ -1355,7 +1354,8 @@ Adsd3500Sensor::getIniParams(std::map<std::string, float> &params) {
     type = 2;
     getIniParamsImpl(&jblf_params, type, config->p_tofi_cal_config);
     params["jblf_apply_flag"] = static_cast<float>(jblf_params.jblf_apply_flag);
-    params["jblf_window_size"] = static_cast<float>(jblf_params.jblf_window_size);
+    params["jblf_window_size"] =
+        static_cast<float>(jblf_params.jblf_window_size);
     params["jblf_gaussian_sigma"] = jblf_params.jblf_gaussian_sigma;
     params["jblf_exponential_term"] = jblf_params.jblf_exponential_term;
     params["jblf_max_edge"] = jblf_params.jblf_max_edge;

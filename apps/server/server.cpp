@@ -721,10 +721,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
         std::map<std::string, float> ini_params;
         aditof::Status status = camDepthSensor->getIniParams(ini_params);
-        DLOG(INFO) << "Read " << ini_params["ab_thresh_min"] << " "
-                   << ini_params["headerSize"];
         if (status == aditof::Status::OK) {
-            DLOG(INFO) << "Status ok ";
             buff_send.add_float_payload(ini_params["ab_thresh_min"]);
             buff_send.add_float_payload(ini_params["ab_sum_thresh"]);
             buff_send.add_float_payload(ini_params["conf_thresh"]);
