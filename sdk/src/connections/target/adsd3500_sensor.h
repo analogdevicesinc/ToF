@@ -118,6 +118,8 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     aditof::Status adsd3500InterruptHandler(int signalValue);
     virtual aditof::Status
     getIniParams(std::map<std::string, float> &params) override;
+    virtual aditof::Status
+    setIniParams(std::map<std::string, float> &params) override;
 
   private:
     aditof::Status writeConfigBlock(const uint32_t offset);
@@ -136,6 +138,8 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     aditof::Status queryAdsd3500();
     aditof::Adsd3500Status convertIdToAdsd3500Status(int status);
     aditof::Status getIniParamsImpl(void *p_config_params, int params_group,
+                                    const void *p_tofi_cal_config);
+    aditof::Status setIniParamsImpl(void *p_config_params, int params_group,
                                     const void *p_tofi_cal_config);
 
   private:

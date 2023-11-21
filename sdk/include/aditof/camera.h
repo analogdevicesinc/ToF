@@ -106,8 +106,19 @@ class SDK_API Camera {
      */
     virtual Status setFrameType(const std::string &frameType) = 0;
 
+    /**
+     * @brief Get the Depth Compute Library ini parameters
+     * @param params - a dictionary of parameters
+     * @return Status
+    */
     virtual Status getIniParams(std::map<std::string, float> &params) = 0;
 
+    /**
+     * @brief Set the Depth Compute Library ini parameters
+     * @param params - a dictionary of parameters
+     * @return Status
+    */
+    virtual Status setIniParams(std::map<std::string, float> &params) = 0;
     /**
      * @brief Returns all the frame types that are supported by the camera
      * @param[out] availableFrameTypes

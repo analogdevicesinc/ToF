@@ -73,6 +73,9 @@ using namespace adiMainWindow;
 
 auto startTime = std::chrono::system_clock::now();
 static int numProcessors;
+static std::string last_mode = "";
+static std::map<std::string, float> modified_ini_params;
+static bool use_modified_ini_params = false;
 GLFWimage icons[1];
 GLFWimage logos[1];
 GLuint logo_texture;
@@ -1069,8 +1072,8 @@ void ADIMainWindow::showIniWindow(bool *p_open) {
         ImGui::End();
         return;
     } else {
-        ImGui::PushItemWidth(100 * dpiScaleFactor);
-
+        ImGui::PushItemWidth(140 * dpiScaleFactor);
+        ImGui::Text("Stop streaming to modify the parameters");
         ImGui::InputFloat("abThreshMin", &abThreshMin);
         ImGui::InputFloat("abSumThresh", &abSumThresh);
         ImGui::InputFloat("confThresh", &confThresh);
@@ -1084,7 +1087,24 @@ void ADIMainWindow::showIniWindow(bool *p_open) {
         ImGui::InputFloat("jblfABThreshold", &jblfABThreshold);
         ImGui::InputInt("headerSize", &headerSize);
 
-        if (ImGui::Button("Done")) {
+        if (ImGui::Button("Modify")) {
+            modified_ini_params["ab_thresh_min"] = abThreshMin;
+            modified_ini_params["ab_sum_thresh"] = abSumThresh;
+            modified_ini_params["conf_thresh"] = confThresh;
+            modified_ini_params["radial_thresh_min"] = radialThreshMin;
+            modified_ini_params["radial_thresh_max"] = radialThreshMax;
+            modified_ini_params["jblf_apply_flag"] = jblfApplyFlag;
+            modified_ini_params["jblf_window_size"] = jblfWindowSize;
+            modified_ini_params["jblf_gaussian_sigma"] = jblfGaussianSigma;
+            modified_ini_params["jblf_exponential_term"] = jblfExponentialTerm;
+            modified_ini_params["jblf_max_edge"] = jblfMaxEdge;
+            modified_ini_params["jblf_ab_threshold"] = jblfABThreshold;
+            use_modified_ini_params = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Reset")) {
+            modified_ini_params.clear();
+            use_modified_ini_params = false;
         }
     }
     ImGui::End();
@@ -1239,6 +1259,22 @@ void ADIMainWindow::prepareCamera(std::string mode) {
     if (status != aditof::Status::OK) {
         my_log.AddLog("Could not set camera mode!");
         return;
+    }
+
+    if (mode == last_mode) {
+        if (!modified_ini_params.empty()) {
+            if (use_modified_ini_params) {
+                status = getActiveCamera()->setIniParams(modified_ini_params);
+                if (status != aditof::Status::OK) {
+                    LOG(ERROR) << "Could not set ini params";
+                } else {
+                    LOG(INFO) << "Using user defined ini parameters.";
+                    use_modified_ini_params = false;
+                }
+            }
+        }
+    } else {
+        last_mode = mode;
     }
 
     aditof::CameraDetails camDetails;

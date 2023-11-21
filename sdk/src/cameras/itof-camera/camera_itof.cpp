@@ -643,8 +643,21 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
 }
 
 aditof::Status CameraItof::getIniParams(std::map<std::string, float> &params) {
-    m_depthSensor->getIniParams(params);
-    return aditof::Status::OK;
+    aditof::Status status;
+    status = m_depthSensor->getIniParams(params);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "get ini parameters failed.";
+    }
+    return status;
+}
+
+aditof::Status CameraItof::setIniParams(std::map<std::string, float> &params) {
+    aditof::Status status;
+    status = m_depthSensor->setIniParams(params);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "set ini parameters failed.";
+    }
+    return status;
 }
 
 aditof::Status CameraItof::getAvailableFrameTypes(

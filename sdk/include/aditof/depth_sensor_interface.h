@@ -299,9 +299,21 @@ class DepthSensorInterface {
                                                   uint8_t *calData,
                                                   uint16_t calDataLength) = 0;
 
-    // virtual aditof::Status setIniParams(void *p_config_params, int params_group,
-    //                                     const void *p_tofi_cal_config) = 0;
+    /**
+     * @brief Get ini parameters for Depth Compute library
+     * @param[in] params - a dictionary of parameters
+     * @return Status
+    */
     virtual aditof::Status getIniParams(std::map<std::string, float> &params) {
+        return Status::OK;
+    };
+
+    /**
+     * @brief Set ini parameters for Depth Compute library
+     * @param[in] params - a dictionary of parameters
+     * @return Status
+    */
+    virtual aditof::Status setIniParams(std::map<std::string, float> &params) {
         return Status::OK;
     };
 };

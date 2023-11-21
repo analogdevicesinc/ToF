@@ -96,6 +96,9 @@ class NetworkDepthSensor : public aditof::DepthSensorInterface {
     virtual aditof::Status
     getIniParams(std::map<std::string, float> &params) override;
 
+    virtual aditof::Status
+    setIniParams(std::map<std::string, float> &params) override;
+
   private:
     struct ImplData;
     std::string m_sensorName;
