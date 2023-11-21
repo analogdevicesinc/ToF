@@ -51,14 +51,6 @@ build_docker() {
     run_docker ${DOCKER} /ToF/ci/azure/inside_docker.sh "${DEFAULT_CMAKE_FLAGS} ${EXTRA_CMAKE_FLAGS}"
 }
 
-build_ros(){
-    pushd "${TRAVIS_BUILD_DIR}"
-    cd build
-    sudo cmake --build . --target install
-    cmake --build . --target aditof_ros_package
-    popd
-}
-
 if [[ "${DOCKER}" != "" ]]; then export BUILD_TYPE="docker"; fi
 
 build_${BUILD_TYPE:-default}
