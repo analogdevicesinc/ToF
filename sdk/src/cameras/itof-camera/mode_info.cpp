@@ -230,13 +230,13 @@ aditof::Status ModeInfo::getSensorProperties(const std::string mode,
         if (pixelFormat == "raw16") {
             if (depthBits == 16 && abBits == 16 && confBits == 0) {
                 if (mode == "lr-native") {
-                    *width = 1024;
+                    *width = 2048;
                     *height = 4096;
-                    *pixelFormatIndex = 1;
+                    *pixelFormatIndex = 0;
                 } else if (mode == "sr-native") {
-                    *width = 1024;
+                    *width = 2048;
                     *height = 3072;
-                    *pixelFormatIndex = 1;
+                    *pixelFormatIndex = 0;
                 } else {
                     LOG(ERROR) << "Invalid configuration!";
                     return aditof::Status::INVALID_ARGUMENT;
