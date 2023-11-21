@@ -250,7 +250,15 @@ aditof::Status OfflineDepthSensor::adsd3500_reset() {
 }
 
 aditof::Status OfflineDepthSensor::adsd3500_register_interrupt_callback(
-    aditof::SensorInterruptCallback cb) {
+    aditof::SensorInterruptCallback &cb) {
+    LOG(WARNING)
+        << "Unregistering an interrupt callback on an offline connection "
+           "is not supported!";
+    return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status OfflineDepthSensor::adsd3500_unregister_interrupt_callback(
+    aditof::SensorInterruptCallback &cb) {
     LOG(WARNING)
         << "Registering an interrupt callback on an offline connection "
            "is not supported!";

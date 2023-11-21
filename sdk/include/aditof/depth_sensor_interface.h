@@ -215,7 +215,15 @@ class DepthSensorInterface {
      * @return Status
      */
     virtual aditof::Status
-    adsd3500_register_interrupt_callback(SensorInterruptCallback cb) = 0;
+    adsd3500_register_interrupt_callback(SensorInterruptCallback &cb) = 0;
+
+    /**
+     * @brief Unregister a function registered with adsd3500_register_interrupt_callback
+     * @param cb - the function to be unregistred
+     * @return Status
+     */
+    virtual aditof::Status
+    adsd3500_unregister_interrupt_callback(SensorInterruptCallback &cb) = 0;
 
     /**
      * @brief Returns the chip status
