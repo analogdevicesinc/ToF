@@ -1851,11 +1851,11 @@ void CameraItof::setAdsd3500WithIniParams(
         LOG(WARNING) << "vcselDelay was not found in .ini file, not setting.";
     }
 
-    it = iniKeyValPairs.find("jblfMaxEdgeThreshold");
+    it = iniKeyValPairs.find("jblfMaxEdge");
     if (it != iniKeyValPairs.end()) {
         adsd3500SetJBLFMaxEdgeThreshold(std::stoi(it->second));
     } else {
-        LOG(WARNING) << "jblfMaxEdgeThreshold was not found in .ini file, "
+        LOG(WARNING) << "jblfMaxEdge was not found in .ini file, "
                         "not setting.";
     }
 
