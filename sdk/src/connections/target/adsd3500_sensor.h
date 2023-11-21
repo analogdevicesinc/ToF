@@ -150,7 +150,8 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     bool m_firstRun;
     unsigned int m_sensorFps;
     bool m_adsd3500Queried;
-    aditof::SensorInterruptCallback m_interruptCallback;
+    std::unordered_map<void *, aditof::SensorInterruptCallback>
+        m_interruptCallbackMap;
     std::vector<aditof::DepthSensorFrameType> m_availableFrameTypes;
     BufferProcessor *m_bufferProcessor;
     bool m_depthComputeOnTarget;
