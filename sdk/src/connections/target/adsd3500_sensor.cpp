@@ -1553,7 +1553,7 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
 aditof::Status Adsd3500Sensor::adsd3500_register_interrupt_callback(
     aditof::SensorInterruptCallback &cb) {
     if (Adsd3500InterruptNotifier::getInstance().interruptsAvailable()) {
-        m_interruptCallback = cb;
+        m_interruptCallbackMap.insert({&cb, cb});
     } else {
         return aditof::Status::UNAVAILABLE;
     }
@@ -1564,7 +1564,9 @@ aditof::Status Adsd3500Sensor::adsd3500_register_interrupt_callback(
 aditof::Status Adsd3500Sensor::adsd3500_unregister_interrupt_callback(
     aditof::SensorInterruptCallback &cb) {
 
-    return aditof::Status::UNAVAILABLE;
+    m_interruptCallbackMap.erase(&cb);
+
+    return aditof::Status::OK;
 }
 
 aditof::Status Adsd3500Sensor::adsd3500InterruptHandler(int signalValue) {
@@ -1595,8 +1597,10 @@ aditof::Status Adsd3500Sensor::adsd3500InterruptHandler(int signalValue) {
         LOG(ERROR) << "Imager error detected. Error code: " << statusRegister;
     }
 
-    if (m_interruptCallback) {
-        m_interruptCallback(adsd3500Status);
+    if (!m_interruptCallbackMap.empty()) {
+        for (auto m_interruptCallback : m_interruptCallbackMap) {
+            m_interruptCallback.second(adsd3500Status);
+        }
     }
 
     return status;
