@@ -1597,10 +1597,8 @@ aditof::Status Adsd3500Sensor::adsd3500InterruptHandler(int signalValue) {
         LOG(ERROR) << "Imager error detected. Error code: " << statusRegister;
     }
 
-    if (!m_interruptCallbackMap.empty()) {
-        for (auto m_interruptCallback : m_interruptCallbackMap) {
-            m_interruptCallback.second(adsd3500Status);
-        }
+    for (auto m_interruptCallback : m_interruptCallbackMap) {
+        m_interruptCallback.second(adsd3500Status);
     }
 
     return status;
