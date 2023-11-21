@@ -350,7 +350,7 @@ int main(int argc, char *argv[]) {
 
     // Suppose it is needed to unregister from ADSD3500 interupts
     if (registerCbStatus == Status::OK) {
-        sensor->adsd3500_register_interrupt_callback(nullptr);
+        sensor->adsd3500_unregister_interrupt_callback(callback);
     }
 
     return 0;

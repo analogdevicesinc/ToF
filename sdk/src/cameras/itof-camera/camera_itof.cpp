@@ -1099,7 +1099,7 @@ CameraItof::adsd3500UpdateFirmware(const std::string &fwFilePath) {
             secondsWaited += secondsWaitingStep;
         }
         LOG(INFO) << "Waited: " << secondsWaited << " seconds";
-        m_depthSensor->adsd3500_register_interrupt_callback(nullptr);
+        m_depthSensor->adsd3500_unregister_interrupt_callback(cb);
         if (!m_fwUpdated && secondsWaited >= secondsTimeout) {
             LOG(WARNING) << "Adsd3500 firmware updated has timeout after: "
                          << secondsWaited << "seconds";

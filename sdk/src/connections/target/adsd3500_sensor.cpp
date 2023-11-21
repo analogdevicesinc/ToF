@@ -1551,7 +1551,7 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
 }
 
 aditof::Status Adsd3500Sensor::adsd3500_register_interrupt_callback(
-    aditof::SensorInterruptCallback cb) {
+    aditof::SensorInterruptCallback &cb) {
     if (Adsd3500InterruptNotifier::getInstance().interruptsAvailable()) {
         m_interruptCallback = cb;
     } else {
@@ -1559,6 +1559,12 @@ aditof::Status Adsd3500Sensor::adsd3500_register_interrupt_callback(
     }
 
     return aditof::Status::OK;
+}
+
+aditof::Status Adsd3500Sensor::adsd3500_unregister_interrupt_callback(
+    aditof::SensorInterruptCallback &cb) {
+
+    return aditof::Status::UNAVAILABLE;
 }
 
 aditof::Status Adsd3500Sensor::adsd3500InterruptHandler(int signalValue) {
