@@ -139,20 +139,10 @@ struct Point3I {
 };
 
 #pragma pack(push, 1)
-struct OutputConfiguration {
-    bool fullDepthFrame;
-    bool phaseFrame;
-    bool abFrame;
-    bool confidenceFrame;
-    bool depthAbInterleaved;
-    bool phaseJBLFConfidenceAbInterleaved;
-    bool depthConfidenceAbInterleaved;
-};
-
 struct Metadata {
     uint16_t width;
     uint16_t height;
-    uint8_t outputConfigurationRaw;
+    uint8_t outputConfiguration;
     uint8_t bitsInDepht;
     uint8_t bitsInAb;
     uint8_t bitsInConfidence;
@@ -163,11 +153,11 @@ struct Metadata {
     uint8_t imagerMode;
     uint8_t numberOfPhases;
     uint8_t numberOfFrequencies;
+    uint8_t reserved;
     uint32_t elapsedTimeFractionalValue;
     uint32_t elapsedTimeSecondsValue;
     uint32_t sensorTemperature;
     uint32_t laserTemperature;
-    OutputConfiguration outputConfiguration;
 };
 #pragma pack(pop)
 
