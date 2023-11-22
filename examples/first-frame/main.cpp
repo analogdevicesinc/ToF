@@ -272,22 +272,6 @@ int main(int argc, char *argv[]) {
     save_frame(frame, "ir");
     save_frame(frame, "depth");
 
-    // Example of reading temperature from hardware
-    uint16_t sensorTmp = 0;
-    uint16_t laserTmp = 0;
-    status = camera->adsd3500GetSensorTemperature(sensorTmp);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not read sensor temperature!";
-    }
-
-    status = camera->adsd3500GetLaserTemperature(laserTmp);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not read laser temperature!";
-    }
-
-    LOG(INFO) << "Sensor temperature: " << sensorTmp;
-    LOG(INFO) << "Laser temperature: " << laserTmp;
-
     status = camera->stop();
     if (status != Status::OK) {
         LOG(ERROR) << "Could not stop the camera!";
