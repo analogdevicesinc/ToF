@@ -137,19 +137,11 @@ class Frame {
                                         std::string &value) const;
 
     /**
-     * @brief Extracts the sensor and laser temperatures from metadata within this frame.
-     * @param[out] sensorTemp - Sensor temperature in degrees Celsius
-     * @param[out] laserTemp - Laser temperature in degrees Celsius
+     * @brief Extracts the metadata content and returns a struct with values
+     * @param[out] metadata - struct containing all metadata fields 
      * @return Status
      */
-    SDK_API virtual Status getTemperature(uint32_t &sensorTemp,
-                                          uint32_t &laserTemp) const;
-    /**
-     * @brief Extracts the frame number from metadata within this frame.
-     * @param[out] frameNumber - frame number
-     * @return Status
-     */
-    SDK_API virtual Status getFrameNumber(uint32_t &frameNumber) const;
+    SDK_API virtual Status getMetadataStruct(Metadata &metadata) const;
 
   private:
     std::unique_ptr<FrameImpl> m_impl;

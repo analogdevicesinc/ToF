@@ -85,12 +85,8 @@ Status Frame::getAttribute(const std::string &attribute,
     return m_impl->getAttribute(attribute, value);
 }
 
-Status Frame::getTemperature(uint32_t &sensorTemp, uint32_t &laserTemp) const {
-    return m_impl->getTemperature(sensorTemp, laserTemp);
-}
-
-Status Frame::getFrameNumber(uint32_t &frameNumber) const {
-    return m_impl->getFrameNumber(frameNumber);
+Status Frame::getMetadataStruct(Metadata &metadata) const {
+    return m_impl->getMetadataStruct(metadata);
 }
 
 } // namespace aditof
