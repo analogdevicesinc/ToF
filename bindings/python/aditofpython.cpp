@@ -109,6 +109,35 @@ PYBIND11_MODULE(aditofpython, m) {
         .def_readwrite("passiveIRCaptured",
                        &aditof::FrameDetails::passiveIRCaptured);
 
+    py::class_<aditof::Metadata>(m, "Metadata")
+        .def(py::init<>())
+        .def_readwrite("width", &aditof::Metadata::width)
+        .def_readwrite("height", &aditof::Metadata::height)
+        .def_readwrite("outputConfiguration",
+                       &aditof::Metadata::outputConfiguration)
+        .def_readwrite("bitsInDepht", &aditof::Metadata::bitsInDepht)
+        .def_readwrite("bitsInAb", &aditof::Metadata::bitsInAb)
+        .def_readwrite("bitsInConfidence", &aditof::Metadata::bitsInConfidence)
+        .def_readwrite("invalidPhaseValue",
+                       &aditof::Metadata::invalidPhaseValue)
+        .def_readwrite("frequencyIndex", &aditof::Metadata::frequencyIndex)
+        .def_readwrite("abFrequencyIndex", &aditof::Metadata::abFrequencyIndex)
+        .def_readwrite("frameNumber", &aditof::Metadata::frameNumber)
+        .def_readwrite("imagerMode", &aditof::Metadata::imagerMode)
+        .def_readwrite("numberOfPhases", &aditof::Metadata::numberOfPhases)
+        .def_readwrite("numberOfFrequencies",
+                       &aditof::Metadata::numberOfFrequencies)
+        .def_readwrite("reserved", &aditof::Metadata::reserved)
+        .def_readwrite("elapsedTimeFractionalValue",
+                       &aditof::Metadata::elapsedTimeFractionalValue)
+        .def_readwrite("elapsedTimeSecondsValue",
+                       &aditof::Metadata::elapsedTimeSecondsValue)
+        .def_readwrite("elapsedTimeSecondsValue",
+                       &aditof::Metadata::elapsedTimeSecondsValue)
+        .def_readwrite("sensorTemperature",
+                       &aditof::Metadata::sensorTemperature)
+        .def_readwrite("laserTemperature", &aditof::Metadata::laserTemperature);
+
     // Camera declarations
 
     py::enum_<aditof::ConnectionType>(m, "ConnectionType")
@@ -536,7 +565,12 @@ PYBIND11_MODULE(aditofpython, m) {
             },
             py::arg("attribute"), py::arg("value"))
         .def("getAttribute", &aditof::Frame::getAttribute, py::arg("attribute"),
-             py::arg("value"));
+             py::arg("value"))
+        .def("getMetadataStruct", [](aditof::Frame &frame) {
+            aditof::Metadata metadata;
+            aditof::Status status = frame.getMetadataStruct(metadata);
+            return std::make_pair(status, metadata);
+        });
 
     // DepthSensorInterface
     py::class_<aditof::DepthSensorInterface,
