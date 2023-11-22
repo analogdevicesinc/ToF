@@ -256,38 +256,6 @@ aditof::Status FrameImpl::getAttribute(const std::string &attribute,
     return aditof::Status::OK;
 }
 
-aditof::Status FrameImpl::getTemperature(uint32_t &sensorTemp,
-                                         uint32_t &laserTemp) const {
-
-    aditof::Status status = aditof::Status::OK;
-    uint8_t *header;
-
-    if (m_implData->m_dataLocations.count("metadata") > 0) {
-        header = reinterpret_cast<uint8_t *>(
-            m_implData->m_dataLocations["metadata"]);
-    } else {
-        return aditof::Status::UNAVAILABLE;
-    }
-
-    sensorTemp = *((uint32_t *)(header + 28));
-    laserTemp = *((uint32_t *)(header + 32));
-
-    return aditof::Status::OK;
-}
-
-aditof::Status FrameImpl::getFrameNumber(uint32_t &frameNumber) const {
-
-    aditof::Status status = aditof::Status::OK;
-    uint8_t *header;
-
-    if (m_implData->m_dataLocations.count("metadata") > 0) {
-        header = reinterpret_cast<uint8_t *>(
-            m_implData->m_dataLocations["metadata"]);
-    } else {
-        return aditof::Status::UNAVAILABLE;
-    }
-
-    frameNumber = *((uint32_t *)(header + 12));
-
+aditof::Status FrameImpl::getMetadataStruct(aditof::Metadata &metadata) const {
     return aditof::Status::OK;
 }
