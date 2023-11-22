@@ -536,19 +536,7 @@ PYBIND11_MODULE(aditofpython, m) {
             },
             py::arg("attribute"), py::arg("value"))
         .def("getAttribute", &aditof::Frame::getAttribute, py::arg("attribute"),
-             py::arg("value"))
-        .def("getTemperature",
-             [](aditof::Frame &frame) {
-                 uint32_t laserTemp, sensorTemp;
-                 aditof::Status status =
-                     frame.getTemperature(laserTemp, sensorTemp);
-                 return std::make_tuple(status, laserTemp, sensorTemp);
-             })
-        .def("getFrameNumber", [](aditof::Frame &frame) {
-            uint32_t frameNumber;
-            aditof::Status status = frame.getFrameNumber(frameNumber);
-            return std::make_pair(status, frameNumber);
-        });
+             py::arg("value"));
 
     // DepthSensorInterface
     py::class_<aditof::DepthSensorInterface,
