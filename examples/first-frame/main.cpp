@@ -278,6 +278,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+    // Example of reading status of ADSD3500 chip and of imager
     int chipStatus, imagerStatus;
     status = camera->adsd3500GetStatus(chipStatus, imagerStatus);
     if (status != Status::OK) {
@@ -288,7 +289,7 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "Chip status error code: " << chipStatus;
     LOG(INFO) << "Imager status error code: " << imagerStatus;
 
-    //Example of reading temperature from frame metadata
+    // Example of reading temperature from frame metadata
     uint32_t sensorTmpMetadata, laserTempMetadata;
     status = frame.getTemperature(sensorTmpMetadata, laserTempMetadata);
     if (status == Status::OK) {
@@ -305,11 +306,11 @@ int main(int argc, char *argv[]) {
     if (status == Status::OK) {
         LOG(INFO) << "Frame number of latest frame: " << frameCount;
     } else {
-        LOG(INFO)
+        LOG(ERROR)
             << "Failed to read frame number from metadata of latest frame.";
     }
 
-    //Example on how to extract data from metadata
+    // Example on how to extract data from metadata
     uint16_t *metadataFrame;
     uint8_t *metadataContent;
     status = frame.getData("metadata", &metadataFrame);
@@ -332,7 +333,7 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "Frame Number: " << frameNumber;
     LOG(INFO) << "Mode:  " << modeFromMetadata;
 
-    // Suppose it is needed to unregister from ADSD3500 interupts
+    // Example on how to unregister a callback from ADSD3500 interupts
     if (registerCbStatus == Status::OK) {
         sensor->adsd3500_unregister_interrupt_callback(callback);
     }
