@@ -139,6 +139,10 @@ struct Point3I {
 };
 
 #pragma pack(push, 1)
+/**
+ * @struct Metadata
+ * @brief Contains all of the metadata components
+ */
 struct Metadata {
 
     /**
