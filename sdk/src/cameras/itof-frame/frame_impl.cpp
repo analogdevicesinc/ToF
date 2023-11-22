@@ -257,5 +257,18 @@ aditof::Status FrameImpl::getAttribute(const std::string &attribute,
 }
 
 aditof::Status FrameImpl::getMetadataStruct(aditof::Metadata &metadata) const {
+    using namespace aditof;
+    Status status = Status::OK;
+
+    uint8_t *header;
+    if (m_implData->m_dataLocations.count("metadata") > 0) {
+        header = reinterpret_cast<uint8_t *>(
+            m_implData->m_dataLocations["metadata"]);
+    } else {
+        return aditof::Status::UNAVAILABLE;
+    }
+
+    memcpy(&metadata, header, sizeof(Metadata));
+
     return aditof::Status::OK;
 }
