@@ -289,28 +289,7 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "Chip status error code: " << chipStatus;
     LOG(INFO) << "Imager status error code: " << imagerStatus;
 
-    // Example of reading temperature from frame metadata
-    uint32_t sensorTmpMetadata, laserTempMetadata;
-    status = frame.getTemperature(sensorTmpMetadata, laserTempMetadata);
-    if (status == Status::OK) {
-        LOG(INFO) << "Sensor temperature read from metadata of latest frame: "
-                  << sensorTmpMetadata;
-        LOG(INFO) << "Laser temperature read from metadata of latest frame: "
-                  << laserTempMetadata;
-    } else {
-        LOG(ERROR) << "Could not get temperature from metadata!";
-    }
-
-    uint32_t frameCount;
-    status = frame.getFrameNumber(frameCount);
-    if (status == Status::OK) {
-        LOG(INFO) << "Frame number of latest frame: " << frameCount;
-    } else {
-        LOG(ERROR)
-            << "Failed to read frame number from metadata of latest frame.";
-    }
-
-    // Example on how to extract data from metadata
+    //Example on how to extract data from metadata
     uint16_t *metadataFrame;
     uint8_t *metadataContent;
     status = frame.getData("metadata", &metadataFrame);

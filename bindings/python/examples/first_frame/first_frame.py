@@ -96,17 +96,6 @@ print("depth frame details:", "width:", frameDataDetails.width, "height:", frame
 status = camera1.stop()
 print("camera1.stop()", status)
 
-sensorTemperature = 0
-laserTemperature = 0
-status, sensorTemperature, laserTemperature = frame.getTemperature()
-print("frame.getTemperature() ", status)
-print("sensorTemperature: ", sensorTemperature, " laserTemperature: ", laserTemperature)
-
-frameNumber = 0
-status, frameNumber = frame.getFrameNumber()
-print("frame.getFrameNumber() ", status)
-print("frameNumber: ", frameNumber)
-
 image = np.array(frame.getData("depth"), copy=False)
 
 metadata = np.array(frame.getData("metadata"), copy=False, dtype=np.uint8)
