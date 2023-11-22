@@ -289,7 +289,17 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "Chip status error code: " << chipStatus;
     LOG(INFO) << "Imager status error code: " << imagerStatus;
 
-    //Example on how to extract data from metadata
+    Metadata metadata;
+    status = frame.getMetadataStruct(metadata);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not get frame metadata!";
+        return 0;
+    }
+
+    LOG(INFO) << "Sensor and Laser temperature read from metadata struct: "
+              << metadata.sensorTemperature << " " << metadata.laserTemperature;
+
+    //Example on how to extract data from metadata frame
     uint16_t *metadataFrame;
     uint8_t *metadataContent;
     status = frame.getData("metadata", &metadataFrame);
