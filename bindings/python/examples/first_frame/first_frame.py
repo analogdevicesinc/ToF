@@ -98,17 +98,13 @@ print("camera1.stop()", status)
 
 image = np.array(frame.getData("depth"), copy=False)
 
-metadata = np.array(frame.getData("metadata"), copy=False, dtype=np.uint8)
+metadata = tof.Metadata
+status, metadata = frame.getMetadataStruct()
 
-sensorTemperature = np.uint32(metadata[15] << 24 | metadata[15] << 16 | metadata[14] << 8 | metadata[14])
-laserTemperature = np.uint32(metadata[17] << 24 | metadata[17] << 16 | metadata[16] << 8 | metadata[16])
-frameNumber = np.uint32(metadata[7] << 24 | metadata[7] << 16 | metadata[6] << 8 | metadata[6])
-modeMetadata = metadata[8]
-
-print("Sensor temperature from metadata: ", sensorTemperature)
-print("Laser temperature from metadata: ", laserTemperature)
-print("Frame number from metadata: ", frameNumber)
-print("Mode from metadata: ", modeMetadata)
+print("Sensor temperature from metadata: ", metadata.sensorTemperature)
+print("Laser temperature from metadata: ", metadata.laserTemperature)
+print("Frame number from metadata: ", metadata.frameNumber)
+print("Mode from metadata: ", metadata.imagerMode)
 
 plt.figure()
 plt.imshow(image)
