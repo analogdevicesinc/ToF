@@ -17,6 +17,6 @@ Press q to quit the  application.
 
 ### Python Dependencies
 
-pip install keyboard
-pip install opencv-python
-pip install numpy
+* pip install keyboard
+* pip install opencv-python
+* pip install numpy
