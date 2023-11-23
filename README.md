@@ -8,7 +8,7 @@ The SDK provides an API to control the ToF camera, IR stream and depth data. Win
 License : [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/analogdevicesinc/ToF/blob/master/LICENSE)
 Platform details : [![Hardware](https://img.shields.io/badge/hardware-wiki-green.svg)]()
 
-## Supported host platforms
+## Supported Host Platforms
 
 For more details on building the SDK on a host platform please check the **User Guide** specified below:.
 
@@ -17,7 +17,18 @@ For more details on building the SDK on a host platform please check the **User 
 | Windows | [Build Instructions](scripts/windows) | [![Build status](https://dev.azure.com/AnalogDevices/3DToF-rework/_apis/build/status/analogdevicesinc.ToF?branchName=master)](https://dev.azure.com/AnalogDevices/3DToF-rework/_build?view=runs&branchFilter=3310) | [![ToF evaluation kit installer](https://img.shields.io/badge/release-ToF_evaluation_kit_installer-blue.svg)](https://github.com/analogdevicesinc/ToF/releases/latest) |
 | Linux | [Build Instructions](doc/itof/linux_build_instructions.md) | [![Build status](https://dev.azure.com/AnalogDevices/3DToF-rework/_apis/build/status/analogdevicesinc.ToF?branchName=master)](https://dev.azure.com/AnalogDevices/3DToF-rework/_build?view=runs&branchFilter=3310) | [![ToF evaluation kit installer](https://img.shields.io/badge/release-ToF_evaluation_kit_installer-blue.svg)](https://github.com/analogdevicesinc/ToF/releases/latest) |
 
-## Supported embedded platforms
+### Requirements
+
+Host Platform: 
+
+* Windows 10 or
+* Ubuntu 20.04 or
+* Ubuntu 22.04
+
+Other
+* Python 3.9
+
+## Supported Embedded Platforms
 
 For more details on building the SDK on an embedded platform please check the **User Guide** specified below:
 ### ITOF camera
@@ -27,7 +38,7 @@ For more details on building the SDK on an embedded platform please check the **
 
 [How to write the SD card image onto the SD card?](doc/sdcard_burn.md)
 
-## SDK documentation
+## SDK Documentation
 
 From an architectural point of view, the SDK consists of two layers. One layer is the high level API that allows clients to easily grab a camera object, configure it and request frames. The other layer is the low level API which exposes the interface through which low level operations can be made to the camera hardware.
 
@@ -39,7 +50,7 @@ For more details about the SDK check the links below:
 
 [Building and installing the SDK](https://github.com/analogdevicesinc/ToF/tree/master/cmake/)
 
-## SDK examples
+## SDK Examples
 | Example | Language | Description |
 | --------- | ------------- | ----------- |
 | tof-viewer | <a href="https://github.com/analogdevicesinc/ToF/tree/master/examples/tof-viewer"> C++ </a> | Graphical User interface for visualising stream from depth camera |
@@ -48,6 +59,12 @@ For more details about the SDK check the links below:
 | point-cloud | <a href="https://github.com/analogdevicesinc/ToF/tree/master/examples/point_cloud"> C++ </a> | An application for visualising depth of a frame (Point Cloud representation). |
 | low_level_example | <a href="https://github.com/analogdevicesinc/ToF/tree/master/bindings/python/examples/low_level_example"> Python</a> | A simple example of how to get access to the low-level API of the camera. |
 | ROS2 CPP Wrapper | <a href="https://github.com/analogdevicesinc/ToF/tree/master/bindings/ros2/"> ROS2/C++</a> | ROS2 binding that publishes topics |
+
+## Other Examples
+| Example | Language | Description |
+| --------- | ------------- | ----------- |
+| ROS2 Application | <a href="https://github.com/analogdevicesinc/adi_3dtof_adtf31xx"> C++ </a> | A more extensive ROS2 example based on the ADI ToF SDK. |
+| Stitching Algorithm | <a href="https://github.com/analogdevicesinc/adi_3dtof_image_stitching"> C++ </a> | A stiching algorithm using ADI ToF data. |
 
 ## Directory Structure
 | Directory | Description |
