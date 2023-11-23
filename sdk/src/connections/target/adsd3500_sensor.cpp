@@ -118,7 +118,8 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     : m_driverPath(driverPath), m_driverSubPath(driverSubPath),
       m_captureDev(captureDev), m_implData(new Adsd3500Sensor::ImplData),
       m_firstRun(true), m_adsd3500Queried(false), m_depthComputeOnTarget(true),
-      m_chipStatus(0), m_imagerStatus(0) {
+      m_chipStatus(0), m_imagerStatus(0),
+      m_hostConnectionType(aditof::ConnectionType::ON_TARGET) {
     m_sensorName = "adsd3500";
     m_sensorDetails.connectionType = aditof::ConnectionType::ON_TARGET;
 
