@@ -8,6 +8,8 @@
 #include <aditof/system.h>
 #include <iostream>
 #include <string>
+#include <algorithm>
+
 using namespace std;
 using namespace aditof;
 
@@ -185,21 +187,31 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
                     wsi, std::string("Error while selecting frame type"));
                 break;
             }
-            status = camera->requestFrame(&frame);
-            if (status != aditof::Status::OK) {
-                send_error_message(wsi,
-                                   std::string("Error while requesting frame"));
-                //     SOLVE THIS !!!!
-                // break;
-            }
-            status = frame.getDetails(frameDetalis);
+
+            CameraDetails details;
+            status = camera->getDetails(details);
             if (status != aditof::Status::OK) {
                 send_error_message(
-                    wsi, std::string("Error while getting frame details"));
+                    wsi, std::string("Error while requesting camera details"));
                 break;
             }
-            frameWidth = frameDetalis.width;
-            frameHeight = frameDetalis.height;
+            std::vector<FrameDataDetails> tmp_frameDetails =
+                details.frameType.dataDetails;
+            std::string dataType = "depth";
+
+            auto detailsIter = std::find_if(
+                tmp_frameDetails.begin(), tmp_frameDetails.end(),
+                [&dataType](const aditof::FrameDataDetails &details) {
+                    return dataType == details.type;
+                });
+            if (detailsIter == tmp_frameDetails.end()) {
+                send_error_message(
+                    wsi, std::string("Error while requesting frame details"));
+                break;
+            }
+
+            frameWidth = detailsIter->width;
+            frameHeight = detailsIter->height;
 
             std::string availableSize = "size:" + std::to_string(frameWidth) +
                                         "," + std::to_string(frameHeight);
