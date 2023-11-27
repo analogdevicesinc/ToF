@@ -86,7 +86,7 @@ elseif(${SELECTED_PLATFORMS} EQUAL 1)
 endif()
 
 if(NOT ON_TARGET AND USE_DEPTH_COMPUTE_OPENSOURCE)
-        message (STATUS "USE_DEPRH_COMPUTE_OPENSOURCE is not used on host")
+        message (STATUS "USE_DEPTH_COMPUTE_OPENSOURCE is not used on host")
 endif()
 
 if(CI_BUILD)
