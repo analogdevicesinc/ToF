@@ -100,7 +100,7 @@ int send_message(struct lws *wsi, const char *msg, int len) {
 }
 
 int send_frame(struct lws *wsi, const char *msg, int len) {
-    memcpy((void *)(buf + LWS_PRE), msg, len);
+    memcpy((void *)(buf), msg, len);
     int ret = lws_write(wsi, buf, LWS_PRE + len, LWS_WRITE_BINARY);
     if (!ret) {
         lwsl_err("ERROR writing to tof socket\n");
