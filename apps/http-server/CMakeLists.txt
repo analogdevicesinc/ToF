@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 2.8)
 project(aditof-http-server)
 
-add_definitions(-DHTTP_LOCAL_RESOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
+add_definitions(-DHTTP_LOCAL_RESOURCE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/webpage")
 
 find_package(Libwebsockets REQUIRED)
 
-add_executable(${PROJECT_NAME} test-server.cpp ${PROTO_SRCS} ${PROTO_HDRS})
+add_executable(${PROJECT_NAME} http-server.cpp ${PROTO_SRCS} ${PROTO_HDRS})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE aditof ${Protobuf_LIBRARIES} ${LIBWEBSOCKETS_LIBRARIES})
 
