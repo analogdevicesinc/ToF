@@ -762,8 +762,15 @@ PYBIND11_MODULE(aditofpython, m) {
         .def(
             "adsd3500_register_interrupt_callback",
             [](aditof::DepthSensorInterface &device,
-               aditof::SensorInterruptCallback cb) {
+               aditof::SensorInterruptCallback &cb) {
                 return device.adsd3500_register_interrupt_callback(cb);
+            },
+            py::arg("cb"))
+        .def(
+            "adsd3500_unregister_interrupt_callback",
+            [](aditof::DepthSensorInterface &device,
+               aditof::SensorInterruptCallback &cb) {
+                return device.adsd3500_unregister_interrupt_callback(cb);
             },
             py::arg("cb"))
         .def("setControl", &aditof::DepthSensorInterface::setControl,

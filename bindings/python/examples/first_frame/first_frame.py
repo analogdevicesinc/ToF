@@ -63,6 +63,13 @@ print("system.getCameraList()", status)
 
 camera1 = cameras[0]
 
+#create callback and register it to the interrupt routine
+def callbackFunction(callbackStatus):
+    print("Running the python callback for which the status of ADSD3500 has been forwarded. ADSD3500 status = ", callbackStatus)
+
+sensor = camera1.getSensor()
+status = sensor.adsd3500_register_interrupt_callback(callbackFunction)
+
 status = camera1.initialize(config)
 print("camera1.initialize()", status)
 
@@ -105,6 +112,9 @@ print("Sensor temperature from metadata: ", metadata.sensorTemperature)
 print("Laser temperature from metadata: ", metadata.laserTemperature)
 print("Frame number from metadata: ", metadata.frameNumber)
 print("Mode from metadata: ", metadata.imagerMode)
+
+#Unregister callback
+status = sensor.adsd3500_unregister_interrupt_callback(callbackFunction)
 
 plt.figure()
 plt.imshow(image)
