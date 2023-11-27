@@ -57,13 +57,7 @@ int initializeSystem(string configFile) {
 
     camera = cameras.front();
 
-    status = camera->setControl("initialization_config", configFile);
-    if (status != Status::OK) {
-        cout << "Failed to set control!";
-        return -1;
-    }
-
-    status = camera->initialize();
+    status = camera->initialize(configFile);
     if (status != Status::OK) {
         cout << "Could not initialize camera!";
         return -1;
