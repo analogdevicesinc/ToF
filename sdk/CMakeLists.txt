@@ -225,11 +225,17 @@ include(GNUInstallDirs)
 set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/aditof)
 
 # export targets for the config cmake to use
-if (NOT ON_TARGET)
+if (NOT USE_DEPTH_COMPUTE_OPENSOURCE)
     install(TARGETS aditof
         EXPORT aditof-targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+elseif(NOT ON_TARGET AND USE_DEPTH_COMPUTE_OPENSOURCE)
+    install(TARGETS aditof
+    EXPORT aditof-targets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
 else()
     install(TARGETS aditof tofi_compute tofi_config
@@ -238,6 +244,7 @@ else()
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
 endif()
+
 
 install(EXPORT aditof-targets
     FILE
