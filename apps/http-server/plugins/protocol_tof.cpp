@@ -3,17 +3,18 @@
 #define LWS_INTERNAL
 #include <libwebsockets.h>
 #endif
+
 #include <aditof/camera.h>
 #include <aditof/frame.h>
 #include <aditof/system.h>
+#include <algorithm>
 #include <iostream>
 #include <string>
-#include <algorithm>
 
 using namespace std;
 using namespace aditof;
 
-#define DUMB_PERIOD_US 50000
+#define CHECK_PERIOD_US 50000
 #define HEADER_SIZE 0
 #define MAX_MESSAGE_LEN (1042 * 1024 * 2 + HEADER_SIZE) // For Megapixel
 
@@ -24,9 +25,6 @@ struct pss__tof {
 struct vhd__tof {
     const unsigned int *options;
 };
-
-//To remove
-#include <fstream>
 
 //Tof variables
 aditof::System tofSystem;
@@ -40,14 +38,11 @@ uint16_t frameHeight;
 uint16_t *frameData = NULL;
 uint16_t *frameDataDepth;
 uint16_t *frameDataIr;
-// uint8_t *frameToSend = NULL;
 
 aditof::Status status;
 static bool cameraStarted = false;
 static std::string frameContent;
 static aditof::FrameDetails frameDetalis;
-static int minRange = 30;
-static int maxRange = 4000;
 
 //ToF init function
 int initializeSystem(string configFile) {
@@ -74,11 +69,6 @@ uint8_t buf[LWS_PRE + MAX_MESSAGE_LEN], *p = &buf[LWS_PRE];
 //Available frametypes
 string availableFrameTypes = "ft:sr-native,sr-qnative,lr-native,lr-qnative";
 string availableFormats = "format:depth,ir,depth+ir";
-
-/**
- * according to protocol take into consideration messages until the first '\n' character
- * otherwise eras everything else
-*/
 
 string process_message(char *in) {
     std::string message = (const char *)in;
@@ -121,7 +111,6 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
     struct vhd__tof *vhd = (struct vhd__tof *)lws_protocol_vh_priv_get(
         lws_get_vhost(wsi), lws_get_protocol(wsi));
     uint8_t buf[LWS_PRE + MAX_MESSAGE_LEN], *p = &buf[LWS_PRE];
-    const struct lws_protocol_vhost_options *opt;
     int n, m;
 
     switch (reason) {
@@ -130,15 +119,12 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
             lws_get_vhost(wsi), lws_get_protocol(wsi), sizeof(struct vhd__tof));
         if (!vhd)
             return -1;
-        if ((opt = lws_pvo_search((const struct lws_protocol_vhost_options *)in,
-                                  "options")))
-            vhd->options = (unsigned int *)opt->value;
         break;
 
     case LWS_CALLBACK_ESTABLISHED:
         pss->number = 0;
         if (!vhd->options || !((*vhd->options) & 1))
-            lws_set_timer_usecs(wsi, DUMB_PERIOD_US);
+            lws_set_timer_usecs(wsi, CHECK_PERIOD_US);
         break;
 
     case LWS_CALLBACK_SERVER_WRITEABLE:
@@ -266,7 +252,8 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
                     else
                         frameToSend[i] = (uint8_t)((frameData[i] >> 4) & 0xff);
                 }
-                send_frame(wsi, (const char *)frameToSend, MAX_MESSAGE_LEN);
+                send_frame(wsi, (const char *)frameToSend,
+                           frameWidth * frameHeight);
                 free(frameToSend);
             } else if (frameContent == std::string("depth+ir")) {
 
@@ -287,7 +274,8 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
                         (uint8_t)((frameDataIr[i] >> 4) & 0xff);
                 }
 
-                send_frame(wsi, (const char *)frameToSend, MAX_MESSAGE_LEN);
+                send_frame(wsi, (const char *)frameToSend,
+                           frameWidth * frameHeight * 2);
                 free(frameToSend);
 
             } else {
@@ -317,7 +305,7 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
         if (!vhd->options || !((*vhd->options) & 1)) {
             lws_callback_on_writable_all_protocol_vhost(lws_get_vhost(wsi),
                                                         lws_get_protocol(wsi));
-            lws_set_timer_usecs(wsi, DUMB_PERIOD_US);
+            lws_set_timer_usecs(wsi, CHECK_PERIOD_US);
         }
         break;
 

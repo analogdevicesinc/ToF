@@ -1,9 +1,5 @@
 (function () {
 
-        /**
-         * Console logging for webapp messages
-         */
-
         if (typeof console != "undefined")
                 if (typeof console.log != 'undefined')
                         console.olog = console.log;
@@ -16,20 +12,12 @@
         };
         console.error = console.debug = console.info = console.log
 
-
-        /*
-         * We display untrusted stuff in html context... reject anything
-         * that has HTML stuff in it
-         */
-
         function san(s) {
                 if (s.search("<") !== -1)
                         return "invalid string";
 
                 return s;
         }
-
-        /* BrowserDetect came from http://www.quirksmode.org/js/detect.html */
 
         var BrowserDetect = {
                 init: function () {
@@ -504,7 +492,7 @@
                                 data1[i] = binaryArray[j];
                                 data1[i + 1] = binaryArray[j];
                                 data1[i + 2] = binaryArray[j];
-                                data1[i + 3] = 200;
+                                data1[i + 3] = 255;
                                 j++;
                         }
                         context1.putImageData(imgData1, 0, 0);
@@ -525,7 +513,7 @@
                                 data2[i] = binaryArray[j];
                                 data2[i + 1] = binaryArray[j];
                                 data2[i + 2] = binaryArray[j];
-                                data2[i + 3] = 200;
+                                data2[i + 3] = 255;
                                 j++;
                         }
                         context1.putImageData(imgData1, 0, 0);
@@ -548,7 +536,7 @@
         };
 
         function ws_open_tof() {
-                socket_tof = new_ws(get_appropriate_ws_url(""), "dumb-increment-protocol");
+                socket_tof = new_ws(get_appropriate_ws_url(""), "connection-check-protocol");
 
                 try {
                         socket_tof.onopen = function () {
