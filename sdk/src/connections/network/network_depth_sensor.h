@@ -35,6 +35,7 @@
 #include "aditof/depth_sensor_interface.h"
 
 #include <memory>
+#include <unordered_map>
 
 class NetworkDepthSensor : public aditof::DepthSensorInterface {
   public:
@@ -103,7 +104,8 @@ class NetworkDepthSensor : public aditof::DepthSensorInterface {
     std::unique_ptr<ImplData> m_implData;
     int m_sensorIndex;
     static int m_sensorCounter;
-    aditof::SensorInterruptCallback m_cb;
+    std::unordered_map<void *, aditof::SensorInterruptCallback>
+        m_interruptCallbackMap;
 };
 
 #endif // NETWORK_DEPTH_SENSOR_H
