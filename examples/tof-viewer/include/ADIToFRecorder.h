@@ -164,7 +164,7 @@ class ADIToFRecorder {
   public:
     uint16_t *frameDataLocationDEPTH = nullptr;
     uint16_t *frameDataLocationXYZ = nullptr;
-    uint16_t *frameDataLocationIR = nullptr;
+    uint16_t *frameDataLocationAB = nullptr;
     uint16_t *frameDataLocationHeader = nullptr;
     aditof::FrameDetails m_frameDetails;
     bool m_saveBinaryFormat = false;
@@ -193,7 +193,7 @@ class ADIToFRecorder {
     bool isPaused = false;
     int framesToRecord = 0;
     const int _depth = 2;
-    const int _ir = 1;
+    const int _ab = 1;
     size_t frameCtr = 0;
 };
 

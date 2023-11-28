@@ -269,7 +269,7 @@ int main(int argc, char *argv[]) {
         LOG(INFO) << "succesfully requested frame!";
     }
 
-    save_frame(frame, "ir");
+    save_frame(frame, "ab");
     save_frame(frame, "depth");
 
     status = camera->stop();

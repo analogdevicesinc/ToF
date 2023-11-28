@@ -385,8 +385,8 @@ class ADIMainWindow {
 		*						mode and view settings
 		* @param modeSelect		Camera mode selection
 		* @param viewSelect		Window view selection:
-		*						- Depth and IR
-		*						- Blended Depth with IR
+		*						- Depth and AB
+		*						- Blended Depth with AB
 		*/
     void PlayCCD(int modeSelect, int viewSelect);
 
@@ -406,9 +406,9 @@ class ADIMainWindow {
     void ShowRecordTree();
 
     /**
-		* @brief Initializes OpenGL and IR + Depth settings
+		* @brief Initializes OpenGL and AB + Depth settings
 		*/
-    void InitCaptureIRDepthVideo();
+    void InitCaptureABDepthVideo();
 
     /**
 		* @brief Renders Depth OpenGL images
@@ -416,9 +416,9 @@ class ADIMainWindow {
     void CaptureDepthVideo();
 
     /**
-		* @brief Renders IR OpenGL images
+		* @brief Renders AB OpenGL images
 		*/
-    void CaptureIRVideo();
+    void CaptureABVideo();
 
     /**
 		* @brief Renders Point Cloud OpenGL images
@@ -426,9 +426,9 @@ class ADIMainWindow {
     void CapturePointCloudVideo();
 
     /**
-		* @brief Initializes OpenGL for IR texture
+		* @brief Initializes OpenGL for AB texture
 		*/
-    void initOpenGLIRTexture();
+    void initOpenGLABTexture();
 
     /**
 		* @brief Initializes OpenGL for Depth texture
@@ -448,9 +448,9 @@ class ADIMainWindow {
 
     /**
 		* @brief Sets the threads to get both
-		*        IR and Depth images
+		*        AB and Depth images
 		*/
-    void synchronizeDepthIRVideo();
+    void synchronizeDepthABVideo();
 
     /**
 		* @brief Sets the thread to get 
@@ -506,7 +506,7 @@ class ADIMainWindow {
 
     /**
 		 * @brief Checks if the frame type set in camera has a certain
-		 *        content. (e.g. 'depth', 'ir', 'xyz', etc.)
+		 *        content. (e.g. 'depth', 'ab', 'xyz', etc.)
 		 */
     bool checkCameraSetToReceiveContent(const std::string &contentType);
 
@@ -541,8 +541,8 @@ class ADIMainWindow {
     const ImVec2 depthWinSize = ImVec2(0, 0);
     ImVec2 sourceDepthImageDimensions;
     ImVec2 displayDepthDimensions;
-    ImVec2 sourceIRImageDimensions;
-    ImVec2 displayIRDimensions;
+    ImVec2 sourceABImageDimensions;
+    ImVec2 displayABDimensions;
     ImVec2 sourcePointCloudImageDimensions;
     ImVec2 displayPointCloudDimensions;
 
@@ -552,7 +552,7 @@ class ADIMainWindow {
     GLFWwindow *window;
     int mainWindowHeight;
     int mainWindowWidth;
-    bool showIRWindow = false;
+    bool showABWindow = false;
     bool showDepthWindow = false;
     int modeSelection = 0;
     int modeSelectChanged = 0; //flag when changed
@@ -593,11 +593,11 @@ class ADIMainWindow {
 
     float imagescale = 1.0f;
     const float imagesizemax = 516.0f;
-    unsigned int ir_video_texture = 0;
+    unsigned int ab_video_texture = 0;
     unsigned int depth_video_texture = 0;
     unsigned int pointCloud_video_texture = 0;
     bool setTempWinPositionOnce = true;
-    bool setIRWinPositionOnce = true;
+    bool setABWinPositionOnce = true;
     bool setDepthWinPositionOnce = true;
     bool setLogWinPositionOnce = true;
     bool setPointCloudPositionOnce = true;
@@ -607,7 +607,7 @@ class ADIMainWindow {
     float customColorSave = 0.3f;
     float customColorOpen = 0.2f;
     float customColorPause = 0.1f;
-    bool displayIR = true;
+    bool displayAB = true;
     bool displayDepth = true;
     bool displayPointCloud = false;
     bool displayTemp = true;

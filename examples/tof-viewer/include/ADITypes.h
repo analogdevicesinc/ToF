@@ -36,10 +36,10 @@ typedef enum {
 	 */
     ADI_IMAGE_FORMAT_DEPTH16 = 0,
 
-    /** Image type IR16.
+    /** Image type AB16.
 	 *
 	 * \details
-	 * Each pixel of IR16 data is two bytes of little endian unsigned depth data. The value of the data represents
+	 * Each pixel of AB16 data is two bytes of little endian unsigned depth data. The value of the data represents
 	 * brightness.
 	 *
 	 * \details
@@ -49,7 +49,7 @@ typedef enum {
 	 * Stride indicates the length of each line in bytes and should be used to determine the start location of each
 	 * line of the image in memory.
 	 */
-    ADI_IMAGE_FORMAT_IR16,
+    ADI_IMAGE_FORMAT_AB16,
 
 } ADI_Image_Format_t;
 

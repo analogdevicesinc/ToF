@@ -228,8 +228,8 @@ void ADIToFRecorder::recordThread() {
 
         auto frame = m_recordQueue.dequeue();
 
-        uint16_t *irData;
-        frame->getData("ir", &irData);
+        uint16_t *abData;
+        frame->getData("ab", &abData);
 
         uint16_t *depthData;
         frame->getData("depth", &depthData);
@@ -248,7 +248,7 @@ void ADIToFRecorder::recordThread() {
         int captures = m_frameDetails.totalCaptures;
         int size = static_cast<int>(sizeof(uint16_t) * width * height);
 
-        m_recordFile.write(reinterpret_cast<const char *>(irData), size);
+        m_recordFile.write(reinterpret_cast<const char *>(abData), size);
         m_recordFile.write(reinterpret_cast<const char *>(depthData), size);
         m_recordFile.write(reinterpret_cast<const char *>(xyzData), size * 3);
         m_recordFile.write(reinterpret_cast<const char *>(header),
@@ -294,7 +294,7 @@ void ADIToFRecorder::playbackThread() {
         dataDetails.width = m_frameDetails.width;
         dataDetails.height = m_frameDetails.height;
         m_frameDetails.dataDetails.emplace_back(dataDetails);
-        dataDetails.type = "ir";
+        dataDetails.type = "ab";
         dataDetails.width = m_frameDetails.width;
         dataDetails.height = m_frameDetails.height;
         m_frameDetails.dataDetails.emplace_back(dataDetails);
@@ -308,7 +308,7 @@ void ADIToFRecorder::playbackThread() {
         m_frameDetails.dataDetails.emplace_back(dataDetails);
 
         frame->setDetails(m_frameDetails);
-        frame->getData("ir", &frameDataLocationIR);
+        frame->getData("ab", &frameDataLocationAB);
         frame->getData("depth", &frameDataLocationDEPTH);
         frame->getData("xyz", &frameDataLocationXYZ);
         frame->getData("metadata", &frameDataLocationHeader);
@@ -319,7 +319,7 @@ void ADIToFRecorder::playbackThread() {
         sizeOfFrame = sizeof(uint16_t) * height * width;
 
         if (m_playbackFile.eof()) {
-            memset(frameDataLocationIR, 0, sizeof(uint16_t) * width * height);
+            memset(frameDataLocationAB, 0, sizeof(uint16_t) * width * height);
             m_playBackEofReached = true;
         } else {
             if (!isPaused && (currentPBPos < (fileSize - (sizeOfFrame)*10))) {
@@ -328,7 +328,7 @@ void ADIToFRecorder::playbackThread() {
                 m_playbackFile.seekg(currentPBPos);
                 currentPBPos += size * 5 + EMBED_HDR_LENGTH;
                 m_playbackFile.read(
-                    reinterpret_cast<char *>(frameDataLocationIR), size);
+                    reinterpret_cast<char *>(frameDataLocationAB), size);
                 m_playbackFile.read(
                     reinterpret_cast<char *>(frameDataLocationDEPTH), size);
                 m_playbackFile.read(
@@ -341,7 +341,7 @@ void ADIToFRecorder::playbackThread() {
                 m_playbackFile.seekg(currentPBPos);
                 int size = static_cast<int>(sizeof(uint16_t) * width * height);
                 m_playbackFile.read(
-                    reinterpret_cast<char *>(frameDataLocationIR), size);
+                    reinterpret_cast<char *>(frameDataLocationAB), size);
                 m_playbackFile.read(
                     reinterpret_cast<char *>(frameDataLocationDEPTH), size);
                 m_playbackFile.read(
@@ -357,8 +357,8 @@ void ADIToFRecorder::playbackThread() {
 }
 
 void ADIToFRecorder::clearVariables() {
-    //delete[] frameDataLocationIR;
-    frameDataLocationIR = nullptr;
+    //delete[] frameDataLocationAB;
+    frameDataLocationAB = nullptr;
     frameDataLocationDEPTH = nullptr;
     frameDataLocationXYZ = nullptr;
     m_frameDetails.height = 0;

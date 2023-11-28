@@ -727,7 +727,7 @@ void ADIMainWindow::ShowPlaybackTree() {
 
                 view->m_ctrl->startPlayback(path, recordingSeconds);
                 if (viewSelection == 0) {
-                    initOpenGLIRTexture();
+                    initOpenGLABTexture();
                 } else {
                     initOpenGLPointCloudTexture();
                 }
@@ -811,7 +811,7 @@ void ADIMainWindow::ShowPlaybackTree() {
         ImGui::Text("View Options:");
         ImGuiExtensions::ADIRadioButton(
             "Active Brightness and Depth", &viewSelection, 0,
-            (displayIR || displayDepth) && !isPlayRecorded);
+            (displayAB || displayDepth) && !isPlayRecorded);
         ImGuiExtensions::ADIRadioButton("Point Cloud and Depth", &viewSelection,
                                         1, pointCloudEnable && !isPlayRecorded);
         ImGui::NewLine();
@@ -843,7 +843,7 @@ void ADIMainWindow::stopPlayback() {
     isPlaying = false;
     isPlayRecorded = false;
     displayDepth = true;
-    displayIR = true;
+    displayAB = true;
     cameraOptionsTreeEnabled = true;
     _isOpenDevice = true;
     if (view && view->m_ctrl) {
@@ -962,16 +962,16 @@ void ADIMainWindow::PlayRecorded() {
     displayDepth = true;
     pointCloudEnable = true;
     if (viewSelection == 0) {
-        displayIR = true;
+        displayAB = true;
         displayPointCloud = false;
-        synchronizeDepthIRVideo();
+        synchronizeDepthABVideo();
     } else {
-        displayIR = false;
+        displayAB = false;
         displayPointCloud = true;
         synchronizePointCloudVideo();
     }
 
-    if (displayIR) {
+    if (displayAB) {
         displayActiveBrightnessWindow(overlayFlags);
     }
     if (displayDepth) {
@@ -988,7 +988,7 @@ void ADIMainWindow::PlayRecorded() {
 void ADIMainWindow::stopPlayCCD() {
     captureSeparateEnabled = true;
     captureBlendedEnabled = true;
-    setIRWinPositionOnce = true;
+    setABWinPositionOnce = true;
     setDepthWinPositionOnce = true;
     setPointCloudPositionOnce = true;
     dephtWinCtr = 0;
@@ -998,7 +998,7 @@ void ADIMainWindow::stopPlayCCD() {
             view->m_ctrl->panicStop = false;
         }
         view->m_capturedFrame = nullptr;
-        view->ir_video_data = nullptr;
+        view->ab_video_data = nullptr;
         view->depth_video_data = nullptr;
         view->pointCloud_video_data = nullptr;
     }
@@ -1008,7 +1008,7 @@ void ADIMainWindow::stopPlayCCD() {
 }
 
 void ADIMainWindow::openGLCleanUp() {
-    glDeleteTextures(1, &ir_video_texture);
+    glDeleteTextures(1, &ab_video_texture);
     glDeleteTextures(1, &depth_video_texture);
     glDeleteTextures(1, &pointCloud_video_texture);
     glDeleteVertexArrays(1, &view->vertexArrayObject);
@@ -1222,7 +1222,7 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect) {
 
             prepareCamera(m_cameraModes[modeSelection].second);
             openGLCleanUp();
-            initOpenGLIRTexture();
+            initOpenGLABTexture();
             initOpenGLDepthTexture();
             initOpenGLPointCloudTexture();
 
@@ -1234,17 +1234,17 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect) {
         } else if (viewSelectionChanged != viewSelect) {
             viewSelectionChanged = viewSelect;
             openGLCleanUp();
-            initOpenGLIRTexture();
+            initOpenGLABTexture();
             initOpenGLDepthTexture();
             initOpenGLPointCloudTexture();
         }
     }
 
     switch (viewSelect) {
-    case 0: //Show Depth and IR in separate windows
-        displayIR = true;
+    case 0: //Show Depth and AB in separate windows
+        displayAB = true;
         displayDepth = checkCameraSetToReceiveContent("depth");
-        synchronizeDepthIRVideo();
+        synchronizeDepthABVideo();
         displayActiveBrightnessWindow(overlayFlags);
         if (displayDepth) {
             displayDepthWindow(overlayFlags);
@@ -1254,13 +1254,13 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect) {
     case 1: //Point Cloud Window
         displayDepth = checkCameraSetToReceiveContent("depth");
         if (displayDepth) {
-            displayIR = false;
+            displayAB = false;
             synchronizePointCloudVideo();
             displayPointCloudWindow(overlayFlags);
             displayDepthWindow(overlayFlags);
         } else {
-            displayIR = true;
-            synchronizeDepthIRVideo();
+            displayAB = true;
+            synchronizeDepthABVideo();
             displayActiveBrightnessWindow(overlayFlags);
         }
         displayInfoWindow(overlayFlags);
@@ -1284,7 +1284,7 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
 
     float info_height = (_isHighDPI) ? 205.0f : 80.0f;
 
-    if (displayIR)
+    if (displayAB)
         dictWinPosition["info"] = std::array<float, 4>(
             {dictWinPosition["ab"][0], offsetfromtop, 900, info_height});
     else
@@ -1328,8 +1328,8 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
         if (scale10)
             imagescale = 1.0f;
         ImGui::Text("%ipx x %ipx -> %ipx x %ipx", view->frameWidth,
-                    view->frameHeight, (uint32_t)displayIRDimensions.x,
-                    (uint32_t)displayIRDimensions.y);
+                    view->frameHeight, (uint32_t)displayABDimensions.x,
+                    (uint32_t)displayABDimensions.y);
         ImGui::Text(" FPS: %i", fps);
     }
     ImGui::End();
@@ -1360,7 +1360,7 @@ void ADIMainWindow::displayActiveBrightnessWindow(
 
     ImVec2 size;
 
-    if (displayDataWindow(displayIRDimensions, size) == false)
+    if (displayDataWindow(displayABDimensions, size) == false)
         return;
 
     dictWinPosition["ab"] = std::array<float, 4>(
@@ -1370,7 +1370,7 @@ void ADIMainWindow::displayActiveBrightnessWindow(
     setWindowSize(dictWinPosition["ab"][2] + 40, dictWinPosition["ab"][3] + 40);
 
     if (ImGui::Begin("Active Brightness Window", nullptr, overlayFlags)) {
-        CaptureIRVideo();
+        CaptureABVideo();
         bool logImage = view->getLogImage();
         ImGui::Checkbox("Log Image", &logImage);
         view->setLogImage(logImage);
@@ -1396,7 +1396,7 @@ void ADIMainWindow::displayDepthWindow(ImGuiWindowFlags overlayFlags) {
     sourceDepthImageDimensions = {(float)(view->frameWidth),
                                   (float)(view->frameHeight)};
 
-    if (displayIR)
+    if (displayAB)
         dictWinPosition["depth"] = std::array<float, 4>(
             {dictWinPosition["ab"][0] + dictWinPosition["ab"][2],
              dictWinPosition["info"][1] + dictWinPosition["info"][3], size.x,
@@ -1499,21 +1499,21 @@ void ADIMainWindow::createColorBar(ImVec2 position, ImVec2 size) {
                            "Test Standalone ImGui DrawList");
 }
 
-void ADIMainWindow::InitCaptureIRDepthVideo() {}
+void ADIMainWindow::InitCaptureABDepthVideo() {}
 
-void ADIMainWindow::initOpenGLIRTexture() {
+void ADIMainWindow::initOpenGLABTexture() {
     /********************************************/
-    //IR Texture
-    GLuint ir_texture;
-    glGenTextures(1, &ir_texture);
-    glBindTexture(GL_TEXTURE_2D, ir_texture);
+    //ab Texture
+    GLuint ab_texture;
+    glGenTextures(1, &ab_texture);
+    glBindTexture(GL_TEXTURE_2D, ab_texture);
 
     // Setup filtering parameters for display
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    ir_video_texture = ir_texture;
+    ab_video_texture = ab_texture;
     /*************************************************/
 }
 
@@ -1636,18 +1636,18 @@ void ADIMainWindow::initOpenGLPointCloudTexture() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void ADIMainWindow::synchronizeDepthIRVideo() {
+void ADIMainWindow::synchronizeDepthABVideo() {
 
     view->m_capturedFrame = view->m_ctrl->getFrame();
 
     aditof::FrameDetails frameDetails;
     view->m_capturedFrame->getDetails(frameDetails);
     std::unique_lock<std::mutex> lock(view->m_frameCapturedMutex);
-    if (displayIR) {
-        view->m_irFrameAvailable = true;
+    if (displayAB) {
+        view->m_abFrameAvailable = true;
     } else {
-        view->m_irFrameAvailable = false;
-        view->ir_video_data_8bit = nullptr;
+        view->m_abFrameAvailable = false;
+        view->ab_video_data_8bit = nullptr;
     }
     if (displayDepth) {
         view->m_depthFrameAvailable = true;
@@ -1655,7 +1655,7 @@ void ADIMainWindow::synchronizeDepthIRVideo() {
         view->m_depthFrameAvailable = false;
         view->depth_video_data_8bit = nullptr;
     }
-    if (displayIR && displayDepth) {
+    if (displayAB && displayDepth) {
         view->numOfThreads = 2;
     } else {
         view->numOfThreads = 1;
@@ -1799,7 +1799,7 @@ void ADIMainWindow::RenderInfoPane(ImVec2 hoveredImagePixel,
             }
         }
         ImGui::End();
-    } else if (format == ADI_Image_Format_t::ADI_IMAGE_FORMAT_IR16) {
+    } else if (format == ADI_Image_Format_t::ADI_IMAGE_FORMAT_AB16) {
         ImGui::Begin("dd", nullptr, overlayFlags2);
 
         if (hoveredImagePixel.x >= 0 && hoveredImagePixel.y >= 0) {
@@ -1886,27 +1886,27 @@ void ADIMainWindow::CaptureDepthVideo() {
     }
 }
 
-void ADIMainWindow::CaptureIRVideo() {
-    if (view->ir_video_data_8bit != nullptr) {
-        glBindTexture(GL_TEXTURE_2D, ir_video_texture);
+void ADIMainWindow::CaptureABVideo() {
+    if (view->ab_video_data_8bit != nullptr) {
+        glBindTexture(GL_TEXTURE_2D, ab_video_texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, view->frameWidth,
                      view->frameHeight, 0, GL_BGR, GL_UNSIGNED_BYTE,
-                     view->ir_video_data_8bit);
+                     view->ab_video_data_8bit);
         glGenerateMipmap(GL_TEXTURE_2D);
-        delete view->ir_video_data_8bit;
+        delete view->ab_video_data_8bit;
 
-        ImVec2 _displayIRDimensions = displayIRDimensions;
+        ImVec2 _displayABDimensions = displayABDimensions;
 
         if (rotationangledegrees == 90 || rotationangledegrees == 270) {
-            std::swap(_displayIRDimensions.x, _displayIRDimensions.y);
+            std::swap(_displayABDimensions.x, _displayABDimensions.y);
         }
 
         ImVec2 p = ImGui::GetCursorScreenPos();
-        ImageRotated((ImTextureID)ir_video_texture,
+        ImageRotated((ImTextureID)ab_video_texture,
                      ImVec2(dictWinPosition["ab"][2], dictWinPosition["ab"][3]),
-                     ImVec2(_displayIRDimensions.x, _displayIRDimensions.y),
+                     ImVec2(_displayABDimensions.x, _displayABDimensions.y),
                      rotationangleradians);
-        //ImGui::Image((void*)(intptr_t)ir_video_texture, displayIRDimensions);
+        //ImGui::Image((void*)(intptr_t)ab_video_texture, displayABDimensions);
         size_t bb = 0;
     }
 }
