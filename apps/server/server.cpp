@@ -741,6 +741,17 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
+    case GET_INTERRUPTS: {
+        while (!adsd3500InterruptsQueue.empty()) {
+            buff_send.add_int32_payload((int)adsd3500InterruptsQueue.front());
+            adsd3500InterruptsQueue.pop();
+        }
+
+        buff_send.set_status(
+            static_cast<::payload::Status>(aditof::Status::OK));
+        break;
+    }
+
     case HANG_UP: {
         if (sensors_are_created) {
             cleanup_sensors();
@@ -788,5 +799,6 @@ void Initialize() {
     s_map_api_Values["Adsd3500WritePayloadCmd"] = ADSD3500_WRITE_PAYLOAD_CMD;
     s_map_api_Values["Adsd3500WritePayload"] = ADSD3500_WRITE_PAYLOAD;
     s_map_api_Values["Adsd3500GetStatus"] = ADSD3500_GET_STATUS;
+    s_map_api_Values["GetInterrupts"] = GET_INTERRUPTS;
     s_map_api_Values["HangUp"] = HANG_UP;
 }
