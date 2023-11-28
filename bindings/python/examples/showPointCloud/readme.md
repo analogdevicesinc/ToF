@@ -36,7 +36,7 @@ point_cloud = o3d.geometry.PointCloud()
 ```
 * Request frame from adiToF camera;
 * Color the depth image with a rainbow spectrum;
-* Combine IR image and the depth image to get the color image;
+* Combine AB image and the depth image to get the color image;
 * Transform the 16bits depth image (the depth image raw) into Open3D *o3d.geometry.Image* type:
 ```console
     depth16bits_raw = o3d.geometry.Image(depth16bits_map)
