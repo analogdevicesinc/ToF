@@ -77,7 +77,7 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
         {
             "lr-qnative",
             {{"raw", 2560, 512},
-             {"ir", 512, 512},
+             {"ab", 512, 512},
              {"xyz", 512, 512},
              {"depth", 512, 512},
              {"conf", 512, 512},
@@ -88,7 +88,7 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
         {
             "sr-qnative",
             {{"raw", 2560, 512},
-             {"ir", 512, 512},
+             {"ab", 512, 512},
              {"xyz", 512, 512},
              {"depth", 512, 512},
              {"conf", 512, 512},
