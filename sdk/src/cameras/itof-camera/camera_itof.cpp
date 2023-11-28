@@ -716,7 +716,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         frame->getData("frameData", &frameDataLocation);
     } else {
         if ((m_details.frameType.type == "pcm-native")) {
-            frame->getData("ir", &frameDataLocation);
+            frame->getData("ab", &frameDataLocation);
         } else if (m_details.frameType.type == "") {
             LOG(ERROR) << "Frame type not found!";
             return Status::INVALID_ARGUMENT;
@@ -754,7 +754,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     if (m_enableMetaDatainAB) {
         uint16_t *abFrame;
         uint16_t *header;
-        frame->getData("ir", &abFrame);
+        frame->getData("ab", &abFrame);
         frame->getData("metadata", &header);
         memcpy(header, abFrame, 128);
     }
