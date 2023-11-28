@@ -141,10 +141,10 @@ def apply_maskrcnn_algorithm(distance_map, image, imageH, imageW):
 def get_scaling_values(cameraDetails):
     camera_range = cameraDetails.maxDepth
     bit_count = cameraDetails.bitCount
-    max_value_of_IR_pixel = 2 ** bit_count - 1
-    distance_scale_ir = 255.0 / max_value_of_IR_pixel
+    max_value_of_AB_pixel = 2 ** bit_count - 1
+    distance_scale_ab = 255.0 / max_value_of_AB_pixel
     distance_scale_depth = 255.0 / camera_range
-    return distance_scale_ir, distance_scale_depth
+    return distance_scale_ab, distance_scale_depth
 
 
 if __name__ == "__main__":
@@ -211,8 +211,8 @@ if __name__ == "__main__":
     smallSignalThreshold = 100
     cameras[0].setControl("noise_reduction_threshold", str(smallSignalThreshold))
 
-    # Get the scaling values for depth and ir image
-    distance_scale_ir, distance_scale_depth = get_scaling_values(camDetails)
+    # Get the scaling values for depth and ab image
+    distance_scale_ab, distance_scale_depth = get_scaling_values(camDetails)
 
     cv.namedWindow(WINDOW_MASKRCNN, cv.WINDOW_AUTOSIZE)
     cv.namedWindow(WINDOW_COLOR, cv.WINDOW_AUTOSIZE)
@@ -230,14 +230,14 @@ if __name__ == "__main__":
             print("cameras[0].requestFrame() failed with status: ", status)
 
         depth_map = np.array(frame.getData("depth"), dtype="uint16", copy=False)
-        ir_map = np.array(frame.getData("ir"), dtype="uint16", copy=False)
+        ab_map = np.array(frame.getData("ab"), dtype="uint16", copy=False)
 
-        # Creation of the IR image
-        ir_map = ir_map[0: int(ir_map.shape[0] / 2), :]
-        ir_map = distance_scale_ir * ir_map
-        ir_map = np.uint8(ir_map)
-        ir_map = cv.flip(ir_map, 1)
-        ir_map = cv.cvtColor(ir_map, cv.COLOR_GRAY2RGB)
+        # Creation of the AB image
+        ab_map = ab_map[0: int(ab_map.shape[0] / 2), :]
+        ab_map = distance_scale_ab * ab_map
+        ab_map = np.uint8(ab_map)
+        ab_map = cv.flip(ab_map, 1)
+        ab_map = cv.cvtColor(ab_map, cv.COLOR_GRAY2RGB)
 
         # Creation of the Depth image
         depth_map = depth_map[0: int(depth_map.shape[0] / 2), :]
@@ -247,9 +247,9 @@ if __name__ == "__main__":
         depth_map = np.uint8(depth_map)
         depth_map = cv.applyColorMap(depth_map, cv.COLORMAP_RAINBOW)
 
-        # Combine depth and IR for more accurate results
-        color_map = cv.addWeighted(ir_map, 0.4, depth_map, 0.6, 0)
-        show_image = cv.addWeighted(ir_map, 0.4, depth_map, 0.6, 0)
+        # Combine depth and AB for more accurate results
+        color_map = cv.addWeighted(ab_map, 0.4, depth_map, 0.6, 0)
+        show_image = cv.addWeighted(ab_map, 0.4, depth_map, 0.6, 0)
 
         width = color_map.shape[1]
         height = color_map.shape[0]
