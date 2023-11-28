@@ -34,10 +34,10 @@ ADIView::ADIView(std::shared_ptr<ADIController> &ctrl, const std::string &name)
     : m_ctrl(ctrl), m_viewName(name), m_depthFrameAvailable(false),
       m_center(true), m_waitKeyBarrier(0), m_distanceVal(0),
       m_smallSignal(false), m_crtSmallSignalState(false) {
-    //Create IR and Depth independent threads
+    //Create AB and Depth independent threads
     m_depthImageWorker =
         std::thread(std::bind(&ADIView::_displayDepthImage, this));
-    m_irImageWorker = std::thread(std::bind(&ADIView::_displayIrImage, this));
+    m_abImageWorker = std::thread(std::bind(&ADIView::_displayAbImage, this));
 
     //Create a Point Cloud independent thread
     m_pointCloudImageWorker =
@@ -54,7 +54,7 @@ ADIView::~ADIView() {
     lock.unlock();
     m_frameCapturedCv.notify_all();
     m_depthImageWorker.join();
-    m_irImageWorker.join();
+    m_abImageWorker.join();
     m_pointCloudImageWorker.join();
 }
 
@@ -113,7 +113,7 @@ void ADIView::render() {
         // Menu Bar
         if (ImGui::BeginMainMenuBar()) {
             if (ImGui::BeginMenu("Imager Options")) {
-                ImGui::MenuItem("Show IR Window", NULL, &showIRWindow);
+                ImGui::MenuItem("Show AB Window", NULL, &showABWindow);
                 ImGui::MenuItem("Show Depth Window", NULL, &showDepthWindow);
                 ImGui::EndMenu();
             }
@@ -121,16 +121,16 @@ void ADIView::render() {
             ImGui::EndMainMenuBar();
         }
 
-        // Show IR Window
-        if (showIRWindow) {
-            ImGui::Begin("IR Window", &showIRWindow);
-            ImGui::Text("Display IR View");
-            if (ImGui::Button("Close IR Window")) {
-                showIRWindow = false;
+        // Show AB Window
+        if (showABWindow) {
+            ImGui::Begin("AB Window", &showABWindow);
+            ImGui::Text("Display AB View");
+            if (ImGui::Button("Close AB Window")) {
+                showABWindow = false;
             }
             captureEnabled =
-                ImGui::Checkbox("Display IR Image", &beginDisplayIRImage);
-            if (beginDisplayIRImage) {
+                ImGui::Checkbox("Display AB Image", &beginDisplayABImage);
+            if (beginDisplayABImage) {
                 //Do some work here
                 if (m_ctrl->hasCamera()) {
                     if (captureEnabled) {
@@ -147,7 +147,7 @@ void ADIView::render() {
 
                         std::unique_lock<std::mutex> lock(m_frameCapturedMutex);
                         m_depthFrameAvailable = true;
-                        m_irFrameAvailable = true;
+                        m_abFrameAvailable = true;
                         lock.unlock();
                         m_frameCapturedCv.notify_all();
                         m_ctrl->requestFrame();
@@ -270,76 +270,76 @@ void ADIView::setABMaxRange(std::string value) {
     m_maxABPixelValue = (1 << base) - 1;
 }
 
-void ADIView::_displayIrImage() {
+void ADIView::_displayAbImage() {
     while (!m_stopWorkersFlag) {
         std::unique_lock<std::mutex> lock(m_frameCapturedMutex);
         m_frameCapturedCv.wait(
-            lock, [&]() { return m_irFrameAvailable || m_stopWorkersFlag; });
+            lock, [&]() { return m_abFrameAvailable || m_stopWorkersFlag; });
 
         if (m_stopWorkersFlag) {
             break;
         }
 
-        m_irFrameAvailable = false;
+        m_abFrameAvailable = false;
         if (m_capturedFrame == nullptr) {
             continue;
         }
 
         lock.unlock(); // Lock is no longer needed
 
-        m_capturedFrame->getData("ir", &ir_video_data);
+        m_capturedFrame->getData("ab", &ab_video_data);
 
-        aditof::FrameDataDetails frameIrDetails;
-        frameIrDetails.height = 0;
-        frameIrDetails.width = 0;
-        m_capturedFrame->getDataDetails("ir", frameIrDetails);
+        aditof::FrameDataDetails frameAbDetails;
+        frameAbDetails.height = 0;
+        frameAbDetails.width = 0;
+        m_capturedFrame->getDataDetails("ab", frameAbDetails);
 
-        frameHeight = static_cast<int>(frameIrDetails.height);
-        frameWidth = static_cast<int>(frameIrDetails.width);
+        frameHeight = static_cast<int>(frameAbDetails.height);
+        frameWidth = static_cast<int>(frameAbDetails.width);
 
         size_t imageSize = frameHeight * frameWidth;
         size_t bgrSize = 0;
-        ir_video_data_8bit = new uint8_t[frameHeight * frameWidth * 3];
+        ab_video_data_8bit = new uint8_t[frameHeight * frameWidth * 3];
 
-        uint32_t min_value_of_IR_pixel = 0xFFFF;
-        uint32_t max_value_of_IR_pixel = 0;
+        uint32_t min_value_of_AB_pixel = 0xFFFF;
+        uint32_t max_value_of_AB_pixel = 0;
         if (getAutoScale()) {
-            max_value_of_IR_pixel = 1;
+            max_value_of_AB_pixel = 1;
             for (size_t dummyCtr = 0; dummyCtr < imageSize; dummyCtr++) {
-                if (ir_video_data[dummyCtr] > max_value_of_IR_pixel) {
-                    max_value_of_IR_pixel = ir_video_data[dummyCtr];
+                if (ab_video_data[dummyCtr] > max_value_of_AB_pixel) {
+                    max_value_of_AB_pixel = ab_video_data[dummyCtr];
                 }
-                if (ir_video_data[dummyCtr] < min_value_of_IR_pixel) {
-                    min_value_of_IR_pixel = ir_video_data[dummyCtr];
+                if (ab_video_data[dummyCtr] < min_value_of_AB_pixel) {
+                    min_value_of_AB_pixel = ab_video_data[dummyCtr];
                 }
             }
-            max_value_of_IR_pixel -= min_value_of_IR_pixel;
+            max_value_of_AB_pixel -= min_value_of_AB_pixel;
         } else {
 
-            max_value_of_IR_pixel = getABMaxRange();
-            min_value_of_IR_pixel =
+            max_value_of_AB_pixel = getABMaxRange();
+            min_value_of_AB_pixel =
                 (!getUserABMinState()) ? 0 : getABMinRange();
         }
 
-        double c = 255.0f / log10(1 + max_value_of_IR_pixel);
+        double c = 255.0f / log10(1 + max_value_of_AB_pixel);
 
         //Create a  for loop that mimics some future process
         for (size_t dummyCtr = 0; dummyCtr < imageSize; dummyCtr++) {
-            //ir Data is a "width size as 16 bit data. Need to normalize to an 8 bit data
+            //AB Data is a "width size as 16 bit data. Need to normalize to an 8 bit data
             //It is doing a width x height x 3: Resolution * 3bytes (BGR)
             if (getAutoScale()) {
-                ir_video_data[dummyCtr] =
-                    ir_video_data[dummyCtr] - min_value_of_IR_pixel;
+                ab_video_data[dummyCtr] =
+                    ab_video_data[dummyCtr] - min_value_of_AB_pixel;
             }
             double pix =
-                ir_video_data[dummyCtr] * (255.0 / max_value_of_IR_pixel);
+                ab_video_data[dummyCtr] * (255.0 / max_value_of_AB_pixel);
             pix = (pix >= 255.0) ? 255.0 : pix; //clip to 8bit range;
             if (getLogImage()) {
                 pix = c * log10(pix + 1);
             }
-            ir_video_data_8bit[bgrSize++] = (uint8_t)(pix);
-            ir_video_data_8bit[bgrSize++] = (uint8_t)(pix);
-            ir_video_data_8bit[bgrSize++] = (uint8_t)(pix);
+            ab_video_data_8bit[bgrSize++] = (uint8_t)(pix);
+            ab_video_data_8bit[bgrSize++] = (uint8_t)(pix);
+            ab_video_data_8bit[bgrSize++] = (uint8_t)(pix);
         }
 
         // Create a OpenGL texture identifier
@@ -463,8 +463,8 @@ void ADIView::_displayDepthImage() {
 void ADIView::_displayBlendedImage() {
     std::shared_ptr<aditof::Frame> localFrame = m_capturedFrame;
 
-    uint16_t *irData;
-    localFrame->getData("ir", &irData);
+    uint16_t *abData;
+    localFrame->getData("ab", &abData);
 }
 
 void ADIView::_displayPointCloudImage() {

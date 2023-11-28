@@ -259,7 +259,7 @@ int main(int argc, char *argv[]) {
         (!frame_type.compare(std::string("metadata")) ||
          !frame_type.compare(std::string("full-frame")) ||
          !frame_type.compare(std::string("depth")) ||
-         !frame_type.compare(std::string("ir")) ||
+         !frame_type.compare(std::string("ab")) ||
          !frame_type.compare(std::string("conf")))) {
         LOG(ERROR) << "Error parsing frame_type (-ft/--ft) from command line!"
                    << "\n Possible values: depth, ir, conf, full-frame, metadata"
@@ -373,12 +373,12 @@ int main(int argc, char *argv[]) {
     std::string sensorName;
     status = depthSensor->getName(sensorName);
 
-    // pcm-native contains ir only
-    if (frame_type != "ir" && modeName == "pcm-native") {
+    // pcm-native contains ab only
+    if (frame_type != "ab" && modeName == "pcm-native") {
         LOG(ERROR) << modeName
                    << " mode doesn't contain depth/conf/full-frame/metadata data, setting --ft "
-                      "(frameType) to ir.";
-        frame_type = "ir";
+                      "(frameType) to ab.";
+        frame_type = "ab";
     }
 
     status = camera->setFrameType(modeName);
@@ -491,13 +491,13 @@ int main(int argc, char *argv[]) {
 
             frame_size = sizeof(uint16_t) * height * width;
         }
-        // Ir data
-        else if (frame_type == "ir") {
+        // AB data
+        else if (frame_type == "ab") {
             if (modeName != "pcm-native") {
                 FrameDataDetails FrameDataDetails;
                 status = frame.getDataDetails(frame_type, FrameDataDetails);
                 if (status != Status::OK) {
-                    LOG(ERROR) << "IR disabled from ini file!";
+                    LOG(ERROR) << "AB disabled from ini file!";
                     return 0;
                 }
             }
