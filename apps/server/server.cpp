@@ -429,7 +429,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         aditof::Status status = camDepthSensor->setFrameType(aditofFrameType);
 
         if (status == aditof::Status::OK) {
-            //width * height * 2 bytes/pixel * 2 frames(depth/ir)
+            //width * height * 2 bytes/pixel * 2 frames(depth/ab)
             //Looking for depth resolution
             int width_tmp = aditofFrameType.width;
             int height_tmp = aditofFrameType.height;

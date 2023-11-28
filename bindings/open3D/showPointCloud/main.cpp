@@ -125,12 +125,12 @@ int main(int argc, char *argv[]) {
     int frameHeight = static_cast<int>(frameDetails.height);
     int frameWidth = static_cast<int>(frameDetails.width);
 
-    /* Create visualizer for depth and IR images */
-    auto visualized_ir_img = std::make_shared<geometry::Image>();
-    visualized_ir_img->Prepare(frameWidth, frameHeight, 1, 1);
-    visualization::Visualizer ir_vis;
-    ir_vis.CreateVisualizerWindow("IR Image", 2 * frameWidth, 2 * frameHeight);
-    bool is_geometry_added_ir = false;
+    /* Create visualizer for depth and AB images */
+    auto visualized_ab_img = std::make_shared<geometry::Image>();
+    visualized_ab_img->Prepare(frameWidth, frameHeight, 1, 1);
+    visualization::Visualizer ab_vis;
+    ab_vis.CreateVisualizerWindow("AB Image", 2 * frameWidth, 2 * frameHeight);
+    bool is_geometry_added_ab = false;
 
     auto visualized_depth_img = std::make_shared<geometry::Image>();
     visualized_depth_img->Prepare(frameWidth, frameHeight, 3, 1);
@@ -173,8 +173,8 @@ int main(int argc, char *argv[]) {
             LOG(ERROR) << "Could not convert from frame to Image!";
         }
 
-        geometry::Image ir_image;
-        status = fromFrameToIRImg(frame, bitCount, ir_image);
+        geometry::Image ab_image;
+        status = fromFrameToABImg(frame, bitCount, ab_image);
         if (status != Status::OK) {
             LOG(ERROR) << "Could not convert from frame to Image!";
         }
@@ -186,29 +186,29 @@ int main(int argc, char *argv[]) {
                    &colormap[depth_image.data_[i] * 3], 3);
         }
 
-        geometry::Image ir_color;
-        ir_color.Prepare(frameWidth, frameHeight, 3, 1);
+        geometry::Image ab_color;
+        ab_color.Prepare(frameWidth, frameHeight, 3, 1);
         for (int i = 0, j = 0; i < frameHeight * frameWidth; i++, j = j + 3) {
-            ir_color.data_[j] = ir_image.data_[i];
-            ir_color.data_[j + 1] = ir_image.data_[i];
-            ir_color.data_[j + 2] = ir_image.data_[i];
+            ab_color.data_[j] = ab_image.data_[i];
+            ab_color.data_[j + 1] = ab_image.data_[i];
+            ab_color.data_[j + 2] = ab_image.data_[i];
         }
 
         geometry::Image color_image;
         color_image.Prepare(frameWidth, frameHeight, 3, 1);
         for (int i = 0; i < frameHeight * frameWidth * 3; i = i + 3) {
             color_image.data_[i] =
-                ir_color.data_[i] * 0.5 + depth_color.data_[i] * 0.5;
+                ab_color.data_[i] * 0.5 + depth_color.data_[i] * 0.5;
             color_image.data_[i + 1] =
-                ir_color.data_[i + 1] * 0.5 + depth_color.data_[i + 1] * 0.5;
+                ab_color.data_[i + 1] * 0.5 + depth_color.data_[i + 1] * 0.5;
             color_image.data_[i + 2] =
-                ir_color.data_[i + 2] * 0.5 + depth_color.data_[i + 2] * 0.5;
+                ab_color.data_[i + 2] * 0.5 + depth_color.data_[i + 2] * 0.5;
         }
 
-        visualized_ir_img->data_ = ir_image.data_;
-        if (!is_geometry_added_ir) {
-            ir_vis.AddGeometry(visualized_ir_img);
-            is_geometry_added_ir = true;
+        visualized_ab_img->data_ = ab_image.data_;
+        if (!is_geometry_added_ab) {
+            ab_vis.AddGeometry(visualized_ab_img);
+            is_geometry_added_ab = true;
         }
 
         visualized_depth_img->data_ = depth_color.data_;
@@ -216,9 +216,9 @@ int main(int argc, char *argv[]) {
             depth_vis.AddGeometry(visualized_depth_img);
             is_geometry_added_depth = true;
         }
-        ir_vis.UpdateGeometry();
-        ir_vis.PollEvents();
-        ir_vis.UpdateRender();
+        ab_vis.UpdateGeometry();
+        ab_vis.PollEvents();
+        ab_vis.UpdateRender();
 
         depth_vis.UpdateGeometry();
         depth_vis.PollEvents();
@@ -260,7 +260,7 @@ int main(int argc, char *argv[]) {
 
         if (is_window_closed == false) {
             pointcloud_vis.DestroyVisualizerWindow();
-            ir_vis.DestroyVisualizerWindow();
+            ab_vis.DestroyVisualizerWindow();
             depth_vis.DestroyVisualizerWindow();
             break;
         } else {

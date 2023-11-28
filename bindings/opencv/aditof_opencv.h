@@ -56,21 +56,21 @@ aditof::Status fromFrameToDepthMat(aditof::Frame &frame, cv::Mat &mat) {
     return aditof::Status::OK;
 }
 
-aditof::Status fromFrameToIrMat(aditof::Frame &frame, cv::Mat &mat) {
-    aditof::FrameDataDetails frameIrDetails;
-    frame.getDataDetails("ir", frameIrDetails);
+aditof::Status fromFrameToABMat(aditof::Frame &frame, cv::Mat &mat) {
+    aditof::FrameDataDetails frameABDetails;
+    frame.getDataDetails("ab", frameABDetails);
 
-    const int frameHeight = static_cast<int>(frameIrDetails.height);
-    const int frameWidth = static_cast<int>(frameIrDetails.width);
+    const int frameHeight = static_cast<int>(frameABDetails.height);
+    const int frameWidth = static_cast<int>(frameABDetails.width);
 
-    uint16_t *irData;
-    frame.getData("ir", &irData);
+    uint16_t *abData;
+    frame.getData("ab", &abData);
 
-    if (irData == nullptr) {
+    if (abData == nullptr) {
         return aditof::Status::GENERIC_ERROR;
     }
 
-    mat = cv::Mat(frameHeight, frameWidth, CV_16UC1, irData);
+    mat = cv::Mat(frameHeight, frameWidth, CV_16UC1, abData);
 
     return aditof::Status::OK;
 }
