@@ -73,11 +73,13 @@ recursive_mutex Network::m_mutex[MAX_CAMERA_NUM];
 mutex Network::mutex_recv[MAX_CAMERA_NUM];
 condition_variable_any Network::Cond_Var[MAX_CAMERA_NUM];
 condition_variable Network::thread_Cond_Var[MAX_CAMERA_NUM];
+static const int FRAME_PREPADDING_BYTES = 2;
 
 bool Network::Send_Successful[MAX_CAMERA_NUM];
 bool Network::Data_Received[MAX_CAMERA_NUM];
 bool Network::Server_Connected[MAX_CAMERA_NUM];
 bool Network::Thread_Detached[MAX_CAMERA_NUM];
+bool Network::InterruptDetected[MAX_CAMERA_NUM];
 
 void *Network::rawPayloads[MAX_CAMERA_NUM];
 
@@ -342,6 +344,13 @@ int Network::recv_server_data() {
 
     send_buff[m_connectionId].Clear();
 
+    if (status == 0) {
+        if (InterruptDetected[m_connectionId]) {
+            // TO DO: execute callback here
+            InterruptDetected[m_connectionId] = false;
+        }
+    }
+
     return status;
 }
 
@@ -438,11 +447,20 @@ int Network::callback_function(struct lws *wsi,
                 recv_data_error = 0;
                 Data_Received[connectionId] = true;
 
+                if (recv_buff[connectionId].interrupt_occured()) {
+                    InterruptDetected[connectionId] = true;
+                }
+
                 /*Notify the host SDK that data is received from server*/
                 Cond_Var[connectionId].notify_all();
             } else {
                 //expect content that is not wrapped in a protobuf message
-                memcpy(rawPayloads[connectionId], static_cast<char *>(in), len);
+                memcpy(rawPayloads[connectionId],
+                       static_cast<char *>(in + FRAME_PREPADDING_BYTES),
+                       len - FRAME_PREPADDING_BYTES);
+                if (*(static_cast<char *>(in + 0)) = 123) {
+                    InterruptDetected[connectionId] = true;
+                }
                 rawPayloads[connectionId] = nullptr;
                 recv_data_error = 0;
                 Data_Received[connectionId] = true;
@@ -534,6 +552,7 @@ Network::Network(int connectionId) {
     Network::Thread_Running[connectionId] = 0;
     Network::Server_Connected[connectionId] = false;
     Network::Thread_Detached[connectionId] = false;
+    Network::InterruptDetected[connectionId] = false;
 
     m_connectionId = connectionId;
     while (context.size() <= m_connectionId)
