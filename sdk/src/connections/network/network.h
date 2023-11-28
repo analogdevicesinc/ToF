@@ -32,6 +32,7 @@
 #include "buffer.pb.h"
 
 #include <condition_variable>
+#include <functional>
 #include <libwebsockets.h>
 #include <thread>
 
@@ -45,7 +46,10 @@ struct NetworkHandle {
 };
 
 class Network {
+  public:
+    typedef std::function<void(void)> InterruptNotificationCallback;
 
+  private:
     static std::vector<lws_context *> context;
     static std::vector<lws *> web_socket;
 
@@ -66,6 +70,8 @@ class Network {
     int Thread_Running[MAX_CAMERA_NUM];
 
     static void *rawPayloads[MAX_CAMERA_NUM];
+
+    InterruptNotificationCallback m_intNotifCb;
 
     //! call_lws_service - calls lws_service api to service any websocket
     //! activity
@@ -115,4 +121,6 @@ class Network {
 
     //! isServer_Connected() - APi to check if server is connected successfully
     bool isServer_Connected();
+
+    void registerInterruptCallback(InterruptNotificationCallback &cb);
 };

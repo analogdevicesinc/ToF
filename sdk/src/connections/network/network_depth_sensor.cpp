@@ -51,11 +51,56 @@ struct NetworkDepthSensor::ImplData {
     aditof::DepthSensorFrameType frameTypeCache;
     std::unordered_map<std::string, CalibrationData> calibration_cache;
     bool opened;
+    Network::InterruptNotificationCallback cb;
 };
 
 NetworkDepthSensor::NetworkDepthSensor(const std::string &name,
                                        const std::string &ip)
     : m_implData(new NetworkDepthSensor::ImplData) {
+
+    m_implData->cb = [this]() {
+        Network *net = m_implData->handle.net;
+        std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
+
+        if (net->ServerConnect(m_implData->ip) != 0) {
+            LOG(WARNING) << "Server Connect Failed";
+            return;
+        }
+
+        if (!net->isServer_Connected()) {
+            LOG(WARNING) << "Not connected to server";
+            return;
+        }
+
+        net->send_buff[m_sensorIndex].set_func_name("GetInterrupts");
+        net->send_buff[m_sensorIndex].set_expect_reply(true);
+
+        if (net->SendCommand() != 0) {
+            LOG(WARNING) << "Send Command Failed";
+            return;
+        }
+
+        if (net->recv_server_data() != 0) {
+            LOG(WARNING) << "Receive Data Failed";
+            return;
+        }
+
+        if (net->recv_buff[m_sensorIndex].server_status() !=
+            payload::ServerStatus::REQUEST_ACCEPTED) {
+            LOG(WARNING) << "API execution on Target Failed";
+            return;
+        }
+
+        for (size_t i = 0;
+             i < net->recv_buff[m_sensorIndex].bytes_payload(0).length(); ++i) {
+            for (auto m_interruptCallback : m_interruptCallbackMap) {
+                m_interruptCallback.second(
+                    (aditof::Adsd3500Status)net->recv_buff[m_sensorIndex]
+                        .bytes_payload(0)
+                        .at(i));
+            }
+        }
+    };
 
     int m_sensorCounter = 0;
     m_sensorIndex = m_sensorCounter;
@@ -63,6 +108,7 @@ NetworkDepthSensor::NetworkDepthSensor(const std::string &name,
 
     Network *net = new Network(m_sensorIndex);
     m_implData->handle.net = net;
+    m_implData->handle.net->registerInterruptCallback(m_implData->cb);
     m_implData->ip = ip;
     m_implData->opened = false;
     m_sensorDetails.connectionType = aditof::ConnectionType::NETWORK;
@@ -956,18 +1002,16 @@ aditof::Status NetworkDepthSensor::adsd3500_reset() {
 
 aditof::Status NetworkDepthSensor::adsd3500_register_interrupt_callback(
     aditof::SensorInterruptCallback &cb) {
-    LOG(WARNING) << "Registering an interrupt callback on a network connection "
-                    "is not supported yet!";
-    m_cb = cb;
-    return aditof::Status::UNAVAILABLE;
+    m_interruptCallbackMap.insert({&cb, cb});
+    return aditof::Status::OK;
 }
 
 aditof::Status NetworkDepthSensor::adsd3500_unregister_interrupt_callback(
     aditof::SensorInterruptCallback &cb) {
-    LOG(WARNING) << "Registering an interrupt callback on a network connection "
-                    "is not supported yet!";
-    m_cb = nullptr;
-    return aditof::Status::UNAVAILABLE;
+
+    m_interruptCallbackMap.erase(&cb);
+
+    return aditof::Status::OK;
 }
 
 aditof::Status NetworkDepthSensor::adsd3500_get_status(int &chipStatus,

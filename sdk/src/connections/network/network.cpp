@@ -346,7 +346,9 @@ int Network::recv_server_data() {
 
     if (status == 0) {
         if (InterruptDetected[m_connectionId]) {
-            // TO DO: execute callback here
+            if (m_intNotifCb) {
+                m_intNotifCb();
+            }
             InterruptDetected[m_connectionId] = false;
         }
     }
@@ -455,10 +457,11 @@ int Network::callback_function(struct lws *wsi,
                 Cond_Var[connectionId].notify_all();
             } else {
                 //expect content that is not wrapped in a protobuf message
+                char *pCharIn = static_cast<char *>(in);
                 memcpy(rawPayloads[connectionId],
-                       static_cast<char *>(in + FRAME_PREPADDING_BYTES),
+                       (pCharIn + FRAME_PREPADDING_BYTES),
                        len - FRAME_PREPADDING_BYTES);
-                if (*(static_cast<char *>(in + 0)) = 123) {
+                if (pCharIn[0] == 123) {
                     InterruptDetected[connectionId] = true;
                 }
                 rawPayloads[connectionId] = nullptr;
@@ -539,12 +542,16 @@ int Network::callback_function(struct lws *wsi,
     return 0;
 }
 
+void Network::registerInterruptCallback(InterruptNotificationCallback &cb) {
+    m_intNotifCb = cb;
+}
+
 /*
  * Network():    Initializes the network parameters
  * Parameters:   None
  * Desription:   This function initializes the network parameters
  */
-Network::Network(int connectionId) {
+Network::Network(int connectionId) : m_intNotifCb(nullptr) {
 
     /*Initialize the static flags*/
     Network::Send_Successful[connectionId] = false;
