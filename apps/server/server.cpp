@@ -45,11 +45,13 @@
 #include <iostream>
 #include <linux/videodev2.h>
 #include <map>
+#include <queue>
 #include <string>
 #include <sys/time.h>
 
 using namespace google::protobuf::io;
 
+static const int FRAME_PREPADDING_BYTES = 2;
 static int interrupted = 0;
 
 /* Available sensors */
@@ -78,6 +80,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv);
 static bool Client_Connected = false;
 static bool no_of_client_connected = false;
 bool latest_sent_msg_is_was_buffered = false;
+static std::queue<aditof::Adsd3500Status> adsd3500InterruptsQueue;
 
 struct clientData {
     bool hasFragments;
@@ -94,10 +97,19 @@ static struct lws_protocols protocols[] = {
     {NULL, NULL, 0, 0} /* terminator */
 };
 
+aditof::SensorInterruptCallback callback = [](aditof::Adsd3500Status status) {
+    adsd3500InterruptsQueue.push(status);
+    DLOG(INFO) << "ADSD3500 interrupt occured: status = " << status;
+};
+
 static void cleanup_sensors() {
+    camDepthSensor->adsd3500_unregister_interrupt_callback(callback);
     sensorV4lBufAccess.reset();
     camDepthSensor.reset();
 
+    while (!adsd3500InterruptsQueue.empty()) {
+        adsd3500InterruptsQueue.pop();
+    }
     sensors_are_created = false;
     clientEngagedWithSensors = false;
 }
@@ -358,6 +370,14 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         sensorsEnumerator->getSdVersion(sdversion);
         cardVersion->set_sdversion(sdversion);
 
+        // This server is now subscribing for interrupts of ADSD3500
+        aditof::Status registerCbStatus =
+            camDepthSensor->adsd3500_register_interrupt_callback(callback);
+        if (registerCbStatus != aditof::Status::OK) {
+            LOG(WARNING) << "Could not register callback";
+            // TBD: not sure whether to send this error to client or not
+        }
+
         buff_send.set_status(
             static_cast<::payload::Status>(aditof::Status::OK));
         break;
@@ -452,8 +472,9 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             }
             buff_frame_to_send =
                 new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
+                            FRAME_PREPADDING_BYTES +
                             processedFrameSize * sizeof(uint16_t)];
-            buff_frame_length = processedFrameSize * 2;
+            buff_frame_length = processedFrameSize * 2 + FRAME_PREPADDING_BYTES;
         }
 
         buff_send.set_status(static_cast<::payload::Status>(status));
@@ -474,12 +495,23 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
         //TO DO: get value of m_depthComputeOnTarget from sensor
         status = camDepthSensor->getFrame(
-            (uint16_t *)(buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING));
+            (uint16_t *)(buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING +
+                         FRAME_PREPADDING_BYTES));
         if (status != aditof::Status::OK) {
             LOG(ERROR) << "Failed to get frame!";
             buff_send.set_status(static_cast<::payload::Status>(status));
             break;
         }
+
+        uint8_t *pInterruptOccuredByte =
+            &buff_frame_to_send[LWS_SEND_BUFFER_PRE_PADDING +
+                                0]; // 1st byte after LWS prepadding bytes
+        if (!adsd3500InterruptsQueue.empty()) {
+            *pInterruptOccuredByte = 123;
+        } else {
+            *pInterruptOccuredByte = 0;
+        }
+
         m_frame_ready = true;
 
         buff_send.set_status(payload::Status::OK);
@@ -508,12 +540,14 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             free(buff_frame_to_send);
             buff_frame_to_send = NULL;
         }
-        buff_frame_to_send = (uint8_t *)malloc(
-            (buff_frame_length + LWS_SEND_BUFFER_PRE_PADDING) *
-            sizeof(uint8_t));
+        buff_frame_to_send =
+            (uint8_t *)malloc((buff_frame_length + LWS_SEND_BUFFER_PRE_PADDING +
+                               FRAME_PREPADDING_BYTES) *
+                              sizeof(uint8_t));
 
-        memcpy(buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING, buffer,
-               buff_frame_length * sizeof(uint8_t));
+        memcpy(buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING +
+                   FRAME_PREPADDING_BYTES,
+               buffer, buff_frame_length * sizeof(uint8_t));
 
         m_frame_ready = true;
 
@@ -724,6 +758,10 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
     } // switch
+
+    if (!adsd3500InterruptsQueue.empty()) {
+        buff_send.set_interrupt_occured(true);
+    }
 
     buff_recv.Clear();
 }

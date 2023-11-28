@@ -61,6 +61,7 @@ class Network {
     static bool Server_Connected[MAX_CAMERA_NUM];
     static bool Thread_Detached[MAX_CAMERA_NUM];
     bool Connection_Closed[MAX_CAMERA_NUM] = {false, false, false, false};
+    static bool InterruptDetected[MAX_CAMERA_NUM];
 
     int Thread_Running[MAX_CAMERA_NUM];
 
