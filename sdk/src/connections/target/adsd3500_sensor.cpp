@@ -29,6 +29,7 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <thread>
 #include <unordered_map>
 
 #define MAX_SUBFRAMES_COUNT                                                    \
@@ -1285,11 +1286,38 @@ aditof::Status Adsd3500Sensor::adsd3500_write_payload(uint8_t *payload,
 
 aditof::Status Adsd3500Sensor::adsd3500_reset() {
     using namespace aditof;
+    Status status = Status::OK;
+
 #if defined(NXP)
+    m_chipResetDone = false;
+    m_adsd3500Status = Adsd3500Status::OK;
+    aditof::SensorInterruptCallback cb = [this](Adsd3500Status status) {
+        m_adsd3500Status = status;
+        m_chipResetDone = true;
+    };
+    status = adsd3500_register_interrupt_callback(cb);
+    bool interruptsAvailable = (status == Status::OK);
+
     system("echo 0 > /sys/class/gpio/gpio122/value");
     usleep(1000000);
     system("echo 1 > /sys/class/gpio/gpio122/value");
-    usleep(7000000);
+
+    if (interruptsAvailable) {
+        LOG(INFO) << "Waiting for ADSD3500 to reset.";
+        int secondsTimeout = 7;
+        int secondsWaited = 0;
+        int secondsWaitingStep = 1;
+        while (!m_chipResetDone && secondsWaited < secondsTimeout) {
+            LOG(INFO) << ".";
+            std::this_thread::sleep_for(
+                std::chrono::seconds(secondsWaitingStep));
+            secondsWaited += secondsWaitingStep;
+        }
+        LOG(INFO) << "Waited: " << secondsWaited << " seconds";
+        adsd3500_unregister_interrupt_callback(cb);
+    } else {
+        usleep(7000000);
+    }
 #elif defined(NVIDIA)
     struct stat st;
     if (stat("/sys/class/gpio/PP.04/value", &st) == 0) {
