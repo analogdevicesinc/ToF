@@ -346,10 +346,10 @@ int Network::recv_server_data() {
 
     if (status == 0) {
         if (InterruptDetected[m_connectionId]) {
+            InterruptDetected[m_connectionId] = false;
             if (m_intNotifCb) {
                 m_intNotifCb();
             }
-            InterruptDetected[m_connectionId] = false;
         }
     }
 
