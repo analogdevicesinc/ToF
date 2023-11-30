@@ -770,9 +770,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
     } // switch
 
-    if (!adsd3500InterruptsQueue.empty()) {
-        buff_send.set_interrupt_occured(true);
-    }
+    buff_send.set_interrupt_occured(!adsd3500InterruptsQueue.empty());
 
     buff_recv.Clear();
 }

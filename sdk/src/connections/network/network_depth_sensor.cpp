@@ -60,12 +60,6 @@ NetworkDepthSensor::NetworkDepthSensor(const std::string &name,
 
     m_implData->cb = [this]() {
         Network *net = m_implData->handle.net;
-        std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
-
-        if (net->ServerConnect(m_implData->ip) != 0) {
-            LOG(WARNING) << "Server Connect Failed";
-            return;
-        }
 
         if (!net->isServer_Connected()) {
             LOG(WARNING) << "Not connected to server";
@@ -91,13 +85,12 @@ NetworkDepthSensor::NetworkDepthSensor(const std::string &name,
             return;
         }
 
-        for (size_t i = 0;
-             i < net->recv_buff[m_sensorIndex].bytes_payload(0).length(); ++i) {
+        for (int32_t i = 0;
+             i < net->recv_buff[m_sensorIndex].int32_payload_size(); ++i) {
             for (auto m_interruptCallback : m_interruptCallbackMap) {
                 m_interruptCallback.second(
                     (aditof::Adsd3500Status)net->recv_buff[m_sensorIndex]
-                        .bytes_payload(0)
-                        .at(i));
+                        .int32_payload(i));
             }
         }
     };
