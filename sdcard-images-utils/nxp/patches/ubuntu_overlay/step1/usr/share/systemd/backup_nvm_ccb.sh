@@ -1,5 +1,5 @@
 #!/bin/bash
-
+chown -R analog:analog /home/analog/Workspace
 nvm_size=741376
 sleep 15
 if [ -d "/boot" ]; then
