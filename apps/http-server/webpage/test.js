@@ -485,7 +485,7 @@
                         context1.putImageData(imgData1, 0, 0);
 
                 }
-                else if (formatType == "ir") {
+                else if (formatType == "ab") {
                         data1 = imgData1.data;
 
                         for (var i = 0; i < data1.length; i += 4) {
@@ -498,7 +498,7 @@
                         context1.putImageData(imgData1, 0, 0);
 
                 }
-                else if (formatType == "depth+ir") {
+                else if (formatType == "depth+ab") {
                         data1 = imgData1.data;
                         data2 = imgData2.data;
                         for (var i = 0; i < data1.length; i += 4) {
@@ -720,7 +720,7 @@
 
                         // Canvas 2
                         canvas2 = document.getElementById("canvas2");
-                        if (formatType == "depth+ir") {
+                        if (formatType == "depth+ab") {
                                 canvas2.width = canvasWidth;
                                 canvas2.height = canvasHeight;
                                 context2 = canvas2.getContext('2d');
