@@ -302,8 +302,8 @@ function main() {
   
   cd ${OUTPUT_DIR}
   
-  # create 3GB ext4 image
-  dd if=/dev/zero of=rootfs.ext4 bs=1M count=3000
+  # create 8GB ext4 image
+  dd if=/dev/zero of=rootfs.ext4 bs=1M count=8000
   mkdir -p ${ROOTFS_TMP}
   mkfs.ext4 rootfs.ext4
   sudo mount -o loop -o barrier=0 rootfs.ext4 ${ROOTFS_TMP}
