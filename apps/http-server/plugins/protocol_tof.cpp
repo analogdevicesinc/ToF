@@ -37,7 +37,7 @@ uint16_t frameWidth;
 uint16_t frameHeight;
 uint16_t *frameData = NULL;
 uint16_t *frameDataDepth;
-uint16_t *frameDataIr;
+uint16_t *frameDataAb;
 
 aditof::Status status;
 static bool cameraStarted = false;
@@ -68,7 +68,7 @@ uint8_t buf[LWS_PRE + MAX_MESSAGE_LEN], *p = &buf[LWS_PRE];
 
 //Available frametypes
 string availableFrameTypes = "ft:sr-native,sr-qnative,lr-native,lr-qnative";
-string availableFormats = "format:depth,ir,depth+ir";
+string availableFormats = "format:depth,ab,depth+ab";
 
 string process_message(char *in) {
     std::string message = (const char *)in;
@@ -204,7 +204,7 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
 
             // Send available size for the frame:
             send_message(wsi, availableSize.c_str(), availableSize.length());
-            // Send available formats (depth/ir)
+            // Send available formats (depth/ab)
             send_message(wsi, availableFormats.c_str(),
                          availableFormats.length());
 
@@ -235,7 +235,7 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
             }
 
             if (frameContent == std::string("depth") ||
-                frameContent == std::string("ir")) {
+                frameContent == std::string("ab")) {
 
                 status = frame.getData(frameContent, &frameData);
 
@@ -255,10 +255,10 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
                 send_frame(wsi, (const char *)frameToSend,
                            frameWidth * frameHeight);
                 free(frameToSend);
-            } else if (frameContent == std::string("depth+ir")) {
+            } else if (frameContent == std::string("depth+ab")) {
 
                 status = frame.getData(std::string("depth"), &frameDataDepth);
-                status = frame.getData(std::string("ir"), &frameDataIr);
+                status = frame.getData(std::string("ab"), &frameDataAb);
 
                 if (status != aditof::Status::OK) {
                     send_error_message(wsi,
@@ -271,7 +271,7 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
                 for (int i = 0; i < frameWidth * frameHeight; i++) {
                     frameToSend[i] = (uint8_t)((frameDataDepth[i] >> 2) & 0xff);
                     frameToSend[i + frameWidth * frameHeight] =
-                        (uint8_t)((frameDataIr[i] >> 4) & 0xff);
+                        (uint8_t)((frameDataAb[i] >> 4) & 0xff);
                 }
 
                 send_frame(wsi, (const char *)frameToSend,

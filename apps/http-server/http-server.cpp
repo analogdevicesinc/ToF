@@ -87,10 +87,8 @@ static struct lws_protocols protocols[] = {
         MAX_MESSAGE_LEN,
     },
     {"connection-check-protocol", callback_tof, sizeof(struct pss__tof),
-     MAX_MESSAGE_LEN, 
-     0, NULL, 0},
-    {NULL, NULL, 0, 0} 
-};
+     MAX_MESSAGE_LEN, 0, NULL, 0},
+    {NULL, NULL, 0, 0}};
 
 static lws_fop_fd_t test_server_fops_open(const struct lws_plat_file_ops *fops,
                                           const char *vfs_path,
@@ -124,16 +122,18 @@ void sighandler(int sig) {
     lws_cancel_service(context);
 }
 
-static const struct lws_extension exts[] = {
-    {"permessage-deflate", lws_extension_callback_pm_deflate,
-     "permessage-deflate"},
-    {NULL, NULL, NULL }};
+static const struct lws_extension exts[] = {{"permessage-deflate",
+                                             lws_extension_callback_pm_deflate,
+                                             "permessage-deflate"},
+                                            {NULL, NULL, NULL}};
 
 static const struct lws_http_mount mount_ziptest = {
-    NULL, "/ziptest",
-    HTTP_LOCAL_RESOURCE_PATH "/candide.zip",
-    NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, LWSMPRO_FILE, 8, NULL, {NULL, NULL}
-};
+    NULL, "/ziptest", HTTP_LOCAL_RESOURCE_PATH "/candide.zip",
+    NULL, NULL,       NULL,
+    NULL, NULL,       0,
+    0,    0,          0,
+    0,    0,          LWSMPRO_FILE,
+    8,    NULL,       {NULL, NULL}};
 
 static const struct lws_http_mount mount_post = {
     (struct lws_http_mount *)&mount_ziptest,
@@ -153,11 +153,10 @@ static const struct lws_http_mount mount_post = {
     LWSMPRO_CALLBACK,
     9,
     NULL,
-    {NULL, NULL}
-};
+    {NULL, NULL}};
 
 static const struct lws_http_mount mount = {
-    (struct lws_http_mount *)&mount_post, 
+    (struct lws_http_mount *)&mount_post,
     "/",
     HTTP_LOCAL_RESOURCE_PATH,
     "test.html",
@@ -174,8 +173,7 @@ static const struct lws_http_mount mount = {
     LWSMPRO_FILE,
     1,
     NULL,
-    {NULL, NULL}
-};
+    {NULL, NULL}};
 
 int main(int argc, char **argv) {
     struct lws_context_creation_info info;
