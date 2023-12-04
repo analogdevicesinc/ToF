@@ -244,7 +244,7 @@ td.t { vertical-align:middle;
 		display: block;
 		width: 170px;
 		border: none;
-		background-color: #3e7bc0;
+		background-color: #2b609e;
 		color: white;
 		padding: 10px 20px;
 		font-size: 14px;
@@ -252,11 +252,36 @@ td.t { vertical-align:middle;
 		text-align: center;
 }
 
+.button:disabled {
+        display: block;
+        width: 170px;
+        border: none;
+        background-color: #061b33;
+        color: white;
+        padding: 10px 20px;
+        font-size: 14px;
+        cursor: pointer;
+        text-align: center;
+}
+
+
 .custom-select{
 	display: block;
 	width: 170px;
 	border: none;
-	background-color: #6dabf1;
+	background-color: #5594dd;
+	color: white;
+	padding: 5px 10px;
+	font-size: 14px;
+	cursor: pointer;
+	text-align: center;
+}
+
+.custom-select:disabled{
+	display: block;
+	width: 170px;
+	border: none;
+	background-color: #061b33;
 	color: white;
 	padding: 5px 10px;
 	font-size: 14px;
