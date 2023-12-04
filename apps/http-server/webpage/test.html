@@ -38,33 +38,34 @@
 						</tr>
 					</table>
 					</br>
-					</br>
 					<!-- Camera selection -->
-					<select class="custom-select" id="cameraSelect" name="cameraSelect">
+					<select class="custom-select" id="cameraSelect" name="cameraSelect" disabled=true>
 						<option value="adsd3030">Adsd3030</option>
 						<option value="adsd3100">Adsd3100</option>
 					</select>
-					<input class="button" type=button id=connectCamera value="Open">
-					</br>
+					<input class="button" type=button id=connectCameraButton value="Open" disabled=true>
 					</br>
 
 					<!-- Frame Type selection -->
 					<select class="custom-select" id="frameTypeSelect" name="frameTypeSelect" disabled = true>
 					</select>
-					<input class="button" type=button id=setFrameType value="Set Frame Type">
-					</br>
+					<input class="button" type=button id=setFrameTypeButton value="Set Frame Type">
 					</br>
 
 					<!-- Format selection -->
 					<select class="custom-select" id="formatSelect" name="formatSelect" disabled = true>
 					</select>
-					<input class="button" type=button id=setFormat value="Set format">
+					<input class="button" type=button id=setFormatButton value="Set format">
 					</br>
+					<input class="button" type=button id=startButton value="Start" disabled = true>
+					<input class="button" type=button id=stopButton value="Stop" disabled = true>
 					</br>
-					<input class="button" type=button id=start value="Start" disabled = true>
-					<input class="button" type=button id=stop value="Stop" disabled = true>
+
+                                        <!-- Frame Type selection -->
+					<input class="button" type=button id=resetButton value="Reset" disabled = true>
 					</br>
-					</br>
+
+
                                         <div id=number class="bigger"> </div>
 
 				</div>
