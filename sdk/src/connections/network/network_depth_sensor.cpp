@@ -66,6 +66,7 @@ NetworkDepthSensor::NetworkDepthSensor(const std::string &name,
     m_implData->ip = ip;
     m_implData->opened = false;
     m_sensorDetails.connectionType = aditof::ConnectionType::NETWORK;
+    m_sensorDetails.id = ip;
     m_sensorName = name;
 }
 

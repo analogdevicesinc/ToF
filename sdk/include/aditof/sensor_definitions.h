@@ -49,9 +49,10 @@ namespace aditof {
  */
 struct SensorDetails {
     /**
-     * @brief The sensor's name
+     * @brief The sensor identification data to be used to differentiate between sensors.
+     * When on target, id is set to video driver path. When on network, id is set to the IP of the target.
      */
-    std::string sensorName;
+    std::string id;
 
     /**
      * @brief The type of connection with the sensor
