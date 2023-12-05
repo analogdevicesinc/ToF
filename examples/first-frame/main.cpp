@@ -205,7 +205,7 @@ int main(int argc, char *argv[]) {
 
     auto camera = cameras.front();
 
-    // Registering a callback to be executed when ADSD3500 issues an interrupt. This works only on target (NXP).
+    // Registering a callback to be executed when ADSD3500 issues an interrupt
     std::shared_ptr<DepthSensorInterface> sensor = camera->getSensor();
     aditof::SensorInterruptCallback callback = [](Adsd3500Status status) {
         LOG(INFO) << "Running the callback for which the status of ADSD3500 "
