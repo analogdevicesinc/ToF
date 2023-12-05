@@ -123,6 +123,7 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
       m_hostConnectionType(aditof::ConnectionType::ON_TARGET) {
     m_sensorName = "adsd3500";
     m_sensorDetails.connectionType = aditof::ConnectionType::ON_TARGET;
+    m_sensorDetails.id = driverPath;
 
     // Define the controls that this sensor has available
     m_controls.emplace("abAveraging", "0");

@@ -183,7 +183,7 @@ PYBIND11_MODULE(aditofpython, m) {
 
     py::class_<aditof::SensorDetails>(m, "SensorDetails")
         .def(py::init<>())
-        .def_readwrite("sensorName", &aditof::SensorDetails::sensorName)
+        .def_readwrite("id", &aditof::SensorDetails::id)
         .def_readwrite("connectionType",
                        &aditof::SensorDetails::connectionType);
 
