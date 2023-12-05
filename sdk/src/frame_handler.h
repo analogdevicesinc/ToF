@@ -32,53 +32,58 @@
 #ifndef FRAME_HANDLER
 #define FRAME_HANDLER
 
-#include <string>
-#include <aditof/status_definitions.h>
 #include <aditof/frame.h>
+#include <aditof/status_definitions.h>
 
-namespace aditof {
-    class Frame;
-}
+#include <chrono>
+#include <fstream>
+#include <iostream>
+#include <string>
+
+#define METADATA_SIZE 128
 
 class FrameHandler {
-    public:
+  public:
     FrameHandler();
     ~FrameHandler();
 
     //Open existing file/create new file to store data
-    aditof::Status openFile(std::string filePath);
-    aditof::Status closeFile(std::string filePath);
+    aditof::Status setOutputFilePath(std::string &filePath);
+    aditof::Status setInputFileName(std::string &fullFileName);
 
     //the api should only use frame objects when saving/reading data from file
     //the conversion between formats should happen inside the functions
 
     //store frame to file
-    aditof::Status saveFrameToFile(aditof::Frame frame);
-    
+    aditof::Status saveFrameToFile(aditof::Frame &frame,
+                                   std::string fileName = "");
+
     //TO DO: write function to save frames on different thread
     //aditof::Status enqueueFrameToSaveToFile(aditof::Frame frame);
     //aditof::Status addFrameToQueue(aditof::Frame frame);
 
     //read new frame from file and process metadata to get new frame
     //charateristics if we have different frame types in the same file
-    aditof::Status readNextFrame(aditof::Frame frame);
+    aditof::Status readNextFrame(aditof::Frame &frame,
+                                 std::string fullFileName = "");
 
     //We could offer support for a couple of standart formats (avi/mp4/..)
     //and let the users decide between them
     aditof::Status setCustomFormat(std::string format);
-    
+
     //aditof::Status splitFrames(bool enable);
     aditof::Status storeFramesToSingleFile(bool enable);
     //aditof::Status storeSingleFrameToFile(bool enable);
     //aditof::Status storeToSingleFile(bool enable);
 
-    //we should be able to give the users the ability to choose which data 
+    //we should be able to give the users the ability to choose which data
     //type they want to store (depth/ab/conf/metadata/full-data) or any combinations
     //between this 2
     //NOTE: metadata should be always enabled for a better data processing
     aditof::Status setFrameContent(std::string frameContent);
 
-private:
+  private:
+    aditof::Status createFile(std::string fileName);
     //We should be able do decide if we want to store frames in the same file
     //or store them in different files
     bool m_concatFrames;
@@ -88,7 +93,7 @@ private:
 
     //we should offer a standart format that would be compatible with our examples
     //(viewer/data-collect/python bindings/etc)
-    //it would be nice if we could give the users the posibility to store data in other 
+    //it would be nice if we could give the users the posibility to store data in other
     //formats (mp4, avi, etc)
     bool m_customFormat;
     std::string m_customFormatType;
@@ -103,9 +108,11 @@ private:
 
     //variables used for file handling
     std::string m_filePath;
-    bool m_fileOpened;
+    std::string m_fileName;
+    std::string m_fullFileName;
+    bool m_fileCreated;
     bool m_endOfFile;
-
+    std::fstream m_file;
 };
 
 #endif // FRAME_HANDLER
