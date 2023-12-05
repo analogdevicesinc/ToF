@@ -37,6 +37,7 @@
 #else
 #include <aditof/log.h>
 #endif
+#include <chrono>
 #include <unordered_map>
 
 struct CalibrationData {
@@ -56,7 +57,7 @@ struct NetworkDepthSensor::ImplData {
 
 NetworkDepthSensor::NetworkDepthSensor(const std::string &name,
                                        const std::string &ip)
-    : m_implData(new NetworkDepthSensor::ImplData) {
+    : m_implData(new NetworkDepthSensor::ImplData), m_stopServerCheck(false) {
 
     m_implData->cb = [this]() {
         Network *net = m_implData->handle.net;
@@ -125,6 +126,11 @@ NetworkDepthSensor::~NetworkDepthSensor() {
         if (m_implData->handle.net->SendCommand() != 0) {
             LOG(WARNING) << "Send Command Failed";
         }
+
+        if (!m_stopServerCheck) {
+            m_stopServerCheck = true;
+            m_activityCheckThread.join();
+        }
     }
 
     delete m_implData->handle.net;
@@ -175,6 +181,10 @@ aditof::Status NetworkDepthSensor::open() {
 
     if (status == Status::OK) {
         m_implData->opened = true;
+
+        // Create a new thread that periodically checks for inactivity on client-network then goes back to sleep
+        m_activityCheckThread =
+            std::thread(&NetworkDepthSensor::checkForServerUpdates, this);
     }
 
     return status;
@@ -1086,4 +1096,29 @@ aditof::Status NetworkDepthSensor::initTargetDepthCompute(
     Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
     return status;
+}
+
+void NetworkDepthSensor::checkForServerUpdates() {
+    using namespace std::chrono;
+
+    while (!m_stopServerCheck) {
+        // get latest timestamp from Network object
+        steady_clock::time_point latestActivityTimestamp =
+            m_implData->handle.net->getLatestActivityTimestamp();
+
+        // get current timestamp
+        steady_clock::time_point now = steady_clock::now();
+
+        // decide if it is required to check for server updates
+        duration<double> inactivityDuration =
+            duration_cast<duration<double>>(now - latestActivityTimestamp);
+        if (inactivityDuration.count() > 1.0) {
+            // check server for interrupts
+            std::unique_lock<std::mutex> mutex_lock(
+                m_implData->handle.net_mutex);
+            m_implData->cb();
+        }
+        // go back to sleep
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
 }
