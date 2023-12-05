@@ -190,6 +190,21 @@ struct CameraDetails {
      * @brief The SD card image version on the embedded system that the camera is attached to.
      */
     std::string sdCardImageVersion;
+
+    /**
+     * @brief The serial number of camera
+     */
+    std::string serialNumber;
+};
+
+/**
+ * @enum ImagerType
+ * @brief Types of imagers
+ */
+enum class ImagerType {
+    UNSET,    //!< Value for when the type is unset
+    ADSD3100, //!< The ADSD3100 imager
+    ADSD3030, //!< The ADSD3030 imager
 };
 
 } // namespace aditof

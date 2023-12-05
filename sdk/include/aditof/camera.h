@@ -1,5 +1,4 @@
 /*
-/*
  * BSD 3-Clause License
  *
  * Copyright (c) 2019, Analog Devices, Inc.
@@ -33,6 +32,7 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include "aditof/adsd_errs.h"
 #include "camera_definitions.h"
 #include "sdk_exports.h"
 #include "status_definitions.h"
@@ -45,8 +45,6 @@ namespace aditof {
 
 class Frame;
 class DepthSensorInterface;
-class StorageInterface;
-class TemperatureSensorInterface;
 
 /**
  * @class Camera
@@ -62,9 +60,11 @@ class SDK_API Camera {
     /**
      * @brief Initialize the camera. This is required before performing any
      * operation on the camera.
+     * @param configFilepath - The JSON configuration files which should be specific to the given module.
+     * The expected value is a file name (including extension) or left empty.
      * @return Status
      */
-    virtual Status initialize() = 0;
+    virtual Status initialize(const std::string &configFilepath = {}) = 0;
 
     /**
      * @brief Start the camera. This starts the streaming of data from the
@@ -175,22 +175,45 @@ class SDK_API Camera {
     virtual std::shared_ptr<DepthSensorInterface> getSensor() = 0;
 
     /**
-     * @brief Gets the eeprom(s) used internally by the camera. This gives
-     * direct access to the eeprom(s) of the camera.
-     * @param[out] eeproms - List of internal eeproms
+     * @brief Enable the generation of a XYZ frame. The XYZ frame can be enabled
+     * or disabled through .ini configuration file but if this method is explicitly called
+     * then it will override the option in the .ini file. By default XYZ frame is disabled.
+     * @param[in] enable - set to true to enable the generation of XYZ, set to false otherwise.
      * @return Status
      */
-    virtual Status
-    getEeproms(std::vector<std::shared_ptr<StorageInterface>> &eeproms) = 0;
+    virtual Status enableXYZframe(bool enable) = 0;
 
     /**
-     * @brief Gets the temperature sensors used internally by the camera.
-     * This gives direct access to the temperature sensor(s) of the camera.
-     * @param[out] sensors - List of internal temperature sensors
+     * @brief Save the CFG content which is obtained from module memory to a given file path.
+     * @param[in] filepath - A path to a file (including file name and extension) where the
+     *                       CFG should be stored.
      * @return Status
      */
-    virtual Status getTemperatureSensors(
-        std::vector<std::shared_ptr<TemperatureSensorInterface>> &sensors) = 0;
+    virtual Status saveModuleCFG(const std::string &filepath) const = 0;
+
+    /**
+     * @brief Save the CCB content which is obtained from module memory to a given file path.
+     * @param[in] filepath - A path to a file (including file name and extension) where the
+     *                       CCB should be stored.
+     * @return Status
+     */
+    virtual Status saveModuleCCB(const std::string &filepath) = 0;
+
+    /**
+     * @brief Enable or disable the depth processing on the frames received from the sensor
+     * Must be called after getFrame() where the depth processing happens.
+     * @param[in] enable - set to true to enable depth processing. Set to false otherwise.
+     * @return Status
+     */
+    virtual Status enableDepthCompute(bool enable) = 0;
+
+    /**
+     * @brief Update the firmware of ADSD3500 with the content found in the specified file.
+     * @param[in] fwFilePath - A path to a file (including file name and extension)
+     *                         where the firmware for adsd3500 is stored.
+     * @return Status
+     */
+    virtual Status adsd3500UpdateFirmware(const std::string &fwFilePath) = 0;
 
     /**
      * @brief Enables or disables FSYNC toggle for ADSD3500
@@ -432,20 +455,18 @@ class SDK_API Camera {
     virtual Status adsd3500SetEnableTemperatureCompensation(uint16_t value) = 0;
 
     /**
-     * @brief Set Enable Embedded Header in the AB frame
-     * @param[in] value - See "Enable/Disable Output Embedded Header in AB Frame" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @brief Set Enable Metadata in the AB frame
+     * @param[in] value - See "Enable/Disable Output Metadata in AB Frame" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
      * @return Status
      */
-    virtual aditof::Status
-    adsd3500SetEnableEmbeddedHeaderinAB(uint16_t value) = 0;
+    virtual aditof::Status adsd3500SetEnableMetadatainAB(uint16_t value) = 0;
 
     /**
-     * @brief Get state of Enable Embedded Header in the AB frame
-     * @param[out] value - See "Get Output Embedded Header in AB Frame status" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @brief Get state of Enable Metadata in the AB frame
+     * @param[out] value - See "Get Output Metadata in AB Frame status" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
      * @return Status
      */
-    virtual aditof::Status
-    adsd3500GetEnableEmbeddedHeaderinAB(uint16_t &value) = 0;
+    virtual aditof::Status adsd3500GetEnableMetadatainAB(uint16_t &value) = 0;
 
     /**
      * @brief Generic ADSD3500 function for commands not defined in the SDK (yet)
@@ -463,6 +484,31 @@ class SDK_API Camera {
      */
     virtual Status adsd3500GetGenericTemplate(uint16_t reg,
                                               uint16_t &value) = 0;
+    /**
+     * @brief Returns the chip status
+     * @param[out] chipStatus - chip status (error) value
+     * @param[out] imagerStatus - imager status (error) value
+     * @return Status
+     */
+    virtual Status adsd3500GetStatus(int &chipStatus, int &imagerStatus) = 0;
+
+    /**
+    * @brief Read serial number from camera and update cache
+    * @param[out] serialNumber - Will contain serial number
+    * @param[in] useCacheValue - If it is false it will
+    *  read from camera and if it is true it will
+    *  return serialNumber from cache
+    * @return Status
+    */
+    virtual Status readSerialNumber(std::string &serialNumber,
+                                    bool useCacheValue = false) = 0;
+
+    /**
+     * @brief Provides the type of the imager
+     * @param[out] imagerType - Will be set with the imager type
+     * @return Status
+     */
+    virtual Status getImagerType(ImagerType &imagerType) const = 0;
 };
 
 } // namespace aditof

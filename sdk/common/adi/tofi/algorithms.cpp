@@ -53,8 +53,6 @@ uint32_t Algorithms::GenerateXYZTables(
     // Adjust values based on optical center and focal length
     float cx = p_intr_data->cx / row_bin_factor;
     float cy = p_intr_data->cy / col_bin_factor;
-    float fx = p_intr_data->fx / row_bin_factor;
-    float fy = p_intr_data->fy / col_bin_factor;
     // float codx = p_intr_data->codx;
     //float cody = p_intr_data->cody;
 

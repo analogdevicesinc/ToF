@@ -62,10 +62,9 @@ static int xioctl(int fh, unsigned int request, void *arg) {
 }
 
 BufferProcessor::BufferProcessor()
-    : m_outputFrameWidth(0), m_outputFrameHeight(0), m_tofiConfig(nullptr),
-      m_tofiComputeContext(nullptr), m_vidPropSet(false),
-      m_processorPropSet(false), m_inputVideoDev(nullptr),
-      m_processedBuffer(nullptr) {
+    : m_vidPropSet(false), m_processorPropSet(false), m_outputFrameWidth(0),
+      m_outputFrameHeight(0), m_processedBuffer(nullptr), m_tofiConfig(nullptr),
+      m_tofiComputeContext(nullptr), m_inputVideoDev(nullptr) {
     m_outputVideoDev = new VideoDev();
 }
 
@@ -81,7 +80,7 @@ BufferProcessor::~BufferProcessor() {
         m_tofiConfig = NULL;
     }
 
-    if (m_outputVideoDev->fd != 0) {
+    if (m_outputVideoDev->fd != -1) {
         if (::close(m_outputVideoDev->fd) == -1) {
             LOG(ERROR) << "Failed to close " << m_videoDeviceName
                        << " error: " << strerror(errno);

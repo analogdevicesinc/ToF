@@ -136,6 +136,13 @@ class Frame {
     SDK_API virtual Status getAttribute(const std::string &attribute,
                                         std::string &value) const;
 
+    /**
+     * @brief Extracts the metadata content and returns a struct with values
+     * @param[out] metadata - struct containing all metadata fields 
+     * @return Status
+     */
+    SDK_API virtual Status getMetadataStruct(Metadata &metadata) const;
+
   private:
     std::unique_ptr<FrameImpl> m_impl;
     Status allocFrameData();

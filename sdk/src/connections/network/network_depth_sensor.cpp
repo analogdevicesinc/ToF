@@ -31,7 +31,6 @@
  */
 #include "network_depth_sensor.h"
 #include "connections/network/network.h"
-#include "device_utils.h"
 
 #ifdef USE_GLOG
 #include <glog/logging.h>
@@ -955,11 +954,58 @@ aditof::Status NetworkDepthSensor::adsd3500_reset() {
 }
 
 aditof::Status NetworkDepthSensor::adsd3500_register_interrupt_callback(
-    aditof::SensorInterruptCallback cb) {
+    aditof::SensorInterruptCallback &cb) {
     LOG(WARNING) << "Registering an interrupt callback on a network connection "
                     "is not supported yet!";
     m_cb = cb;
     return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status NetworkDepthSensor::adsd3500_unregister_interrupt_callback(
+    aditof::SensorInterruptCallback &cb) {
+    LOG(WARNING) << "Registering an interrupt callback on a network connection "
+                    "is not supported yet!";
+    m_cb = nullptr;
+    return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status NetworkDepthSensor::adsd3500_get_status(int &chipStatus,
+                                                       int &imagerStatus) {
+    using namespace aditof;
+
+    Network *net = m_implData->handle.net;
+    std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
+
+    if (!net->isServer_Connected()) {
+        LOG(WARNING) << "Not connected to server";
+        return Status::UNREACHABLE;
+    }
+
+    net->send_buff[m_sensorIndex].set_func_name("Adsd3500GetStatus");
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
+
+    if (net->SendCommand() != 0) {
+        LOG(WARNING) << "Send Command Failed";
+        return Status::INVALID_ARGUMENT;
+    }
+
+    if (net->recv_server_data() != 0) {
+        LOG(WARNING) << "Receive Data Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    if (net->recv_buff[m_sensorIndex].server_status() !=
+        payload::ServerStatus::REQUEST_ACCEPTED) {
+        LOG(WARNING) << "API execution on Target Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    chipStatus = net->recv_buff[m_sensorIndex].int32_payload(0);
+    imagerStatus = net->recv_buff[m_sensorIndex].int32_payload(1);
+
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
+
+    return status;
 }
 
 aditof::Status NetworkDepthSensor::initTargetDepthCompute(

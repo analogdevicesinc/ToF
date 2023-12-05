@@ -66,8 +66,8 @@ int main(int argc, char *argv[]) {
     int16_t *p_xyz_frame = NULL;
     uint8_t *ccb_file_buff = NULL;
 
-    char input_file_path[MAX_FILE_NAME_SIZE],
-        p_xyz_frame_output_file_path[MAX_FILE_NAME_SIZE];
+    char input_file_path[MAX_FILE_NAME_SIZE];
+    std::string p_xyz_frame_output_file_path;
     char ccb_filename[MAX_FILE_NAME_SIZE];
     char output_path[MAX_FILE_NAME_SIZE];
 
@@ -171,11 +171,10 @@ int main(int argc, char *argv[]) {
     }
 #endif
 
-    snprintf(p_xyz_frame_output_file_path, sizeof(p_xyz_frame_output_file_path),
-             "%s/%s", output_path, p_xyz_frame_output_file_name);
+    p_xyz_frame_output_file_path=std::string(output_path) + std::string(p_xyz_frame_output_file_name);
 
     finput_depth_file = fopen(input_file_path, "rb");
-    fXYZ = fopen(p_xyz_frame_output_file_path, "wb");
+    fXYZ = fopen(p_xyz_frame_output_file_path.c_str(), "wb");
     ccb_file = fopen(ccb_filename, "rb");
 
     size_t size = 0;

@@ -32,8 +32,6 @@
 #include "connections/usb/usb_sensor_enumerator.h"
 #include "connections/usb/linux/usb_linux_utils.h"
 #include "connections/usb/usb_depth_sensor.h"
-#include "connections/usb/usb_storage.h"
-#include "connections/usb/usb_temperature_sensor.h"
 #include "connections/usb/usb_utils.h"
 #include "usb_buffer.pb.h"
 #include "utils.h"
@@ -188,21 +186,6 @@ Status UsbSensorEnumerator::searchSensors() {
 
         m_sensorName = responseMsg.sensors_info().image_sensors().name();
 
-        m_storagesInfo.clear();
-        for (int i = 0; i < responseMsg.sensors_info().storages_size(); ++i) {
-            auto storage = responseMsg.sensors_info().storages(i);
-            m_storagesInfo.emplace_back(
-                std::make_pair(storage.name(), storage.id()));
-        }
-
-        m_temperatureSensorsInfo.clear();
-        for (int i = 0; i < responseMsg.sensors_info().temp_sensors_size();
-             ++i) {
-            auto tempSensor = responseMsg.sensors_info().temp_sensors(i);
-            m_storagesInfo.emplace_back(
-                std::make_pair(tempSensor.name(), tempSensor.id()));
-        }
-
         m_kernelVersion = responseMsg.card_image_version().kernelversion();
         m_sdVersion = responseMsg.card_image_version().sdversion();
         m_uBootVersion = responseMsg.card_image_version().ubootversion();
@@ -222,35 +205,6 @@ Status UsbSensorEnumerator::getDepthSensors(
         auto sensor =
             std::make_shared<UsbDepthSensor>(m_sensorName, sInfo.driverPath);
         depthSensors.emplace_back(sensor);
-    }
-
-    return Status::OK;
-}
-
-Status UsbSensorEnumerator::getStorages(
-    std::vector<std::shared_ptr<StorageInterface>> &storages) {
-
-    storages.clear();
-
-    for (const auto &nameAndId : m_storagesInfo) {
-        auto storage =
-            std::make_shared<UsbStorage>(nameAndId.first, nameAndId.second);
-        storages.emplace_back(storage);
-    }
-
-    return Status::OK;
-}
-
-Status UsbSensorEnumerator::getTemperatureSensors(
-    std::vector<std::shared_ptr<TemperatureSensorInterface>>
-        &temperatureSensors) {
-
-    temperatureSensors.clear();
-
-    for (const auto &nameAndId : m_temperatureSensorsInfo) {
-        auto tSensor = std::make_shared<UsbTemperatureSensor>(nameAndId.first,
-                                                              nameAndId.second);
-        temperatureSensors.emplace_back(tSensor);
     }
 
     return Status::OK;

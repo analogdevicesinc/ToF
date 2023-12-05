@@ -41,7 +41,7 @@ enum : uint16_t {
 
 #define MULTI_THREADED 1
 #define DATA_COLLECT_VERSION "1.3.0"
-#define EMBED_HDR_LENGTH 128
+#define METADATA_LENGTH 128
 
 using namespace aditof;
 
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]);
 
 typedef struct thread_params {
     uint16_t *pCaptureData;
-    uint8_t *pHeaderData;
+    uint8_t *pMetadata;
     uint16_t nframes;
     uint32_t nFrameNum;
     uint64_t nTotalCaptureSize;
@@ -66,7 +66,7 @@ static const char kUsagePublic[] =
     R"(Data Collect.
     Usage:
       data_collect CONFIG
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--ext_fsync <0|1>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] CONFIG
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] CONFIG
       data_collect (-h | --help)
 
     Arguments:
@@ -77,12 +77,11 @@ static const char kUsagePublic[] =
       --f <folder>       Output folder (max name 512) [default: ./]
       --n <ncapture>     Capture frame num. [default: 1]
       --m <mode>         Mode to capture data in. [default: 0]
-      --ext_fsync <0|1>  External FSYNC [0: Internal 1: External] [default: 0]
       --wt <warmup>      Warmup Time (sec) [default: 0]
       --ccb <FILE>       The path to store CCB content
       --ip <ip>          Camera IP
       --fw <firmware>    Adsd3500 fw file
-      --ft <frameType>   FrameType of saved image (raw/depth/ir/conf) [default: depth]
+      --ft <frameType>   FrameType of saved image (depth/ir/conf/full-frame/metadata) [default: depth]
 
     Note: --m argument supports both index and string (0/sr-native) 
 
@@ -106,13 +105,12 @@ int main(int argc, char *argv[]) {
         {"-f", {"--f", false, "", "."}},
         {"-n", {"--n", false, "", "1"}},
         {"-m", {"--m", false, "", "0"}},
-        {"-ext", {"--ext_fsync", false, "", "0"}},
         {"-wt", {"--wt", false, "", "0"}},
         {"-ip", {"--ip", false, "", ""}},
         {"-fw", {"--fw", false, "", ""}},
         {"-fps", {"--fps", false, "", ""}},
         {"-ccb", {"--ccb", false, "", ""}},
-        {"-ft", {"--ft", false, "", "depth"}},
+        {"-ft", {"--ft", false, "", "full-frame"}},
         {"-config", {"-CONFIG", true, "last", ""}}};
 
     CommandParser command;
@@ -146,7 +144,9 @@ int main(int argc, char *argv[]) {
 
     result = command.checkMandatoryArguments(command_map, arg_error);
     if (result != 0) {
-        std::string argName = (arg_error == "-config") ? "CONFIG" : command_map[arg_error].long_option;
+        std::string argName = (arg_error == "-config")
+                                  ? "CONFIG"
+                                  : command_map[arg_error].long_option;
 
         LOG(ERROR) << "Mandatory argument: " << argName << " missing";
         LOG(INFO) << kUsagePublic;
@@ -155,7 +155,9 @@ int main(int argc, char *argv[]) {
 
     result = command.checkMandatoryPosition(command_map, arg_error);
     if (result != 0) {
-        std::string argName = (arg_error == "-config") ? "CONFIG" : command_map[arg_error].long_option;
+        std::string argName = (arg_error == "-config")
+                                  ? "CONFIG"
+                                  : command_map[arg_error].long_option;
 
         LOG(ERROR) << "Mandatory argument " << argName
                    << " is not on its correct position ("
@@ -164,19 +166,17 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    char folder_path[MAX_FILE_PATH_SIZE]; // Path to store the raw/depth frames
+    char folder_path[MAX_FILE_PATH_SIZE]; // Path to store the depth frames
     char json_file_path
         [MAX_FILE_PATH_SIZE]; // Get the .json file from command line
-    std::string frame_type; // Type of frame need to be captured (Raw/Depth/IR)
+    std::string frame_type;   // Type of frame need to be captured (Depth/IR/full-frame)
 
     uint16_t err = 0;
     uint32_t n_frames = 0;
     uint32_t mode = 0;
-    uint32_t ext_frame_sync_en = 0;
     uint32_t warmup_time = 0;
     std::string ip;
     std::string firmware;
-    uint32_t setfps = 0;
 
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
@@ -253,24 +253,16 @@ int main(int argc, char *argv[]) {
         firmware = command_map["-fw"].value;
     }
 
-    //set FPS value
-    if (!command_map["-fps"].value.empty()) {
-        setfps = std::stoi(command_map["-fps"].value);
-    } else {
-        setfps = 10;
-    }
-
-    ext_frame_sync_en = std::stoi(command_map["-ext"].value);
-
     frame_type = command_map["-ft"].value;
 
     if (frame_type.length() <= 0 &&
-        (!frame_type.compare(std::string("raw")) ||
+        (!frame_type.compare(std::string("metadata")) ||
+         !frame_type.compare(std::string("full-frame")) ||
          !frame_type.compare(std::string("depth")) ||
-         !frame_type.compare(std::string("ir")) ||
+         !frame_type.compare(std::string("ab")) ||
          !frame_type.compare(std::string("conf")))) {
         LOG(ERROR) << "Error parsing frame_type (-ft/--ft) from command line!"
-                   << "\n Possible values: raw, depth, ir, conf"
+                   << "\n Possible values: depth, ir, conf, full-frame, metadata"
                    << "\n Please check help menu";
         return 0;
     }
@@ -295,6 +287,10 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "Json file: " << json_file_path;
     LOG(INFO) << "Frame type is: " << frame_type;
     LOG(INFO) << "Warm Up Time is: " << warmup_time << " seconds";
+
+    if(frame_type == "full-frame"){
+        frame_type = "frameData";
+    }
 
     if (!ip.empty()) {
         LOG(INFO) << "Ip address is: " << ip;
@@ -325,14 +321,7 @@ int main(int argc, char *argv[]) {
 
     auto camera = cameras.front();
 
-    // user can pass any config.json stored anywhere in HW
-    status = camera->setControl("initialization_config", json_file_path);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not set the initialization config file!";
-        return 0;
-    }
-
-    status = camera->initialize();
+    status = camera->initialize(json_file_path);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
         return 0;
@@ -353,7 +342,7 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
-        status = camera->setControl("updateAdsd3500Firmware", firmware);
+        status = camera->adsd3500UpdateFirmware(firmware);
         if (status != Status::OK) {
             LOG(ERROR) << "Could not update the adsd3500 firmware";
             return 0;
@@ -384,22 +373,24 @@ int main(int argc, char *argv[]) {
     std::string sensorName;
     status = depthSensor->getName(sensorName);
 
-    // Disable depth compute for raw frames
-    if (frame_type == "raw") {
-        camera->setControl("enableDepthCompute", "off");
-    }
-
-    // pcm-native contains ir only
-    if (frame_type != "ir" && modeName == "pcm-native") {
+    // pcm-native contains ab only
+    if (frame_type != "ab" && modeName == "pcm-native") {
         LOG(ERROR) << modeName
-                   << " mode doesn't contain depth/conf/raw data, setting --ft "
-                      "(frameType) to ir.";
-        frame_type = "ir";
+                   << " mode doesn't contain depth/conf/full-frame/metadata data, setting --ft "
+                      "(frameType) to ab.";
+        frame_type = "ab";
     }
 
     status = camera->setFrameType(modeName);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
+        return 0;
+    }
+
+    uint16_t value;
+    status = camera->adsd3500GetEnableMetadatainAB(value);
+    if (value == 0) {
+        LOG(WARNING) << "Metadata is unvailable for this camera";
         return 0;
     }
 
@@ -423,7 +414,7 @@ int main(int argc, char *argv[]) {
 
     // Store CCB to file
     if (!ccbFilePath.empty()) {
-        status = camera->setControl("saveModuleCCB", ccbFilePath);
+        status = camera->saveModuleCCB(ccbFilePath);
         if (status != Status::OK) {
             LOG(INFO) << "Failed to store CCB to " << ccbFilePath;
         }
@@ -436,21 +427,11 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    if (ext_frame_sync_en == 0) {
-        status = camera->setControl("syncMode", "0, 0"); // Master, timer driven
-
-    } else if (ext_frame_sync_en == 1) {
-        status = camera->setControl(
-            "syncMode",
-            "2, 0"); // Slave, 1.8v  // TODO: This configuration is required by oFilm, expand for finer control
-    }
-
     aditof::Frame frame;
     FrameDetails fDetails;
-    std::string frameType;
 
     uint16_t *frameBuffer;
-    uint8_t *headerBuffer;
+    uint8_t *metadataBuffer;
     uint32_t height;
     uint32_t width;
     uint64_t frame_size = 0;
@@ -461,16 +442,16 @@ int main(int argc, char *argv[]) {
     // Wait until the warmup time is finished
     if (warmup_time > 0) {
         do {
-            frameType = "raw";
-            uint16_t *pRawFrame;
+            uint16_t *pFrame;
             status = camera->requestFrame(&frame);
             if (status != Status::OK) {
                 LOG(ERROR) << "Could not request frame!";
                 return 0;
             }
-            status = frame.getData(frameType, &pRawFrame);
+            status = frame.getData(frame_type, &pFrame);
             if (status != Status::OK) {
-                LOG(ERROR) << "Could not get Raw frame type data!";
+                LOG(ERROR) << "Could not get " << frame_type
+                           << " frame type data!";
                 return 0;
             }
 
@@ -497,58 +478,56 @@ int main(int argc, char *argv[]) {
         height = fDetails.height;
         width = fDetails.width;
 
-        frameType = "raw";
         std::string pixelCount;
 
         // Depth Data
         if (frame_type == "depth") {
-            status = depthSensor->getControl("phaseDepthBits", pixelCount);
-            if (!std::stoi(pixelCount)) {
+            FrameDataDetails FrameDataDetails;
+            status = frame.getDataDetails(frame_type, FrameDataDetails);
+            if (status != Status::OK) {
                 LOG(ERROR) << "Depth disabled from ini file!";
                 return 0;
             }
 
             frame_size = sizeof(uint16_t) * height * width;
-            frameType = "depth";
         }
-        // Ir data
-        else if (frame_type == "ir") {
+        // AB data
+        else if (frame_type == "ab") {
             if (modeName != "pcm-native") {
-                status = depthSensor->getControl("abBits", pixelCount);
-                if (!std::stoi(pixelCount)) {
-                    LOG(ERROR) << "IR disabled from ini file!";
+                FrameDataDetails FrameDataDetails;
+                status = frame.getDataDetails(frame_type, FrameDataDetails);
+                if (status != Status::OK) {
+                    LOG(ERROR) << "AB disabled from ini file!";
                     return 0;
                 }
             }
 
             frame_size = sizeof(uint16_t) * height * width;
-            frameType = "ir";
         }
         // Conf data
         else if (frame_type == "conf") {
-            status = depthSensor->getControl("confidenceBits", pixelCount);
-            if (!std::stoi(pixelCount)) {
+            FrameDataDetails FrameDataDetails;
+            status = frame.getDataDetails(frame_type, FrameDataDetails);
+            if (status != Status::OK) {
                 LOG(ERROR) << "Conf disabled from ini file!";
                 return 0;
             }
 
             frame_size = sizeof(float) * height * width;
-            frameType = "conf";
-        }
-        // Raw data
-        else if (frame_type == "raw") {
-            aditof::FrameDataDetails rawFrameDetails;
-            frame.getDataDetails("raw", rawFrameDetails);
-
-            frame_size = rawFrameDetails.width * rawFrameDetails.height *
-                         rawFrameDetails.subelementsPerElement *
-                         rawFrameDetails.subelementSize;
-            frameType = "raw";
+        } else if (frame_type == "frameData") {
+            FrameDetails frameDetails;
+            frame.getDetails(frameDetails);
+            frame_size =
+                sizeof(uint16_t) * frameDetails.height * frameDetails.width;
+        } else if (frame_type == "metadata") {
+            FrameDataDetails frameDetails;
+            frame.getDataDetails(frame_type, frameDetails);
+            frame_size = frameDetails.bytesCount;
         } else {
             LOG(WARNING) << "Can't recognize frame data type!";
         }
 
-        /* Since getData returns the pointer to the depth/raw data, which only main thread has access to,
+        /* Since getData returns the pointer to the depth data, which only main thread has access to,
             we need to copy depth frame to local memory and pass that to thread for file I/O, there is no drop in the throughput with this. */
         frameBuffer = new uint16_t[frame_size];
         if (frameBuffer == NULL) {
@@ -557,7 +536,7 @@ int main(int argc, char *argv[]) {
         }
 
         uint16_t *pData;
-        status = frame.getData(frameType, &pData);
+        status = frame.getData(frame_type, &pData);
         if (status != Status::OK) {
             LOG(ERROR) << "Could not get frame type data!";
             return 0;
@@ -568,28 +547,26 @@ int main(int argc, char *argv[]) {
         }
         memcpy(frameBuffer, (uint8_t *)pData, frame_size);
 
-        uint32_t header_data_size = EMBED_HDR_LENGTH;
-        headerBuffer = new uint8_t[header_data_size];
-        if (headerBuffer == NULL) {
-            LOG(ERROR) << "Can't allocate Memory for frame header data!";
+        uint32_t metadata_size = METADATA_LENGTH;
+        metadataBuffer = new uint8_t[metadata_size];
+        if (metadataBuffer == NULL) {
+            LOG(ERROR) << "Can't allocate Memory for frame metadata!";
             return 0;
         }
 
-#if 0 // TO DO: uncomment this one the header becomes available
-        uint16_t *pHeader = nullptr;
-        status = frame.getData("embeded_header", &pHeader);
+        uint16_t *pMetadata = nullptr;
+        status = frame.getData("metadata", &pMetadata);
         if (status != Status::OK) {
-            LOG(ERROR) << "Could not get frame header data!";
+            LOG(ERROR) << "Could not get frame metadata!";
             return 0;
         }
-        if (!pHeader) {
-            LOG(ERROR) << "no memory allocated in frame header";
+        if (!pMetadata) {
+            LOG(ERROR) << "no memory allocated in frame metadata";
             return 0;
         }
-        memcpy(headerBuffer, (uint8_t *)pHeader, header_data_size);
-#endif
+        memcpy(metadataBuffer, (uint8_t *)pMetadata, metadata_size);
 
-        // Create thread to handle the file I/O of copying raw/depth images to file
+        // Create thread to handle the file I/O of copying depth images to file
 #ifdef MULTI_THREADED
         thread_params *pThreadParams = new thread_params();
         if (pThreadParams == nullptr) {
@@ -597,7 +574,7 @@ int main(int argc, char *argv[]) {
             return 0;
         }
         pThreadParams->pCaptureData = frameBuffer;
-        pThreadParams->pHeaderData = headerBuffer;
+        pThreadParams->pMetadata = metadataBuffer;
         pThreadParams->nTotalCaptureSize = frame_size;
         pThreadParams->pFolderPath = folder_path;
         pThreadParams->nFileTime = time_buffer;
@@ -606,7 +583,7 @@ int main(int argc, char *argv[]) {
         pThreadParams->pFrame_type = frame_type.c_str();
         pThreadParams->pFramesize = height * width;
 
-        /* fileWriterThread handles the copying of raw/depth frames to a file */
+        /* fileWriterThread handles the copying of depth frames to a file */
         std::thread fileWriterThread(
             fileWriterTask,
             const_cast<const thread_params *const>(pThreadParams));
@@ -629,19 +606,17 @@ int main(int argc, char *argv[]) {
         if (frameBuffer != NULL) {
             free((void *)frameBuffer);
         }
-        if (headerBuffer != NULL) {
-            free((void *)headerBuffer);
+        if (metadataBuffer != NULL) {
+            free((void *)metadataBuffer);
         }
 #endif
     } // End of for Loop
 
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> total_time = end_time - start_time;
-    if (frame_type == "raw") {
-        if (total_time.count() > 0.0) {
-            double fps = (double)n_frames / total_time.count();
-            LOG(INFO) << "FPS: " << fps;
-        }
+    if (total_time.count() > 0.0) {
+        double measured_fps = (double)n_frames / total_time.count();
+        LOG(INFO) << "Measured FPS: " << measured_fps;
     }
 
     status = camera->stop();
@@ -670,8 +645,8 @@ void fileWriterTask(const thread_params *const pThreadParams) {
     if (pThreadParams->pCaptureData != nullptr) {
         delete[] pThreadParams->pCaptureData;
     }
-    if (pThreadParams->pHeaderData != nullptr) {
-        delete[] pThreadParams->pHeaderData;
+    if (pThreadParams->pMetadata != nullptr) {
+        delete[] pThreadParams->pMetadata;
     }
     delete pThreadParams;
 }

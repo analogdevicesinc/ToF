@@ -138,6 +138,123 @@ struct Point3I {
     int16_t c; //!< Z Information
 };
 
+#pragma pack(push, 1)
+/**
+ * @struct Metadata
+ * @brief Contains all of the metadata components
+ */
+struct Metadata {
+
+    /**
+    * @brief Width of frame
+    */
+    uint16_t width;
+
+    /**
+    * @brief Height of frame
+    */
+    uint16_t height;
+
+    /**
+    * @brief ADSD3500 Output Configuration:
+    * 0 Full Depth Frame
+    * 1 Phase Frame (Partial Depth)
+    * 2 AB Frame
+    * 3 Confidence Frame
+    * 4 Depth AB Interleaved
+    * 5 Phase and AB Interleaved
+    * 6 Phase, JBLF Confidence and AB Interleaved
+    * 7 Depth, Confidence and AB Interleaved
+    */
+    uint8_t outputConfiguration;
+
+    /**
+    * @brief Number of bits in depth
+    */
+    uint8_t bitsInDepht;
+
+    /**
+    * @brief Number of bits in AB
+    */
+    uint8_t bitsInAb;
+
+    /**
+    * @brief Number of bits in confidence
+    */
+    uint8_t bitsInConfidence;
+
+    /**
+    * @brief invalidPhaseValue:
+    * In partial depth case, the host must know the invalid phase value used by the ADSD3500, which is used for invalidation during full depth compute.
+    */
+    uint16_t invalidPhaseValue;
+
+    /**
+    * @brief frequencyIndex: Stores index of the frequency for which the phase frame is outputted.
+    */
+    uint8_t frequencyIndex;
+
+    /**
+    * @brief abFrequencyIndex:
+    * AB Frequency Index:
+    * 0 AB of frequency 0
+    * 1 AB of frequency 1
+    * 2 AB of frequency 2
+    * 3 AB Averaged
+    */
+    uint8_t abFrequencyIndex;
+
+    /**
+    * @brief Frame number
+    */
+    uint32_t frameNumber;
+
+    /**
+    * @brief Imager mode
+    */
+    uint8_t imagerMode;
+
+    /**
+    * @brief number of phases:
+    * Number of phases in the input raw capture fed to the ADSD3500
+    */
+    uint8_t numberOfPhases;
+
+    /**
+    * @brief number of frequencies:
+    * Number of frequencies in the input raw capture fed to the ADSD3500.
+    */
+    uint8_t numberOfFrequencies;
+
+    /**
+    * @brief reserved
+    */
+    uint8_t reserved;
+
+    /**
+    * @brief elapsedTimeFractionalValue:
+    * 32-bit fractional value out of total elapsed time.
+    */
+    uint32_t elapsedTimeFractionalValue;
+
+    /**
+    * @brief elapsedTimeSecondsValue:
+    * 32-bit seconds value out of total elapsed time.
+    */
+    uint32_t elapsedTimeSecondsValue;
+
+    /**
+    * @brief Sensor temperature in degrees Celsius
+    */
+    uint32_t sensorTemperature;
+
+    /**
+    * @brief Laser temperature in degrees Celsius
+    */
+    uint32_t laserTemperature;
+};
+#pragma pack(pop)
+
 } // namespace aditof
 
 #endif // FRAME_DEFINITIONS_H

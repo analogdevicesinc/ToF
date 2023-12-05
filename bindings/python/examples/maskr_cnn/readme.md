@@ -1,7 +1,7 @@
 # MaskR-CNN Example
 
 ### Overview
-This example  demonstrates object detection on a combination between the depth frame and the IR frame using the MaskR-CNN object detection example from OpenCV and the adiTOF SDK.
+This example  demonstrates object detection on a combination between the depth frame and the AB frame using the MaskR-CNN object detection example from OpenCV and the adiTOF SDK.
 
 This example needs access to 3 configuration files: COCO object class LABELS and two TENSORFLOW model configuration files, based on COCO datase. 
 

@@ -13,13 +13,6 @@
 #endif
 
 //TO DO: update table with new values
-ModeInfo::modeInfo ModeInfo::g_newModesAdsd3100[] = {
-    {0, 1024, 1024, 6, 49156, 96, 0, "sr-native"},
-    {1, 1024, 1024, 9, 49156, 144, 0, "lr-native"},
-    {2, 512, 512, 6, 12292, 96, 0, "sr-qnative"},
-    {3, 512, 512, 9, 18438, 96, 0, "lr-qnative"},
-    {4, 1024, 1024, 1, 49156, 16, 1, "pcm-native"}};
-
 ModeInfo::modeInfo ModeInfo::g_newModesAdsd3500Adsd3100[] = {
     {0, 1024, 1024, 2, 49156, 96, 0, "sr-native"},
     {1, 1024, 1024, 3, 49156, 144, 0, "lr-native"},
@@ -140,11 +133,6 @@ aditof::Status ModeInfo::setImagerTypeAndModeVersion(int type, int version) {
             g_modeInfoData.assign(std::begin(g_newModesAdsd3500Adsd3100),
                                   std::end(g_newModesAdsd3500Adsd3100));
             LOG(INFO) << "Using new modes table for ADSD3500 w/ADSD3100.";
-
-        } else if (version == 1) {
-            g_modeInfoData.assign(std::begin(g_newModesAdsd3100),
-                                  std::end(g_newModesAdsd3100));
-            LOG(INFO) << "Using new modes table for ADSD3100.";
         } else {
             LOG(INFO) << "Unknow modes table.";
             return Status::GENERIC_ERROR;
@@ -161,7 +149,6 @@ aditof::Status ModeInfo::setImagerTypeAndModeVersion(int type, int version) {
                                   std::end(g_newModesAdsd3500Adsd3030));
             LOG(INFO) << "Using new modes table for ADSD3500 w/ADSD3030.";
         } else {
-
             LOG(INFO) << "Unknow modes table.";
             return Status::GENERIC_ERROR;
         }
@@ -238,9 +225,27 @@ aditof::Status ModeInfo::getSensorProperties(const std::string mode,
         return aditof::Status::OK;
     }
 
-    //ADSD3500 + ADSD3030
+    //ADSD3500 + ADSD3100
     if (g_imagerType == 1) {
-        if (pixelFormat == "raw16_bits12_shift4") {
+        if (pixelFormat == "raw16") {
+            if (depthBits == 16 && abBits == 16 && confBits == 0) {
+                if (mode == "lr-native") {
+                    *width = 2048;
+                    *height = 4096;
+                    *pixelFormatIndex = 0;
+                } else if (mode == "sr-native") {
+                    *width = 2048;
+                    *height = 3072;
+                    *pixelFormatIndex = 0;
+                } else {
+                    LOG(ERROR) << "Invalid configuration!";
+                    return aditof::Status::INVALID_ARGUMENT;
+                }
+            } else {
+                LOG(ERROR) << "Invalid configuration!";
+                return aditof::Status::INVALID_ARGUMENT;
+            }
+        } else if (pixelFormat == "raw16_bits12_shift4") {
             if (depthBits == 12 && abBits == 12 && confBits == 0) {
                 if (mode == "lr-native") {
                     *width = 1024;

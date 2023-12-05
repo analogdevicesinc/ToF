@@ -22,10 +22,10 @@ camera::PinholeCameraIntrinsic intrinsicParameters(frameWidth, frameHeight,
 ```
 * Request frame from adiToF camera;
 * Transform the depth image into Open3D *geometry::Image* type;
-* Transform the IR image into Open3D *geometry::Image* type;
+* Transform the AB image into Open3D *geometry::Image* type;
 * Transform the 16bits depth image (the depth image raw) into Open3D *geometry::Image* type;
 * Color the depth *geometry::Image* with a rainbow spectrum;
-* Combine IR *geometry::Image* and the depth *geometry::Image* to get the color *geometry::Image*;
+* Combine AB *geometry::Image* and the depth *geometry::Image* to get the color *geometry::Image*;
 * Create *geometry::RGBDImage* from depth and color images:
 ```console
 auto rgbd_ptr = geometry::RGBDImage::CreateFromColorAndDepth(color_image, depth16bits_image, 1000.0, 3.0, false);

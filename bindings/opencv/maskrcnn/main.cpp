@@ -190,10 +190,10 @@ int main(int argc, char **argv) {
     int cameraRange = cameraDetails.maxDepth;
     double distance_scale = 255.0 / cameraRange;
 
-    /* Distance factor IR */
+    /* Distance factor AB */
     int bitCount = cameraDetails.bitCount;
-    int max_value_of_IR_pixel = (1 << bitCount) - 1;
-    double distance_scale_ir = 255.0 / max_value_of_IR_pixel;
+    int max_value_of_AB_pixel = (1 << bitCount) - 1;
+    double distance_scale_ab = 255.0 / max_value_of_AB_pixel;
 
     aditof::Frame frame;
     status = camera->requestFrame(&frame);
@@ -245,9 +245,9 @@ int main(int argc, char **argv) {
             return -1;
         }
 
-        /* Obtain the ir mat from the frame */
-        cv::Mat irMat;
-        status = fromFrameToIrMat(frame, irMat);
+        /* Obtain the ab mat from the frame */
+        cv::Mat abMat;
+        status = fromFrameToAbMat(frame, abMat);
         if (status != Status::OK) {
             LOG(ERROR) << "Could not convert from frame to mat!";
             return -1;
@@ -257,14 +257,14 @@ int main(int argc, char **argv) {
         frameMat.convertTo(frameMat, CV_8U, distance_scale);
         applyColorMap(frameMat, frameMat, cv::COLORMAP_RAINBOW);
 
-        irMat.convertTo(irMat, CV_8U, distance_scale_ir);
-        cv::cvtColor(irMat, irMat, cv::COLOR_GRAY2RGB);
+        abMat.convertTo(abMat, CV_8U, distance_scale_ab);
+        cv::cvtColor(abMat, abMat, cv::COLOR_GRAY2RGB);
 
-        /* Use a combination between ir mat & depth mat as input for the Net as
+        /* Use a combination between ab mat & depth mat as input for the Net as
          * we currently don't have an rgb source */
         cv::Mat resultMat, colorImage;
-        cv::addWeighted(irMat, 0.4, frameMat, 0.6, 0, resultMat);
-        cv::addWeighted(irMat, 0.4, frameMat, 0.6, 0, colorImage);
+        cv::addWeighted(abMat, 0.4, frameMat, 0.6, 0, resultMat);
+        cv::addWeighted(abMat, 0.4, frameMat, 0.6, 0, colorImage);
 
         /* Calculate FPS */
         auto endTime = std::chrono::system_clock::now();

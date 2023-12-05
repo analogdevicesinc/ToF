@@ -364,12 +364,10 @@ void Network::call_lws_service() {
         } else if (Connection_Closed[m_connectionId] == true &&
                    Server_Connected[m_connectionId] == false) {
             Connection_Closed[m_connectionId] = false;
-            break;
         }
         /*Complete the thread if destructor is called*/
-        std::lock_guard<std::mutex> guard(thread_mutex[m_connectionId]);
-
         if (Thread_Running[m_connectionId] == 1) {
+            std::lock_guard<std::mutex> guard(thread_mutex[m_connectionId]);
 #ifdef NW_DEBUG
             cout << "Thread exited" << endl;
 #endif
@@ -445,7 +443,7 @@ int Network::callback_function(struct lws *wsi,
             } else {
                 //expect content that is not wrapped in a protobuf message
                 memcpy(rawPayloads[connectionId], static_cast<char *>(in), len);
-                rawPayloads[connectionId] == nullptr;
+                rawPayloads[connectionId] = nullptr;
                 recv_data_error = 0;
                 Data_Received[connectionId] = true;
 

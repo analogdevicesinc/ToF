@@ -54,9 +54,6 @@ static int interrupted = 0;
 
 /* Available sensors */
 std::vector<std::shared_ptr<aditof::DepthSensorInterface>> depthSensors;
-static std::vector<std::shared_ptr<aditof::StorageInterface>> storages;
-static std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
-    temperatureSensors;
 bool sensors_are_created = false;
 bool clientEngagedWithSensors = false;
 
@@ -98,14 +95,6 @@ static struct lws_protocols protocols[] = {
 };
 
 static void cleanup_sensors() {
-    for (auto &storage : storages) {
-        storage->close();
-    }
-    storages.clear();
-    for (auto &sensor : temperatureSensors) {
-        sensor->close();
-    }
-    temperatureSensors.clear();
     sensorV4lBufAccess.reset();
     camDepthSensor.reset();
 
@@ -118,7 +107,7 @@ Network ::Network() : context(nullptr) {}
 int Network::callback_function(struct lws *wsi,
                                enum lws_callback_reasons reason, void *user,
                                void *in, size_t len) {
-    int n;
+    uint n;
 
     switch (reason) {
     case LWS_CALLBACK_ESTABLISHED: {
@@ -334,8 +323,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
             sensorsEnumerator->searchSensors();
             sensorsEnumerator->getDepthSensors(depthSensors);
-            sensorsEnumerator->getStorages(storages);
-            sensorsEnumerator->getTemperatureSensors(temperatureSensors);
             sensors_are_created = true;
         }
 
@@ -361,27 +348,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         auto pbDepthSensorInfo = pbSensorsInfo->mutable_image_sensors();
         pbDepthSensorInfo->set_name(name);
 
-        // Storages
-        int storage_id = 0;
-        for (const auto &storage : storages) {
-            std::string name;
-            storage->getName(name);
-            auto pbStorageInfo = pbSensorsInfo->add_storages();
-            pbStorageInfo->set_name(name);
-            pbStorageInfo->set_id(storage_id);
-            ++storage_id;
-        }
-
-        // Temperature sensors
-        int temp_sensor_id = 0;
-        for (const auto &sensor : temperatureSensors) {
-            std::string name;
-            sensor->getName(name);
-            auto pbTempSensorInfo = pbSensorsInfo->add_temp_sensors();
-            pbTempSensorInfo->set_name(name);
-            pbTempSensorInfo->set_id(temp_sensor_id);
-            ++temp_sensor_id;
-        }
         std::string kernelversion;
         std::string ubootversion;
         std::string sdversion;
@@ -461,9 +427,9 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         }
 
         aditof::Status status = camDepthSensor->setFrameType(aditofFrameType);
-#ifdef DEPTH_COMPUTE_ON_TARGET
+
         if (status == aditof::Status::OK) {
-            //width * height * 2 bytes/pixel * 2 frames(depth/ir)
+            //width * height * 2 bytes/pixel * 2 frames(depth/ab)
             //Looking for depth resolution
             int width_tmp = aditofFrameType.width;
             int height_tmp = aditofFrameType.height;
@@ -491,7 +457,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                             processedFrameSize * sizeof(uint16_t)];
             buff_frame_length = processedFrameSize * 2;
         }
-#endif
+
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
@@ -507,8 +473,8 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
     case GET_FRAME: {
         aditof::Status status = aditof::Status::OK;
-        //to do: get value of m_depthComputeOnTarget from sensor
-#ifdef DEPTH_COMPUTE_ON_TARGET
+
+        //TO DO: get value of m_depthComputeOnTarget from sensor
         status = camDepthSensor->getFrame(
             (uint16_t *)(buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING));
         if (status != aditof::Status::OK) {
@@ -520,7 +486,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
         buff_send.set_status(payload::Status::OK);
         break;
-#else
+
         status = sensorV4lBufAccess->waitForBuffer();
 
         if (status != aditof::Status::OK) {
@@ -566,7 +532,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
         buff_send.set_status(payload::Status::OK);
         break;
-#endif
     }
 
     case READ_REGISTERS: {
@@ -630,21 +595,11 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
 
     case INIT_TARGET_DEPTH_COMPUTE: {
-        uint16_t iniFileLength =
-            static_cast<uint16_t>(buff_recv.func_int32_param(0));
-        uint16_t calDataLength =
-            static_cast<uint16_t>(buff_recv.func_int32_param(1));
-        uint8_t *iniFile = new uint8_t[iniFileLength];
-        uint8_t *calData = new uint8_t[calDataLength];
-
-        memcpy(iniFile, buff_recv.func_bytes_param(0).c_str(), iniFileLength);
-        memcpy(calData, buff_recv.func_bytes_param(1).c_str(), calDataLength);
-
         aditof::Status status = camDepthSensor->initTargetDepthCompute(
-            iniFile, iniFileLength, calData, calDataLength);
-
-        delete[] iniFile;
-        delete[] calData;
+            (uint8_t *)buff_recv.func_bytes_param(0).c_str(),
+            static_cast<uint16_t>(buff_recv.func_int32_param(0)),
+            (uint8_t *)buff_recv.func_bytes_param(1).c_str(),
+            static_cast<uint16_t>(buff_recv.func_int32_param(1)));
 
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
@@ -739,149 +694,16 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
-    case STORAGE_OPEN: {
-        aditof::Status status;
-        std::string msg;
-        size_t index = static_cast<size_t>(buff_recv.func_int32_param(0));
+    case ADSD3500_GET_STATUS: {
+        int chipStatus;
+        int imagerStatus;
 
-        if (index < 0 || index >= storages.size()) {
-            buff_send.set_message("The ID of the storage is invalid");
-            buff_send.set_status(::payload::Status::INVALID_ARGUMENT);
-            break;
-        }
-
-        void *sensorHandle;
-        status = camDepthSensor->getHandle(&sensorHandle);
-        if (status != aditof::Status::OK) {
-            buff_send.set_message("Failed to obtain handle from depth sensor "
-                                  "needed to open storage");
-            buff_send.set_status(::payload::Status::GENERIC_ERROR);
-            break;
-        }
-
-        status = storages[index]->open(sensorHandle);
-
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        clientEngagedWithSensors = true;
-        break;
-    }
-
-    case STORAGE_READ: {
-        aditof::Status status;
-        std::string msg;
-        size_t index = static_cast<size_t>(buff_recv.func_int32_param(0));
-
-        if (index < 0 || index >= storages.size()) {
-            buff_send.set_message("The ID of the storage is invalid");
-            buff_send.set_status(::payload::Status::INVALID_ARGUMENT);
-            break;
-        }
-
-        uint32_t address = static_cast<uint32_t>(buff_recv.func_int32_param(1));
-        size_t length = static_cast<size_t>(buff_recv.func_int32_param(2));
-        std::unique_ptr<uint8_t[]> buffer(new uint8_t[length]);
-        status = storages[index]->read(address, buffer.get(), length);
+        aditof::Status status =
+            camDepthSensor->adsd3500_get_status(chipStatus, imagerStatus);
         if (status == aditof::Status::OK) {
-            buff_send.add_bytes_payload(buffer.get(), length);
+            buff_send.add_int32_payload(chipStatus);
+            buff_send.add_int32_payload(imagerStatus);
         }
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case STORAGE_WRITE: {
-        aditof::Status status;
-        std::string msg;
-        size_t index = static_cast<size_t>(buff_recv.func_int32_param(0));
-
-        if (index < 0 || index >= storages.size()) {
-            buff_send.set_message("The ID of the storage is invalid");
-            buff_send.set_status(::payload::Status::INVALID_ARGUMENT);
-            break;
-        }
-
-        uint32_t address = static_cast<uint32_t>(buff_recv.func_int32_param(1));
-        size_t length = static_cast<size_t>(buff_recv.func_int32_param(2));
-        const uint8_t *buffer = reinterpret_cast<const uint8_t *>(
-            buff_recv.func_bytes_param(0).c_str());
-
-        status = storages[index]->write(address, buffer, length);
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case STORAGE_CLOSE: {
-        aditof::Status status;
-        std::string msg;
-        size_t index = static_cast<size_t>(buff_recv.func_int32_param(0));
-
-        if (index < 0 || index >= storages.size()) {
-            buff_send.set_message("The ID of the storage is invalid");
-            buff_send.set_status(::payload::Status::INVALID_ARGUMENT);
-            break;
-        }
-
-        status = storages[index]->close();
-
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case TEMPERATURE_SENSOR_OPEN: {
-        size_t index = static_cast<size_t>(buff_recv.func_int32_param(0));
-
-        if (index < 0 || index >= temperatureSensors.size()) {
-            buff_send.set_message(
-                "The ID of the temperature sensor is invalid");
-            buff_send.set_status(::payload::Status::INVALID_ARGUMENT);
-            break;
-        }
-
-        void *sensorHandle;
-        aditof::Status status = camDepthSensor->getHandle(&sensorHandle);
-        if (status != aditof::Status::OK) {
-            buff_send.set_message("Failed to obtain handle from depth sensor "
-                                  "needed to open temperature sensor");
-            buff_send.set_status(::payload::Status::GENERIC_ERROR);
-            break;
-        }
-
-        status = temperatureSensors[index]->open(sensorHandle);
-
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        clientEngagedWithSensors = true;
-        break;
-    }
-
-    case TEMPERATURE_SENSOR_READ: {
-        size_t index = static_cast<size_t>(buff_recv.func_int32_param(0));
-
-        if (index < 0 || index >= temperatureSensors.size()) {
-            buff_send.set_message(
-                "The ID of the temperature sensor is invalid");
-            buff_send.set_status(::payload::Status::INVALID_ARGUMENT);
-            break;
-        }
-
-        float temperature;
-        aditof::Status status = temperatureSensors[index]->read(temperature);
-        if (status == aditof::Status::OK) {
-            buff_send.add_float_payload(temperature);
-        }
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case TEMPERATURE_SENSOR_CLOSE: {
-        size_t index = static_cast<size_t>(buff_recv.func_int32_param(0));
-
-        if (index < 0 || index >= temperatureSensors.size()) {
-            buff_send.set_message(
-                "The ID of the temperature sensor is invalid");
-            buff_send.set_status(::payload::Status::INVALID_ARGUMENT);
-            break;
-        }
-
-        aditof::Status status = temperatureSensors[index]->close();
 
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
@@ -929,12 +751,6 @@ void Initialize() {
     s_map_api_Values["Adsd3500ReadPayload"] = ADSD3500_READ_PAYLOAD;
     s_map_api_Values["Adsd3500WritePayloadCmd"] = ADSD3500_WRITE_PAYLOAD_CMD;
     s_map_api_Values["Adsd3500WritePayload"] = ADSD3500_WRITE_PAYLOAD;
-    s_map_api_Values["StorageOpen"] = STORAGE_OPEN;
-    s_map_api_Values["StorageRead"] = STORAGE_READ;
-    s_map_api_Values["StorageWrite"] = STORAGE_WRITE;
-    s_map_api_Values["StorageClose"] = STORAGE_CLOSE;
-    s_map_api_Values["TemperatureSensorOpen"] = TEMPERATURE_SENSOR_OPEN;
-    s_map_api_Values["TemperatureSensorRead"] = TEMPERATURE_SENSOR_READ;
-    s_map_api_Values["TemperatureSensorClose"] = TEMPERATURE_SENSOR_CLOSE;
+    s_map_api_Values["Adsd3500GetStatus"] = ADSD3500_GET_STATUS;
     s_map_api_Values["HangUp"] = HANG_UP;
 }

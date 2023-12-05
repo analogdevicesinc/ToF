@@ -39,3 +39,9 @@ sudo cmake --build . --target tof_ros2_package
 # 3. Usage
 
 For usage information please refere to ```section 3``` from: [ROS Usage](https://github.com/analogdevicesinc/tof-ros2#3-usage)
+
+# 4. Diagrams
+
+![Software stack](https://github.com/analogdevicesinc/ToF/blob/master/bindings/ros2/doc/tof-ros2-nativ.png)
+
+![Software stack](https://github.com/analogdevicesinc/ToF/blob/master/bindings/ros2/doc/tof-ros2-network.png)

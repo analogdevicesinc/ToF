@@ -109,19 +109,19 @@ class ADIView {
     int numOfThreads = 2;
     std::mutex m_frameCapturedMutex;
     bool m_depthFrameAvailable;
-    bool m_irFrameAvailable;
+    bool m_abFrameAvailable;
     bool m_pointCloudFrameAvailable;
     bool m_stopWorkersFlag = false;
     bool m_saveBinaryFormat = false;
 
     std::thread m_depthImageWorker;
-    std::thread m_irImageWorker;
+    std::thread m_abImageWorker;
     std::thread m_pointCloudImageWorker;
     std::condition_variable m_frameCapturedCv;
-    uint16_t *ir_video_data;
+    uint16_t *ab_video_data;
     uint16_t *depth_video_data;
     uint16_t *pointCloud_video_data;
-    uint8_t *ir_video_data_8bit;
+    uint8_t *ab_video_data_8bit;
     uint8_t *depth_video_data_8bit;
     float *normalized_vertices = nullptr;
     size_t pointcloudTableSize = 0;
@@ -158,12 +158,12 @@ class ADIView {
     void _displayDepthImage();
 
     /**
-		* @brief Creates IR buffer data
+		* @brief Creates AB buffer data
 		*/
-    void _displayIrImage();
+    void _displayAbImage();
 
     /**
-		* @brief Creates a blended IR and Depth buffer data
+		* @brief Creates a blended AB and Depth buffer data
 		*/
     void _displayBlendedImage();
 
@@ -187,9 +187,9 @@ class ADIView {
 
     //imGUI stuff
     GLFWwindow *window;
-    bool showIRWindow = true;
+    bool showABWindow = true;
     bool showDepthWindow = true;
-    bool beginDisplayIRImage = false;
+    bool beginDisplayABImage = false;
     bool beginDisplayDepthImage = false;
     bool beginDisplayPointCloudImage = false;
 

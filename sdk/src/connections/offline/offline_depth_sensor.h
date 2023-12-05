@@ -57,8 +57,11 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
     virtual aditof::Status
     adsd3500_write_payload(uint8_t *payload, uint16_t payload_len) override;
     virtual aditof::Status adsd3500_register_interrupt_callback(
-        aditof::SensorInterruptCallback cb) override;
+        aditof::SensorInterruptCallback &cb) override;
+    virtual aditof::Status adsd3500_unregister_interrupt_callback(
+        aditof::SensorInterruptCallback &cb) override;
     virtual aditof::Status adsd3500_reset() override;
+    virtual aditof::Status adsd3500_get_status(int &status) override;
     virtual aditof::Status
     initTargetDepthCompute(uint8_t *iniFile, uint16_t iniFileLength,
                            uint8_t *calData, uint16_t calDataLength) override;
@@ -74,22 +77,22 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
         {
             "lr-qnative",
             {{"raw", 2560, 512},
-             {"ir", 512, 512},
+             {"ab", 512, 512},
              {"xyz", 512, 512},
              {"depth", 512, 512},
              {"conf", 512, 512},
-             {"embedded_header", 1, 128}},
+             {"metadata", 1, 128}},
             2560,
             512, //TODO header size not counted here
         },
         {
             "sr-qnative",
             {{"raw", 2560, 512},
-             {"ir", 512, 512},
+             {"ab", 512, 512},
              {"xyz", 512, 512},
              {"depth", 512, 512},
              {"conf", 512, 512},
-             {"embedded_header", 1, 128}},
+             {"metadata", 1, 128}},
             2560,
             512,
         },
