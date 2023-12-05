@@ -42,7 +42,7 @@ FrameHandler::FrameHandler()
     : m_concatFrames(true), m_enableMultithreading(false),
       m_customFormat(false), m_bitsInDepth(0), m_bitsInAB(0), m_bitsInConf(0),
       m_frameWidth(0), m_frameHeight(0), m_frameIndex(0), m_fileCreated(false),
-      m_endOfFile(false), m_filePath("./") {}
+      m_endOfFile(false), m_filePath("./"), m_pos(0) {}
 
 FrameHandler::~FrameHandler() = default;
 
@@ -55,7 +55,8 @@ Status FrameHandler::setOutputFilePath(std::string &filePath) {
 
 Status FrameHandler::setInputFileName(std::string &fullFileName) {
     Status status = Status::OK;
-    m_fullFileName = fullFileName;
+    m_fullInputFileName = fullFileName;
+    m_pos = 0;
     return status;
 }
 
@@ -68,7 +69,7 @@ Status FrameHandler::saveFrameToFile(aditof::Frame &frame,
             status = createFile(fileName);
         } else {
             m_file =
-                std::fstream(m_fullFileName,
+                std::fstream(m_fullOutputFileName,
                              std::ios::app | std::ios::binary | std::ios::end);
         }
     } else {
@@ -106,7 +107,7 @@ Status FrameHandler::saveFrameToFile(aditof::Frame &frame,
                      metadataStruct.width * metadataStruct.height * 2);
     if (metadataStruct.bitsInConfidence)
         m_file.write(reinterpret_cast<char *>(confData),
-                     metadataStruct.width * metadataStruct.height);
+                     metadataStruct.width * metadataStruct.height * 2);
 
     m_file.close();
 
@@ -115,6 +116,55 @@ Status FrameHandler::saveFrameToFile(aditof::Frame &frame,
 
 Status FrameHandler::readNextFrame(aditof::Frame &frame,
                                    std::string fullFileName) {
+    Status status = Status::OK;
+    if(m_fullInputFileName.empty() && fullFileName.empty()){
+        LOG(ERROR) << "No input file provided!";
+        return Status::GENERIC_ERROR;
+    }
+
+    if(fullFileName != m_fullInputFileName){
+        m_fullInputFileName = fullFileName;
+        m_pos = 0;
+    }
+
+    m_file.seekg(m_pos, std::ios::beg);
+    if(m_file.eof()){
+        LOG(WARNING) << "End of file reached! No more frames left to read.";
+        return Status::UNAVAILABLE;
+    }
+
+    //Store frames in file in followind order: metadata depth ab conf
+    uint16_t *metaData;
+    uint16_t *depthData;
+    uint16_t *abData;
+    uint16_t *confData;
+
+    frame.getData("metadata", &metaData);
+    frame.getData("depth", &depthData);
+    frame.getData("ab", &abData);
+    frame.getData("conf", &confData);
+
+    m_file.read(reinterpret_cast<char *>(metaData), METADATA_SIZE);
+
+    Metadata metadataStruct;
+    frame.getMetadataStruct(metadataStruct);
+
+    //at first we assume that we have metadata enabled by default
+    //TO DO: implement use-case where we don't have metadata
+
+    if (metadataStruct.bitsInDepht)
+        m_file.read(reinterpret_cast<char *>(depthData),
+                     metadataStruct.width * metadataStruct.height * 2);
+    if (metadataStruct.bitsInAb)
+        m_file.read(reinterpret_cast<char *>(abData),
+                     metadataStruct.width * metadataStruct.height * 2);
+    if (metadataStruct.bitsInConfidence)
+        m_file.read(reinterpret_cast<char *>(confData),
+                     metadataStruct.width * metadataStruct.height * 2);
+
+    m_pos = m_file.tellg();
+    m_file.close();
+
     return Status::OK;
 }
 
@@ -150,8 +200,8 @@ Status FrameHandler::createFile(std::string fileName) {
     } else {
         m_fileName = fileName;
     }
-    m_fullFileName = m_filePath + '/' + m_fileName;
-    m_file = std::fstream(m_fullFileName,
+    m_fullOutputFileName = m_filePath + '/' + m_fileName;
+    m_file = std::fstream(m_fullOutputFileName,
                           std::ios::app | std::ios::out | std::ios::binary);
 
     if (!m_file) {

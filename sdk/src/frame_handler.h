@@ -109,10 +109,12 @@ class FrameHandler {
     //variables used for file handling
     std::string m_filePath;
     std::string m_fileName;
-    std::string m_fullFileName;
+    std::string m_fullOutputFileName;
+    std::string m_fullInputFileName;
     bool m_fileCreated;
     bool m_endOfFile;
     std::fstream m_file;
+    size_t m_pos;
 };
 
 #endif // FRAME_HANDLER
