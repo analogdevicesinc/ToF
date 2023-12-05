@@ -117,8 +117,6 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
             break;
         }
 
-        aditof::SensorDetails depthSensorDetails;
-        camDepthSensor->getDetails(depthSensorDetails);
         auto pbSensorsInfo = response.mutable_sensors_info();
 
         std::string name;
