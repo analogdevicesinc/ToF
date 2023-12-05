@@ -31,6 +31,7 @@
  */
 #include "buffer.pb.h"
 
+#include <chrono>
 #include <condition_variable>
 #include <functional>
 #include <libwebsockets.h>
@@ -72,6 +73,7 @@ class Network {
     static void *rawPayloads[MAX_CAMERA_NUM];
 
     InterruptNotificationCallback m_intNotifCb;
+    std::chrono::steady_clock::time_point m_latestActivityTimestamp;
 
     //! call_lws_service - calls lws_service api to service any websocket
     //! activity
@@ -123,4 +125,6 @@ class Network {
     bool isServer_Connected();
 
     void registerInterruptCallback(InterruptNotificationCallback &cb);
+
+    std::chrono::steady_clock::time_point getLatestActivityTimestamp();
 };

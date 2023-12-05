@@ -291,6 +291,8 @@ int Network::SendCommand(void *rawPayload) {
         status = -2;
     }
 
+    m_latestActivityTimestamp = std::chrono::steady_clock::now();
+
     return status;
 }
 
@@ -352,6 +354,8 @@ int Network::recv_server_data() {
             }
         }
     }
+
+    m_latestActivityTimestamp = std::chrono::steady_clock::now();
 
     return status;
 }
@@ -546,12 +550,17 @@ void Network::registerInterruptCallback(InterruptNotificationCallback &cb) {
     m_intNotifCb = cb;
 }
 
+std::chrono::steady_clock::time_point Network::getLatestActivityTimestamp() {
+    return m_latestActivityTimestamp;
+}
+
 /*
  * Network():    Initializes the network parameters
  * Parameters:   None
  * Desription:   This function initializes the network parameters
  */
-Network::Network(int connectionId) : m_intNotifCb(nullptr) {
+Network::Network(int connectionId)
+    : m_intNotifCb(nullptr), m_latestActivityTimestamp{} {
 
     /*Initialize the static flags*/
     Network::Send_Successful[connectionId] = false;
