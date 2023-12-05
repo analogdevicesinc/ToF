@@ -49,14 +49,15 @@ class FrameHandler {
     aditof::Status openFile(std::string filePath);
     aditof::Status closeFile(std::string filePath);
 
-
     //the api should only use frame objects when saving/reading data from file
     //the conversion between formats should happen inside the functions
 
     //store frame to file
     aditof::Status saveFrameToFile(aditof::Frame frame);
-    aditof::Status enqueueFrameToSaveToFile(aditof::Frame frame);
-    aditof::Status addFrameToQueue(aditof::Frame frame);
+    
+    //TO DO: write function to save frames on different thread
+    //aditof::Status enqueueFrameToSaveToFile(aditof::Frame frame);
+    //aditof::Status addFrameToQueue(aditof::Frame frame);
 
     //read new frame from file and process metadata to get new frame
     //charateristics if we have different frame types in the same file
@@ -66,10 +67,10 @@ class FrameHandler {
     //and let the users decide between them
     aditof::Status setCustomFormat(std::string format);
     
-    aditof::Status splitFrames(bool enable);
+    //aditof::Status splitFrames(bool enable);
     aditof::Status storeFramesToSingleFile(bool enable);
-    aditof::Status storeSingleFrameToFile(bool enable);
-    aditof::Status storeToSingleFile(bool enable);
+    //aditof::Status storeSingleFrameToFile(bool enable);
+    //aditof::Status storeToSingleFile(bool enable);
 
     //we should be able to give the users the ability to choose which data 
     //type they want to store (depth/ab/conf/metadata/full-data) or any combinations
@@ -92,7 +93,6 @@ private:
     bool m_customFormat;
     std::string m_customFormatType;
 
-
     //relevant data extracted from metadata that can help us compute frame size
     int m_bitsInDepth;
     int m_bitsInAB;
@@ -102,6 +102,7 @@ private:
     int m_frameIndex;
 
     //variables used for file handling
+    std::string m_filePath;
     bool m_fileOpened;
     bool m_endOfFile;
 
