@@ -758,6 +758,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         Metadata metadata;
         status = frame->getMetadataStruct(metadata);
         if (status == Status::OK) {
+            memset(static_cast<void *>(&metadata), 0, sizeof(metadata));
             metadata.width = aModeInfo.width;
             metadata.height = aModeInfo.height;
             metadata.imagerMode = aModeInfo.mode;
