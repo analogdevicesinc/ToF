@@ -10,5 +10,5 @@ This README file provides instructions on building the ADSD3500 Device driver fo
 	$ cd /usr/src/linux-imx/
 	$ sudo make clean && sudo make prepare
 4. Navigate to the current directory and run the make command.
-	$ cd ~/ToF/drivers/adsd3500/nxp/
+	$ cd ~/Workspace/ToF/drivers/adsd3500/nxp/
 	$ make
