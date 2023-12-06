@@ -286,6 +286,16 @@ EOF
   
   sudo tar -xvf ${SCRIPT_DIR}/build/linux-imx/modules.tar -C ${ROOTFS_TMP}/usr/
 
+  # Move the linux-imx kernel source to the NXP  
+  sudo mkdir -p ${SCRIPT_DIR}/build/linux-imx_tmp
+  sudo cp -Rf ${SCRIPT_DIR}/build/linux-imx/* ${SCRIPT_DIR}/build/linux-imx_tmp/
+  pushd ${SCRIPT_DIR}/build/linux-imx_tmp/
+  sudo make clean
+  popd
+
+  sudo mkdir -p ${ROOTFS_TMP}/usr/src/linux-imx/
+  sudo cp -Rf ${SCRIPT_DIR}/build/linux-imx_tmp/* ${ROOTFS_TMP}/usr/src/linux-imx/
+
   # I don't know who creates empty .cache which is owned by root, remove it.
   sudo rm -rf ${ROOTFS_TMP}/home/${USERNAME}/.cache
 
@@ -302,8 +312,8 @@ function main() {
   
   cd ${OUTPUT_DIR}
   
-  # create 8GB ext4 image
-  dd if=/dev/zero of=rootfs.ext4 bs=1M count=8000
+  # create 5GB ext4 image
+  dd if=/dev/zero of=rootfs.ext4 bs=1M count=5000
   mkdir -p ${ROOTFS_TMP}
   mkfs.ext4 rootfs.ext4
   sudo mount -o loop -o barrier=0 rootfs.ext4 ${ROOTFS_TMP}
