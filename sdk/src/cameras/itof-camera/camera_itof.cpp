@@ -88,6 +88,7 @@ CameraItof::CameraItof(
 
     aditof::SensorDetails sDetails;
     m_depthSensor->getDetails(sDetails);
+    m_details.cameraId = sDetails.id;
     m_details.connection = sDetails.connectionType;
 
     std::string sensorName;
