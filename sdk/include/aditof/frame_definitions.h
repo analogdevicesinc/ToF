@@ -32,6 +32,7 @@
 #ifndef FRAME_DEFINITIONS_H
 #define FRAME_DEFINITIONS_H
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -171,7 +172,7 @@ struct Metadata {
     /**
     * @brief Number of bits in depth
     */
-    uint8_t bitsInDepht;
+    uint8_t bitsInDepth;
 
     /**
     * @brief Number of bits in AB
@@ -254,6 +255,29 @@ struct Metadata {
     uint32_t laserTemperature;
 };
 #pragma pack(pop)
+
+/**
+ * @brief prints human readable metadata structure
+ */
+inline std::ostream &operator<<(std::ostream &o, const struct Metadata &meta) {
+    o << "\tWidth: " << meta.width << "\tHeight: " << meta.height
+      << "\tOutputConfiguration: " << meta.outputConfiguration
+      << "\tBitsInDepth: " << meta.bitsInDepth
+      << "\tBitsInAb: " << meta.bitsInAb
+      << "\tBitsInConfidenc: " << meta.bitsInConfidence
+      << "\tInvalidPhaseValue: " << meta.invalidPhaseValue
+      << "\tFrequencyIndex: " << meta.frequencyIndex
+      << "\tFrameNumber: " << meta.frameNumber
+      << "\tImagerMode: " << meta.imagerMode
+      << "\tNumberOfPhases: " << meta.numberOfPhases
+      << "\tNumberOfFrequencies: " << meta.numberOfFrequencies
+      << "\tReserved: " << meta.reserved
+      << "\tElapsedTimeFractionalValue: " << meta.elapsedTimeFractionalValue
+      << "\tElapsedTimeSecondsValue: " << meta.elapsedTimeSecondsValue
+      << "\tSensorTemperature: " << meta.sensorTemperature
+      << "\tLaserTemperature: " << meta.laserTemperature << "\n";
+    return o;
+}
 
 } // namespace aditof
 

@@ -115,7 +115,7 @@ PYBIND11_MODULE(aditofpython, m) {
         .def_readwrite("height", &aditof::Metadata::height)
         .def_readwrite("outputConfiguration",
                        &aditof::Metadata::outputConfiguration)
-        .def_readwrite("bitsInDepht", &aditof::Metadata::bitsInDepht)
+        .def_readwrite("bitsInDepth", &aditof::Metadata::bitsInDepth)
         .def_readwrite("bitsInAb", &aditof::Metadata::bitsInAb)
         .def_readwrite("bitsInConfidence", &aditof::Metadata::bitsInConfidence)
         .def_readwrite("invalidPhaseValue",
