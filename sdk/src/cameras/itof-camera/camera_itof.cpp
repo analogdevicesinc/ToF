@@ -549,10 +549,6 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
             continue;
         }
 
-        if (item.type == "metadata" && !m_enableMetaDatainAB) {
-            continue;
-        }
-
         FrameDataDetails fDataDetails;
         fDataDetails.type = item.type;
         fDataDetails.width = item.width;
@@ -757,6 +753,17 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         frame->getData("ab", &abFrame);
         frame->getData("metadata", &header);
         memcpy(header, abFrame, 128);
+    } else {
+        // If metadata from ADSD3500 is not available/disabled, generate one here
+        Metadata metadata;
+        status = frame->getMetadataStruct(metadata);
+        if (status == Status::OK) {
+            metadata.width = aModeInfo.width;
+            metadata.height = aModeInfo.height;
+            metadata.imagerMode = aModeInfo.mode;
+        } else {
+            LOG(ERROR) << "Could not get frame metadata!";
+        }
     }
 
     return Status::OK;
