@@ -223,7 +223,9 @@ class CameraItof : public aditof::Camera {
     std::string m_ini_depth;
     std::map<std::string, std::string> m_ini_depth_map;
     bool m_abEnabled;
+    uint8_t m_depthBitsPerPixel;
     uint8_t m_abBitsPerPixel;
+    uint8_t m_confBitsPerPixel;
     bool m_xyzEnabled;
     bool m_xyzSetViaApi;
     bool m_pcmFrame;

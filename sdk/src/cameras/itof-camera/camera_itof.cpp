@@ -762,6 +762,9 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
             metadata.width = aModeInfo.width;
             metadata.height = aModeInfo.height;
             metadata.imagerMode = aModeInfo.mode;
+            metadata.bitsInDepth = m_depthBitsPerPixel;
+            metadata.bitsInAb = m_abBitsPerPixel;
+            metadata.bitsInConfidence = m_confBitsPerPixel;
         } else {
             LOG(ERROR) << "Could not get frame metadata!";
         }
@@ -1228,6 +1231,7 @@ void CameraItof::configureSensorFrameType() {
     auto it = m_iniKeyValPairs.find("bitsInPhaseOrDepth");
     if (it != m_iniKeyValPairs.end()) {
         value = it->second;
+        m_depthBitsPerPixel = std::stoi(value);
         if (value == "16")
             value = "6";
         else if (value == "14")
@@ -1247,6 +1251,7 @@ void CameraItof::configureSensorFrameType() {
     it = m_iniKeyValPairs.find("bitsInConf");
     if (it != m_iniKeyValPairs.end()) {
         value = it->second;
+        m_confBitsPerPixel = std::stoi(value);
         if (value == "8")
             value = "2";
         else if (value == "4")
