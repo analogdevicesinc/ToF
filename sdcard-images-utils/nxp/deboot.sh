@@ -289,12 +289,14 @@ EOF
   # Move the linux-imx kernel source to the NXP  
   sudo mkdir -p ${SCRIPT_DIR}/build/linux-imx_tmp
   sudo cp -Rf ${SCRIPT_DIR}/build/linux-imx/* ${SCRIPT_DIR}/build/linux-imx_tmp/
+  sudo cp ${SCRIPT_DIR}/build/linux-imx/.config ${SCRIPT_DIR}/build/linux-imx_tmp/
   pushd ${SCRIPT_DIR}/build/linux-imx_tmp/
   sudo make clean
   popd
 
   sudo mkdir -p ${ROOTFS_TMP}/usr/src/linux-imx/
   sudo cp -Rf ${SCRIPT_DIR}/build/linux-imx_tmp/* ${ROOTFS_TMP}/usr/src/linux-imx/
+  sudo cp ${SCRIPT_DIR}/build/linux-imx_tmp/.config ${ROOTFS_TMP}/usr/src/linux-imx/
 
   # I don't know who creates empty .cache which is owned by root, remove it.
   sudo rm -rf ${ROOTFS_TMP}/home/${USERNAME}/.cache
