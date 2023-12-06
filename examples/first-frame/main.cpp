@@ -296,31 +296,10 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    LOG(INFO) << "Sensor and Laser temperature read from metadata struct: "
-              << metadata.sensorTemperature << " " << metadata.laserTemperature;
-
-    //Example on how to extract data from metadata frame
-    uint16_t *metadataFrame;
-    uint8_t *metadataContent;
-    status = frame.getData("metadata", &metadataFrame);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not get frame metadata!";
-        return 0;
-    }
-
-    metadataContent = reinterpret_cast<uint8_t *>(metadataFrame);
-
-    uint32_t sensorTemperature, laserTemperature, frameNumber, modeFromMetadata;
-    sensorTemperature = *((uint32_t *)(metadataContent + 28));
-    laserTemperature = *((uint32_t *)(metadataContent + 32));
-    frameNumber = *((uint32_t *)(metadataContent + 12));
-    modeFromMetadata = *(metadataContent + 16);
-
-    LOG(INFO) << "Values read from metadata frame: ";
-    LOG(INFO) << "SensorTemperature: " << sensorTemperature;
-    LOG(INFO) << "LaserTemperature: " << laserTemperature;
-    LOG(INFO) << "Frame Number: " << frameNumber;
-    LOG(INFO) << "Mode:  " << modeFromMetadata;
+    LOG(INFO) << "Sensor Temperature: " << metadata.sensorTemperature;
+    LOG(INFO) << "Laser Temperature: " << metadata.laserTemperature;
+    LOG(INFO) << "Frame Number: " << metadata.frameNumber;
+    LOG(INFO) << "Mode: " << metadata.imagerMode;
 
     // Example on how to unregister a callback from ADSD3500 interupts
     if (registerCbStatus == Status::OK) {
