@@ -177,22 +177,25 @@ if (WITH_GLOG_DEPENDENCY)
 endif()
 
 #LIBTOFI_LIBDIR_PATH - path to libtofi_config.so and libtofi_compute.so folder	
+set(LIBTOFI_COMPUTE_CLOSED_SOURCE_PATH "${LIBTOFI_LIBDIR_PATH}/libtofi_compute.so")
+set(LIBTOFI_CONFIG_CLOSED_SOURCE_PATH "${LIBTOFI_LIBDIR_PATH}/libtofi_config.so")
+
 if ( ON_TARGET AND UNIX )
 	if (NOT USE_DEPTH_COMPUTE_OPENSOURCE)
-        add_library(libtofi_compute SHARED IMPORTED)
-        set_target_properties(libtofi_compute PROPERTIES
-            IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_compute.so"
-            IMPORTED_NO_SONAME 1
-        )
-
-        add_library(libtofi_config SHARED IMPORTED)
-        set_target_properties(libtofi_config PROPERTIES
-                IMPORTED_LOCATION "${LIBTOFI_LIBDIR_PATH}/libtofi_config.so"
+                add_library(libtofi_compute SHARED IMPORTED)
+                set_target_properties(libtofi_compute PROPERTIES
+                IMPORTED_LOCATION "${LIBTOFI_COMPUTE_CLOSED_SOURCE_PATH}"
                 IMPORTED_NO_SONAME 1
-		    )
+                )
 
-        target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_compute)
-        target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_config)
+                add_library(libtofi_config SHARED IMPORTED)
+                set_target_properties(libtofi_config PROPERTIES
+                        IMPORTED_LOCATION "${LIBTOFI_CONFIG_CLOSED_SOURCE_PATH}"
+                        IMPORTED_NO_SONAME 1
+                        )
+
+                target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_compute)
+                target_link_libraries(${PROJECT_NAME} PRIVATE libtofi_config)
     else()
         target_link_libraries(${PROJECT_NAME} PRIVATE tofi_compute)
         target_link_libraries(${PROJECT_NAME} PRIVATE tofi_config)
@@ -224,27 +227,33 @@ include(GNUInstallDirs)
 # install path for the aditof-config.cmake and aditof-config-version.cmake
 set(INSTALL_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/aditof)
 
-# export targets for the config cmake to use
-if (NOT USE_DEPTH_COMPUTE_OPENSOURCE)
+if (ON_TARGET) # ON TARGET
+    if(USE_DEPTH_COMPUTE_OPENSOURCE) # OPEN SOURCE LIBRARIES
+        install(TARGETS aditof tofi_compute tofi_config
+            EXPORT aditof-targets
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        )
+    else() # CLOSED SOURCE LIBRARIES
+        install(TARGETS aditof 
+            EXPORT aditof-targets
+            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        )
+        install(FILES
+            ${LIBTOFI_COMPUTE_CLOSED_SOURCE_PATH}
+            ${LIBTOFI_CONFIG_CLOSED_SOURCE_PATH}
+            DESTINATION
+            ${CMAKE_INSTALL_LIBDIR}
+        )
+    endif()
+else() # NOT ON TARGET, NO LIBRARIES
     install(TARGETS aditof
-        EXPORT aditof-targets
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    )
-elseif(NOT ON_TARGET AND USE_DEPTH_COMPUTE_OPENSOURCE)
-    install(TARGETS aditof
-    EXPORT aditof-targets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    )
-else()
-    install(TARGETS aditof tofi_compute tofi_config
         EXPORT aditof-targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
 endif()
-
 
 install(EXPORT aditof-targets
     FILE
