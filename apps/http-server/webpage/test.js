@@ -195,6 +195,7 @@
         var formatType = "";
         var isPreparingFrame = false;
         var isStreaming = false;
+        var lwsPreSize = 16; // Nr of bits at the beginning of lws message
 
         var colormap = [{
                 red: 0,
@@ -1478,7 +1479,6 @@
         }
         ];
 
-        // To Remove
         var prevTime = Date.now();
         var curTime = Date.now();
 
@@ -1506,7 +1506,10 @@
         var firstFrameDrawn = false;
 
         function updateFrame(binaryArray) {
-                var j = 0;
+
+                // Skipping pre lws bytes
+                var j = lwsPreSize; 
+
                 if (formatType == "depth") {
                         data1 = imgData1.data;
 
@@ -1748,7 +1751,7 @@
                         // Sending frame type
                         formatType = document.getElementById("formatSelect").value;
                         console.log("Setting formt: " + formatType);
-                        socket_tof.send("setFormatButton:" + formatType + "\n");
+                        socket_tof.send("setFormat:" + formatType + "\n");
 
                         // Canvas 1
                         canvas1 = document.getElementById("canvas1");

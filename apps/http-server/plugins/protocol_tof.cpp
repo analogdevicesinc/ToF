@@ -16,7 +16,8 @@ using namespace aditof;
 
 #define CHECK_PERIOD_US 50000
 #define HEADER_SIZE 0
-#define MAX_MESSAGE_LEN (1042 * 1024 * 2 + HEADER_SIZE) // For Megapixel
+#define MAX_MESSAGE_LEN                                                        \
+    (LWS_PRE + 1042 * 1024 * 2 + HEADER_SIZE) // For Megapixel
 
 struct pss__tof {
     int number;
@@ -74,7 +75,7 @@ int send_message(const char *msg, int len) {
 }
 
 int send_frame(const char *msg, int len) {
-    memcpy((void *)(buf), msg, len);
+    memcpy((void *)(buf + LWS_PRE), msg, len);
     int ret = lws_write(systemWsi, buf, LWS_PRE + len, LWS_WRITE_BINARY);
     if (!ret) {
         lwsl_err("ERROR writing to tof socket\n");
