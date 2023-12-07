@@ -1788,13 +1788,11 @@
                         isStreaming = true;
                         console.log("Starting streaming");
                         socket_tof.send("requestFrame\n");
-                        document.getElementById("fps").style.display = "block";
 
                         generalState = 5;
                         updateDisplay();
 
                 } else {
-                        document.getElementById("fps").style.display = "none";
                         console.log("Could not start streaming");
                 }
 
@@ -1807,7 +1805,6 @@
                         isStreaming = false;
                         console.log("Stop streaming");
                         socket_tof.send("stop\n");
-                        document.getElementById("fps").style.display = "none";
 
                         generalState = 4;
                         updateDisplay();
@@ -1911,6 +1908,8 @@
                 canvas1.hidden = true;
                 canvas2 = document.getElementById("canvas2");
                 canvas2.hidden = true;
+
+                document.getElementById("fps").style.display = "none";
         }
 
         function enableDisplay() {
@@ -1919,6 +1918,8 @@
                 canvas1.hidden = false;
                 canvas2 = document.getElementById("canvas2");
                 canvas2.hidden = false;
+
+                document.getElementById("fps").style.display = "block";
         }
 
         function updateDisplay() {
@@ -1967,7 +1968,7 @@
                                 enableStartStop();
                                 enableReset();
 
-                                enableDisplay();
+                                disableDisplay();
                                 break;
                         case 5:
                                 disableCameraList();
