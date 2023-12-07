@@ -22,6 +22,7 @@
 #include <unordered_map>
 #define _USE_MATH_DEFINES
 #include <array>
+#include <chrono>
 #include <math.h>
 
 /**
@@ -356,6 +357,8 @@ class ADIMainWindow {
 		*/
     void showMainMenu();
 
+    void showRecordMenu();
+
     /**
 		* @brief	Open Device menu will give you the information of
 		*			the supported camera. It will also fetch for
@@ -520,8 +523,19 @@ class ADIMainWindow {
     void computeFPS(int &fps);
 
     /**
-         * @brief Return the current selected camera object
-         */
+     * @brief save current customizable ini parameters to a file
+    */
+    int ADIMainWindow::saveIniFile();
+
+    /**
+     * @brief print out warning message in popup window if ini param is out of valid range
+    */
+    void ADIMainWindow::iniParamWarn(std::string variable,
+                                     std::string validVal);
+
+    /**
+     * @brief Return the current selected camera object
+    */
     std::shared_ptr<aditof::Camera> getActiveCamera();
 
     aditof::System m_system;
