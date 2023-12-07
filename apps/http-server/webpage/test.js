@@ -1906,8 +1906,6 @@
                 canvas1.hidden = true;
                 canvas2 = document.getElementById("canvas2");
                 canvas2.hidden = true;
-                // Disable FPS counter
-                document.getElementById("fps").style.display = "none";
         }
 
         function enableDisplay() {
@@ -1916,8 +1914,6 @@
                 canvas1.hidden = false;
                 canvas2 = document.getElementById("canvas2");
                 canvas2.hidden = false;
-                // Disable FPS counter
-                document.getElementById("fps").style.display = "block";
         }
 
         function updateDisplay() {
