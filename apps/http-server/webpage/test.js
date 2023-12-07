@@ -13,6 +13,8 @@
 // +-------+--------------------------+-----------------+---------------------------+------------------------------+----------------+---------------+----------------+
 // | 4     | format set               |        X        |             X             |              OK              |       OK       |       OK      |       OK       |
 // +-------+--------------------------+-----------------+---------------------------+------------------------------+----------------+---------------+----------------+
+// | 5     | streaming                |        X        |             X             |              X               |       OK       |       OK      |       X        |
+// +-------+--------------------------+-----------------+---------------------------+------------------------------+----------------+---------------+----------------+
 
 (function () {
 
@@ -1592,7 +1594,7 @@
                         socket_tof.onmessage = async function got_packet(msgGot) {
                                 let msg = msgGot;
 
-                                if (msg.data instanceof Blob && generalState == 4) {
+                                if (msg.data instanceof Blob && generalState == 5) {
                                         if (isPreparingFrame == false)
                                                 blobToBinary(msg.data);
                                         if (isStreaming == true) {
@@ -1787,13 +1789,15 @@
                         console.log("Starting streaming");
                         socket_tof.send("requestFrame\n");
                         document.getElementById("fps").style.display = "block";
+
+                        generalState = 5;
+                        updateDisplay();
+
                 } else {
                         document.getElementById("fps").style.display = "none";
                         console.log("Could not start streaming");
                 }
 
-                generalState = 4;
-                updateDisplay();
         }
 
         // Stop streaming
@@ -1805,12 +1809,13 @@
                         socket_tof.send("stop\n");
                         document.getElementById("fps").style.display = "none";
 
+                        generalState = 4;
+                        updateDisplay();
                 } else {
                         console.log("Could not stop streaming");
                 }
 
-                generalState = 4;
-                updateDisplay();
+
         }
 
         // Reset Camera, start configuring from beggining
@@ -1927,7 +1932,6 @@
                                 disableReset();
 
                                 disableDisplay();
-
                                 break;
                         case 1:
                                 enableCameraList();
@@ -1937,7 +1941,6 @@
                                 enableReset();
 
                                 disableDisplay();
-
                                 break;
                         case 2:
                                 disableCameraList();
@@ -1947,7 +1950,6 @@
                                 enableReset();
 
                                 disableDisplay();
-
                                 break;
                         case 3:
                                 disableCameraList();
@@ -1957,7 +1959,6 @@
                                 enableReset();
 
                                 disableDisplay();
-
                                 break;
                         case 4:
                                 disableCameraList();
@@ -1965,6 +1966,15 @@
                                 enableFormat();
                                 enableStartStop();
                                 enableReset();
+
+                                enableDisplay();
+                                break;
+                        case 5:
+                                disableCameraList();
+                                disableFrameType();
+                                disableFormat();
+                                enableStartStop();
+                                disableReset();
 
                                 enableDisplay();
                                 break;
