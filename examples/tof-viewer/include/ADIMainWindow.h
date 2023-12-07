@@ -525,13 +525,12 @@ class ADIMainWindow {
     /**
      * @brief save current customizable ini parameters to a file
     */
-    int ADIMainWindow::saveIniFile();
+    int saveIniFile();
 
     /**
      * @brief print out warning message in popup window if ini param is out of valid range
     */
-    void ADIMainWindow::iniParamWarn(std::string variable,
-                                     std::string validVal);
+    void iniParamWarn(std::string variable, std::string validVal);
 
     /**
      * @brief Return the current selected camera object
