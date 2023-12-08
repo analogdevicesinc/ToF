@@ -280,7 +280,7 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
         n = lws_snprintf((char *)p, sizeof(buf) - LWS_PRE, "%d", pss->number++);
         m = lws_write(wsi, p, n, LWS_WRITE_TEXT);
         if (m < n) {
-            lwsl_err("ERROR %d writing to di socket\n", n);
+            lwsl_err("ERROR %d writing to the socket\n", n);
             return -1;
         }
         break;
