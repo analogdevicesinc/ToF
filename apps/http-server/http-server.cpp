@@ -159,7 +159,7 @@ static const struct lws_http_mount mount = {
     (struct lws_http_mount *)&mount_post,
     "/",
     HTTP_LOCAL_RESOURCE_PATH,
-    "test.html",
+    "tof_main.html",
     NULL,
     NULL,
     NULL,
