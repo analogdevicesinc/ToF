@@ -48,6 +48,8 @@ static bool cameraStarted = false;
 static std::string frameContent;
 static aditof::FrameDetails frameDetalis;
 
+bool qmp_size = false;
+
 //Message to Host
 uint8_t buf[LWS_PRE + MAX_MESSAGE_LEN], *p = &buf[LWS_PRE];
 
@@ -165,9 +167,13 @@ aditof::Status requestFrame() {
             (uint8_t *)malloc(sizeof(uint8_t) * frameWidth * frameHeight);
         for (int i = 0; i < frameWidth * frameHeight; i++) {
             if (frameContent == std::string("depth"))
-                frameToSend[i] = (uint8_t)((frameData[i] >> 2) & 0xff);
+                if (qmp_size)
+                    frameToSend[i] = (uint8_t)(frameData[i] / 256);
+
+                else
+                    frameToSend[i] = (uint8_t)(frameData[i] / 16);
             else
-                frameToSend[i] = (uint8_t)((frameData[i] >> 4) & 0xff);
+                frameToSend[i] = (uint8_t)((frameData[i]) & 0xff);
         }
         send_frame((const char *)frameToSend, frameWidth * frameHeight);
         free(frameToSend);
@@ -185,9 +191,17 @@ aditof::Status requestFrame() {
             (uint8_t *)malloc(sizeof(uint8_t) * frameWidth * frameHeight * 2);
 
         for (int i = 0; i < frameWidth * frameHeight; i++) {
-            frameToSend[i] = (uint8_t)((frameDataDepth[i] >> 2) & 0xff);
+            //     frameToSend[i] = (uint8_t)((frameDataDepth[i] >> 2) & 0xff);
+
+            // preparing depth data
+            if (qmp_size)
+                frameToSend[i] = (uint8_t)(frameDataDepth[i] / 256);
+            else
+                frameToSend[i] = (uint8_t)(frameDataDepth[i] / 16);
+
+            // preparing ir data
             frameToSend[i + frameWidth * frameHeight] =
-                (uint8_t)((frameDataAb[i] >> 4) & 0xff);
+                (uint8_t)((frameDataAb[i]) & 0xff);
         }
 
         send_frame((const char *)frameToSend, frameWidth * frameHeight * 2);
@@ -316,6 +330,11 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
             std::cout << "Messeage from HOST: " << message << "\n";
             int pos = message.find(":");
             std::string frameTypeNew = message.substr(pos + 1);
+
+            // if (frameTypeNew == "sr-qnative" || frameTypeNew = "lr-qnative") //qnative -12, native 16 bits
+            if (strcmp(frameTypeNew.c_str(), "sr-qnative") == 0 ||
+                strcmp(frameTypeNew.c_str(), "lr-qnative") == 0)
+                qmp_size = true;
 
             status = setFrameType(frameTypeNew);
 
