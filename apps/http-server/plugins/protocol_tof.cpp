@@ -36,7 +36,7 @@ std::vector<std::shared_ptr<aditof::Camera>> cameras;
 shared_ptr<aditof::Camera> camera = NULL;
 
 // Frame related variables
-static aditof::Frame frame;
+std::shared_ptr<aditof::Frame> frame;
 uint16_t frameWidth;
 uint16_t frameHeight;
 uint16_t *frameData = NULL;
@@ -104,6 +104,7 @@ aditof::Status initializeSystem(string configFile) {
     }
 
     camera = cameras.front();
+    frame = std::make_shared<aditof::Frame>();
 
     status = camera->initialize(configFile);
     if (status != Status::OK) {
@@ -120,6 +121,7 @@ aditof::Status deInitializeSystem() {
 
     if (camera) {
         camera.reset();
+        frame.reset();
         return aditof::Status::OK;
     } else
         return aditof::Status::GENERIC_ERROR;
@@ -143,7 +145,7 @@ aditof::Status requestFrame() {
         camera->start();
         cameraStarted = true;
     }
-    status = camera->requestFrame(&frame);
+    status = camera->requestFrame(frame.get());
     if (status != aditof::Status::OK) {
         send_error_message(std::string("Error requesting frame"));
         return status;
@@ -152,7 +154,7 @@ aditof::Status requestFrame() {
     if (frameContent == std::string("depth") ||
         frameContent == std::string("ab")) {
 
-        status = frame.getData(frameContent, &frameData);
+        status = frame->getData(frameContent, &frameData);
 
         if (status != aditof::Status::OK) {
             send_error_message(std::string("Failed to get frame data"));
@@ -171,8 +173,8 @@ aditof::Status requestFrame() {
         free(frameToSend);
     } else if (frameContent == std::string("depth+ab")) {
 
-        status = frame.getData(std::string("depth"), &frameDataDepth);
-        status = frame.getData(std::string("ab"), &frameDataAb);
+        status = frame->getData(std::string("depth"), &frameDataDepth);
+        status = frame->getData(std::string("ab"), &frameDataAb);
 
         if (status != aditof::Status::OK) {
             send_error_message(std::string("Failed to get frame data"));
