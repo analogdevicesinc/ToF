@@ -314,6 +314,8 @@ aditof::Status Adsd3500Sensor::open() {
             for (int i = 0; i < 10; i++) {
                 chipIDStatus = adsd3500_read_cmd(0x0112, &chipID);
                 if (chipIDStatus != Status::OK) {
+                    LOG(INFO) << "Could not read chip ID. Resetting ADSD3500 "
+                                 "to handle previous error.";
                     adsd3500_reset();
                     continue;
                 }
@@ -971,8 +973,9 @@ aditof::Status Adsd3500Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data,
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
@@ -985,14 +988,16 @@ aditof::Status Adsd3500Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data,
     usleep(usDelay);
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
     if (xioctl(dev->sfd, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not get control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
@@ -1026,8 +1031,9 @@ aditof::Status Adsd3500Sensor::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
     return status;
@@ -1080,8 +1086,9 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd,
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
@@ -1101,13 +1108,16 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd,
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
     if (xioctl(dev->sfd, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Failed to get ctrl with id " << extCtrl.id;
+        LOG(WARNING) << "Could not get control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
@@ -1130,8 +1140,10 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd,
     memcpy(extCtrl.p_u8, switchBuf, 19);
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Switch Adsd3500 to standard mode error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << " (switch to standard mode)"
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
@@ -1165,13 +1177,16 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload(uint8_t *payload,
     usleep(30000);
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " to read payload with length: " << payload_len
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
     if (xioctl(dev->sfd, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Failed to get ctrl with id " << extCtrl.id;
+        LOG(WARNING) << "Could not get control: 0x" << std::hex << extCtrl.id
+                     << " to read payload with length: " << payload_len
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
@@ -1226,8 +1241,9 @@ Adsd3500Sensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload,
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Writing Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
@@ -1243,8 +1259,10 @@ Adsd3500Sensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload,
     memcpy(extCtrl.p_u8, switchBuf, 19);
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Switch Adsd3500 to standard mode error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << " (switch to standard mode)"
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
@@ -1275,8 +1293,9 @@ aditof::Status Adsd3500Sensor::adsd3500_write_payload(uint8_t *payload,
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Writing Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " to write payload with length: " << payload_len
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
