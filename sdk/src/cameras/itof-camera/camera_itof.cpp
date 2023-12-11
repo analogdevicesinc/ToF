@@ -93,6 +93,7 @@ CameraItof::CameraItof(
 
     std::string sensorName;
     m_depthSensor->getName(sensorName);
+    LOG(INFO) << "Sensor name = " << sensorName;
     if (sensorName == "adsd3500") {
         m_adsd3500Enabled = true;
     } else if (sensorName == "offline") {
@@ -637,6 +638,24 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         }
     }
 
+    return status;
+}
+
+aditof::Status CameraItof::getIniParams(std::map<std::string, float> &params) {
+    aditof::Status status;
+    status = m_depthSensor->getIniParams(params);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "get ini parameters failed.";
+    }
+    return status;
+}
+
+aditof::Status CameraItof::setIniParams(std::map<std::string, float> &params) {
+    aditof::Status status;
+    status = m_depthSensor->setIniParams(params);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "set ini parameters failed.";
+    }
     return status;
 }
 

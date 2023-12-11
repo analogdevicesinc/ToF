@@ -22,6 +22,7 @@
 #include <unordered_map>
 #define _USE_MATH_DEFINES
 #include <array>
+#include <chrono>
 #include <math.h>
 
 /**
@@ -198,6 +199,7 @@ namespace adiMainWindow {
 class ADIMainWindow {
   private:
     const float OFFSETFROMTOPOFGUI = 38;
+    const float OFFSETFROMLEFT = 38;
     const float INITIALRAD = 0.0f;
     const uint32_t INITIALDEG = 0;
     const float NORMALDPISCALAR = 1.0f;
@@ -289,7 +291,7 @@ class ADIMainWindow {
                             const vec2 startPos, const vec2 endPos);
 
     /**
-		* @brief Map XY coordinates to a virtual sphere, which we use 
+		* @brief Map XY coordinates to a virtual sphere, which we use
 		*		 for rotation calculations
 		*/
     void MapToArcball(vec3 out, const vec2 displayDimensions,
@@ -313,6 +315,7 @@ class ADIMainWindow {
     float rotationangleradians = INITIALRAD;
     uint32_t rotationangledegrees = INITIALDEG;
     const float offsetfromtop = OFFSETFROMTOPOFGUI;
+    const float offsetfromleft = OFFSETFROMLEFT;
     std::unordered_map<std::string, std::array<float, 4>> dictWinPosition;
     std::shared_ptr<adiviewer::ADIView> view = nullptr;
     AppLog my_log;
@@ -354,23 +357,32 @@ class ADIMainWindow {
 		*/
     void showMainMenu();
 
+    void showRecordMenu();
+
     /**
-		* @brief	Open Device window will give you the information of 
+		* @brief	Open Device menu will give you the information of
 		*			the supported camera. It will also fetch for
 		*			any other USB devices and only recognize the
 		*			supported device(s), otherwise it will just
 		*			"wait" for a new plug-and-play device and
 		*			refresh options
 		*/
-    void showOpenDeviceWindow();
+    void showDeviceMenu();
+
+    /**
+     * @brief Show the Analog Devices, Inc log
+    */
+    void showLogoWindow();
 
     /**
 		* @brief Displays Log information
 		*/
     void showLogWindow(bool *p_open);
 
+    void showIniWindow(bool *p_open);
+
     /**
-		* @brief Will poll the USB interface to look 
+		* @brief Will poll the USB interface to look
 		*        for supported devices
 		*/
     void RefreshDevices();
@@ -396,14 +408,9 @@ class ADIMainWindow {
     void PlayRecorded();
 
     /**
-		* @brief Displays Playback tree menu
+		* @brief Displays Playback menu
 		*/
-    void ShowPlaybackTree();
-
-    /**
-		* @brief Displays Record tree menu
-		*/
-    void ShowRecordTree();
+    void showPlaybackMenu();
 
     /**
 		* @brief Initializes OpenGL and AB + Depth settings
@@ -453,7 +460,7 @@ class ADIMainWindow {
     void synchronizeDepthABVideo();
 
     /**
-		* @brief Sets the thread to get 
+		* @brief Sets the thread to get
 		*        Point Cloud image
 		*/
     void synchronizePointCloudVideo();
@@ -516,8 +523,18 @@ class ADIMainWindow {
     void computeFPS(int &fps);
 
     /**
-         * @brief Return the current selected camera object
-         */
+     * @brief save current customizable ini parameters to a file
+    */
+    int saveIniFile();
+
+    /**
+     * @brief print out warning message in popup window if ini param is out of valid range
+    */
+    void iniParamWarn(std::string variable, std::string validVal);
+
+    /**
+     * @brief Return the current selected camera object
+    */
     std::shared_ptr<aditof::Camera> getActiveCamera();
 
     aditof::System m_system;

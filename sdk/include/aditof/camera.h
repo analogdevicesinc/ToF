@@ -38,6 +38,7 @@
 #include "status_definitions.h"
 
 #include <functional>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -105,6 +106,19 @@ class SDK_API Camera {
      */
     virtual Status setFrameType(const std::string &frameType) = 0;
 
+    /**
+     * @brief Get the Depth Compute Library ini parameters
+     * @param params - a dictionary of parameters
+     * @return Status
+    */
+    virtual Status getIniParams(std::map<std::string, float> &params) = 0;
+
+    /**
+     * @brief Set the Depth Compute Library ini parameters
+     * @param params - a dictionary of parameters
+     * @return Status
+    */
+    virtual Status setIniParams(std::map<std::string, float> &params) = 0;
     /**
      * @brief Returns all the frame types that are supported by the camera
      * @param[out] availableFrameTypes
@@ -217,7 +231,7 @@ class SDK_API Camera {
 
     /**
      * @brief Enables or disables FSYNC toggle for ADSD3500
-     * @param[in] mode - 2 = Fsync pin set as HiZ ; 1 = Toggle at user specified framerate ; 0 = Toggle controlled via adsd3500ToggleFsync ; 
+     * @param[in] mode - 2 = Fsync pin set as HiZ ; 1 = Toggle at user specified framerate ; 0 = Toggle controlled via adsd3500ToggleFsync ;
      * @return Status
      */
     virtual Status adsd3500SetToggleMode(int mode) = 0;
