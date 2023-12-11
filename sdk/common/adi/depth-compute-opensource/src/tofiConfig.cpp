@@ -103,3 +103,12 @@ void FreeTofiConfig(TofiConfig *p_tofi_cal_config) {
     delete dealiasDataObj;
     delete p_tofi_cal_config;
 };
+
+uint32_t TofiSetINIParams(void *p_config_params, int params_group,
+                          const void *p_tofi_cal_config) {
+    return 0;
+};
+uint32_t TofiGetINIParams(void *p_config_params, int params_group,
+                          const void *p_tofi_cal_config) {
+    return 0;
+};
