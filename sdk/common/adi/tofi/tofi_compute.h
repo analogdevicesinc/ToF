@@ -22,7 +22,7 @@ extern "C" { // only need to export C interface if
 #include <stdint.h>
 
 #include "tofi_error.h"
-
+#include "tofi_util.h"
 // TODO: Confirm if its fine to hardcode
 // number of phases as 3, else make it a pointer
 #define NO_OF_PHASES 3
@@ -31,6 +31,14 @@ typedef struct {
     float sensor_temp[NO_OF_PHASES];
     float laser_temp[NO_OF_PHASES];
 } TemperatureInfo;
+
+// char ver_info[] =
+//    "VERSIONINFO:"
+//    "TOF_DepthComputeEngine_ARM64-Added_API_INI";
+///
+/// @brief Function to get the version for TOF Depth Compute Engine Library
+/// @param[in] char *depth_compute_version: Pointer to store thelibrary version
+//TOFI_COMPUTE_API uint32_t GetVersion(char *depth_compute_version);
 
 typedef struct {
     uint32_t n_rows;               ///< Number of rows

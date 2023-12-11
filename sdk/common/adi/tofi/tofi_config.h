@@ -18,14 +18,15 @@ extern "C" { // only need to export C interface if
 #else
 #define TOFI_CONFIG_API
 #endif
-
+#define MAX_PATH_SIZE 512
+#include "TOF_Calibration_Types.h"
 #include <stdint.h>
 #include <stdlib.h>
 
 #include "tofi_camera_intrinsics.h"
 #include "tofi_error.h"
 
-#define MAX_CHAR_SIZE 12
+#define MAX_CHAR_SIZE 24
 typedef struct ConfigFileData {
     unsigned char *p_data; ///< Pointer to the data
     size_t size;           ///< Size of the data
@@ -76,10 +77,24 @@ TOFI_CONFIG_API TofiConfig *InitTofiConfig(ConfigFileData *p_cal_file_data,
                                            ConfigFileData *p_ini_file_data,
                                            uint16_t mode, uint32_t *p_status);
 
-//
+///
+/// @brief Function to Initialize the configuration for TOFI cal config incase of isp.
+/// @param[in] ConfigFileData *p_cal_file_data: Pointer to cal data
+/// @param[in] ConfigFileData *p_ini_file_data: pointer to ini data,
+/// it is initialized to default if NULL
+/// @param[in] mode - uint16_t - mode of camera operation
+/// @param[in] TofiXYZDealiasData *p_xyz_dealias_data : pointer to XYZ and dealias data
+/// @param[out] uint32_t p_status: pointer to status, assigned as
+/// ADI_TOFI_SUCCESS on success, assigned as error code incase of failure
+///
+/// @return[out] TofiConfig *: returns p_tofi_config pointer on success,
+/// returns NULL on failure
 TOFI_CONFIG_API TofiConfig *
 InitTofiConfig_isp(ConfigFileData *p_ini_file_data, uint16_t mode,
                    uint32_t *p_status, TofiXYZDealiasData *p_xyz_dealias_data);
+
+TOFI_CONFIG_API uint32_t GetXYZ_DealiasData(ConfigFileData *ccb_data,
+                                            TofiXYZDealiasData *p_xyz_data);
 
 /// Function to release memory for configuration structure and
 /// Depth/AB/Confidence memory buffers
@@ -87,8 +102,12 @@ InitTofiConfig_isp(ConfigFileData *p_ini_file_data, uint16_t mode,
 /// calibration configuration parameter structure to be freed
 TOFI_CONFIG_API void FreeTofiConfig(TofiConfig *p_tofi_cal_config);
 
-TOFI_CONFIG_API uint32_t GetXYZ_DealiasData(ConfigFileData *ccb_data,
-                                            TofiXYZDealiasData *p_xyz_data);
+TOFI_CONFIG_API uint32_t TofiSetINIParams(void *p_config_params,
+                                          int params_group,
+                                          const void *p_tofi_cal_config);
+TOFI_CONFIG_API uint32_t TofiGetINIParams(void *p_config_params,
+                                          int params_group,
+                                          const void *p_tofi_cal_config);
 
 #ifdef __cplusplus
 }

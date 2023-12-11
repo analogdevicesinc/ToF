@@ -60,6 +60,8 @@ enum api_Values {
     ADSD3500_GET_STATUS,
     GET_INTERRUPTS,
     HANG_UP,
+    GET_INI_PARAM,
+    SET_INI_PARAM,
 };
 
 enum protocols { PROTOCOL_EXAMPLE, PROTOCOL_COUNT };

@@ -394,3 +394,5 @@ aditof::Status BufferProcessor::enqueueInternalBuffer(struct v4l2_buffer &buf) {
 
     return enqueueInternalBufferPrivate(buf);
 }
+
+TofiConfig *BufferProcessor::getTofiCongfig() { return m_tofiConfig; }

@@ -105,7 +105,7 @@ int32_t getinstalledVersion(std::string &fwVersion, std::string &fwHash,
     std::vector<std::shared_ptr<aditof::Camera>> cameras;
 
     if (!ip.empty()) {
-        ip = "ip:" + ip;
+        ip = "IP:" + ip;
     }
     system.getCameraList(cameras, ip);
     if (cameras.empty()) {

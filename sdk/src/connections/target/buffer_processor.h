@@ -73,6 +73,7 @@ class BufferProcessor : public aditof::V4lBufferAccessInterface {
                                           uint16_t calDataLength, uint16_t mode,
                                           bool ispEnabled);
     aditof::Status processBuffer(uint16_t *buffer);
+    TofiConfig *getTofiCongfig();
 
   public:
     virtual aditof::Status waitForBuffer() override;
