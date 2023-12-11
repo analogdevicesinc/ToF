@@ -38,6 +38,7 @@
 
 #include <cstddef>
 #include <functional>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -305,6 +306,24 @@ class DepthSensorInterface {
                                                   uint16_t iniFileLength,
                                                   uint8_t *calData,
                                                   uint16_t calDataLength) = 0;
+
+    /**
+     * @brief Get ini parameters for Depth Compute library
+     * @param[in] params - a dictionary of parameters
+     * @return Status
+    */
+    virtual aditof::Status getIniParams(std::map<std::string, float> &params) {
+        return Status::OK;
+    };
+
+    /**
+     * @brief Set ini parameters for Depth Compute library
+     * @param[in] params - a dictionary of parameters
+     * @return Status
+    */
+    virtual aditof::Status setIniParams(std::map<std::string, float> &params) {
+        return Status::OK;
+    };
 };
 
 } // namespace aditof

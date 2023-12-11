@@ -23,6 +23,7 @@
 #include <cstring>
 #include <unistd.h>
 #endif
+#include "tofi/tofi_config.h"
 #include <linux/videodev2.h>
 #include <signal.h>
 #include <sstream>
@@ -1384,6 +1385,77 @@ aditof::Status Adsd3500Sensor::initTargetDepthCompute(uint8_t *iniFile,
     return aditof::Status::OK;
 }
 
+aditof::Status
+Adsd3500Sensor::getIniParams(std::map<std::string, float> &params) {
+    TofiConfig *config = m_bufferProcessor->getTofiCongfig();
+    aditof::Status status;
+
+    ABThresholdsParams ab_params;
+    int type = 3;
+    status = getIniParamsImpl(&ab_params, type, config->p_tofi_cal_config);
+    params["ab_thresh_min"] = ab_params.ab_thresh_min;
+    params["ab_sum_thresh"] = ab_params.ab_sum_thresh;
+
+    DepthRangeParams dr_params;
+    type = 4;
+    status = getIniParamsImpl(&dr_params, type, config->p_tofi_cal_config);
+    params["conf_thresh"] = dr_params.conf_thresh;
+    params["radial_thresh_min"] = dr_params.radial_thresh_min;
+    params["radial_thresh_max"] = dr_params.radial_thresh_max;
+
+    JBLFConfigParams jblf_params;
+    type = 2;
+    status = getIniParamsImpl(&jblf_params, type, config->p_tofi_cal_config);
+    params["jblf_apply_flag"] = static_cast<float>(jblf_params.jblf_apply_flag);
+    params["jblf_window_size"] =
+        static_cast<float>(jblf_params.jblf_window_size);
+    params["jblf_gaussian_sigma"] = jblf_params.jblf_gaussian_sigma;
+    params["jblf_exponential_term"] = jblf_params.jblf_exponential_term;
+    params["jblf_max_edge"] = jblf_params.jblf_max_edge;
+    params["jblf_ab_threshold"] = jblf_params.jblf_ab_threshold;
+
+    InputRawDataParams ir_params;
+    type = 1;
+    status = getIniParamsImpl(&ir_params, type, config->p_tofi_cal_config);
+    params["headerSize"] = static_cast<float>(ir_params.headerSize);
+
+    return status;
+}
+
+aditof::Status
+Adsd3500Sensor::setIniParams(std::map<std::string, float> &params) {
+    TofiConfig *config = m_bufferProcessor->getTofiCongfig();
+    aditof::Status status;
+
+    ABThresholdsParams ab_params;
+    int type = 3;
+    ab_params.ab_thresh_min = params["ab_thresh_min"];
+    ab_params.ab_sum_thresh = params["ab_sum_thresh"];
+    status = setIniParamsImpl(&ab_params, type, config->p_tofi_cal_config);
+
+    DepthRangeParams dr_params;
+    type = 4;
+    dr_params.conf_thresh = params["conf_thresh"];
+    dr_params.radial_thresh_min = params["radial_thresh_min"];
+    dr_params.radial_thresh_max = params["radial_thresh_max"];
+    status = setIniParamsImpl(&dr_params, type, config->p_tofi_cal_config);
+
+    JBLFConfigParams jblf_params;
+    type = 2;
+    status = getIniParamsImpl(
+        &jblf_params, type,
+        config->p_tofi_cal_config); // get any original non-customizable value
+    jblf_params.jblf_apply_flag = static_cast<int>(params["jblf_apply_flag"]);
+    jblf_params.jblf_window_size = static_cast<int>(params["jblf_window_size"]);
+    jblf_params.jblf_gaussian_sigma = params["jblf_gaussian_sigma"];
+    jblf_params.jblf_exponential_term = params["jblf_exponential_term"];
+    jblf_params.jblf_max_edge = params["jblf_max_edge"];
+    jblf_params.jblf_ab_threshold = params["jblf_ab_threshold"];
+    status = setIniParamsImpl(&jblf_params, type, config->p_tofi_cal_config);
+
+    return status;
+}
+
 aditof::Status Adsd3500Sensor::waitForBufferPrivate(struct VideoDev *dev) {
     fd_set fds;
     struct timeval tv;
@@ -1727,4 +1799,38 @@ aditof::Adsd3500Status Adsd3500Sensor::convertIdToAdsd3500Status(int status) {
         return Adsd3500Status::UNKNOWN_ERROR_ID;
     }
     }
+}
+
+aditof::Status Adsd3500Sensor::getIniParamsImpl(void *p_config_params,
+                                                int params_group,
+                                                const void *p_tofi_cal_config) {
+    using namespace aditof;
+    Status status = Status::OK;
+    uint32_t ret;
+    ret = TofiGetINIParams(p_config_params, params_group, p_tofi_cal_config);
+    status = static_cast<Status>(ret);
+
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed getting ini parameters";
+        return Status::GENERIC_ERROR;
+    }
+
+    return status;
+}
+
+aditof::Status Adsd3500Sensor::setIniParamsImpl(void *p_config_params,
+                                                int params_group,
+                                                const void *p_tofi_cal_config) {
+    using namespace aditof;
+    Status status = Status::OK;
+    uint32_t ret;
+    ret = TofiSetINIParams(p_config_params, params_group, p_tofi_cal_config);
+    status = static_cast<Status>(ret);
+
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed setting ini parameters";
+        return Status::GENERIC_ERROR;
+    }
+
+    return status;
 }
