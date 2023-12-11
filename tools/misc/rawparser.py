@@ -71,7 +71,7 @@ def visualize_ab(filename, directory, index):
             norm_ab_frame = np.uint8(norm_ab_frame)
         norm_ab_frame = cv.cvtColor(norm_ab_frame, cv.COLOR_GRAY2RGB)
             
-        #save depth frame as
+        #save ab frame as PNG
         img = o3d.geometry.Image(norm_ab_frame)
         #Save the image to a file
         o3d.io.write_image(directory + 'ab_' + args.filename + '_' + index + pngFileType, img)
@@ -88,10 +88,23 @@ def visualize_depth(filename, directory, index):
         norm_depth_frame = np.uint8(norm_depth_frame)
         norm_depth_frame = cv.applyColorMap(norm_depth_frame,cv.COLORMAP_TURBO)
         
-        #save depth frame as
+        #save depth frame as PNG
         img = o3d.geometry.Image(norm_depth_frame)
         #Save the image to a file
         o3d.io.write_image(directory + 'depth_' + args.filename + '_' + index + pngFileType, img)
+
+def visualize_confidence(filename, directory, index):
+    conf_frame = np.zeros([height,width])
+    with open ('%s' % filename) as file:
+        #parse the confidence data from binary file 
+        byte_array = np.fromfile(file, dtype=np.int16)
+        conf_frame = np.reshape(byte_array[height*width*5:height*width*6], [height,width])
+        conf_frame = cv.applyColorMap(conf_frame, cv2.COLORMAP_VIRIDIS)
+            
+        #save depth frame as
+        img = o3d.geometry.Image(conf_frame)
+        #Save the image to a file
+        o3d.io.write_image(directory + 'conf_' + args.filename + '_' + index + pngFileType, img)
 
 def visualize_pcloud(filename, directory, index):
     # Create visualizer
