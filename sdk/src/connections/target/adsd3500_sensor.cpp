@@ -323,6 +323,9 @@ aditof::Status Adsd3500Sensor::open() {
                 dealiasStatus =
                     adsd3500_read_payload_cmd(0x02, dealiasCheck, 32);
                 if (dealiasStatus != Status::OK) {
+                    LOG(INFO) << "Could not read Dealias Parameters. Resetting "
+                                 "ADSD3500 "
+                                 "to handle previous error.";
                     adsd3500_reset();
                     continue;
                 }
