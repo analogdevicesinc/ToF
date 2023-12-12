@@ -299,7 +299,7 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "Sensor Temperature: " << metadata.sensorTemperature;
     LOG(INFO) << "Laser Temperature: " << metadata.laserTemperature;
     LOG(INFO) << "Frame Number: " << metadata.frameNumber;
-    LOG(INFO) << "Mode: " << metadata.imagerMode;
+    LOG(INFO) << "Mode: " << static_cast<unsigned int>(metadata.imagerMode);
 
     // Example on how to unregister a callback from ADSD3500 interupts
     if (registerCbStatus == Status::OK) {
