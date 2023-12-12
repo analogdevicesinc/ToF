@@ -427,7 +427,6 @@ int Network::callback_function(struct lws *wsi,
 #ifdef NW_DEBUG
         cout << endl << "Rcvd Data len : " << len << endl;
 #endif
-        std::lock_guard<std::mutex> guard(mutex_recv[connectionId]);
 
         const size_t remaining = lws_remaining_packet_payload(wsi);
         bool isFinal = lws_is_final_fragment(wsi);
@@ -496,7 +495,6 @@ int Network::callback_function(struct lws *wsi,
 #ifdef NW_DEBUG
         cout << endl << "Client is sending " << send_buff.func_name() << endl;
 #endif
-        std::lock_guard<std::recursive_mutex> guard(m_mutex[connectionId]);
         if (send_buff[connectionId].func_name().empty()) {
             break;
         }
