@@ -247,12 +247,12 @@ struct Metadata {
     /**
     * @brief Sensor temperature in degrees Celsius
     */
-    uint32_t sensorTemperature;
+    int32_t sensorTemperature;
 
     /**
     * @brief Laser temperature in degrees Celsius
     */
-    uint32_t laserTemperature;
+    int32_t laserTemperature;
 };
 #pragma pack(pop)
 
