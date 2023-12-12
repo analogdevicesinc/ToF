@@ -261,17 +261,20 @@ struct Metadata {
  */
 inline std::ostream &operator<<(std::ostream &o, const struct Metadata &meta) {
     o << "\tWidth: " << meta.width << "\tHeight: " << meta.height
-      << "\tOutputConfiguration: " << meta.outputConfiguration
-      << "\tBitsInDepth: " << meta.bitsInDepth
-      << "\tBitsInAb: " << meta.bitsInAb
-      << "\tBitsInConfidenc: " << meta.bitsInConfidence
+      << "\tOutputConfiguration: "
+      << static_cast<unsigned int>(meta.outputConfiguration)
+      << "\tBitsInDepth: " << static_cast<unsigned int>(meta.bitsInDepth)
+      << "\tBitsInAb: " << static_cast<unsigned int>(meta.bitsInAb)
+      << "\tBitsInConfidenc: "
+      << static_cast<unsigned int>(meta.bitsInConfidence)
       << "\tInvalidPhaseValue: " << meta.invalidPhaseValue
-      << "\tFrequencyIndex: " << meta.frequencyIndex
+      << "\tFrequencyIndex: " << static_cast<unsigned int>(meta.frequencyIndex)
       << "\tFrameNumber: " << meta.frameNumber
-      << "\tImagerMode: " << meta.imagerMode
-      << "\tNumberOfPhases: " << meta.numberOfPhases
-      << "\tNumberOfFrequencies: " << meta.numberOfFrequencies
-      << "\tReserved: " << meta.reserved
+      << "\tImagerMode: " << static_cast<unsigned int>(meta.imagerMode)
+      << "\tNumberOfPhases: " << static_cast<unsigned int>(meta.numberOfPhases)
+      << "\tNumberOfFrequencies: "
+      << static_cast<unsigned int>(meta.numberOfFrequencies)
+      << "\tReserved: " << static_cast<unsigned int>(meta.reserved)
       << "\tElapsedTimeFractionalValue: " << meta.elapsedTimeFractionalValue
       << "\tElapsedTimeSecondsValue: " << meta.elapsedTimeSecondsValue
       << "\tSensorTemperature: " << meta.sensorTemperature
