@@ -195,9 +195,16 @@ aditof::Status OfflineDepthSensor::adsd3500_read_payload_cmd(
         memcpy(readback_data, &dealiasStruct.camera_intrinsics,
                sizeof(CameraIntrinsics));
     } else if (cmd == 0x02) {
-        if (readback_data[0] == 3) {
-            dealiasStruct.n_rows = 512;
-            dealiasStruct.n_cols = 512;
+        if (readback_data[0] == 0) {
+            dealiasStruct.n_rows = 1024;
+            dealiasStruct.n_cols = 1024;
+            dealiasStruct.row_bin_factor = 1;
+            dealiasStruct.col_bin_factor = 1;
+            dealiasStruct.n_sensor_rows = 1024;
+            dealiasStruct.n_sensor_cols = 1024;
+        } else if (readback_data[0] == 1) {
+            dealiasStruct.n_rows = 1024;
+            dealiasStruct.n_cols = 1024;
             dealiasStruct.row_bin_factor = 1;
             dealiasStruct.col_bin_factor = 1;
             dealiasStruct.n_sensor_rows = 1024;
@@ -205,8 +212,29 @@ aditof::Status OfflineDepthSensor::adsd3500_read_payload_cmd(
         } else if (readback_data[0] == 2) {
             dealiasStruct.n_rows = 512;
             dealiasStruct.n_cols = 512;
-            dealiasStruct.row_bin_factor = 2;
-            dealiasStruct.col_bin_factor = 2;
+            dealiasStruct.row_bin_factor = 1;
+            dealiasStruct.col_bin_factor = 1;
+            dealiasStruct.n_sensor_rows = 1024;
+            dealiasStruct.n_sensor_cols = 1024;
+        } else if (readback_data[0] == 3) {
+            dealiasStruct.n_rows = 512;
+            dealiasStruct.n_cols = 512;
+            dealiasStruct.row_bin_factor = 1;
+            dealiasStruct.col_bin_factor = 1;
+            dealiasStruct.n_sensor_rows = 1024;
+            dealiasStruct.n_sensor_cols = 1024;
+        } else if (readback_data[0] == 5) {
+            dealiasStruct.n_rows = 512;
+            dealiasStruct.n_cols = 512;
+            dealiasStruct.row_bin_factor = 1;
+            dealiasStruct.col_bin_factor = 1;
+            dealiasStruct.n_sensor_rows = 1024;
+            dealiasStruct.n_sensor_cols = 1024;
+        } else if (readback_data[0] == 6) {
+            dealiasStruct.n_rows = 512;
+            dealiasStruct.n_cols = 512;
+            dealiasStruct.row_bin_factor = 1;
+            dealiasStruct.col_bin_factor = 1;
             dealiasStruct.n_sensor_rows = 1024;
             dealiasStruct.n_sensor_cols = 1024;
         }
@@ -265,10 +293,9 @@ aditof::Status OfflineDepthSensor::adsd3500_unregister_interrupt_callback(
     return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status OfflineDepthSensor::adsd3500_get_status(int &status) {
-    using namespace aditof;
-    Status status = Status::OK;
-    return status;
+aditof::Status OfflineDepthSensor::adsd3500_get_status(int &status,
+                                                       int &imagerStatus) {
+    return aditof::Status::OK;
 }
 
 aditof::Status OfflineDepthSensor::initTargetDepthCompute(

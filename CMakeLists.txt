@@ -110,7 +110,7 @@ if (WITH_OFFLINE)
         set(RESOURCES_OFFLINE_DIR "${RESOURCES_DIR}/offline")
         make_directory(${RESOURCES_OFFLINE_DIR})
         
-        set(MODE_FILE "lr-qnative.bin" "sr-qnative.bin")
+        set(MODE_FILE "lr-native.bin" "sr-native.bin" "lr-qnative.bin" "sr-qnative.bin" "lr-mixed.bin" "sr-mixed.bin")
         message("Downloading raw frames into ${RESOURCES_OFFLINE_DIR}")
         foreach(MODE IN LISTS MODE_FILE)
                 set(MODE_URL "swdownloads.analog.com/cse/aditof/resources/itof/frames/${MODE}")
