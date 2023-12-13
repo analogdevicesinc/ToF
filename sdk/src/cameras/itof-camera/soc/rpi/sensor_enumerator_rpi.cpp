@@ -176,5 +176,8 @@ Status TargetSensorEnumerator::searchSensors() {
         m_storagesInfo.emplace_back(eepromInfo);
     }
 
-    return status;
+    if(m_sensorsInfo.empty())
+        return status;
+    else
+        return Status::OK;
 }
