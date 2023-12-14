@@ -321,7 +321,8 @@ class DepthSensorInterface {
      * @param[in] params - a dictionary of parameters
      * @return Status
     */
-    virtual aditof::Status setIniParams(std::map<std::string, float> &params) {
+    virtual aditof::Status
+    setIniParams(const std::map<std::string, float> &params) {
         return Status::OK;
     };
 };
