@@ -145,6 +145,37 @@ create_uvc() {
 			echo -n -e '\x42\x41\x38\x31\x00\x00\x10\x00\x80\x00\x00\xaa\x00\x38\x9b\x71' > $GADGET/g1/functions/$FUNCTION/streaming/uncompressed/u1/guidFormat
 			;;
 
+		 "NXP i.MX8MPlus ADI TOF carrier ADSD3500-SPI + ADSD3100")
+			create_frame $FUNCTION 512 512 uncompressed u 2
+			create_frame $FUNCTION 1024 3072 uncompressed u 2
+			create_frame $FUNCTION 1024 4096 uncompressed u 2
+			create_frame $FUNCTION 1024 512 uncompressed u1 1
+			create_frame $FUNCTION 1280 512 uncompressed u1 1
+			create_frame $FUNCTION 1536 512 uncompressed u1 1
+			create_frame $FUNCTION 1792 512 uncompressed u1 1
+			create_frame $FUNCTION 2048 512 uncompressed u1 1
+			create_frame $FUNCTION 2304 512 uncompressed u1 1
+			create_frame $FUNCTION 2560 512 uncompressed u1 1
+			echo 8 > functions/$FUNCTION/streaming/uncompressed/u1/bBitsPerPixel
+			echo -n -e '\x42\x41\x38\x31\x00\x00\x10\x00\x80\x00\x00\xaa\x00\x38\x9b\x71' > $GADGET/g1/functions/$FUNCTION/streaming/uncompressed/u1/guidFormat
+			;;
+
+		 "NXP i.MX8MPlus ADI TOF carrier ADSD3500-SPI + ADSD3030")
+			create_frame $FUNCTION 512 640 uncompressed u 2
+			create_frame $FUNCTION 1024 960 uncompressed u 2
+			create_frame $FUNCTION 1024 2880 uncompressed u 2
+			create_frame $FUNCTION 1024 640 uncompressed u1 1
+			create_frame $FUNCTION 1280 640 uncompressed u1 1
+			create_frame $FUNCTION 1536 640 uncompressed u1 1
+			create_frame $FUNCTION 1792 640 uncompressed u1 1
+			create_frame $FUNCTION 2048 640 uncompressed u1 1
+			create_frame $FUNCTION 2304 640 uncompressed u1 1
+			create_frame $FUNCTION 2560 640 uncompressed u1 1
+			create_frame $FUNCTION 1280 320 uncompressed u1 1
+			echo 8 > functions/$FUNCTION/streaming/uncompressed/u1/bBitsPerPixel
+			echo -n -e '\x42\x41\x38\x31\x00\x00\x10\x00\x80\x00\x00\xaa\x00\x38\x9b\x71' > $GADGET/g1/functions/$FUNCTION/streaming/uncompressed/u1/guidFormat
+			;;
+
 		*)
 			echo "Board model not valid"
 			exit 1
@@ -235,6 +266,18 @@ case "$1" in
 			;;
 
 		"NXP i.MX8MPlus ADI TOF carrier + ADSD3030")
+			#create_uvc configs/c.1 uvc.0
+			create_rndis configs/c.1 rndis.0
+			create_msd configs/c.1 mass_storage.0 /dev/mmcblk1p1
+			;;
+
+		"NXP i.MX8MPlus ADI TOF carrier ADSD3500-SPI + ADSD3100")
+			#create_uvc configs/c.1 uvc.0
+			create_rndis configs/c.1 rndis.0
+			create_msd configs/c.1 mass_storage.0 /dev/mmcblk1p1
+			;;
+
+		"NXP i.MX8MPlus ADI TOF carrier ADSD3500-SPI + ADSD3030")
 			#create_uvc configs/c.1 uvc.0
 			create_rndis configs/c.1 rndis.0
 			create_msd configs/c.1 mass_storage.0 /dev/mmcblk1p1

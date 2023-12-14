@@ -2,6 +2,58 @@
 
 BOARD=$(strings /proc/device-tree/model)
 
+check_host_boot_pin_state() {
+
+	PIN_STATE=$(sudo cat /sys/class/gpio/gpio139/value)
+
+	echo -e "Boot pin state is $PIN_STATE"
+
+	if [ $PIN_STATE == 1 ]; then
+		echo -e "Host boot is enabled\n"
+	else
+		echo -e "Self boot is enabled\n"
+	fi
+}
+
+detect_i2c_devices(){
+
+	echo "Detect I2C device"
+	while [[ $(i2cdetect -y 1 | grep 38) == "" ]]
+	do
+		sleep 1
+	done
+}
+
+remove_adsd3500_i2c_driver() {
+
+	sudo rmmod imx8_media_dev
+	sudo rmmod adsd3500
+}
+
+probe_adsd3500_i2c_driver() {
+
+	echo "Started ADSD3500 I2C host boot"
+	sudo modprobe adsd3500 fw_load=1
+	sudo modprobe imx8_media_dev
+	sleep 1
+	echo "Completed"
+}
+
+remove_adsd3500_spi_driver() {
+
+	sudo rmmod imx8_media_dev
+	sudo rmmod adsd3500-spi
+}
+
+probe_adsd3500_spi_driver() {
+
+	echo "Started ADSD3500 SPI host boot"
+	sudo modprobe adsd3500-spi fw_load=1
+	sudo modprobe imx8_media_dev
+	sleep 1
+	echo "Completed"
+}
+
 adsd3100_power_sequence(){
 
 	#ADSD3500 Reset Pin
@@ -78,17 +130,40 @@ adsd3030_power_sequence(){
 
 }
 
-configure_boot_pin(){
+enable_host_boot(){
 
 	case $BOARD in
 		"NXP i.MX8MPlus ADI TOF carrier + ADSD3500")
 			echo "Running on ADSD3500 + ADSD3100"
+			check_host_boot_pin_state
+			remove_adsd3500_i2c_driver
 			adsd3100_power_sequence
+			detect_i2c_devices
+			probe_adsd3500_i2c_driver
 			;;
 		"NXP i.MX8MPlus ADI TOF carrier + ADSD3030")
 			echo "Running on ADSD3500 + ADSD3030"
+			check_host_boot_pin_state
+			remove_adsd3500_i2c_driver
 			adsd3030_power_sequence
+			detect_i2c_devices
+			probe_adsd3500_i2c_driver
 			;;
+		"NXP i.MX8MPlus ADI TOF carrier ADSD3500-SPI + ADSD3100")
+			echo "Running on ADSD3500-SPI + ADSD3100"
+			check_host_boot_pin_state
+			remove_adsd3500_spi_driver
+			adsd3100_power_sequence
+			probe_adsd3500_spi_driver
+			;;
+		"NXP i.MX8MPlus ADI TOF carrier ADSD3500-SPI + ADSD3030")
+			echo "Running on ADSD3500-SPI + ADSD3030"
+			check_host_boot_pin_state
+			remove_adsd3500_spi_driver
+			adsd3030_power_sequence
+			probe_adsd3500_spi_driver
+			;;
+
 		*)
 			echo "Board model not valid"
 			exit 1
@@ -98,38 +173,7 @@ configure_boot_pin(){
 
 main(){
 
-	PIN_STATE=$(sudo cat /sys/class/gpio/gpio139/value)
-
-	echo -e "Boot pin state is $PIN_STATE"
-
-	if [ $PIN_STATE == 1 ]; then
-		echo -e "Host boot is enabled\n"
-	else
-		echo -e "Self boot is enabled\n"
-	fi
-
-	# Remove adsd driver
-	sudo rmmod imx8_media_dev
-	sudo rmmod adsd3500
-
-	echo -e "Reset ADSD3500\n"
-	configure_boot_pin
-
-	# Wait for ADSD3500 to boot
-	echo "Detect I2C device"
-	while [[ $(i2cdetect -y 1 | grep 38) == "" ]]
-	do
-		sleep 1
-	done
-
-	#Reload ADSD3500 driver
-	echo "Started ADSD3500 host boot"
-	sudo modprobe adsd3500 fw_load=1
-	sudo modprobe imx8_media_dev
-	sleep 2
-	echo "Completed"
-
+	enable_host_boot
 }
 
 main
-
