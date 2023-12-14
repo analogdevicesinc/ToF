@@ -92,7 +92,7 @@ SystemImpl::getCameraList(std::vector<std::shared_ptr<Camera>> &cameraList,
 
     cameraList.clear();
 
-    if (uri.compare(0, 3, "IP:") == 0) {
+    if (uri.compare(0, 3, "ip:") == 0) {
         std::string ip(uri, 3);
         return getCameraListAtIp(cameraList, ip);
     }

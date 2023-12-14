@@ -101,7 +101,7 @@ class NetworkDepthSensor : public aditof::DepthSensorInterface {
     getIniParams(std::map<std::string, float> &params) override;
 
     virtual aditof::Status
-    setIniParams(std::map<std::string, float> &params) override;
+    setIniParams(const std::map<std::string, float> &params) override;
 
   private:
     void checkForServerUpdates();
