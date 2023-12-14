@@ -206,7 +206,7 @@ NetworkDepthSensor::getIniParams(std::map<std::string, float> &params) {
 }
 
 aditof::Status
-NetworkDepthSensor::setIniParams(std::map<std::string, float> &params) {
+NetworkDepthSensor::setIniParams(const std::map<std::string, float> &params) {
     using namespace aditof;
     Network *net = m_implData->handle.net;
     std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
@@ -218,24 +218,28 @@ NetworkDepthSensor::setIniParams(std::map<std::string, float> &params) {
 
     net->send_buff[m_sensorIndex].set_func_name("SetIniParam");
     net->send_buff[m_sensorIndex].set_expect_reply(true);
-    net->send_buff[m_sensorIndex].add_func_float_param(params["ab_thresh_min"]);
-    net->send_buff[m_sensorIndex].add_func_float_param(params["ab_sum_thresh"]);
-    net->send_buff[m_sensorIndex].add_func_float_param(params["conf_thresh"]);
     net->send_buff[m_sensorIndex].add_func_float_param(
-        params["radial_thresh_min"]);
+        params.at("ab_thresh_min"));
     net->send_buff[m_sensorIndex].add_func_float_param(
-        params["radial_thresh_max"]);
+        params.at("ab_sum_thresh"));
     net->send_buff[m_sensorIndex].add_func_float_param(
-        params["jblf_apply_flag"]);
+        params.at("conf_thresh"));
     net->send_buff[m_sensorIndex].add_func_float_param(
-        params["jblf_window_size"]);
+        params.at("radial_thresh_min"));
     net->send_buff[m_sensorIndex].add_func_float_param(
-        params["jblf_gaussian_sigma"]);
+        params.at("radial_thresh_max"));
     net->send_buff[m_sensorIndex].add_func_float_param(
-        params["jblf_exponential_term"]);
-    net->send_buff[m_sensorIndex].add_func_float_param(params["jblf_max_edge"]);
+        params.at("jblf_apply_flag"));
     net->send_buff[m_sensorIndex].add_func_float_param(
-        params["jblf_ab_threshold"]);
+        params.at("jblf_window_size"));
+    net->send_buff[m_sensorIndex].add_func_float_param(
+        params.at("jblf_gaussian_sigma"));
+    net->send_buff[m_sensorIndex].add_func_float_param(
+        params.at("jblf_exponential_term"));
+    net->send_buff[m_sensorIndex].add_func_float_param(
+        params.at("jblf_max_edge"));
+    net->send_buff[m_sensorIndex].add_func_float_param(
+        params.at("jblf_ab_threshold"));
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";

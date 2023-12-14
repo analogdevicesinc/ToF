@@ -171,7 +171,7 @@ ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
             (json_camera_ip->valuestring != NULL)) {
             m_cameraIp = json_camera_ip->valuestring;
             if (!m_cameraIp.empty()) {
-                m_cameraIp = "IP:" + m_cameraIp;
+                m_cameraIp = "ip:" + m_cameraIp;
             }
         }
 
@@ -1495,7 +1495,10 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
 
     if (ImGui::Begin("Information Window", nullptr,
                      overlayFlags | ImGuiWindowFlags_NoTitleBar)) {
-        ImGui::Text(" Camera %s", m_cameraIp);
+        char formattedIP[20];
+        for (int i = 0; i < m_cameraIp.length(); i++)
+            formattedIP[i] = toupper(m_cameraIp[i]);
+        ImGui::Text(" Camera %s", formattedIP);
         ImGui::Text(" Rotate: ");
         ImGui::SameLine();
         bool rotate = ImGui::Button("+");

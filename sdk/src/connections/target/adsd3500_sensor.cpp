@@ -1423,21 +1423,21 @@ Adsd3500Sensor::getIniParams(std::map<std::string, float> &params) {
 }
 
 aditof::Status
-Adsd3500Sensor::setIniParams(std::map<std::string, float> &params) {
+Adsd3500Sensor::setIniParams(const std::map<std::string, float> &params) {
     TofiConfig *config = m_bufferProcessor->getTofiCongfig();
     aditof::Status status;
 
     ABThresholdsParams ab_params;
     int type = 3;
-    ab_params.ab_thresh_min = params["ab_thresh_min"];
-    ab_params.ab_sum_thresh = params["ab_sum_thresh"];
+    ab_params.ab_thresh_min = params.at("ab_thresh_min");
+    ab_params.ab_sum_thresh = params.at("ab_sum_thresh");
     status = setIniParamsImpl(&ab_params, type, config->p_tofi_cal_config);
 
     DepthRangeParams dr_params;
     type = 4;
-    dr_params.conf_thresh = params["conf_thresh"];
-    dr_params.radial_thresh_min = params["radial_thresh_min"];
-    dr_params.radial_thresh_max = params["radial_thresh_max"];
+    dr_params.conf_thresh = params.at("conf_thresh");
+    dr_params.radial_thresh_min = params.at("radial_thresh_min");
+    dr_params.radial_thresh_max = params.at("radial_thresh_max");
     status = setIniParamsImpl(&dr_params, type, config->p_tofi_cal_config);
 
     JBLFConfigParams jblf_params;
@@ -1445,12 +1445,14 @@ Adsd3500Sensor::setIniParams(std::map<std::string, float> &params) {
     status = getIniParamsImpl(
         &jblf_params, type,
         config->p_tofi_cal_config); // get any original non-customizable value
-    jblf_params.jblf_apply_flag = static_cast<int>(params["jblf_apply_flag"]);
-    jblf_params.jblf_window_size = static_cast<int>(params["jblf_window_size"]);
-    jblf_params.jblf_gaussian_sigma = params["jblf_gaussian_sigma"];
-    jblf_params.jblf_exponential_term = params["jblf_exponential_term"];
-    jblf_params.jblf_max_edge = params["jblf_max_edge"];
-    jblf_params.jblf_ab_threshold = params["jblf_ab_threshold"];
+    jblf_params.jblf_apply_flag =
+        static_cast<int>(params.at("jblf_apply_flag"));
+    jblf_params.jblf_window_size =
+        static_cast<int>(params.at("jblf_window_size"));
+    jblf_params.jblf_gaussian_sigma = params.at("jblf_gaussian_sigma");
+    jblf_params.jblf_exponential_term = params.at("jblf_exponential_term");
+    jblf_params.jblf_max_edge = params.at("jblf_max_edge");
+    jblf_params.jblf_ab_threshold = params.at("jblf_ab_threshold");
     status = setIniParamsImpl(&jblf_params, type, config->p_tofi_cal_config);
 
     return status;

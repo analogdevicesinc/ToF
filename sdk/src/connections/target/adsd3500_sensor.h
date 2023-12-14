@@ -121,7 +121,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     virtual aditof::Status
     getIniParams(std::map<std::string, float> &params) override;
     virtual aditof::Status
-    setIniParams(std::map<std::string, float> &params) override;
+    setIniParams(const std::map<std::string, float> &params) override;
 
   private:
     aditof::Status writeConfigBlock(const uint32_t offset);
