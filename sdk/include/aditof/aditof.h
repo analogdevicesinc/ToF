@@ -34,6 +34,7 @@
 #include <aditof/depth_sensor_interface.h>
 #include <aditof/frame.h>
 #include <aditof/frame_definitions.h>
+#include <aditof/frame_handler.h>
 #include <aditof/frame_operations.h>
 #include <aditof/status_definitions.h>
 #include <aditof/system.h>

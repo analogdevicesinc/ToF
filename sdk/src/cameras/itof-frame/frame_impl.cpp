@@ -69,18 +69,33 @@ FrameImpl::FrameImpl() : m_implData(new FrameImpl::ImplData) {
 FrameImpl::~FrameImpl() = default;
 
 FrameImpl::FrameImpl(const FrameImpl &op) {
+    for (auto attributeKey : availableAttributes) {
+        m_attributes.emplace(attributeKey, "");
+        if (attributeKey == "embed_hdr_length") {
+            m_attributes[attributeKey] = std::to_string(skMetaDataBytesCount);
+        }
+    }
     allocFrameData(op.m_details);
     memcpy(m_implData->m_allData.get(), op.m_implData->m_allData.get(),
            m_implData->allDataNbBytes);
     m_details = op.m_details;
+    m_attributes.clear();
 }
 
 FrameImpl &FrameImpl::operator=(const FrameImpl &op) {
     if (this != &op) {
+        for (auto attributeKey : availableAttributes) {
+            m_attributes.emplace(attributeKey, "");
+            if (attributeKey == "embed_hdr_length") {
+                m_attributes[attributeKey] =
+                    std::to_string(skMetaDataBytesCount);
+            }
+        }
         allocFrameData(op.m_details);
         memcpy(m_implData->m_allData.get(), op.m_implData->m_allData.get(),
                m_implData->allDataNbBytes);
         m_details = op.m_details;
+        m_attributes.clear();
     }
 
     return *this;
@@ -275,7 +290,8 @@ aditof::Status FrameImpl::setAttribute(const std::string &attribute,
 
 aditof::Status FrameImpl::getAttribute(const std::string &attribute,
                                        std::string &value) {
-    if (m_attributes.find(attribute) == m_attributes.end()) {
+    if (m_attributes.find(attribute) == m_attributes.end() &&
+        m_attributes.find(attribute) == m_attributes.begin()) {
         LOG(WARNING) << "Could not find any attribute with name: " << attribute;
         return aditof::Status::INVALID_ARGUMENT;
     }
