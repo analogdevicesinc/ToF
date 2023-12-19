@@ -30,7 +30,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "frame_handler.h"
+#include "frame_handler_impl.h"
+#include <aditof/frame_handler.h>
 #ifdef USE_GLOG
 #include <glog/logging.h>
 #else
@@ -38,176 +39,46 @@
 #endif
 using namespace aditof;
 
-FrameHandler::FrameHandler()
-    : m_concatFrames(true), m_enableMultithreading(false),
-      m_customFormat(false), m_bitsInDepth(0), m_bitsInAB(0), m_bitsInConf(0),
-      m_frameWidth(0), m_frameHeight(0), m_frameIndex(0), m_fileCreated(false),
-      m_endOfFile(false), m_filePath("./"), m_pos(0) {}
+FrameHandler::FrameHandler() : m_impl(new FrameHandlerImpl) {}
 
 FrameHandler::~FrameHandler() = default;
 
+FrameHandler::FrameHandler(FrameHandler &&) noexcept = default;
+
+FrameHandler &FrameHandler::operator=(FrameHandler &&) noexcept = default;
+
 Status FrameHandler::setOutputFilePath(std::string &filePath) {
-    Status status = Status::OK;
-    m_filePath = filePath;
-    m_fileCreated = false;
-    return status;
+    return m_impl->setOutputFilePath(filePath);
 }
 
 Status FrameHandler::setInputFileName(std::string &fullFileName) {
-    Status status = Status::OK;
-    m_fullInputFileName = fullFileName;
-    m_pos = 0;
-    return status;
+    return m_impl->setInputFileName(fullFileName);
 }
 
 Status FrameHandler::saveFrameToFile(aditof::Frame &frame,
                                      std::string fileName) {
-    Status status = Status::OK;
+    return m_impl->saveFrameToFile(frame, fileName);
+}
 
-    if (m_concatFrames) {
-        if (!m_fileCreated) {
-            status = createFile(fileName);
-        } else {
-            m_file =
-                std::fstream(m_fullOutputFileName,
-                             std::ios::app | std::ios::binary | std::ios::end);
-        }
-    } else {
-        status = createFile(fileName);
-    }
+Status FrameHandler::saveFrameToFileMultithread(aditof::Frame *frame,
+                                                std::string fileName) {
 
-    if (status != Status::OK) {
-        LOG(ERROR) << "Failed to create file!";
-        return status;
-    }
-
-    //Store frames in file in followind order: metadata depth ab conf
-    uint16_t *metaData;
-    uint16_t *depthData;
-    uint16_t *abData;
-    uint16_t *confData;
-
-    frame.getData("metadata", &metaData);
-    frame.getData("depth", &depthData);
-    frame.getData("ab", &abData);
-    frame.getData("conf", &confData);
-
-    Metadata metadataStruct;
-    frame.getMetadataStruct(metadataStruct);
-
-    //at first we assume that we have metadata enabled by default
-    //TO DO: implement use-case where we don't have metadata
-    m_file.write(reinterpret_cast<char *>(metaData), METADATA_SIZE);
-
-    if (metadataStruct.bitsInDepht)
-        m_file.write(reinterpret_cast<char *>(depthData),
-                     metadataStruct.width * metadataStruct.height * 2);
-    if (metadataStruct.bitsInAb)
-        m_file.write(reinterpret_cast<char *>(abData),
-                     metadataStruct.width * metadataStruct.height * 2);
-    if (metadataStruct.bitsInConfidence)
-        m_file.write(reinterpret_cast<char *>(confData),
-                     metadataStruct.width * metadataStruct.height * 2);
-
-    m_file.close();
-
-    return status;
+    return m_impl->saveFrameToFileMultithread(frame, fileName);
 }
 
 Status FrameHandler::readNextFrame(aditof::Frame &frame,
                                    std::string fullFileName) {
-    Status status = Status::OK;
-    if(m_fullInputFileName.empty() && fullFileName.empty()){
-        LOG(ERROR) << "No input file provided!";
-        return Status::GENERIC_ERROR;
-    }
-
-    if(fullFileName != m_fullInputFileName){
-        m_fullInputFileName = fullFileName;
-        m_pos = 0;
-    }
-
-    m_file.seekg(m_pos, std::ios::beg);
-    if(m_file.eof()){
-        LOG(WARNING) << "End of file reached! No more frames left to read.";
-        return Status::UNAVAILABLE;
-    }
-
-    //Store frames in file in followind order: metadata depth ab conf
-    uint16_t *metaData;
-    uint16_t *depthData;
-    uint16_t *abData;
-    uint16_t *confData;
-
-    frame.getData("metadata", &metaData);
-    frame.getData("depth", &depthData);
-    frame.getData("ab", &abData);
-    frame.getData("conf", &confData);
-
-    m_file.read(reinterpret_cast<char *>(metaData), METADATA_SIZE);
-
-    Metadata metadataStruct;
-    frame.getMetadataStruct(metadataStruct);
-
-    //at first we assume that we have metadata enabled by default
-    //TO DO: implement use-case where we don't have metadata
-
-    if (metadataStruct.bitsInDepht)
-        m_file.read(reinterpret_cast<char *>(depthData),
-                     metadataStruct.width * metadataStruct.height * 2);
-    if (metadataStruct.bitsInAb)
-        m_file.read(reinterpret_cast<char *>(abData),
-                     metadataStruct.width * metadataStruct.height * 2);
-    if (metadataStruct.bitsInConfidence)
-        m_file.read(reinterpret_cast<char *>(confData),
-                     metadataStruct.width * metadataStruct.height * 2);
-
-    m_pos = m_file.tellg();
-    m_file.close();
-
-    return Status::OK;
+    return m_impl->readNextFrame(frame, fullFileName);
 }
 
 Status FrameHandler::setCustomFormat(std::string format) {
-    return Status::UNAVAILABLE;
+    return m_impl->setCustomFormat(format);
 }
 
 Status FrameHandler::storeFramesToSingleFile(bool enable) {
-    Status status = Status::OK;
-    m_concatFrames = enable;
-
-    return status;
+    return m_impl->storeFramesToSingleFile(enable);
 }
 
 Status FrameHandler::setFrameContent(std::string frameContent) {
-    return Status::UNAVAILABLE;
-}
-
-Status FrameHandler::createFile(std::string fileName) {
-    if (fileName.empty()) {
-        char time_buffer[128];
-        time_t rawtime;
-        time(&rawtime);
-        struct tm timeinfo;
-#ifdef _WIN32
-        localtime_s(&timeinfo, &rawtime);
-#else
-        localtime_r(&rawtime, &timeinfo);
-#endif
-        strftime(time_buffer, sizeof(time_buffer), "%Y_%m_%d_%H_%M_%S",
-                 &timeinfo);
-        m_fileName = "frame" + std::string(time_buffer) + ".bin";
-    } else {
-        m_fileName = fileName;
-    }
-    m_fullOutputFileName = m_filePath + '/' + m_fileName;
-    m_file = std::fstream(m_fullOutputFileName,
-                          std::ios::app | std::ios::out | std::ios::binary);
-
-    if (!m_file) {
-        LOG(ERROR) << "Failed to create output file!";
-        return Status::GENERIC_ERROR;
-    }
-
-    return Status::OK;
+    return m_impl->setFrameContent(frameContent);
 }
