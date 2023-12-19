@@ -33,19 +33,24 @@
 #define FRAME_HANDLER
 
 #include <aditof/frame.h>
+#include <aditof/frame_handler.h>
 #include <aditof/status_definitions.h>
 
 #include <chrono>
 #include <fstream>
+#include <functional>
 #include <iostream>
+#include <mutex>
+#include <queue>
 #include <string>
+#include <thread>
 
 #define METADATA_SIZE 128
 
-class FrameHandler {
+class FrameHandlerImpl {
   public:
-    FrameHandler();
-    ~FrameHandler();
+    FrameHandlerImpl();
+    ~FrameHandlerImpl();
 
     //Open existing file/create new file to store data
     aditof::Status setOutputFilePath(std::string &filePath);
@@ -60,7 +65,8 @@ class FrameHandler {
 
     //TO DO: write function to save frames on different thread
     //aditof::Status enqueueFrameToSaveToFile(aditof::Frame frame);
-    //aditof::Status addFrameToQueue(aditof::Frame frame);
+    aditof::Status saveFrameToFileMultithread(aditof::Frame *frame,
+                                              std::string filename = "");
 
     //read new frame from file and process metadata to get new frame
     //charateristics if we have different frame types in the same file
@@ -84,6 +90,7 @@ class FrameHandler {
 
   private:
     aditof::Status createFile(std::string fileName);
+    //aditof::Status writtingThread(std::string fileName = "");
     //We should be able do decide if we want to store frames in the same file
     //or store them in different files
     bool m_concatFrames;
@@ -106,6 +113,8 @@ class FrameHandler {
     int m_frameHeight;
     int m_frameIndex;
 
+    aditof::Frame m_swapFrame;
+
     //variables used for file handling
     std::string m_filePath;
     std::string m_fileName;
@@ -115,6 +124,11 @@ class FrameHandler {
     bool m_endOfFile;
     std::fstream m_file;
     size_t m_pos;
+    int m_frameCount = 0;
+
+    //multithread variables
+    std::mutex m_mutex;
+    std::queue<aditof::Frame> m_frameQueue;
 };
 
 #endif // FRAME_HANDLER
