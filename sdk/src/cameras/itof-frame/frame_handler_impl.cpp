@@ -137,6 +137,14 @@ Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
         m_pos = 0;
     }
 
+    m_file =
+        std::fstream(m_fullOutputFileName, std::ios::in | std::ios::binary);
+
+    if (!m_file) {
+        LOG(ERROR) << "Failed open file!";
+        return Status::GENERIC_ERROR;
+    }
+
     m_file.seekg(m_pos, std::ios::beg);
     if (m_file.eof()) {
         LOG(WARNING) << "End of file reached! No more frames left to read.";
@@ -144,34 +152,73 @@ Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
         return Status::UNAVAILABLE;
     }
 
-    //Store frames in file in followind order: metadata depth ab conf
+    m_file.read(reinterpret_cast<char *>(&m_metadataStruct), METADATA_SIZE);
+
+    m_frDetails.width = m_metadataStruct.width;
+    m_frDetails.height = m_metadataStruct.height;
+    m_frDetails.cameraMode = std::to_string(m_metadataStruct.imagerMode);
+    m_frDetails.totalCaptures = 1;
+
+    m_info = ModeInfo::getInstance()->getModeInfo(m_metadataStruct.imagerMode);
+    if (!m_info.mode_name.empty()) {
+        m_frDetails.type = m_info.mode_name;
+    }
+
+    FrameDataDetails frDataDetails;
+    frDataDetails.type = "metadata";
+    frDataDetails.width = METADATA_SIZE;
+    frDataDetails.height = 1;
+    m_frDetails.dataDetails.emplace_back(frDataDetails);
+
+    frDataDetails.type = "depth";
+    frDataDetails.width = m_metadataStruct.width;
+    frDataDetails.height = m_metadataStruct.height;
+    m_frDetails.dataDetails.emplace_back(frDataDetails);
+
+    frDataDetails.type = "ab";
+    frDataDetails.width = m_metadataStruct.width;
+    frDataDetails.height = m_metadataStruct.height;
+    m_frDetails.dataDetails.emplace_back(frDataDetails);
+
+    frDataDetails.type = "conf";
+    frDataDetails.width = m_metadataStruct.width;
+    frDataDetails.height = m_metadataStruct.height;
+    m_frDetails.dataDetails.emplace_back(frDataDetails);
+
+    status = frame.setDetails(m_frDetails);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to set frame details.";
+        return status;
+    }
+
+    m_frDetails.dataDetails.clear();
+
+    //Read frames from the file in followind order: metadata depth ab conf
     uint16_t *metaData;
     uint16_t *depthData;
     uint16_t *abData;
     uint16_t *confData;
 
     frame.getData("metadata", &metaData);
+    memcpy(metaData, reinterpret_cast<uint8_t *>(&m_metadataStruct),
+           METADATA_SIZE);
+
     frame.getData("depth", &depthData);
     frame.getData("ab", &abData);
     frame.getData("conf", &confData);
 
-    m_file.read(reinterpret_cast<char *>(metaData), METADATA_SIZE);
-
-    Metadata metadataStruct;
-    frame.getMetadataStruct(metadataStruct);
-
     //at first we assume that we have metadata enabled by default
     //TO DO: implement use-case where we don't have metadata
 
-    if (metadataStruct.bitsInDepth)
+    if (m_metadataStruct.bitsInDepth)
         m_file.read(reinterpret_cast<char *>(depthData),
-                    metadataStruct.width * metadataStruct.height * 2);
-    if (metadataStruct.bitsInAb)
+                    m_metadataStruct.width * m_metadataStruct.height * 2);
+    if (m_metadataStruct.bitsInAb)
         m_file.read(reinterpret_cast<char *>(abData),
-                    metadataStruct.width * metadataStruct.height * 2);
-    if (metadataStruct.bitsInConfidence)
+                    m_metadataStruct.width * m_metadataStruct.height * 2);
+    if (m_metadataStruct.bitsInConfidence)
         m_file.read(reinterpret_cast<char *>(confData),
-                    metadataStruct.width * metadataStruct.height * 2);
+                    m_metadataStruct.width * m_metadataStruct.height * 2);
 
     m_pos = m_file.tellg();
     m_file.close();

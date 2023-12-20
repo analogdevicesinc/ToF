@@ -32,6 +32,8 @@
 #ifndef FRAME_HANDLER
 #define FRAME_HANDLER
 
+#include "mode_info.h"
+#include <aditof/camera.h>
 #include <aditof/frame.h>
 #include <aditof/frame_handler.h>
 #include <aditof/status_definitions.h>
@@ -114,6 +116,9 @@ class FrameHandlerImpl {
     int m_frameIndex;
 
     aditof::Frame m_swapFrame;
+    aditof::FrameDetails m_frDetails;
+    ModeInfo::modeInfo m_info;
+    aditof::Metadata m_metadataStruct;
 
     //variables used for file handling
     std::string m_filePath;
