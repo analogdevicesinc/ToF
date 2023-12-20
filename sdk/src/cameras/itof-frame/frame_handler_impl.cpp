@@ -68,9 +68,9 @@ Status FrameHandlerImpl::saveFrameToFile(aditof::Frame &frame,
         if (!m_fileCreated) {
             status = createFile(fileName);
         } else {
-            m_file =
-                std::fstream(m_fullOutputFileName,
-                             std::ios::app | std::ios::binary | std::ios::end);
+            m_file = std::fstream(m_fullOutputFileName,
+                                  std::ios::app | std::ios::binary);
+            m_file.seekg(std::ios::end);
         }
     } else {
         status = createFile(fileName);
