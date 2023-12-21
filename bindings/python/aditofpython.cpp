@@ -809,6 +809,27 @@ PYBIND11_MODULE(aditofpython, m) {
             py::arg("iniFile"), py::arg("iniFileLength"), py::arg("calData"),
             py::arg("calDataLength"));
 
+    // FrameHandler
+    py::class_<aditof::FrameHandler>(m, "FrameHandler")
+        .def(py::init<>())
+        .def("setOutputFilePath", &aditof::FrameHandler::setOutputFilePath,
+             py::arg("filePath"))
+        .def("setInputFileName", &aditof::FrameHandler::setInputFileName,
+             py::arg("fullFileName"))
+        .def("saveFrameToFile", &aditof::FrameHandler::saveFrameToFile,
+             py::arg("frame"), py::arg("fileName"))
+        .def("saveFrameToFileMultithread",
+             &aditof::FrameHandler::saveFrameToFileMultithread,
+             py::arg("frame"), py::arg("fileName"))
+        .def("readNextFrame", &aditof::FrameHandler::readNextFrame,
+             py::arg("frame"), py::arg("fullFileName"))
+        .def("setCustomFormat", &aditof::FrameHandler::setCustomFormat,
+             py::arg("format"))
+        .def("storeFramesToSingleFile",
+             &aditof::FrameHandler::storeFramesToSingleFile, py::arg("enable"))
+        .def("setFrameContent", &aditof::FrameHandler::setFrameContent,
+             py::arg("frameContent"));
+
     //SDK version
     m.def("getApiVersion", &aditof::getApiVersion);
     m.def("getBranchVersion", &aditof::getBranchVersion);
