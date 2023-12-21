@@ -48,6 +48,8 @@
 
 class FrameHandlerImpl;
 
+namespace aditof {
+
 class FrameHandler {
   public:
     SDK_API FrameHandler();
@@ -127,5 +129,5 @@ class FrameHandler {
   private:
     std::unique_ptr<FrameHandlerImpl> m_impl;
 };
-
+} // namespace aditof
 #endif // FRAME_HANDLER_H
