@@ -15,7 +15,7 @@ mkdir -p deps_installed/Debug/protobuf
 mkdir -p deps_installed/Release/websockets
 mkdir -p deps_installed/Debug/websockets
 
-cp -r C:/'Program Files'/OpenSSL-Win64 deps_installed
+cp -r C:/'Program Files'/OpenSSL deps_installed
 
 #Install glog
 git clone --branch v0.6.0 --depth 1 https://github.com/google/glog
@@ -39,11 +39,11 @@ mkdir build_3_2_3_Release
 mkdir build_3_2_3_Debug
 
 cd build_3_2_3_Release
-cmake -DOPENSSL_ROOT_DIR="$local_path/deps_installed/OpenSSL-Win64" -DCMAKE_INSTALL_PREFIX="$local_path/deps_installed/Release/websockets" -G $GENERATOR ..
+cmake -DOPENSSL_ROOT_DIR="$local_path/deps_installed/OpenSSL" -DCMAKE_INSTALL_PREFIX="$local_path/deps_installed/Release/websockets" -G $GENERATOR ..
 cmake --build . --target install --config Release -j 4 
 
 cd ../build_3_2_3_Debug
-cmake -DOPENSSL_ROOT_DIR="$local_path/deps_installed/OpenSSL-Win64" -DCMAKE_INSTALL_PREFIX="$local_path/deps_installed/Debug/websockets" -G $GENERATOR ..
+cmake -DOPENSSL_ROOT_DIR="$local_path/deps_installed/OpenSSL" -DCMAKE_INSTALL_PREFIX="$local_path/deps_installed/Debug/websockets" -G $GENERATOR ..
 cmake --build . --target install --config Debug -j 4
 
 cd $local_path
