@@ -36,7 +36,6 @@
 
 enum : uint16_t {
     MAX_FILE_PATH_SIZE = 512,
-    FRAME_TYPE_LEN = 20,
 };
 
 #define MULTI_THREADED 1
