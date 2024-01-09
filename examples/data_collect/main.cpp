@@ -40,26 +40,12 @@ enum : uint16_t {
 
 #define MULTI_THREADED 1
 #define DATA_COLLECT_VERSION "1.3.0"
-#define METADATA_LENGTH 128
 
 using namespace aditof;
 
 #ifdef _WIN32
 int main(int argc, char *argv[]);
 #endif
-
-typedef struct thread_params {
-    uint16_t *pCaptureData;
-    uint8_t *pMetadata;
-    uint16_t nframes;
-    uint32_t nFrameNum;
-    uint64_t nTotalCaptureSize;
-    uint64_t nFrameCount;
-    uint64_t pFramesize;
-    const char *pFolderPath;
-    const char *pFrame_type;
-    const char *nFileTime;
-} thread_params;
 
 static const char kUsagePublic[] =
     R"(Data Collect.
@@ -93,10 +79,6 @@ static const char kUsagePublic[] =
         5: long-range mixed
         6: short-range mixed
 )";
-
-#ifdef MULTI_THREADED
-void fileWriterTask(const thread_params *const pThreadParams);
-#endif
 
 int main(int argc, char *argv[]) {
     std::map<std::string, struct Argument> command_map = {
@@ -432,8 +414,6 @@ int main(int argc, char *argv[]) {
     aditof::Frame frame;
     FrameDetails fDetails;
 
-    uint16_t *frameBuffer;
-    uint8_t *metadataBuffer;
     uint32_t height;
     uint32_t width;
     uint64_t frame_size = 0;
@@ -528,90 +508,6 @@ int main(int argc, char *argv[]) {
         } else {
             LOG(WARNING) << "Can't recognize frame data type!";
         }
-
-        /* Since getData returns the pointer to the depth data, which only main thread has access to,
-            we need to copy depth frame to local memory and pass that to thread for file I/O, there is no drop in the throughput with this. */
-        frameBuffer = new uint16_t[frame_size];
-        if (frameBuffer == NULL) {
-            LOG(ERROR) << "Can't allocate Memory for frame type data!";
-            return 0;
-        }
-
-        uint16_t *pData;
-        status = frame.getData(frame_type, &pData);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Could not get frame type data!";
-            return 0;
-        }
-        if (!pData) {
-            LOG(ERROR) << "no memory allocated in frame";
-            return 0;
-        }
-        memcpy(frameBuffer, (uint8_t *)pData, frame_size);
-
-        uint32_t metadata_size = METADATA_LENGTH;
-        metadataBuffer = new uint8_t[metadata_size];
-        if (metadataBuffer == NULL) {
-            LOG(ERROR) << "Can't allocate Memory for frame metadata!";
-            return 0;
-        }
-
-        uint16_t *pMetadata = nullptr;
-        status = frame.getData("metadata", &pMetadata);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Could not get frame metadata!";
-            return 0;
-        }
-        if (!pMetadata) {
-            LOG(ERROR) << "no memory allocated in frame metadata";
-            return 0;
-        }
-        memcpy(metadataBuffer, (uint8_t *)pMetadata, metadata_size);
-
-        // Create thread to handle the file I/O of copying depth images to file
-#ifdef MULTI_THREADED
-        thread_params *pThreadParams = new thread_params();
-        if (pThreadParams == nullptr) {
-            LOG(ERROR) << "Thread param memory allocation failed";
-            return 0;
-        }
-        pThreadParams->pCaptureData = frameBuffer;
-        pThreadParams->pMetadata = metadataBuffer;
-        pThreadParams->nTotalCaptureSize = frame_size;
-        pThreadParams->pFolderPath = folder_path;
-        pThreadParams->nFileTime = time_buffer;
-        pThreadParams->nframes = n_frames;
-        pThreadParams->nFrameCount = loopcount;
-        pThreadParams->pFrame_type = frame_type.c_str();
-        pThreadParams->pFramesize = height * width;
-
-        /* fileWriterThread handles the copying of depth frames to a file */
-        std::thread fileWriterThread(
-            fileWriterTask,
-            const_cast<const thread_params *const>(pThreadParams));
-        if (loopcount == n_frames - 1) {
-            // wait for completion on final loop iteration
-            fileWriterThread.join();
-        } else {
-            fileWriterThread.detach();
-        }
-#else
-        char out_file[MAX_FILE_PATH_SIZE];
-
-        snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05u.bin",
-                 &folder_path[0], &frame_type[0], time_buffer, loopcount);
-        std::ofstream rawFile(out_file, std::ios::out | std::ios::binary |
-                                            std::ofstream::trunc);
-        rawFile.write((const char *)&frameBuffer[0], frame_size);
-        rawFile.close();
-
-        if (frameBuffer != NULL) {
-            free((void *)frameBuffer);
-        }
-        if (metadataBuffer != NULL) {
-            free((void *)metadataBuffer);
-        }
-#endif
     } // End of for Loop
 
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -626,29 +522,4 @@ int main(int argc, char *argv[]) {
         LOG(INFO) << "Error stopping camera!";
     }
     return 0;
-}
-
-void fileWriterTask(const thread_params *const pThreadParams) {
-
-    if (nullptr == pThreadParams) {
-        return;
-    }
-
-    char out_file[MAX_FILE_PATH_SIZE] = {0};
-    snprintf(out_file, sizeof(out_file), "%s/%s_frame_%s_%05" PRIu64 ".bin",
-             pThreadParams->pFolderPath, pThreadParams->pFrame_type,
-             pThreadParams->nFileTime, pThreadParams->nFrameCount);
-    std::ofstream rawFile(out_file, std::ios::out | std::ios::binary |
-                                        std::ofstream::trunc);
-    rawFile.write((const char *)pThreadParams->pCaptureData,
-                  pThreadParams->nTotalCaptureSize);
-    rawFile.close();
-
-    if (pThreadParams->pCaptureData != nullptr) {
-        delete[] pThreadParams->pCaptureData;
-    }
-    if (pThreadParams->pMetadata != nullptr) {
-        delete[] pThreadParams->pMetadata;
-    }
-    delete pThreadParams;
 }
