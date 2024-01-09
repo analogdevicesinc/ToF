@@ -39,7 +39,6 @@ enum : uint16_t {
 };
 
 #define MULTI_THREADED 1
-#define DATA_COLLECT_VERSION "1.3.0"
 
 using namespace aditof;
 
