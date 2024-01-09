@@ -169,7 +169,8 @@ int main(int argc, char *argv[]) {
     char folder_path[MAX_FILE_PATH_SIZE]; // Path to store the depth frames
     char json_file_path
         [MAX_FILE_PATH_SIZE]; // Get the .json file from command line
-    std::string frame_type;   // Type of frame need to be captured (Depth/IR/full-frame)
+    std::string
+        frame_type; // Type of frame need to be captured (Depth/IR/full-frame)
 
     uint16_t err = 0;
     uint32_t n_frames = 0;
@@ -261,9 +262,10 @@ int main(int argc, char *argv[]) {
          !frame_type.compare(std::string("depth")) ||
          !frame_type.compare(std::string("ab")) ||
          !frame_type.compare(std::string("conf")))) {
-        LOG(ERROR) << "Error parsing frame_type (-ft/--ft) from command line!"
-                   << "\n Possible values: depth, ir, conf, full-frame, metadata"
-                   << "\n Please check help menu";
+        LOG(ERROR)
+            << "Error parsing frame_type (-ft/--ft) from command line!"
+            << "\n Possible values: depth, ir, conf, full-frame, metadata"
+            << "\n Please check help menu";
         return 0;
     }
 
@@ -288,7 +290,7 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "Frame type is: " << frame_type;
     LOG(INFO) << "Warm Up Time is: " << warmup_time << " seconds";
 
-    if(frame_type == "full-frame"){
+    if (frame_type == "full-frame") {
         frame_type = "frameData";
     }
 
@@ -376,7 +378,8 @@ int main(int argc, char *argv[]) {
     // pcm-native contains ab only
     if (frame_type != "ab" && modeName == "pcm-native") {
         LOG(ERROR) << modeName
-                   << " mode doesn't contain depth/conf/full-frame/metadata data, setting --ft "
+                   << " mode doesn't contain depth/conf/full-frame/metadata "
+                      "data, setting --ft "
                       "(frameType) to ab.";
         frame_type = "ab";
     }
