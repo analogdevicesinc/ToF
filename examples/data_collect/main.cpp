@@ -52,7 +52,7 @@ static const char kUsagePublic[] =
     R"(Data Collect.
     Usage:
       data_collect CONFIG
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] CONFIG
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [-s | --split] CONFIG
       data_collect (-h | --help)
 
     Arguments:
@@ -67,6 +67,7 @@ static const char kUsagePublic[] =
       --ccb <FILE>       The path to store CCB content
       --ip <ip>          Camera IP
       --fw <firmware>    Adsd3500 fw file
+      --split            Save each frame into a separate file
 
     Note: --m argument supports both index and string (0/sr-native) 
 
@@ -91,6 +92,7 @@ int main(int argc, char *argv[]) {
         {"-fw", {"--fw", false, "", ""}},
         {"-fps", {"--fps", false, "", ""}},
         {"-ccb", {"--ccb", false, "", ""}},
+        {"-s", {"--split", false, "", "0"}},
         {"-config", {"-CONFIG", true, "last", ""}}};
 
     CommandParser command;
@@ -244,6 +246,14 @@ int main(int argc, char *argv[]) {
     std::string ccbFilePath;
     if (!command_map["-ccb"].value.empty()) {
         ccbFilePath = command_map["-ccb"].value;
+    }
+
+    //Parsing split option
+    bool saveToSingleFile = true;
+    if (!command_map["-s"]
+             .value
+             .empty()) { // TO DO: How to check -s option was provided or not by user?
+        saveToSingleFile = false;
     }
 
     LOG(INFO) << "Output folder: " << folder_path;
@@ -404,6 +414,7 @@ int main(int argc, char *argv[]) {
     }
 
     FrameHandler frameSaver;
+    frameSaver.storeFramesToSingleFile(saveToSingleFile);
 
     LOG(INFO) << "Requesting " << n_frames << " frames!";
     auto start_time = std::chrono::high_resolution_clock::now();
