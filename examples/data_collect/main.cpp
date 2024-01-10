@@ -390,15 +390,9 @@ int main(int argc, char *argv[]) {
     // Wait until the warmup time is finished
     if (warmup_time > 0) {
         do {
-            uint16_t *pFrame;
             status = camera->requestFrame(&frame);
             if (status != Status::OK) {
                 LOG(ERROR) << "Could not request frame!";
-                return 0;
-            }
-            status = frame.getData("frameData", &pFrame);
-            if (status != Status::OK) {
-                LOG(ERROR) << "Could not get: 'frameData' from frame!";
                 return 0;
             }
 
