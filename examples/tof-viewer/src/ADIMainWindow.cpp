@@ -10,6 +10,7 @@
 #include "ADIImGUIExtensions.h"
 #include "ADIOpenFile.h"
 #include "aditof/version.h"
+#include <aditof/status_definitions.h>
 #include <cmath>
 #include <fcntl.h>
 #include <fstream>
@@ -403,6 +404,7 @@ void ADIMainWindow::render() {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+        handleInterruptCallback();
         /***************************************************/
         //Create windows here:
         showMainMenu();
@@ -443,6 +445,24 @@ void ADIMainWindow::render() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
+    }
+}
+
+void ADIMainWindow::handleInterruptCallback() {
+    aditof::SensorInterruptCallback cb = [this](aditof::Adsd3500Status status) {
+        LOG(WARNING) << "status: " << status;
+        ImGui::Begin("Interrupt");
+        ImGui::Text("%i", status);
+    };
+    aditof::Status ret_status = aditof::Status::OK;
+    auto camera = getActiveCamera();
+    if (!camera) {
+        return;
+    }
+    ret_status = camera->getSensor()->adsd3500_register_interrupt_callback(cb);
+    if (ret_status != aditof::Status::OK) {
+        my_log.AddLog("Could not register interrupt callback");
+        return;
     }
 }
 
