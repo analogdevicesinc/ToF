@@ -272,6 +272,7 @@ Status FrameHandlerImpl::createFile(std::string fileName) {
         LOG(ERROR) << "Failed to create output file!";
         return Status::GENERIC_ERROR;
     }
+    m_fileCreated = true;
 
     return Status::OK;
 }
