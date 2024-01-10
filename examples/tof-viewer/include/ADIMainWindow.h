@@ -352,6 +352,8 @@ class ADIMainWindow {
 		*/
     void processInputs(GLFWwindow *window);
 
+    void ADIMainWindow::handleInterruptCallback();
+
     /**
 		* @brief Main Menu
 		*/
@@ -360,7 +362,11 @@ class ADIMainWindow {
     void showRecordMenu();
 
     /**
+<<<<<<< Updated upstream
 		* @brief	Open Device menu will give you the information of
+=======
+		* @brief	Open Device window will give you the information of
+>>>>>>> Stashed changes
 		*			the supported camera. It will also fetch for
 		*			any other USB devices and only recognize the
 		*			supported device(s), otherwise it will just
