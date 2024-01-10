@@ -64,6 +64,7 @@ if (WITH_EXAMPLES)
     PopulateforPython("examples/dnn")
     PopulateforPython("examples/first_frame")
     PopulateforPython("examples/streaming")
+    PopulateforPython("examples/skeletal_tracking")
 endif()
 
 configure_file(
