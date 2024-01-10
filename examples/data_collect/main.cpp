@@ -8,12 +8,14 @@
 #include <aditof/camera.h>
 #include <aditof/depth_sensor_interface.h>
 #include <aditof/frame.h>
+#include <aditof/frame_handler.h>
 #include <aditof/system.h>
 #include <aditof/version.h>
 #include <chrono>
 #include <command_parser.h>
 #include <ctime>
 #include <fstream>
+
 #ifdef USE_GLOG
 #include <glog/logging.h>
 #else
@@ -38,7 +40,7 @@ enum : uint16_t {
     MAX_FILE_PATH_SIZE = 512,
 };
 
-#define MULTI_THREADED 1
+#define MULTI_THREADED 0
 
 using namespace aditof;
 
@@ -65,7 +67,6 @@ static const char kUsagePublic[] =
       --ccb <FILE>       The path to store CCB content
       --ip <ip>          Camera IP
       --fw <firmware>    Adsd3500 fw file
-      --ft <frameType>   FrameType of saved image (depth/ir/conf/full-frame/metadata) [default: depth]
 
     Note: --m argument supports both index and string (0/sr-native) 
 
@@ -90,7 +91,6 @@ int main(int argc, char *argv[]) {
         {"-fw", {"--fw", false, "", ""}},
         {"-fps", {"--fps", false, "", ""}},
         {"-ccb", {"--ccb", false, "", ""}},
-        {"-ft", {"--ft", false, "", "full-frame"}},
         {"-config", {"-CONFIG", true, "last", ""}}};
 
     CommandParser command;
@@ -149,8 +149,6 @@ int main(int argc, char *argv[]) {
     char folder_path[MAX_FILE_PATH_SIZE]; // Path to store the depth frames
     char json_file_path
         [MAX_FILE_PATH_SIZE]; // Get the .json file from command line
-    std::string
-        frame_type; // Type of frame need to be captured (Depth/IR/full-frame)
 
     uint16_t err = 0;
     uint32_t n_frames = 0;
@@ -234,21 +232,6 @@ int main(int argc, char *argv[]) {
         firmware = command_map["-fw"].value;
     }
 
-    frame_type = command_map["-ft"].value;
-
-    if (frame_type.length() <= 0 &&
-        (!frame_type.compare(std::string("metadata")) ||
-         !frame_type.compare(std::string("full-frame")) ||
-         !frame_type.compare(std::string("depth")) ||
-         !frame_type.compare(std::string("ab")) ||
-         !frame_type.compare(std::string("conf")))) {
-        LOG(ERROR)
-            << "Error parsing frame_type (-ft/--ft) from command line!"
-            << "\n Possible values: depth, ir, conf, full-frame, metadata"
-            << "\n Please check help menu";
-        return 0;
-    }
-
     //Parsing Warm up time
     if (!command_map["-wt"].value.empty()) {
         warmup_time = std::stoi(command_map["-wt"].value);
@@ -267,12 +250,7 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "Mode: " << command_map["-m"].value;
     LOG(INFO) << "Number of frames: " << n_frames;
     LOG(INFO) << "Json file: " << json_file_path;
-    LOG(INFO) << "Frame type is: " << frame_type;
     LOG(INFO) << "Warm Up Time is: " << warmup_time << " seconds";
-
-    if (frame_type == "full-frame") {
-        frame_type = "frameData";
-    }
 
     if (!ip.empty()) {
         LOG(INFO) << "Ip address is: " << ip;
@@ -355,15 +333,6 @@ int main(int argc, char *argv[]) {
     std::string sensorName;
     status = depthSensor->getName(sensorName);
 
-    // pcm-native contains ab only
-    if (frame_type != "ab" && modeName == "pcm-native") {
-        LOG(ERROR) << modeName
-                   << " mode doesn't contain depth/conf/full-frame/metadata "
-                      "data, setting --ft "
-                      "(frameType) to ab.";
-        frame_type = "ab";
-    }
-
     status = camera->setFrameType(modeName);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
@@ -413,8 +382,6 @@ int main(int argc, char *argv[]) {
     aditof::Frame frame;
     FrameDetails fDetails;
 
-    uint32_t height;
-    uint32_t width;
     uint64_t frame_size = 0;
     uint64_t elapsed_time;
 
@@ -429,10 +396,9 @@ int main(int argc, char *argv[]) {
                 LOG(ERROR) << "Could not request frame!";
                 return 0;
             }
-            status = frame.getData(frame_type, &pFrame);
+            status = frame.getData("frameData", &pFrame);
             if (status != Status::OK) {
-                LOG(ERROR) << "Could not get " << frame_type
-                           << " frame type data!";
+                LOG(ERROR) << "Could not get: 'frameData' from frame!";
                 return 0;
             }
 
@@ -442,6 +408,8 @@ int main(int argc, char *argv[]) {
                                .count();
         } while (warmup_time >= elapsed_time);
     }
+
+    FrameHandler frameSaver;
 
     LOG(INFO) << "Requesting " << n_frames << " frames!";
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -453,60 +421,11 @@ int main(int argc, char *argv[]) {
             LOG(ERROR) << "Could not request frame!";
             return 0;
         }
-
-        frame.getDetails(fDetails);
-
-        height = fDetails.height;
-        width = fDetails.width;
-
-        std::string pixelCount;
-
-        // Depth Data
-        if (frame_type == "depth") {
-            FrameDataDetails FrameDataDetails;
-            status = frame.getDataDetails(frame_type, FrameDataDetails);
-            if (status != Status::OK) {
-                LOG(ERROR) << "Depth disabled from ini file!";
-                return 0;
-            }
-
-            frame_size = sizeof(uint16_t) * height * width;
-        }
-        // AB data
-        else if (frame_type == "ab") {
-            if (modeName != "pcm-native") {
-                FrameDataDetails FrameDataDetails;
-                status = frame.getDataDetails(frame_type, FrameDataDetails);
-                if (status != Status::OK) {
-                    LOG(ERROR) << "AB disabled from ini file!";
-                    return 0;
-                }
-            }
-
-            frame_size = sizeof(uint16_t) * height * width;
-        }
-        // Conf data
-        else if (frame_type == "conf") {
-            FrameDataDetails FrameDataDetails;
-            status = frame.getDataDetails(frame_type, FrameDataDetails);
-            if (status != Status::OK) {
-                LOG(ERROR) << "Conf disabled from ini file!";
-                return 0;
-            }
-
-            frame_size = sizeof(float) * height * width;
-        } else if (frame_type == "frameData") {
-            FrameDetails frameDetails;
-            frame.getDetails(frameDetails);
-            frame_size =
-                sizeof(uint16_t) * frameDetails.height * frameDetails.width;
-        } else if (frame_type == "metadata") {
-            FrameDataDetails frameDetails;
-            frame.getDataDetails(frame_type, frameDetails);
-            frame_size = frameDetails.bytesCount;
-        } else {
-            LOG(WARNING) << "Can't recognize frame data type!";
-        }
+#if MULTI_THREADED
+        frameSaver.saveFrameToFileMultithread(&frame);
+#else
+        frameSaver.saveFrameToFile(frame);
+#endif
     } // End of for Loop
 
     auto end_time = std::chrono::high_resolution_clock::now();
