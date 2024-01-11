@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
         {"-fw", {"--fw", false, "", ""}},
         {"-fps", {"--fps", false, "", ""}},
         {"-ccb", {"--ccb", false, "", ""}},
-        {"-s", {"--split", false, "", "0"}},
+        {"-s", {"--split", false, "", ""}},
         {"-config", {"-CONFIG", true, "last", ""}}};
 
     CommandParser command;
@@ -250,9 +250,7 @@ int main(int argc, char *argv[]) {
 
     //Parsing split option
     bool saveToSingleFile = true;
-    if (!command_map["-s"]
-             .value
-             .empty()) { // TO DO: How to check -s option was provided or not by user?
+    if (!command_map["-s"].value.empty()) {
         saveToSingleFile = false;
     }
 
