@@ -74,6 +74,10 @@ void CommandParser::parseArguments(
                    std::string(argv[i]) == "--help") {
             m_command_vector.push_back({argv[i], "help_menu"});
             arg_number++;
+        } else if (std::string(argv[i]) == "-s" ||
+                   std::string(argv[i]) == "--split") {
+            m_command_vector.push_back({argv[i], "split"});
+            arg_number++;
         } else if (i != argc - 1) {
             m_command_vector.push_back({argv[i], argv[i + 1]});
             i++;
