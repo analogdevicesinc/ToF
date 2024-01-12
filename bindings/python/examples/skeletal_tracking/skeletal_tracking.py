@@ -35,26 +35,7 @@ import cv2 as cv
 import argparse
 from enum import Enum
 import sys
-#import keyboard
-
-# Import OpenPose Library
-try:
-    sys.path.append('libs/python');
-    from openpose import pyopenpose as op
-except ImportError as e:
-    print('Error: OpenPose library could not be found')
-    raise e
-
-# OpenPose parameters
-params = {
-    "model_folder": f"models/",
-    "hand": True,
-}
-
-# Initialize OpenPose
-opWrapper = op.WrapperPython()
-opWrapper.configure(params)
-opWrapper.start()
+import mediapipe as mp
 
 ip = "10.42.0.1" # Set to "10.42.0.1" if networking is used.
 config = "config/config_adsd3500_adsd3100.json"
@@ -70,6 +51,11 @@ WINDOW_NAME = "Display Objects"
 WINDOW_NAME_DEPTH = "Display Objects Depth"
 
 
+# Initialize Mediapipe
+mp_pose = mp.solutions.pose
+pose = mp_pose.Pose()
+
+
 class ModesEnum(Enum):
     MODE_NEAR = 0
     MODE_MEDIUM = 1
@@ -78,22 +64,16 @@ class ModesEnum(Enum):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(
-        description='Script to run Skeletal Tracking Algorithm ')
-    parser.add_argument("--ip", default=ip, help="IP address of ToF Device")
-    parser.add_argument("--config", default=config, help="IP address of ToF Device")
-    args = parser.parse_args()
-
     system = tof.System()
 
     cameras = []
-    status = system.getCameraList(cameras, "ip:"+args.ip)
+    status = system.getCameraList(cameras, "ip:"+ip)
     if not status:
         print("system.getCameraList(): ", status)
 
     camera1 = cameras[0]
         
-    status = camera1.setControl("initialization_config", args.config)
+    status = camera1.setControl("initialization_config", config)
     print("camera1.setControl()", status)
 
     status = camera1.initialize()
@@ -140,73 +120,31 @@ if __name__ == "__main__":
     distance_scale = 255.0 / camera_range
 
     while True:
-    
-        #if keyboard.is_pressed('q'):
-        #    print("'q' key pressed. Exiting loop.")
-        #    break
             
         # Capture frame-by-frame
         status = camera1.requestFrame(frame)
         if not status:
             print("camera1.requestFrame() failed with status: ", status)
 
-        depth_map = np.array(frame.getData("depth"), dtype="uint16", copy=False)
         ir_map = np.array(frame.getData("ir"), dtype="uint16", copy=False)
 
         # Creation of the IR image
-        ir_map = ir_map[0: int(ir_map.shape[0] / 2), :]
         ir_map = distance_scale_ir * ir_map
         ir_map = np.uint8(ir_map)
         ir_map = cv.flip(ir_map, 1)
-        ir_map = cv.cvtColor(ir_map, cv.COLOR_GRAY2RGB)
+        ir_map_rgb = cv.cvtColor(ir_map, cv.COLOR_GRAY2RGB)  
+        ir_map_bgr = cv.cvtColor(ir_map_rgb, cv.COLOR_RGB2BGR)
+        
+        # Process the frame with Mediapipe Pose
+        results = pose.process(ir_map_rgb)
+        
+        # Check if any pose is detected
+        if results.pose_landmarks:
+        	# Draw connections between landmarks
+        	mp.solutions.drawing_utils.draw_landmarks(ir_map_bgr, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
 
-        # Creation of the Depth image
-        new_shape = (int(depth_map.shape[0] / 2), depth_map.shape[1])
-        depth_map = np.resize(depth_map, new_shape)
-        depth_map = cv.flip(depth_map, 1)
-        distance_map = depth_map
-        depth_map = distance_scale * depth_map
-        depth_map = np.uint8(depth_map)
-        depth_map = cv.applyColorMap(depth_map, cv.COLORMAP_RAINBOW)
-
-        # Combine depth and IR for more accurate results
-        result = cv.addWeighted(ir_map, 0.4, depth_map, 0.6, 0)
-
-        cols = result.shape[1]
-        rows = result.shape[0]
-
-        if cols / float(rows) > WHRatio:
-            cropSize = (int(rows * WHRatio), rows)
-        else:
-            cropSize = (cols, int(cols / WHRatio))
-
-        y1 = int((rows - cropSize[1]) / 2)
-        y2 = y1 + cropSize[1]
-        x1 = int((cols - cropSize[0]) / 2)
-        x2 = x1 + cropSize[0]
-        result = result[y1:y2, x1:x2]
-        depth_map = depth_map[y1:y2, x1:x2]
-        distance_map = distance_map[y1:y2, x1:x2]
-
-        cols = result.shape[1]
-        rows = result.shape[0]
-
-        # Process the frame with OpenPose
-        #datum = op.Datum()
-        #frame_st = np.array(depth_map)
-        #datum.cvInputData = frame_st
-        #opWrapper.emplaceAndPop(op.VectorDatum([datum]))
-
-        # Display the frame
-        cv.imshow("Skeletal Tracking", datum.cvOutputData)
-
-        # Show image with object detection
-        #cv.namedWindow(WINDOW_NAME, cv.WINDOW_AUTOSIZE)
-        #cv.imshow(WINDOW_NAME, result)
-
-        # Show Depth map
-        #cv.namedWindow(WINDOW_NAME_DEPTH, cv.WINDOW_AUTOSIZE)
-        #cv.imshow(WINDOW_NAME_DEPTH, depth_map)
+        cv.namedWindow(WINDOW_NAME, cv.WINDOW_AUTOSIZE)
+        cv.imshow(WINDOW_NAME, ir_map_bgr)
 
         if cv.waitKey(1) >= 0:
             break
