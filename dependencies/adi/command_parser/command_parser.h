@@ -31,6 +31,7 @@ struct Argument {
     bool is_mandatory;
     std::string position;
     std::string value;
+    bool has_value;
 };
 
 class CommandParser {

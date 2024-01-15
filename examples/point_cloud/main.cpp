@@ -51,11 +51,11 @@ static const char kUsage[] =
 
 int main(int argc, char *argv[]) {
     std::map<std::string, struct Argument> command_map = {
-        {"-h", {"--help", false, "", ""}},
-        {"-input_file", {"--input_file", true, "1", ""}},
-        {"-ccb_file", {"--ccb_file", true, "2", ""}},
-        {"-mode", {"--mode", true, "3", "0"}},
-        {"-output_folder", {"--output_folder", false, "", "./"}}};
+        {"-h", {"--help", false, "", "", false}},
+        {"-input_file", {"--input_file", true, "1", "", true}},
+        {"-ccb_file", {"--ccb_file", true, "2", "", true}},
+        {"-mode", {"--mode", true, "3", "0", true}},
+        {"-output_folder", {"--output_folder", false, "", "./", true}}};
 
     int status = 0;
     uint16_t err = 0;
