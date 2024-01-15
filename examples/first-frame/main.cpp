@@ -100,10 +100,10 @@ Status save_frame(aditof::Frame &frame, std::string frameType) {
 
 int main(int argc, char *argv[]) {
     std::map<std::string, struct Argument> command_map = {
-        {"-h", {"--help", false, "", ""}},
-        {"-ip", {"--ip", false, "", ""}},
-        {"-m", {"--m", false, "", "0"}},
-        {"config", {"CONFIG", true, "last", ""}}};
+        {"-h", {"--help", false, "", "", false}},
+        {"-ip", {"--ip", false, "", "", true}},
+        {"-m", {"--m", false, "", "0", true}},
+        {"config", {"CONFIG", true, "last", "", true}}};
 
     CommandParser command;
     std::string arg_error;
