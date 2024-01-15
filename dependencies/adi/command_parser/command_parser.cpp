@@ -28,6 +28,8 @@ void CommandParser::parseArguments(
     int argc, char *argv[],
     std::map<std::string, struct Argument> command_map) {
     int arg_number = 1;
+    
+    // Stores mandatory arguments and their location
     std::vector<std::pair<std::string, int>> arg_position;
     for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
         if (ct->second.is_mandatory == true) {
@@ -43,6 +45,9 @@ void CommandParser::parseArguments(
     for (int i = 1; i < argc; i++) {
         bool mandatory = false;
         int contains_equal = std::string(argv[i]).find("=");
+        int is_argument;
+        if(i < argc - 1)
+            is_argument = std::string(argv[i+1]).find("-");
         for (int j = 0; j < arg_position.size(); j++) {
             if (arg_number == arg_position[j].second &&
                 (std::string(argv[i]).find("-h") == -1 &&
@@ -66,25 +71,47 @@ void CommandParser::parseArguments(
         }
         if (mandatory) {
             continue;
-        } else if (contains_equal != -1) {
+        } else if (contains_equal != -1) { // Solves -arg/--arg=value
             m_command_vector.push_back(
                 {std::string(argv[i]).substr(0, contains_equal),
                  std::string(argv[i]).substr(contains_equal + 1)});
             arg_number++;
-        } else if (std::string(argv[i]) == "-h" ||
-                   std::string(argv[i]) == "--help") {
-            m_command_vector.push_back({argv[i], "help_menu"});
-            arg_number++;
-        } else if (std::string(argv[i]) == "-s" ||
-                   std::string(argv[i]) == "--split") {
-            m_command_vector.push_back({argv[i], "split"});
-            arg_number++;
-        } else if (i != argc - 1) {
+        } else if (i != argc - 1 && is_argument != 0 &&
+                   i + 1 != argc - 1) { // Solves -arg/--arg value
             m_command_vector.push_back({argv[i], argv[i + 1]});
             i++;
             arg_number += 2;
+        } else if (i != argc - 1 &&
+                   is_argument == 0) { // Solves -arg/--arg -arg value
+            int is_long_arg = std::string(argv[i]).find("--");
+            if (is_long_arg != -1) {
+                bool argument_found = false;
+                for (const auto& entry : command_map) {
+                    if (entry.second.long_option == argv[i]) {
+                        if (!entry.second.has_value) {
+                            m_command_vector.push_back({argv[i], "true"});
+                        } else {
+                            m_command_vector.push_back({argv[i], ""});
+                        }
+                        arg_number++;
+                        argument_found = true;
+                        break;
+                    }
+                }
+                if(!argument_found){
+                    m_command_vector.push_back({argv[i], ""});
+                    arg_number++;
+                }
+            } else {
+                if (!command_map[argv[i]].has_value) {
+                    m_command_vector.push_back({argv[i], "true"});
+                } else {
+                    m_command_vector.push_back({argv[i], ""});
+                }
+                arg_number++;
+            }
         } else {
-            m_command_vector.push_back({argv[i], ""});
+            m_command_vector.push_back({argv[i], "true"});
             arg_number++;
         }
     }
@@ -113,7 +140,8 @@ int CommandParser::checkArgumentExist(
 
 int CommandParser::helpMenu() {
     for (int i = 0; i < m_command_vector.size(); i++) {
-        if (m_command_vector[i].second == "help_menu") {
+        if (m_command_vector[i].first == "-h" ||
+            m_command_vector[i].first == "--help") {
             if (i != 0 || m_command_vector.size() != 1) {
                 return -1;
             }

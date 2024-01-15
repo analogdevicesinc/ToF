@@ -83,17 +83,17 @@ static const char kUsagePublic[] =
 
 int main(int argc, char *argv[]) {
     std::map<std::string, struct Argument> command_map = {
-        {"-h", {"--help", false, "", ""}},
-        {"-f", {"--f", false, "", "."}},
-        {"-n", {"--n", false, "", "1"}},
-        {"-m", {"--m", false, "", "0"}},
-        {"-wt", {"--wt", false, "", "0"}},
-        {"-ip", {"--ip", false, "", ""}},
-        {"-fw", {"--fw", false, "", ""}},
-        {"-fps", {"--fps", false, "", ""}},
-        {"-ccb", {"--ccb", false, "", ""}},
-        {"-s", {"--split", false, "", ""}},
-        {"-config", {"-CONFIG", true, "last", ""}}};
+        {"-h", {"--help", false, "", "", false}},
+        {"-f", {"--f", false, "", ".", true}},
+        {"-n", {"--n", false, "", "1", true}},
+        {"-m", {"--m", false, "", "0", true}},
+        {"-wt", {"--wt", false, "", "0", true}},
+        {"-ip", {"--ip", false, "", "", true}},
+        {"-fw", {"--fw", false, "", "", true}},
+        {"-fps", {"--fps", false, "", "", true}},
+        {"-ccb", {"--ccb", false, "", "", true}},
+        {"-s", {"--split", false, "", "", false}},
+        {"-config", {"-CONFIG", true, "last", "", true}}};
 
     CommandParser command;
     std::string arg_error;
