@@ -57,11 +57,47 @@ aditof::Status findDevicePathsAtVideo(const std::string &video,
     using namespace aditof;
     using namespace std;
 
-    //TO DO: remove hardcoded values and read them from media-ctl
-    dev_path = "/dev/video0";
-    subdev_path = "/dev/v4l-subdev1";
-    device_name = "adsd3500";
+    char *buf;
+    int size = 0;
 
+    /* Run media-ctl to get the video processing pipes */
+    char cmd[64];
+    sprintf(cmd, "media-ctl -d %s --print-dot", video.c_str());
+    FILE *fp = popen(cmd, "r");
+    if (!fp) {
+        LOG(WARNING) << "Error running media-ctl";
+        return Status::GENERIC_ERROR;
+    }
+
+    /* Read the media-ctl output stream */
+    buf = (char *)malloc(128 * 1024);
+    while (!feof(fp)) {
+        fread(&buf[size], 1, 1, fp);
+        size++;
+    }
+    pclose(fp);
+    buf[size] = '\0';
+
+    /* Search command media-ctl for device/subdevice name */
+    string str(buf);
+    free(buf);
+
+    size_t pos = str.find("vi-output, adsd3500");
+    if (pos != string::npos) {
+        dev_path = str.substr(pos + strlen("vi-output, adsd3500") + 9,
+                              strlen("/dev/mediaX"));
+    } else {
+        return Status::GENERIC_ERROR;
+    }
+
+    if (str.find("adsd3500") != string::npos) {
+        device_name = "adsd3500";
+        pos = str.find("adsd3500");
+        subdev_path = str.substr(pos + strlen("adsd3500") + 9,
+                                 strlen("/dev/v4l-subdevX"));
+    } else {
+        return Status::GENERIC_ERROR;
+    }
     return Status::OK;
 }
 
