@@ -67,7 +67,7 @@ class FrameHandlerImpl {
 
     //TO DO: write function to save frames on different thread
     //aditof::Status enqueueFrameToSaveToFile(aditof::Frame frame);
-    aditof::Status saveFrameToFileMultithread(aditof::Frame *frame,
+    aditof::Status saveFrameToFileMultithread(aditof::Frame &frame,
                                               std::string filename = "");
 
     //read new frame from file and process metadata to get new frame
@@ -92,6 +92,7 @@ class FrameHandlerImpl {
 
   private:
     aditof::Status createFile(std::string fileName);
+    void threadWritter();
     //aditof::Status writtingThread(std::string fileName = "");
     //We should be able do decide if we want to store frames in the same file
     //or store them in different files
@@ -133,7 +134,10 @@ class FrameHandlerImpl {
 
     //multithread variables
     std::mutex m_mutex;
+    std::thread m_threadWorker;
     std::queue<aditof::Frame> m_frameQueue;
+    std::queue<std::string> m_frameNameQueue;
+    volatile bool m_threadRunning;
 };
 
 #endif // FRAME_HANDLER

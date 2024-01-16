@@ -60,7 +60,7 @@ Status FrameHandler::saveFrameToFile(aditof::Frame &frame,
     return m_impl->saveFrameToFile(frame, fileName);
 }
 
-Status FrameHandler::saveFrameToFileMultithread(aditof::Frame *frame,
+Status FrameHandler::saveFrameToFileMultithread(aditof::Frame &frame,
                                                 std::string fileName) {
 
     return m_impl->saveFrameToFileMultithread(frame, fileName);
