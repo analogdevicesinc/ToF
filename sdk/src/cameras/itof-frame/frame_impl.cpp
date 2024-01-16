@@ -79,7 +79,6 @@ FrameImpl::FrameImpl(const FrameImpl &op) {
     memcpy(m_implData->m_allData.get(), op.m_implData->m_allData.get(),
            m_implData->allDataNbBytes);
     m_details = op.m_details;
-    m_attributes.clear();
 }
 
 FrameImpl &FrameImpl::operator=(const FrameImpl &op) {
@@ -95,7 +94,6 @@ FrameImpl &FrameImpl::operator=(const FrameImpl &op) {
         memcpy(m_implData->m_allData.get(), op.m_implData->m_allData.get(),
                m_implData->allDataNbBytes);
         m_details = op.m_details;
-        m_attributes.clear();
     }
 
     return *this;

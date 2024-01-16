@@ -42,9 +42,9 @@ FrameHandlerImpl::FrameHandlerImpl()
     : m_concatFrames(true), m_enableMultithreading(false),
       m_customFormat(false), m_bitsInDepth(0), m_bitsInAB(0), m_bitsInConf(0),
       m_frameWidth(0), m_frameHeight(0), m_frameIndex(0), m_fileCreated(false),
-      m_endOfFile(false), m_filePath("./"), m_pos(0) {}
+      m_endOfFile(false), m_filePath("./"), m_pos(0), m_threadRunning(false) {}
 
-FrameHandlerImpl::~FrameHandlerImpl() = default;
+FrameHandlerImpl::~FrameHandlerImpl() { m_threadWorker.join(); }
 
 Status FrameHandlerImpl::setOutputFilePath(std::string &filePath) {
     Status status = Status::OK;
@@ -81,10 +81,6 @@ Status FrameHandlerImpl::saveFrameToFile(aditof::Frame &frame,
         return status;
     }
 
-    if (!m_frameQueue.empty()) {
-        frame = m_frameQueue.front();
-    }
-
     //Store frames in file in followind order: metadata depth ab conf
     uint16_t *metaData;
     uint16_t *depthData;
@@ -115,13 +111,51 @@ Status FrameHandlerImpl::saveFrameToFile(aditof::Frame &frame,
 
     m_file.close();
 
+    if (!m_frameQueue.empty()) {
+        m_mutex.lock();
+        m_frameQueue.pop();
+        m_frameNameQueue.pop();
+        m_mutex.unlock();
+    }
+
     return status;
 }
 
-Status FrameHandlerImpl::saveFrameToFileMultithread(aditof::Frame *frame,
+Status FrameHandlerImpl::saveFrameToFileMultithread(aditof::Frame &frame,
                                                     std::string fileName) {
 
-    return aditof::Status::UNAVAILABLE;
+    using namespace aditof;
+    Status status = Status::OK;
+
+    m_mutex.lock();
+    m_frameQueue.push(std::move(frame));
+    m_frameNameQueue.push(fileName);
+    m_mutex.unlock();
+
+    frame = Frame();
+
+    if (!m_threadRunning) {
+        m_threadWorker =
+            std::thread(std::bind(&FrameHandlerImpl::threadWritter, this));
+        m_threadRunning = true;
+    }
+
+    return status;
+}
+
+void FrameHandlerImpl::threadWritter() {
+    m_threadRunning = true;
+    aditof::Status status;
+
+    while (!m_frameQueue.empty()) {
+        status =
+            saveFrameToFile(m_frameQueue.front(), m_frameNameQueue.front());
+        if (status != aditof::Status::OK)
+            return; // status;
+    }
+
+    m_threadRunning = false;
+    return; // status;
 }
 
 Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
@@ -222,10 +256,6 @@ Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
 
     m_pos = m_file.tellg();
     m_file.close();
-
-    if (!m_frameQueue.empty()) {
-        m_frameQueue.pop();
-    }
 
     return Status::OK;
 }
