@@ -135,6 +135,10 @@ Status FrameHandlerImpl::saveFrameToFileMultithread(aditof::Frame &frame,
     frame = Frame();
 
     if (!m_threadRunning) {
+        if (m_threadWorker.joinable()) {
+            m_threadWorker.join();
+        }
+
         m_threadWorker =
             std::thread(std::bind(&FrameHandlerImpl::threadWritter, this));
         m_threadRunning = true;
