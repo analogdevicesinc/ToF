@@ -96,7 +96,7 @@ class FrameHandler {
      * @return Status
      */
     SDK_API aditof::Status
-    saveFrameToFileMultithread(aditof::Frame *frame, std::string fileName = "");
+    saveFrameToFileMultithread(aditof::Frame &frame, std::string fileName = "");
 
     /**
      * @brief Reads frame from a file. If same file is provided it will 
