@@ -30,6 +30,7 @@ Dependencies that must be installed: Please do an **sudo apt-get update** first.
 * zlib dev: **sudo apt install zlib1g-dev**
 * device tree compiler: **sudo apt install device-tree-compiler**
 * bc: **sudo apt install bc**
+* mtools: **sudo apt install mtools**
 
 ## Build with host tools
 Simply running ./runme.sh, it will check for required tools, clone and build images and place results in images/ directory.
