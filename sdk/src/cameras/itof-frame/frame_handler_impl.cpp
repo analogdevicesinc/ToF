@@ -50,14 +50,14 @@ FrameHandlerImpl::~FrameHandlerImpl() {
     }
 }
 
-Status FrameHandlerImpl::setOutputFilePath(std::string &filePath) {
+Status FrameHandlerImpl::setOutputFilePath(const std::string &filePath) {
     Status status = Status::OK;
     m_filePath = filePath;
     m_fileCreated = false;
     return status;
 }
 
-Status FrameHandlerImpl::setInputFileName(std::string &fullFileName) {
+Status FrameHandlerImpl::setInputFileName(const std::string &fullFileName) {
     Status status = Status::OK;
     m_fullInputFileName = fullFileName;
     m_pos = 0;
@@ -65,7 +65,7 @@ Status FrameHandlerImpl::setInputFileName(std::string &fullFileName) {
 }
 
 Status FrameHandlerImpl::saveFrameToFile(aditof::Frame &frame,
-                                         std::string fileName) {
+                                         const std::string &fileName) {
     Status status = Status::OK;
 
     if (m_concatFrames) {
@@ -125,8 +125,9 @@ Status FrameHandlerImpl::saveFrameToFile(aditof::Frame &frame,
     return status;
 }
 
-Status FrameHandlerImpl::saveFrameToFileMultithread(aditof::Frame &frame,
-                                                    std::string fileName) {
+Status
+FrameHandlerImpl::saveFrameToFileMultithread(aditof::Frame &frame,
+                                             const std::string &fileName) {
 
     using namespace aditof;
     Status status = Status::OK;
@@ -145,7 +146,6 @@ Status FrameHandlerImpl::saveFrameToFileMultithread(aditof::Frame &frame,
 
         m_threadWorker =
             std::thread(std::bind(&FrameHandlerImpl::threadWritter, this));
-        m_threadRunning = true;
     }
 
     return status;
@@ -167,7 +167,7 @@ void FrameHandlerImpl::threadWritter() {
 }
 
 Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
-                                       std::string fullFileName) {
+                                       const std::string &fullFileName) {
     Status status = Status::OK;
     if (m_fullInputFileName.empty() && fullFileName.empty()) {
         LOG(ERROR) << "No input file provided!";
@@ -268,7 +268,7 @@ Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
     return Status::OK;
 }
 
-Status FrameHandlerImpl::setCustomFormat(std::string format) {
+Status FrameHandlerImpl::setCustomFormat(const std::string &format) {
     return Status::UNAVAILABLE;
 }
 
@@ -279,11 +279,11 @@ Status FrameHandlerImpl::storeFramesToSingleFile(bool enable) {
     return status;
 }
 
-Status FrameHandlerImpl::setFrameContent(std::string frameContent) {
+Status FrameHandlerImpl::setFrameContent(const std::string &frameContent) {
     return Status::UNAVAILABLE;
 }
 
-Status FrameHandlerImpl::createFile(std::string fileName) {
+Status FrameHandlerImpl::createFile(const std::string &fileName) {
     if (fileName.empty()) {
         char time_buffer[128];
         time_t rawtime;

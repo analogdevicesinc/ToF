@@ -47,31 +47,31 @@ FrameHandler::FrameHandler(FrameHandler &&) noexcept = default;
 
 FrameHandler &FrameHandler::operator=(FrameHandler &&) noexcept = default;
 
-Status FrameHandler::setOutputFilePath(std::string &filePath) {
+Status FrameHandler::setOutputFilePath(const std::string &filePath) {
     return m_impl->setOutputFilePath(filePath);
 }
 
-Status FrameHandler::setInputFileName(std::string &fullFileName) {
+Status FrameHandler::setInputFileName(const std::string &fullFileName) {
     return m_impl->setInputFileName(fullFileName);
 }
 
 Status FrameHandler::saveFrameToFile(aditof::Frame &frame,
-                                     std::string fileName) {
+                                     const std::string &fileName) {
     return m_impl->saveFrameToFile(frame, fileName);
 }
 
 Status FrameHandler::saveFrameToFileMultithread(aditof::Frame &frame,
-                                                std::string fileName) {
+                                                const std::string &fileName) {
 
     return m_impl->saveFrameToFileMultithread(frame, fileName);
 }
 
 Status FrameHandler::readNextFrame(aditof::Frame &frame,
-                                   std::string fullFileName) {
+                                   const std::string &fullFileName) {
     return m_impl->readNextFrame(frame, fullFileName);
 }
 
-Status FrameHandler::setCustomFormat(std::string format) {
+Status FrameHandler::setCustomFormat(const std::string &format) {
     return m_impl->setCustomFormat(format);
 }
 
@@ -79,6 +79,6 @@ Status FrameHandler::storeFramesToSingleFile(bool enable) {
     return m_impl->storeFramesToSingleFile(enable);
 }
 
-Status FrameHandler::setFrameContent(std::string frameContent) {
+Status FrameHandler::setFrameContent(const std::string &frameContent) {
     return m_impl->setFrameContent(frameContent);
 }
