@@ -1,0 +1,41 @@
+variables:
+  sdk_version: '5.1.0'
+  ${{ if eq(variables['Build.Reason'], 'PullRequest')}}:
+    branch: $(System.PullRequest.TargetBranchName)
+  ${{ else }}:
+    branch: $(Build.SourceBranchName)
+
+trigger:
+  branches:
+    include:
+    - main
+    - dev-5.1.0
+  paths:
+    include:
+    - sdcard-images-utils/nxp
+    exclude:
+    - sdcard-images-utils/README.md
+    - sdcard-images-utils/nxp/README.md
+
+jobs:
+- job: Image_build
+  pool:
+    name: Default
+    demands:
+      - agent.name -equals ToF
+  timeoutInMinutes: 120
+  steps:
+  - checkout: self
+    fetchDepth: 1
+    submodules: true
+    clean: true
+    persistCredentials: true
+  - script: |
+      cd sdcard-images-utils/nxp
+      ./runme.sh $(sdk_version) $(branch)
+      exit_status="$?"
+      if [ -d "$(Build.Repository.LocalPath)/sdcard-images-utils/nxp/build/ubuntu/rootfs_tmp" ] && [ $exit_status != 0 ]; then
+        sudo umount $(Build.Repository.LocalPath)/sdcard-images-utils/nxp/build/ubuntu/rootfs_tmp
+      fi
+      exit $exit_status
+    displayName: 'Build image'
