@@ -69,14 +69,14 @@ class FrameHandler {
      * @param[in] filePath - File path
      * @return Status
      */
-    SDK_API aditof::Status setOutputFilePath(std::string &filePath);
+    SDK_API aditof::Status setOutputFilePath(const std::string &filePath);
 
     /**
      * @brief Set the input file for the frames
      * @param[in] fullFileName - Input file name
      * @return Status
      */
-    SDK_API aditof::Status setInputFileName(std::string &fullFileName);
+    SDK_API aditof::Status setInputFileName(const std::string &fullFileName);
 
     /**
      * @brief Store frame to file
@@ -86,7 +86,7 @@ class FrameHandler {
      * @return Status
      */
     SDK_API aditof::Status saveFrameToFile(aditof::Frame &frame,
-                                           std::string fileName = "");
+                                           const std::string &fileName = "");
 
     /**
      * @brief Store frame to file using a separate thread.
@@ -96,7 +96,8 @@ class FrameHandler {
      * @return Status
      */
     SDK_API aditof::Status
-    saveFrameToFileMultithread(aditof::Frame &frame, std::string fileName = "");
+    saveFrameToFileMultithread(aditof::Frame &frame,
+                               const std::string &fileName = "");
 
     /**
      * @brief Reads frame from a file. If same file is provided it will 
@@ -106,14 +107,14 @@ class FrameHandler {
      * @return Status
      */
     SDK_API aditof::Status readNextFrame(aditof::Frame &frame,
-                                         std::string fullFileName = "");
+                                         const std::string &fullFileName = "");
 
     /**
      * @brief A custom format in which the frames will be stored/read
      * @param[in] format - Format name
      * @return Status
      */
-    SDK_API aditof::Status setCustomFormat(std::string format);
+    SDK_API aditof::Status setCustomFormat(const std::string &format);
 
     /**
      * @brief Enable/disable if single file is intended to use for 
@@ -127,7 +128,7 @@ class FrameHandler {
      * @param[in] frameContent - a string providing the frame subelements that will be stored
      * @return Status
      */
-    SDK_API aditof::Status setFrameContent(std::string frameContent);
+    SDK_API aditof::Status setFrameContent(const std::string &frameContent);
 
   private:
     std::unique_ptr<FrameHandlerImpl> m_impl;
