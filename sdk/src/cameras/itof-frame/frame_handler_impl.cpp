@@ -44,7 +44,11 @@ FrameHandlerImpl::FrameHandlerImpl()
       m_frameWidth(0), m_frameHeight(0), m_frameIndex(0), m_fileCreated(false),
       m_endOfFile(false), m_filePath("./"), m_pos(0), m_threadRunning(false) {}
 
-FrameHandlerImpl::~FrameHandlerImpl() { m_threadWorker.join(); }
+FrameHandlerImpl::~FrameHandlerImpl() {
+    if (m_threadWorker.joinable()) {
+        m_threadWorker.join();
+    }
+}
 
 Status FrameHandlerImpl::setOutputFilePath(std::string &filePath) {
     Status status = Status::OK;
