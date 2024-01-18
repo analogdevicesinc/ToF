@@ -50,6 +50,7 @@
 
 using namespace google::protobuf::io;
 
+static const int FRAME_PREPADDING_BYTES = 8;
 static int interrupted = 0;
 
 /* Available sensors */
@@ -199,7 +200,8 @@ int Network::callback_function(struct lws *wsi,
             buff_frame_to_send[0] = '1';
 
             n = lws_write(wsi, buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING,
-                          (buff_frame_length + 1), LWS_WRITE_TEXT);
+                          (buff_frame_length + 1 + FRAME_PREPADDING_BYTES),
+                          LWS_WRITE_TEXT);
             m_frame_ready = false;
             if (lws_partial_buffered(wsi)) {
                 latest_sent_msg_is_was_buffered = true;
@@ -502,12 +504,18 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             free(buff_frame_to_send);
             buff_frame_to_send = NULL;
         }
-        buff_frame_to_send = (uint8_t *)malloc(
-            (buff_frame_length + LWS_SEND_BUFFER_PRE_PADDING + 1) *
-            sizeof(uint8_t));
+        buff_frame_to_send =
+            (uint8_t *)malloc((buff_frame_length + LWS_SEND_BUFFER_PRE_PADDING +
+                               1 + FRAME_PREPADDING_BYTES) *
+                              sizeof(uint8_t));
+        int64_t *pTimestampLocation = reinterpret_cast<int64_t *>(
+            &buff_frame_to_send[LWS_SEND_BUFFER_PRE_PADDING + 1]);
+        *pTimestampLocation =
+            std::chrono::system_clock::now().time_since_epoch().count();
 
-        memcpy(buff_frame_to_send + (LWS_SEND_BUFFER_PRE_PADDING + 1), buffer,
-               buff_frame_length * sizeof(uint8_t));
+        memcpy(buff_frame_to_send +
+                   (LWS_SEND_BUFFER_PRE_PADDING + 1 + FRAME_PREPADDING_BYTES),
+               buffer, buff_frame_length * sizeof(uint8_t));
 
         m_frame_ready = true;
 

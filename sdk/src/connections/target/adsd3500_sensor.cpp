@@ -23,6 +23,7 @@
 #include <cstring>
 #include <unistd.h>
 #endif
+#include <chrono>
 #include <linux/videodev2.h>
 #include <signal.h>
 #include <sstream>
@@ -689,6 +690,8 @@ aditof::Status Adsd3500Sensor::getFrame(uint16_t *buffer) {
     uint8_t *pdata;
     dev = &m_implData->videoDevs[0];
     m_capturesPerFrame = 1;
+    int64_t *pTimestampLocation = reinterpret_cast<int64_t *>(buffer);
+
     for (int idx = 0; idx < m_capturesPerFrame; idx++) {
         status = waitForBufferPrivate(dev);
         if (status != Status::OK) {
@@ -700,12 +703,21 @@ aditof::Status Adsd3500Sensor::getFrame(uint16_t *buffer) {
             return status;
         }
 
+        // Get current time as soon as we get the frame from kernel space and
+        // write the timestamp right before the frame.
+        *pTimestampLocation =
+            std::chrono::system_clock::now().time_since_epoch().count();
+
         status = getInternalBufferPrivate(&pdata, buf_data_len, buf[idx], dev);
         if (status != Status::OK) {
             return status;
         }
 
-        memcpy(buffer, pdata, buf_data_len);
+        // The timestamp occupies 8 bytes. FramePos will be 4 (aka the 4th pair
+        // of 2 bytes, because buffer points at 2 bytes at a time)
+        size_t framePos = sizeof(*pTimestampLocation) / sizeof(*buffer);
+
+        memcpy(buffer + framePos, pdata, buf_data_len);
 
         status = enqueueInternalBufferPrivate(buf[idx], dev);
         if (status != Status::OK) {

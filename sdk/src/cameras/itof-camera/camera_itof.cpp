@@ -664,6 +664,14 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         m_details.frameType.totalCaptures = 1;
     }
     m_details.frameType.dataDetails.clear();
+    FrameDataDetails timestampDetails;
+    timestampDetails.type = "timestamp";
+    timestampDetails.width = sizeof(int64_t);
+    timestampDetails.height = 1;
+    timestampDetails.subelementSize = 1;
+    timestampDetails.subelementsPerElement = 1;
+    m_details.frameType.dataDetails.emplace_back(timestampDetails);
+
     for (const auto &item : (*frameTypeIt).content) {
         if (item.type == "xyz" && !m_xyzEnabled) {
             continue;
@@ -817,7 +825,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
             LOG(ERROR) << "Frame type not found!";
             return Status::INVALID_ARGUMENT;
         } else {
-            frame->getData("raw", &frameDataLocation);
+            frame->getData("frameData", &frameDataLocation);
         }
     }
     if (!frameDataLocation) {
@@ -830,6 +838,9 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         LOG(WARNING) << "Failed to get frame from device";
         return status;
     }
+    int64_t *timestamp;
+    frame->getData("timestamp", reinterpret_cast<uint16_t **>(&timestamp));
+    frame->getData("raw", &frameDataLocation);
 
     if (!m_adsd3500Enabled && !m_isOffline &&
         (m_details.frameType.type != "pcm-native")) {
