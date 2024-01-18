@@ -274,7 +274,7 @@ inline std::ostream &operator<<(std::ostream &o, const struct Metadata &meta) {
       << "\tNumberOfPhases: " << static_cast<unsigned int>(meta.numberOfPhases)
       << "\tNumberOfFrequencies: "
       << static_cast<unsigned int>(meta.numberOfFrequencies)
-      << "\tReserved: " << static_cast<unsigned int>(meta.reserved)
+      << "\tXYZEnabled: " << static_cast<unsigned int>(meta.xyzEnabled)
       << "\tElapsedTimeFractionalValue: " << meta.elapsedTimeFractionalValue
       << "\tElapsedTimeSecondsValue: " << meta.elapsedTimeSecondsValue
       << "\tSensorTemperature: " << meta.sensorTemperature
