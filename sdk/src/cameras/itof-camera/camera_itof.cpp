@@ -816,18 +816,20 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     }
 
     uint16_t *frameDataLocation = nullptr;
+    std::string dataType;
     if (m_targetFramesAreComputed) {
-        frame->getData("frameData", &frameDataLocation);
+        dataType = "frameData";
     } else {
         if ((m_details.frameType.type == "pcm-native")) {
-            frame->getData("ir", &frameDataLocation);
+            dataType = "ir";
         } else if (m_details.frameType.type == "") {
             LOG(ERROR) << "Frame type not found!";
             return Status::INVALID_ARGUMENT;
         } else {
-            frame->getData("frameData", &frameDataLocation);
+            dataType = "raw";
         }
     }
+    frame->getData("frameData", &frameDataLocation);
     if (!frameDataLocation) {
         LOG(WARNING) << "getframe failed to allocated valid frame";
         return status;
@@ -840,7 +842,12 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     }
     int64_t *timestamp;
     frame->getData("timestamp", reinterpret_cast<uint16_t **>(&timestamp));
-    frame->getData("raw", &frameDataLocation);
+
+    frame->getData(dataType, &frameDataLocation);
+    if (!frameDataLocation) {
+        LOG(WARNING) << "getframe failed to allocated valid frame";
+        return status;
+    }
 
     if (!m_adsd3500Enabled && !m_isOffline &&
         (m_details.frameType.type != "pcm-native")) {
