@@ -90,11 +90,13 @@ Status FrameHandlerImpl::saveFrameToFile(aditof::Frame &frame,
     uint16_t *depthData;
     uint16_t *abData;
     uint16_t *confData;
+    uint16_t *xyzData;
 
     frame.getData("metadata", &metaData);
     frame.getData("depth", &depthData);
     frame.getData("ab", &abData);
     frame.getData("conf", &confData);
+    frame.getData("xyz", &xyzData);
 
     Metadata metadataStruct;
     frame.getMetadataStruct(metadataStruct);
@@ -112,6 +114,9 @@ Status FrameHandlerImpl::saveFrameToFile(aditof::Frame &frame,
     if (metadataStruct.bitsInConfidence)
         m_file.write(reinterpret_cast<char *>(confData),
                      metadataStruct.width * metadataStruct.height * 2);
+    if (metadataStruct.xyzEnabled)
+        m_file.write(reinterpret_cast<char *>(xyzData),
+                     metadataStruct.width * metadataStruct.height * 6);
 
     m_file.close();
 
@@ -227,6 +232,11 @@ Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
     frDataDetails.height = m_metadataStruct.height;
     m_frDetails.dataDetails.emplace_back(frDataDetails);
 
+    frDataDetails.type = "xyz";
+    frDataDetails.width = m_metadataStruct.width;
+    frDataDetails.height = m_metadataStruct.height;
+    m_frDetails.dataDetails.emplace_back(frDataDetails);
+
     status = frame.setDetails(m_frDetails);
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Failed to set frame details.";
@@ -240,6 +250,7 @@ Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
     uint16_t *depthData;
     uint16_t *abData;
     uint16_t *confData;
+    uint16_t *xyzData;
 
     frame.getData("metadata", &metaData);
     memcpy(metaData, reinterpret_cast<uint8_t *>(&m_metadataStruct),
@@ -248,6 +259,7 @@ Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
     frame.getData("depth", &depthData);
     frame.getData("ab", &abData);
     frame.getData("conf", &confData);
+    frame.getData("xyz", &xyzData);
 
     //at first we assume that we have metadata enabled by default
     //TO DO: implement use-case where we don't have metadata
@@ -261,6 +273,9 @@ Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
     if (m_metadataStruct.bitsInConfidence)
         m_file.read(reinterpret_cast<char *>(confData),
                     m_metadataStruct.width * m_metadataStruct.height * 2);
+    if (m_metadataStruct.xyzEnabled)
+        m_file.read(reinterpret_cast<char *>(xyzData),
+                    m_metadataStruct.width * m_metadataStruct.height * 6);
 
     m_pos = m_file.tellg();
     m_file.close();
