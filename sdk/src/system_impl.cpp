@@ -110,7 +110,7 @@ SystemImpl::getCameraList(std::vector<std::shared_ptr<Camera>> &cameraList,
         LOG(ERROR) << "Could not create OfflineSensorEnumerator";
         return Status::GENERIC_ERROR;
     }
-#elif defined(NXP) || defined(NVIDIA)
+#elif defined(NXP) || defined(NVIDIA) || defined(RPI)
     sensorEnumerator = SensorEnumeratorFactory::buildTargetSensorEnumerator();
     if (!sensorEnumerator) {
         LOG(ERROR) << "Could not create TargetSensorEnumerator";

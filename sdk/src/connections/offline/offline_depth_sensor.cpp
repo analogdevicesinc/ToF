@@ -1,6 +1,7 @@
 #include "offline_depth_sensor.h"
 #include "tofi/tofi_config.h"
 #include <cstring>
+#define UNIX
 #ifdef UNIX
 #include <dirent.h>
 #endif
@@ -44,7 +45,7 @@ aditof::Status OfflineDepthSensor::open() {
     DIR *dir = opendir(m_path.c_str());
     while ((entry = readdir(dir)) != NULL) {
         fileName = entry->d_name;
-        if (fileName[0] != ".")
+        if (fileName[0] != '.')
             frameTypesResources.push_back(fileName);
     }
 #elif WIN32

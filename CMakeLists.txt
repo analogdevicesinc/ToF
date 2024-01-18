@@ -104,7 +104,7 @@ if(WITH_GLOG_DEPENDENCY)
 endif()
 
 if(NOT WITH_PROTOBUF_DEPENDENCY)
-        if(NOT NXP AND NOT NVIDIA)
+        if(NOT NXP AND NOT NVIDIA AND NOT RPI)
                 message(FATAL_ERROR "SDK can be built without protobuf only on target builds!")
         endif()
 else()

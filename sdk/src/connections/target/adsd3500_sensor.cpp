@@ -38,14 +38,14 @@
 
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
-#define V4L2_CID_AD_DEV_CHIP_CONFIG (0x9819e1)
+#define V4L2_CID_AD_DEV_CHIP_CONFIG (0x9819f1)
 #define CTRL_PACKET_SIZE 65537
-#define CTRL_SET_MODE (0x9819e0)
-#define CTRL_AB_AVG (0x9819e5)
-#define CTRL_DEPTH_EN (0x9819e6)
-#define CTRL_PHASE_DEPTH_BITS (0x9819e2)
-#define CTRL_AB_BITS (0x9819e3)
-#define CTRL_CONFIDENCE_BITS (0x9819e4)
+#define CTRL_SET_MODE (0x9819f0)
+#define CTRL_AB_AVG (0x9819f5)
+#define CTRL_DEPTH_EN (0x9819f6)
+#define CTRL_PHASE_DEPTH_BITS (0x9819f2)
+#define CTRL_AB_BITS (0x9819f3)
+#define CTRL_CONFIDENCE_BITS (0x9819f4)
 #ifdef NVIDIA
 #define CTRL_SET_FRAME_RATE (0x9a200b)
 #endif
@@ -588,7 +588,7 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
             if (pixFmt == 1) {
                 pixelFormat = V4L2_PIX_FMT_SBGGR12;
             } else {
-#ifdef NXP
+#if defined(NXP) || defined(RPI)
                 pixelFormat = V4L2_PIX_FMT_SBGGR8;
 #else
                 pixelFormat = V4L2_PIX_FMT_SRGGB8;
@@ -795,7 +795,7 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
                          << "errno: " << errno << " error: " << strerror(errno);
             status = Status::GENERIC_ERROR;
         }
-#else // NXP
+#else // NXP or RPI
         struct v4l2_streamparm fpsControl;
         memset(&fpsControl, 0, sizeof(struct v4l2_streamparm));
 
@@ -1263,6 +1263,8 @@ aditof::Status Adsd3500Sensor::adsd3500_reset() {
     usleep(1000000);
     system("echo 1 > /sys/class/gpio/gpio122/value");
     usleep(7000000);
+#elif defined(RPI)
+    #warning "update for rpi"
 #elif defined(NVIDIA)
     struct stat st;
     if (stat("/sys/class/gpio/PP.04/value", &st) == 0) {

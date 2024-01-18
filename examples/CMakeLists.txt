@@ -3,14 +3,14 @@ project(examples)
 
 add_subdirectory(first-frame)
 add_subdirectory(data_collect)
-if (NOT NXP)
+if (NOT NXP AND NOT RPI)
     add_subdirectory(tof-viewer)
 endif()
 add_subdirectory(point_cloud)
 
 include(GNUInstallDirs)
 
-if (NXP)
+if (NXP OR RPI)
     install(PROGRAMS
         $<TARGET_FILE:first-frame>
         $<TARGET_FILE:data_collect>

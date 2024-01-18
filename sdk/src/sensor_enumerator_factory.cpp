@@ -31,7 +31,7 @@
  */
 #include "aditof/sensor_enumerator_factory.h"
 
-#if defined(NXP) || defined(NVIDIA)
+#if defined(NXP) || defined(NVIDIA) || defined(RPI)
 #define TARGET
 #endif
 
