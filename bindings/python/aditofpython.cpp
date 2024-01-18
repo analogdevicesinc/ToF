@@ -127,7 +127,7 @@ PYBIND11_MODULE(aditofpython, m) {
         .def_readwrite("numberOfPhases", &aditof::Metadata::numberOfPhases)
         .def_readwrite("numberOfFrequencies",
                        &aditof::Metadata::numberOfFrequencies)
-        .def_readwrite("reserved", &aditof::Metadata::reserved)
+        .def_readwrite("xyzEnabled", &aditof::Metadata::xyzEnabled)
         .def_readwrite("elapsedTimeFractionalValue",
                        &aditof::Metadata::elapsedTimeFractionalValue)
         .def_readwrite("elapsedTimeSecondsValue",
