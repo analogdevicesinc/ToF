@@ -35,6 +35,8 @@
 #include "aditof/depth_sensor_interface.h"
 
 #include <memory>
+#include <thread>
+#include <unordered_map>
 
 class NetworkDepthSensor : public aditof::DepthSensorInterface {
   public:
@@ -87,7 +89,17 @@ class NetworkDepthSensor : public aditof::DepthSensorInterface {
     adsd3500_write_payload(uint8_t *payload, uint16_t payload_len) override;
     virtual aditof::Status adsd3500_reset() override;
     virtual aditof::Status adsd3500_register_interrupt_callback(
-        aditof::SensorInterruptCallback cb) override;
+        aditof::SensorInterruptCallback &cb) override;
+    virtual aditof::Status adsd3500_unregister_interrupt_callback(
+        aditof::SensorInterruptCallback &cb) override;
+    virtual aditof::Status adsd3500_get_status(int &chipStatus,
+                                               int &imagerStatus) override;
+    virtual aditof::Status
+    initTargetDepthCompute(uint8_t *iniFile, uint16_t iniFileLength,
+                           uint8_t *calData, uint16_t calDataLength) override;
+
+  private:
+    void checkForServerUpdates();
 
   private:
     struct ImplData;
@@ -96,7 +108,10 @@ class NetworkDepthSensor : public aditof::DepthSensorInterface {
     std::unique_ptr<ImplData> m_implData;
     int m_sensorIndex;
     static int m_sensorCounter;
-    aditof::SensorInterruptCallback m_cb;
+    std::unordered_map<void *, aditof::SensorInterruptCallback>
+        m_interruptCallbackMap;
+    bool m_stopServerCheck;
+    std::thread m_activityCheckThread;
 };
 
 #endif // NETWORK_DEPTH_SENSOR_H

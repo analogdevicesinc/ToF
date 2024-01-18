@@ -56,6 +56,35 @@ PYBIND11_MODULE(aditofpython, m) {
         .value("Unavailable", aditof::Status::UNAVAILABLE)
         .value("GenericError", aditof::Status::GENERIC_ERROR);
 
+    py::enum_<aditof::Adsd3500Status>(m, "Adsd3500Status")
+        .value("OK", aditof::Adsd3500Status::OK)
+        .value("Invalid_Mode", aditof::Adsd3500Status::INVALID_MODE)
+        .value("Invalid_JBLF_Filter_Size",
+               aditof::Adsd3500Status::INVALID_JBLF_FILTER_SIZE)
+        .value("Unsupported_Command",
+               aditof::Adsd3500Status::UNSUPPORTED_COMMAND)
+        .value("Invalid_Memory_Region",
+               aditof::Adsd3500Status::INVALID_MEMORY_REGION)
+        .value("Invalid_Firmware_Crc",
+               aditof::Adsd3500Status::INVALID_FIRMWARE_CRC)
+        .value("Invalid_Imager", aditof::Adsd3500Status::INVALID_IMAGER)
+        .value("Invalid_Ccb", aditof::Adsd3500Status::INVALID_CCB)
+        .value("Flash_Header_Parse_Error",
+               aditof::Adsd3500Status::FLASH_HEADER_PARSE_ERROR)
+        .value("Flash_File_Parse_Error",
+               aditof::Adsd3500Status::FLASH_FILE_PARSE_ERROR)
+        .value("Spim_Error", aditof::Adsd3500Status::SPIM_ERROR)
+        .value("Invalid_Chipid", aditof::Adsd3500Status::INVALID_CHIPID)
+        .value("Imager_Communication_Error",
+               aditof::Adsd3500Status::IMAGER_COMMUNICATION_ERROR)
+        .value("Imager_Boot_Failure",
+               aditof::Adsd3500Status::IMAGER_BOOT_FAILURE)
+        .value("Firmware_Update_Complete",
+               aditof::Adsd3500Status::FIRMWARE_UPDATE_COMPLETE)
+        .value("Nvm_Write_Complete", aditof::Adsd3500Status::NVM_WRITE_COMPLETE)
+        .value("Imager_Error", aditof::Adsd3500Status::IMAGER_ERROR)
+        .value("Unknown_Error_Id", aditof::Adsd3500Status::UNKNOWN_ERROR_ID);
+
     // Frame declarations
 
     py::class_<aditof::FrameDataDetails>(m, "FrameDataDetails")
@@ -66,20 +95,56 @@ PYBIND11_MODULE(aditofpython, m) {
         .def_readwrite("subelementSize",
                        &aditof::FrameDataDetails::subelementSize)
         .def_readwrite("subelementsPerElement",
-                       &aditof::FrameDataDetails::subelementsPerElement);
+                       &aditof::FrameDataDetails::subelementsPerElement)
+        .def_readwrite("bytesCount", &aditof::FrameDataDetails::bytesCount);
 
     py::class_<aditof::FrameDetails>(m, "FrameDetails")
         .def(py::init<>())
         .def_readwrite("type", &aditof::FrameDetails::type)
         .def_readwrite("dataDetails", &aditof::FrameDetails::dataDetails)
-        .def_readwrite("cameraMode", &aditof::FrameDetails::cameraMode);
+        .def_readwrite("cameraMode", &aditof::FrameDetails::cameraMode)
+        .def_readwrite("width", &aditof::FrameDetails::width)
+        .def_readwrite("height", &aditof::FrameDetails::height)
+        .def_readwrite("totalCaptures", &aditof::FrameDetails::totalCaptures)
+        .def_readwrite("passiveIRCaptured",
+                       &aditof::FrameDetails::passiveIRCaptured);
+
+    py::class_<aditof::Metadata>(m, "Metadata")
+        .def(py::init<>())
+        .def_readwrite("width", &aditof::Metadata::width)
+        .def_readwrite("height", &aditof::Metadata::height)
+        .def_readwrite("outputConfiguration",
+                       &aditof::Metadata::outputConfiguration)
+        .def_readwrite("bitsInDepth", &aditof::Metadata::bitsInDepth)
+        .def_readwrite("bitsInAb", &aditof::Metadata::bitsInAb)
+        .def_readwrite("bitsInConfidence", &aditof::Metadata::bitsInConfidence)
+        .def_readwrite("invalidPhaseValue",
+                       &aditof::Metadata::invalidPhaseValue)
+        .def_readwrite("frequencyIndex", &aditof::Metadata::frequencyIndex)
+        .def_readwrite("abFrequencyIndex", &aditof::Metadata::abFrequencyIndex)
+        .def_readwrite("frameNumber", &aditof::Metadata::frameNumber)
+        .def_readwrite("imagerMode", &aditof::Metadata::imagerMode)
+        .def_readwrite("numberOfPhases", &aditof::Metadata::numberOfPhases)
+        .def_readwrite("numberOfFrequencies",
+                       &aditof::Metadata::numberOfFrequencies)
+        .def_readwrite("reserved", &aditof::Metadata::reserved)
+        .def_readwrite("elapsedTimeFractionalValue",
+                       &aditof::Metadata::elapsedTimeFractionalValue)
+        .def_readwrite("elapsedTimeSecondsValue",
+                       &aditof::Metadata::elapsedTimeSecondsValue)
+        .def_readwrite("elapsedTimeSecondsValue",
+                       &aditof::Metadata::elapsedTimeSecondsValue)
+        .def_readwrite("sensorTemperature",
+                       &aditof::Metadata::sensorTemperature)
+        .def_readwrite("laserTemperature", &aditof::Metadata::laserTemperature);
 
     // Camera declarations
 
     py::enum_<aditof::ConnectionType>(m, "ConnectionType")
         .value("Usb", aditof::ConnectionType::USB)
         .value("Network", aditof::ConnectionType::NETWORK)
-        .value("OnTarget", aditof::ConnectionType::ON_TARGET);
+        .value("OnTarget", aditof::ConnectionType::ON_TARGET)
+        .value("Offline", aditof::ConnectionType::OFFLINE);
 
     py::class_<aditof::IntrinsicParameters>(m, "IntrinsicParameters")
         .def(py::init<>())
@@ -107,13 +172,18 @@ PYBIND11_MODULE(aditofpython, m) {
         .def_readwrite("intrinsics", &aditof::CameraDetails::intrinsics)
         .def_readwrite("minDepth", &aditof::CameraDetails::minDepth)
         .def_readwrite("maxDepth", &aditof::CameraDetails::maxDepth)
-        .def_readwrite("bitCount", &aditof::CameraDetails::bitCount);
+        .def_readwrite("bitCount", &aditof::CameraDetails::bitCount)
+        .def_readwrite("uBootVersion", &aditof::CameraDetails::uBootVersion)
+        .def_readwrite("kernelVersion", &aditof::CameraDetails::kernelVersion)
+        .def_readwrite("sdCardImageVersion",
+                       &aditof::CameraDetails::sdCardImageVersion)
+        .def_readwrite("serialNumber", &aditof::CameraDetails::serialNumber);
 
     // Sensors declarations
 
     py::class_<aditof::SensorDetails>(m, "SensorDetails")
         .def(py::init<>())
-        .def_readwrite("sensorName", &aditof::SensorDetails::sensorName)
+        .def_readwrite("id", &aditof::SensorDetails::id)
         .def_readwrite("connectionType",
                        &aditof::SensorDetails::connectionType);
 
@@ -194,7 +264,8 @@ PYBIND11_MODULE(aditofpython, m) {
 
     // Camera
     py::class_<aditof::Camera, std::shared_ptr<aditof::Camera>>(m, "Camera")
-        .def("initialize", &aditof::Camera::initialize)
+        .def("initialize", &aditof::Camera::initialize,
+             py::arg("configFilepath") = "")
         .def("start", &aditof::Camera::start)
         .def("stop", &aditof::Camera::stop)
         .def("setMode", &aditof::Camera::setMode, py::arg("mode"),
@@ -225,6 +296,13 @@ PYBIND11_MODULE(aditofpython, m) {
                 return status;
             },
             py::arg("availableFrameTypes"))
+        .def(
+            "getFrameTypeNameFromId",
+            [](const aditof::Camera &camera, int id, std::string name) {
+                aditof::Status status = camera.getFrameTypeNameFromId(id, name);
+                return std::make_pair(status, name);
+            },
+            py::arg("id"), py::arg("name"))
         .def("requestFrame", &aditof::Camera::requestFrame, py::arg("frame"),
              py::arg("cb") = nullptr)
         .def("getDetails", &aditof::Camera::getDetails, py::arg("details"))
@@ -246,33 +324,16 @@ PYBIND11_MODULE(aditofpython, m) {
         .def("getControl", &aditof::Camera::getControl, py::arg("control"),
              py::arg("value"))
         .def("getSensor", &aditof::Camera::getSensor)
-        .def(
-            "getEeproms",
-            [](aditof::Camera &camera, py::list eeproms) {
-                std::vector<std::shared_ptr<aditof::StorageInterface>>
-                    eepromList;
-                aditof::Status status = camera.getEeproms(eepromList);
-
-                for (const auto &e : eepromList)
-                    eeproms.append(e);
-
-                return status;
-            },
-            py::arg("eeproms"))
-        .def(
-            "getTemperatureSensors",
-            [](aditof::Camera &camera, py::list tempSensors) {
-                std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
-                    sensorList;
-                aditof::Status status =
-                    camera.getTemperatureSensors(sensorList);
-
-                for (const auto &s : sensorList)
-                    tempSensors.append(s);
-
-                return status;
-            },
-            py::arg("tempSensors"))
+        .def("enableXYZframe", &aditof::Camera::enableXYZframe,
+             py::arg("enable"))
+        .def("saveModuleCFG", &aditof::Camera::saveModuleCFG,
+             py::arg("filepath"))
+        .def("saveModuleCCB", &aditof::Camera::saveModuleCCB,
+             py::arg("filepath"))
+        .def("enableDepthCompute", &aditof::Camera::enableDepthCompute,
+             py::arg("enable"))
+        .def("adsd3500UpdateFirmware", &aditof::Camera::adsd3500UpdateFirmware,
+             py::arg("filePath"))
         .def("adsd3500SetToggleMode", &aditof::Camera::adsd3500SetToggleMode,
              py::arg("mode"))
         .def("adsd3500ToggleFsync", &aditof::Camera::adsd3500ToggleFsync)
@@ -334,6 +395,29 @@ PYBIND11_MODULE(aditofpython, m) {
                      camera.adsd3500GetRadialThresholdMax(threshold);
                  return std::make_pair(status, threshold);
              })
+        .def("adsd3500GetSensorTemperature",
+             [](aditof::Camera &camera) {
+                 uint16_t tmpValue;
+                 aditof::Status status =
+                     camera.adsd3500GetSensorTemperature(tmpValue);
+                 return std::make_pair(status, tmpValue);
+             })
+        .def("adsd3500GetLaserTemperature",
+             [](aditof::Camera &camera) {
+                 uint16_t tmpValue;
+                 aditof::Status status =
+                     camera.adsd3500GetLaserTemperature(tmpValue);
+                 return std::make_pair(status, tmpValue);
+             })
+        .def(
+            "adsd3500GetFirmwareVersion",
+            [](aditof::Camera &camera, std::string fwVersion,
+               std::string fwHash) {
+                aditof::Status status =
+                    camera.adsd3500GetFirmwareVersion(fwVersion, fwHash);
+                return std::make_tuple(status, fwVersion, fwHash);
+            },
+            py::arg("fwVersion"), py::arg("fwHash"))
         .def("adsd3500SetMIPIOutputSpeed",
              &aditof::Camera::adsd3500SetMIPIOutputSpeed, py::arg("speed"))
         .def("adsd3500GetMIPIOutputSpeed",
@@ -404,14 +488,13 @@ PYBIND11_MODULE(aditofpython, m) {
         .def("adsd3500SetEnableTemperatureCompensation",
              &aditof::Camera::adsd3500SetEnableTemperatureCompensation,
              py::arg("value"))
-        .def("adsd3500SetEnableEmbeddedHeaderinAB",
-             &aditof::Camera::adsd3500SetEnableEmbeddedHeaderinAB,
-             py::arg("value"))
-        .def("adsd3500GetEnableEmbeddedHeaderinAB",
+        .def("adsd3500SetEnableMetadatainAB",
+             &aditof::Camera::adsd3500SetEnableMetadatainAB, py::arg("value"))
+        .def("adsd3500GetEnableMetadatainAB",
              [](aditof::Camera &camera) {
                  uint16_t value;
                  aditof::Status status =
-                     camera.adsd3500GetEnableEmbeddedHeaderinAB(value);
+                     camera.adsd3500GetEnableMetadatainAB(value);
                  return std::make_pair(status, value);
              })
         .def("adsd3500SetGenericTemplate",
@@ -423,7 +506,24 @@ PYBIND11_MODULE(aditofpython, m) {
                  aditof::Status status =
                      camera.adsd3500GetGenericTemplate(reg, value);
                  return std::make_pair(status, value);
-             });
+             })
+        .def(
+            "adsd3500GetStatus",
+            [](aditof::Camera &camera, int chipStatus, int imagerStatus) {
+                aditof::Status status =
+                    camera.adsd3500GetStatus(chipStatus, imagerStatus);
+                return std::make_tuple(status, chipStatus, imagerStatus);
+            },
+            py::arg("chipStatus"), py::arg("imagerStatus"))
+        .def(
+            "readSerialNumber",
+            [](aditof::Camera &camera, std::string serialNumber,
+               bool useCacheValue) {
+                aditof::Status status =
+                    camera.readSerialNumber(serialNumber, useCacheValue);
+                return std::make_pair(status, serialNumber);
+            },
+            py::arg("serialNumber"), py::arg("useCacheValue"));
 
     // Frame
     py::class_<aditof::Frame>(m, "Frame")
@@ -443,7 +543,34 @@ PYBIND11_MODULE(aditofpython, m) {
 
                 return f;
             },
-            py::arg("dataType"));
+            py::arg("dataType"))
+        .def(
+            "getAvailableAttributes",
+            [](aditof::Frame &frame, py::list attributes) {
+                std::vector<std::string> attributesList;
+                aditof::Status status =
+                    frame.getAvailableAttributes(attributesList);
+
+                for (const auto &s : attributesList)
+                    attributes.append(s);
+
+                return status;
+            },
+            py::arg("attributes"))
+        .def(
+            "setAttribute",
+            [](aditof::Frame &frame, std::string attribute, std::string value) {
+                aditof::Status status = frame.setAttribute(attribute, value);
+                return status;
+            },
+            py::arg("attribute"), py::arg("value"))
+        .def("getAttribute", &aditof::Frame::getAttribute, py::arg("attribute"),
+             py::arg("value"))
+        .def("getMetadataStruct", [](aditof::Frame &frame) {
+            aditof::Metadata metadata;
+            aditof::Status status = frame.getMetadataStruct(metadata);
+            return std::make_pair(status, metadata);
+        });
 
     // DepthSensorInterface
     py::class_<aditof::DepthSensorInterface,
@@ -545,62 +672,145 @@ PYBIND11_MODULE(aditofpython, m) {
 
                 return device.writeRegisters(addrPtr, dataPtr, length);
             },
-            py::arg("address"), py::arg("data"), py::arg("length"));
-
-    // StorageInterface
-    py::class_<aditof::StorageInterface,
-               std::shared_ptr<aditof::StorageInterface>>(m, "StorageInterface")
-        .def("open", &aditof::StorageInterface::open)
-        .def(
-            "read",
-            [](aditof::StorageInterface &eeprom, uint32_t address,
-               py::array_t<uint8_t> data, size_t length) {
-                py::buffer_info buffInfo = data.request(true);
-                uint8_t *ptr = static_cast<uint8_t *>(buffInfo.ptr);
-
-                return eeprom.read(address, ptr, length);
-            },
             py::arg("address"), py::arg("data"), py::arg("length"))
         .def(
-            "write",
-            [](aditof::StorageInterface &eeprom, uint32_t address,
-               py::array_t<uint8_t> data, size_t length) {
-                py::buffer_info buffInfo = data.request();
-                uint8_t *ptr = static_cast<uint8_t *>(buffInfo.ptr);
+            "getAvailableControls",
+            [](const aditof::DepthSensorInterface &device, py::list controls) {
+                std::vector<std::string> controlsList;
+                aditof::Status status =
+                    device.getAvailableControls(controlsList);
 
-                return eeprom.write(address, ptr, length);
-            },
-            py::arg("address"), py::arg("data"), py::arg("length"))
-        .def("close", &aditof::StorageInterface::close)
-        .def("getName", [](aditof::StorageInterface &eeprom) {
-            std::string n;
-            eeprom.getName(n);
+                for (const auto &control : controlsList)
+                    controls.append(control);
 
-            return n;
-        });
-
-    // TemperatureSensorInterface
-    py::class_<aditof::TemperatureSensorInterface,
-               std::shared_ptr<aditof::TemperatureSensorInterface>>(
-        m, "TemperatureSensorInterface")
-        .def("open", &aditof::TemperatureSensorInterface::open)
-        .def(
-            "read",
-            [](aditof::TemperatureSensorInterface &sensor,
-               py::list temperature) {
-                float temp;
-                aditof::Status status = sensor.read(temp);
-                if (status == aditof::Status::OK) {
-                    temperature.append(temp);
-                }
                 return status;
             },
-            py::arg("temperature"))
-        .def("close", &aditof::TemperatureSensorInterface::close)
-        .def("getName", [](aditof::TemperatureSensorInterface &sensor) {
-            std::string n;
-            sensor.getName(n);
+            py::arg("controls"))
+        .def(
+            "adsd3500_read_cmd",
+            [](aditof::DepthSensorInterface &device, uint16_t cmd,
+               py::array_t<uint16_t> data, unsigned int usDelay) {
+                py::buffer_info dataBuffInfo = data.request();
+                uint16_t *dataPtr = static_cast<uint16_t *>(dataBuffInfo.ptr);
+                aditof::Status status =
+                    device.adsd3500_read_cmd(cmd, dataPtr, usDelay);
+                return std::make_pair(status, dataPtr);
+            },
+            py::arg("cmd"), py::arg("data"), py::arg("usDelay"))
+        .def(
+            "adsd3500_write_cmd",
+            [](aditof::DepthSensorInterface &device, uint16_t cmd,
+               uint16_t data) {
+                aditof::Status status = device.adsd3500_write_cmd(cmd, data);
+                return status;
+            },
+            py::arg("cmd"), py::arg("data"))
+        .def(
+            "adsd3500_read_payload_cmd",
+            [](aditof::DepthSensorInterface &device, uint32_t cmd,
+               py::array_t<uint8_t> readback_data, uint16_t payload_len) {
+                py::buffer_info readbackBuffInfo = readback_data.request();
+                uint8_t *readback_dataPtr =
+                    static_cast<uint8_t *>(readbackBuffInfo.ptr);
+                aditof::Status status = device.adsd3500_read_payload_cmd(
+                    cmd, readback_dataPtr, payload_len);
+                return std::make_pair(status, readback_dataPtr);
+            },
+            py::arg("cmd"), py::arg("readback_data"), py::arg("payload_len"))
+        .def(
+            "adsd3500_read_payload",
+            [](aditof::DepthSensorInterface &device,
+               py::array_t<uint8_t> payload, uint16_t payload_len) {
+                py::buffer_info payloadBuffInfo = payload.request();
+                uint8_t *payloadPtr =
+                    static_cast<uint8_t *>(payloadBuffInfo.ptr);
+                aditof::Status status =
+                    device.adsd3500_read_payload(payloadPtr, payload_len);
+                return std::make_pair(status, payloadPtr);
+            },
+            py::arg("payload"), py::arg("payload_len"))
+        .def(
+            "adsd3500_write_payload_cmd",
+            [](aditof::DepthSensorInterface &device,
+               py::array_t<uint8_t> payload, uint32_t cmd,
+               uint16_t payload_len) {
+                py::buffer_info payloadBuffInfo = payload.request();
+                uint8_t *payloadPtr =
+                    static_cast<uint8_t *>(payloadBuffInfo.ptr);
+                aditof::Status status = device.adsd3500_write_payload_cmd(
+                    cmd, payloadPtr, payload_len);
+                return status;
+            },
+            py::arg("cmd"), py::arg("payload"), py::arg("payload_len"))
+        .def(
+            "adsd3500_write_payload",
+            [](aditof::DepthSensorInterface &device,
+               py::array_t<uint8_t> payload, uint16_t payload_len) {
+                py::buffer_info payloadBuffInfo = payload.request();
+                uint8_t *payloadPtr =
+                    static_cast<uint8_t *>(payloadBuffInfo.ptr);
+                aditof::Status status =
+                    device.adsd3500_write_payload(payloadPtr, payload_len);
+                return status;
+            },
+            py::arg("payload"), py::arg("payload_len"))
+        .def("adsd3500_reset",
+             [](aditof::DepthSensorInterface &device) {
+                 aditof::Status status = device.adsd3500_reset();
+                 return status;
+             })
+        .def(
+            "adsd3500_register_interrupt_callback",
+            [](aditof::DepthSensorInterface &device,
+               aditof::SensorInterruptCallback &cb) {
+                return device.adsd3500_register_interrupt_callback(cb);
+            },
+            py::arg("cb"))
+        .def(
+            "adsd3500_unregister_interrupt_callback",
+            [](aditof::DepthSensorInterface &device,
+               aditof::SensorInterruptCallback &cb) {
+                return device.adsd3500_unregister_interrupt_callback(cb);
+            },
+            py::arg("cb"))
+        .def("setControl", &aditof::DepthSensorInterface::setControl,
+             py::arg("control"), py::arg("value"))
+        .def("getControl", &aditof::DepthSensorInterface::getControl,
+             py::arg("control"), py::arg("value"))
+        .def("getDetails", &aditof::DepthSensorInterface::getDetails,
+             py::arg("details"))
+        .def(
+            "getHandle",
+            [](aditof::DepthSensorInterface &device, void *handle) {
+                aditof::Status status =
+                    device.getHandle(static_cast<void **>(handle));
+                return std::make_pair(status, handle);
+            },
+            py::arg("handle"))
+        .def("getName", &aditof::DepthSensorInterface::getName, py::arg("name"))
+        .def("setHostConnectionType",
+             &aditof::DepthSensorInterface::setHostConnectionType,
+             py::arg("connectionType"))
+        .def(
+            "initTargetDepthCompute",
+            [](aditof::DepthSensorInterface &device,
+               py::array_t<uint8_t> iniFile, uint16_t iniFileLength,
+               py::array_t<uint8_t> calData, uint16_t calDataLength) {
+                py::buffer_info iniFileBuffInfo = iniFile.request();
+                uint8_t *iniFilePtr =
+                    static_cast<uint8_t *>(iniFileBuffInfo.ptr);
+                py::buffer_info calDataBuffInfo = calData.request();
+                uint8_t *calDataPtr =
+                    static_cast<uint8_t *>(calDataBuffInfo.ptr);
+                aditof::Status status = device.initTargetDepthCompute(
+                    iniFilePtr, iniFileLength, calDataPtr, calDataLength);
+                return std::make_tuple(status, iniFilePtr, calDataPtr);
+            },
+            py::arg("iniFile"), py::arg("iniFileLength"), py::arg("calData"),
+            py::arg("calDataLength"));
 
-            return n;
-        });
+    //SDK version
+    m.def("getApiVersion", &aditof::getApiVersion);
+    m.def("getBranchVersion", &aditof::getBranchVersion);
+    m.def("getCommitVersion", &aditof::getCommitVersion);
 }

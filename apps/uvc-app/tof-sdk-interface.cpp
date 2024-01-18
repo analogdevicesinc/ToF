@@ -1,5 +1,6 @@
 #include "tof-sdk-interface.h"
 #include "buffer.pb.h"
+
 #ifdef USE_GLOG
 #include <glog/logging.h>
 #else
@@ -11,14 +12,9 @@
 #include <aditof/sensor_definitions.h>
 #include <aditof/sensor_enumerator_factory.h>
 #include <aditof/sensor_enumerator_interface.h>
-#include <aditof/storage_interface.h>
-#include <aditof/temperature_sensor_interface.h>
 
 /* Available sensors */
 std::vector<std::shared_ptr<aditof::DepthSensorInterface>> depthSensors;
-std::vector<std::shared_ptr<aditof::StorageInterface>> storages;
-std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
-    temperatureSensors;
 std::shared_ptr<aditof::DepthSensorInterface> camDepthSensor;
 
 /* Version information */
@@ -38,8 +34,6 @@ int init_tof_sdk(char *cap_dev_path) {
 
     sensorsEnumerator->searchSensors();
     sensorsEnumerator->getDepthSensors(depthSensors);
-    sensorsEnumerator->getStorages(storages);
-    sensorsEnumerator->getTemperatureSensors(temperatureSensors);
     sensorsEnumerator->getKernelVersion(kernelversion);
     sensorsEnumerator->getUbootVersion(ubootversion);
     sensorsEnumerator->getSdVersion(sdversion);
@@ -123,36 +117,12 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
             break;
         }
 
-        aditof::SensorDetails depthSensorDetails;
-        camDepthSensor->getDetails(depthSensorDetails);
         auto pbSensorsInfo = response.mutable_sensors_info();
 
         std::string name;
         camDepthSensor->getName(name);
         auto pbDepthSensorInfo = pbSensorsInfo->mutable_image_sensors();
         pbDepthSensorInfo->set_name(name);
-
-        // Storages
-        int storage_id = 0;
-        for (const auto &storage : storages) {
-            std::string name;
-            storage->getName(name);
-            auto pbStorageInfo = pbSensorsInfo->add_storages();
-            pbStorageInfo->set_name(name);
-            pbStorageInfo->set_id(storage_id);
-            ++storage_id;
-        }
-
-        // Temperature sensors
-        int temp_sensor_id = 0;
-        for (const auto &sensor : temperatureSensors) {
-            std::string name;
-            sensor->getName(name);
-            auto pbTempSensorInfo = pbSensorsInfo->add_temp_sensors();
-            pbTempSensorInfo->set_name(name);
-            pbTempSensorInfo->set_id(temp_sensor_id);
-            ++temp_sensor_id;
-        }
 
         auto cardVersion = response.mutable_card_image_version();
 
@@ -255,6 +225,13 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
         break;
     }
 
+    case uvc_payload::FunctionName::START: {
+        aditof::Status status = camDepthSensor->start();
+        response.set_status(static_cast<::uvc_payload::Status>(status));
+
+        break;
+    }
+
     case uvc_payload::FunctionName::ADSD3500_READ_CMD: {
         uint16_t cmd = static_cast<uint32_t>(request.func_int32_param(0));
         uint16_t *data = new uint16_t;
@@ -351,66 +328,31 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
         break;
     }
 
-    case uvc_payload::FunctionName::STORAGE_OPEN: {
+    case uvc_payload::FunctionName::INIT_TARGET_DEPTH_COMPUTE: {
+        uint16_t iniFileLength =
+            static_cast<uint16_t>(request.func_int32_param(0));
+        uint16_t calDataLength =
+            static_cast<uint16_t>(request.func_int32_param(1));
+        uint8_t *iniFile = new uint8_t[iniFileLength];
+        uint8_t *calData = new uint8_t[calDataLength];
+
+        memcpy(iniFile, request.func_bytes_param(0).c_str(), iniFileLength);
+        memcpy(calData, request.func_bytes_param(1).c_str(), calDataLength);
+
+        aditof::Status status = camDepthSensor->initTargetDepthCompute(
+            iniFile, iniFileLength, calData, calDataLength);
+        response.set_status(static_cast<::uvc_payload::Status>(status));
+
+        delete[] iniFile;
+        delete[] calData;
+
+        break;
+    }
+
+    case uvc_payload::FunctionName::PROCESS_FRAME: {
 
         aditof::Status status = aditof::Status::OK;
-        response.set_status(static_cast<::uvc_payload::Status>(status));
-
-        break;
-    }
-
-    case uvc_payload::FunctionName::STORAGE_READ: {
-
-        size_t length = static_cast<size_t>(request.func_int32_param(0));
-        const uint32_t address =
-            static_cast<const uint32_t>(request.func_int32_param(1));
-        uint8_t *data = new uint8_t[length];
-
-        aditof::Status status = storages[0]->read(address, data, length);
-
-        if (status == aditof::Status::OK) {
-            response.add_bytes_payload(data, length * sizeof(uint8_t));
-        }
-        delete[] data;
-
-        response.set_status(static_cast<::uvc_payload::Status>(status));
-
-        break;
-    }
-
-    case uvc_payload::FunctionName::STORAGE_WRITE: {
-
-        size_t length = static_cast<size_t>(request.func_int32_param(0));
-        const uint32_t address =
-            static_cast<const uint32_t>(request.func_int32_param(1));
-        const uint8_t *data = reinterpret_cast<const uint8_t *>(
-            request.func_bytes_param(0).c_str());
-
-        aditof::Status status = storages[0]->write(address, data, length);
-
-        response.set_status(static_cast<::uvc_payload::Status>(status));
-
-        break;
-    }
-
-    case uvc_payload::FunctionName::STORAGE_CLOSE: {
-
-        aditof::Status status = aditof::Status::OK;
-        response.set_status(static_cast<::uvc_payload::Status>(status));
-
-        break;
-    }
-
-    case uvc_payload::FunctionName::STORAGE_READ_CAPACITY: {
-
-        size_t data;
-
-        aditof::Status status = storages[0]->getCapacity(data);
-
-        if (status == aditof::Status::OK) {
-            response.add_int32_payload(data);
-        }
-
+        status = camDepthSensor->getFrame(nullptr);
         response.set_status(static_cast<::uvc_payload::Status>(status));
 
         break;

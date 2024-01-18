@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset=utf-8 http-equiv="Content-Language" content="en" />
+	<link rel="stylesheet" type="text/css" href="main_page.css" />
+	<script type='text/javascript' src="/lws-common.js"></script>
+	<script type='text/javascript' src='main_page.js'></script>
+	<title>Tof Web App</title>
+</head>
+
+<body>
+	<div class="mainFrame">
+		<div class="row_top">
+			<div class="row">
+				<div class="column_left" style="background-color:#dbd8d8;">
+					<table>
+						<tr>
+							<td valign=middle align=center>
+								<a>
+									<img src="CompanyIcon.png">
+								</a>
+								<div id=brow hidden></div>
+							</td>
+							<td width="64" height="64" id="wstransport"></td>
+							<td width="64" height="64" id="transport"></td>
+						</tr>
+					</table>
+
+					<h2>Command Interface</h2>
+					<table>
+						<tr>
+							<td id=wsdi_statustd align=center class="wsstatus">
+								<span id=wsdi_status>Websocket connection not
+									initialized
+								</span>
+							</td>
+						</tr>
+					</table>
+					</br>
+					<!-- Camera selection -->
+					<select class="custom-select" id="cameraSelect" name="cameraSelect" disabled=true>
+						<option value="adsd3030">Adsd3030</option>
+						<option value="adsd3100">Adsd3100</option>
+					</select>
+					<input class="button" type=button id=connectCameraButton value="Open" disabled=true>
+					</br>
+
+					<!-- Frame Type selection -->
+					<select class="custom-select" id="frameTypeSelect" name="frameTypeSelect" disabled = true>
+					</select>
+					<input class="button" type=button id=setFrameTypeButton value="Set Frame Type">
+					</br>
+
+					<!-- Format selection -->
+					<select class="custom-select" id="formatSelect" name="formatSelect" disabled = true>
+					</select>
+					<input class="button" type=button id=setFormatButton value="Set format">
+					</br>
+					<input class="button" type=button id=startButton value="Start" disabled = true>
+					<input class="button" type=button id=stopButton value="Stop" disabled = true>
+					</br>
+
+                                        <!-- Frame Type selection -->
+					<input class="button" type=button id=resetButton value="Reset" disabled = true>
+					</br>
+
+
+                                        <div id=number class="bigger"> </div>
+
+				</div>
+				<div class="column_right" style="background-color:#7f7f7f;">
+						 <div id="count"></div>
+						 <img id="img"></img>
+						 <img id="img2"> </img>
+						 <canvas id="canvas1" width="0" height="0" willReadFrequently="true"></canvas>
+						 <canvas id="canvas2" width="0" height="0" willReadFrequently="true"></canvas>
+						</br>
+					<table>
+						<tr>
+							<td align=center>
+                                                                <div id=fps class="bigger" display="hidden"> </div>	
+							</td>
+							<td align=center>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+		</div>
+		<div class="row_bottom">
+			<div id="tofConsole">
+			</div>
+		</div>
+	</div>
+
+</body>
+
+</html>

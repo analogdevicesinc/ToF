@@ -86,17 +86,16 @@ if __name__ == "__main__":
 
     system = tof.System()
 
+    print("SDK version: ", tof.getApiVersion(), " | branch: ", tof.getBranchVersion(), " | commit: ", tof.getCommitVersion())
+
     cameras = []
     status = system.getCameraList(cameras, "ip:"+args.ip)
     if not status:
         print("system.getCameraList(): ", status)
 
     camera1 = cameras[0]
-        
-    status = camera1.setControl("initialization_config", args.config)
-    print("camera1.setControl()", status)
 
-    status = camera1.initialize()
+    status = camera1.initialize(args.config)
     if not status:
         print("camera1.initialize() failed with status: ", status)
 
@@ -135,8 +134,8 @@ if __name__ == "__main__":
     bitCount = 9
     frame = tof.Frame()
 
-    max_value_of_IR_pixel = 2 ** bitCount - 1
-    distance_scale_ir = 255.0 / max_value_of_IR_pixel
+    max_value_of_AB_pixel = 2 ** bitCount - 1
+    distance_scale_ab = 255.0 / max_value_of_AB_pixel
     distance_scale = 255.0 / camera_range
 
     while True:
@@ -151,14 +150,14 @@ if __name__ == "__main__":
             print("camera1.requestFrame() failed with status: ", status)
 
         depth_map = np.array(frame.getData("depth"), dtype="uint16", copy=False)
-        ir_map = np.array(frame.getData("ir"), dtype="uint16", copy=False)
+        ab_map = np.array(frame.getData("ab"), dtype="uint16", copy=False)
 
-        # Creation of the IR image
-        ir_map = ir_map[0: int(ir_map.shape[0] / 2), :]
-        ir_map = distance_scale_ir * ir_map
-        ir_map = np.uint8(ir_map)
-        ir_map = cv.flip(ir_map, 1)
-        ir_map = cv.cvtColor(ir_map, cv.COLOR_GRAY2RGB)
+        # Creation of the AB image
+        ab_map = ab_map[0: int(ab_map.shape[0] / 2), :]
+        ab_map = distance_scale_ab * ab_map
+        ab_map = np.uint8(ab_map)
+        ab_map = cv.flip(ab_map, 1)
+        ab_map = cv.cvtColor(ab_map, cv.COLOR_GRAY2RGB)
 
         # Creation of the Depth image
         new_shape = (int(depth_map.shape[0] / 2), depth_map.shape[1])
@@ -169,8 +168,8 @@ if __name__ == "__main__":
         depth_map = np.uint8(depth_map)
         depth_map = cv.applyColorMap(depth_map, cv.COLORMAP_RAINBOW)
 
-        # Combine depth and IR for more accurate results
-        result = cv.addWeighted(ir_map, 0.4, depth_map, 0.6, 0)
+        # Combine depth and AB for more accurate results
+        result = cv.addWeighted(ab_map, 0.4, depth_map, 0.6, 0)
 
         # Start the computations for object detection using DNN
         blob = cv.dnn.blobFromImage(result, inScaleFactor, (inWidth, inHeight), (meanVal, meanVal, meanVal), swapRB)

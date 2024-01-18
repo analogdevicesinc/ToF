@@ -55,23 +55,18 @@ buildCameras(std::unique_ptr<SensorEnumeratorInterface> enumerator) {
 
     std::vector<std::shared_ptr<Camera>> cameras;
     std::vector<std::shared_ptr<DepthSensorInterface>> depthSensors;
-    std::vector<std::shared_ptr<StorageInterface>> storages;
-    std::vector<std::shared_ptr<TemperatureSensorInterface>> temperatureSensors;
     std::string uboot;
     std::string kernel;
     std::string sd_ver;
 
     enumerator->getDepthSensors(depthSensors);
-    enumerator->getStorages(storages);
-    enumerator->getTemperatureSensors(temperatureSensors);
-
     enumerator->getUbootVersion(uboot);
     enumerator->getKernelVersion(kernel);
     enumerator->getSdVersion(sd_ver);
 
     for (const auto &dSensor : depthSensors) {
-        std::shared_ptr<Camera> camera = std::make_shared<CameraItof>(
-            dSensor, storages, temperatureSensors, uboot, kernel, sd_ver);
+        std::shared_ptr<Camera> camera =
+            std::make_shared<CameraItof>(dSensor, uboot, kernel, sd_ver);
         cameras.emplace_back(camera);
     }
 

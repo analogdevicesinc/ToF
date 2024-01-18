@@ -34,8 +34,6 @@
 #include "usb_buffer.pb.h"
 #include "usb_windows_utils.h"
 
-#include "device_utils.h"
-
 #include <atlstr.h>
 #ifdef USE_GLOG
 #include <glog/logging.h>
@@ -538,6 +536,42 @@ aditof::Status UsbDepthSensor::start() {
     using namespace aditof;
     Status status = Status::OK;
 
+    // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::START);
+
+    // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbWindowsUtils::uvcExUnitSendRequest(
+        m_implData->handle.pVideoInputFilter, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to write registers failed";
+        return status;
+    }
+
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbWindowsUtils::uvcExUnitGetResponse(
+        m_implData->handle.pVideoInputFilter, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR)
+            << "Failed to get response of the request to write registers";
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Read registers operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
+
     if (nullptr == m_implData->handle.pControl) {
         LOG(WARNING) << "USB interface not active";
         return Status::UNAVAILABLE;
@@ -609,14 +643,14 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     }
     VIDEOINFOHEADER *pVih = reinterpret_cast<VIDEOINFOHEADER *>(
         m_implData->handle.pAmMediaType->pbFormat);
-    HEADER(pVih)->biWidth = type.width;
-    HEADER(pVih)->biHeight = type.height;
-    hr = m_implData->handle.streamConf->SetFormat(
-        m_implData->handle.pAmMediaType);
-    if (FAILED(hr)) {
-        LOG(WARNING) << "Could not set requested resolution (Frame Index)\n";
-        return Status::GENERIC_ERROR;
-    }
+    //HEADER(pVih)->biWidth = type.width * 2;
+    //HEADER(pVih)->biHeight = type.height;
+    //hr = m_implData->handle.streamConf->SetFormat(
+    //    m_implData->handle.pAmMediaType);
+    //if (FAILED(hr)) {
+    //    LOG(WARNING) << "Could not set requested resolution (Frame Index)\n";
+    //    return Status::GENERIC_ERROR;
+    //}
     return status;
 }
 
@@ -673,10 +707,22 @@ aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
     int retryCount = 0;
     HRESULT hr;
 
+    usb_payload::ClientRequest requestMsg;
+    // Send request
+    requestMsg.set_func_name(usb_payload::FunctionName::PROCESS_FRAME);
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbWindowsUtils::uvcExUnitSendRequest(
+        m_implData->handle.pVideoInputFilter, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to process frame on target!";
+        return status;
+    }
+
     VIDEOINFOHEADER *pVi = reinterpret_cast<VIDEOINFOHEADER *>(
         m_implData->handle.pAmMediaType->pbFormat);
-    int currentWidth = HEADER(pVi)->biWidth;
-    int currentHeight = HEADER(pVi)->biHeight;
+    int currentWidth = HEADER(pVi)->biWidth * 2;
+    int currentHeight = HEADER(pVi)->biHeight * 2;
 
     while (retryCount < 1000) {
         if (m_implData->handle.pCB->newFrame == 1) {
@@ -1096,6 +1142,7 @@ aditof::Status UsbDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd,
         usb_payload::FunctionName::ADSD3500_READ_PAYLOAD_CMD);
     requestMsg.add_func_int32_param(static_cast<::google::int32>(cmd));
     requestMsg.add_func_int32_param(static_cast<::google::int32>(payload_len));
+    requestMsg.add_func_bytes_param(readback_data, 4 * sizeof(uint8_t));
 
     // Send request
     std::string requestStr;
@@ -1139,7 +1186,49 @@ aditof::Status UsbDepthSensor::adsd3500_read_payload(uint8_t *payload,
                                                      uint16_t payload_len) {
     using namespace aditof;
 
-    return Status::UNAVAILABLE;
+    Status status = Status::OK;
+
+    // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_READ_PAYLOAD);
+    requestMsg.add_func_int32_param(static_cast<::google::int32>(payload_len));
+
+    // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+    status = UsbWindowsUtils::uvcExUnitSendRequest(
+        m_implData->handle.pVideoInputFilter, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to read registers failed";
+        return status;
+    }
+
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbWindowsUtils::uvcExUnitGetResponse(
+        m_implData->handle.pVideoInputFilter, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to get response of the request to read registers";
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Read registers operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
+
+    // If request and response went well, extract data from response
+    memcpy(payload, responseMsg.bytes_payload(0).c_str(),
+           responseMsg.bytes_payload(0).length());
+
+    return Status::OK;
 }
 
 aditof::Status
@@ -1200,8 +1289,7 @@ aditof::Status UsbDepthSensor::adsd3500_write_payload(uint8_t *payload,
 
     // Construct request message
     usb_payload::ClientRequest requestMsg;
-    requestMsg.set_func_name(
-        usb_payload::FunctionName::ADSD3500_WRITE_PAYLOAD_CMD);
+    requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_WRITE_PAYLOAD);
     requestMsg.add_func_int32_param(static_cast<::google::int32>(payload_len));
     requestMsg.add_func_bytes_param(payload, payload_len);
 
@@ -1246,8 +1334,77 @@ aditof::Status UsbDepthSensor::adsd3500_reset() {
 }
 
 aditof::Status UsbDepthSensor::adsd3500_register_interrupt_callback(
-    aditof::SensorInterruptCallback cb) {
+    aditof::SensorInterruptCallback &cb) {
     LOG(WARNING) << "Registering an interrupt callback on a USB connection "
                     "is not supported yet!";
     return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status UsbDepthSensor::adsd3500_unregister_interrupt_callback(
+    aditof::SensorInterruptCallback &cb) {
+    LOG(WARNING) << "Unregistering an interrupt callback on a USB connection "
+                    "is not supported yet!";
+    return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status UsbDepthSensor::adsd3500_get_status(int &chipStatus,
+                                                   int &imagerStatus) {
+    using namespace aditof;
+    Status status = Status::UNAVAILABLE;
+    return status;
+}
+
+aditof::Status UsbDepthSensor::initTargetDepthCompute(uint8_t *iniFile,
+                                                      uint16_t iniFileLength,
+                                                      uint8_t *calData,
+                                                      uint16_t calDataLength) {
+    using namespace aditof;
+
+    Status status = Status::OK;
+
+    // Construct request message
+    usb_payload::ClientRequest requestMsg;
+    requestMsg.set_func_name(
+        usb_payload::FunctionName::INIT_TARGET_DEPTH_COMPUTE);
+    requestMsg.add_func_int32_param(
+        static_cast<::google::int32>(iniFileLength));
+    requestMsg.add_func_int32_param(
+        static_cast<::google::int32>(calDataLength));
+    requestMsg.add_func_bytes_param(iniFile, iniFileLength);
+    requestMsg.add_func_bytes_param(calData, calDataLength);
+
+    // Send request
+    std::string requestStr;
+    requestMsg.SerializeToString(&requestStr);
+
+    status = UsbWindowsUtils::uvcExUnitSendRequest(
+        m_implData->handle.pVideoInputFilter, requestStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Request to write registers failed";
+        return status;
+    }
+
+    // Read UVC gadget response
+    std::string responseStr;
+    status = UsbWindowsUtils::uvcExUnitGetResponse(
+        m_implData->handle.pVideoInputFilter, responseStr);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR)
+            << "Failed to get response of the request to write registers";
+        return status;
+    }
+    usb_payload::ServerResponse responseMsg;
+    bool parsed = responseMsg.ParseFromString(responseStr);
+    if (!parsed) {
+        LOG(ERROR)
+            << "Failed to deserialize string containing UVC gadget response";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    if (responseMsg.status() != usb_payload::Status::OK) {
+        LOG(ERROR) << "Read registers operation failed on UVC gadget";
+        return static_cast<aditof::Status>(responseMsg.status());
+    }
+
+    return Status::OK;
 }

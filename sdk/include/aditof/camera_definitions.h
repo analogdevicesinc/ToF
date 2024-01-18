@@ -161,18 +161,18 @@ struct CameraDetails {
 
     /**
      * @brief The maximum distance (in millimeters) the camera can measure in
-     * the current operating mode.
+     * the current operating mode. This is currently unused!
      */
     int maxDepth;
 
     /**
      * @brief The minimum distance (in millimeters) the camera can measure in
-     * the current operating mode.
+     * the current operating mode. This is currently unused!
      */
     int minDepth;
 
     /**
-     * @brief The number of bits used for representing one pixel data.
+     * @brief The number of bits used for representing one pixel data. This is currently unused!
      */
     int bitCount;
 
@@ -190,6 +190,21 @@ struct CameraDetails {
      * @brief The SD card image version on the embedded system that the camera is attached to.
      */
     std::string sdCardImageVersion;
+
+    /**
+     * @brief The serial number of camera
+     */
+    std::string serialNumber;
+};
+
+/**
+ * @enum ImagerType
+ * @brief Types of imagers
+ */
+enum class ImagerType {
+    UNSET,    //!< Value for when the type is unset
+    ADSD3100, //!< The ADSD3100 imager
+    ADSD3030, //!< The ADSD3030 imager
 };
 
 } // namespace aditof

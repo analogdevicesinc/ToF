@@ -31,7 +31,9 @@
  */
 #include "buffer.pb.h"
 
+#include <chrono>
 #include <condition_variable>
+#include <functional>
 #include <libwebsockets.h>
 #include <thread>
 
@@ -45,7 +47,10 @@ struct NetworkHandle {
 };
 
 class Network {
+  public:
+    typedef std::function<void(void)> InterruptNotificationCallback;
 
+  private:
     static std::vector<lws_context *> context;
     static std::vector<lws *> web_socket;
 
@@ -61,8 +66,14 @@ class Network {
     static bool Server_Connected[MAX_CAMERA_NUM];
     static bool Thread_Detached[MAX_CAMERA_NUM];
     bool Connection_Closed[MAX_CAMERA_NUM] = {false, false, false, false};
+    static bool InterruptDetected[MAX_CAMERA_NUM];
 
     int Thread_Running[MAX_CAMERA_NUM];
+
+    static void *rawPayloads[MAX_CAMERA_NUM];
+
+    InterruptNotificationCallback m_intNotifCb;
+    std::chrono::steady_clock::time_point m_latestActivityTimestamp;
 
     //! call_lws_service - calls lws_service api to service any websocket
     //! activity
@@ -80,7 +91,10 @@ class Network {
     int ServerConnect(const std::string &ip);
 
     //! SendCommand() - APi to send SDK apis to connected server
-    int SendCommand();
+    //! If, after the command, we expect the server to send raw (non-protobuf)
+    //! payload, set the 'rawPayload' with the location where the payload
+    //! should be copied. Otherwise, set to null or skip it.
+    int SendCommand(void *rawPayload = nullptr);
 
     //! recv_server_data() - APi to receive data from server
     int recv_server_data();
@@ -109,4 +123,8 @@ class Network {
 
     //! isServer_Connected() - APi to check if server is connected successfully
     bool isServer_Connected();
+
+    void registerInterruptCallback(InterruptNotificationCallback &cb);
+
+    std::chrono::steady_clock::time_point getLatestActivityTimestamp();
 };

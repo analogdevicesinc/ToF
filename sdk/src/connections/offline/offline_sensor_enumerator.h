@@ -13,12 +13,6 @@ class OfflineSensorEnumerator : public aditof::SensorEnumeratorInterface {
     virtual aditof::Status
     getDepthSensors(std::vector<std::shared_ptr<aditof::DepthSensorInterface>>
                         &depthSensors) override;
-    virtual aditof::Status getStorages(
-        std::vector<std::shared_ptr<aditof::StorageInterface>> &storages)
-        override;
-    virtual aditof::Status getTemperatureSensors(
-        std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
-            &temperatureSensors) override;
     virtual aditof::Status
     getUbootVersion(std::string &uBootVersion) const override;
     virtual aditof::Status

@@ -5,6 +5,7 @@
 #VSYS enable GPIO - GPIO5 / IO01 - Linux GPIO 129
 #VAUX enable GPIO - GPIO4 / IO31 - Linux GPIO 127
 #VDAC enable GPIO - GPIO5 / IO02 - Linux GPIO 130
+#BS0  enable GPIO - GPIO5 / IO11 - Linux GPIO 139
 
 BOARD=$(strings /proc/device-tree/model)
 
@@ -13,6 +14,11 @@ if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier + ADSD3500" ]]; then
 	echo 122 > /sys/class/gpio/export
 	echo out > /sys/class/gpio/gpio122/direction
 	echo 0 > /sys/class/gpio/gpio122/value
+
+	#BS0 Set 0 - Self boot and 1 - Host boot
+	echo 139 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio139/direction
+	echo 0 > /sys/class/gpio/gpio139/value
 
 	# Boot strap MAX7321
 	#OC0
@@ -79,6 +85,12 @@ if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier + ADSD3030" ]]; then
 	echo 122 > /sys/class/gpio/export
 	echo out > /sys/class/gpio/gpio122/direction
 	echo 0 > /sys/class/gpio/gpio122/value
+
+	#BS0 Set 0 - Self boot and 1 - Host boot
+	echo 139 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio139/direction
+	echo 0 > /sys/class/gpio/gpio139/value
+
 
 #U13	#U0 1 - INTERPOSER FLASH / 0 - TEMBIN FLASH
 	echo 492 > /sys/class/gpio/export
@@ -161,6 +173,178 @@ if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier + ADSD3030" ]]; then
 
 	# Pull reset high
 	echo 1 > /sys/class/gpio/gpio122/value
+fi
+
+if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier ADSD3500-SPI + ADSD3100" ]]; then
+	#ADSD3500 Reset Pin
+	echo 122 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio122/direction
+	echo 0 > /sys/class/gpio/gpio122/value
+
+	#BS0 Set 0 - Self boot and 1 - Host boot
+	echo 139 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio139/direction
+	echo 0 > /sys/class/gpio/gpio139/value
+
+	# Boot strap MAX7321
+	#OC0
+	echo 496 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio496/direction
+	echo 0 > /sys/class/gpio/gpio496/value
+
+	#OC1
+	echo 497 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio497/direction
+	echo 0 > /sys/class/gpio/gpio497/value
+
+	#OC2
+	echo 498 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio498/direction
+	echo 0 > /sys/class/gpio/gpio498/value
+
+	#OC3
+	echo 499 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio499/direction
+	echo 0 > /sys/class/gpio/gpio499/value
+
+	#OC4
+	echo 500 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio500/direction
+	echo 0 > /sys/class/gpio/gpio500/value
+
+	#OC5
+	echo 501 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio501/direction
+	echo 0 > /sys/class/gpio/gpio501/value
+
+	#OC6
+	echo 502 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio502/direction
+	echo 0 > /sys/class/gpio/gpio502/value
+
+	#FLASH_WP
+	echo 503 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio503/direction
+	echo 1 > /sys/class/gpio/gpio503/value
+
+	# Boot strap MAX7320
+	#U0
+	echo 507 > /sys/class/gpio/export
+	echo 0 > /sys/class/gpio/gpio507/value
+
+	#EN_1P8
+	echo 510 > /sys/class/gpio/export
+	echo 1 > /sys/class/gpio/gpio510/value
+
+	sleep 1
+
+	#EN_0P8
+	echo 511 > /sys/class/gpio/export
+	echo 1 > /sys/class/gpio/gpio511/value
+
+	# Pull reset high
+	echo 1 > /sys/class/gpio/gpio122/value
+
+	# Probe ADSD3500 SPI driver
+	modprobe adsd3500-spi
+fi
+
+if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier ADSD3500-SPI + ADSD3030" ]]; then
+	#ADSD3500 Reset Pin
+	echo 122 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio122/direction
+	echo 0 > /sys/class/gpio/gpio122/value
+
+	#BS0 Set 0 - Self boot and 1 - Host boot
+	echo 139 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio139/direction
+	echo 0 > /sys/class/gpio/gpio139/value
+
+
+	#U13	#U0 1 - INTERPOSER FLASH / 0 - TEMBIN FLASH
+	echo 492 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio492/direction
+	echo 0 > /sys/class/gpio/gpio492/value
+
+	#U5		#EN_AVDD
+	echo 508 > /sys/class/gpio/export
+	echo 1 > /sys/class/gpio/gpio508/value
+
+	#U12	#OC0
+	echo 496 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio496/direction
+	echo 0 > /sys/class/gpio/gpio496/value
+
+	#U12	#OC1
+	echo 497 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio497/direction
+	echo 0 > /sys/class/gpio/gpio497/value
+
+	#U12	#OC2
+	echo 498 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio498/direction
+	echo 0 > /sys/class/gpio/gpio498/value
+
+	#U12	#OC3
+	echo 499 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio499/direction
+	echo 0 > /sys/class/gpio/gpio499/value
+
+	#U12	#OC4
+	echo 500 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio500/direction
+	echo 0 > /sys/class/gpio/gpio500/value
+
+	#U12	#OC5
+	echo 501 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio501/direction
+	echo 0 > /sys/class/gpio/gpio501/value
+
+	#U12	#OC6
+	echo 502 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio502/direction
+	echo 1 > /sys/class/gpio/gpio502/value
+
+	#U12	#FLASH_WP
+	echo 503 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio503/direction
+	echo 1 > /sys/class/gpio/gpio503/value
+
+
+	#U13	#DS2_ON
+	echo 493 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio493/direction
+	echo 0 > /sys/class/gpio/gpio493/value
+
+	#U5	#EN_3V3
+	echo 504 > /sys/class/gpio/export
+	echo 1 > /sys/class/gpio/gpio504/value
+
+	#U5	#EN_1V2
+	echo 505 > /sys/class/gpio/export
+	echo 1 > /sys/class/gpio/gpio505/value
+
+	#U5	#EN_1V8
+	echo 506 > /sys/class/gpio/export
+	echo 1 > /sys/class/gpio/gpio506/value
+
+	#U5	#EN_VLDD
+	echo 507 > /sys/class/gpio/export
+	echo 1 > /sys/class/gpio/gpio507/value
+
+	#U5	#EN_0V8
+	echo 509 > /sys/class/gpio/export
+	echo 1 > /sys/class/gpio/gpio509/value
+
+	#U5 #SHDWN_SEL
+	echo 510 > /sys/class/gpio/export
+	echo 0 > /sys/class/gpio/gpio510/value
+
+	# Pull reset high
+	echo 1 > /sys/class/gpio/gpio122/value
+
+	# Probe ADSD3500 SPI driver
+	modprobe adsd3500-spi
 fi
 
 # Deassert ADC reset - will pop on /dev/i2c1 address 0x10

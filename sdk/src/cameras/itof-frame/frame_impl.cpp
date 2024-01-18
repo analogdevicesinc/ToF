@@ -32,7 +32,6 @@
 
 #include "frame_impl.h"
 #include "aditof/frame_operations.h"
-#include "aditof_internal.h"
 
 #include <algorithm>
 #include <cmath>
@@ -44,6 +43,8 @@
 #include <aditof/log.h>
 #endif
 #include <unordered_map>
+
+static const int skMetaDataBytesCount = 128;
 
 const std::vector<std::string> availableAttributes = {
     "mode",       "width",          "height",
@@ -60,7 +61,7 @@ FrameImpl::FrameImpl() : m_implData(new FrameImpl::ImplData) {
     for (auto attributeKey : availableAttributes) {
         m_attributes.emplace(attributeKey, "");
         if (attributeKey == "embed_hdr_length") {
-            m_attributes[attributeKey] = std::to_string(EMBED_HDR_LENGTH);
+            m_attributes[attributeKey] = std::to_string(skMetaDataBytesCount);
         }
     }
 }
@@ -109,6 +110,22 @@ aditof::Status FrameImpl::getDetails(aditof::FrameDetails &details) const {
 aditof::Status
 FrameImpl::getDataDetails(const std::string &dataType,
                           aditof::FrameDataDetails &details) const {
+
+    //TO DO: to be removed when we drop ir terminology
+    if (dataType == "ir") {
+        std::string dataTypeAB = "ab";
+        auto detailsIterAB = std::find_if(
+            m_details.dataDetails.begin(), m_details.dataDetails.end(),
+            [&dataTypeAB](const aditof::FrameDataDetails &details) {
+                return dataTypeAB == details.type;
+            });
+        LOG(WARNING)
+            << "The term 'ir' has been deprecated in release 5.0.0 and will be "
+               "entirely removed in 5.1.0. Please use 'ab' instead.";
+        details = *detailsIterAB;
+        return aditof::Status::OK;
+    }
+
     auto detailsIter =
         std::find_if(m_details.dataDetails.begin(), m_details.dataDetails.end(),
                      [&dataType](const aditof::FrameDataDetails &details) {
@@ -126,8 +143,20 @@ FrameImpl::getDataDetails(const std::string &dataType,
 
 aditof::Status FrameImpl::getData(const std::string &dataType,
                                   uint16_t **dataPtr) {
+
     using namespace aditof;
-    if (m_implData->m_dataLocations.count(dataType) > 0) {
+    //TO DO: to be removed when we drop ir terminology
+    if (dataType == "ir") {
+        if (m_implData->m_dataLocations.count("ab") > 0) {
+            *dataPtr = m_implData->m_dataLocations["ab"];
+            LOG(WARNING) << "The term 'ir' has been deprecated in release "
+                            "5.0.0 and will be entirely removed in 5.1.0. "
+                            "Please use 'ab' instead.";
+        } else {
+            dataPtr = nullptr;
+            return Status::INVALID_ARGUMENT;
+        }
+    } else if (m_implData->m_dataLocations.count(dataType) > 0) {
         *dataPtr = m_implData->m_dataLocations[dataType];
     } else {
         dataPtr = nullptr;
@@ -198,7 +227,7 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
             return (unsigned long int)(embed_hdr_length / 2) * total_captures;
         } else if (frameDetail.type == "xyz") {
             return (unsigned long int)(frameDetail.height * frameDetail.width *
-                                       sizeof(Point3I));
+                                       sizeof(Point3I) / 2);
         } else {
             return (unsigned long int)frameDetail.height * frameDetail.width;
         }
@@ -252,5 +281,22 @@ aditof::Status FrameImpl::getAttribute(const std::string &attribute,
     }
 
     value = m_attributes[attribute];
+    return aditof::Status::OK;
+}
+
+aditof::Status FrameImpl::getMetadataStruct(aditof::Metadata &metadata) const {
+    using namespace aditof;
+    Status status = Status::OK;
+
+    uint8_t *header;
+    if (m_implData->m_dataLocations.count("metadata") > 0) {
+        header = reinterpret_cast<uint8_t *>(
+            m_implData->m_dataLocations["metadata"]);
+    } else {
+        return aditof::Status::UNAVAILABLE;
+    }
+
+    memcpy(&metadata, header, sizeof(Metadata));
+
     return aditof::Status::OK;
 }

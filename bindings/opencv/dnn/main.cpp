@@ -76,7 +76,8 @@ int main(int argc, char *argv[]) {
     Status status = Status::OK;
 
     if (argc < 2) {
-        LOG(ERROR) << "No config file provided! ./aditof-opencv-dnn <config_file>";
+        LOG(ERROR)
+            << "No config file provided! ./aditof-opencv-dnn <config_file>";
         return 0;
     }
 
@@ -92,14 +93,8 @@ int main(int argc, char *argv[]) {
     }
 
     auto camera = cameras.front();
-    
-    status = camera->setControl("initialization_config", configFile);
-    if(status != Status::OK){
-        LOG(ERROR) << "Failed to set control!";
-        return 0;
-    }
 
-    status = camera->initialize();
+    status = camera->initialize(configFile);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
         return -1;
@@ -150,26 +145,30 @@ int main(int argc, char *argv[]) {
     aditof::FrameDetails frameDetails;
     frame.getDetails(frameDetails);
 
-    cv::namedWindow("Display Objects Depth and IR", cv::WINDOW_AUTOSIZE);
+    cv::namedWindow("Display Objects Depth and AB", cv::WINDOW_AUTOSIZE);
     cv::namedWindow("Display Objects Depth", cv::WINDOW_AUTOSIZE);
-	
-	//TODO review usage of frame details
+
+    //TODO review usage of frame details
     cv::Size cropSize;
-	if ((float)frameDetails.dataDetails.front().width / (float)(frameDetails.dataDetails.front().height) >
+    if ((float)frameDetails.dataDetails.front().width /
+            (float)(frameDetails.dataDetails.front().height) >
         WHRatio) {
         cropSize = cv::Size(
-            static_cast<int>((float)(frameDetails.dataDetails.front().height) * WHRatio),
+            static_cast<int>((float)(frameDetails.dataDetails.front().height) *
+                             WHRatio),
             (frameDetails.dataDetails.front().height));
     } else {
-        cropSize =
-            cv::Size(frameDetails.dataDetails.front().width,
-                     static_cast<int>((float)frameDetails.dataDetails.front().width / WHRatio));
+        cropSize = cv::Size(
+            frameDetails.dataDetails.front().width,
+            static_cast<int>((float)frameDetails.dataDetails.front().width /
+                             WHRatio));
     }
 
-    cv::Rect crop(cv::Point(frameDetails.dataDetails.front().width - cropSize.width,
-                            frameDetails.dataDetails.front().height - cropSize.height),
-                  cropSize);
-	
+    cv::Rect crop(
+        cv::Point(frameDetails.dataDetails.front().width - cropSize.width,
+                  frameDetails.dataDetails.front().height - cropSize.height),
+        cropSize);
+
     // Look up table to adjust image => use gamma correction
     float gamma = 0.4f;
     cv::Mat lookUpTable(1, 256, CV_8U);
@@ -204,9 +203,9 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 
-        /* Obtain the ir mat from the frame */
-        cv::Mat irMat;
-        status = fromFrameToIrMat(frame, irMat);
+        /* Obtain the ab mat from the frame */
+        cv::Mat abMat;
+        status = fromFrameToAbMat(frame, abMat);
         if (status != Status::OK) {
             LOG(ERROR) << "Could not convert from frame to mat!";
             return -1;
@@ -215,22 +214,22 @@ int main(int argc, char *argv[]) {
         /* Distance factor */
         double distance_scale = 255.0 / cameraRange;
 
-        int max_value_of_IR_pixel = (1 << bitCount) - 1;
+        int max_value_of_AB_pixel = (1 << bitCount) - 1;
 
-        /* Distance factor IR */
-        double distance_scale_ir = 255.0 / max_value_of_IR_pixel;
+        /* Distance factor AB */
+        double distance_scale_ab = 255.0 / max_value_of_AB_pixel;
 
         /* Convert from raw values to values that opencv can understand */
         frameMat.convertTo(frameMat, CV_8U, distance_scale);
         applyColorMap(frameMat, frameMat, cv::COLORMAP_RAINBOW);
 
-        irMat.convertTo(irMat, CV_8U, distance_scale_ir);
-        cv::cvtColor(irMat, irMat, cv::COLOR_GRAY2RGB);
+        abMat.convertTo(abMat, CV_8U, distance_scale_ab);
+        cv::cvtColor(abMat, abMat, cv::COLOR_GRAY2RGB);
 
-        /* Use a combination between ir mat & depth mat as input for the Net as
+        /* Use a combination between ab mat & depth mat as input for the Net as
          * we currently don't have an rgb source */
         cv::Mat resultMat;
-        cv::addWeighted(irMat, 0.4, frameMat, 0.6, 0, resultMat);
+        cv::addWeighted(abMat, 0.4, frameMat, 0.6, 0, resultMat);
 
         cv::Mat inputBlob =
             cv::dnn::blobFromImage(resultMat, inScaleFactor,
@@ -336,7 +335,7 @@ int main(int argc, char *argv[]) {
 
         /* Display the images */
         cv::imshow("Display Objects Depth", frameMat);
-        cv::imshow("Display Objects Depth and IR", resultMat);
+        cv::imshow("Display Objects Depth and AB", resultMat);
     }
 
     return 0;

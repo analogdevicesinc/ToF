@@ -131,8 +131,6 @@ uint32_t GenerateXYZTables(float **pp_x_table, float **pp_y_table,
     // Adjust values based on optical center and focal length
     float cx = p_intr_data->cx / row_bin_factor;
     float cy = p_intr_data->cy / col_bin_factor;
-    float fx = p_intr_data->fx / row_bin_factor;
-    float fy = p_intr_data->fy / col_bin_factor;
     // float codx = p_intr_data->codx;
     //float cody = p_intr_data->cody;
 
@@ -244,7 +242,7 @@ uint32_t ComputeXYZ(uint16_t *p_depth, XYZData *p_xyz_data,
     const uint32_t n_rows = p_xyz_data->n_rows;
     const uint32_t n_cols = p_xyz_data->n_cols;
 
-    for (int pixel_id = 0; pixel_id < n_rows * n_cols; pixel_id++) {
+    for (uint32_t pixel_id = 0; pixel_id < n_rows * n_cols; pixel_id++) {
         p_xyz_image[3 * pixel_id + 0] = (int16_t)(floorf(
             p_xyz_data->p_x_table[pixel_id] * (float)p_depth[pixel_id] + 0.5f));
 

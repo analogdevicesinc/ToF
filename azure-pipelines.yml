@@ -7,14 +7,13 @@ variables:
   WORK_DIR: "$(Agent.BuildDirectory)/s"  
   BUILD_DIR:  "$(WORK_DIR)/build"
   DEPS_DIR: "$(BUILD_DIR)/deps"
-  DEFAULT_CMAKE_FLAGS: "-DUSE_DEPTH_COMPUTE_STUBS=1 \
-                        -DWITH_NETWORK=1 \
+  DEFAULT_CMAKE_FLAGS: "-DWITH_NETWORK=1 \
                         -DWITH_PYTHON=1 \
-                        -DWITH_ROS=0 \
                         -DWITH_OPENCV=1 \ 
                         -DWITH_EXAMPLES=1 \
                         -DWITH_DOC=0 \
-                        -DWITH_OPEN3D=0"
+                        -DWITH_OPEN3D=0 \ 
+                        -DCI_BUILD=1"
   NUM_JOBS: 4
   IS_PULL_REQUEST: ${{ eq('$(Build.Reason)', 'PullRequest') }}
   BRANCH_NAME: $(Build.SourceBranchName)
@@ -115,8 +114,8 @@ jobs:
       versionSpec: '3.9'
   - task: Cache@2
     inputs:
-      key: deps_windowsZ | "$(imageName)" 
-      restoreKeys: deps_windowsZ | "$(imageName)"
+      key: deps_windows | "$(imageName)" 
+      restoreKeys: deps_windows | "$(imageName)"
       path: $(Agent.BuildDirectory)/s/deps_installed
       cacheHitVar: CACHE_RESTORED
   - task: PowerShell@2

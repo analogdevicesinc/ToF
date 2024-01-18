@@ -31,10 +31,12 @@
  */
 
 #include "aditof/depth_sensor_interface.h"
-#include "cameras/itof-camera/mode_info.h"
+#include "buffer_processor.h"
 #include "connections/target/v4l_buffer_access_interface.h"
 #include <memory>
 #include <unordered_map>
+
+#include "cameras/itof-camera/mode_info.h"
 
 class Adsd3500Sensor : public aditof::DepthSensorInterface,
                        public aditof::V4lBufferAccessInterface,
@@ -91,7 +93,11 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     adsd3500_write_payload(uint8_t *payload, uint16_t payload_len) override;
     virtual aditof::Status adsd3500_reset() override;
     virtual aditof::Status adsd3500_register_interrupt_callback(
-        aditof::SensorInterruptCallback cb) override;
+        aditof::SensorInterruptCallback &cb) override;
+    virtual aditof::Status adsd3500_unregister_interrupt_callback(
+        aditof::SensorInterruptCallback &cb) override;
+    virtual aditof::Status adsd3500_get_status(int &chipStatus,
+                                               int &imagerStatus) override;
 
   public: // implements V4lBufferAccessInterface
     // Methods that give a finer control than getFrame()
@@ -106,6 +112,9 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     enqueueInternalBuffer(struct v4l2_buffer &buf) override;
     virtual aditof::Status
     getDeviceFileDescriptor(int &fileDescriptor) override;
+    virtual aditof::Status
+    initTargetDepthCompute(uint8_t *iniFile, uint16_t iniFileLength,
+                           uint8_t *calData, uint16_t calDataLength) override;
 
   public:
     aditof::Status adsd3500InterruptHandler(int signalValue);
@@ -141,79 +150,86 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     bool m_firstRun;
     unsigned int m_sensorFps;
     bool m_adsd3500Queried;
-    aditof::SensorInterruptCallback m_interruptCallback;
+    std::unordered_map<void *, aditof::SensorInterruptCallback>
+        m_interruptCallbackMap;
     std::vector<aditof::DepthSensorFrameType> m_availableFrameTypes;
+    BufferProcessor *m_bufferProcessor;
+    bool m_depthComputeOnTarget;
+    int m_chipStatus;
+    int m_imagerStatus;
+    aditof::Adsd3500Status m_adsd3500Status;
+    bool m_chipResetDone;
 
     const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
         {
             "sr-native",
             {{"raw", 1024, 4096},
-             {"ir", 1024, 1024},
-             {"xyz", 1024, 1024},
              {"depth", 1024, 1024},
+             {"ab", 1024, 1024},
              {"conf", 1024, 1024},
-             {"embedded_header", 1, 128}},
+             {"xyz", 1024, 1024},
+             {"metadata", 1, 128}},
             1024,
             4096,
         },
         {
             "lr-native",
             {{"raw", 1024, 4096},
-             {"ir", 1024, 1024},
-             {"xyz", 1024, 1024},
              {"depth", 1024, 1024},
+             {"ab", 1024, 1024},
              {"conf", 1024, 1024},
-             {"embedded_header", 1, 128}},
+             {"xyz", 1024, 1024},
+             {"metadata", 1, 128}},
             1024,
             4096,
         },
         {
             "sr-qnative",
             {{"raw", 2560, 512},
-             {"ir", 512, 512},
-             {"xyz", 512, 512},
              {"depth", 512, 512},
+             {"ab", 512, 512},
              {"conf", 512, 512},
-             {"embedded_header", 1, 128}},
+             {"xyz", 512, 512},
+             {"metadata", 1, 128}},
             2560,
             512,
         },
         {
             "lr-qnative",
             {{"raw", 2560, 512},
-             {"ir", 512, 512},
-             {"xyz", 512, 512},
              {"depth", 512, 512},
+             {"ab", 512, 512},
              {"conf", 512, 512},
-             {"embedded_header", 1, 128}},
+             {"xyz", 512, 512},
+             {"metadata", 1, 128}},
             2560,
             512,
         },
         {
             "pcm-native",
-            {{"ir", 1024, 1024}},
+            {{"ab", 1024, 1024}},
             1024,
             1024,
         },
         {
             "sr-mixed",
             {{"raw", 2560, 512},
-             {"ir", 512, 512},
-             {"xyz", 512, 512},
              {"depth", 512, 512},
+             {"ab", 512, 512},
              {"conf", 512, 512},
-             {"embedded_header", 1, 128}},
+             {"xyz", 512, 512},
+             {"metadata", 1, 128}},
             2560,
             512,
         },
         {
             "lr-mixed",
             {{"raw", 2560, 512},
-             {"ir", 512, 512},
-             {"xyz", 512, 512},
              {"depth", 512, 512},
+             {"ab", 512, 512},
              {"conf", 512, 512},
-             {"embedded_header", 1, 128}},
+             {"xyz", 512, 512},
+             {"metadata", 1, 128}},
             2560,
             512,
         }
@@ -223,72 +239,72 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
         availableFrameTypesAdsd3030 = {{
                                            "sr-native",
                                            {{"raw", 2560, 640},
-                                            {"ir", 512, 640},
-                                            {"xyz", 512, 640},
                                             {"depth", 512, 640},
+                                            {"ab", 512, 640},
                                             {"conf", 512, 640},
-                                            {"embedded_header", 1, 128}},
+                                            {"xyz", 512, 640},
+                                            {"metadata", 1, 128}},
                                            2560,
                                            640,
                                        },
                                        {
                                            "lr-native",
                                            {{"raw", 2560, 640},
-                                            {"ir", 512, 640},
-                                            {"xyz", 512, 640},
                                             {"depth", 512, 640},
+                                            {"ab", 512, 640},
                                             {"conf", 512, 640},
-                                            {"embedded_header", 1, 128}},
+                                            {"xyz", 512, 640},
+                                            {"metadata", 1, 128}},
                                            2560,
                                            640,
                                        },
                                        {
                                            "sr-qnative",
                                            {{"raw", 1280, 320},
-                                            {"ir", 256, 320},
-                                            {"xyz", 256, 320},
                                             {"depth", 256, 320},
+                                            {"ab", 256, 320},
                                             {"conf", 256, 320},
-                                            {"embedded_header", 1, 128}},
+                                            {"xyz", 256, 320},
+                                            {"metadata", 1, 128}},
                                            1280,
                                            320,
                                        },
                                        {
                                            "lr-qnative",
                                            {{"raw", 1280, 320},
-                                            {"ir", 256, 320},
-                                            {"xyz", 256, 320},
                                             {"depth", 256, 320},
+                                            {"ab", 256, 320},
                                             {"conf", 256, 320},
-                                            {"embedded_header", 1, 128}},
+                                            {"xyz", 256, 320},
+                                            {"metadata", 1, 128}},
                                            1280,
                                            320,
                                        },
                                        {
                                            "pcm-native",
-                                           {{"ir", 512, 640}},
+                                           {{"ab", 512, 640}},
                                            512,
                                            640,
                                        },
                                        {
                                            "sr-mixed",
                                            {{"raw", 1280, 320},
-                                            {"ir", 256, 320},
-                                            {"xyz", 256, 320},
                                             {"depth", 256, 320},
+                                            {"ab", 256, 320},
                                             {"conf", 256, 320},
-                                            {"embedded_header", 1, 128}},
+                                            {"xyz", 256, 320},
+                                            {"metadata", 1, 128}},
                                            1280,
                                            320,
                                        },
                                        {
                                            "lr-mixed",
                                            {{"raw", 1280, 320},
-                                            {"ir", 256, 320},
-                                            {"xyz", 256, 320},
                                             {"depth", 256, 320},
+                                            {"ab", 256, 320},
                                             {"conf", 256, 320},
-                                            {"embedded_header", 1, 128}},
+                                            {"xyz", 256, 320},
+                                            {"metadata", 1, 128}},
                                            1280,
                                            320,
                                        }};

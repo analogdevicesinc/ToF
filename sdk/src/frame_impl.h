@@ -60,6 +60,7 @@ class FrameImpl {
                                 const std::string &value);
     aditof::Status getAttribute(const std::string &attribute,
                                 std::string &value);
+    aditof::Status getMetadataStruct(aditof::Metadata &metadata) const;
 
   private:
     void allocFrameData(const aditof::FrameDetails &details);

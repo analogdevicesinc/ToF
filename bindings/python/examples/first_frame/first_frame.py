@@ -42,6 +42,8 @@ if len(sys.argv) < 2  or sys.argv[1] == "--help" or sys.argv[1] == "-h" :
 
 system = tof.System()
 
+print("SDK version: ", tof.getApiVersion(), " | branch: ", tof.getBranchVersion(), " | commit: ", tof.getCommitVersion())
+
 cameras = []
 ip = ""
 if len(sys.argv) == 3 :
@@ -61,10 +63,14 @@ print("system.getCameraList()", status)
 
 camera1 = cameras[0]
 
-status = camera1.setControl("initialization_config", config)
-print("camera1.setControl()", status)
+#create callback and register it to the interrupt routine
+def callbackFunction(callbackStatus):
+    print("Running the python callback for which the status of ADSD3500 has been forwarded. ADSD3500 status = ", callbackStatus)
 
-status = camera1.initialize()
+sensor = camera1.getSensor()
+status = sensor.adsd3500_register_interrupt_callback(callbackFunction)
+
+status = camera1.initialize(config)
 print("camera1.initialize()", status)
 
 types = []
@@ -85,6 +91,7 @@ status = camera1.start()
 print("camera1.start()", status)
 
 frame = tof.Frame()
+
 status = camera1.requestFrame(frame)
 print("camera1.requestFrame()", status)
 
@@ -97,6 +104,17 @@ status = camera1.stop()
 print("camera1.stop()", status)
 
 image = np.array(frame.getData("depth"), copy=False)
+
+metadata = tof.Metadata
+status, metadata = frame.getMetadataStruct()
+
+print("Sensor temperature from metadata: ", metadata.sensorTemperature)
+print("Laser temperature from metadata: ", metadata.laserTemperature)
+print("Frame number from metadata: ", metadata.frameNumber)
+print("Mode from metadata: ", metadata.imagerMode)
+
+#Unregister callback
+status = sensor.adsd3500_unregister_interrupt_callback(callbackFunction)
 
 plt.figure()
 plt.imshow(image)

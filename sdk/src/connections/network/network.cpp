@@ -73,11 +73,15 @@ recursive_mutex Network::m_mutex[MAX_CAMERA_NUM];
 mutex Network::mutex_recv[MAX_CAMERA_NUM];
 condition_variable_any Network::Cond_Var[MAX_CAMERA_NUM];
 condition_variable Network::thread_Cond_Var[MAX_CAMERA_NUM];
+static const int FRAME_PREPADDING_BYTES = 2;
 
 bool Network::Send_Successful[MAX_CAMERA_NUM];
 bool Network::Data_Received[MAX_CAMERA_NUM];
 bool Network::Server_Connected[MAX_CAMERA_NUM];
 bool Network::Thread_Detached[MAX_CAMERA_NUM];
+bool Network::InterruptDetected[MAX_CAMERA_NUM];
+
+void *Network::rawPayloads[MAX_CAMERA_NUM];
 
 /*
 * isServer_Connected(): checks if server is connected
@@ -232,7 +236,7 @@ int Network::ServerConnect(const std::string &ip) {
                 -1 -  on error
 * Desription:    This function is used to send the data to connected server.
 */
-int Network::SendCommand() {
+int Network::SendCommand(void *rawPayload) {
     int status = -1;
     uint8_t numRetry = 0;
     int siz = send_buff[m_connectionId].ByteSize();
@@ -275,6 +279,9 @@ int Network::SendCommand() {
 #ifdef NW_DEBUG
             cout << "Write Successful" << endl;
 #endif
+            if (rawPayload) {
+                rawPayloads[m_connectionId] = rawPayload;
+            }
             status = 0;
             break;
         }
@@ -283,6 +290,8 @@ int Network::SendCommand() {
     if (Server_Connected[m_connectionId] == false) {
         status = -2;
     }
+
+    m_latestActivityTimestamp = std::chrono::steady_clock::now();
 
     return status;
 }
@@ -337,6 +346,17 @@ int Network::recv_server_data() {
 
     send_buff[m_connectionId].Clear();
 
+    if (status == 0) {
+        if (InterruptDetected[m_connectionId]) {
+            InterruptDetected[m_connectionId] = false;
+            if (m_intNotifCb) {
+                m_intNotifCb();
+            }
+        }
+    }
+
+    m_latestActivityTimestamp = std::chrono::steady_clock::now();
+
     return status;
 }
 
@@ -359,12 +379,10 @@ void Network::call_lws_service() {
         } else if (Connection_Closed[m_connectionId] == true &&
                    Server_Connected[m_connectionId] == false) {
             Connection_Closed[m_connectionId] = false;
-            break;
         }
         /*Complete the thread if destructor is called*/
-        std::lock_guard<std::mutex> guard(thread_mutex[m_connectionId]);
-
         if (Thread_Running[m_connectionId] == 1) {
+            std::lock_guard<std::mutex> guard(thread_mutex[m_connectionId]);
 #ifdef NW_DEBUG
             cout << "Thread exited" << endl;
 #endif
@@ -409,7 +427,6 @@ int Network::callback_function(struct lws *wsi,
 #ifdef NW_DEBUG
         cout << endl << "Rcvd Data len : " << len << endl;
 #endif
-        std::lock_guard<std::mutex> guard(mutex_recv[connectionId]);
 
         const size_t remaining = lws_remaining_packet_payload(wsi);
         bool isFinal = lws_is_final_fragment(wsi);
@@ -425,25 +442,32 @@ int Network::callback_function(struct lws *wsi,
                 in = static_cast<void *>(clientData->data.data());
                 len = clientData->data.size();
             }
-            if (static_cast<unsigned char *>(in)[0] == '0') {
-                // process message without frame
+            // Expect regular protobuf messages
+            if (rawPayloads[connectionId] == nullptr) {
                 google::protobuf::io::ArrayInputStream ais(
-                    static_cast<char *>(in) + 1, static_cast<int>(len) - 1);
+                    static_cast<char *>(in), static_cast<int>(len));
                 CodedInputStream coded_input(&ais);
                 recv_buff[connectionId].ParseFromCodedStream(&coded_input);
 
                 recv_data_error = 0;
                 Data_Received[connectionId] = true;
 
+                if (recv_buff[connectionId].interrupt_occured()) {
+                    InterruptDetected[connectionId] = true;
+                }
+
                 /*Notify the host SDK that data is received from server*/
                 Cond_Var[connectionId].notify_all();
             } else {
-                // process message of only frame data
-                int m_frameLength;
-                m_frameLength = static_cast<int>(len) - 1;
-
-                recv_buff[connectionId].add_bytes_payload(
-                    static_cast<char *>(in) + 1, m_frameLength - 1);
+                //expect content that is not wrapped in a protobuf message
+                char *pCharIn = static_cast<char *>(in);
+                memcpy(rawPayloads[connectionId],
+                       (pCharIn + FRAME_PREPADDING_BYTES),
+                       len - FRAME_PREPADDING_BYTES);
+                if (pCharIn[0] == 123) {
+                    InterruptDetected[connectionId] = true;
+                }
+                rawPayloads[connectionId] = nullptr;
                 recv_data_error = 0;
                 Data_Received[connectionId] = true;
 
@@ -471,7 +495,6 @@ int Network::callback_function(struct lws *wsi,
 #ifdef NW_DEBUG
         cout << endl << "Client is sending " << send_buff.func_name() << endl;
 #endif
-        std::lock_guard<std::recursive_mutex> guard(m_mutex[connectionId]);
         if (send_buff[connectionId].func_name().empty()) {
             break;
         }
@@ -521,12 +544,21 @@ int Network::callback_function(struct lws *wsi,
     return 0;
 }
 
+void Network::registerInterruptCallback(InterruptNotificationCallback &cb) {
+    m_intNotifCb = cb;
+}
+
+std::chrono::steady_clock::time_point Network::getLatestActivityTimestamp() {
+    return m_latestActivityTimestamp;
+}
+
 /*
  * Network():    Initializes the network parameters
  * Parameters:   None
  * Desription:   This function initializes the network parameters
  */
-Network::Network(int connectionId) {
+Network::Network(int connectionId)
+    : m_intNotifCb(nullptr), m_latestActivityTimestamp{} {
 
     /*Initialize the static flags*/
     Network::Send_Successful[connectionId] = false;
@@ -534,6 +566,7 @@ Network::Network(int connectionId) {
     Network::Thread_Running[connectionId] = 0;
     Network::Server_Connected[connectionId] = false;
     Network::Thread_Detached[connectionId] = false;
+    Network::InterruptDetected[connectionId] = false;
 
     m_connectionId = connectionId;
     while (context.size() <= m_connectionId)

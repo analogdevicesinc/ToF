@@ -45,11 +45,22 @@ void CommandParser::parseArguments(
         int contains_equal = std::string(argv[i]).find("=");
         for (int j = 0; j < arg_position.size(); j++) {
             if (arg_number == arg_position[j].second &&
-                (std::string(argv[i]).find("h") == -1 &&
-                 std::string(argv[i]).find("help") == -1)) {
-                m_command_vector.push_back({arg_position[j].first, argv[i]});
+                (std::string(argv[i]).find("-h") == -1 &&
+                 std::string(argv[i]).find("--help") == -1)) {
+                if (contains_equal != -1) {
+                    m_command_vector.push_back(
+                        {std::string(argv[i]).substr(0, contains_equal),
+                         std::string(argv[i]).substr(contains_equal + 1)});
+                } else if(arg_number != argc - 1){
+                    m_command_vector.push_back(
+                        {arg_position[j].first, argv[i + 1]});
+                    i++;
+                } else {
+                    m_command_vector.push_back({arg_position[j].first, argv[i]});
+                }
                 arg_number++;
                 mandatory = true;
+                break;
             }
         }
         if (mandatory) {

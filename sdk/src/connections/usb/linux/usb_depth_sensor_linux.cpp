@@ -35,8 +35,6 @@
 #include "usb_buffer.pb.h"
 #include "usb_linux_utils.h"
 
-#include "device_utils.h"
-
 #include <cmath>
 #include <fcntl.h>
 #ifdef USE_GLOG
@@ -1144,8 +1142,29 @@ aditof::Status UsbDepthSensor::adsd3500_reset() {
 }
 
 aditof::Status UsbDepthSensor::adsd3500_register_interrupt_callback(
-    aditof::SensorInterruptCallback cb) {
+    aditof::SensorInterruptCallback &cb) {
     LOG(WARNING) << "Registering an interrupt callback on a USB connection "
                     "is not supported yet!";
     return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status UsbDepthSensor::adsd3500_unregister_interrupt_callback(
+    aditof::SensorInterruptCallback &cb) {
+    LOG(WARNING) << "Unregistering an interrupt callback on a USB connection "
+                    "is not supported yet!";
+    return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status UsbDepthSensor::adsd3500_get_status(int &chipStatus,
+                                                   int &imagerStatus) {
+    using namespace aditof;
+    Status status = Status::UNAVAILABLE;
+    return status;
+}
+
+aditof::Status UsbDepthSensor::initTargetDepthCompute(uint8_t *iniFile,
+                                                      uint16_t iniFileLength,
+                                                      uint8_t *calData,
+                                                      uint16_t calDataLength) {
+    return aditof::Status::OK;
 }

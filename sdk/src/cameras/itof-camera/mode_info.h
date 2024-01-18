@@ -7,6 +7,7 @@
 #ifndef MODE_INFO
 #define MODE_INFO
 
+#include <aditof/camera_definitions.h>
 #include <aditof/status_definitions.h>
 #include <cstdint>
 #include <map>
@@ -63,10 +64,10 @@ class ModeInfo {
     /**
      * @brief Set imager type. Set mode version.
      * param[in] type - 1 ADSD3100, 2 ADSD3030
-     * param[in] version - 0 Old table, 1 new adsd3100 table, 2 new adsd3500 table
+     * param[in] version - 2 new adsd3500 table, 3 new mixed adsd3500 table
      * @return aditof::Status
      */
-    aditof::Status setImagerTypeAndModeVersion(int version, int type);
+    aditof::Status setImagerTypeAndModeVersion(int type, int version);
 
     /**
      * Get the id of the mode that corresponds to the name
@@ -102,7 +103,6 @@ class ModeInfo {
 
   private:
     static std::vector<modeInfo> g_modeInfoData;
-    static modeInfo g_newModesAdsd3100[];
     static modeInfo g_newModesAdsd3500Adsd3100[];
     static modeInfo g_newModesAdsd3500Adsd3030[];
     static modeInfo g_newMixedModesAdsd3500Adsd3100[];

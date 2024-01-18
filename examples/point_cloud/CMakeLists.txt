@@ -34,4 +34,12 @@ target_include_directories(point_cloud PRIVATE
         ${SRC_DIR}/
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE doc_opt)
+if( WIN32 )
+    if (WITH_GLOG_DEPENDENCY)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${GLOG_BIN_DIR} ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>
+    )
+    endif()
+endif()
+
+target_link_libraries(${PROJECT_NAME} PRIVATE aditof command_parser)

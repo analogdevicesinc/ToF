@@ -93,18 +93,18 @@ Status fromFrameTo16bitsDepth(Frame &frame, geometry::Image &image) {
     return Status::OK;
 }
 
-Status fromFrameToIRImg(Frame &frame, int bitCount, geometry::Image &image) {
+Status fromFrameToABImg(Frame &frame, int bitCount, geometry::Image &image) {
     FrameDataDetails frameDetails;
-    frame.getDataDetails("ir", frameDetails);
+    frame.getDataDetails("ab", frameDetails);
 
     const int frameHeight = static_cast<int>(frameDetails.height);
     const int frameWidth = static_cast<int>(frameDetails.width);
-    int max_value_of_IR_pixel = (1 << bitCount) - 1;
+    int max_value_of_AB_pixel = (1 << bitCount) - 1;
 
-    uint16_t *irData;
-    frame.getData("ir", &irData);
+    uint16_t *abData;
+    frame.getData("ab", &abData);
 
-    if (irData == nullptr) {
+    if (abData == nullptr) {
         return Status::GENERIC_ERROR;
     }
 
@@ -112,7 +112,7 @@ Status fromFrameToIRImg(Frame &frame, int bitCount, geometry::Image &image) {
     for (int i = 0; i < frameHeight * frameWidth; i++) {
         uint8_t *p =
             static_cast<uint8_t *>(image.data_.data() + i * sizeof(uint8_t));
-        uint16_t value = *(irData + i) * 255.0 / max_value_of_IR_pixel;
+        uint16_t value = *(abData + i) * 255.0 / max_value_of_AB_pixel;
         *p = static_cast<uint8_t>(value <= 255 ? value : 255);
         p++;
     }

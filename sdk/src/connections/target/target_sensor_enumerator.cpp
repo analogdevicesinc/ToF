@@ -30,12 +30,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "connections/target/target_sensor_enumerator.h"
-#include "connections/target/adsd3100_sensor.h"
 #include "connections/target/adsd3500_interrupt_notifier.h"
 #include "connections/target/adsd3500_sensor.h"
-#include "connections/target/eeprom.h"
 #include <algorithm>
 #include <fstream>
+
 #ifdef USE_GLOG
 #include <glog/logging.h>
 #else
@@ -60,43 +59,6 @@ Status TargetSensorEnumerator::getDepthSensors(
             interruptNotifier.enableInterrupts(); // TO DO: refactor this!
 
             break;
-        }
-        case SensorType::SENSOR_ADSD3100: {
-            auto sensor = std::make_shared<Adsd3100Sensor>(
-                sInfo.driverPath, sInfo.subDevPath, sInfo.captureDev);
-            depthSensors.emplace_back(sensor);
-            break;
-        }
-        }
-    }
-
-    return Status::OK;
-}
-
-Status TargetSensorEnumerator::getStorages(
-    std::vector<std::shared_ptr<StorageInterface>> &storages) {
-
-    storages.clear();
-
-    for (const auto &eInfo : m_storagesInfo) {
-        auto storage =
-            std::make_shared<Eeprom>(eInfo.driverName, eInfo.driverPath);
-        storages.emplace_back(storage);
-    }
-
-    return Status::OK;
-}
-
-Status TargetSensorEnumerator::getTemperatureSensors(
-    std::vector<std::shared_ptr<TemperatureSensorInterface>>
-        &temperatureSensors) {
-
-    temperatureSensors.clear();
-
-    for (const auto &tInfo : m_temperatureSensorsInfo) {
-        switch (tInfo.sensorType) {
-        case TempSensorType::NO_TYPE: {
-            ; // do nothing
         }
         }
     }

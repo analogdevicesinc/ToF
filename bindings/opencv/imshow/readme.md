@@ -15,4 +15,4 @@ if (status != Status::OK) {
         return 0;
 }
 ```
-The IR information can be stored in a Mat by using the `fromFrameToIrMat` function instead of `fromFrameToDepthMat`
+The AB information can be stored in a Mat by using the `fromFrameToAbMat` function instead of `fromFrameToDepthMat`

@@ -88,7 +88,7 @@ check_cppcheck() {
 ############################################################################
 check_doxygen() {
     pushd ${WORK_DIR}/doc
-    (cd build && ! make doc 2>&1 | grep -E "warning|error") || {
+    (cd build && ! make doc 2>&1 | grep -E "warning:|error:") || {
         echo_red "Documentation incomplete or errors in the generation of it have occured!"
         exit 1
     }

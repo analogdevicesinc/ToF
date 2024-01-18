@@ -56,14 +56,14 @@ Based on the following scenarios you will be able to do the following:
 
     If you prefer to keep the files somewhere else, you can tell cmake where to find them using the cmake variable: LIBTOFI_LIBDIR_PATH
 
-2. You have the **distribution package** (tofi_compute.dll, tofi_config.dll) for the Depth Compute library. With it you won't be able to build the SDK unless you turn on the  USE_DEPTH_COMPUTE_STUBS cmake option. This will create an empty Depth Compute library allowing the build of SDK to complete. To use the real Depth Compute, just replace the stubs generated during build (tofi_compute.dll, tofi_config.dll) with the ones from the distribution package.
+2. You have the **distribution package** (tofi_compute.dll, tofi_config.dll) for the Depth Compute library. With it you won't be able to build the SDK unless you turn on the  USE_DEPTH_COMPUTE_OPENSOURCE cmake option. This will create an empty Depth Compute library allowing the build of SDK to complete. To use the real Depth Compute, just replace the stubs generated during build (tofi_compute.dll, tofi_config.dll) with the ones from the distribution package.
 
-3. You have no Depth Compute packages. In this case you can still build the SDK by enabling the USE_DEPTH_COMPUTE_STUBS option but you won't have access to the functionality that Depth Compute provides.
+3. You have no Depth Compute packages. In this case you can still build the SDK by enabling the USE_DEPTH_COMPUTE_OPENSOURCE option but you won't have access to the functionality that Depth Compute provides.
 
 ### Download and build SDK only
 * Follow below steps to download the SDK, generate MS Visual Studio project and build it directly from command line
 ```console
-git clone https://github.com/analogdevicesinc/ToF
+git clone --branch v4.4.0 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build
 cd build
@@ -71,12 +71,9 @@ cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_6_0\local_path\glog
 cmake --build . --config Release
 ```
 
-* Or if you will be building the Depth Compute stubs the cmake command should be:
-```console
-cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_6_0\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=off -DUSE_DEPTH_COMPUTE_STUBS=on ..
-```
-
 ## Building the SDK with examples
+
+See [here](../../cmake/readme.md) for details on the cmake options.
 
 ### Additional pre-requisites
 * None
@@ -87,6 +84,7 @@ cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_6_0\local_path\glog
 ### Build SDK with examples and in Visual Studio
 - Generate the VisualStudio solution
 ```console
+git clone --branch v4.4.0 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build
 cd build

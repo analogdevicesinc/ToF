@@ -44,13 +44,6 @@ class UsbSensorEnumerator : public aditof::SensorEnumeratorInterface {
     virtual aditof::Status
     getDepthSensors(std::vector<std::shared_ptr<aditof::DepthSensorInterface>>
                         &depthSensors) override;
-    virtual aditof::Status getStorages(
-        std::vector<std::shared_ptr<aditof::StorageInterface>> &storages)
-        override;
-    virtual aditof::Status getTemperatureSensors(
-        std::vector<std::shared_ptr<aditof::TemperatureSensorInterface>>
-            &temperatureSensors) override;
-
     virtual aditof::Status
     getUbootVersion(std::string &uBootVersion) const override;
     virtual aditof::Status
@@ -66,8 +59,6 @@ class UsbSensorEnumerator : public aditof::SensorEnumeratorInterface {
     int fd;
 
     std::vector<SensorInfo> m_sensorsInfo;
-    std::vector<std::pair<std::string, unsigned int>> m_storagesInfo;
-    std::vector<std::pair<std::string, unsigned int>> m_temperatureSensorsInfo;
     std::string m_uBootVersion;
     std::string m_kernelVersion;
     std::string m_sdVersion;

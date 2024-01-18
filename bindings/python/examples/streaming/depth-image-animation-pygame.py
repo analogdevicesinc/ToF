@@ -55,6 +55,8 @@ viridis = plt.get_cmap('viridis')
 
 system = tof.System()
 
+print("SDK version: ", tof.getApiVersion(), " | branch: ", tof.getBranchVersion(), " | commit: ", tof.getCommitVersion())
+
 cameras = []
 ip = ""
 if len(sys.argv) == 3 :
@@ -74,10 +76,7 @@ print("system.getCameraList()", status)
 
 camera1 = cameras[0]
 
-status = camera1.setControl("initialization_config", config)
-print("camera1.setControl()", status)
-
-status = camera1.initialize()
+status = camera1.initialize(config)
 print("camera1.initialize()", status)
 
 types = []

@@ -31,13 +31,13 @@
  */
 #include "network_depth_sensor.h"
 #include "connections/network/network.h"
-#include "device_utils.h"
 
 #ifdef USE_GLOG
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>
 #endif
+#include <chrono>
 #include <unordered_map>
 
 struct CalibrationData {
@@ -52,11 +52,49 @@ struct NetworkDepthSensor::ImplData {
     aditof::DepthSensorFrameType frameTypeCache;
     std::unordered_map<std::string, CalibrationData> calibration_cache;
     bool opened;
+    Network::InterruptNotificationCallback cb;
 };
 
 NetworkDepthSensor::NetworkDepthSensor(const std::string &name,
                                        const std::string &ip)
-    : m_implData(new NetworkDepthSensor::ImplData) {
+    : m_implData(new NetworkDepthSensor::ImplData), m_stopServerCheck(false) {
+
+    m_implData->cb = [this]() {
+        Network *net = m_implData->handle.net;
+
+        if (!net->isServer_Connected()) {
+            LOG(WARNING) << "Not connected to server";
+            return;
+        }
+
+        net->send_buff[m_sensorIndex].set_func_name("GetInterrupts");
+        net->send_buff[m_sensorIndex].set_expect_reply(true);
+
+        if (net->SendCommand() != 0) {
+            LOG(WARNING) << "Send Command Failed";
+            return;
+        }
+
+        if (net->recv_server_data() != 0) {
+            LOG(WARNING) << "Receive Data Failed";
+            return;
+        }
+
+        if (net->recv_buff[m_sensorIndex].server_status() !=
+            payload::ServerStatus::REQUEST_ACCEPTED) {
+            LOG(WARNING) << "API execution on Target Failed";
+            return;
+        }
+
+        for (int32_t i = 0;
+             i < net->recv_buff[m_sensorIndex].int32_payload_size(); ++i) {
+            for (auto m_interruptCallback : m_interruptCallbackMap) {
+                m_interruptCallback.second(
+                    (aditof::Adsd3500Status)net->recv_buff[m_sensorIndex]
+                        .int32_payload(i));
+            }
+        }
+    };
 
     int m_sensorCounter = 0;
     m_sensorIndex = m_sensorCounter;
@@ -64,9 +102,11 @@ NetworkDepthSensor::NetworkDepthSensor(const std::string &name,
 
     Network *net = new Network(m_sensorIndex);
     m_implData->handle.net = net;
+    m_implData->handle.net->registerInterruptCallback(m_implData->cb);
     m_implData->ip = ip;
     m_implData->opened = false;
     m_sensorDetails.connectionType = aditof::ConnectionType::NETWORK;
+    m_sensorDetails.id = ip;
     m_sensorName = name;
 }
 
@@ -86,6 +126,11 @@ NetworkDepthSensor::~NetworkDepthSensor() {
 
         if (m_implData->handle.net->SendCommand() != 0) {
             LOG(WARNING) << "Send Command Failed";
+        }
+
+        if (!m_stopServerCheck) {
+            m_stopServerCheck = true;
+            m_activityCheckThread.join();
         }
     }
 
@@ -137,6 +182,10 @@ aditof::Status NetworkDepthSensor::open() {
 
     if (status == Status::OK) {
         m_implData->opened = true;
+
+        // Create a new thread that periodically checks for inactivity on client-network then goes back to sleep
+        m_activityCheckThread =
+            std::thread(&NetworkDepthSensor::checkForServerUpdates, this);
     }
 
     return status;
@@ -384,7 +433,7 @@ aditof::Status NetworkDepthSensor::getFrame(uint16_t *buffer) {
     net->send_buff[m_sensorIndex].set_func_name("GetFrame");
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 
-    if (net->SendCommand() != 0) {
+    if (net->SendCommand(static_cast<void *>(buffer)) != 0) {
         LOG(WARNING) << "Send Command Failed";
         return Status::INVALID_ARGUMENT;
     }
@@ -405,10 +454,6 @@ aditof::Status NetworkDepthSensor::getFrame(uint16_t *buffer) {
         LOG(WARNING) << "getFrame() failed on target";
         return status;
     }
-
-    //when using ITOF camera the data is already deinterleaved, so a simple copy is enough
-    memcpy(buffer, net->recv_buff[m_sensorIndex].bytes_payload(0).c_str(),
-           net->recv_buff[m_sensorIndex].bytes_payload(0).length());
 
     return status;
 }
@@ -959,9 +1004,122 @@ aditof::Status NetworkDepthSensor::adsd3500_reset() {
 }
 
 aditof::Status NetworkDepthSensor::adsd3500_register_interrupt_callback(
-    aditof::SensorInterruptCallback cb) {
-    LOG(WARNING) << "Registering an interrupt callback on a network connection "
-                    "is not supported yet!";
-    m_cb = cb;
-    return aditof::Status::UNAVAILABLE;
+    aditof::SensorInterruptCallback &cb) {
+    m_interruptCallbackMap.insert({&cb, cb});
+    return aditof::Status::OK;
+}
+
+aditof::Status NetworkDepthSensor::adsd3500_unregister_interrupt_callback(
+    aditof::SensorInterruptCallback &cb) {
+
+    m_interruptCallbackMap.erase(&cb);
+
+    return aditof::Status::OK;
+}
+
+aditof::Status NetworkDepthSensor::adsd3500_get_status(int &chipStatus,
+                                                       int &imagerStatus) {
+    using namespace aditof;
+
+    Network *net = m_implData->handle.net;
+    std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
+
+    if (!net->isServer_Connected()) {
+        LOG(WARNING) << "Not connected to server";
+        return Status::UNREACHABLE;
+    }
+
+    net->send_buff[m_sensorIndex].set_func_name("Adsd3500GetStatus");
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
+
+    if (net->SendCommand() != 0) {
+        LOG(WARNING) << "Send Command Failed";
+        return Status::INVALID_ARGUMENT;
+    }
+
+    if (net->recv_server_data() != 0) {
+        LOG(WARNING) << "Receive Data Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    if (net->recv_buff[m_sensorIndex].server_status() !=
+        payload::ServerStatus::REQUEST_ACCEPTED) {
+        LOG(WARNING) << "API execution on Target Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    chipStatus = net->recv_buff[m_sensorIndex].int32_payload(0);
+    imagerStatus = net->recv_buff[m_sensorIndex].int32_payload(1);
+
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
+
+    return status;
+}
+
+aditof::Status NetworkDepthSensor::initTargetDepthCompute(
+    uint8_t *iniFile, uint16_t iniFileLength, uint8_t *calData,
+    uint16_t calDataLength) {
+    using namespace aditof;
+
+    Network *net = m_implData->handle.net;
+    std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
+
+    if (!net->isServer_Connected()) {
+        LOG(WARNING) << "Not connected to server";
+        return Status::UNREACHABLE;
+    }
+
+    net->send_buff[m_sensorIndex].set_func_name("InitTargetDepthCompute");
+    net->send_buff[m_sensorIndex].add_func_int32_param(
+        static_cast<::google::int32>(iniFileLength));
+    net->send_buff[m_sensorIndex].add_func_int32_param(
+        static_cast<::google::int32>(calDataLength));
+    net->send_buff[m_sensorIndex].add_func_bytes_param(iniFile, iniFileLength);
+    net->send_buff[m_sensorIndex].add_func_bytes_param(calData, calDataLength);
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
+
+    if (net->SendCommand() != 0) {
+        LOG(WARNING) << "Send Command Failed";
+        return Status::INVALID_ARGUMENT;
+    }
+
+    if (net->recv_server_data() != 0) {
+        LOG(WARNING) << "Receive Data Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    if (net->recv_buff[m_sensorIndex].server_status() !=
+        payload::ServerStatus::REQUEST_ACCEPTED) {
+        LOG(WARNING) << "API execution on Target Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
+
+    return status;
+}
+
+void NetworkDepthSensor::checkForServerUpdates() {
+    using namespace std::chrono;
+
+    while (!m_stopServerCheck) {
+        // get latest timestamp from Network object
+        steady_clock::time_point latestActivityTimestamp =
+            m_implData->handle.net->getLatestActivityTimestamp();
+
+        // get current timestamp
+        steady_clock::time_point now = steady_clock::now();
+
+        // decide if it is required to check for server updates
+        duration<double> inactivityDuration =
+            duration_cast<duration<double>>(now - latestActivityTimestamp);
+        if (inactivityDuration.count() > 1.0) {
+            // check server for interrupts
+            std::unique_lock<std::mutex> mutex_lock(
+                m_implData->handle.net_mutex);
+            m_implData->cb();
+        }
+        // go back to sleep
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
 }

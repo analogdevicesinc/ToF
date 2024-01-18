@@ -30,6 +30,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <aditof/camera.h>
+#include <aditof/depth_sensor_interface.h>
 #include <aditof/frame.h>
 #include <aditof/system.h>
 #include <aditof/version.h>
@@ -112,42 +113,51 @@ int main(int argc, char *argv[]) {
     command.parseArguments(argc, argv, command_map);
     int result = command.checkArgumentExist(command_map, arg_error);
     if (result != 0) {
-        std::cout << "Argument " << arg_error << " doesn't exist."
-                  << "\n"
-                  << Help_Menu;
+        LOG(ERROR) << "Argument " << arg_error << " doesn't exist!";
+        std::cout << Help_Menu;
         return -1;
     }
+
     result = command.helpMenu();
     if (result == 1) {
         std::cout << Help_Menu;
         return 0;
     } else if (result == -1) {
-        std::cout << "Usage of argument -h/--help"
-                  << " is incorrect! Help argument should be used alone."
-                  << "\n"
-                  << Help_Menu;
+        LOG(ERROR) << "Usage of argument -h/--help"
+                   << " is incorrect! Help argument should be used alone!";
+        std::cout << Help_Menu;
         return -1;
     }
+
     result = command.checkValue(command_map, arg_error);
     if (result != 0) {
-        std::cout << "Argument: " << arg_error
-                  << " doesn't have assigned or default value."
-                  << "\n"
-                  << Help_Menu;
+        LOG(ERROR) << "Argument: " << command_map[arg_error].long_option
+                   << " doesn't have assigned or default value!";
+        std::cout << Help_Menu;
         return -1;
     }
+
     result = command.checkMandatoryArguments(command_map, arg_error);
     if (result != 0) {
-        std::cout << "Mandatory argument: " << arg_error << " missing. \n"
-                  << Help_Menu;
+        std::string argName = (arg_error == "-config")
+                                  ? "CONFIG"
+                                  : command_map[arg_error].long_option;
+
+        LOG(ERROR) << "Mandatory argument: " << argName << " missing";
+        std::cout << Help_Menu;
         return -1;
     }
+
     result = command.checkMandatoryPosition(command_map, arg_error);
     if (result != 0) {
-        std::cout << "Mandatory argument " << arg_error
-                  << " is not on its correct position ("
-                  << command_map[arg_error].position << "). \n"
-                  << Help_Menu;
+        std::string argName = (arg_error == "-config")
+                                  ? "CONFIG"
+                                  : command_map[arg_error].long_option;
+
+        LOG(ERROR) << "Mandatory argument " << argName
+                   << " is not on its correct position ("
+                   << command_map[arg_error].position << ").";
+        std::cout << Help_Menu;
         return -1;
     }
 
@@ -195,13 +205,21 @@ int main(int argc, char *argv[]) {
 
     auto camera = cameras.front();
 
-    status = camera->setControl("initialization_config", configFile);
+    // Registering a callback to be executed when ADSD3500 issues an interrupt
+    std::shared_ptr<DepthSensorInterface> sensor = camera->getSensor();
+    aditof::SensorInterruptCallback callback = [](Adsd3500Status status) {
+        LOG(INFO) << "Running the callback for which the status of ADSD3500 "
+                     "has been "
+                     "forwarded. ADSD3500 status = "
+                  << status;
+    };
+    Status registerCbStatus =
+        sensor->adsd3500_register_interrupt_callback(callback);
     if (status != Status::OK) {
-        LOG(ERROR) << "Failed to set control!";
-        return 0;
+        LOG(WARNING) << "Could not register callback";
     }
 
-    status = camera->initialize();
+    status = camera->initialize(configFile);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
         return 0;
@@ -251,21 +269,8 @@ int main(int argc, char *argv[]) {
         LOG(INFO) << "succesfully requested frame!";
     }
 
-    save_frame(frame, "ir");
+    save_frame(frame, "ab");
     save_frame(frame, "depth");
-
-    // Example of reading temperature from hardware
-    uint16_t sensorTmp = 0;
-    uint16_t laserTmp = 0;
-    status = camera->adsd3500GetSensorTemperature(sensorTmp);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not read sensor temperature!";
-    }
-
-    status = camera->adsd3500GetLaserTemperature(laserTmp);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not read laser temperature!";
-    }
 
     status = camera->stop();
     if (status != Status::OK) {
@@ -273,8 +278,33 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    LOG(INFO) << "Sensor temperature: " << sensorTmp;
-    LOG(INFO) << "Laser temperature: " << laserTmp;
+    // Example of reading status of ADSD3500 chip and of imager
+    int chipStatus, imagerStatus;
+    status = camera->adsd3500GetStatus(chipStatus, imagerStatus);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not get imager error codes!";
+        return 0;
+    }
+
+    LOG(INFO) << "Chip status error code: " << chipStatus;
+    LOG(INFO) << "Imager status error code: " << imagerStatus;
+
+    Metadata metadata;
+    status = frame.getMetadataStruct(metadata);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not get frame metadata!";
+        return 0;
+    }
+
+    LOG(INFO) << "Sensor Temperature: " << metadata.sensorTemperature;
+    LOG(INFO) << "Laser Temperature: " << metadata.laserTemperature;
+    LOG(INFO) << "Frame Number: " << metadata.frameNumber;
+    LOG(INFO) << "Mode: " << static_cast<unsigned int>(metadata.imagerMode);
+
+    // Example on how to unregister a callback from ADSD3500 interupts
+    if (registerCbStatus == Status::OK) {
+        sensor->adsd3500_unregister_interrupt_callback(callback);
+    }
 
     return 0;
 }

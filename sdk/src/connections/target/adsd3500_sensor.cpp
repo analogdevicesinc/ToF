@@ -29,6 +29,7 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <thread>
 #include <unordered_map>
 
 #define MAX_SUBFRAMES_COUNT                                                    \
@@ -58,11 +59,6 @@
 #define ADI_DEBUG 1
 #define REQ_COUNT 10
 
-struct buffer {
-    void *start;
-    size_t length;
-};
-
 struct CalibrationData {
     std::string mode;
     float gain;
@@ -82,21 +78,11 @@ struct ConfigurationData {
     uint32_t values;
 };
 
-struct VideoDev {
-    int fd;
-    int sfd;
-    struct buffer *videoBuffers;
-    unsigned int nVideoBuffers;
-    struct v4l2_plane planes[8];
-    enum v4l2_buf_type videoBuffersType;
-    bool started;
-
-    VideoDev()
-        : fd(-1), sfd(-1), videoBuffers(nullptr), nVideoBuffers(0),
-          started(false) {}
+enum class SensorImagerType {
+    IMAGER_UNKNOWN,
+    IMAGER_ADSD3100,
+    IMAGER_ADSD3030
 };
-
-enum class ImagerType { IMAGER_UNKNOWN, IMAGER_ADSD3100, IMAGER_ADSD3030 };
 enum class CCBVersion { CCB_UNKNOWN, CCB_VERSION0, CCB_VERSION1 };
 
 struct Adsd3500Sensor::ImplData {
@@ -104,13 +90,13 @@ struct Adsd3500Sensor::ImplData {
     struct VideoDev *videoDevs;
     aditof::DepthSensorFrameType frameType;
     std::unordered_map<std::string, __u32> controlsCommands;
-    ImagerType imagerType;
+    SensorImagerType imagerType;
     CCBVersion ccbVersion;
     std::string fw_ver;
 
     ImplData()
         : numVideoDevs(1), videoDevs(nullptr), frameType{"", {}, 0, 0},
-          imagerType{ImagerType::IMAGER_UNKNOWN},
+          imagerType{SensorImagerType::IMAGER_UNKNOWN},
           ccbVersion{CCBVersion::CCB_UNKNOWN} {}
 };
 
@@ -132,8 +118,12 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
                                const std::string &captureDev)
     : m_driverPath(driverPath), m_driverSubPath(driverSubPath),
       m_captureDev(captureDev), m_implData(new Adsd3500Sensor::ImplData),
-      m_firstRun(true), m_adsd3500Queried(false) {
+      m_firstRun(true), m_adsd3500Queried(false), m_depthComputeOnTarget(true),
+      m_chipStatus(0), m_imagerStatus(0),
+      m_hostConnectionType(aditof::ConnectionType::ON_TARGET) {
     m_sensorName = "adsd3500";
+    m_sensorDetails.connectionType = aditof::ConnectionType::ON_TARGET;
+    m_sensorDetails.id = driverPath;
 
     // Define the controls that this sensor has available
     m_controls.emplace("abAveraging", "0");
@@ -152,6 +142,8 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     m_implData->controlsCommands["phaseDepthBits"] = 0x9819e2;
     m_implData->controlsCommands["abBits"] = 0x9819e3;
     m_implData->controlsCommands["confidenceBits"] = 0x9819e4;
+
+    m_bufferProcessor = new BufferProcessor();
 }
 
 Adsd3500Sensor::~Adsd3500Sensor() {
@@ -193,6 +185,8 @@ Adsd3500Sensor::~Adsd3500Sensor() {
             }
         }
     }
+
+    delete m_bufferProcessor;
 }
 
 aditof::Status Adsd3500Sensor::open() {
@@ -320,6 +314,8 @@ aditof::Status Adsd3500Sensor::open() {
             for (int i = 0; i < 10; i++) {
                 chipIDStatus = adsd3500_read_cmd(0x0112, &chipID);
                 if (chipIDStatus != Status::OK) {
+                    LOG(INFO) << "Could not read chip ID. Resetting ADSD3500 "
+                                 "to handle previous error.";
                     adsd3500_reset();
                     continue;
                 }
@@ -327,6 +323,9 @@ aditof::Status Adsd3500Sensor::open() {
                 dealiasStatus =
                     adsd3500_read_payload_cmd(0x02, dealiasCheck, 32);
                 if (dealiasStatus != Status::OK) {
+                    LOG(INFO) << "Could not read Dealias Parameters. Resetting "
+                                 "ADSD3500 "
+                                 "to handle previous error.";
                     adsd3500_reset();
                     continue;
                 }
@@ -357,6 +356,18 @@ aditof::Status Adsd3500Sensor::open() {
     if (!m_adsd3500Queried) {
         status = queryAdsd3500();
         m_adsd3500Queried = true;
+    }
+
+    status = m_bufferProcessor->setInputDevice(m_implData->videoDevs);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to set input video device!";
+        return status;
+    }
+
+    status = m_bufferProcessor->open();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to open output video device!";
+        return status;
     }
 
     return status;
@@ -671,6 +682,16 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
     m_implData->frameType = type;
 
+    if (type.type != "pcm-native") {
+        //TO DO: update this values when frame_impl gets restructured
+        status = m_bufferProcessor->setVideoProperties(
+            type.content.at(1).width * 4, type.content.at(1).height);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to set bufferProcessor properties!";
+            return status;
+        }
+    }
+
     return status;
 }
 
@@ -682,9 +703,19 @@ aditof::Status Adsd3500Sensor::program(const uint8_t *firmware, size_t size) {
 aditof::Status Adsd3500Sensor::getFrame(uint16_t *buffer) {
 
     using namespace aditof;
+    Status status;
+
+    if (m_depthComputeOnTarget && m_implData->frameType.type != "pcm-native") {
+        status = m_bufferProcessor->processBuffer(buffer);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to process buffer!";
+            return status;
+        }
+        return status;
+    }
+
     struct v4l2_buffer buf[MAX_SUBFRAMES_COUNT];
     struct VideoDev *dev;
-    Status status;
     unsigned int buf_data_len;
     uint8_t *pdata;
     dev = &m_implData->videoDevs[0];
@@ -763,9 +794,10 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
             return Status::INVALID_ARGUMENT;
         } else if (n == 2) {
             m_implData->ccbVersion = CCBVersion::CCB_VERSION1;
-            if (m_implData->imagerType == ImagerType::IMAGER_ADSD3100) {
+            if (m_implData->imagerType == SensorImagerType::IMAGER_ADSD3100) {
                 m_availableFrameTypes = availableFrameTypes;
-            } else if (m_implData->imagerType == ImagerType::IMAGER_ADSD3030) {
+            } else if (m_implData->imagerType ==
+                       SensorImagerType::IMAGER_ADSD3030) {
                 m_availableFrameTypes = availableFrameTypesAdsd3030;
             } else {
                 LOG(ERROR) << "Unknown imager type. Because of this, cannot "
@@ -894,6 +926,7 @@ aditof::Status Adsd3500Sensor::getControl(const std::string &control,
 aditof::Status
 Adsd3500Sensor::getDetails(aditof::SensorDetails &details) const {
 
+    details = m_sensorDetails;
     return aditof::Status::OK;
 }
 
@@ -943,8 +976,9 @@ aditof::Status Adsd3500Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data,
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
@@ -957,14 +991,16 @@ aditof::Status Adsd3500Sensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data,
     usleep(usDelay);
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
     if (xioctl(dev->sfd, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not get control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
@@ -998,8 +1034,9 @@ aditof::Status Adsd3500Sensor::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
     return status;
@@ -1052,14 +1089,16 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd,
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
-    if (cmd == 0x13) {
+    if (cmd == 0x13)
         usleep(1000);
-    }
+    else if (cmd == 0x19)
+        usleep(5000);
 
     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
     extCtrls.controls = &extCtrl;
@@ -1072,13 +1111,16 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd,
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
     if (xioctl(dev->sfd, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Failed to get ctrl with id " << extCtrl.id;
+        LOG(WARNING) << "Could not get control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
@@ -1101,8 +1143,10 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload_cmd(uint32_t cmd,
     memcpy(extCtrl.p_u8, switchBuf, 19);
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Switch Adsd3500 to standard mode error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << " (switch to standard mode)"
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
@@ -1136,13 +1180,16 @@ aditof::Status Adsd3500Sensor::adsd3500_read_payload(uint8_t *payload,
     usleep(30000);
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Reading Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " to read payload with length: " << payload_len
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
     if (xioctl(dev->sfd, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Failed to get ctrl with id " << extCtrl.id;
+        LOG(WARNING) << "Could not get control: 0x" << std::hex << extCtrl.id
+                     << " to read payload with length: " << payload_len
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
@@ -1197,8 +1244,9 @@ Adsd3500Sensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload,
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Writing Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
@@ -1214,8 +1262,10 @@ Adsd3500Sensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload,
     memcpy(extCtrl.p_u8, switchBuf, 19);
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Switch Adsd3500 to standard mode error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " with command: 0x" << std::hex << cmd
+                     << " (switch to standard mode)"
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
@@ -1246,8 +1296,9 @@ aditof::Status Adsd3500Sensor::adsd3500_write_payload(uint8_t *payload,
     extCtrl.p_u8 = buf;
 
     if (xioctl(dev->sfd, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-        LOG(WARNING) << "Writing Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Could not set control: 0x" << std::hex << extCtrl.id
+                     << " to write payload with length: " << payload_len
+                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return Status::GENERIC_ERROR;
     }
 
@@ -1258,11 +1309,38 @@ aditof::Status Adsd3500Sensor::adsd3500_write_payload(uint8_t *payload,
 
 aditof::Status Adsd3500Sensor::adsd3500_reset() {
     using namespace aditof;
+    Status status = Status::OK;
+
 #if defined(NXP)
+    m_chipResetDone = false;
+    m_adsd3500Status = Adsd3500Status::OK;
+    aditof::SensorInterruptCallback cb = [this](Adsd3500Status status) {
+        m_adsd3500Status = status;
+        m_chipResetDone = true;
+    };
+    status = adsd3500_register_interrupt_callback(cb);
+    bool interruptsAvailable = (status == Status::OK);
+
     system("echo 0 > /sys/class/gpio/gpio122/value");
     usleep(1000000);
     system("echo 1 > /sys/class/gpio/gpio122/value");
-    usleep(7000000);
+
+    if (interruptsAvailable) {
+        LOG(INFO) << "Waiting for ADSD3500 to reset.";
+        int secondsTimeout = 7;
+        int secondsWaited = 0;
+        int secondsWaitingStep = 1;
+        while (!m_chipResetDone && secondsWaited < secondsTimeout) {
+            LOG(INFO) << ".";
+            std::this_thread::sleep_for(
+                std::chrono::seconds(secondsWaitingStep));
+            secondsWaited += secondsWaitingStep;
+        }
+        LOG(INFO) << "Waited: " << secondsWaited << " seconds";
+        adsd3500_unregister_interrupt_callback(cb);
+    } else {
+        usleep(7000000);
+    }
 #elif defined(NVIDIA)
     struct stat st;
     if (stat("/sys/class/gpio/PP.04/value", &st) == 0) {
@@ -1282,6 +1360,27 @@ aditof::Status Adsd3500Sensor::adsd3500_reset() {
         gpio11.close();
     }
 #endif
+    return aditof::Status::OK;
+}
+
+aditof::Status Adsd3500Sensor::initTargetDepthCompute(uint8_t *iniFile,
+                                                      uint16_t iniFileLength,
+                                                      uint8_t *calData,
+                                                      uint16_t calDataLength) {
+    using namespace aditof;
+    Status status = Status::OK;
+
+    uint8_t convertedMode;
+    status = ModeInfo::getInstance()->convertCameraMode(
+        m_implData->frameType.type, convertedMode);
+
+    status = m_bufferProcessor->setProcessorProperties(
+        iniFile, iniFileLength, calData, calDataLength, convertedMode, true);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to initialize depth compute on target!";
+        return status;
+    }
+
     return aditof::Status::OK;
 }
 
@@ -1417,7 +1516,7 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
     using namespace aditof;
     Status status = Status::OK;
     // Ask ADSD3500 what imager is being used and whether we're using the old or new modes (CCB version)
-    if (m_implData->imagerType == ImagerType::IMAGER_UNKNOWN ||
+    if (m_implData->imagerType == SensorImagerType::IMAGER_UNKNOWN ||
         m_implData->ccbVersion == CCBVersion::CCB_UNKNOWN) {
 
         uint8_t fwData[44] = {0};
@@ -1461,11 +1560,11 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
             uint8_t imager_version = (readValue & 0xFF00) >> 8;
             switch (imager_version) {
             case 1: {
-                m_implData->imagerType = ImagerType::IMAGER_ADSD3100;
+                m_implData->imagerType = SensorImagerType::IMAGER_ADSD3100;
                 break;
             }
             case 2: {
-                m_implData->imagerType = ImagerType::IMAGER_ADSD3030;
+                m_implData->imagerType = SensorImagerType::IMAGER_ADSD3030;
                 break;
             }
             default: {
@@ -1482,13 +1581,13 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
         }
     }
 
-    if (m_implData->imagerType == ImagerType::IMAGER_UNKNOWN) {
+    if (m_implData->imagerType == SensorImagerType::IMAGER_UNKNOWN) {
         LOG(WARNING) << "Since the image type is unknown, fall back on compile "
                         "flag to determine imager type";
 #ifdef ADSD3030 // TO DO: remove this fallback mechanism once we no longer support old firmwares that don't support command 0x32
-        m_implData->imagerType = ImagerType::IMAGER_ADSD3030;
+        m_implData->imagerType = SensorImagerType::IMAGER_ADSD3030;
 #else
-        m_implData->imagerType = ImagerType::IMAGER_ADSD3100;
+        m_implData->imagerType = SensorImagerType::IMAGER_ADSD3100;
 #endif
     }
 
@@ -1504,12 +1603,20 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
 }
 
 aditof::Status Adsd3500Sensor::adsd3500_register_interrupt_callback(
-    aditof::SensorInterruptCallback cb) {
+    aditof::SensorInterruptCallback &cb) {
     if (Adsd3500InterruptNotifier::getInstance().interruptsAvailable()) {
-        m_interruptCallback = cb;
+        m_interruptCallbackMap.insert({&cb, cb});
     } else {
         return aditof::Status::UNAVAILABLE;
     }
+
+    return aditof::Status::OK;
+}
+
+aditof::Status Adsd3500Sensor::adsd3500_unregister_interrupt_callback(
+    aditof::SensorInterruptCallback &cb) {
+
+    m_interruptCallbackMap.erase(&cb);
 
     return aditof::Status::OK;
 }
@@ -1519,14 +1626,43 @@ aditof::Status Adsd3500Sensor::adsd3500InterruptHandler(int signalValue) {
     aditof::Status status = aditof::Status::OK;
 
     status = adsd3500_read_cmd(0x0020, &statusRegister);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to read status register!";
+        return status;
+    }
+
     aditof::Adsd3500Status adsd3500Status =
         convertIdToAdsd3500Status(statusRegister);
     DLOG(INFO) << "statusRegister:" << statusRegister << "(" << adsd3500Status
                << ")";
 
-    if (m_interruptCallback) {
-        m_interruptCallback(adsd3500Status);
+    m_chipStatus = statusRegister;
+
+    if (adsd3500Status == aditof::Adsd3500Status::IMAGER_ERROR) {
+        status = adsd3500_read_cmd(0x0038, &statusRegister);
+        if (status != aditof::Status::OK) {
+            LOG(ERROR) << "Failed to read imager status register!";
+            return status;
+        }
+
+        m_imagerStatus = statusRegister;
+        LOG(ERROR) << "Imager error detected. Error code: " << statusRegister;
     }
+
+    for (auto m_interruptCallback : m_interruptCallbackMap) {
+        m_interruptCallback.second(adsd3500Status);
+    }
+
+    return status;
+}
+
+aditof::Status Adsd3500Sensor::adsd3500_get_status(int &chipStatus,
+                                                   int &imagerStatus) {
+    using namespace aditof;
+    Status status = Status::OK;
+
+    chipStatus = m_chipStatus;
+    imagerStatus = m_imagerStatus;
 
     return status;
 }

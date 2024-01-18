@@ -93,7 +93,14 @@ class UsbDepthSensor : public aditof::DepthSensorInterface {
     adsd3500_write_payload(uint8_t *payload, uint16_t payload_len) override;
     virtual aditof::Status adsd3500_reset() override;
     virtual aditof::Status adsd3500_register_interrupt_callback(
-        aditof::SensorInterruptCallback cb) override;
+        aditof::SensorInterruptCallback &cb) override;
+    virtual aditof::Status adsd3500_unregister_interrupt_callback(
+        aditof::SensorInterruptCallback &cb) override;
+    virtual aditof::Status adsd3500_get_status(int &chipStatus,
+                                               int &imagerStatus) override;
+    virtual aditof::Status
+    initTargetDepthCompute(uint8_t *iniFile, uint16_t iniFileLength,
+                           uint8_t *calData, uint16_t calDataLength) override;
 
   private:
     struct ImplData;

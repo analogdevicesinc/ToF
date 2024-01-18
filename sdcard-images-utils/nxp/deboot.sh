@@ -68,7 +68,7 @@ function setup_config() {
   TZ_AREA=Etc
   TZ_CITY=UTC
   LOCALE_LANG=en_US.UTF-8
-  ADD_LIST='git build-essential gcc autoconf nano vim parted'
+  ADD_LIST='git build-essential gcc autoconf nano vim parted flex bison'
   ADD_LIST_ST_3='i2c-tools v4l-utils rfkill wpasupplicant libtool libconfig-dev avahi-daemon htpdate openssh-server bc python3-dev python3-pip python3-matplotlib'
 
   # output example of the config file
@@ -286,13 +286,25 @@ EOF
   
   sudo tar -xvf ${SCRIPT_DIR}/build/linux-imx/modules.tar -C ${ROOTFS_TMP}/usr/
 
+  # Move the linux-imx kernel source to the NXP  
+  sudo mkdir -p ${SCRIPT_DIR}/build/linux-imx_tmp
+  sudo cp -Rf ${SCRIPT_DIR}/build/linux-imx/* ${SCRIPT_DIR}/build/linux-imx_tmp/
+  sudo cp ${SCRIPT_DIR}/build/linux-imx/.config ${SCRIPT_DIR}/build/linux-imx_tmp/
+  pushd ${SCRIPT_DIR}/build/linux-imx_tmp/
+  sudo make clean
+  popd
+
+  sudo mkdir -p ${ROOTFS_TMP}/usr/src/linux-imx/
+  sudo cp -Rf ${SCRIPT_DIR}/build/linux-imx_tmp/* ${ROOTFS_TMP}/usr/src/linux-imx/
+  sudo cp ${SCRIPT_DIR}/build/linux-imx_tmp/.config ${ROOTFS_TMP}/usr/src/linux-imx/
+
   # I don't know who creates empty .cache which is owned by root, remove it.
   sudo rm -rf ${ROOTFS_TMP}/home/${USERNAME}/.cache
 
   # Apply step3 overlay (configs)
   sudo cp -R ${SCRIPT_DIR}/patches/ubuntu_overlay/step3/* ${ROOTFS_TMP}/
   # Change owner of Tools
-  sudo chown -R ${USERNAME}:${USERNAME} ${ROOTFS_TMP}/home/${USERNAME}/Workspace/Tools
+  #sudo chown -R ${USERNAME}:${USERNAME} ${ROOTFS_TMP}/home/${USERNAME}/Workspace/Tools
 }
 
 function main() {
@@ -302,8 +314,8 @@ function main() {
   
   cd ${OUTPUT_DIR}
   
-  # create 3GB ext4 image
-  dd if=/dev/zero of=rootfs.ext4 bs=1M count=3000
+  # create 5GB ext4 image
+  dd if=/dev/zero of=rootfs.ext4 bs=1M count=5000
   mkdir -p ${ROOTFS_TMP}
   mkfs.ext4 rootfs.ext4
   sudo mount -o loop -o barrier=0 rootfs.ext4 ${ROOTFS_TMP}

@@ -59,6 +59,8 @@ if __name__ == "__main__":
         exit(1)
 
     system = tof.System()
+
+    print("SDK version: ", tof.getApiVersion(), " | branch: ", tof.getBranchVersion(), " | commit: ", tof.getCommitVersion())
     
     cameras = []
     ip = ""
@@ -79,10 +81,7 @@ if __name__ == "__main__":
 
     camera1 = cameras[0]
 
-    status = camera1.setControl("initialization_config", config)
-    print("camera1.setControl()", status)
-
-    status = cameras[0].initialize()
+    status = cameras[0].initialize(config)
     if not status:
         print("cameras[0].initialize() failed with status: ", status)
 
@@ -124,16 +123,16 @@ if __name__ == "__main__":
     # TO DO: Get the range from camera details when it will be defined
     camera_range = 4096
     bitCount = 12
-    max_value_of_IR_pixel = 2 ** bitCount - 1
-    distance_scale_ir = 255.0 / max_value_of_IR_pixel
+    max_value_of_AB_pixel = 2 ** bitCount - 1
+    distance_scale_ab = 255.0 / max_value_of_AB_pixel
     distance_scale = 255.0 / camera_range
 
-    # Create visualizer for depth and ir
+    # Create visualizer for depth and ab
     vis_depth = o3d.visualization.Visualizer()
     vis_depth.create_window("Depth", 2 * width, 2 * height)
 
-    vis_ir = o3d.visualization.Visualizer()
-    vis_ir.create_window("IR", 2 * width, 2 * height)
+    vis_ab = o3d.visualization.Visualizer()
+    vis_ab.create_window("AB", 2 * width, 2 * height)
 
     # Create visualizer
     vis = o3d.visualization.Visualizer()
@@ -148,18 +147,18 @@ if __name__ == "__main__":
             print("cameras[0].requestFrame() failed with status: ", status)
             
         depth_map = np.array(frame.getData("depth"), dtype="uint16", copy=False)
-        ir_map = np.array(frame.getData("ir"), dtype="uint16", copy=False)
+        ab_map = np.array(frame.getData("ab"), dtype="uint16", copy=False)
         xyz_map = np.array(frame.getData("xyz"), dtype="int16", copy=False)
 
-        # Create the IR image
-        ir_map = ir_map[0: int(ir_map.shape[0]), :]
-        ir_map = distance_scale_ir * ir_map
-        ir_map = np.uint8(ir_map)
-        ir_map = cv.cvtColor(ir_map, cv.COLOR_GRAY2RGB)
+        # Create the AB image
+        ab_map = ab_map[0: int(ab_map.shape[0]), :]
+        ab_map = distance_scale_ab * ab_map
+        ab_map = np.uint8(ab_map)
+        ab_map = cv.cvtColor(ab_map, cv.COLOR_GRAY2RGB)
 
-        # Show IR image
-        vis_ir.add_geometry(transform_image(ir_map))
-        vis_ir.poll_events()
+        # Show AB image
+        vis_ab.add_geometry(transform_image(ab_map))
+        vis_ab.poll_events()
 
         # Create the Depth image
         xyz_points = np.resize(xyz_map, (int(depth_map.shape[0]) * depth_map.shape[1], 3))
