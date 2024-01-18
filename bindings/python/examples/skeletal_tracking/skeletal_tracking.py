@@ -55,6 +55,8 @@ WINDOW_NAME_DEPTH = "Display Objects Depth"
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose()
 
+mp_hands = mp.solutions.hands
+hands = mp_hands.Hands()
 
 class ModesEnum(Enum):
     MODE_NEAR = 0
@@ -135,13 +137,21 @@ if __name__ == "__main__":
         ir_map_rgb = cv.cvtColor(ir_map, cv.COLOR_GRAY2RGB)  
         ir_map_bgr = cv.cvtColor(ir_map_rgb, cv.COLOR_RGB2BGR)
         
-        # Process the frame with Mediapipe Pose
-        results = pose.process(ir_map_rgb)
+        # Process the frame with Mediapipe Pose and Hands
+        results_pose = pose.process(ir_map_rgb)
+        results_hands = hands.process(ir_map_rgb)
         
         # Check if any pose is detected
-        if results.pose_landmarks:
+        if results_pose.pose_landmarks:
         	# Draw connections between landmarks
-        	mp.solutions.drawing_utils.draw_landmarks(ir_map_bgr, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+        	mp.solutions.drawing_utils.draw_landmarks(ir_map_bgr, results_pose.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+        
+        # Check if any hand is detected
+        if results_hands.multi_hand_landmarks:
+        	for hand_landmarks in results_hands.multi_hand_landmarks:
+        		for landmark in hand_landmarks.landmark:
+        			x, y, z = int(landmark.x * ir_map_bgr.shape[1]), int(landmark.y * ir_map_bgr.shape[0]), landmark.z
+        			cv.circle(ir_map_bgr, (x, y), 8, (0, 255, 0), -1)
 
         cv.namedWindow(WINDOW_NAME, cv.WINDOW_AUTOSIZE)
         cv.imshow(WINDOW_NAME, ir_map_bgr)
