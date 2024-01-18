@@ -750,28 +750,29 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
                                m_details.frameType.width);
     }
 
+    Metadata metadata;
+    status = frame->getMetadataStruct(metadata);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not get frame metadata!";
+        return status;
+    }
+
     if (m_enableMetaDatainAB) {
         uint16_t *abFrame;
-        uint16_t *header;
         frame->getData("ab", &abFrame);
-        frame->getData("metadata", &header);
-        memcpy(header, abFrame, 128);
+        memcpy(reinterpret_cast<uint8_t *>(&metadata), abFrame, 128);
     } else {
         // If metadata from ADSD3500 is not available/disabled, generate one here
-        Metadata metadata;
-        status = frame->getMetadataStruct(metadata);
-        if (status == Status::OK) {
-            memset(static_cast<void *>(&metadata), 0, sizeof(metadata));
-            metadata.width = aModeInfo.width;
-            metadata.height = aModeInfo.height;
-            metadata.imagerMode = aModeInfo.mode;
-            metadata.bitsInDepth = m_depthBitsPerPixel;
-            metadata.bitsInAb = m_abBitsPerPixel;
-            metadata.bitsInConfidence = m_confBitsPerPixel;
-        } else {
-            LOG(ERROR) << "Could not get frame metadata!";
-        }
+        memset(static_cast<void *>(&metadata), 0, sizeof(metadata));
+        metadata.width = aModeInfo.width;
+        metadata.height = aModeInfo.height;
+        metadata.imagerMode = aModeInfo.mode;
+        metadata.bitsInDepth = m_depthBitsPerPixel;
+        metadata.bitsInAb = m_abBitsPerPixel;
+        metadata.bitsInConfidence = m_confBitsPerPixel;
     }
+
+    metadata.xyzEnabled = m_xyzEnabled;
 
     return Status::OK;
 }
