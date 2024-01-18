@@ -228,9 +228,9 @@ struct Metadata {
     uint8_t numberOfFrequencies;
 
     /**
-    * @brief reserved
+    * @brief True if xyz is being generated for the current frame. (set by sdk)
     */
-    uint8_t reserved;
+    uint8_t xyzEnabled;
 
     /**
     * @brief elapsedTimeFractionalValue:
