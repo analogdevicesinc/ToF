@@ -51,12 +51,13 @@ void CommandParser::parseArguments(
                     m_command_vector.push_back(
                         {std::string(argv[i]).substr(0, contains_equal),
                          std::string(argv[i]).substr(contains_equal + 1)});
-                } else if(arg_number != argc - 1){
+                } else if (arg_number != argc - 1) {
                     m_command_vector.push_back(
                         {arg_position[j].first, argv[i + 1]});
                     i++;
                 } else {
-                    m_command_vector.push_back({arg_position[j].first, argv[i]});
+                    m_command_vector.push_back(
+                        {arg_position[j].first, argv[i]});
                 }
                 arg_number++;
                 mandatory = true;
