@@ -12,7 +12,7 @@
 # 2. ToF dependency
 
 
-- [Install SDK dependencies](https://github.com/analogdevicesinc/ToF/blob/master/doc/itof/linux_build_instructions.md)
+- [Install SDK dependencies](../../doc/itof/linux_build_instructions.md)
 
 ```console
 git clone https://github.com/analogdevicesinc/ToF
@@ -42,6 +42,6 @@ For usage information please refere to ```section 3``` from: [ROS Usage](https:/
 
 # 4. Diagrams
 
-![Software stack](https://github.com/analogdevicesinc/ToF/blob/master/bindings/ros2/doc/tof-ros2-nativ.png)
+![Software stack](doc/tof-ros2-nativ.png)
 
-![Software stack](https://github.com/analogdevicesinc/ToF/blob/master/bindings/ros2/doc/tof-ros2-network.png)
+![Software stack](doc/tof-ros2-network.png)
