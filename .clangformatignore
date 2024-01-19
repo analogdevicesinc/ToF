@@ -1,7 +1,7 @@
 apps/uvc-app/include
 apps/uvc-app/lib
 bindings/python/pybind11
-dependencies/
+dependencies/third-party
 drivers/
 examples/data_collect/third_party
 examples/data_collect/adi
