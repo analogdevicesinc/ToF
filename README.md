@@ -5,17 +5,17 @@ The **ADI ToF SDK** is a cross platform library for the Analog Devices depth cam
 
 The SDK provides an API to control the ToF camera, AB stream and depth data. Windows support are built into the SDK as well as sample code and wrappers for various languages including Python and C/C++.
 
-License : [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/analogdevicesinc/ToF/blob/master/LICENSE)
+License : [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 Platform details : [![Hardware](https://img.shields.io/badge/hardware-wiki-green.svg)]()
 
 ## Supported Host Platforms
 
 For more details on building the SDK on a host platform please check the **User Guide** specified below:.
 
-| Operating System | Documentation | GitHub master status | Downloads |
+| Operating System | Documentation | GitHub main status | Downloads |
 | --------- | ----------- | ----------- | ----------- |
-| Windows | [Build Instructions](scripts/windows) | [![Build status](https://dev.azure.com/AnalogDevices/3DToF-rework/_apis/build/status/analogdevicesinc.ToF?branchName=master)](https://dev.azure.com/AnalogDevices/3DToF-rework/_build?view=runs&branchFilter=3310) | [![ToF evaluation kit installer](https://img.shields.io/badge/release-ToF_evaluation_kit_installer-blue.svg)](https://github.com/analogdevicesinc/ToF/releases/latest) |
-| Linux | [Build Instructions](doc/itof/linux_build_instructions.md) | [![Build status](https://dev.azure.com/AnalogDevices/3DToF-rework/_apis/build/status/analogdevicesinc.ToF?branchName=master)](https://dev.azure.com/AnalogDevices/3DToF-rework/_build?view=runs&branchFilter=3310) | [![ToF evaluation kit installer](https://img.shields.io/badge/release-ToF_evaluation_kit_installer-blue.svg)](https://github.com/analogdevicesinc/ToF/releases/latest) |
+| Windows | [Build Instructions](scripts/windows) | [![Build status](https://dev.azure.com/AnalogDevices/3DToF-rework/_apis/build/status/analogdevicesinc.ToF?branchName=main)](https://dev.azure.com/AnalogDevices/3DToF-rework/_build?view=runs&branchFilter=3310) | [![ToF evaluation kit installer](https://img.shields.io/badge/release-ToF_evaluation_kit_installer-blue.svg)](https://github.com/analogdevicesinc/ToF/releases/latest) |
+| Linux | [Build Instructions](doc/itof/linux_build_instructions.md) | [![Build status](https://dev.azure.com/AnalogDevices/3DToF-rework/_apis/build/status/analogdevicesinc.ToF?branchName=main)](https://dev.azure.com/AnalogDevices/3DToF-rework/_build?view=runs&branchFilter=3310) | [![ToF evaluation kit installer](https://img.shields.io/badge/release-ToF_evaluation_kit_installer-blue.svg)](https://github.com/analogdevicesinc/ToF/releases/latest) |
 
 ### Requirements
 
@@ -32,9 +32,9 @@ Other
 
 For more details on building the SDK on an embedded platform please check the **User Guide** specified below:
 ### ITOF camera
-| Operating system | Evaluation boards | Documentation | GitHub master status |
+| Operating system | Evaluation boards | Documentation | GitHub main status |
 | --------- | ----------- | ----------- | ----------- |
-| NXP | [EVAL-ADTF3175D-NXZ](https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175d-nxz) | [Build instructions](doc/itof/nxp_build_instructions.md) | [![Build status](https://dev.azure.com/AnalogDevices/3DToF-rework/_apis/build/status/analogdevicesinc.ToF?branchName=master)](https://dev.azure.com/AnalogDevices/3DToF-rework/_build?view=runs&branchFilter=3310) |
+| NXP | [EVAL-ADTF3175D-NXZ](https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175d-nxz) | [Build instructions](doc/itof/nxp_build_instructions.md) | [![Build status](https://dev.azure.com/AnalogDevices/3DToF-rework/_apis/build/status/analogdevicesinc.ToF?branchName=main)](https://dev.azure.com/AnalogDevices/3DToF-rework/_build?view=runs&branchFilter=3310) |
 
 [How to write the SD card image onto the SD card?](doc/sdcard_burn.md)
 
@@ -44,21 +44,21 @@ From an architectural point of view, the SDK consists of two layers. One layer i
 
 For more details about the SDK check the links below:
 
-[Software stack documentation](https://github.com/analogdevicesinc/ToF/blob/master/sdk/readme.md)
+[Software stack documentation](sdk/readme.md)
 
 [API Doxygen documentation](https://analogdevicesinc.github.io/ToF/)
 
-[Building and installing the SDK](https://github.com/analogdevicesinc/ToF/tree/master/cmake/)
+[Building and installing the SDK](cmake/)
 
 ## SDK Examples
 | Example | Language | Description |
 | --------- | ------------- | ----------- |
-| tof-viewer | <a href="https://github.com/analogdevicesinc/ToF/tree/master/examples/tof-viewer"> C++ </a> | Graphical User interface for visualising stream from depth camera |
-| data-collect | <a href="https://github.com/analogdevicesinc/ToF/tree/master/examples/data_collect"> C++ </a> | A command line application that takes in command line input arguments (like number of frames, mode to be set, folder location to save frame data) and captures the frames and stores in path provided |
-| first-frame | <a href="https://github.com/analogdevicesinc/ToF/tree/master/examples/first-frame"> C++ </a> <br> <a href="https://github.com/analogdevicesinc/ToF/tree/master/bindings/python/examples/first_frame"> Python </a> | An example code that shows the steps required to get to the point where camera frames can be captured. |
-| point-cloud | <a href="https://github.com/analogdevicesinc/ToF/tree/master/examples/point_cloud"> C++ </a> | An application for visualising depth of a frame (Point Cloud representation). |
-| low_level_example | <a href="https://github.com/analogdevicesinc/ToF/tree/master/bindings/python/examples/low_level_example"> Python</a> | A simple example of how to get access to the low-level API of the camera. |
-| ROS2 CPP Wrapper | <a href="https://github.com/analogdevicesinc/ToF/tree/master/bindings/ros2/"> ROS2/C++</a> | ROS2 binding that publishes topics |
+| tof-viewer | <a href="examples/tof-viewer"> C++ </a> | Graphical User interface for visualising stream from depth camera |
+| data-collect | <a href="examples/data_collect"> C++ </a> | A command line application that takes in command line input arguments (like number of frames, mode to be set, folder location to save frame data) and captures the frames and stores in path provided |
+| first-frame | <a href="examples/first-frame"> C++ </a> <br> <a href="bindings/python/examples/first_frame"> Python </a> | An example code that shows the steps required to get to the point where camera frames can be captured. |
+| point-cloud | <a href="examples/point_cloud"> C++ </a> | An application for visualising depth of a frame (Point Cloud representation). |
+| low_level_example | <a href="bindings/python/examples/low_level_example"> Python</a> | A simple example of how to get access to the low-level API of the camera. |
+| ROS2 CPP Wrapper | <a href="bindings/ros2/"> ROS2/C++</a> | ROS2 binding that publishes topics |
 
 ## Other Examples
 | Example | Language | Description |

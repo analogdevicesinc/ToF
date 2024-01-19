@@ -13,7 +13,7 @@ python dnn.py --prototxt \pathTo\MobileNetSSD_deploy.prototxt  --weights \pathTo
 
 Press q to quit the  application.
 
-![Display Image](https://github.com/analogdevicesinc/ToF/blob/master/doc/img/dnn_python.PNG) 
+![Display Image](../../../../doc/img/dnn_python.PNG) 
 
 ### Python Dependencies
 
