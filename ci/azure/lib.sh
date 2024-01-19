@@ -97,12 +97,12 @@ check_doxygen() {
 }
 
 ############################################################################
-# If the current build is not a pull request and it is on master the 
+# If the current build is not a pull request and it is on main the 
 # documentation will be pushed to the gh-pages branch if changes occurred
 # since the last version that was pushed
 ############################################################################
 deploy_doxygen() {
-    if [[ "${IS_PULL_REQUEST}" == "False" && "${BRANCH_NAME}" == "master" ]]
+    if [[ "${IS_PULL_REQUEST}" == "False" && "${BRANCH_NAME}" == "main" ]]
     then
         echo_green "Running Github docs update on commit '$CURRENT_COMMIT'"
 
@@ -130,7 +130,7 @@ deploy_doxygen() {
         fi
 
     else
-        echo_green "Documentation will be updated when this commit gets on master!"
+        echo_green "Documentation will be updated when this commit gets on main!"
     fi
 }
 

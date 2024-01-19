@@ -4,7 +4,7 @@
 This folder contains helper cmake.in files for the project and also config files for other cmake projects to use in order to find the SDK.
 
 #### Using the CMake build system
-In order to build the SDK with cmake, we first need to have all the dependencies installed: glog, protobuf, libwebsockets ( [Check instructions for your system](https://github.com/analogdevicesinc/ToF/tree/master/doc) ).
+In order to build the SDK with cmake, we first need to have all the dependencies installed: glog, protobuf, libwebsockets ( [Check instructions for your system](../doc) ).
 
 After creating a build folder and moving into it `mkdir -p build && cd build`, we can run cmake.
 
