@@ -42,7 +42,7 @@ FrameHandlerImpl::FrameHandlerImpl()
     : m_concatFrames(true), m_enableMultithreading(false),
       m_customFormat(false), m_bitsInDepth(0), m_bitsInAB(0), m_bitsInConf(0),
       m_frameWidth(0), m_frameHeight(0), m_frameIndex(0), m_fileCreated(false),
-      m_endOfFile(false), m_filePath("./"), m_pos(0), m_threadRunning(false) {}
+      m_endOfFile(false), m_filePath("."), m_pos(0), m_threadRunning(false) {}
 
 FrameHandlerImpl::~FrameHandlerImpl() {
     if (m_threadWorker.joinable()) {
@@ -79,6 +79,8 @@ Status FrameHandlerImpl::saveFrameToFile(aditof::Frame &frame,
     } else {
         status = createFile(fileName);
     }
+
+    m_inputFileName = fileName;
 
     if (status != Status::OK) {
         LOG(ERROR) << "Failed to create file!";
@@ -184,8 +186,7 @@ Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
         m_pos = 0;
     }
 
-    m_file =
-        std::fstream(m_fullOutputFileName, std::ios::in | std::ios::binary);
+    m_file = std::fstream(m_fullInputFileName, std::ios::in | std::ios::binary);
 
     if (!m_file) {
         LOG(ERROR) << "Failed open file!";
@@ -243,9 +244,7 @@ Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
         return status;
     }
 
-    m_frDetails.dataDetails.clear();
-
-    //Read frames from the file in followind order: metadata depth ab conf
+    //Read frames from the file in followind order: metadata depth ab conf xyz
     uint16_t *metaData;
     uint16_t *depthData;
     uint16_t *abData;
@@ -314,10 +313,11 @@ Status FrameHandlerImpl::createFile(const std::string &fileName) {
         m_fileName = "frame" + std::string(time_buffer) + "_" +
                      std::to_string(m_frameCount) + ".bin";
         m_frameCount++;
+        m_fullOutputFileName = m_fileName;
     } else {
-        m_fileName = fileName;
+        m_fullOutputFileName = fileName;
     }
-    m_fullOutputFileName = m_filePath + '/' + m_fileName;
+
     m_file = std::fstream(m_fullOutputFileName,
                           std::ios::app | std::ios::out | std::ios::binary);
 
