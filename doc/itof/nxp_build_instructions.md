@@ -28,6 +28,7 @@ See [here](../../cmake/readme.md) for details on the cmake options.
 * Glog v0.6.0
 * Libwebsockets v3.1
 * Protocol Buffers v3.9.0
+* Depth Compute
 
 ### Installing the dependencies
 * CMake:
@@ -68,6 +69,16 @@ sudo cmake --build . --target install
 popd
 ```
 
+* Depth Compute:
+
+The Depth Compute library is required to build the SDK and run any application based on the SDK.
+Based on the following scenarios you will be able to do the following:
+
+1. You have the **arm development package for nxp** (libtofi_compute.so, libtofi_config.so) for the Depth Compute library. With it you will be able to build the SDK. The files should be included in the SD card image (~\Workspace\libs). You just need to put the files mentioned above in a directory called 'libs' which should be placed at the same level as the repository directory.
+
+    If you prefer to keep the files somewhere else, you can tell cmake where to find them using the cmake variable: LIBTOFI_LIBDIR_PATH
+
+2. You have no Depth Compute packages. In this case you can still build the SDK by enabling the USE_DEPTH_COMPUTE_OPENSOURCE option but you won't have access to the functionality that Depth Compute provides.
 
 ### Download and build SDK only
 
