@@ -220,7 +220,7 @@ if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier ADSD3500-SPI + ADSD3100" ]]; the
 	#OC6
 	echo 502 > /sys/class/gpio/export
 	echo out > /sys/class/gpio/gpio502/direction
-	echo 0 > /sys/class/gpio/gpio502/value
+	echo 1 > /sys/class/gpio/gpio502/value
 
 	#FLASH_WP
 	echo 503 > /sys/class/gpio/export
@@ -303,7 +303,7 @@ if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier ADSD3500-SPI + ADSD3030" ]]; the
 	#U12	#OC6
 	echo 502 > /sys/class/gpio/export
 	echo out > /sys/class/gpio/gpio502/direction
-	echo 1 > /sys/class/gpio/gpio502/value
+	echo 0 > /sys/class/gpio/gpio502/value
 
 	#U12	#FLASH_WP
 	echo 503 > /sys/class/gpio/export
