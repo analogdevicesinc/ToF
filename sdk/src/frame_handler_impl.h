@@ -126,6 +126,7 @@ class FrameHandlerImpl {
     std::string m_fileName;
     std::string m_fullOutputFileName;
     std::string m_fullInputFileName;
+    std::string m_inputFileName;
     bool m_fileCreated;
     bool m_endOfFile;
     std::fstream m_file;
