@@ -40,6 +40,7 @@
 #else
 #include <aditof/log.h>
 #endif
+#include <chrono>
 #include <ios>
 #include <iostream>
 #include <map>
@@ -253,6 +254,22 @@ int main(int argc, char *argv[]) {
 
     save_frame(frame, "ir");
     save_frame(frame, "depth");
+
+    // Get the timestamp of the frame
+    int64_t *timestamp;
+    frame.getData("timestamp", reinterpret_cast<uint16_t **>(&timestamp));
+    if (timestamp) {
+        LOG(INFO) << "frame timestamp is: " << *timestamp;
+
+        // Display amount of time between the moment the frame was captured and this moment
+        auto timePoint = std::chrono::system_clock::time_point(
+            std::chrono::duration<std::int64_t>(*timestamp));
+        const auto now = std::chrono::system_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+            now - timePoint);
+        LOG(INFO) << "milliseconds have passed since the frame was captured: "
+                  << duration.count();
+    }
 
     // Example of reading temperature from hardware
     uint16_t sensorTmp = 0;
