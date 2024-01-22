@@ -683,6 +683,8 @@ aditof::Status Adsd3500Sensor::program(const uint8_t *firmware, size_t size) {
 aditof::Status Adsd3500Sensor::getFrame(uint16_t *buffer) {
 
     using namespace aditof;
+    using namespace std::chrono;
+
     struct v4l2_buffer buf[MAX_SUBFRAMES_COUNT];
     struct VideoDev *dev;
     Status status;
@@ -705,8 +707,9 @@ aditof::Status Adsd3500Sensor::getFrame(uint16_t *buffer) {
 
         // Get current time as soon as we get the frame from kernel space and
         // write the timestamp right before the frame.
-        *pTimestampLocation =
-            std::chrono::system_clock::now().time_since_epoch().count();
+        *pTimestampLocation = time_point_cast<milliseconds>(system_clock::now())
+                                  .time_since_epoch()
+                                  .count();
 
         status = getInternalBufferPrivate(&pdata, buf_data_len, buf[idx], dev);
         if (status != Status::OK) {

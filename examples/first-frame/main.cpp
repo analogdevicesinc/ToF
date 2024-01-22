@@ -262,13 +262,15 @@ int main(int argc, char *argv[]) {
         LOG(INFO) << "frame timestamp is: " << *timestamp;
 
         // Display amount of time between the moment the frame was captured and this moment
-        auto timePoint = std::chrono::system_clock::time_point(
-            std::chrono::duration<std::int64_t>(*timestamp));
-        const auto now = std::chrono::system_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-            now - timePoint);
-        LOG(INFO) << "milliseconds have passed since the frame was captured: "
-                  << duration.count();
+        auto frameCapturedTimepointMs =
+            std::chrono::time_point_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::time_point(
+                    std::chrono::milliseconds(*timestamp)));
+        const auto nowMs =
+            std::chrono::time_point_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now());
+        LOG(INFO) << "time passed since the frame was captured: "
+                  << (nowMs - frameCapturedTimepointMs).count() << "ms";
     }
 
     // Example of reading temperature from hardware

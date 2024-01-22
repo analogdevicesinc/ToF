@@ -511,7 +511,10 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         int64_t *pTimestampLocation = reinterpret_cast<int64_t *>(
             &buff_frame_to_send[LWS_SEND_BUFFER_PRE_PADDING + 1]);
         *pTimestampLocation =
-            std::chrono::system_clock::now().time_since_epoch().count();
+            std::chrono::time_point_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now())
+                .time_since_epoch()
+                .count();
 
         memcpy(buff_frame_to_send +
                    (LWS_SEND_BUFFER_PRE_PADDING + 1 + FRAME_PREPADDING_BYTES),
