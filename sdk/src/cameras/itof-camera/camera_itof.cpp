@@ -757,10 +757,18 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         return status;
     }
 
+    uint16_t *metadataLocation;
+    status = frame->getData("metadata", &metadataLocation);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to get metadata location";
+        return status;
+    }
+
     if (m_enableMetaDatainAB) {
         uint16_t *abFrame;
         frame->getData("ab", &abFrame);
-        memcpy(reinterpret_cast<uint8_t *>(&metadata), abFrame, 128);
+        memcpy(reinterpret_cast<uint8_t *>(&metadata), abFrame,
+               sizeof(metadata));
     } else {
         // If metadata from ADSD3500 is not available/disabled, generate one here
         memset(static_cast<void *>(&metadata), 0, sizeof(metadata));
@@ -773,6 +781,8 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
     }
 
     metadata.xyzEnabled = m_xyzEnabled;
+    memcpy(reinterpret_cast<uint8_t *>(metadataLocation),
+           reinterpret_cast<uint8_t *>(&metadata), sizeof(metadata));
 
     return Status::OK;
 }
