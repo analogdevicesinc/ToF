@@ -28,7 +28,7 @@ void CommandParser::parseArguments(
     int argc, char *argv[],
     std::map<std::string, struct Argument> command_map) {
     int arg_number = 1;
-    
+
     // Stores mandatory arguments and their location
     std::vector<std::pair<std::string, int>> arg_position;
     for (auto ct = command_map.begin(); ct != command_map.end(); ct++) {
@@ -46,8 +46,8 @@ void CommandParser::parseArguments(
         bool mandatory = false;
         int contains_equal = std::string(argv[i]).find("=");
         int is_argument;
-        if(i < argc - 1)
-            is_argument = std::string(argv[i+1]).find("-");
+        if (i < argc - 1)
+            is_argument = std::string(argv[i + 1]).find("-");
         for (int j = 0; j < arg_position.size(); j++) {
             if (arg_number == arg_position[j].second &&
                 (std::string(argv[i]).find("-h") == -1 &&
@@ -86,7 +86,7 @@ void CommandParser::parseArguments(
             int is_long_arg = std::string(argv[i]).find("--");
             if (is_long_arg != -1) {
                 bool argument_found = false;
-                for (const auto& entry : command_map) {
+                for (const auto &entry : command_map) {
                     if (entry.second.long_option == argv[i]) {
                         if (!entry.second.has_value) {
                             m_command_vector.push_back({argv[i], "true"});
@@ -98,7 +98,7 @@ void CommandParser::parseArguments(
                         break;
                     }
                 }
-                if(!argument_found){
+                if (!argument_found) {
                     m_command_vector.push_back({argv[i], ""});
                     arg_number++;
                 }
