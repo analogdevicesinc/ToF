@@ -87,6 +87,11 @@ status = camera1.setFrameType("lr-qnative")
 print("camera1.setFrameType()", status)
 print("lrqmp")
 
+# Example of getting/modifying/setting the current ADSD3500 parameters
+# status, currentIniParams = camera1.getIniParams()
+# currentIniParams["ab_thresh_min"] = 4
+# camera1.setIniParams(currentIniParams)
+
 status = camera1.start()
 print("camera1.start()", status)
 
