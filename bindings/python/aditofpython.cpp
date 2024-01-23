@@ -296,6 +296,32 @@ PYBIND11_MODULE(aditofpython, m) {
                 return status;
             },
             py::arg("availableFrameTypes"))
+        .def("getIniParams",
+             [](aditof::Camera &camera) {
+                 std::map<std::string, float> cppParams;
+                 aditof::Status status = camera.setIniParams(cppParams);
+
+                 py::dict pyParams;
+                 for (const auto &pair : cppParams) {
+                     pyParams[py::str(pair.first)] = py::float_(pair.second);
+                 }
+
+                 return std::make_pair(status, pyParams);
+             })
+        .def(
+            "setIniParams",
+            [](aditof::Camera &camera, py::dict params) {
+                std::map<std::string, float> cppParams;
+
+                for (std::pair<py::handle, py::handle> item : params) {
+                    auto key = item.first.cast<std::string>();
+                    auto value = item.second.cast<float>();
+                    cppParams[key] = value;
+                }
+
+                return camera.setIniParams(cppParams);
+            },
+            py::arg("params"))
         .def(
             "getFrameTypeNameFromId",
             [](const aditof::Camera &camera, int id, std::string name) {
