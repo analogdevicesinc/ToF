@@ -1,31 +1,20 @@
 # Linux Build Instructions
 
-**Please note, use the applicable tag, when cloning, and release version, when getting the latest depth compute library files. As of writing, version 4.3.0 of the release is available as well as tag v4.3.0.** 
+**Please note, use the applicable tag, when cloning, and release version. As of writing, version 4.3.0 of the release is available as well as tag v4.3.0.** 
 
 If you building for a ARM64 Linux host you will need the ARM64 libraries. These are available in the installation package. See
 
-Note, all actities below are assuming to be done in a base folder. Where the **libs**, and its contents, folder is called out.
+Note, all actities below are assuming to be done in a base folder.
 
 ```
 base folder
 ├── glog
-├── libs
-│   ├── libtofi_compute.so
-│   └── libtofi_config.so
 ├── libwebsockets
 ├── protobuf
 └── ToF
 ```
 
 You can use the evaluation folder as a reference by over writing the files with the executables and binaries built.
-
-The following variables must be exported for execution of the examples:
-```
-export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
-# Only if the OpenCL depth compute libraries are being used.
-export OverrideDefaultFP64Settings=1
-export IGC_EnableDPEmulation=1 
-```
 
 ## Building the SDK only
 
