@@ -74,7 +74,7 @@ popd
 Please note, ensure you are using the intended branch.
 
 ```console
-git clone --branch v4.4.0  https://github.com/analogdevicesinc/ToF
+git clone --branch v5.0.0  https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
 cmake -DNXP=1 -DWITH_EXAMPLES=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
@@ -86,7 +86,7 @@ make -j4
 Please note, ensure you are using the intended branch.
 
 ```console
-git clone --branch v4.4.0  https://github.com/analogdevicesinc/ToF
+git clone --branch v5.0.0  https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
 cmake -DNXP=1 -DWITH_EXAMPLES=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
