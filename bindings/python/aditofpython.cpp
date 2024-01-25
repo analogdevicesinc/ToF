@@ -299,7 +299,7 @@ PYBIND11_MODULE(aditofpython, m) {
         .def("getIniParams",
              [](aditof::Camera &camera) {
                  std::map<std::string, float> cppParams;
-                 aditof::Status status = camera.setIniParams(cppParams);
+                 aditof::Status status = camera.getIniParams(cppParams);
 
                  py::dict pyParams;
                  for (const auto &pair : cppParams) {
