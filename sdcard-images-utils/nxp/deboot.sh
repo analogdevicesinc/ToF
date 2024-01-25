@@ -69,7 +69,7 @@ function setup_config() {
   TZ_CITY=UTC
   LOCALE_LANG=en_US.UTF-8
   ADD_LIST='git build-essential gcc autoconf nano vim parted flex bison'
-  ADD_LIST_ST_3='i2c-tools v4l-utils rfkill wpasupplicant libtool libconfig-dev avahi-daemon htpdate openssh-server bc python3-dev python3-pip python3-matplotlib'
+  ADD_LIST_ST_3='i2c-tools v4l-utils rfkill wpasupplicant libtool libconfig-dev avahi-daemon htpdate openssh-server iperf3 bc python3-dev python3-pip python3-matplotlib'
 
   # output example of the config file
 #  cat <<EOF>config-example
