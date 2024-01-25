@@ -12,22 +12,10 @@ base folder
 └── ToF
 ```
 
-You can use the evaluation folder as a reference by over writing the files with the executables and binaries built.
-
 ## Building the SDK only
-
-See [here](../../cmake/readme.md) for details on the cmake options.
-
-Download the latest Linux installer - as of writing v4.4.0.
-https://github.com/analogdevicesinc/ToF/releases
-
-* mkdir libs
-* cd libs
-* cp ~/Analog\ Devices/TOF_Evaluation_Ubuntu_ADTF3175D-Rel4.3.0/bin_22.04/libaditofi\* .
 
 ### Pre-requisites
 * CMake
-* OpenGL
 * Glog v0.6.0
 * Libwebsockets v3.1
 * Protocol Buffers v3.9.0
@@ -36,11 +24,6 @@ https://github.com/analogdevicesinc/ToF/releases
 * CMake:
 ```console
 sudo apt install cmake
-```
-
-* OpenGL:
-```console
-sudo apt install libgl1-mesa-dev libglfw3-dev
 ```
 
 * Glog:
@@ -83,17 +66,20 @@ popd
 Please note, ensure you are using the intended branch.
 
 ```console
-git clone --branch v4.4.0 --depth 1 https://github.com/analogdevicesinc/ToF
+git clone --branch v5.0.0 --depth 1 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
 cmake -DWITH_EXAMPLES=off -DWITH_NETWORK=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
 make -j4
 ```
 
+See [here](../../cmake/readme.md) for details on the cmake options.
+
 ## SDK with examples
 
 ### Additional pre-requisites
 * OpenCV
+* OpenGL
 
 ### Installing the additional dependencies
 * OpenCV:
@@ -102,12 +88,17 @@ sudo apt install libopencv-contrib-dev
 sudo apt install libopencv-dev
 ```
 
+* OpenGL:
+```console
+sudo apt install libgl1-mesa-dev libglfw3-dev
+```
+
 ### Build SDK with examples
 
 Please note, ensure you are using the intended branch.
 
 ```console
-git clone --branch v4.4.0 --depth 1 https://github.com/analogdevicesinc/ToF
+git clone --branch v5.0.0 --depth 1 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
 cmake -DWITH_EXAMPLES=on -DWITH_NETWORK=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
