@@ -1,8 +1,6 @@
 # Linux Build Instructions
 
-**Please note, use the applicable tag, when cloning, and release version. As of writing, version 4.3.0 of the release is available as well as tag v4.3.0.** 
-
-If you building for a ARM64 Linux host you will need the ARM64 libraries. These are available in the installation package. See
+**Please note, use the applicable tag, when cloning, and release version when getting the latest depth compute library files for the embedded system. As of writing, version 5.0.0 of the release is available as well as tag v5.0.0.**
 
 Note, all actities below are assuming to be done in a base folder.
 
