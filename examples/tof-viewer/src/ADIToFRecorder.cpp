@@ -93,7 +93,7 @@ void ADIToFRecorder::startRecordingRaw(const std::string &fileName,
     m_finishRecording = false;
     m_recordTreadStop = false;
     m_recordThread =
-        std::thread(std::bind(&ADIToFRecorder::recordThread, this));
+        std::thread(std::bind(&ADIToFRecorder::recordThread, this, fileName));
 }
 
 void ADIToFRecorder::startRecording(const std::string &fileName,
@@ -129,22 +129,49 @@ void ADIToFRecorder::stopRecording() {
 }
 
 int ADIToFRecorder::startPlaybackRaw(const std::string &fileName, int &fps) {
+    aditof::Metadata m_metadataStruct;
     unsigned int height = 0;
     unsigned int width = 0;
+    m_sizeOfHeader = METADATA_SIZE;
 
     m_playbackFile.open(fileName, std::ios::binary);
+
+    if (!m_playbackFile) {
+        LOG(ERROR) << "Failed open file!";
+        return 0;
+    }
 
     m_playbackFile.seekg(0, std::ios_base::end);
     fileSize = m_playbackFile.tellg();
     m_playbackFile.seekg(0, std::ios_base::beg);
 
-    m_playbackFile.read(reinterpret_cast<char *>(&height), sizeof(int));
-    m_playbackFile.read(reinterpret_cast<char *>(&width), sizeof(int));
-    m_playbackFile.read(reinterpret_cast<char *>(&fps), sizeof(int));
-    m_sizeOfHeader = 3 * sizeof(int);
-    int sizeOfFrame = sizeof(uint16_t) * height * width;
+    if (m_playbackFile.eof()) {
+        LOG(WARNING) << "End of file reached! No more frames left to read.";
+        m_playbackFile.close();
+        return 0;
+    }
+
+    m_playbackFile.read(reinterpret_cast<char *>(&m_metadataStruct),
+                        sizeof(aditof::Metadata));
+
+    height = m_metadataStruct.height;
+    width = m_metadataStruct.width;
+
+    // when the first frame is not carrying the correct metadata, skip it
+    if (height == 0) {
+        m_playbackFile.seekg(0, std::ios_base::beg);
+        m_playbackFile.seekg(sizeof(uint16_t) * width * width * 6 + 128,
+                             std::ios_base::cur);
+        m_playbackFile.read(reinterpret_cast<char *>(&m_metadataStruct),
+                            sizeof(aditof::Metadata));
+
+        height = m_metadataStruct.height;
+        width = m_metadataStruct.width;
+    }
+
+    int sizeOfFrame = sizeof(uint16_t) * height * width * 6;
     currentPBPos = m_sizeOfHeader;
-    m_numberOfFrames = (fileSize - m_sizeOfHeader) / sizeOfFrame;
+    m_numberOfFrames = fileSize / (m_sizeOfHeader + sizeOfFrame);
 
     m_frameDetails.height = height;
     m_frameDetails.width = width;
@@ -209,8 +236,10 @@ void ADIToFRecorder::setPlaybackPaused(bool paused) { isPaused = paused; }
 
 int ADIToFRecorder::getNumberOfFrames() const { return m_numberOfFrames; }
 
-void ADIToFRecorder::recordThread() {
+void ADIToFRecorder::recordThread(const std::string fileName) {
     clock_t recording_start = clock();
+    aditof::FrameHandler frameSaver;
+    frameSaver.setOutputFilePath(std::string(""));
     while (!m_recordTreadStop) {
         int checkTime = (clock() - recording_start) / CLOCKS_PER_SEC;
         if (!m_recordFile.is_open()) {
@@ -237,9 +266,6 @@ void ADIToFRecorder::recordThread() {
         uint16_t *xyzData;
         frame->getData("xyz", &xyzData);
 
-        uint16_t *rawData;
-        frame->getData("raw", &rawData);
-
         uint16_t *header;
         frame->getData("metadata", &header);
 
@@ -248,11 +274,7 @@ void ADIToFRecorder::recordThread() {
         int captures = m_frameDetails.totalCaptures;
         int size = static_cast<int>(sizeof(uint16_t) * width * height);
 
-        m_recordFile.write(reinterpret_cast<const char *>(abData), size);
-        m_recordFile.write(reinterpret_cast<const char *>(depthData), size);
-        m_recordFile.write(reinterpret_cast<const char *>(xyzData), size * 3);
-        m_recordFile.write(reinterpret_cast<const char *>(header),
-                           EMBED_HDR_LENGTH);
+        frameSaver.saveFrameToFile(*frame, fileName);
 
         //Create a new .bin file for each frame with raw sensor data
         if (m_saveBinaryFormat) {
@@ -263,8 +285,6 @@ void ADIToFRecorder::recordThread() {
             std::ofstream recordFileRaw;
             recordFileRaw.open(fileNameRawFrame,
                                std::ios::binary | std::ofstream::trunc);
-            recordFileRaw.write(reinterpret_cast<const char *>(rawData),
-                                static_cast<int>(captures * size));
             recordFileRaw.close();
         }
         frameCtr++;
@@ -290,6 +310,10 @@ void ADIToFRecorder::playbackThread() {
         m_shouldReadNewFrame = false;
         m_frameDetails.dataDetails.clear();
 
+        dataDetails.type = "metadata";
+        dataDetails.width = 1;
+        dataDetails.height = EMBED_HDR_LENGTH;
+        m_frameDetails.dataDetails.emplace_back(dataDetails);
         dataDetails.type = "depth";
         dataDetails.width = m_frameDetails.width;
         dataDetails.height = m_frameDetails.height;
@@ -298,57 +322,56 @@ void ADIToFRecorder::playbackThread() {
         dataDetails.width = m_frameDetails.width;
         dataDetails.height = m_frameDetails.height;
         m_frameDetails.dataDetails.emplace_back(dataDetails);
+        dataDetails.type = "conf";
+        dataDetails.width = m_frameDetails.width;
+        dataDetails.height = m_frameDetails.height;
+        m_frameDetails.dataDetails.emplace_back(dataDetails);
         dataDetails.type = "xyz";
         dataDetails.width = m_frameDetails.width;
         dataDetails.height = m_frameDetails.height;
         m_frameDetails.dataDetails.emplace_back(dataDetails);
-        dataDetails.type = "metadata";
-        dataDetails.width = 1;
-        dataDetails.height = EMBED_HDR_LENGTH;
-        m_frameDetails.dataDetails.emplace_back(dataDetails);
 
         frame->setDetails(m_frameDetails);
-        frame->getData("ab", &frameDataLocationAB);
-        frame->getData("depth", &frameDataLocationDEPTH);
-        frame->getData("xyz", &frameDataLocationXYZ);
         frame->getData("metadata", &frameDataLocationHeader);
+        frame->getData("depth", &frameDataLocationDEPTH);
+        frame->getData("ab", &frameDataLocationAB);
+        frame->getData("conf", &frameDataLocationCONF);
+        frame->getData("xyz", &frameDataLocationXYZ);
 
         unsigned int width = m_frameDetails.width;
         unsigned int height = m_frameDetails.height;
 
         sizeOfFrame = sizeof(uint16_t) * height * width;
 
-        if (m_playbackFile.eof()) {
+        if (m_playbackFile.eof() && currentPBPos >= fileSize) {
+            LOG(WARNING) << "eof";
             memset(frameDataLocationAB, 0, sizeof(uint16_t) * width * height);
             m_playBackEofReached = true;
         } else {
-            if (!isPaused && (currentPBPos < (fileSize - (sizeOfFrame)*10))) {
+            if (!isPaused && (currentPBPos < (fileSize - (sizeOfFrame)*12))) {
                 int size = static_cast<int>(sizeof(uint16_t) * width * height);
-                LOG(INFO) << "CURRENT BPOS " << currentPBPos;
                 m_playbackFile.seekg(currentPBPos);
-                currentPBPos += size * 5 + EMBED_HDR_LENGTH;
-                m_playbackFile.read(
-                    reinterpret_cast<char *>(frameDataLocationAB), size);
+                currentPBPos += size * 6 + EMBED_HDR_LENGTH;
                 m_playbackFile.read(
                     reinterpret_cast<char *>(frameDataLocationDEPTH), size);
                 m_playbackFile.read(
-                    reinterpret_cast<char *>(frameDataLocationXYZ), size * 3);
+                    reinterpret_cast<char *>(frameDataLocationAB), size);
                 m_playbackFile.read(
-                    reinterpret_cast<char *>(frameDataLocationHeader),
-                    EMBED_HDR_LENGTH);
+                    reinterpret_cast<char *>(frameDataLocationCONF), size);
+                m_playbackFile.read(
+                    reinterpret_cast<char *>(frameDataLocationXYZ), size * 3);
 
             } else {
                 m_playbackFile.seekg(currentPBPos);
                 int size = static_cast<int>(sizeof(uint16_t) * width * height);
                 m_playbackFile.read(
-                    reinterpret_cast<char *>(frameDataLocationAB), size);
-                m_playbackFile.read(
                     reinterpret_cast<char *>(frameDataLocationDEPTH), size);
                 m_playbackFile.read(
-                    reinterpret_cast<char *>(frameDataLocationXYZ), size * 3);
+                    reinterpret_cast<char *>(frameDataLocationAB), size);
                 m_playbackFile.read(
-                    reinterpret_cast<char *>(frameDataLocationHeader),
-                    EMBED_HDR_LENGTH);
+                    reinterpret_cast<char *>(frameDataLocationCONF), size);
+                m_playbackFile.read(
+                    reinterpret_cast<char *>(frameDataLocationXYZ), size * 3);
             }
         }
 
@@ -361,6 +384,7 @@ void ADIToFRecorder::clearVariables() {
     frameDataLocationAB = nullptr;
     frameDataLocationDEPTH = nullptr;
     frameDataLocationXYZ = nullptr;
+    frameDataLocationCONF = nullptr;
     m_frameDetails.height = 0;
     m_frameDetails.passiveIRCaptured = false;
     m_frameDetails.cameraMode = "";
