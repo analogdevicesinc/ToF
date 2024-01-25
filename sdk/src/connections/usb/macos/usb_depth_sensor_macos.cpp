@@ -167,3 +167,17 @@ aditof::Status UsbDepthSensor::adsd3500_register_interrupt_callback(
                     "is not supported yet!";
     return aditof::Status::UNAVAILABLE;
 }
+
+aditof::Status
+UsbDepthSensor::getIniParams(std::map<std::string, float> &params) {
+    using namespace aditof;
+    Status status = Status::UNAVAILABLE;
+    return status;
+}
+
+aditof::Status
+UsbDepthSensor::setIniParams(const std::map<std::string, float> &params) {
+    using namespace aditof;
+    Status status = Status::UNAVAILABLE;
+    return status;
+}
