@@ -1168,3 +1168,17 @@ aditof::Status UsbDepthSensor::initTargetDepthCompute(uint8_t *iniFile,
                                                       uint16_t calDataLength) {
     return aditof::Status::OK;
 }
+
+aditof::Status
+UsbDepthSensor::getIniParams(std::map<std::string, float> &params) {
+    using namespace aditof;
+    Status status = Status::UNAVAILABLE;
+    return status;
+}
+
+aditof::Status
+UsbDepthSensor::setIniParams(const std::map<std::string, float> &params) {
+    using namespace aditof;
+    Status status = Status::UNAVAILABLE;
+    return status;
+}
