@@ -896,17 +896,17 @@ void ADIMainWindow::showPlaybackMenu() {
                 (view->m_ctrl->m_recorder->currentPBPos) /
                 (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
                      ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
-                     sizeof(uint16_t) * 5 +
+                     sizeof(uint16_t) * 6 +
                  EMBED_HDR_LENGTH);
+            // LOG(INFO) << "rawSeeker :" << rawSeeker;
             ImGuiExtensions::ADISliderInt(
                 "Progress", &rawSeeker, 0,
-                (view->m_ctrl->m_recorder->m_numberOfFrames / 5) - 1, "%d",
-                true);
+                (view->m_ctrl->m_recorder->m_numberOfFrames) - 1, "%d", true);
             view->m_ctrl->m_recorder->currentPBPos =
                 rawSeeker *
                     (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
                          ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
-                         sizeof(uint16_t) * 5 +
+                         sizeof(uint16_t) * 6 +
                      EMBED_HDR_LENGTH) +
                 view->m_ctrl->m_recorder->m_sizeOfHeader;
         }
@@ -918,23 +918,7 @@ void ADIMainWindow::showPlaybackMenu() {
         ImGuiExtensions::ADIRadioButton("Point Cloud and Depth", &viewSelection,
                                         1, pointCloudEnable && !isPlayRecorded);
 
-        // if (0) {
-        // int filterIndex = 0;
-        // //USE ONLY IN DEBUG MODE: Highly Experimental. May use in the future
-        // ImGui::NewLine();
-        // if (ImGuiExtensions::ADIButton("Open *.bin Recording",
-        //                                !isPlayRecorded && !isPlaying)) {
-        //     std::string path = openADIFileName(customFilter.c_str(), NULL, filterIndex).c_str();
-        //     if (!path.empty()) {
-        //         if (path.find(".bin") !=
-        //             std::string::npos) { //If bin File was found
-        //             int frames = 1;
-        //             int width = 1024;
-        //             int height = 1024;
-        //         }
-        //     }
-        // }
-        // } //Playback
+        //Playback
         ImGui::EndMenu();
     }
 }
@@ -1569,7 +1553,7 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
         if (camera_mode != "pcm-native") {
             frame->getData("metadata", &frameHeader);
         }
-        if (frameHeader) {
+        if (frameHeader && (isPlaying || isRecording)) {
             void *metadata = nullptr;
             metadata = frameHeader + 6; // to get frame number
             int32_t *frameNum = reinterpret_cast<int32_t *>(metadata);
@@ -1694,17 +1678,17 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                 (view->m_ctrl->m_recorder->currentPBPos) /
                 (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
                      ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
-                     sizeof(uint16_t) * 5 +
+                     sizeof(uint16_t) * 6 +
                  EMBED_HDR_LENGTH);
             ImGuiExtensions::ADISliderInt(
                 "Progress", &rawSeeker, 0,
-                (view->m_ctrl->m_recorder->m_numberOfFrames / 5) - 1, "%d",
-                true);
+                (view->m_ctrl->m_recorder->m_numberOfFrames) - 1, "%d", true);
+            // LOG(INFO) << "Progress bar rawSeeker: " << rawSeeker;
             view->m_ctrl->m_recorder->currentPBPos =
                 rawSeeker *
                     (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
                          ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
-                         sizeof(uint16_t) * 5 +
+                         sizeof(uint16_t) * 6 +
                      EMBED_HDR_LENGTH) +
                 view->m_ctrl->m_recorder->m_sizeOfHeader;
         }
