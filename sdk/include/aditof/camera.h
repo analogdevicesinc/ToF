@@ -135,6 +135,20 @@ class SDK_API Camera {
                                 FrameUpdateCallback cb = nullptr) = 0;
 
     /**
+     * @brief Scale AB image with logarithmic base 10
+     * @param frame - The frame of the camera
+     * @param normalizeSteps - if is 0 then the algorithm is not applied,
+     * if is 1 is applied the normalization between 0 and 255,
+     * if is 2 is applied normalization between 0 and 255 and log10
+     * if is another value the algorithm is not applied
+     * @param abData[out] - the new data is returned throught this pointer
+     * @return Status
+     */
+    virtual aditof::Status normalizeABdata(aditof::Frame *frame,
+                                           int normalizeSteps,
+                                           uint16_t **abData) = 0;
+
+    /**
      * @brief Gets the current details of the camera
      * @param[out] details
      * @return Status

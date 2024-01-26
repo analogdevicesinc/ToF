@@ -52,6 +52,7 @@
 #include <chrono>
 #include <iostream>
 #include <iterator>
+#include <math.h>
 #include <thread>
 #include <vector>
 
@@ -785,6 +786,66 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
            reinterpret_cast<uint8_t *>(&metadata), sizeof(metadata));
 
     return Status::OK;
+}
+
+aditof::Status CameraItof::normalizeABdata(aditof::Frame *frame,
+                                           int normalizeSteps,
+                                           uint16_t **abData) {
+
+    using namespace aditof;
+    Status status = Status::OK;
+
+    if (normalizeSteps != 1 && normalizeSteps != 2) {
+        return Status::INVALID_ARGUMENT;
+    }
+
+    status = frame->getData("ab", abData);
+
+    uint16_t *abVideoData = *abData;
+
+    aditof::FrameDataDetails frameAbDetails;
+    frameAbDetails.height = 0;
+    frameAbDetails.width = 0;
+    frame->getDataDetails("ab", frameAbDetails);
+
+    size_t imageSize = frameAbDetails.height * frameAbDetails.width;
+
+    uint32_t min_value_of_AB_pixel = 0xFFFF;
+    uint32_t max_value_of_AB_pixel = 1;
+
+    for (size_t dummyCtr = 0; dummyCtr < imageSize; ++dummyCtr) {
+        if (abVideoData[dummyCtr] > max_value_of_AB_pixel) {
+            max_value_of_AB_pixel = abVideoData[dummyCtr];
+        }
+        if (abVideoData[dummyCtr] < min_value_of_AB_pixel) {
+            min_value_of_AB_pixel = abVideoData[dummyCtr];
+        }
+    }
+    max_value_of_AB_pixel -= min_value_of_AB_pixel;
+
+    double c = 255.0f / log10(1 + max_value_of_AB_pixel);
+    //Create a  for loop that mimics some future process
+    for (size_t dummyCtr = 0; dummyCtr < imageSize; ++dummyCtr) {
+        //AB Data is a "width size as 16 bit data. Need to normalize to an 8 bit data
+        //It is doing a width x height x 3: Resolution * 3bytes (BGR)
+
+        abVideoData[dummyCtr] -= min_value_of_AB_pixel;
+
+        double pix = abVideoData[dummyCtr] * (255.0 / max_value_of_AB_pixel);
+
+        if (normalizeSteps == 1) {
+            pix = (pix >= 255.0) ? 255.0 : pix; //clip to 8bit range;
+            abVideoData[dummyCtr] = (uint8_t)(pix);
+        }
+
+        if (normalizeSteps == 2) {
+            pix = (pix >= 255.0) ? 255.0 : pix; //clip to 8bit range;
+            pix = c * log10(pix + 1);
+            abVideoData[dummyCtr] = (uint8_t)(pix);
+        }
+    }
+
+    return status;
 }
 
 aditof::Status CameraItof::getDetails(aditof::CameraDetails &details) const {
