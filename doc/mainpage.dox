@@ -45,7 +45,7 @@
  The below code snipped shows an example of how the ToF SDK can be used to get a frame from one camera.
 
 ~~~{.cpp}
- #include "aditof/aditof.h"
+#include "aditof/aditof.h"
  
  
 aditof::System system;
@@ -75,4 +75,10 @@ uint16_t *frameData;
 status = frame.getData("depth", &frameData);
 ~~~
 
- */
+ @subsection framehandler FrameHandler
+ The role of the FrameHandler is provide the means to save the content of a Frame object to a file and to readback content from a file and construct a Frame object based on that content.
+ 
+ The following diagram shows how the content of a frame is organized within the saved file.
+ ![Saved Frame Content Map](img/saved_frame_content_map.png)
+
+*/
