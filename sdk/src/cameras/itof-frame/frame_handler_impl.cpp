@@ -115,7 +115,7 @@ Status FrameHandlerImpl::saveFrameToFile(aditof::Frame &frame,
                      metadataStruct.width * metadataStruct.height * 2);
     if (metadataStruct.bitsInConfidence)
         m_file.write(reinterpret_cast<char *>(confData),
-                     metadataStruct.width * metadataStruct.height * 2);
+                     metadataStruct.width * metadataStruct.height * 4);
     if (metadataStruct.xyzEnabled)
         m_file.write(reinterpret_cast<char *>(xyzData),
                      metadataStruct.width * metadataStruct.height * 6);
@@ -271,7 +271,7 @@ Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
                     m_metadataStruct.width * m_metadataStruct.height * 2);
     if (m_metadataStruct.bitsInConfidence)
         m_file.read(reinterpret_cast<char *>(confData),
-                    m_metadataStruct.width * m_metadataStruct.height * 2);
+                    m_metadataStruct.width * m_metadataStruct.height * 4);
     if (m_metadataStruct.xyzEnabled)
         m_file.read(reinterpret_cast<char *>(xyzData),
                     m_metadataStruct.width * m_metadataStruct.height * 6);

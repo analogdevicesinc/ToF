@@ -241,6 +241,9 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
         } else if (frameDetail.type == "xyz") {
             return (unsigned long int)(frameDetail.height * frameDetail.width *
                                        sizeof(Point3I) / 2);
+        } else if (frameDetail.type == "conf") {
+            return (unsigned long int)(frameDetail.height * frameDetail.width *
+                                       2);
         } else {
             return (unsigned long int)frameDetail.height * frameDetail.width;
         }
