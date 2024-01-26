@@ -129,7 +129,7 @@ void ADIToFRecorder::stopRecording() {
 }
 
 int ADIToFRecorder::startPlaybackRaw(const std::string &fileName, int &fps) {
-    aditof::Metadata m_metadataStruct;
+    aditof::Metadata metadataStruct;
     unsigned int height = 0;
     unsigned int width = 0;
     m_sizeOfHeader = METADATA_SIZE;
@@ -151,22 +151,22 @@ int ADIToFRecorder::startPlaybackRaw(const std::string &fileName, int &fps) {
         return 0;
     }
 
-    m_playbackFile.read(reinterpret_cast<char *>(&m_metadataStruct),
+    m_playbackFile.read(reinterpret_cast<char *>(&metadataStruct),
                         sizeof(aditof::Metadata));
 
-    height = m_metadataStruct.height;
-    width = m_metadataStruct.width;
+    height = metadataStruct.height;
+    width = metadataStruct.width;
 
     // when the first frame is not carrying the correct metadata, skip it
     if (height == 0) {
         m_playbackFile.seekg(0, std::ios_base::beg);
         m_playbackFile.seekg(sizeof(uint16_t) * width * width * 6 + 128,
                              std::ios_base::cur);
-        m_playbackFile.read(reinterpret_cast<char *>(&m_metadataStruct),
+        m_playbackFile.read(reinterpret_cast<char *>(&metadataStruct),
                             sizeof(aditof::Metadata));
 
-        height = m_metadataStruct.height;
-        width = m_metadataStruct.width;
+        height = metadataStruct.height;
+        width = metadataStruct.width;
     }
 
     int sizeOfFrame = sizeof(uint16_t) * height * width * 6;
@@ -257,15 +257,6 @@ void ADIToFRecorder::recordThread(const std::string fileName) {
 
         auto frame = m_recordQueue.dequeue();
 
-        uint16_t *abData;
-        frame->getData("ab", &abData);
-
-        uint16_t *depthData;
-        frame->getData("depth", &depthData);
-
-        uint16_t *xyzData;
-        frame->getData("xyz", &xyzData);
-
         uint16_t *header;
         frame->getData("metadata", &header);
 
@@ -276,17 +267,18 @@ void ADIToFRecorder::recordThread(const std::string fileName) {
 
         frameSaver.saveFrameToFile(*frame, fileName);
 
-        //Create a new .bin file for each frame with raw sensor data
-        if (m_saveBinaryFormat) {
-            std::string fileNameRawFrame = m_fileNameRaw;
-            fileNameRawFrame.replace(fileNameRawFrame.find_last_of("#"), 1,
-                                     std::to_string(frameCtr));
+        // Create a new .bin file for each frame with raw sensor data
+        // TODO: need to be implemented and exposed to UI
+        // if (m_saveBinaryFormat) {
+        //     std::string fileNameRawFrame = m_fileNameRaw;
+        //     fileNameRawFrame.replace(fileNameRawFrame.find_last_of("#"), 1,
+        //                              std::to_string(frameCtr));
 
-            std::ofstream recordFileRaw;
-            recordFileRaw.open(fileNameRawFrame,
-                               std::ios::binary | std::ofstream::trunc);
-            recordFileRaw.close();
-        }
+        //     std::ofstream recordFileRaw;
+        //     recordFileRaw.open(fileNameRawFrame,
+        //                        std::ios::binary | std::ofstream::trunc);
+        //     recordFileRaw.close();
+        // }
         frameCtr++;
     }
 }
