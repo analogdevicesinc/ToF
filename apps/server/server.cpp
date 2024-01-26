@@ -784,7 +784,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     case SET_INI_PARAM: {
         std::map<std::string, float> ini_params;
         ini_params["ab_thresh_min"] = buff_recv.func_float_param(0);
-        DLOG(INFO) << "modified ab_thresh_min " << ini_params["ab_thresh_min"];
         ini_params["ab_sum_thresh"] = buff_recv.func_float_param(1);
         ini_params["conf_thresh"] = buff_recv.func_float_param(2);
         ini_params["radial_thresh_min"] = buff_recv.func_float_param(3);
