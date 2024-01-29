@@ -8,7 +8,6 @@ endif()
 if(USE_DEPTH_COMPUTE_OPENSOURCE AND ON_TARGET)
     add_subdirectory(common/adi/depth-compute-opensource)
 endif()
-add_subdirectory(common/adi/ccb)
 
 add_definitions(-DSDK_EXPORTS)
 
@@ -127,7 +126,6 @@ add_library(${PROJECT_NAME} SHARED
 
 target_link_libraries(${PROJECT_NAME} PRIVATE crc32)
 target_link_libraries(${PROJECT_NAME} PRIVATE cjson)
-target_link_libraries(${PROJECT_NAME} PRIVATE ccb)
 
 # Add alias to aditof as aditof::aditof
 add_library(aditof::aditof ALIAS aditof)
