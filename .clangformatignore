@@ -8,5 +8,4 @@ examples/data_collect/adi
 examples/tof-viewer/external
 examples/tof-viewer/include/stb_image.h
 examples/tof-viewer/include/linmath.h
-sdk/common/adi/ccb
 sdk/src/cameras/itof-camera/tofi
