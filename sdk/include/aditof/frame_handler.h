@@ -50,6 +50,10 @@ class FrameHandlerImpl;
 
 namespace aditof {
 
+/**
+ * @class FrameHandler
+ * @brief Handles operations on a frame such as saving it to file and creating a new frame with content read from file.
+ */
 class FrameHandler {
   public:
     SDK_API FrameHandler();
