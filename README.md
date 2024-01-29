@@ -56,7 +56,6 @@ For more details about the SDK check the links below:
 | tof-viewer | <a href="examples/tof-viewer"> C++ </a> | Graphical User interface for visualising stream from depth camera |
 | data-collect | <a href="examples/data_collect"> C++ </a> | A command line application that takes in command line input arguments (like number of frames, mode to be set, folder location to save frame data) and captures the frames and stores in path provided |
 | first-frame | <a href="examples/first-frame"> C++ </a> <br> <a href="bindings/python/examples/first_frame"> Python </a> | An example code that shows the steps required to get to the point where camera frames can be captured. |
-| point-cloud | <a href="examples/point_cloud"> C++ </a> | An application for visualising depth of a frame (Point Cloud representation). |
 | low_level_example | <a href="bindings/python/examples/low_level_example"> Python</a> | A simple example of how to get access to the low-level API of the camera. |
 | ROS2 CPP Wrapper | <a href="bindings/ros2/"> ROS2/C++</a> | ROS2 binding that publishes topics |
 

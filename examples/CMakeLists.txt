@@ -6,7 +6,6 @@ add_subdirectory(data_collect)
 if (NOT NXP)
     add_subdirectory(tof-viewer)
 endif()
-add_subdirectory(point_cloud)
 
 include(GNUInstallDirs)
 
