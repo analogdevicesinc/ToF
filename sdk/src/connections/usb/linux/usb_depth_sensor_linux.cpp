@@ -145,6 +145,7 @@ aditof::Status UsbDepthSensor::open() {
     usb_payload::ClientRequest requestMsg;
     requestMsg.set_func_name(
         usb_payload::FunctionName::GET_AVAILABLE_FRAME_TYPES);
+    requestMsg.add_func_int32_param(10);
     std::string requestStr;
     requestMsg.SerializeToString(&requestStr);
     status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
@@ -262,6 +263,7 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     UsbUtils::depthSensorFrameTypeToProtoMsg(type, frameTypeMsg);
     // Send request
     requestMsg.set_func_name(usb_payload::FunctionName::SET_FRAME_TYPE);
+    requestMsg.add_func_int32_param(10);
     std::string requestStr;
     requestMsg.SerializeToString(&requestStr);
     status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
@@ -565,6 +567,7 @@ aditof::Status UsbDepthSensor::readRegisters(const uint16_t *address,
     requestMsg.add_func_int32_param(static_cast<::google::int32>(burst));
     requestMsg.add_func_bytes_param(address,
                                     burst ? 2 : length * sizeof(uint16_t));
+    requestMsg.add_func_int32_param(10);
 
     // Send request
     std::string requestStr;
@@ -616,6 +619,7 @@ aditof::Status UsbDepthSensor::writeRegisters(const uint16_t *address,
     requestMsg.add_func_bytes_param(address,
                                     burst ? 2 : length * sizeof(uint16_t));
     requestMsg.add_func_bytes_param(data, length * sizeof(uint16_t));
+    requestMsg.add_func_int32_param(10);
 
     // Send request
     std::string requestStr;
@@ -658,6 +662,7 @@ UsbDepthSensor::getAvailableControls(std::vector<std::string> &controls) const {
     // Construct request message
     usb_payload::ClientRequest requestMsg;
     requestMsg.set_func_name(usb_payload::FunctionName::GET_AVAILABLE_CONTROLS);
+    requestMsg.add_func_int32_param(10);
 
     // Send request
     std::string requestStr;
@@ -713,6 +718,7 @@ aditof::Status UsbDepthSensor::setControl(const std::string &control,
     requestMsg.set_func_name(usb_payload::FunctionName::SET_CONTROL);
     requestMsg.add_func_strings_param(control);
     requestMsg.add_func_strings_param(value);
+    requestMsg.add_func_int32_param(10);
 
     // Send request
     std::string requestStr;
@@ -757,6 +763,7 @@ aditof::Status UsbDepthSensor::getControl(const std::string &control,
     usb_payload::ClientRequest requestMsg;
     requestMsg.set_func_name(usb_payload::FunctionName::GET_CONTROL);
     requestMsg.add_func_strings_param(control);
+    requestMsg.add_func_int32_param(10);
 
     // Send request
     std::string requestStr;
@@ -832,6 +839,7 @@ aditof::Status UsbDepthSensor::adsd3500_read_cmd(uint16_t cmd, uint16_t *data,
     requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_READ_CMD);
     requestMsg.add_func_int32_param(static_cast<::google::int32>(cmd));
     requestMsg.add_func_int32_param(static_cast<::google::int32>(usDelay));
+    requestMsg.add_func_int32_param(10);
 
     // Send request
     std::string requestStr;
@@ -878,6 +886,7 @@ aditof::Status UsbDepthSensor::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
     requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_WRITE_CMD);
     requestMsg.add_func_int32_param(static_cast<::google::int32>(cmd));
     requestMsg.add_func_bytes_param(&data, sizeof(uint16_t));
+    requestMsg.add_func_int32_param(10);
 
     // Send request
     std::string requestStr;
@@ -925,6 +934,7 @@ aditof::Status UsbDepthSensor::adsd3500_read_payload_cmd(uint32_t cmd,
     requestMsg.add_func_int32_param(static_cast<::google::int32>(cmd));
     requestMsg.add_func_int32_param(static_cast<::google::int32>(payload_len));
     requestMsg.add_func_bytes_param(readback_data, 4 * sizeof(uint8_t));
+    requestMsg.add_func_int32_param(10);
 
     // Send request
     std::string requestStr;
@@ -973,6 +983,7 @@ aditof::Status UsbDepthSensor::adsd3500_read_payload(uint8_t *payload,
     usb_payload::ClientRequest requestMsg;
     requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_WRITE_PAYLOAD);
     requestMsg.add_func_int32_param(static_cast<::google::int32>(payload_len));
+    requestMsg.add_func_int32_param(10);
 
     // Send request
     std::string requestStr;
@@ -1022,6 +1033,7 @@ UsbDepthSensor::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload,
     requestMsg.add_func_int32_param(static_cast<::google::int32>(cmd));
     requestMsg.add_func_int32_param(static_cast<::google::int32>(payload_len));
     requestMsg.add_func_bytes_param(payload, payload_len);
+    requestMsg.add_func_int32_param(10);
 
     // Send request
     std::string requestStr;
@@ -1068,6 +1080,7 @@ aditof::Status UsbDepthSensor::adsd3500_write_payload(uint8_t *payload,
     requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_WRITE_PAYLOAD);
     requestMsg.add_func_int32_param(static_cast<::google::int32>(payload_len));
     requestMsg.add_func_bytes_param(payload, payload_len);
+    requestMsg.add_func_int32_param(10);
 
     // Send request
     std::string requestStr;
@@ -1109,6 +1122,7 @@ aditof::Status UsbDepthSensor::adsd3500_reset() {
     // Construct request message
     usb_payload::ClientRequest requestMsg;
     requestMsg.set_func_name(usb_payload::FunctionName::ADSD3500_RESET);
+    requestMsg.add_func_int32_param(10);
 
     // Send request
     std::string requestStr;

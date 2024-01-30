@@ -427,6 +427,7 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
     }
     } // switch
 
+    response.add_int32_payload(10);
     response.SerializeToString(&serverResponseBlob);
 
     *out_buf = (char *)malloc(serverResponseBlob.size());

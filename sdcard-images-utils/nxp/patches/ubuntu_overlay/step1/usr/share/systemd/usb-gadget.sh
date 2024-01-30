@@ -176,8 +176,8 @@ create_uvc() {
 	#echo 2048 > functions/$FUNCTION/streaming_maxpacket
 	#echo 1024 > functions/$FUNCTION/streaming_maxpacket
 
-	echo 15 > functions/$FUNCTION/streaming_maxburst
-	echo 3 > functions/$FUNCTION/streaming_interval
+	echo 1 > functions/$FUNCTION/streaming_maxburst
+	echo 1 > functions/$FUNCTION/streaming_interval
 
 	ln -s functions/$FUNCTION $CONFIG
 }

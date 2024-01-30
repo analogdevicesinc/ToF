@@ -355,7 +355,7 @@ aditof::Status UsbLinuxUtils::uvcExUnitGetResponse(int fd,
             << ret << "(" << strerror(ret) << ")";
         return aditof::Status::GENERIC_ERROR;
     }
-    size_t stringLength = reinterpret_cast<size_t *>(packet)[0];
+    size_t stringLength = *(int16_t *)packet;
 
     responseStr.reserve(stringLength);
 
