@@ -785,7 +785,6 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
 
     if (m_enableMetaDatainAB) {
         uint16_t *abFrame;
-        uint16_t *header;
         frame->getData("ab", &abFrame);
         memcpy(reinterpret_cast<uint8_t *>(&metadata), abFrame,
                sizeof(metadata));
