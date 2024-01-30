@@ -11,7 +11,7 @@ extern "C" { // only need to export C interface if
 #define MAX_PATH_SIZE 512
 #define MAX_CHAR_SIZE 24
 #define MAX_N_FREQS 3
-#define MAX_N_MODES 17
+#define MAX_N_MODES 10
 // Structure for the camera intrinsic data
 typedef struct {
     float fx;
