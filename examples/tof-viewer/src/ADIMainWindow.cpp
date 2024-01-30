@@ -498,8 +498,6 @@ void ADIMainWindow::showMainMenu() {
 
 void ADIMainWindow::showRecordMenu() {
     if (ImGui::BeginMenu("Record Options")) {
-        ImGuiExtensions::ButtonColorChanger colorChangerStartRec(
-            customColorPlay, isPlaying);
         //Allow the user to choose from 1 to 120 frames. Default value is 5 frames
         ImGui::InputInt("Frames", &recordingSeconds, 1, 300);
 
@@ -511,54 +509,64 @@ void ADIMainWindow::showRecordMenu() {
 
         ImGui::NewLine();
 
-        if (ImGuiExtensions::ADIButton("Start Recording",
-                                       !isRecording && !isPlayRecorded)) {
-            fs::path NPath = fs::current_path();
-            std::string tempPath = NPath.string();
-            char time_buffer[128];
-            struct tm timeinfo;
-            time_t rawtime;
-            time(&rawtime);
+        { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
+            ImGuiExtensions::ButtonColorChanger colorChangerStartRec(
+                customColorPlay, isPlaying);
+            if (ImGuiExtensions::ADIButton("Start Recording",
+                                           !isRecording && !isPlayRecorded)) {
+                fs::path NPath = fs::current_path();
+                std::string tempPath = NPath.string();
+                char time_buffer[128];
+                struct tm timeinfo;
+                time_t rawtime;
+                time(&rawtime);
 #ifdef _WIN32
-            localtime_s(&timeinfo, &rawtime);
+                localtime_s(&timeinfo, &rawtime);
 #else
-            localtime_r(&rawtime, &timeinfo);
+                localtime_r(&rawtime, &timeinfo);
 #endif
-            strftime(time_buffer, sizeof(time_buffer), "%Y%m%d%H%M", &timeinfo);
-            tempPath += "\\frames" + std::string(time_buffer);
+                strftime(time_buffer, sizeof(time_buffer), "%Y%m%d%H%M",
+                         &timeinfo);
+                tempPath += "\\frames" + std::string(time_buffer);
 
-            int filterIndex = 0;
-            char tempbuff[MAX_PATH];
-            tempPath.copy(tempbuff, tempPath.length(), 0);
-            tempbuff[tempPath.length()] = '\0';
-            std::string saveFile = getADIFileName(NULL, tempbuff, filterIndex);
-            //Check if filename exists and format is corrct
-            if (!saveFile.empty() && filterIndex) {
-                if (!isPlaying && filterIndex) {
-                    //"Press" the play button, in case it is not pressed.
-                    PlayCCD(modeSelection,
+                int filterIndex = 0;
+                char tempbuff[MAX_PATH];
+                tempPath.copy(tempbuff, tempPath.length(), 0);
+                tempbuff[tempPath.length()] = '\0';
+                std::string saveFile =
+                    getADIFileName(NULL, tempbuff, filterIndex);
+                //Check if filename exists and format is corrct
+                if (!saveFile.empty() && filterIndex) {
+                    if (!isPlaying && filterIndex) {
+                        //"Press" the play button, in case it is not pressed.
+                        PlayCCD(
+                            modeSelection,
                             viewSelection); //Which ever is currently selected
-                    isPlaying = true;
+                        isPlaying = true;
+                    }
+                    //setting binary save option
+                    view->m_ctrl->m_saveBinaryFormat =
+                        view->getSaveBinaryFormat();
+                    view->m_ctrl->startRecording(saveFile, view->frameHeight,
+                                                 view->frameWidth,
+                                                 recordingSeconds);
+                    isRecording = true;
                 }
-                //setting binary save option
-                view->m_ctrl->m_saveBinaryFormat = view->getSaveBinaryFormat();
-                view->m_ctrl->startRecording(saveFile, view->frameHeight,
-                                             view->frameWidth,
-                                             recordingSeconds);
-                isRecording = true;
             }
         }
 
         ImGui::SameLine();
-        ImGuiExtensions::ButtonColorChanger colorChangerRecStop(customColorStop,
-                                                                isRecording);
-        if (ImGuiExtensions::ADIButton("Stop Recording", isRecording)) {
-            view->m_ctrl->stopRecording();
-            isRecording = false;
-            isPlayRecorded = false;
-            firstFrame = 0;
-            stopPlayCCD(); //TODO: Create a Stop ToF camera
-            isPlaying = false;
+        { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
+            ImGuiExtensions::ButtonColorChanger colorChangerRecStop(
+                customColorStop, isRecording);
+            if (ImGuiExtensions::ADIButton("Stop Recording", isRecording)) {
+                view->m_ctrl->stopRecording();
+                isRecording = false;
+                isPlayRecorded = false;
+                firstFrame = 0;
+                stopPlayCCD(); //TODO: Create a Stop ToF camera
+                isPlaying = false;
+            }
         }
 
         /* AS 2023-6-6: Temporarily disable.
@@ -601,19 +609,22 @@ void ADIMainWindow::showDeviceMenu() {
         const bool openAvailable = !m_connectedDevices.empty();
         {
 
-            ImGuiExtensions::ButtonColorChanger colorChanger(
-                ImGuiExtensions::ButtonColor::Green, openAvailable);
-            if (ImGuiExtensions::ADIButton("Open",
-                                           /*openAvailable*/ _isOpenDevice &&
-                                               m_configFiles.size() > 0) &&
-                0 <= m_selectedDevice) {
-                if (isPlayRecorded) {
-                    stopPlayback();
-                }
+            { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
+                ImGuiExtensions::ButtonColorChanger colorChanger(
+                    ImGuiExtensions::ButtonColor::Green, openAvailable);
+                if (ImGuiExtensions::ADIButton(
+                        "Open",
+                        /*openAvailable*/ _isOpenDevice &&
+                            m_configFiles.size() > 0) &&
+                    0 <= m_selectedDevice) {
+                    if (isPlayRecorded) {
+                        stopPlayback();
+                    }
 
-                _isOpenDevice = false;
-                initCameraWorker =
-                    std::thread(std::bind(&ADIMainWindow::InitCamera, this));
+                    _isOpenDevice = false;
+                    initCameraWorker = std::thread(
+                        std::bind(&ADIMainWindow::InitCamera, this));
+                }
             }
         }
         ImGui::SameLine();
@@ -680,25 +691,29 @@ void ADIMainWindow::showDeviceMenu() {
             ImGui::NewLine();
             ImGui::Text("Video:");
 
-            ImGuiExtensions::ButtonColorChanger colorChangerPlay(
-                customColorPlay, !isPlaying);
-            if (ImGuiExtensions::ADIButton("Play",
-                                           !isPlaying && !isPlayRecorded)) {
-                viewSelectionChanged = viewSelection;
-                isPlaying = true;
+            { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
+                ImGuiExtensions::ButtonColorChanger colorChangerPlay(
+                    customColorPlay, !isPlaying);
+                if (ImGuiExtensions::ADIButton("Play",
+                                               !isPlaying && !isPlayRecorded)) {
+                    viewSelectionChanged = viewSelection;
+                    isPlaying = true;
+                }
             }
             ImGui::SameLine();
-            ImGuiExtensions::ButtonColorChanger colorChangerStop(
-                customColorStop, isPlaying);
-            if (ImGuiExtensions::ADIButton("Stop", isPlaying)) {
-                isPlaying = false;
-                isPlayRecorded = false;
-                firstFrame = 0;
-                frameRecvd = 0;
-                stopPlayCCD();
-                if (isRecording) {
-                    view->m_ctrl->stopRecording();
-                    isRecording = false;
+            { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
+                ImGuiExtensions::ButtonColorChanger colorChangerStop(
+                    customColorStop, isPlaying);
+                if (ImGuiExtensions::ADIButton("Stop", isPlaying)) {
+                    isPlaying = false;
+                    isPlayRecorded = false;
+                    firstFrame = 0;
+                    frameRecvd = 0;
+                    stopPlayCCD();
+                    if (isRecording) {
+                        view->m_ctrl->stopRecording();
+                        isRecording = false;
+                    }
                 }
             }
             ImGui::EndMenu();
@@ -810,39 +825,42 @@ void ADIMainWindow::showPlaybackMenu() {
     //Playback
     if (ImGui::BeginMenu("Playback Options")) {
         float customColorOpenRec = 0.22f;
-        ImGuiExtensions::ButtonColorChanger colorChangerPlay(
-            customColorOpenRec, !isPlayRecorded && !isPlaying);
+        { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
+            ImGuiExtensions::ButtonColorChanger colorChangerPlay(
+                customColorOpenRec, !isPlayRecorded && !isPlaying);
 
-        if (ImGuiExtensions::ADIButton("Open Recording",
-                                       !isPlayRecorded && !isPlaying)) {
-            int filterIndex = 0;
-            std::string path =
-                openADIFileName(customFilter.c_str(), NULL, filterIndex)
-                    .c_str();
-            if (!path.empty() && filterIndex) {
+            if (ImGuiExtensions::ADIButton("Open Recording",
+                                           !isPlayRecorded && !isPlaying)) {
+                int filterIndex = 0;
+                std::string path =
+                    openADIFileName(customFilter.c_str(), NULL, filterIndex)
+                        .c_str();
+                if (!path.empty() && filterIndex) {
 
-                if (view == NULL) {
-                    view = std::make_shared<adiviewer::ADIView>(
-                        m_controller, "Record Viewer");
-                }
+                    if (view == NULL) {
+                        view = std::make_shared<adiviewer::ADIView>(
+                            m_controller, "Record Viewer");
+                    }
 
-                view->m_ctrl->startPlayback(path, recordingSeconds);
-                if (viewSelection == 0) {
-                    initOpenGLABTexture();
+                    view->m_ctrl->startPlayback(path, recordingSeconds);
+                    if (viewSelection == 0) {
+                        initOpenGLABTexture();
+                    } else {
+                        initOpenGLPointCloudTexture();
+                    }
+                    initOpenGLDepthTexture();
+
+                    isPlayRecorded = true;
+                    _isOpenDevice = false;
+                    cameraOptionsTreeEnabled = false;
+
                 } else {
-                    initOpenGLPointCloudTexture();
+                    _isOpenDevice = true;
+                    cameraOptionsTreeEnabled = true;
+                    LOG(ERROR)
+                        << "Non-existing file or unsupported file format "
+                           "chosen for playback";
                 }
-                initOpenGLDepthTexture();
-
-                isPlayRecorded = true;
-                _isOpenDevice = false;
-                cameraOptionsTreeEnabled = false;
-
-            } else {
-                _isOpenDevice = true;
-                cameraOptionsTreeEnabled = true;
-                LOG(ERROR) << "Non-existing file or unsupported file format "
-                              "chosen for playback";
             }
         }
 
@@ -858,24 +876,26 @@ void ADIMainWindow::showPlaybackMenu() {
             recordPlaybackColor = customColorPlay;
         }
         ImGui::SameLine();
-        ImGuiExtensions::ButtonColorChanger colorChangerPausePB(
-            recordPlaybackColor, isPlayRecorded && isPlayRecordPaused);
+        { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
+            ImGuiExtensions::ButtonColorChanger colorChangerPausePB(
+                recordPlaybackColor, isPlayRecorded && isPlayRecordPaused);
 
-        if (ImGuiExtensions::ADIButton(playbackButtonText.c_str(),
-                                       isPlayRecorded)) {
-            isPlayRecordPaused = !isPlayRecordPaused;
-            if (isPlayRecordPaused) {
-                view->m_ctrl->pausePlayback(true);
-                LOG(INFO) << "Stream has been paused...";
-            } else {
-                if (isPlayRecordDone) {
-                    view->m_ctrl->m_recorder->currentPBPos = 0;
-                    isPlayRecordDone = false;
+            if (ImGuiExtensions::ADIButton(playbackButtonText.c_str(),
+                                           isPlayRecorded)) {
+                isPlayRecordPaused = !isPlayRecordPaused;
+                if (isPlayRecordPaused) {
+                    view->m_ctrl->pausePlayback(true);
+                    LOG(INFO) << "Stream has been paused...";
+                } else {
+                    if (isPlayRecordDone) {
+                        view->m_ctrl->m_recorder->currentPBPos = 0;
+                        isPlayRecordDone = false;
+                    }
+                    view->m_ctrl->pausePlayback(false);
+                    LOG(INFO) << "Streaming.";
                 }
-                view->m_ctrl->pausePlayback(false);
-                LOG(INFO) << "Streaming.";
+                view->m_ctrl->playbackPaused();
             }
-            view->m_ctrl->playbackPaused();
         }
         ImGui::SameLine();
         if (view != nullptr && view->m_ctrl->m_recorder->_stopPlayback) {
@@ -883,11 +903,13 @@ void ADIMainWindow::showPlaybackMenu() {
             view->m_ctrl->m_recorder->_stopPlayback = false;
         }
 
-        ImGuiExtensions::ButtonColorChanger colorChangerStopPB(customColorStop,
-                                                               isPlayRecorded);
-        if (ImGuiExtensions::ADIButton("Close Recording", isPlayRecorded)) {
-            firstFrame = 0;
-            stopPlayback();
+        { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
+            ImGuiExtensions::ButtonColorChanger colorChangerStopPB(
+                customColorStop, isPlayRecorded);
+            if (ImGuiExtensions::ADIButton("Close Recording", isPlayRecorded)) {
+                firstFrame = 0;
+                stopPlayback();
+            }
         }
 
         if (isPlayRecorded) {
@@ -1643,24 +1665,26 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                 recordPlaybackColor = customColorPlay;
             }
             ImGui::SameLine();
-            ImGuiExtensions::ButtonColorChanger colorChangerPausePB(
-                recordPlaybackColor, isPlayRecorded && isPlayRecordPaused);
+            { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
+                ImGuiExtensions::ButtonColorChanger colorChangerPausePB(
+                    recordPlaybackColor, isPlayRecorded && isPlayRecordPaused);
 
-            if (ImGuiExtensions::ADIButton(playbackButtonText.c_str(),
-                                           isPlayRecorded)) {
-                isPlayRecordPaused = !isPlayRecordPaused;
-                if (isPlayRecordPaused) {
-                    view->m_ctrl->pausePlayback(true);
-                    LOG(INFO) << "Stream has been paused...";
-                } else {
-                    if (isPlayRecordDone) {
-                        view->m_ctrl->m_recorder->currentPBPos = 0;
-                        isPlayRecordDone = false;
+                if (ImGuiExtensions::ADIButton(playbackButtonText.c_str(),
+                                               isPlayRecorded)) {
+                    isPlayRecordPaused = !isPlayRecordPaused;
+                    if (isPlayRecordPaused) {
+                        view->m_ctrl->pausePlayback(true);
+                        LOG(INFO) << "Stream has been paused...";
+                    } else {
+                        if (isPlayRecordDone) {
+                            view->m_ctrl->m_recorder->currentPBPos = 0;
+                            isPlayRecordDone = false;
+                        }
+                        view->m_ctrl->pausePlayback(false);
+                        LOG(INFO) << "Streaming.";
                     }
-                    view->m_ctrl->pausePlayback(false);
-                    LOG(INFO) << "Streaming.";
+                    view->m_ctrl->playbackPaused();
                 }
-                view->m_ctrl->playbackPaused();
             }
             ImGui::SameLine();
             if (view != nullptr && view->m_ctrl->m_recorder->_stopPlayback) {
@@ -1668,11 +1692,14 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                 view->m_ctrl->m_recorder->_stopPlayback = false;
             }
 
-            ImGuiExtensions::ButtonColorChanger colorChangerStopPB(
-                customColorStop, isPlayRecorded);
-            if (ImGuiExtensions::ADIButton("Close Recording", isPlayRecorded)) {
-                firstFrame = 0;
-                stopPlayback();
+            { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
+                ImGuiExtensions::ButtonColorChanger colorChangerStopPB(
+                    customColorStop, isPlayRecorded);
+                if (ImGuiExtensions::ADIButton("Close Recording",
+                                               isPlayRecorded)) {
+                    firstFrame = 0;
+                    stopPlayback();
+                }
             }
             rawSeeker =
                 (view->m_ctrl->m_recorder->currentPBPos) /
