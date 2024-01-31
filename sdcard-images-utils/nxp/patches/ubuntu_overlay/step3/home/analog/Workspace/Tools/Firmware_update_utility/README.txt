@@ -1,18 +1,18 @@
 1). Steps to follow on windows machine and copy the below files to NXP host platform using Winscp application
     -> Download and Install WinSCP
     -> Open WinScp 
-    -> Host Name (or IP Address) : 10.42.0.1
+    -> Host Name (or IP Address) : 10.43.0.1
     -> NXP Username : analog ; Password : analog
     -> Copy the below listed folder from Package to /home/analog/Workspace/
         - Firmware_update_utilities
 
     -> Copy the directory from Host PC to NXP Host. (Alternate method instead of Winscp)
 
-        $ pscp -P 22 -l analog -pw analog -r Firmware_update_utilities analog@10.42.0.1:/home/analog/Workspace
+        $ pscp -P 22 -l analog -pw analog -r Firmware_update_utilities analog@10.43.0.1:/home/analog/Workspace
 
 2). SSH into NXP platform
     -> SSH with Putty example
-    -> Host Name (or IP Address) : 10.42.0.1 ; Port 22 ; SSH
+    -> Host Name (or IP Address) : 10.43.0.1 ; Port 22 ; SSH
     -> NXP Username : analog
            Password : analog
 

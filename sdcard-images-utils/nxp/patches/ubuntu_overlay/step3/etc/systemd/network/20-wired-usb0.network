@@ -3,7 +3,7 @@ Name=usb0
 
 [Network]
 #DHCP=yes
-Address=10.42.0.1/24
+Address=10.43.0.1/24
 DHCPServer=true
 IPMasquerade=true
 

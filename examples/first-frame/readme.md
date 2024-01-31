@@ -9,9 +9,9 @@ For example, the run command could look like:
 
 The first-frame can talk to a remote ToF camera over the network.
 
-For example if the ip address of the remote camera is `10.42.01` the run command could look like:
+For example if the ip address of the remote camera is `10.43.0.1` the run command could look like:
 
-`./first-frame 10.42.0.1 config/config_adsd3500_adsd3100.json`
+`./first-frame 10.43.0.1 config/config_adsd3500_adsd3100.json`
 
 In addition please ensure the correct mode is selected. This is done by manually editing the code. In the future this will move to a comamnd line option.
 
