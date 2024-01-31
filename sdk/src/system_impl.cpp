@@ -51,7 +51,8 @@
 using namespace aditof;
 
 static std::vector<std::shared_ptr<Camera>>
-buildCameras(std::unique_ptr<SensorEnumeratorInterface> enumerator) {
+buildCameras(std::unique_ptr<SensorEnumeratorInterface> enumerator,
+             const std::string &netLinkTest = {}) {
 
     std::vector<std::shared_ptr<Camera>> cameras;
     std::vector<std::shared_ptr<DepthSensorInterface>> depthSensors;
@@ -65,8 +66,8 @@ buildCameras(std::unique_ptr<SensorEnumeratorInterface> enumerator) {
     enumerator->getSdVersion(sd_ver);
 
     for (const auto &dSensor : depthSensors) {
-        std::shared_ptr<Camera> camera =
-            std::make_shared<CameraItof>(dSensor, uboot, kernel, sd_ver);
+        std::shared_ptr<Camera> camera = std::make_shared<CameraItof>(
+            dSensor, uboot, kernel, sd_ver, netLinkTest);
         cameras.emplace_back(camera);
     }
 
@@ -130,8 +131,15 @@ SystemImpl::getCameraList(std::vector<std::shared_ptr<Camera>> &cameraList,
 Status
 SystemImpl::getCameraListAtIp(std::vector<std::shared_ptr<Camera>> &cameraList,
                               const std::string &ip) const {
+    int netLinkFlag = ip.find(":");
+    std::string onlyIp = ip;
+    std::string netLinkTest;
+    if (netLinkFlag != -1) {
+        netLinkTest = ip.substr(netLinkFlag + 1, ip.size());
+        onlyIp.erase(netLinkFlag);
+    }
     std::unique_ptr<SensorEnumeratorInterface> sensorEnumerator =
-        SensorEnumeratorFactory::buildNetworkSensorEnumerator(ip);
+        SensorEnumeratorFactory::buildNetworkSensorEnumerator(onlyIp);
 
     if (!sensorEnumerator) {
         LOG(ERROR) << "Network interface is not enabled."
@@ -141,7 +149,7 @@ SystemImpl::getCameraListAtIp(std::vector<std::shared_ptr<Camera>> &cameraList,
     }
     Status status = sensorEnumerator->searchSensors();
     if (status == Status::OK) {
-        cameraList = buildCameras(std::move(sensorEnumerator));
+        cameraList = buildCameras(std::move(sensorEnumerator), netLinkTest);
     }
 
     return status;
