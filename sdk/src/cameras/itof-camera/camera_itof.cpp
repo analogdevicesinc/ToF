@@ -60,7 +60,7 @@ static const int skMetaDataBytesCount = 128;
 CameraItof::CameraItof(
     std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
     const std::string &ubootVersion, const std::string &kernelVersion,
-    const std::string &sdCardImageVersion)
+    const std::string &sdCardImageVersion, const std::string &netLinkTest)
     : m_depthSensor(depthSensor), m_devStarted(false), m_adsd3500Enabled(false),
       m_loadedConfigData(false), m_xyzEnabled(false), m_xyzSetViaApi(false),
       m_cameraFps(0), m_fsyncMode(-1), m_mipiOutputSpeed(-1),
@@ -75,6 +75,7 @@ CameraItof::CameraItof(
     m_details.uBootVersion = ubootVersion;
     m_details.kernelVersion = kernelVersion;
     m_details.sdCardImageVersion = sdCardImageVersion;
+    m_netLinkTest = netLinkTest;
 
     // Define some of the controls of this camera
     // For now there are none. To add one use: m_controls.emplace("your_control_name", "default_control_value");
@@ -131,6 +132,10 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
             return status;
         }
         m_devStarted = true;
+    }
+
+    if (!m_netLinkTest.empty()) {
+        m_depthSensor->setControl("netlinktest", "1");
     }
 
     // get imager type that is used toghether with ADSD3500
