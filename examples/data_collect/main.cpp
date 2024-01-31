@@ -52,7 +52,7 @@ static const char kUsagePublic[] =
     R"(Data Collect.
     Usage:
       data_collect CONFIG
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [-s | --split] CONFIG
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [-s | --split] [-t | --netlinktest] CONFIG
       data_collect (-h | --help)
 
     Arguments:
@@ -68,6 +68,7 @@ static const char kUsagePublic[] =
       --ip <ip>          Camera IP
       --fw <firmware>    Adsd3500 fw file
       --split            Save each frame into a separate file
+      --netlinktest      Sends the same frame
 
     Note: --m argument supports both index and string (0/sr-native) 
 
@@ -93,6 +94,7 @@ int main(int argc, char *argv[]) {
         {"-fps", {"--fps", false, "", "", true}},
         {"-ccb", {"--ccb", false, "", "", true}},
         {"-s", {"--split", false, "", "", false}},
+        {"-t", {"--netlinktest", false, "", "", false}},
         {"-config", {"-CONFIG", true, "last", "", true}}};
 
     CommandParser command;
@@ -254,6 +256,9 @@ int main(int argc, char *argv[]) {
         saveToSingleFile = false;
     }
 
+    //Parsing netLinkTest option
+    bool useNetLinkTest = !command_map["-t"].value.empty();
+
     LOG(INFO) << "Output folder: " << folder_path;
     LOG(INFO) << "Mode: " << command_map["-m"].value;
     LOG(INFO) << "Number of frames: " << n_frames;
@@ -277,6 +282,9 @@ int main(int argc, char *argv[]) {
 
     if (!ip.empty()) {
         ip = "ip:" + ip;
+        if (useNetLinkTest) {
+            ip += ":netlinktest";
+        }
         system.getCameraList(cameras, ip);
     } else {
         system.getCameraList(cameras);
