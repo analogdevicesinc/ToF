@@ -864,82 +864,6 @@ void ADIMainWindow::showPlaybackMenu() {
             }
         }
 
-        std::string playbackButtonText =
-            isPlayRecordPaused ? "Paused" : "Pause";
-        float recordPlaybackColor = customColorPause;
-        bool isPlayRecordDone = false;
-        if (isPlayRecorded && view && view->m_ctrl->playbackFinished()) {
-            isPlayRecordDone = true;
-            isPlayRecordPaused = true;
-            view->m_ctrl->pausePlayback(true);
-            playbackButtonText = "Play";
-            recordPlaybackColor = customColorPlay;
-        }
-        ImGui::SameLine();
-        { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
-            ImGuiExtensions::ButtonColorChanger colorChangerPausePB(
-                recordPlaybackColor, isPlayRecorded && isPlayRecordPaused);
-
-            if (ImGuiExtensions::ADIButton(playbackButtonText.c_str(),
-                                           isPlayRecorded)) {
-                isPlayRecordPaused = !isPlayRecordPaused;
-                if (isPlayRecordPaused) {
-                    view->m_ctrl->pausePlayback(true);
-                    LOG(INFO) << "Stream has been paused...";
-                } else {
-                    if (isPlayRecordDone) {
-                        view->m_ctrl->m_recorder->currentPBPos = 0;
-                        isPlayRecordDone = false;
-                    }
-                    view->m_ctrl->pausePlayback(false);
-                    LOG(INFO) << "Streaming.";
-                }
-                view->m_ctrl->playbackPaused();
-            }
-        }
-        ImGui::SameLine();
-        if (view != nullptr && view->m_ctrl->m_recorder->_stopPlayback) {
-            stopPlayback();
-            view->m_ctrl->m_recorder->_stopPlayback = false;
-        }
-
-        { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
-            ImGuiExtensions::ButtonColorChanger colorChangerStopPB(
-                customColorStop, isPlayRecorded);
-            if (ImGuiExtensions::ADIButton("Close Recording", isPlayRecorded)) {
-                firstFrame = 0;
-                stopPlayback();
-            }
-        }
-
-        if (isPlayRecorded) {
-            ImGui::NewLine();
-            rawSeeker =
-                (view->m_ctrl->m_recorder->currentPBPos) /
-                (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
-                     ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
-                     sizeof(uint16_t) * 6 +
-                 EMBED_HDR_LENGTH);
-            // LOG(INFO) << "rawSeeker :" << rawSeeker;
-            ImGuiExtensions::ADISliderInt(
-                "Progress", &rawSeeker, 0,
-                (view->m_ctrl->m_recorder->m_numberOfFrames) - 1, "%d", true);
-            view->m_ctrl->m_recorder->currentPBPos =
-                rawSeeker *
-                    (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
-                         ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
-                         sizeof(uint16_t) * 6 +
-                     EMBED_HDR_LENGTH) +
-                view->m_ctrl->m_recorder->m_sizeOfHeader;
-        }
-        ImGui::NewLine();
-        ImGui::Text("View Options:");
-        ImGuiExtensions::ADIRadioButton(
-            "Active Brightness and Depth", &viewSelection, 0,
-            (displayAB || displayDepth) && !isPlayRecorded);
-        ImGuiExtensions::ADIRadioButton("Point Cloud and Depth", &viewSelection,
-                                        1, pointCloudEnable && !isPlayRecorded);
-
         //Playback
         ImGui::EndMenu();
     }
@@ -1705,17 +1629,17 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                 (view->m_ctrl->m_recorder->currentPBPos) /
                 (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
                      ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
-                     sizeof(uint16_t) * 6 +
+                     (view->m_ctrl->m_recorder->totalBits) +
                  EMBED_HDR_LENGTH);
+
             ImGuiExtensions::ADISliderInt(
                 "Progress", &rawSeeker, 0,
                 (view->m_ctrl->m_recorder->m_numberOfFrames) - 1, "%d", true);
-            // LOG(INFO) << "Progress bar rawSeeker: " << rawSeeker;
             view->m_ctrl->m_recorder->currentPBPos =
                 rawSeeker *
                     (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
                          ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
-                         sizeof(uint16_t) * 6 +
+                         (view->m_ctrl->m_recorder->totalBits) +
                      EMBED_HDR_LENGTH) +
                 view->m_ctrl->m_recorder->m_sizeOfHeader;
         }

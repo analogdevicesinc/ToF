@@ -174,6 +174,7 @@ class ADIToFRecorder {
     bool m_finishRecording = true;
     bool _stopPlayback = false;
     int currentPBPos = 0;
+    int totalBits = 0;
     int m_numberOfFrames;
     int fileSize = 0;
     uint16_t m_sizeOfHeader;
@@ -181,8 +182,6 @@ class ADIToFRecorder {
   private:
     SafeQueue<std::shared_ptr<aditof::Frame>> m_playbackQueue;
     SafeQueue<std::shared_ptr<aditof::Frame>> m_recordQueue;
-    std::ofstream m_recordFile;
-    //Raw stream
     std::atomic<bool> m_playbackThreadStop;
     std::atomic<bool> m_recordTreadStop;
     std::condition_variable m_playbackCv;
@@ -198,6 +197,7 @@ class ADIToFRecorder {
     const int _depth = 2;
     const int _ab = 1;
     size_t frameCtr = 0;
+    aditof::Metadata m_metadataStruct;
 };
 
 #endif // ADITOFRECORDER_H
