@@ -37,7 +37,7 @@ from enum import Enum
 import sys
 import mediapipe as mp
 
-ip = "10.42.0.1" # Set to "10.42.0.1" if networking is used.
+ip = "10.43.0.1" # Set to "10.43.0.1" if networking is used.
 config = "config/config_adsd3500_adsd3100.json"
 mode = "sr-qnative"
 

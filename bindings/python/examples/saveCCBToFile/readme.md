@@ -9,5 +9,5 @@ Usage:
 
 Example:
 ```
-python saveCCBToFile.py 10.42.0.1 config\config_adsd3500_adsd3030.json
+python saveCCBToFile.py 10.43.0.1 config\config_adsd3500_adsd3030.json
 ```

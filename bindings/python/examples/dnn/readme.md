@@ -8,7 +8,7 @@ Building the project with CMake will download prototxt and caffemodel, used for 
 
 For running the python program use:
 ```console
-python dnn.py --prototxt \pathTo\MobileNetSSD_deploy.prototxt  --weights \pathTo\MobileNetSSD_deploy.caffemodel --ip 10.42.0.1 --config config\config_adsd3500_adsd3100.json
+python dnn.py --prototxt \pathTo\MobileNetSSD_deploy.prototxt  --weights \pathTo\MobileNetSSD_deploy.caffemodel --ip 10.43.0.1 --config config\config_adsd3500_adsd3100.json
 ```
 
 Press q to quit the  application.

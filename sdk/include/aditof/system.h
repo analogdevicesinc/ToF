@@ -82,7 +82,7 @@ class System {
      * For no remote connection, the uri parameter should be omitted
      * For network connectivity, the URI format must be: "ip:ip-address" where
      * the ip-address is the address of the system to which the camera is
-     * attached to. For example: "ip:10.42.0.1" or "ip:192.186.1.2", etc.
+     * attached to. For example: "ip:10.43.0.1" or "ip:192.186.1.2", etc.
      * For USB (UVC) connectivity, the uri parameter should be omitted
      * @return Status
      */

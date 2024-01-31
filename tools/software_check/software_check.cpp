@@ -45,7 +45,7 @@ const char *localJson = "sw_versions.info";
 const char *remoteJsonURL =
     "https://swdownloads.analog.com/cse/aditof/aware3d/sw_update/remote.json";
 const char *localTmpFile = "remote.json";
-std::string ip = "10.42.0.1";
+std::string ip = "10.43.0.1";
 const char *VERSION = "v1.0.1";
 
 int32_t getLocalJSON(std::string &fwversion, std::string &fwhash,
@@ -190,12 +190,12 @@ int main(int argc, char *argv[]) {
         std::cerr << argv[0] << " "
                   << "<ip address>" << std::endl;
         std::cerr << "Where the 'ip address' is the address of the eval kit, "
-                     "normally 10.42.0.1"
+                     "normally 10.43.0.1"
                   << std::endl;
         std::cerr << std::endl;
         std::cerr << "For example:" << std::endl;
         std::cerr << argv[0] << " "
-                  << "10.42.0.1" << std::endl;
+                  << "10.43.0.1" << std::endl;
         std::cerr << std::endl;
         std::cerr << "Using the default IP address of " << ip << std::endl;
     }
