@@ -47,7 +47,8 @@ class CameraItof : public aditof::Camera {
     CameraItof(std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
                const std::string &ubootVersion,
                const std::string &kernelVersion,
-               const std::string &sdCardImageVersion);
+               const std::string &sdCardImageVersion,
+               const std::string &netLinkTest);
     ~CameraItof();
 
   public: // implements Camera
@@ -222,6 +223,7 @@ class CameraItof : public aditof::Camera {
     bool m_adsd3500Enabled;
     bool m_adsd3500_master;
     bool m_isOffline;
+    std::string m_netLinkTest;
 
     FileData m_calData = {NULL, 0};
 

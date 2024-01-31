@@ -136,6 +136,7 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     m_controls.emplace("fps", "0");
     m_controls.emplace("imagerType", "");
     m_controls.emplace("inputFormat", "");
+    m_controls.emplace("netlinktest", "0");
 
     // Define the commands that correspond to the sensor controls
     m_implData->controlsCommands["abAveraging"] = 0x9819e5;
@@ -869,7 +870,9 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
         ModeInfo::getInstance()->setSensorPixelParam("pixelFormat", value);
         return Status::OK;
     }
-
+    if (control == "netlinktest") {
+        return Status::OK;
+    }
     // Send the command that sets the control value
     struct v4l2_control ctrl;
     memset(&ctrl, 0, sizeof(ctrl));
