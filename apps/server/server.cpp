@@ -82,6 +82,13 @@ static bool no_of_client_connected = false;
 bool latest_sent_msg_is_was_buffered = false;
 static std::queue<aditof::Adsd3500Status> adsd3500InterruptsQueue;
 
+// A test mode that server can be set to. After sending one frame from sensor to host, it will repeat
+// sending the same frame over and over without acquiring any other frame from sensor. This allows
+// testing the network link speed because it eliminates operations on target such as getting the frame
+// from v4l2 interface, passing the frame through depth compute and any deep copying.
+static bool sameFrameEndlessRepeat = false;
+static int frameFromSensorCount = 0;
+
 struct clientData {
     bool hasFragments;
     std::vector<char> data;
@@ -387,6 +394,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         aditof::Status status = camDepthSensor->open();
         buff_send.set_status(static_cast<::payload::Status>(status));
         clientEngagedWithSensors = true;
+        frameFromSensorCount = 0;
         break;
     }
 
@@ -492,7 +500,15 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
     case GET_FRAME: {
         aditof::Status status = aditof::Status::OK;
+        if (sameFrameEndlessRepeat) {
+            if (frameFromSensorCount == 2) {
+                m_frame_ready = true;
+                buff_send.set_status(payload::Status::OK);
+                break;
+            }
+        }
 
+        frameFromSensorCount++;
         //TO DO: get value of m_depthComputeOnTarget from sensor
         status = camDepthSensor->getFrame(
             (uint16_t *)(buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING +
@@ -612,6 +628,9 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         std::string controlValue = buff_recv.func_strings_param(1);
         aditof::Status status =
             camDepthSensor->setControl(controlName, controlValue);
+        if (controlName == "netlinktest") {
+            sameFrameEndlessRepeat = controlValue == "1";
+        }
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
@@ -755,6 +774,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     case HANG_UP: {
         if (sensors_are_created) {
             cleanup_sensors();
+            frameFromSensorCount = 0;
         }
 
         break;
