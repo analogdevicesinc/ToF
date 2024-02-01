@@ -87,6 +87,22 @@ aditof::Status requestFrame() {
         return status;
     }
 
+    // Updating metadata in case frame has changed
+    if (metaDataInfo == NULL) {
+        metaDataInfo = (aditof::Metadata *)malloc(sizeof(aditof::Metadata));
+        status = frame.get()->getMetadataStruct(*metaDataInfo);
+        if (status != aditof::Status::OK) {
+            send_error_message(std::string("Error requesting frame metadata"));
+            return status;
+        }
+        depthShiftValue = (metaDataInfo->bitsInDepth - BITS_PER_PIXEL) > 0
+                              ? (metaDataInfo->bitsInDepth - BITS_PER_PIXEL)
+                              : 0;
+        irShiftValue = (metaDataInfo->bitsInAb - BITS_PER_PIXEL) > 0
+                           ? (metaDataInfo->bitsInDepth - BITS_PER_PIXEL)
+                           : 0;
+    }
+
     if (frameContent == std::string("depth") ||
         frameContent == std::string("ab")) {
 
@@ -101,12 +117,9 @@ aditof::Status requestFrame() {
             (uint8_t *)malloc(sizeof(uint8_t) * frameWidth * frameHeight);
         for (int i = 0; i < frameWidth * frameHeight; i++) {
             if (frameContent == std::string("depth"))
-                if (qmp_size)
-                    frameToSend[i] = (uint8_t)(frameData[i] / 256);
-                else
-                    frameToSend[i] = (uint8_t)(frameData[i] / 16);
+                frameToSend[i] = (uint8_t)(frameData[i] >> depthShiftValue);
             else
-                frameToSend[i] = (uint8_t)((frameData[i]) & 0xff);
+                frameToSend[i] = (uint8_t)((frameData[i]) >> irShiftValue);
         }
         send_frame((const char *)frameToSend, frameWidth * frameHeight);
         free(frameToSend);
@@ -124,17 +137,11 @@ aditof::Status requestFrame() {
             (uint8_t *)malloc(sizeof(uint8_t) * frameWidth * frameHeight * 2);
 
         for (int i = 0; i < frameWidth * frameHeight; i++) {
-            // frameToSend[i] = (uint8_t)((frameDataDepth[i] >> 2) & 0xff);
-
-            // preparing depth data
-            if (qmp_size)
-                frameToSend[i] = (uint8_t)(frameDataDepth[i] / 256);
-            else
-                frameToSend[i] = (uint8_t)(frameDataDepth[i] / 16);
-
-            // preparing ir data
+            // Depth data
+            frameToSend[i] = (uint8_t)(frameDataDepth[i] >> depthShiftValue);
+            // Ir data
             frameToSend[i + frameWidth * frameHeight] =
-                (uint8_t)((frameDataAb[i]) & 0xff);
+                (uint8_t)((frameDataAb[i]) >> irShiftValue);
         }
 
         send_frame((const char *)frameToSend, frameWidth * frameHeight * 2);
@@ -154,6 +161,15 @@ aditof::Status setFrameType(std::string frameTypeNew) {
     if (status != aditof::Status::OK) {
         send_error_message(std::string("Error while selecting frame type"));
         return status;
+    }
+
+    if (metaDataInfo) {
+        free(metaDataInfo);
+        metaDataInfo = NULL;
+
+        // Resetting shifting values
+        depthShiftValue = 0;
+        irShiftValue = 0;
     }
 
     CameraDetails details;
@@ -263,11 +279,6 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
             std::cout << "Messeage from HOST: " << message << "\n";
             int pos = message.find(":");
             std::string frameTypeNew = message.substr(pos + 1);
-
-            // if (frameTypeNew == "sr-qnative" || frameTypeNew = "lr-qnative") //qnative -12, native 16 bits
-            if (strcmp(frameTypeNew.c_str(), "sr-qnative") == 0 ||
-                strcmp(frameTypeNew.c_str(), "lr-qnative") == 0)
-                qmp_size = true;
 
             status = setFrameType(frameTypeNew);
 
