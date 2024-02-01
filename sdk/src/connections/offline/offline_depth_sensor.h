@@ -66,6 +66,10 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
     virtual aditof::Status
     initTargetDepthCompute(uint8_t *iniFile, uint16_t iniFileLength,
                            uint8_t *calData, uint16_t calDataLength) override;
+    virtual aditof::Status
+    getIniParams(std::map<std::string, float> &params) override;
+    virtual aditof::Status
+    setIniParams(const std::map<std::string, float> &params) override;
 
   private:
     std::string m_connectionType;

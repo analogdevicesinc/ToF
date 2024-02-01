@@ -303,3 +303,13 @@ aditof::Status OfflineDepthSensor::initTargetDepthCompute(
     uint16_t calDataLength) {
     return aditof::Status::OK;
 }
+
+aditof::Status
+OfflineDepthSensor::getIniParams(std::map<std::string, float> &params) {
+    return aditof::Status::OK;
+}
+
+aditof::Status
+OfflineDepthSensor::setIniParams(const std::map<std::string, float> &params) {
+    return aditof::Status::OK;
+}
