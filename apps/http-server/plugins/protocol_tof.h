@@ -11,8 +11,8 @@
 #define HEADER_SIZE 0
 #define MAX_MESSAGE_LEN                                                        \
     (LWS_PRE + 1042 * 1024 * 2 + HEADER_SIZE) // Maximal pixel size
+#define BITS_PER_PIXEL 8
 
-#include "mode_info.h"
 #include <aditof/camera.h>
 #include <aditof/frame.h>
 #include <aditof/system.h>
@@ -50,10 +50,10 @@ aditof::Status status;
 static bool cameraStarted = false;
 static std::string frameContent;
 static aditof::FrameDetails frameDetalis;
-ModeInfo::modeInfo modeInfo;
-
-// To remove
-bool qmp_size = false;
+aditof::Metadata *metaDataInfo = NULL;
+// Number of bit shift neccessary to right to have BITS_PER_PIXEL defined pixel bit size
+uint8_t depthShiftValue = 0;
+uint8_t irShiftValue = 0;
 
 // Message to Host
 uint8_t buf[LWS_PRE + MAX_MESSAGE_LEN], *p = &buf[LWS_PRE];
