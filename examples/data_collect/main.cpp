@@ -432,6 +432,9 @@ int main(int argc, char *argv[]) {
             LOG(ERROR) << "Could not request frame!";
             return 0;
         }
+        if (useNetLinkTest) {
+            continue;
+        }
 #if MULTI_THREADED
         frameSaver.saveFrameToFileMultithread(&frame);
 #else
