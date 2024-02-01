@@ -1,69 +1,4 @@
-#if !defined(LWS_PLUGIN_STATIC)
-#define LWS_DLL
-#define LWS_INTERNAL
-#include <libwebsockets.h>
-#endif
-
-#include <aditof/camera.h>
-#include <aditof/frame.h>
-#include <aditof/system.h>
-#include <algorithm>
-#include <iostream>
-#include <string>
-
-using namespace std;
-using namespace aditof;
-
-#define CHECK_PERIOD_US 50000
-#define HEADER_SIZE 0
-#define MAX_MESSAGE_LEN                                                        \
-    (LWS_PRE + 1042 * 1024 * 2 + HEADER_SIZE) // For Megapixel
-
-struct pss__tof {
-    int number;
-};
-
-struct vhd__tof {
-    const unsigned int *options;
-};
-
-// Generic variables
-struct lws *systemWsi;
-
-//Tof variables
-aditof::System tofSystem;
-std::vector<std::shared_ptr<aditof::Camera>> cameras;
-shared_ptr<aditof::Camera> camera = NULL;
-
-// Frame related variables
-std::shared_ptr<aditof::Frame> frame;
-uint16_t frameWidth;
-uint16_t frameHeight;
-uint16_t *frameData = NULL;
-uint16_t *frameDataDepth;
-uint16_t *frameDataAb;
-
-aditof::Status status;
-static bool cameraStarted = false;
-static std::string frameContent;
-static aditof::FrameDetails frameDetalis;
-
-bool qmp_size = false;
-
-//Message to Host
-uint8_t buf[LWS_PRE + MAX_MESSAGE_LEN], *p = &buf[LWS_PRE];
-
-//Available frametypes
-string availableFrameTypes = "ft:sr-native,sr-qnative,lr-native,lr-qnative";
-string availableFormats = "format:depth,ab,depth+ab";
-
-string process_message(char *in) {
-    std::string message = (const char *)in;
-    int endOfString = message.find('\n');
-    if (endOfString > 0)
-        message = message.substr(0, endOfString);
-    return message;
-}
+#include "protocol_tof.h"
 
 int send_message(const char *msg, int len) {
     memcpy((void *)(buf + LWS_PRE), msg, len);
@@ -94,7 +29,6 @@ void send_error_message(std::string msg) {
     send_message(msg.c_str(), msg.length());
 }
 
-//ToF init function
 aditof::Status initializeSystem(string configFile) {
     std::cout << "Initilize system \n";
     status = aditof::Status::OK;
@@ -169,7 +103,6 @@ aditof::Status requestFrame() {
             if (frameContent == std::string("depth"))
                 if (qmp_size)
                     frameToSend[i] = (uint8_t)(frameData[i] / 256);
-
                 else
                     frameToSend[i] = (uint8_t)(frameData[i] / 16);
             else
@@ -191,7 +124,7 @@ aditof::Status requestFrame() {
             (uint8_t *)malloc(sizeof(uint8_t) * frameWidth * frameHeight * 2);
 
         for (int i = 0; i < frameWidth * frameHeight; i++) {
-            //     frameToSend[i] = (uint8_t)((frameDataDepth[i] >> 2) & 0xff);
+            // frameToSend[i] = (uint8_t)((frameDataDepth[i] >> 2) & 0xff);
 
             // preparing depth data
             if (qmp_size)
