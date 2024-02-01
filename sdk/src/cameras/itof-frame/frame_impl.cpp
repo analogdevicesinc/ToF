@@ -123,22 +123,6 @@ aditof::Status FrameImpl::getDetails(aditof::FrameDetails &details) const {
 aditof::Status
 FrameImpl::getDataDetails(const std::string &dataType,
                           aditof::FrameDataDetails &details) const {
-
-    //TO DO: to be removed when we drop ir terminology
-    if (dataType == "ir") {
-        std::string dataTypeAB = "ab";
-        auto detailsIterAB = std::find_if(
-            m_details.dataDetails.begin(), m_details.dataDetails.end(),
-            [&dataTypeAB](const aditof::FrameDataDetails &details) {
-                return dataTypeAB == details.type;
-            });
-        LOG(WARNING)
-            << "The term 'ir' has been deprecated in release 5.0.0 and will be "
-               "entirely removed in 5.1.0. Please use 'ab' instead.";
-        details = *detailsIterAB;
-        return aditof::Status::OK;
-    }
-
     auto detailsIter =
         std::find_if(m_details.dataDetails.begin(), m_details.dataDetails.end(),
                      [&dataType](const aditof::FrameDataDetails &details) {
@@ -156,20 +140,8 @@ FrameImpl::getDataDetails(const std::string &dataType,
 
 aditof::Status FrameImpl::getData(const std::string &dataType,
                                   uint16_t **dataPtr) {
-
     using namespace aditof;
-    //TO DO: to be removed when we drop ir terminology
-    if (dataType == "ir") {
-        if (m_implData->m_dataLocations.count("ab") > 0) {
-            *dataPtr = m_implData->m_dataLocations["ab"];
-            LOG(WARNING) << "The term 'ir' has been deprecated in release "
-                            "5.0.0 and will be entirely removed in 5.1.0. "
-                            "Please use 'ab' instead.";
-        } else {
-            dataPtr = nullptr;
-            return Status::INVALID_ARGUMENT;
-        }
-    } else if (m_implData->m_dataLocations.count(dataType) > 0) {
+    if (m_implData->m_dataLocations.count(dataType) > 0) {
         *dataPtr = m_implData->m_dataLocations[dataType];
     } else {
         dataPtr = nullptr;
