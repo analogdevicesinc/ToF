@@ -87,7 +87,6 @@ static std::queue<aditof::Adsd3500Status> adsd3500InterruptsQueue;
 // testing the network link speed because it eliminates operations on target such as getting the frame
 // from v4l2 interface, passing the frame through depth compute and any deep copying.
 static bool sameFrameEndlessRepeat = false;
-static int frameFromSensorCount = 0;
 
 struct clientData {
     bool hasFragments;
@@ -394,12 +393,26 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         aditof::Status status = camDepthSensor->open();
         buff_send.set_status(static_cast<::payload::Status>(status));
         clientEngagedWithSensors = true;
-        frameFromSensorCount = 0;
         break;
     }
 
     case START: {
         aditof::Status status = camDepthSensor->start();
+
+        // When in test mode, capture 2 frames. 1st might be corrupt after a ADSD3500 reset.
+        // 2nd frame will be the one sent over and over again by server in test mode.
+        if (sameFrameEndlessRepeat) {
+            for (int i = 0; i < 2; ++i) {
+                status = camDepthSensor->getFrame(
+                    (uint16_t *)(buff_frame_to_send +
+                                 LWS_SEND_BUFFER_PRE_PADDING +
+                                 FRAME_PREPADDING_BYTES));
+                if (status != aditof::Status::OK) {
+                    LOG(ERROR) << "Failed to get frame!";
+                }
+            }
+        }
+
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
@@ -500,15 +513,13 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
     case GET_FRAME: {
         aditof::Status status = aditof::Status::OK;
+
         if (sameFrameEndlessRepeat) {
-            if (frameFromSensorCount == 2) {
-                m_frame_ready = true;
-                buff_send.set_status(payload::Status::OK);
-                break;
-            }
+            m_frame_ready = true;
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
         }
 
-        frameFromSensorCount++;
         //TO DO: get value of m_depthComputeOnTarget from sensor
         status = camDepthSensor->getFrame(
             (uint16_t *)(buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING +
@@ -774,7 +785,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     case HANG_UP: {
         if (sensors_are_created) {
             cleanup_sensors();
-            frameFromSensorCount = 0;
         }
 
         break;
