@@ -7,10 +7,12 @@ For running the python program use:
 ```console
 python skeletal_tracking.py
 ```
-![Display Image](https://github.com/analogdevicesinc/ToF/blob/master/doc/img/skeletal_tracking_python.png) 
+![Display Image](https://github.com/analogdevicesinc/ToF/blob/main/doc/img/skeletal_tracking_python.png) 
 
 ### Python Dependencies
 
+```python
 pip install mediapipe
 pip install opencv-python
 pip install numpy
+```
