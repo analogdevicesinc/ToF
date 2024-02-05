@@ -55,6 +55,7 @@ if (WITH_EXAMPLES)
     PopulateforPython("examples/first_frame")
     PopulateforPython("examples/streaming")
     PopulateforPython("examples/skeletal_tracking")
+    PopulateforPython("examples/skeletal_tracking_in_pointcloud")
     PopulateforPython("examples/saveCCBToFile")
 
 endif()
