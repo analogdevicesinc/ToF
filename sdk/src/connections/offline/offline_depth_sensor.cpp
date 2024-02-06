@@ -1,7 +1,7 @@
 #include "offline_depth_sensor.h"
 #include "tofi/tofi_config.h"
 #include <cstring>
-#ifdef UNIX
+#ifdef __linux__
 #include <dirent.h>
 #endif
 #include <fstream>
@@ -38,13 +38,13 @@ aditof::Status OfflineDepthSensor::open() {
     std::vector<std::string> frameTypesResources;
     std::streampos size;
     uint16_t *buffer;
-#ifdef UNIX
+#ifdef __linux__
     std::string fileName;
     struct dirent *entry;
     DIR *dir = opendir(m_path.c_str());
     while ((entry = readdir(dir)) != NULL) {
         fileName = entry->d_name;
-        if (fileName[0] != ".")
+        if (fileName[0] != '.')
             frameTypesResources.push_back(fileName);
     }
 #elif WIN32
