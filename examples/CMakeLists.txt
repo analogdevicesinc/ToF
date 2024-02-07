@@ -3,6 +3,10 @@ project(examples)
 
 add_subdirectory(first-frame)
 add_subdirectory(data_collect)
+add_subdirectory(test_frame_capture)
+add_subdirectory(test_access_ini)
+add_subdirectory(test_measure_fps)
+
 if (NOT NXP)
     add_subdirectory(tof-viewer)
 endif()
@@ -13,11 +17,18 @@ if (NXP)
     install(PROGRAMS
         $<TARGET_FILE:first-frame>
         $<TARGET_FILE:data_collect>
+        $<TARGET_FILE:test_frame_capture>
+	$<TARGET_FILE:test_access_ini>
+	$<TARGET_FILE:test_measure_fps>
+
         DESTINATION ${CMAKE_INSTALL_BINDIR} )
 elseif(WIN32)
     install(PROGRAMS
         $<TARGET_FILE:first-frame>
         $<TARGET_FILE:data_collect>
+	$<TARGET_FILE:test_frame_capture>
+	$<TARGET_FILE:test_access_ini>
+	$<TARGET_FILE:test_measure_fps>
         $<TARGET_FILE:ADIToFGUI>
         DESTINATION ${CMAKE_INSTALL_BINDIR} )
 endif()
