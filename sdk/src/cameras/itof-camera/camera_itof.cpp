@@ -52,6 +52,7 @@
 #include <chrono>
 #include <iostream>
 #include <iterator>
+#include <math.h>
 #include <thread>
 #include <vector>
 
@@ -813,6 +814,64 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
            reinterpret_cast<uint8_t *>(&metadata), sizeof(metadata));
 
     return Status::OK;
+}
+
+aditof::Status CameraItof::normalizeABdata(aditof::Frame *frame,
+                                           bool useLogScaling) {
+
+    using namespace aditof;
+    Status status = Status::OK;
+    uint16_t *abVideoData;
+
+    status = frame->getData("ab", &abVideoData);
+
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not get frame data!";
+        return status;
+    }
+
+    if (!abVideoData) {
+        LOG(ERROR) << "no memory allocated in frame";
+        return Status::INVALID_ARGUMENT;
+    }
+
+    aditof::FrameDataDetails frameAbDetails;
+    frameAbDetails.height = 0;
+    frameAbDetails.width = 0;
+    frame->getDataDetails("ab", frameAbDetails);
+
+    size_t imageSize = frameAbDetails.height * frameAbDetails.width;
+
+    uint32_t min_value_of_AB_pixel = 0xFFFF;
+    uint32_t max_value_of_AB_pixel = 1;
+
+    for (size_t dummyCtr = 0; dummyCtr < imageSize; ++dummyCtr) {
+        if (abVideoData[dummyCtr] > max_value_of_AB_pixel) {
+            max_value_of_AB_pixel = abVideoData[dummyCtr];
+        }
+        if (abVideoData[dummyCtr] < min_value_of_AB_pixel) {
+            min_value_of_AB_pixel = abVideoData[dummyCtr];
+        }
+    }
+    max_value_of_AB_pixel -= min_value_of_AB_pixel;
+
+    double c = 255.0f / log10(1 + max_value_of_AB_pixel);
+
+    for (size_t dummyCtr = 0; dummyCtr < imageSize; ++dummyCtr) {
+
+        abVideoData[dummyCtr] -= min_value_of_AB_pixel;
+
+        double pix = abVideoData[dummyCtr] * (255.0 / max_value_of_AB_pixel);
+
+        pix = (pix >= 255.0) ? 255.0 : pix;
+
+        if (useLogScaling) {
+            pix = c * log10(pix + 1);
+        }
+        abVideoData[dummyCtr] = (uint8_t)(pix);
+    }
+
+    return status;
 }
 
 aditof::Status CameraItof::getDetails(aditof::CameraDetails &details) const {
