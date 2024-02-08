@@ -65,6 +65,8 @@ class CameraItof : public aditof::Camera {
                                           std::string &name) const override;
     aditof::Status requestFrame(aditof::Frame *frame,
                                 aditof::FrameUpdateCallback cb) override;
+    aditof::Status normalizeABdata(aditof::Frame *frame,
+                                   bool useLogScaling) override;
     aditof::Status getDetails(aditof::CameraDetails &details) const override;
     aditof::Status
     getAvailableControls(std::vector<std::string> &controls) const override;
