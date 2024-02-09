@@ -323,6 +323,7 @@ class ADIMainWindow {
     bool m_callbackInitialized = false;
     int frameCounter = 0;
     int fps = 0;
+    bool m_netLinkTest = false;
 
     /**
 		* @brief Rotation of an ImGui texture.
@@ -361,6 +362,8 @@ class ADIMainWindow {
     void showMainMenu();
 
     void showRecordMenu();
+
+    void showTestMode();
 
     /**
 		* @brief	Open Device menu will give you the information of
