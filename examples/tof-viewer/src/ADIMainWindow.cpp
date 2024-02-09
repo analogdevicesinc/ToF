@@ -488,6 +488,7 @@ void ADIMainWindow::showMainMenu() {
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Tools")) {
+            showTestMode();
             showRecordMenu();
             showPlaybackMenu();
             ImGui::Separator();
@@ -496,6 +497,21 @@ void ADIMainWindow::showMainMenu() {
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
+    }
+}
+
+void ADIMainWindow::showTestMode() {
+    if (ImGui::BeginMenu("Test mode")) {
+        if (ImGui::Checkbox("Netlinktest", &m_netLinkTest)) {
+            if (m_netLinkTest) {
+                m_cameraIp += ":netlinktest";
+            } else {
+                int netLinkRemover = m_cameraIp.find_last_of(":");
+                m_cameraIp.erase(netLinkRemover);
+            }
+            RefreshDevices();
+        }
+        ImGui::EndMenu();
     }
 }
 
@@ -637,6 +653,7 @@ void ADIMainWindow::showDeviceMenu() {
                 stopPlayCCD();
                 cameraWorkerDone = false;
                 m_callbackInitialized = false;
+                m_netLinkTest = false;
                 m_cameraModes.clear();
                 _cameraModes.clear();
                 if (initCameraWorker.joinable()) {
@@ -1465,7 +1482,7 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
 
     if (ImGui::Begin("Information Window", nullptr,
                      overlayFlags | ImGuiWindowFlags_NoTitleBar)) {
-        char formattedIP[20];
+        char formattedIP[27];
         for (int i = 0; i < m_cameraIp.length(); i++)
             formattedIP[i] = toupper(m_cameraIp[i]);
         ImGui::Text(" Camera %s", formattedIP);
