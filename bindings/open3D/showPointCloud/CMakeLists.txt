@@ -11,6 +11,6 @@ add_executable(${PROJECT_NAME} main.cpp)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE aditof ${Open3D_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PRIVATE aditof command_parser ${Open3D_LIBRARIES})
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${Open3D_INCLUDE_DIRS})
