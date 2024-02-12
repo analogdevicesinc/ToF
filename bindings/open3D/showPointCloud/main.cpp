@@ -30,6 +30,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <aditof/camera.h>
+#include <aditof/depth_sensor_interface.h>
 #include <aditof/frame.h>
 #include <aditof/system.h>
 #include <aditof/version.h>
@@ -49,10 +50,10 @@ static const uint8_t colormap[3 * 256] = {
 using namespace aditof;
 
 static const char Help_Menu[] =
-    R"(PointCloud usage:
-    PointCloud CONFIG
-    PointCloud (-h | --help)
-    PointCloud [-ip | --ip <ip>] [-m | --m <mode>] CONFIG
+    R"(PointCloud-Open3D usage:
+    PointCloud-Open3D CONFIG
+    PointCloud-Open3D (-h | --help)
+    PointCloud-Open3D [-ip | --ip <ip>] [-m | --m <mode>] CONFIG
 
     Arguments:
       CONFIG            Input config_default.json file (which has *.ccb and *.cfg)
@@ -168,70 +169,74 @@ int main(int argc, char *argv[]) {
     System system;
 
     std::vector<std::shared_ptr<Camera>> cameras;
-    system.getCameraList(cameras);
     if (!ip.empty()) {
         system.getCameraList(cameras, ip);
     } else {
         system.getCameraList(cameras);
     }
-
     if (cameras.empty()) {
         LOG(WARNING) << "No cameras found";
         return 0;
     }
 
     auto camera = cameras.front();
+
+    // Registering a callback to be executed when ADSD3500 issues an interrupt
+    std::shared_ptr<DepthSensorInterface> sensor = camera->getSensor();
+    aditof::SensorInterruptCallback callback = [](Adsd3500Status status) {
+        LOG(INFO) << "Running the callback for which the status of ADSD3500 "
+                     "has been "
+                     "forwarded. ADSD3500 status = "
+                  << status;
+    };
+    Status registerCbStatus =
+        sensor->adsd3500_register_interrupt_callback(callback);
+    if (status != Status::OK) {
+        LOG(WARNING) << "Could not register callback";
+    }
+
     status = camera->initialize(configFile);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
         return 0;
     }
 
+    aditof::CameraDetails cameraDetails;
+    camera->getDetails(cameraDetails);
+
+    LOG(INFO) << "SD card image version: " << cameraDetails.sdCardImageVersion;
+    LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
+    LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
+
     std::vector<std::string> frameTypes;
     camera->getAvailableFrameTypes(frameTypes);
     if (frameTypes.empty()) {
-        LOG(ERROR) << "No frame type available!";
+        std::cout << "no frame type avaialble!";
         return 0;
     }
 
-    status = camera->setFrameType(frameTypes.front());
+    if (modeName.empty()) {
+        status = camera->getFrameTypeNameFromId(mode, modeName);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Mode: " << mode
+                       << " is invalid for this type of camera!";
+            return 0;
+        }
+    }
+
+    status = camera->setFrameType(modeName);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 0;
     }
 
-    std::vector<std::string> modes;
-    camera->getAvailableModes(modes);
-    if (modes.empty()) {
-        LOG(ERROR) << "No camera modes available!";
-        return 0;
-    }
-
-    status = camera->setMode(modes[0]);
+    status = camera->start();
     if (status != Status::OK) {
-        LOG(ERROR) << "Could not set camera mode!";
+        LOG(ERROR) << "Could not start the camera!";
         return 0;
     }
 
     aditof::Frame frame;
-
-    /* Get the camera details */
-    aditof::CameraDetails cameraDetails;
-    camera->getDetails(cameraDetails);
-    int camera_rangeMax = cameraDetails.maxDepth;
-    int camera_rangeMin = cameraDetails.minDepth;
-    int bitCount = cameraDetails.bitCount;
-
-    aditof::IntrinsicParameters intrinsics = cameraDetails.intrinsics;
-    double fx = intrinsics.fx;
-    double fy = intrinsics.fy;
-    double cx = intrinsics.cx;
-    double cy = intrinsics.cy;
-
-    /* Enable noise reduction for better results */
-    const int smallSignalThreshold = 100;
-    camera->setControl("noise_reduction_threshold",
-                       std::to_string(smallSignalThreshold));
 
     /* Request frame from camera */
     status = camera->requestFrame(&frame);
@@ -260,16 +265,18 @@ int main(int argc, char *argv[]) {
 
     /* Create visualizer for pointcloud */
     visualization::Visualizer pointcloud_vis;
-    pointcloud_vis.CreateVisualizerWindow("Pointcloud", 1200, 1200);
+    pointcloud_vis.CreateVisualizerWindow("Pointcloud", 1500, 1500);
     bool is_geometry_added_pointcloud = false;
 
-    const float PI_VALUE = 3.14;
     std::shared_ptr<geometry::PointCloud> pointcloud_ptr = nullptr;
-    Eigen::Matrix4d transformation = Eigen::Matrix4d::Identity();
-    transformation.block<3, 3>(0, 0) = static_cast<Eigen::Matrix3d>(
-        Eigen::AngleAxisd(PI_VALUE, Eigen::Vector3d::UnitX()));
-    camera::PinholeCameraIntrinsic intrinsicParameters(frameWidth, frameHeight,
-                                                       fx, fy, cx, cy);
+
+    int camera_rangeMin = 0;
+    int camera_rangeMax = 4096;
+    int bitCount = 16;
+
+    uint16_t *xyzData;
+    frame.getData("xyz", &xyzData);
+    double *xyzDouble = new double[frameWidth * frameHeight * 3];
 
     bool is_window_closed = true;
     while (true) {
@@ -313,17 +320,6 @@ int main(int argc, char *argv[]) {
             ab_color.data_[j + 2] = ab_image.data_[i];
         }
 
-        geometry::Image color_image;
-        color_image.Prepare(frameWidth, frameHeight, 3, 1);
-        for (int i = 0; i < frameHeight * frameWidth * 3; i = i + 3) {
-            color_image.data_[i] =
-                ab_color.data_[i] * 0.5 + depth_color.data_[i] * 0.5;
-            color_image.data_[i + 1] =
-                ab_color.data_[i + 1] * 0.5 + depth_color.data_[i + 1] * 0.5;
-            color_image.data_[i + 2] =
-                ab_color.data_[i + 2] * 0.5 + depth_color.data_[i + 2] * 0.5;
-        }
-
         visualized_ab_img->data_ = ab_image.data_;
         if (!is_geometry_added_ab) {
             ab_vis.AddGeometry(visualized_ab_img);
@@ -343,34 +339,19 @@ int main(int argc, char *argv[]) {
         depth_vis.PollEvents();
         depth_vis.UpdateRender();
 
-        /* create and show pointcloud */
-        auto rgbd_ptr = geometry::RGBDImage::CreateFromColorAndDepth(
-            color_image, depth16bits_image, 1000.0, 3.0, false);
-        if (!pointcloud_ptr) {
-            pointcloud_ptr = geometry::PointCloud::CreateFromRGBDImage(
-                *rgbd_ptr, intrinsicParameters);
-
-            auto bounding_box = pointcloud_ptr->GetAxisAlignedBoundingBox();
-            Eigen::Matrix4d trans_to_origin = Eigen::Matrix4d::Identity();
-            trans_to_origin.block<3, 1>(0, 3) = bounding_box.GetCenter() * -1.0;
-
-            pointcloud_ptr->Transform(trans_to_origin.inverse() *
-                                      transformation * trans_to_origin);
-        } else {
-            auto temp = geometry::PointCloud::CreateFromRGBDImage(
-                *rgbd_ptr, intrinsicParameters);
-
-            auto bounding_box = temp->GetAxisAlignedBoundingBox();
-            Eigen::Matrix4d trans_to_origin = Eigen::Matrix4d::Identity();
-            trans_to_origin.block<3, 1>(0, 3) = bounding_box.GetCenter() * -1.0;
-
-            temp->Transform(trans_to_origin.inverse() * transformation *
-                            trans_to_origin);
-
-            pointcloud_ptr->points_ = temp->points_;
-            pointcloud_ptr->normals_ = temp->normals_;
-            pointcloud_ptr->colors_ = temp->colors_;
+        for (int i = 0; i < frameHeight * frameWidth * 3; i++) {
+            xyzDouble[i] = xyzData[i];
         }
+
+        Eigen::Vector3d *pc_vector =
+            reinterpret_cast<Eigen::Vector3d *>(xyzDouble);
+        Eigen::Vector3d *color_vector =
+            reinterpret_cast<Eigen::Vector3d *>(depth_color.data_.data());
+        /* create and show pointcloud */
+        pointcloud_ptr->points_.assign(pc_vector,
+                                       pc_vector + frameWidth * frameHeight);
+        pointcloud_ptr->colors_.assign(color_vector,
+                                       color_vector + frameWidth * frameHeight);
 
         if (!is_geometry_added_pointcloud) {
             pointcloud_vis.AddGeometry(pointcloud_ptr);
@@ -383,10 +364,15 @@ int main(int argc, char *argv[]) {
             depth_vis.DestroyVisualizerWindow();
             break;
         } else {
-            pointcloud_vis.UpdateGeometry();
+            pointcloud_vis.UpdateGeometry(pointcloud_ptr);
             is_window_closed = pointcloud_vis.PollEvents();
             pointcloud_vis.UpdateRender();
         }
+    }
+
+    // Example on how to unregister a callback from ADSD3500 interupts
+    if (registerCbStatus == Status::OK) {
+        sensor->adsd3500_unregister_interrupt_callback(callback);
     }
 
     return 0;
