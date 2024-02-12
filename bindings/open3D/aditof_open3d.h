@@ -85,10 +85,7 @@ Status fromFrameTo16bitsDepth(Frame &frame, geometry::Image &image) {
     }
 
     image.Prepare(frameWidth, frameHeight, 1, 2);
-    for (int i = 0; i < frameHeight * frameWidth; i++) {
-        image.data_[i * 2] = *(depthData + i) & 0xFF;
-        image.data_[i * 2 + 1] = *(depthData + i) >> 8;
-    }
+    memcpy(image.data_.data(), depthData, frameWidth * frameHeight * sizeof(uint16_t));
 
     return Status::OK;
 }
