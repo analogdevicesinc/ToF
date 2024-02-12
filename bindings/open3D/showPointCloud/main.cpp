@@ -32,6 +32,7 @@
 #include <aditof/camera.h>
 #include <aditof/frame.h>
 #include <aditof/system.h>
+#include <aditof/version.h>
 #ifdef USE_GLOG
 #include <glog/logging.h>
 #else
@@ -39,6 +40,7 @@
 #endif
 
 #include "../aditof_open3d.h"
+#include <command_parser.h>
 
 static const uint8_t colormap[3 * 256] = {
 #include "colormap.txt"
@@ -46,23 +48,140 @@ static const uint8_t colormap[3 * 256] = {
 
 using namespace aditof;
 
+static const char Help_Menu[] =
+    R"(PointCloud usage:
+    PointCloud CONFIG
+    PointCloud (-h | --help)
+    PointCloud [-ip | --ip <ip>] [-m | --m <mode>] CONFIG
+
+    Arguments:
+      CONFIG            Input config_default.json file (which has *.ccb and *.cfg)
+
+    Options:
+      -h --help          Show this screen.
+      -m --m <mode>      Mode to capture data in. [default: 0]
+
+    NOTE: -m | --m argument supports both index and string (0/sr-native)
+
+    Valid mode (-m | --m) options are:
+        0: short-range native
+        1: long-range native
+        2: short-range Qnative
+        3: long-range Qnative
+        4: pcm-native
+        5: long-range mixed
+        6: short-range mixed
+)";
+
 int main(int argc, char *argv[]) {
+    std::map<std::string, struct Argument> command_map = {
+        {"-h", {"--help", false, "", "", false}},
+        {"-ip", {"--ip", false, "", "", true}},
+        {"-m", {"--m", false, "", "0", true}},
+        {"config", {"CONFIG", true, "last", "", true}}};
+
+    CommandParser command;
+    std::string arg_error;
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
 
+    command.parseArguments(argc, argv, command_map);
+    int result = command.checkArgumentExist(command_map, arg_error);
+    if (result != 0) {
+        LOG(ERROR) << "Argument " << arg_error << " doesn't exist!";
+        std::cout << Help_Menu;
+        return -1;
+    }
+
+    result = command.helpMenu();
+    if (result == 1) {
+        std::cout << Help_Menu;
+        return 0;
+    } else if (result == -1) {
+        LOG(ERROR) << "Usage of argument -h/--help"
+                   << " is incorrect! Help argument should be used alone!";
+        std::cout << Help_Menu;
+        return -1;
+    }
+
+    result = command.checkValue(command_map, arg_error);
+    if (result != 0) {
+        LOG(ERROR) << "Argument: " << command_map[arg_error].long_option
+                   << " doesn't have assigned or default value!";
+        std::cout << Help_Menu;
+        return -1;
+    }
+
+    result = command.checkMandatoryArguments(command_map, arg_error);
+    if (result != 0) {
+        std::string argName = (arg_error == "-config")
+                                  ? "CONFIG"
+                                  : command_map[arg_error].long_option;
+
+        LOG(ERROR) << "Mandatory argument: " << argName << " missing";
+        std::cout << Help_Menu;
+        return -1;
+    }
+
+    result = command.checkMandatoryPosition(command_map, arg_error);
+    if (result != 0) {
+        std::string argName = (arg_error == "-config")
+                                  ? "CONFIG"
+                                  : command_map[arg_error].long_option;
+
+        LOG(ERROR) << "Mandatory argument " << argName
+                   << " is not on its correct position ("
+                   << command_map[arg_error].position << ").";
+        std::cout << Help_Menu;
+        return -1;
+    }
+
+    LOG(INFO) << "SDK version: " << aditof::getApiVersion()
+              << " | branch: " << aditof::getBranchVersion()
+              << " | commit: " << aditof::getCommitVersion();
+
     Status status = Status::OK;
+    std::string configFile;
+    std::string ip;
+    uint32_t mode = 0;
+
+    // Parsing mode type
+    std::string modeName;
+    try {
+        std::size_t counter;
+        mode = std::stoi(command_map["-m"].value, &counter);
+        if (counter != command_map["-m"].value.size()) {
+            throw command_map["-m"].value.c_str();
+        }
+    } catch (const char *name) {
+        modeName = name;
+    } catch (const std::exception &) {
+        modeName = command_map["-m"].value;
+    }
+
+    configFile = command_map["config"].value;
+
+    if (!command_map["-ip"].value.empty()) {
+        ip = "ip:" + command_map["-ip"].value;
+    }
 
     System system;
 
     std::vector<std::shared_ptr<Camera>> cameras;
     system.getCameraList(cameras);
+    if (!ip.empty()) {
+        system.getCameraList(cameras, ip);
+    } else {
+        system.getCameraList(cameras);
+    }
+
     if (cameras.empty()) {
-        LOG(WARNING) << "No cameras found!";
+        LOG(WARNING) << "No cameras found";
         return 0;
     }
 
     auto camera = cameras.front();
-    status = camera->initialize();
+    status = camera->initialize(configFile);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
         return 0;
@@ -121,7 +240,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
     aditof::FrameDataDetails frameDetails;
-    frame.getDataDetails("depth",frameDetails);
+    frame.getDataDetails("depth", frameDetails);
     int frameHeight = static_cast<int>(frameDetails.height);
     int frameWidth = static_cast<int>(frameDetails.width);
 
