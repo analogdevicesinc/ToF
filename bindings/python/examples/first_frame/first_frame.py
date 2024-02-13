@@ -33,12 +33,33 @@ import aditofpython as tof
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+import os
 
-if len(sys.argv) < 2  or sys.argv[1] == "--help" or sys.argv[1] == "-h" :
-    print("first_frame.py usage:")
-    print("USB / Local connection: first_frame.py <config>")
-    print("Network connection: first_frame.py <ip> <config>")
+modemapping = {
+"lr-native": {"width":1024, "height":1024},
+"lr-qnative": {"width":512, "height":512},
+"sr-native": {"width":1024, "height":1024},
+"sr-qnative": {"width":512, "height":512}
+}
+
+mode = "lr-qnative"
+
+def help():
+    print(f"{sys.argv[0]} usage:")
+    print(f"USB: {sys.argv[0]} <mode name> <config>")
+    print(f"Network connection: {sys.argv[0]} <mode name> <ip> <config>")
+    print()
+    print("Mode names: ");
+    for mode in modemapping.keys():
+        print(f"{mode}: {modemapping[mode]['width']} x {modemapping[mode]['height']}");
+    print()
+    print("For example:")
+    print(f"python {sys.argv[0]} lr-qnative 10.43.0.1 config\config_adsd3500_adsd3100.json")
     exit(1)
+
+if len(sys.argv) < 3 or len(sys.argv) > 4 or sys.argv[1] == "--help" or sys.argv[1] == "-h" :
+    help()
+    exit(-1)
 
 system = tof.System()
 
@@ -46,17 +67,29 @@ print("SDK version: ", tof.getApiVersion(), " | branch: ", tof.getBranchVersion(
 
 cameras = []
 ip = ""
-if len(sys.argv) == 3 :
-    ip = sys.argv[1]
-    config = sys.argv[2]
+if len(sys.argv) == 4:
+    mode = sys.argv[1]
+    ip = sys.argv[2]
+    config = sys.argv[3]
     print (f"Looking for camera on network @ {ip}. Will use {config}.")
     ip = "ip:" + ip
-elif len(sys.argv) == 2 :
-    config = sys.argv[1]
+elif len(sys.argv) == 3:
+    mode = sys.argv[1]
+    config = sys.argv[2]
     print (f"Looking for camera on UVC. Will use {config}.")
 else :
     print("Too many arguments provided!")
-    exit(1)
+    exit(-2)
+
+#Checks on input
+if mode not in modemapping:
+    print(f"Error: Unknown mode - {mode}")
+    help()
+    exit(-3)
+if os.path.exists(config) == False:
+    print(f"Error: Config file cannot be found - {config}")
+    help()
+    exit(-4)
 
 status = system.getCameraList(cameras, ip)
 print("system.getCameraList()", status)
