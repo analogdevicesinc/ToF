@@ -320,6 +320,7 @@ class ADIMainWindow {
     std::shared_ptr<adiviewer::ADIView> view = nullptr;
     AppLog my_log;
 
+    bool m_callbackInitialized = false;
     int frameCounter = 0;
     int fps = 0;
 

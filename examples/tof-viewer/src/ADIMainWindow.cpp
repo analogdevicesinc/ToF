@@ -404,7 +404,10 @@ void ADIMainWindow::render() {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        handleInterruptCallback();
+        if (!m_callbackInitialized) {
+            handleInterruptCallback();
+            m_callbackInitialized = true;
+        }
         /***************************************************/
         //Create windows here:
         showMainMenu();
@@ -633,6 +636,7 @@ void ADIMainWindow::showDeviceMenu() {
                 stopPlayback();
                 stopPlayCCD();
                 cameraWorkerDone = false;
+                m_callbackInitialized = false;
                 m_cameraModes.clear();
                 _cameraModes.clear();
                 if (initCameraWorker.joinable()) {
