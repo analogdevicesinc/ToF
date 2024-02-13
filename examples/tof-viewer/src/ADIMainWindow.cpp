@@ -628,7 +628,7 @@ void ADIMainWindow::showDeviceMenu() {
             }
         }
         ImGui::SameLine();
-        if (ImGuiExtensions::ADIButton("Close")) {
+        if (ImGuiExtensions::ADIButton("Close", !_isOpenDevice)) {
             stopPlayback();
             stopPlayCCD();
             cameraWorkerDone = false;
