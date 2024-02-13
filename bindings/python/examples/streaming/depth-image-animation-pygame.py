@@ -56,10 +56,9 @@ def help():
         print(f"{mode}: {modemapping[mode]['width']} x {modemapping[mode]['height']}");
     print()
     print("For example:")
-    print("python depth-image-animation-pygame.py lr-qnative 10.43.0.1 config\config_adsd3500_adsd3100.json")
+    print(f"python {sys.argv[0]} lr-qnative 10.43.0.1 config\config_adsd3500_adsd3100.json")
     exit(1)
 
-print(len(sys.argv))
 if len(sys.argv) < 3 or len(sys.argv) > 4 or sys.argv[1] == "--help" or sys.argv[1] == "-h" :
     help()
     exit(-1)
