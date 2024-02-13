@@ -51,7 +51,7 @@ if len(sys.argv) < 2  or sys.argv[1] == "--help" or sys.argv[1] == "-h" :
     print(f"Network connection: {sys.argv[0]} <ip> <config>")
     exit(1)
 
-viridis = plt.get_cmap('viridis')
+jet_colormap = plt.get_cmap('jet')
 
 system = tof.System()
 
@@ -99,7 +99,7 @@ def normalize(image_scalar, width, height):
     image_scalar_norm = image_scalar / image_scalar.max()
 
     # Apply the colormap to the scalar image to obtain an RGB image
-    image_rgb = viridis(image_scalar_norm)
+    image_rgb = jet_colormap(image_scalar_norm)
         
     surface = (image_rgb[:, :, :3] * 255).astype(np.uint8)
     return surface
