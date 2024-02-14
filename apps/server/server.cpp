@@ -425,7 +425,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
 
     case GET_AVAILABLE_FRAME_TYPES: {
-        std::vector<aditof::DepthSensorFrameType> aditofFrameTypes;
+        std::vector<std::string> aditofFrameTypes;
 
         aditof::Status status =
             camDepthSensor->getAvailableFrameTypes(aditofFrameTypes);
