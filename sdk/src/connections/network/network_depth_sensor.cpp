@@ -381,8 +381,8 @@ aditof::Status NetworkDepthSensor::stop() {
     return status;
 }
 
-aditof::Status NetworkDepthSensor::getAvailableFrameTypes(
-    std::vector<aditof::DepthSensorFrameType> &types) {
+aditof::Status
+NetworkDepthSensor::getAvailableFrameTypes(std::vector<std::string> &types) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -421,24 +421,7 @@ aditof::Status NetworkDepthSensor::getAvailableFrameTypes(
          i < net->recv_buff[m_sensorIndex].available_frame_types_size(); i++) {
         payload::DepthSensorFrameType protoFrameType =
             net->recv_buff[m_sensorIndex].available_frame_types(i);
-        aditof::DepthSensorFrameType aditofFrameType;
-
-        aditofFrameType.type = protoFrameType.type();
-        for (int j = 0; j < protoFrameType.depthsensorframecontent_size();
-             ++j) {
-            payload::DepthSensorFrameContent protoFrameContent =
-                protoFrameType.depthsensorframecontent(j);
-            aditof::DepthSensorFrameContent aditofFrameContent;
-
-            aditofFrameContent.type = protoFrameContent.type();
-            aditofFrameContent.width = protoFrameContent.width();
-            aditofFrameContent.height = protoFrameContent.height();
-            aditofFrameType.content.emplace_back(aditofFrameContent);
-        }
-        aditofFrameType.width = protoFrameType.width();
-        aditofFrameType.height = protoFrameType.height();
-
-        types.push_back(aditofFrameType);
+        types.emplace_back(protoFrameType.type());
     }
 
     Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
