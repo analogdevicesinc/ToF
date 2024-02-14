@@ -447,11 +447,12 @@ aditof::Status Adsd3500Sensor::stop() {
     return status;
 }
 
-aditof::Status Adsd3500Sensor::getAvailableFrameTypes(
-    std::vector<aditof::DepthSensorFrameType> &types) {
-
-    types =
-        m_availableFrameTypes; //TBD shall we copy / move vector instead of assign
+aditof::Status
+Adsd3500Sensor::getAvailableFrameTypes(std::vector<std::string> &types) {
+    types.clear();
+    for (const auto &frameType : availableFrameTypes) {
+        types.emplace_back(frameType.type);
+    }
     return aditof::Status::OK;
 }
 
