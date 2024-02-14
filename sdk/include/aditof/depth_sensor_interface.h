@@ -84,8 +84,8 @@ class DepthSensorInterface {
      * @param[out] types
      * @return Status
      */
-    virtual aditof::Status getAvailableFrameTypes(
-        std::vector<aditof::DepthSensorFrameType> &types) = 0;
+    virtual aditof::Status
+    getAvailableFrameTypes(std::vector<std::string> &types) = 0;
 
     /**
      * @brief Set the sensor frame type to the given type
