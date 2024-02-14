@@ -137,10 +137,12 @@ aditof::Status OfflineDepthSensor::start() { return aditof::Status::OK; }
 
 aditof::Status OfflineDepthSensor::stop() { return aditof::Status::OK; }
 
-aditof::Status OfflineDepthSensor::getAvailableFrameTypes(
-    std::vector<aditof::DepthSensorFrameType> &types) {
-    aditof::DepthSensorFrameType frameType;
-    types = availableFrameTypes;
+aditof::Status
+OfflineDepthSensor::getAvailableFrameTypes(std::vector<std::string> &types) {
+    types.clear();
+    for (const auto &frameType : availableFrameTypes) {
+        types.emplace_back(frameType.type);
+    }
     return aditof::Status::OK;
 }
 
