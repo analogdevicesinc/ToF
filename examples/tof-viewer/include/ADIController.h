@@ -163,6 +163,11 @@ class ADIController {
 		*/
     int getbitCount() const;
 
+    /**
+    * @brief Gets camera in use.
+    */
+    int getCameraInUse() const;
+
     std::vector<std::shared_ptr<aditof::Camera>> m_cameras;
     std::unique_ptr<ADIToFRecorder> m_recorder;
     bool m_saveBinaryFormat;
