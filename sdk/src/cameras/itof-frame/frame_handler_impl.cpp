@@ -42,7 +42,7 @@ FrameHandlerImpl::FrameHandlerImpl()
     : m_concatFrames(true), m_enableMultithreading(false),
       m_customFormat(false), m_bitsInDepth(0), m_bitsInAB(0), m_bitsInConf(0),
       m_frameWidth(0), m_frameHeight(0), m_frameIndex(0), m_fileCreated(false),
-      m_endOfFile(false), m_filePath("."), m_pos(0), m_threadRunning(false) {}
+      m_endOfFile(false), m_dir("."), m_pos(0), m_threadRunning(false) {}
 
 FrameHandlerImpl::~FrameHandlerImpl() {
     if (m_threadWorker.joinable()) {
@@ -52,7 +52,7 @@ FrameHandlerImpl::~FrameHandlerImpl() {
 
 Status FrameHandlerImpl::setOutputFilePath(const std::string &filePath) {
     Status status = Status::OK;
-    m_filePath = filePath;
+    m_dir = filePath;
     m_fileCreated = false;
     return status;
 }
@@ -72,7 +72,7 @@ Status FrameHandlerImpl::saveFrameToFile(aditof::Frame &frame,
         if (!m_fileCreated) {
             status = createFile(fileName);
         } else {
-            m_file = std::fstream(m_fullOutputFileName,
+            m_file = std::fstream(getOutputFileFullPath(m_outputFileName),
                                   std::ios::app | std::ios::binary);
             m_file.seekg(std::ios::end);
         }
@@ -310,15 +310,14 @@ Status FrameHandlerImpl::createFile(const std::string &fileName) {
 #endif
         strftime(time_buffer, sizeof(time_buffer), "%Y_%m_%d_%H_%M_%S",
                  &timeinfo);
-        m_fileName = "frame" + std::string(time_buffer) + "_" +
-                     std::to_string(m_frameCount) + ".bin";
+        m_outputFileName = "frame" + std::string(time_buffer) + "_" +
+                           std::to_string(m_frameCount) + ".bin";
         m_frameCount++;
-        m_fullOutputFileName = m_fileName;
     } else {
-        m_fullOutputFileName = fileName;
+        m_outputFileName = fileName;
     }
 
-    m_file = std::fstream(m_fullOutputFileName,
+    m_file = std::fstream(getOutputFileFullPath(m_outputFileName),
                           std::ios::app | std::ios::out | std::ios::binary);
 
     if (!m_file) {
@@ -328,4 +327,22 @@ Status FrameHandlerImpl::createFile(const std::string &fileName) {
     m_fileCreated = true;
 
     return Status::OK;
+}
+
+std::string
+FrameHandlerImpl::getOutputFileFullPath(const std::string &fileName) {
+    std::string fullPath;
+#ifdef _WIN32
+    const std::string pathSeparator = "\\";
+#else
+    const std::string pathSeparator = "//";
+#endif;
+
+    if (m_dir.empty()) {
+        fullPath = fileName;
+    } else {
+        fullPath = m_dir + pathSeparator + fileName;
+    }
+
+    return fullPath;
 }

@@ -421,6 +421,7 @@ int main(int argc, char *argv[]) {
 
     FrameHandler frameSaver;
     frameSaver.storeFramesToSingleFile(saveToSingleFile);
+    frameSaver.setOutputFilePath(folder_path);
 
     LOG(INFO) << "Requesting " << n_frames << " frames!";
     auto start_time = std::chrono::high_resolution_clock::now();
