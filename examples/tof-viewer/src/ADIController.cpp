@@ -235,3 +235,5 @@ int ADIController::getbitCount() const {
         cameraDetails);
     return cameraDetails.bitCount;
 }
+
+int ADIController::getCameraInUse() const { return m_cameraInUse; }
