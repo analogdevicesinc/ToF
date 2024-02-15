@@ -975,21 +975,15 @@ aditof::Status CameraItof::saveModuleCCB(const std::string &filepath) {
         return aditof::Status::INVALID_ARGUMENT;
     }
 
-    aditof::Status status = readAdsd3500CCB();
+    std::string ccbContent;
+    aditof::Status status = readAdsd3500CCB(ccbContent);
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Failed to read CCB from adsd3500 module!";
         return aditof::Status::GENERIC_ERROR;
     }
 
-    if (m_ccbFile.empty()) {
-        LOG(ERROR) << "CCB files is unavailable. Perhaps CCB content was not "
-                      "read from module.";
-        return aditof::Status::UNAVAILABLE;
-    }
-
-    std::ifstream source(m_ccbFile.c_str(), std::ios::binary);
     std::ofstream destination(filepath, std::ios::binary);
-    destination << source.rdbuf();
+    destination << ccbContent;
 
     return aditof::Status::OK;
 }
@@ -1171,7 +1165,7 @@ CameraItof::adsd3500UpdateFirmware(const std::string &fwFilePath) {
     return aditof::Status::OK;
 }
 
-aditof::Status CameraItof::readAdsd3500CCB() {
+aditof::Status CameraItof::readAdsd3500CCB(std::string &ccb) {
     using namespace aditof;
     Status status = Status::OK;
 
@@ -1251,14 +1245,8 @@ aditof::Status CameraItof::readAdsd3500CCB() {
     std::string fileName = "temp_ccb.ccb";
 
     //remove the trailling 4 bytes containing the crc
-    std::string fileContent = std::string((char *)ccbContent, ccbFileSize - 4);
-    tempFile.open(fileName, std::ios::binary);
-
-    tempFile << fileContent;
-
-    m_ccbFile = fileName;
+    ccb = std::string((char *)ccbContent, ccbFileSize - 4);
     delete[] ccbContent;
-    tempFile.close();
 
     return status;
 }
