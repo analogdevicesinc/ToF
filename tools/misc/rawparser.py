@@ -142,8 +142,7 @@ def visualize_confidence(filename, directory, index):
         
         norm_conf_frame = cv.normalize(conf_frame, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
         norm_conf_frame = np.uint8(norm_conf_frame)
-        norm_conf_frame = cv.applyColorMap(norm_conf_frame, cv.COLORMAP_RAINBOW)
-        
+        norm_conf_frame = 255 - norm_conf_frame
         
         #save depth frame as
         img = o3d.geometry.Image(norm_conf_frame)
@@ -207,7 +206,7 @@ def generate_vid(mainDir,numberOfFrames,width,height):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Scrip to parse a raw file and extract different frame data ')
-    parser.add_argument("--filename", default = 'frames202309111819', help="filename to parse")
+    parser.add_argument("--filename",  help="filename to parse")
     args = parser.parse_args()
     print(f"filename: {args.filename}")
     dir_path = os.path.dirname( os.path.abspath(__file__)) + raw_img_dir
