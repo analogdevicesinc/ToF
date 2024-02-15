@@ -91,6 +91,8 @@ class FrameHandlerImpl {
     aditof::Status setFrameContent(const std::string &frameContent);
 
   private:
+    std::string getOutputFileFullPath(const std::string &fileName);
+
     aditof::Status createFile(const std::string &fileName);
     void threadWritter();
     //aditof::Status writtingThread(std::string fileName = "");
@@ -122,9 +124,8 @@ class FrameHandlerImpl {
     aditof::Metadata m_metadataStruct;
 
     //variables used for file handling
-    std::string m_filePath;
-    std::string m_fileName;
-    std::string m_fullOutputFileName;
+    std::string m_dir;
+    std::string m_outputFileName;
     std::string m_fullInputFileName;
     std::string m_inputFileName;
     bool m_fileCreated;
