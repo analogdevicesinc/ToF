@@ -287,6 +287,10 @@ void ADIView::_displayAbImage() {
 
         lock.unlock(); // Lock is no longer needed
 
+        auto camera = m_ctrl->m_cameras[static_cast<unsigned int>(
+            m_ctrl->getCameraInUse())];
+        camera->normalizeABdata(m_capturedFrame.get(), true);
+
         m_capturedFrame->getData("ab", &ab_video_data);
 
         aditof::FrameDataDetails frameAbDetails;
@@ -301,42 +305,8 @@ void ADIView::_displayAbImage() {
         size_t bgrSize = 0;
         ab_video_data_8bit = new uint8_t[frameHeight * frameWidth * 3];
 
-        uint32_t min_value_of_AB_pixel = 0xFFFF;
-        uint32_t max_value_of_AB_pixel = 0;
-        if (getAutoScale()) {
-            max_value_of_AB_pixel = 1;
-            for (size_t dummyCtr = 0; dummyCtr < imageSize; dummyCtr++) {
-                if (ab_video_data[dummyCtr] > max_value_of_AB_pixel) {
-                    max_value_of_AB_pixel = ab_video_data[dummyCtr];
-                }
-                if (ab_video_data[dummyCtr] < min_value_of_AB_pixel) {
-                    min_value_of_AB_pixel = ab_video_data[dummyCtr];
-                }
-            }
-            max_value_of_AB_pixel -= min_value_of_AB_pixel;
-        } else {
-
-            max_value_of_AB_pixel = getABMaxRange();
-            min_value_of_AB_pixel =
-                (!getUserABMinState()) ? 0 : getABMinRange();
-        }
-
-        double c = 255.0f / log10(1 + max_value_of_AB_pixel);
-
-        //Create a  for loop that mimics some future process
         for (size_t dummyCtr = 0; dummyCtr < imageSize; dummyCtr++) {
-            //AB Data is a "width size as 16 bit data. Need to normalize to an 8 bit data
-            //It is doing a width x height x 3: Resolution * 3bytes (BGR)
-            if (getAutoScale()) {
-                ab_video_data[dummyCtr] =
-                    ab_video_data[dummyCtr] - min_value_of_AB_pixel;
-            }
-            double pix =
-                ab_video_data[dummyCtr] * (255.0 / max_value_of_AB_pixel);
-            pix = (pix >= 255.0) ? 255.0 : pix; //clip to 8bit range;
-            if (getLogImage()) {
-                pix = c * log10(pix + 1);
-            }
+            uint16_t pix = ab_video_data[dummyCtr];
             ab_video_data_8bit[bgrSize++] = (uint8_t)(pix);
             ab_video_data_8bit[bgrSize++] = (uint8_t)(pix);
             ab_video_data_8bit[bgrSize++] = (uint8_t)(pix);
