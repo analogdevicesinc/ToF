@@ -157,12 +157,12 @@ class CameraItof : public aditof::Camera {
     // Methods available only when Adsd3500 is detected as part of the entire setup
 
     /**
-     * @brief Read the ccb from adsd3500 memory and store it in m_tempFiles.ccbFile
-     *
+     * @brief Read the CCB from adsd3500 memory and store in output variable ccb
+     * @param[out] ccb - where to store the CCB content
      * @return Status
      * @see Status
      */
-    aditof::Status readAdsd3500CCB();
+    aditof::Status readAdsd3500CCB(std::string &ccb);
 
     /**
      * Configure the sensor with various settings that affect the frame type.
@@ -261,7 +261,6 @@ class CameraItof : public aditof::Camera {
     XYZTable m_xyzTable;
     bool m_enableDepthCompute;
     std::string m_initConfigFilePath;
-    std::string m_ccbFile;
     aditof::ImagerType m_imagerType;
 };
 
