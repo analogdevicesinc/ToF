@@ -1417,6 +1417,7 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect) {
 }
 
 void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
+    using namespace aditof;
     static bool show_ini_window = false;
 
     if ((float)view->frameWidth == 0.0 && (float)(view->frameHeight == 0.0)) {
@@ -1492,45 +1493,40 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
             LOG(ERROR) << "No frame received";
             return;
         }
-        uint16_t *frameHeader = nullptr;
-        aditof::CameraDetails cameraDetails;
+        CameraDetails cameraDetails;
         camera->getDetails(cameraDetails);
         std::string camera_mode = cameraDetails.mode;
         if (camera_mode != "pcm-native") {
-            frame->getData("metadata", &frameHeader);
-        }
-        if (frameHeader && (isPlaying || isRecording)) {
-            void *metadata = nullptr;
-            metadata = frameHeader + 6; // to get frame number
-            int32_t *frameNum = reinterpret_cast<int32_t *>(metadata);
-            if (!firstFrame) {
-                firstFrame = *frameNum;
-            }
-            metadata = frameHeader + 12; // to get sensor temperature;
-            int32_t *sensorTemp = reinterpret_cast<int32_t *>(metadata);
-            metadata = frameHeader + 14; // to get lasor temperature;
-            int32_t *laserTemp = reinterpret_cast<int32_t *>(metadata);
-            ImGui::Text(" Current FPS: %i", fps);
-            if (expectedFPS == 0) {
-                aditof::Status status =
-                    camera->adsd3500GetFrameRate(expectedFPS);
-                if (status != aditof::Status::OK) {
-                    LOG(ERROR) << "Failed to get frame rate.";
+            Metadata metadata;
+            Status status = frame->getMetadataStruct(metadata);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to get frame metadata.";
+            } else if (isPlaying || isRecording) {
+                int32_t frameNum = (metadata.frameNumber);
+                if (!firstFrame) {
+                    firstFrame = frameNum;
                 }
-            }
-            if (expectedFPS) {
+                int32_t sensorTemp = (metadata.sensorTemperature);
+                int32_t laserTemp = (metadata.laserTemperature);
+                ImGui::Text(" Current FPS: %i", fps);
+                if (expectedFPS == 0) {
+                    Status status = camera->adsd3500GetFrameRate(expectedFPS);
+                }
+                if (expectedFPS) {
+                    ImGui::SameLine();
+                    ImGui::Text(" | Expected FPS: %i", expectedFPS);
+                }
+                uint32_t totalFrames = frameNum - firstFrame;
+                uint32_t frameLost = totalFrames - frameRecvd;
+                ImGui::Text(" Number of frames lost: %i", frameLost);
                 ImGui::SameLine();
-                ImGui::Text(" | Expected FPS: %i", expectedFPS);
+                ImGui::Text(" | Number of frames received: %i", frameRecvd);
+                ImGui::Text(" Laser Temperature: %iC", laserTemp);
+                ImGui::SameLine();
+                ImGui::Text(" | Sensor Temperature: %iC", sensorTemp);
             }
-            uint32_t totalFrames = *frameNum - firstFrame;
-            uint32_t frameLost = totalFrames - frameRecvd;
-            ImGui::Text(" Number of frames lost: %i", frameLost);
-            ImGui::SameLine();
-            ImGui::Text(" | Number of frames received: %i", frameRecvd);
-            ImGui::Text(" Laser Temperature: %iC", *laserTemp);
-            ImGui::SameLine();
-            ImGui::Text(" | Sensor Temperature: %iC", *sensorTemp);
         }
+
         ImGui::NewLine();
 
         // "Stop" button
