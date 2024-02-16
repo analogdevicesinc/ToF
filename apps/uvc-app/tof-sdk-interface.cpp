@@ -137,7 +137,7 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
     }
 
     case uvc_payload::FunctionName::GET_AVAILABLE_FRAME_TYPES: {
-        std::vector<aditof::DepthSensorFrameType> frameTypes;
+        std::vector<std::string> frameTypes;
         auto depthSensorFrameTypesMsg =
             response.mutable_available_frame_types();
 
