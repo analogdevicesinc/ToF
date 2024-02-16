@@ -1684,6 +1684,7 @@ void ADIMainWindow::displayActiveBrightnessWindow(
 
     if (ImGui::Begin("Active Brightness Window", nullptr, overlayFlags)) {
         CaptureABVideo();
+
         bool logImage = view->getLogImage();
         ImGui::Checkbox("Log Image", &logImage);
         view->setLogImage(logImage);
@@ -1692,8 +1693,13 @@ void ADIMainWindow::displayActiveBrightnessWindow(
         ImGui::Checkbox("Auto-scale", &autoScale);
         view->setAutoScale(autoScale);
 
+        // fix a y offset caused by the checkbox
+        ImVec2 imageStartPos = ImGui::GetCursorScreenPos();
+        int y_offset = (_isHighDPI) ? 46 : 23;
+        imageStartPos.y -= y_offset;
+
         ImVec2 hoveredImagePixel = InvalidHoveredPixel;
-        GetHoveredImagePix(hoveredImagePixel, ImGui::GetCursorScreenPos(),
+        GetHoveredImagePix(hoveredImagePixel, imageStartPos,
                            ImGui::GetIO().MousePos, displayABDimensions);
         RenderInfoPane(hoveredImagePixel, view->ab_video_data, view->frameWidth,
                        ImGui::IsWindowHovered(),
