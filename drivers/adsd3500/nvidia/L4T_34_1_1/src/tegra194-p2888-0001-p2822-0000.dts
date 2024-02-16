@@ -427,6 +427,38 @@
 				max_exp_time = "660000";
 				embedded_metadata_height = "1";
 			};
+			mode7 {
+				mclk_khz = "104250";
+				num_lanes = "2";
+				tegra_sinterface = "serial_a";
+				phy_mode = "DPHY";
+				discontinuous_clk = "yes";
+				dpcm_enable = "false";
+				cil_settletime = "0";
+				dynamic_pixel_bit_depth = "8";
+				csi_pixel_bit_depth = "8";
+				mode_type = "bayer";
+				pixel_phase = "bggr";
+
+				active_w = "1024";
+				active_h = "320";
+				readout_orientation = "0";
+				line_length = "256";
+				inherent_gain = "1";
+				mclk_multiplier = "4";
+				pix_clk_hz = "208333333";
+
+				min_gain_val = "0"; /* dB */
+				max_gain_val = "48"; /* dB */
+				gain_step_pitch = "0.3";
+				min_hdr_ratio = "1";
+				max_hdr_ratio = "1";
+				min_framerate = "1";
+				max_framerate = "30";
+				min_exp_time = "30";
+				max_exp_time = "660000";
+				embedded_metadata_height = "1";
+			};
 			ports {
 				#address-cells = <1>;
 				#size-cells = <0>;
