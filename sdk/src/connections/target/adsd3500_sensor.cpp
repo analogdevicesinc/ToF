@@ -9,6 +9,7 @@
 #include "adsd3500_interrupt_notifier.h"
 #include "gpio.h"
 #include "utils.h"
+#include "utils_ini.h"
 
 #include "cameras/itof-camera/mode_info.h"
 #include <algorithm>
@@ -24,6 +25,7 @@
 #include <unistd.h>
 #endif
 #include "tofi/tofi_config.h"
+#include <dirent.h>
 #include <linux/videodev2.h>
 #include <signal.h>
 #include <sstream>
@@ -84,6 +86,7 @@ enum class SensorImagerType {
     IMAGER_ADSD3100,
     IMAGER_ADSD3030
 };
+
 enum class CCBVersion { CCB_UNKNOWN, CCB_VERSION0, CCB_VERSION1 };
 
 struct Adsd3500Sensor::ImplData {
@@ -146,6 +149,8 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     m_implData->controlsCommands["confidenceBits"] = 0x9819e4;
 
     m_bufferProcessor = new BufferProcessor();
+
+    loadLocalIniFiles(m_iniFileStructList);
 }
 
 Adsd3500Sensor::~Adsd3500Sensor() {
@@ -1828,4 +1833,95 @@ aditof::Status Adsd3500Sensor::setIniParamsImpl(void *p_config_params,
     }
 
     return status;
+}
+
+aditof::Status Adsd3500Sensor::getDefaultIniParamsForMode(
+    const std::string &imager, const std::string &mode,
+    std::map<std::string, std::string> &params) {
+
+    auto it = std::find_if(
+        m_iniFileStructList.begin(), m_iniFileStructList.end(),
+        [&imager, &mode](const Adsd3500Sensor::iniFileStruct &iniF) {
+            return (iniF.imagerName == imager && iniF.modeName == mode);
+        });
+
+    if (it == m_iniFileStructList.end()) {
+        LOG(WARNING) << "Cannot find default parameters for imager: " << imager
+                     << " and mode: " << mode;
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    params = it->iniKeyValPairs;
+
+    return aditof::Status::OK;
+}
+
+aditof::Status Adsd3500Sensor::loadLocalIniFiles(
+    std::vector<iniFileStruct> &iniFileStructList) {
+    using namespace std;
+    using namespace aditof;
+
+    const std::string iniFilesDirPath = "./config";
+    vector<string> iniFileNames;
+    string dirFileName;
+    struct dirent *entry;
+
+    // Identify all .ini files
+    DIR *dir = opendir(iniFilesDirPath.c_str());
+    while ((entry = readdir(dir)) != NULL) {
+        dirFileName = entry->d_name;
+        string fileFormat = ".ini";
+        if (dirFileName != ".") {
+            if (dirFileName.length() > fileFormat.length()) {
+                if (dirFileName.rfind(fileFormat) ==
+                    dirFileName.length() - fileFormat.length()) {
+                    iniFileNames.push_back(dirFileName);
+                }
+            }
+        }
+    }
+    closedir(dir);
+
+    // Categorise .ini files based on imager type and mode
+    iniFileStructList.clear();
+    for (const auto &file : iniFileNames) {
+        iniFileStruct iniFileS;
+
+        size_t lastUnderscorePos = file.find_last_of("_");
+        if (lastUnderscorePos == string::npos) {
+            LOG(WARNING) << "File: " << file
+                         << " has no suffix that can be used "
+                            "to identify the mode";
+            continue;
+        }
+        size_t dotPos = file.find_last_of(".");
+        iniFileS.modeName =
+            file.substr(lastUnderscorePos + 1, dotPos - lastUnderscorePos - 1);
+
+        const string rawToDepth = "RawToDepth";
+        size_t imagerNamePos = file.find(rawToDepth);
+        if (imagerNamePos == string::npos) {
+            LOG(WARNING) << "File: " << file
+                         << " has no prefix: RawToDepth. Ignoring file";
+            continue;
+        }
+        iniFileS.imagerName = file.substr(imagerNamePos + rawToDepth.length(),
+                                          lastUnderscorePos - imagerNamePos -
+                                              rawToDepth.length());
+        std::transform(iniFileS.imagerName.begin(), iniFileS.imagerName.end(),
+                       iniFileS.imagerName.begin(),
+                       [](unsigned char c) { return std::tolower(c); });
+
+        iniFileS.fileDirPath = iniFilesDirPath;
+        iniFileS.fileName = file;
+
+        // Load the .ini file content to a map
+        UtilsIni::getKeyValuePairsFromIni(iniFileS.fileDirPath + "/" +
+                                              iniFileS.fileName,
+                                          iniFileS.iniKeyValPairs);
+
+        iniFileStructList.emplace_back(iniFileS);
+    }
+
+    return Status::OK;
 }

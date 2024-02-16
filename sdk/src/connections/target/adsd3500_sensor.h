@@ -124,6 +124,15 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     setIniParams(const std::map<std::string, float> &params) override;
 
   private:
+    struct iniFileStruct {
+        std::string fileDirPath;
+        std::string fileName;
+        std::string imagerName;
+        std::string modeName;
+        std::map<std::string, std::string> iniKeyValPairs;
+    };
+
+  private:
     aditof::Status writeConfigBlock(const uint32_t offset);
     aditof::Status waitForBufferPrivate(struct VideoDev *dev = nullptr);
     aditof::Status dequeueInternalBufferPrivate(struct v4l2_buffer &buf,
@@ -143,6 +152,12 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
                                     const void *p_tofi_cal_config);
     aditof::Status setIniParamsImpl(void *p_config_params, int params_group,
                                     const void *p_tofi_cal_config);
+    aditof::Status
+    getDefaultIniParamsForMode(const std::string &imager,
+                               const std::string &mode,
+                               std::map<std::string, std::string> &params);
+    aditof::Status
+    loadLocalIniFiles(std::vector<iniFileStruct> &iniFileStructList);
 
   private:
     struct ImplData;
@@ -167,6 +182,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     int m_imagerStatus;
     aditof::Adsd3500Status m_adsd3500Status;
     bool m_chipResetDone;
+    std::vector<iniFileStruct> m_iniFileStructList;
 
     const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
         {

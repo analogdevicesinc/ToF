@@ -180,17 +180,6 @@ class CameraItof : public aditof::Camera {
     aditof::Status parseJsonFileContent();
 
     /**
-     * Get key-value pairs from ini file
-     * @param[in] iniFileName - the name of the ini file to be opened and parsed
-     * @param[out] iniKeyValPairs - map with parameter names and their values extracted from ini file
-     * @return Status
-     * @see Status
-    */
-    aditof::Status
-    getKeyValuePairsFromIni(const std::string &iniFileName,
-                            std::map<std::string, std::string> &iniKeyValPairs);
-
-    /**
      * Configure ADSD3500 with ini parameters
      * @param[in] iniKeyValPairs - ini parameteres to use
     */
