@@ -32,6 +32,7 @@
 #include "camera_itof.h"
 #include "aditof/frame.h"
 #include "aditof/frame_operations.h"
+#include "utils_ini.h"
 
 #include "cJSON.h"
 #include "crc.h"
@@ -499,7 +500,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         m_pcmFrame = false;
     }
 
-    getKeyValuePairsFromIni(m_ini_depth, m_iniKeyValPairs);
+    UtilsIni::getKeyValuePairsFromIni(m_ini_depth, m_iniKeyValPairs);
     setAdsd3500WithIniParams(m_iniKeyValPairs);
     configureSensorFrameType();
     setMode(frameType);
@@ -1557,7 +1558,8 @@ CameraItof::saveDepthParamsToJsonFile(const std::string &savePathFile) {
          pfile++) {
 
         std::map<std::string, std::string> iniKeyValPairs;
-        status = getKeyValuePairsFromIni(pfile->second, iniKeyValPairs);
+        status =
+            UtilsIni::getKeyValuePairsFromIni(pfile->second, iniKeyValPairs);
 
         if (status == Status::OK) {
             cJSON *json = cJSON_CreateObject();
@@ -1907,42 +1909,6 @@ aditof::Status CameraItof::adsd3500GetLaserTemperature(uint16_t &tmpValue) {
     }
 
     return status;
-}
-
-aditof::Status CameraItof::getKeyValuePairsFromIni(
-    const std::string &iniFileName,
-    std::map<std::string, std::string> &iniKeyValPairs) {
-    using namespace aditof;
-
-    std::ifstream iniStream(iniFileName);
-    if (!iniStream.is_open()) {
-        LOG(ERROR) << "Failed to open: " << iniFileName;
-        return Status::UNREACHABLE;
-    }
-
-    iniKeyValPairs.clear();
-
-    std::string line;
-    while (getline(iniStream, line)) {
-        size_t equalPos = line.find('=');
-        if (equalPos == std::string::npos) {
-            LOG(WARNING) << "Unexpected format on this line:\n"
-                         << line << "\nExpecting 'key=value' format";
-            continue;
-        }
-        std::string key = line.substr(0, equalPos);
-        std::string value = line.substr(equalPos + 1);
-        if (!value.empty()) {
-            m_iniKeyValPairs.emplace(key, value);
-            iniKeyValPairs.emplace(key, value);
-        } else {
-            LOG(WARNING) << "No value found for parameter: " << key;
-        }
-    }
-
-    iniStream.close();
-
-    return Status::OK;
 }
 
 void CameraItof::setAdsd3500WithIniParams(
