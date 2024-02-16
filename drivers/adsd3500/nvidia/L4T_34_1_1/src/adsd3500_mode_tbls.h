@@ -9,6 +9,7 @@ enum {
     ADSD3500_MODE_512x640_30FPS,
     ADSD3500_MODE_2048x640_30FPS,
     ADSD3500_MODE_2560x640_30FPS,
+    ADSD3500_MODE_1024x320_30FPS,
 };
 
 static const int adsd3500_30fps[] = {
@@ -27,6 +28,7 @@ static const struct camera_common_frmfmt adsd3500_frmfmt[] = {
     {{512, 640}, adsd3500_30fps, 1, 0, ADSD3500_MODE_512x640_30FPS},
     {{2048, 640}, adsd3500_30fps, 1, 0, ADSD3500_MODE_2048x640_30FPS},
     {{2560, 640}, adsd3500_30fps, 1, 0, ADSD3500_MODE_2560x640_30FPS},
+    {{1024, 320}, adsd3500_30fps, 1, 0, ADSD3500_MODE_1024x320_30FPS},
     /* Add modes with no device tree support after below */
 };
 
