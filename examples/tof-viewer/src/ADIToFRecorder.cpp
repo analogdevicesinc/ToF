@@ -247,6 +247,7 @@ void ADIToFRecorder::recordThread(const std::string fileName) {
             continue;
         }
         if (frameCtr /*checkTime*/ >= framesToRecord) {
+            LOG(INFO) << frameCtr << " frames recorded.";
             frameCtr = 0; //reset.
             m_finishRecording = true;
             break;
