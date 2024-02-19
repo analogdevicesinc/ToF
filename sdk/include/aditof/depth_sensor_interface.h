@@ -94,7 +94,7 @@ class DepthSensorInterface {
      * @return Status
      */
     virtual aditof::Status
-    getFrameTypeDetails(const std::string frameName,
+    getFrameTypeDetails(const std::string &frameName,
                         aditof::DepthSensorFrameType &details) = 0;
 
     /**

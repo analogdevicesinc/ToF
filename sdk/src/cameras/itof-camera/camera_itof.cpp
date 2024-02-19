@@ -300,17 +300,19 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
             return status;
         }
 
-        m_depthSensor->getAvailableFrameTypes(m_availableSensorFrameTypes);
+        m_depthSensor->getAvailableFrameTypes(m_availableFrameTypesName);
 
-        for (auto availableFrameTypes : m_availableSensorFrameTypes) {
+        for (auto availableFrameTypes : m_availableFrameTypesName) {
+            m_depthSensor->getFrameTypeDetails(availableFrameTypes,
+                                               m_frameDetails);
+            m_availableSensorFrameTypes.emplace_back(m_frameDetails);
             uint8_t intrinsics[56] = {0};
             uint8_t dealiasParams[32] = {0};
             TofiXYZDealiasData dealiasStruct;
             //the first element of readback_data for adsd3500_read_payload is used for the custom command
             //it will be overwritten by the returned data
-            uint8_t mode = ModeInfo::getInstance()
-                               ->getModeInfo(availableFrameTypes.type)
-                               .mode;
+            uint8_t mode =
+                ModeInfo::getInstance()->getModeInfo(m_frameDetails.type).mode;
 
             intrinsics[0] = mode;
             dealiasParams[0] = mode;

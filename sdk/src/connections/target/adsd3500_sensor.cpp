@@ -456,6 +456,20 @@ Adsd3500Sensor::getAvailableFrameTypes(std::vector<std::string> &types) {
     return aditof::Status::OK;
 }
 
+aditof::Status
+Adsd3500Sensor::getFrameTypeDetails(const std::string &frameName,
+                                    aditof::DepthSensorFrameType &details) {
+    using namespace aditof;
+    Status status = Status::OK;
+    for (const auto &frameDetails : availableFrameTypes) {
+        if (frameDetails.type == frameName) {
+            details = frameDetails;
+            break;
+        }
+    }
+    return status;
+}
+
 aditof::Status Adsd3500Sensor::setModeByIndex(uint8_t modeIndex) {
     using namespace aditof;
     struct VideoDev *dev = &m_implData->videoDevs[0];
