@@ -33,7 +33,6 @@
 #define USB_DEPTH_SENSOR_H
 
 #include "aditof/depth_sensor_interface.h"
-#include "aditof/sensor_definitions.h"
 
 #include <memory>
 namespace aditof {
@@ -53,6 +52,9 @@ class UsbDepthSensor : public aditof::DepthSensorInterface {
     virtual aditof::Status stop() override;
     virtual aditof::Status
     getAvailableFrameTypes(std::vector<std::string> &types) override;
+    virtual aditof::Status
+    getFrameTypeDetails(const std::string &frameName,
+                        aditof::DepthSensorFrameType &details) override;
     virtual aditof::Status
     setFrameType(const aditof::DepthSensorFrameType &type) override;
     virtual aditof::Status getFrame(uint16_t *buffer) override;

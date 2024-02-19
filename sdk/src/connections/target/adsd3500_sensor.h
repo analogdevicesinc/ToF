@@ -55,6 +55,9 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     virtual aditof::Status
     getAvailableFrameTypes(std::vector<std::string> &types) override;
     virtual aditof::Status
+    getFrameTypeDetails(const std::string &frameName,
+                        aditof::DepthSensorFrameType &details) override;
+    virtual aditof::Status
     setFrameType(const aditof::DepthSensorFrameType &type) override;
     virtual aditof::Status getFrame(uint16_t *buffer) override;
     virtual aditof::Status
