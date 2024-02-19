@@ -138,16 +138,27 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
 
     case uvc_payload::FunctionName::GET_AVAILABLE_FRAME_TYPES: {
         std::vector<std::string> frameTypes;
+        std::vector<aditof::DepthSensorFrameType> availableFrameTypes;
         auto depthSensorFrameTypesMsg =
             response.mutable_available_frame_types();
 
         camDepthSensor->getAvailableFrameTypes(frameTypes);
-        convertDepthSensorFrameTypesToProtoMsg(frameTypes,
+        for (auto &frame : frameTypes) {
+            aditof::DepthSensorFrameType frameDetails;
+            camDepthSensor->getFrameTypeDetails(frame, frameDetails);
+            availableFrameTypes.emplace_back(frameDetails);
+        }
+        convertDepthSensorFrameTypesToProtoMsg(availableFrameTypes,
                                                *depthSensorFrameTypesMsg);
 
         response.set_status(
             static_cast<::uvc_payload::Status>(aditof::Status::OK));
 
+        break;
+    }
+
+    case uvc_payload::FunctionName::GET_FRAME_TYPE_DETAILS: {
+        // TO DO
         break;
     }
 

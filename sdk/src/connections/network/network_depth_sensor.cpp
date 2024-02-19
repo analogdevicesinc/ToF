@@ -417,15 +417,66 @@ NetworkDepthSensor::getAvailableFrameTypes(std::vector<std::string> &types) {
         types.clear();
     }
 
-    for (int i = 0;
-         i < net->recv_buff[m_sensorIndex].available_frame_types_size(); i++) {
-        payload::DepthSensorFrameType protoFrameType =
-            net->recv_buff[m_sensorIndex].available_frame_types(i);
-        types.emplace_back(protoFrameType.type());
+    for (int i = 0; i < net->recv_buff[m_sensorIndex].strings_payload_size();
+         i++) {
+        types.emplace_back(net->recv_buff[m_sensorIndex].strings_payload(i));
     }
 
     Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
+    return status;
+}
+
+aditof::Status
+NetworkDepthSensor::getFrameTypeDetails(const std::string &frameName,
+                                        aditof::DepthSensorFrameType &details) {
+    using namespace aditof;
+    Network *net = m_implData->handle.net;
+    std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
+
+    if (!net->isServer_Connected()) {
+        LOG(WARNING) << "Not connected to server";
+        return Status::UNREACHABLE;
+    }
+
+    net->send_buff[m_sensorIndex].set_func_name("GetFrameTypeDetails");
+    net->send_buff[m_sensorIndex].add_func_strings_param(frameName);
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
+
+    if (net->SendCommand() != 0) {
+        LOG(WARNING) << "Send Command Failed";
+        return Status::INVALID_ARGUMENT;
+    }
+
+    if (net->recv_server_data() != 0) {
+        LOG(WARNING) << "Receive Data Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    if (net->recv_buff[m_sensorIndex].server_status() !=
+        payload::ServerStatus::REQUEST_ACCEPTED) {
+        LOG(WARNING) << "API execution on Target Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    for (int i = 0;
+         i < net->recv_buff[m_sensorIndex].depthsensorframecontent_size();
+         i++) {
+        aditof::DepthSensorFrameContent aditofFrameContent;
+        payload::DepthSensorFrameContent protoFrameType =
+            net->recv_buff[m_sensorIndex].depthsensorframecontent(i);
+
+        aditofFrameContent.type = protoFrameType.type();
+        aditofFrameContent.width = protoFrameType.width();
+        aditofFrameContent.height = protoFrameType.height();
+        details.content.emplace_back(aditofFrameContent);
+    }
+    details.type = frameName;
+    details.width =
+        net->recv_buff[m_sensorIndex].depthsensorframecontent(1).width();
+    details.height =
+        net->recv_buff[m_sensorIndex].depthsensorframecontent(1).height();
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
     return status;
 }
 
@@ -442,18 +493,12 @@ NetworkDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     }
 
     net->send_buff[m_sensorIndex].set_func_name("SetFrameType");
-    net->send_buff[m_sensorIndex].mutable_frame_type()->set_width(type.width);
-    net->send_buff[m_sensorIndex].mutable_frame_type()->set_height(type.height);
-    net->send_buff[m_sensorIndex].mutable_frame_type()->set_type(type.type);
-    for (const auto &content : type.content) {
-        auto protoFameContent = net->send_buff[m_sensorIndex]
-                                    .mutable_frame_type()
-                                    ->add_depthsensorframecontent();
+    auto protoFrameContent =
+        net->send_buff[m_sensorIndex].add_depthsensorframecontent();
+    protoFrameContent->set_type(type.type);
+    protoFrameContent->set_width(type.width);
+    protoFrameContent->set_height(type.height);
 
-        protoFameContent->set_type(content.type);
-        protoFameContent->set_width(content.width);
-        protoFameContent->set_height(content.height);
-    }
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
