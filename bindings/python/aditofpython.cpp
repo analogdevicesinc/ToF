@@ -616,6 +616,9 @@ PYBIND11_MODULE(aditofpython, m) {
                 return status;
             },
             py::arg("types"))
+        .def("getFrameTypeDetails",
+             &aditof::DepthSensorInterface::getFrameTypeDetails,
+             py::arg("frameName"), py::arg("details"))
         .def("setFrameType", &aditof::DepthSensorInterface::setFrameType,
              py::arg("details"))
         .def(

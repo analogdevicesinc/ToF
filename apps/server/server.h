@@ -42,6 +42,7 @@ enum api_Values {
     START,
     STOP,
     GET_AVAILABLE_FRAME_TYPES,
+    GET_FRAME_TYPE_DETAILS,
     SET_FRAME_TYPE,
     PROGRAM,
     GET_FRAME,
