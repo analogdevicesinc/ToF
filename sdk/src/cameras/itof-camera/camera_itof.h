@@ -129,6 +129,8 @@ class CameraItof : public aditof::Camera {
     aditof::Status readSerialNumber(std::string &serialNumber,
                                     bool useCacheValue = false) override;
     aditof::Status getImagerType(aditof::ImagerType &imagerType) const override;
+    aditof::Status
+    saveDepthParamsToJsonFile(const std::string &savePathFile) override;
 
   private:
     /**
@@ -197,6 +199,11 @@ class CameraItof : public aditof::Camera {
      * @brief Delete allocated tables for X, Y, Z
      */
     void cleanupXYZtables();
+
+    /**
+     * @brief Check if string can convert to double
+     */
+    bool isConvertibleToDouble(const std::string &str);
 
     /**
      * @brief get ini params from depth sensor interface
