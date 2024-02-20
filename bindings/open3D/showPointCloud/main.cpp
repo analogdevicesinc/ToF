@@ -45,6 +45,7 @@
 
 using namespace aditof;
 using namespace std::chrono;
+using namespace open3d;
 
 uint16_t MAX_DISTANCE = 1000;
 uint16_t MIN_DISTANCE = 200;
