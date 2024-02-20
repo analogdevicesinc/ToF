@@ -146,6 +146,17 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
 
     const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
         {
+            "3phase+3ab",
+            {{"raw", 3584, 3072},
+             {"ir", 1024, 1024},
+             {"xyz", 1024, 1024},
+             {"depth", 1024, 1024},
+             {"conf", 1024, 1024},
+             {"embedded_header", 1, 128}},
+            3584,
+            3072,
+        },
+        {
             "sr-native",
             {{"raw", 1024, 4096},
              {"ir", 1024, 1024},

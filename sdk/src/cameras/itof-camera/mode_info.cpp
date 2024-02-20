@@ -211,6 +211,12 @@ aditof::Status ModeInfo::getSensorProperties(const std::string mode,
         }
     }
 
+    if (mode == "3phase+3ab") {
+        *width = 3584;
+        *height = 3072;
+        *pixelFormatIndex = 1;
+    }
+
     //convert values from driver settings to pixel number
     depthBits = std::stoi(m_sensorConfigBits["bitsInDepth"]);
     if (depthBits) {
