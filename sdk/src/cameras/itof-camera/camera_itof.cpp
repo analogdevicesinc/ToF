@@ -53,6 +53,7 @@
 #include <iostream>
 #include <iterator>
 #include <math.h>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -1509,6 +1510,8 @@ aditof::Status CameraItof::parseJsonFileContent() {
                         // Create map with mode name as key and path as value
                         m_ini_depth_map.emplace(mode, file);
                     }
+                    saveDepthParamsToJsonFile(
+                        "./config/user_config.json"); // TODO: for testing only, remove before 5.1.0 release
                     // Set m_ini_depth to first map element
                     auto it = m_ini_depth_map.begin();
                     m_ini_depth = it->second;
@@ -1539,6 +1542,63 @@ aditof::Status CameraItof::parseJsonFileContent() {
     }
 
     return status;
+}
+
+aditof::Status
+CameraItof::saveDepthParamsToJsonFile(const std::string &savePathFile) {
+    using namespace aditof;
+    Status status = Status::OK;
+
+    cJSON *rootjson = cJSON_CreateObject();
+    cJSON *depthParamjson = cJSON_CreateObject();
+    cJSON_AddItemToObject(rootjson, "depthParams", depthParamjson);
+
+    for (auto pfile = m_ini_depth_map.begin(); pfile != m_ini_depth_map.end();
+         pfile++) {
+
+        std::map<std::string, std::string> iniKeyValPairs;
+        status = getKeyValuePairsFromIni(pfile->second, iniKeyValPairs);
+
+        if (status == Status::OK) {
+            cJSON *json = cJSON_CreateObject();
+            for (auto item = iniKeyValPairs.begin();
+                 item != iniKeyValPairs.end(); item++) {
+                double valued = strtod(item->second.c_str(), NULL);
+                if (isConvertibleToDouble(item->second)) {
+                    cJSON_AddNumberToObject(json, item->first.c_str(), valued);
+                } else {
+                    cJSON_AddStringToObject(json, item->first.c_str(),
+                                            item->second.c_str());
+                }
+            }
+            cJSON_AddItemToObject(depthParamjson, pfile->first.c_str(), json);
+        }
+    }
+
+    char *json_str = cJSON_Print(rootjson);
+
+    FILE *fp = fopen(savePathFile.c_str(), "w");
+    if (fp == NULL) {
+        LOG(WARNING) << " Unable to open the file. " << savePathFile.c_str();
+        return Status::GENERIC_ERROR;
+    }
+    fputs(json_str, fp);
+    fclose(fp);
+
+    cJSON_free(json_str);
+    cJSON_Delete(rootjson);
+
+    return status;
+}
+
+bool CameraItof::isConvertibleToDouble(const std::string &str) {
+    bool result = false;
+    try {
+        std::stod(str);
+        result = true;
+    } catch (...) {
+    }
+    return result;
 }
 
 aditof::Status CameraItof::adsd3500SetToggleMode(int mode) {
@@ -1874,6 +1934,7 @@ aditof::Status CameraItof::getKeyValuePairsFromIni(
         std::string value = line.substr(equalPos + 1);
         if (!value.empty()) {
             m_iniKeyValPairs.emplace(key, value);
+            iniKeyValPairs.emplace(key, value);
         } else {
             LOG(WARNING) << "No value found for parameter: " << key;
         }
