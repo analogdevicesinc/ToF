@@ -6,10 +6,10 @@
 /********************************************************************************/
 #include "ADIOpenFile.h"
 
-std::string customFilter = std::string("Raw Files (*.raw)\0*.raw*\0 All "
+std::string customFilter = std::string("Bin Files (*.bin)\0*.bin*\0 All "
                                        "Files (*.*)\0*.*\0",
                                        72);
-std::vector<std::string> customFilters = {"raw"};
+std::vector<std::string> customFilters = {"bin"};
 
 #ifdef _WIN32
 
@@ -22,7 +22,7 @@ using namespace std;
 
 /**
 * @brief		Returns an empty string if cancelled.
-*				Opens a dialog box to fetch a file with 
+*				Opens a dialog box to fetch a file with
 *				a custom file extension
 * @param filter	Is assigned a customized filter per
 *				camera requirements

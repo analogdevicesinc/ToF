@@ -69,11 +69,6 @@ void ADIToFRecorder::createBinaryDirectory(std::string fileName) {
 void ADIToFRecorder::startRecordingRaw(const std::string &fileName,
                                        unsigned int height, unsigned int width,
                                        unsigned int fps) {
-    // m_fileNameRaw = "raw_frame_#.bin";
-    // //save for binary
-    // if (m_saveBinaryFormat)
-    //     createBinaryDirectory(fileName);
-
     framesToRecord = fps;
     m_frameDetails.height = height;
     m_frameDetails.width = width;
@@ -88,7 +83,7 @@ void ADIToFRecorder::startRecordingRaw(const std::string &fileName,
 void ADIToFRecorder::startRecording(const std::string &fileName,
                                     unsigned int height, unsigned int width,
                                     unsigned int fps) {
-    if (fileName.find(".raw") != std::string::npos) {
+    if (fileName.find(".bin") != std::string::npos) {
         startRecordingRaw(fileName, height, width, fps);
     } else {
         LOG(ERROR) << "File format not supported";
@@ -178,7 +173,7 @@ int ADIToFRecorder::startPlaybackRaw(const std::string &fileName, int &fps) {
 
     m_playbackThreadStop = false;
     m_playBackEofReached = false;
-    LOG(INFO) << "Streaming using raw or bin format. ";
+    LOG(INFO) << "Streaming using bin format. ";
     m_playbackThread =
         std::thread(std::bind(&ADIToFRecorder::playbackThread, this));
 
@@ -186,7 +181,7 @@ int ADIToFRecorder::startPlaybackRaw(const std::string &fileName, int &fps) {
 }
 
 int ADIToFRecorder::startPlayback(const std::string &fileName, int &fps) {
-    if (fileName.find(".raw") != std::string::npos) {
+    if (fileName.find(".bin") != std::string::npos) {
         return startPlaybackRaw(fileName, fps);
     } else {
         LOG(ERROR) << "Selected Playback format not supported.";
