@@ -48,6 +48,11 @@ static const uint8_t colormap[3 * 256] = {
 };
 
 using namespace aditof;
+using namespace std::chrono;
+
+uint16_t MAX_DISTANCE = 1000;
+uint16_t MIN_DISTANCE = 200;
+bool AB_LOG10 = false;
 
 static const char Help_Menu[] =
     R"(PointCloud-Open3D usage:
@@ -59,8 +64,12 @@ static const char Help_Menu[] =
       CONFIG            Input config_default.json file (which has *.ccb and *.cfg)
 
     Options:
-      -h --help          Show this screen.
-      -m --m <mode>      Mode to capture data in. [default: 0]
+      -h --help              Show this screen.
+      -m --m <mode>          Mode to capture data in. [default: 0]
+      -colormap --colormap   Disable the overlay of ab image on top of the colormap. [default: 0]
+                             Open3D visualiser supports multiple colormap renderings at runtime. Please check:
+                             https://www.open3d.org/docs/latest/tutorial/Basic/visualization.html#Rendering-styles
+                             For more details.
 
     NOTE: -m | --m argument supports both index and string (0/sr-native)
 
@@ -79,6 +88,7 @@ int main(int argc, char *argv[]) {
         {"-h", {"--help", false, "", "", false}},
         {"-ip", {"--ip", false, "", "", true}},
         {"-m", {"--m", false, "", "0", true}},
+        {"-colormap", {"--colormap", false, "", "0", false}},
         {"config", {"CONFIG", true, "last", "", true}}};
 
     CommandParser command;
@@ -145,6 +155,7 @@ int main(int argc, char *argv[]) {
     std::string configFile;
     std::string ip;
     uint32_t mode = 0;
+    bool overlayColormap = 0;
 
     // Parsing mode type
     std::string modeName;
@@ -164,6 +175,10 @@ int main(int argc, char *argv[]) {
 
     if (!command_map["-ip"].value.empty()) {
         ip = "ip:" + command_map["-ip"].value;
+    }
+
+    if (!command_map["-colormap"].value.empty()) {
+        overlayColormap = std::stoi(command_map["-colormap"].value);
     }
 
     System system;
@@ -236,138 +251,112 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    aditof::Frame frame;
-
-    /* Request frame from camera */
-    status = camera->requestFrame(&frame);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not request frame!";
-        return 0;
-    }
-    aditof::FrameDataDetails frameDetails;
-    frame.getDataDetails("depth", frameDetails);
-    int frameHeight = static_cast<int>(frameDetails.height);
-    int frameWidth = static_cast<int>(frameDetails.width);
-
-    /* Create visualizer for depth and AB images */
-    auto visualized_ab_img = std::make_shared<geometry::Image>();
-    visualized_ab_img->Prepare(frameWidth, frameHeight, 1, 1);
-    visualization::Visualizer ab_vis;
-    ab_vis.CreateVisualizerWindow("AB Image", 2 * frameWidth, 2 * frameHeight);
-    bool is_geometry_added_ab = false;
-
-    auto visualized_depth_img = std::make_shared<geometry::Image>();
-    visualized_depth_img->Prepare(frameWidth, frameHeight, 3, 1);
-    visualization::Visualizer depth_vis;
-    depth_vis.CreateVisualizerWindow("Depth Image", 2 * frameWidth,
-                                     2 * frameHeight);
-    bool is_geometry_added_depth = false;
-
-    /* Create visualizer for pointcloud */
-    visualization::Visualizer pointcloud_vis;
-    pointcloud_vis.CreateVisualizerWindow("Pointcloud", 1500, 1500);
     bool is_geometry_added_pointcloud = false;
+    visualization::Visualizer pointcloud_vis;
+    pointcloud_vis.CreateVisualizerWindow(
+        "ADTF3175D Eval Kit Open3d Point Cloud Example - ESC to Exit");
 
-    std::shared_ptr<geometry::PointCloud> pointcloud_ptr = nullptr;
+    auto pointcloud_ptr = std::make_shared<geometry::PointCloud>();
+    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+    uint16_t frcnt = 0;
 
-    int camera_rangeMin = 0;
-    int camera_rangeMax = 4096;
-    int bitCount = 16;
+    while (pointcloud_vis.PollEvents()) {
 
-    uint16_t *xyzData;
-    frame.getData("xyz", &xyzData);
-    double *xyzDouble = new double[frameWidth * frameHeight * 3];
+        if (frcnt == 0) {
+            start = std::chrono::high_resolution_clock::now();
+        }
 
-    bool is_window_closed = true;
-    while (true) {
+        aditof::Frame frame;
         /* Request frame from camera */
         status = camera->requestFrame(&frame);
         if (status != Status::OK) {
             LOG(ERROR) << "Could not request frame!";
             return 0;
         }
-        geometry::Image depth_image;
-        status = fromFrameToDepthImg(frame, camera_rangeMin, camera_rangeMax,
-                                     depth_image);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Could not convert from frame to Image!";
+        frcnt++;
+
+        int16_t *pcloud;
+        frame.getData("xyz", (uint16_t **)&pcloud);
+        uint16_t *pab;
+        frame.getData("ab", (uint16_t **)&pab);
+
+        FrameDataDetails fDetails;
+        frame.getDataDetails("xyz", fDetails);
+        const uint32_t fsize = fDetails.width * fDetails.height;
+
+        pointcloud_ptr->points_.clear();
+        pointcloud_ptr->colors_.clear();
+
+        uint16_t ab_max = 0;
+        uint16_t ab_min = static_cast<uint16_t>(-1);
+
+        uint32_t cnt_valid_pts = 0;
+        for (uint32_t cnt = 0; cnt < fsize; cnt++) {
+            int16_t _x = pcloud[3 * cnt];
+            int16_t _y = pcloud[3 * cnt + 1];
+            int16_t _z = pcloud[3 * cnt + 2];
+
+            if (_z != 0 && _z > MIN_DISTANCE && _z < MAX_DISTANCE) {
+                pointcloud_ptr->points_.emplace_back(Eigen::Vector3d(
+                    static_cast<double>(_x), static_cast<double>(_y),
+                    static_cast<double>(_z)));
+                cnt_valid_pts++;
+
+                if (pab[cnt] > ab_max) {
+                    ab_max = pab[cnt];
+                }
+                if (pab[cnt] < ab_min) {
+                    ab_min = pab[cnt];
+                }
+            }
         }
 
-        geometry::Image depth16bits_image;
-        status = fromFrameTo16bitsDepth(frame, depth16bits_image);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Could not convert from frame to Image!";
+        pointcloud_ptr->colors_.resize(cnt_valid_pts);
+
+        const double rangeZ = ab_max - ab_min;
+        const double c = (AB_LOG10) ? (255.0 / std::log10(1 + ab_max)) : 0;
+
+        uint32_t idx = 0;
+        if (!overlayColormap) {
+            for (uint32_t cnt = 0; cnt < fsize; cnt++) {
+                int16_t _z = pcloud[3 * cnt + 2];
+
+                if (_z != 0 && _z > MIN_DISTANCE && _z < MAX_DISTANCE) {
+                    double _clr =
+                        (static_cast<double>(pab[cnt]) - ab_min) / rangeZ;
+                    if (AB_LOG10) {
+                        _clr = c * std::log10(_clr + 1);
+                    }
+                    pointcloud_ptr->colors_[idx++] =
+                        Eigen::Vector3d(_clr, _clr, _clr);
+                }
+            }
         }
 
-        geometry::Image ab_image;
-        status = fromFrameToABImg(frame, bitCount, ab_image);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Could not convert from frame to Image!";
-        }
-
-        geometry::Image depth_color;
-        depth_color.Prepare(frameWidth, frameHeight, 3, 1);
-        for (int i = 0; i < frameHeight * frameWidth; i++) {
-            memcpy(depth_color.data_.data() + i * 3,
-                   &colormap[depth_image.data_[i] * 3], 3);
-        }
-
-        geometry::Image ab_color;
-        ab_color.Prepare(frameWidth, frameHeight, 3, 1);
-        for (int i = 0, j = 0; i < frameHeight * frameWidth; i++, j = j + 3) {
-            ab_color.data_[j] = ab_image.data_[i];
-            ab_color.data_[j + 1] = ab_image.data_[i];
-            ab_color.data_[j + 2] = ab_image.data_[i];
-        }
-
-        visualized_ab_img->data_ = ab_image.data_;
-        if (!is_geometry_added_ab) {
-            ab_vis.AddGeometry(visualized_ab_img);
-            is_geometry_added_ab = true;
-        }
-
-        visualized_depth_img->data_ = depth_color.data_;
-        if (!is_geometry_added_depth) {
-            depth_vis.AddGeometry(visualized_depth_img);
-            is_geometry_added_depth = true;
-        }
-        ab_vis.UpdateGeometry();
-        ab_vis.PollEvents();
-        ab_vis.UpdateRender();
-
-        depth_vis.UpdateGeometry();
-        depth_vis.PollEvents();
-        depth_vis.UpdateRender();
-
-        for (int i = 0; i < frameHeight * frameWidth * 3; i++) {
-            xyzDouble[i] = xyzData[i];
-        }
-
-        Eigen::Vector3d *pc_vector =
-            reinterpret_cast<Eigen::Vector3d *>(xyzDouble);
-        Eigen::Vector3d *color_vector =
-            reinterpret_cast<Eigen::Vector3d *>(depth_color.data_.data());
-        /* create and show pointcloud */
-        pointcloud_ptr->points_.assign(pc_vector,
-                                       pc_vector + frameWidth * frameHeight);
-        pointcloud_ptr->colors_.assign(color_vector,
-                                       color_vector + frameWidth * frameHeight);
-
-        if (!is_geometry_added_pointcloud) {
+        if (is_geometry_added_pointcloud == false) {
             pointcloud_vis.AddGeometry(pointcloud_ptr);
             is_geometry_added_pointcloud = true;
-        }
-
-        if (is_window_closed == false) {
-            pointcloud_vis.DestroyVisualizerWindow();
-            ab_vis.DestroyVisualizerWindow();
-            depth_vis.DestroyVisualizerWindow();
-            break;
         } else {
             pointcloud_vis.UpdateGeometry(pointcloud_ptr);
-            is_window_closed = pointcloud_vis.PollEvents();
             pointcloud_vis.UpdateRender();
         }
+
+        if (frcnt == 10) {
+            end = std::chrono::high_resolution_clock::now();
+            double seconds =
+                std::chrono::duration_cast<duration<double>>(end - start)
+                    .count();
+            LOG(INFO) << "fps = " << ((double)frcnt / seconds)
+                      << " voxel cnt = " << idx;
+            frcnt = 0;
+        }
+    }
+    pointcloud_vis.DestroyVisualizerWindow();
+
+    status = camera->stop();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not stop the camera!";
+        return 0;
     }
 
     // Example on how to unregister a callback from ADSD3500 interupts
