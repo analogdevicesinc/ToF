@@ -40,12 +40,8 @@
 #include <aditof/log.h>
 #endif
 
-#include "../aditof_open3d.h"
 #include <command_parser.h>
-
-static const uint8_t colormap[3 * 256] = {
-#include "colormap.txt"
-};
+#include <open3d/Open3D.h>
 
 using namespace aditof;
 using namespace std::chrono;
