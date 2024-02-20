@@ -541,6 +541,14 @@ class SDK_API Camera {
      * @return Status
      */
     virtual Status getImagerType(ImagerType &imagerType) const = 0;
+
+    /**
+     * @brief Save ini file to json format
+     * @param savePathFile - Path to save json file
+     * @return Status
+     */
+    virtual aditof::Status
+    saveDepthParamsToJsonFile(const std::string &savePathFile) = 0;
 };
 
 } // namespace aditof
