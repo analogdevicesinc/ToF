@@ -319,6 +319,7 @@ set configuration=%~1
 echo "Installing websockets with config=%configuration% and generator=%generator%"
 pushd %deps_dir%
 if not exist "libwebsockets" ( git clone --branch v3.1-stable --depth 1  https://libwebsockets.org/repo/libwebsockets )
+if not exist "libwebsockets" ( git clone --branch v3.1-stable --depth 1  https://github.com/warmcat/libwebsockets )
 pushd libwebsockets
 if not exist "build_3_1_stable" ( mkdir build_3_1_stable )
 pushd build_3_1_stable
