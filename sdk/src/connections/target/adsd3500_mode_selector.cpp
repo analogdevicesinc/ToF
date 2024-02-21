@@ -29,4 +29,26 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "adsd3500_mode_selector.h"
 
+Adsd3500ModeSelector::Adsd3500ModeSelector() : m_configuration("standard"){};
+
+//functions to set which table configuration to use
+aditof::Status
+Adsd3500ModeSelector::setConfiguration(std::string &configuration) {
+    return aditof::Status::UNAVAILABLE;
+}
+
+aditof::Status
+getConfigurationTable(aditof::DepthSensorFrameType &configurationTable) {
+    return aditof::Status::UNAVAILABLE;
+};
+
+//Functions used to set mode, number of bits, pixel format, etc
+aditof::Status setControl(std::string &control, std::string &value) {
+    return aditof::Status::UNAVAILABLE;
+};
+
+aditof::Status getControl(std::string &control, std::string &value) {
+    return aditof::Status::UNAVAILABLE;
+};
