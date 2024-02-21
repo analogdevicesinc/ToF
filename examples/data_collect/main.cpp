@@ -437,7 +437,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
 #if MULTI_THREADED
-        frameSaver.saveFrameToFileMultithread(&frame);
+        frameSaver.saveFrameToFileMultithread(frame);
 #else
         frameSaver.saveFrameToFile(frame);
 #endif
