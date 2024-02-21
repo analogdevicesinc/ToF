@@ -497,7 +497,7 @@ void ADIMainWindow::showMainMenu() {
 }
 
 void ADIMainWindow::showRecordMenu() {
-    if (ImGui::BeginMenu("Record Options")) {
+    if (ImGui::BeginMenu("Record Options", cameraWorkerDone)) {
         //Allow the user to choose from 1 to 120 frames. Default value is 5 frames
         ImGui::InputInt("Frames", &recordingSeconds, 1, 300);
 
