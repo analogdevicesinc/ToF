@@ -756,11 +756,6 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         return status;
     }
 
-    // For frame with PCM content only there is nothing else to do
-    if (m_pcmFrame) {
-        return Status::OK;
-    }
-
     // The incoming sensor frames are already processed. Need to just create XYZ data
     if (m_xyzEnabled) {
         uint16_t *depthFrame;
@@ -802,6 +797,11 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         metadata.bitsInDepth = m_depthBitsPerPixel;
         metadata.bitsInAb = m_abBitsPerPixel;
         metadata.bitsInConfidence = m_confBitsPerPixel;
+
+        // For frame with PCM content we need to store ab bits
+        if (m_pcmFrame) {
+            metadata.bitsInAb = 16;
+        }
     }
 
     metadata.xyzEnabled = m_xyzEnabled;
