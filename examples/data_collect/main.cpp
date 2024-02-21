@@ -361,13 +361,6 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    uint16_t value;
-    status = camera->adsd3500GetEnableMetadatainAB(value);
-    if (value == 0) {
-        LOG(WARNING) << "Metadata is unvailable for this camera";
-        return 0;
-    }
-
     char time_buffer[128];
     time_t rawtime;
     time(&rawtime);
