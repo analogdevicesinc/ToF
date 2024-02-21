@@ -243,6 +243,7 @@ int Network::SendCommand() {
            Server_Connected[m_connectionId] != false) {
 
         lws_callback_on_writable(web_socket.at(m_connectionId));
+        lws_callback_on_writable(web_socket.at(m_connectionId));
         /*Acquire the lock*/
         std::unique_lock<std::recursive_mutex> mlock(m_mutex[m_connectionId]);
 
