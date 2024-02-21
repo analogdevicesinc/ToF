@@ -40,8 +40,6 @@ enum : uint16_t {
     MAX_FILE_PATH_SIZE = 512,
 };
 
-#define MULTI_THREADED 0
-
 using namespace aditof;
 
 #ifdef _WIN32
@@ -69,6 +67,7 @@ static const char kUsagePublic[] =
       --fw <firmware>    Adsd3500 fw file
       --split            Save each frame into a separate file
       --netlinktest      Sends the same frame
+      --singlethread     Store the frame to file using same tread
 
     Note: --m argument supports both index and string (0/sr-native) 
 
@@ -95,6 +94,7 @@ int main(int argc, char *argv[]) {
         {"-ccb", {"--ccb", false, "", "", true}},
         {"-s", {"--split", false, "", "", false}},
         {"-t", {"--netlinktest", false, "", "", false}},
+        {"-st", {"--singlethread", false, "", "", false}},
         {"-config", {"-CONFIG", true, "last", "", true}}};
 
     CommandParser command;
@@ -254,6 +254,12 @@ int main(int argc, char *argv[]) {
     bool saveToSingleFile = true;
     if (!command_map["-s"].value.empty()) {
         saveToSingleFile = false;
+    }
+
+    //Parsing single thread option
+    bool samethread = 0;
+    if (!command_map["-st"].value.empty()) {
+        samethread = true;
     }
 
     //Parsing netLinkTest option
@@ -436,11 +442,12 @@ int main(int argc, char *argv[]) {
         if (useNetLinkTest) {
             continue;
         }
-#if MULTI_THREADED
-        frameSaver.saveFrameToFileMultithread(frame);
-#else
-        frameSaver.saveFrameToFile(frame);
-#endif
+
+        if (!samethread) {
+            frameSaver.saveFrameToFileMultithread(frame);
+        } else {
+            frameSaver.saveFrameToFile(frame);
+        }
     } // End of for Loop
 
     auto end_time = std::chrono::high_resolution_clock::now();
