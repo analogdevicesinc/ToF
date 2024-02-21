@@ -638,7 +638,6 @@ void ADIMainWindow::showDeviceMenu() {
                 if (initCameraWorker.joinable()) {
                     initCameraWorker.join();
                 }
-                RefreshDevices();
             }
             ImGui::EndMenu();
         }
