@@ -581,65 +581,67 @@ void ADIMainWindow::showRecordMenu() {
 }
 
 void ADIMainWindow::showDeviceMenu() {
-    if (ImGui::BeginMenu("Device")) {
-        ImGuiExtensions::ADIComboBox("Device", "(No available devices)",
-                                     ImGuiComboFlags_None, m_connectedDevices,
-                                     &m_selectedDevice, _isOpenDevice);
-        //If a device is found, then set the first one found
-        if (!m_connectedDevices.empty() && m_selectedDevice == -1) {
-            m_selectedDevice = 0;
-            _isOpenDevice = true;
-        }
-
-        if (!m_connectedDevices.empty()) {
+    if (!isPlaying && !isPlayRecorded) {
+        if (ImGui::BeginMenu("Device")) {
             ImGuiExtensions::ADIComboBox(
-                "Config", "No Config Files", ImGuiSelectableFlags_None,
-                m_configFiles, &configSelection, _isOpenDevice);
-        }
+                "Device", "(No available devices)", ImGuiComboFlags_None,
+                m_connectedDevices, &m_selectedDevice, _isOpenDevice);
+            //If a device is found, then set the first one found
+            if (!m_connectedDevices.empty() && m_selectedDevice == -1) {
+                m_selectedDevice = 0;
+                _isOpenDevice = true;
+            }
 
-        bool _noConnected = m_connectedDevices.empty();
-        if (ImGuiExtensions::ADIButton("Refresh", _noConnected)) {
-            _isOpenDevice = false;
-            cameraWorkerDone = false;
-            RefreshDevices();
-        }
+            if (!m_connectedDevices.empty()) {
+                ImGuiExtensions::ADIComboBox(
+                    "Config", "No Config Files", ImGuiSelectableFlags_None,
+                    m_configFiles, &configSelection, _isOpenDevice);
+            }
 
-        ImGui::SameLine();
+            bool _noConnected = m_connectedDevices.empty();
+            if (ImGuiExtensions::ADIButton("Refresh", _noConnected)) {
+                _isOpenDevice = false;
+                cameraWorkerDone = false;
+                RefreshDevices();
+            }
 
-        const bool openAvailable = !m_connectedDevices.empty();
-        {
+            ImGui::SameLine();
 
-            { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
-                ImGuiExtensions::ButtonColorChanger colorChanger(
-                    ImGuiExtensions::ButtonColor::Green, openAvailable);
-                if (ImGuiExtensions::ADIButton(
-                        "Open",
-                        /*openAvailable*/ _isOpenDevice &&
-                            m_configFiles.size() > 0) &&
-                    0 <= m_selectedDevice) {
-                    if (isPlayRecorded) {
-                        stopPlayback();
+            const bool openAvailable = !m_connectedDevices.empty();
+            {
+
+                { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
+                    ImGuiExtensions::ButtonColorChanger colorChanger(
+                        ImGuiExtensions::ButtonColor::Green, openAvailable);
+                    if (ImGuiExtensions::ADIButton(
+                            "Open",
+                            /*openAvailable*/ _isOpenDevice &&
+                                m_configFiles.size() > 0) &&
+                        0 <= m_selectedDevice) {
+                        if (isPlayRecorded) {
+                            stopPlayback();
+                        }
+
+                        _isOpenDevice = false;
+                        initCameraWorker = std::thread(
+                            std::bind(&ADIMainWindow::InitCamera, this));
                     }
-
-                    _isOpenDevice = false;
-                    initCameraWorker = std::thread(
-                        std::bind(&ADIMainWindow::InitCamera, this));
                 }
             }
-        }
-        ImGui::SameLine();
-        if (ImGuiExtensions::ADIButton("Close", !_isOpenDevice)) {
-            stopPlayback();
-            stopPlayCCD();
-            cameraWorkerDone = false;
-            m_cameraModes.clear();
-            _cameraModes.clear();
-            if (initCameraWorker.joinable()) {
-                initCameraWorker.join();
+            ImGui::SameLine();
+            if (ImGuiExtensions::ADIButton("Close", !_isOpenDevice)) {
+                stopPlayback();
+                stopPlayCCD();
+                cameraWorkerDone = false;
+                m_cameraModes.clear();
+                _cameraModes.clear();
+                if (initCameraWorker.joinable()) {
+                    initCameraWorker.join();
+                }
+                RefreshDevices();
             }
-            RefreshDevices();
+            ImGui::EndMenu();
         }
-        ImGui::EndMenu();
     }
 
 #if defined(Debug) && defined(_WIN32)
@@ -677,47 +679,50 @@ void ADIMainWindow::showDeviceMenu() {
 
     if (cameraWorkerDone) {
         _isOpenDevice = false;
-        if (ImGui::BeginMenu("ToF Camera Options")) {
-            ImGuiExtensions::ADIComboBox("Mode", "Select Mode",
-                                         ImGuiSelectableFlags_None,
-                                         m_cameraModes, &modeSelection, true);
+        if (!isPlaying && !isPlayRecorded) {
+            if (ImGui::BeginMenu("ToF Camera Options")) {
+                ImGuiExtensions::ADIComboBox(
+                    "Mode", "Select Mode", ImGuiSelectableFlags_None,
+                    m_cameraModes, &modeSelection, true);
 
-            ImGui::NewLine();
-            ImGui::Text("View Options:");
-            ImGuiExtensions::ADIRadioButton("Active Brightness and Depth",
-                                            &viewSelection, 0);
-            ImGuiExtensions::ADIRadioButton("Point Cloud and Depth",
-                                            &viewSelection, 1);
-            ImGui::NewLine();
-            ImGui::Text("Video:");
+                ImGui::NewLine();
+                ImGui::Text("View Options:");
+                ImGuiExtensions::ADIRadioButton("Active Brightness and Depth",
+                                                &viewSelection, 0);
+                ImGuiExtensions::ADIRadioButton("Point Cloud and Depth",
+                                                &viewSelection, 1);
+                ImGui::NewLine();
+                ImGui::Text("Video:");
 
-            { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
-                ImGuiExtensions::ButtonColorChanger colorChangerPlay(
-                    customColorPlay, !isPlaying);
-                if (ImGuiExtensions::ADIButton("Play",
-                                               !isPlaying && !isPlayRecorded)) {
-                    viewSelectionChanged = viewSelection;
-                    isPlaying = true;
-                }
-            }
-            ImGui::SameLine();
-            { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
-                ImGuiExtensions::ButtonColorChanger colorChangerStop(
-                    customColorStop, isPlaying);
-                if (ImGuiExtensions::ADIButton("Stop", isPlaying)) {
-                    isPlaying = false;
-                    isPlayRecorded = false;
-                    firstFrame = 0;
-                    frameRecvd = 0;
-                    stopPlayCCD();
-                    if (isRecording) {
-                        view->m_ctrl->stopRecording();
-                        isRecording = false;
+                { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
+                    ImGuiExtensions::ButtonColorChanger colorChangerPlay(
+                        customColorPlay, !isPlaying);
+                    if (ImGuiExtensions::ADIButton(
+                            "Play", !isPlaying && !isPlayRecorded)) {
+                        viewSelectionChanged = viewSelection;
+                        isPlaying = true;
                     }
                 }
+                ImGui::SameLine();
+                { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
+                    ImGuiExtensions::ButtonColorChanger colorChangerStop(
+                        customColorStop, isPlaying);
+                    if (ImGuiExtensions::ADIButton("Stop", isPlaying)) {
+                        isPlaying = false;
+                        isPlayRecorded = false;
+                        firstFrame = 0;
+                        frameRecvd = 0;
+                        stopPlayCCD();
+                        if (isRecording) {
+                            view->m_ctrl->stopRecording();
+                            isRecording = false;
+                        }
+                    }
+                }
+                ImGui::EndMenu();
             }
-            ImGui::EndMenu();
         }
+
         if (view != NULL && view->m_ctrl->recordingFinished() && isRecording) {
             view->m_ctrl->stopRecording();
             isRecording = false;
