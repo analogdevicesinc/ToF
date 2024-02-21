@@ -1326,6 +1326,8 @@ void ADIMainWindow::prepareCamera(std::string mode) {
             }
         }
     } else {
+        ini_params.clear();
+        modified_ini_params.clear();
         last_mode = mode;
     }
 
