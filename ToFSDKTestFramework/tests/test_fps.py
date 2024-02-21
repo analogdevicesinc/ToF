@@ -35,23 +35,36 @@ import os.path
 import numpy as np
 import logging
 import os
+import re
 
 Logger = logging.getLogger(__name__)
 
 frame_dir = "./data_dir/"
-frame_types = ["ab" , "depth" , "conf" , "metadata"]
 mode_names = ["sr-native" , "lr-native" , "sr-qnative" , "lr-qnative" , "pcm-native" , "lr-mixed" , "sr-mixed"]
 
-def test_cpp_program():
-    # Run the 'dir ..' command and capture the output
-    exe_path = "../build/examples/sample_code/release/sample_code.exe"
-    process = subprocess.run(exe_path, text=True,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+def test_fps(available_modes_ini, ip_set, config_file):
+
+
+    #Run the exe file
+    exe_path = "../../build/examples/test_measure_fps/release/test_measure_fps.exe"
+    process = subprocess.run([exe_path, str(available_modes_ini), ip_set, config_file], 
+        text=True,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        
+    assert process.returncode == 0
     print(process.stdout)
-    assert process.returncode == 0 
-    Logger.info(process.stdout)
-    assert os.path.isdir(frame_dir),"folder does not exist"
+    output = process.stdout
     
-    for modeName in modeName:
-        for frameType in frame_types:
-            assert os.path.exists(frame_dir + 'out_' + frameType + "_" + modeName + ".bin" )
+    match = re.search("Camera FPS set from Ini file at: *?(\\d+)", output)
+    assert match is not None    # Checks if the pattern is found
+    value = match.groups()[0]
+    fps_setting = float(value)
+    print("FPS set from Ini file: ", fps_setting)
+    
+    match = re.search("Measured FPS: *?(\d+(\.\d*)?)", output)
+    assert match is not None    # Checks if the pattern is found
+    measured_fps = float(match.group(1))
+    print("Measured fps: ", measured_fps)
+
+    assert (fps_setting+5) >= measured_fps >= (fps_setting-5),"desired fps not obtained"
+    Logger.info(process.stdout)
     

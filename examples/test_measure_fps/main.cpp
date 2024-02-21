@@ -36,6 +36,7 @@
 #include <aditof/version.h>
 #include <command_parser.h>
 #include <fstream>
+#include <chrono>
 #ifdef USE_GLOG
 #include <glog/logging.h>
 #else
@@ -49,14 +50,31 @@
 using namespace aditof;
 
 int main(int argc, char *argv[]) {
+    std::string configFile;
+    int modeNum;
+    std::string ip;
+    // check argument for modeName
+    if (argc > 3) {
+        // convert the string argument to an integer
+        modeNum = std::stoi(argv[1]);
+        ip = argv[2];
+        configFile = argv[3];
+
+    } else {
+        // set num to default: 0(sr-native)
+        modeNum = 0;
+        ip = "ip:10.42.0.1";
+        configFile = "config/config_adsd3500_adsd3100.json";
+    }
+
+    LOG(INFO) << "value: " << modeNum;
+
     Status status = Status::OK;
     LOG(INFO) << "SDK version: " << aditof::getApiVersion()
               << " | branch: " << aditof::getBranchVersion()
               << " | commit: " << aditof::getCommitVersion();
 
     System system;
-    std::string ip = "ip:10.42.0.1";
-    std::string configFile = "config/config_adsd3500_adsd3100.json";
     std::vector<std::shared_ptr<Camera>> cameras;
 
     if (!ip.empty()) {
@@ -86,25 +104,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Check if a directory named "data_dir" exists and create it if not
-    DWORD attr = GetFileAttributes("data_dir");
-    if (attr == INVALID_FILE_ATTRIBUTES) {
-        if (CreateDirectory("data_dir", NULL)) {
-            LOG(INFO) << "Directory created successfully\n";
-        } else {
-            LOG(INFO) << "Error creating directory\n";
-        }
-    } else if (attr & FILE_ATTRIBUTE_DIRECTORY) {
-        LOG(INFO) << "The directory already exists\n";
-    } else {
-        LOG(INFO) << "The path is not a directory\n";
-    }
-
     std::string modeName;
-    //for (int id_num = 0; id_num <= 6; id_num++)
-    //{
-    //    camera->getFrameTypeNameFromId(id_num, modeName);
-    camera->getFrameTypeNameFromId(0, modeName);
+    camera->getFrameTypeNameFromId(modeNum, modeName);
     status = camera->setFrameType(modeName);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
@@ -119,77 +120,36 @@ int main(int argc, char *argv[]) {
 
     aditof::Frame frame;
 
-    status = camera->requestFrame(&frame);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not request frame!";
-        return 1;
-    } else {
-        LOG(INFO) << "succesfully requested frame!";
+    int nFrames = 50;
+    LOG(INFO) << "Requesting " << nFrames << " frames!";
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    // Request the frames for the respective mode
+    for (uint32_t loopcount = 0; loopcount < nFrames; loopcount++) {
+
+        status = camera->requestFrame(&frame);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Could not request frame!";
+            return 0;
+        }
+
+    } // End of for Loop
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> total_time = end_time - start_time;
+    if (total_time.count() > 0.0) {
+        double measured_fps = (double)nFrames / total_time.count();
+        LOG(INFO) << "Measured FPS: " << measured_fps;
     }
 
-    std::string pixelCount;
-    uint64_t frame_size = 0;
-    uint16_t *pData;
 
-    std::string frameType[] = {"ab", "depth", "conf", "metadata"};
-    for (const auto &type : frameType) {
-        FrameDataDetails FrameDataDetails;
-        status = frame.getDataDetails(type, FrameDataDetails);
-        if (status != Status::OK) {
-            LOG(ERROR) << type << "disabled from ini file!";
-            return 1;
-        }
-
-        uint32_t height = FrameDataDetails.height;
-        uint32_t width = FrameDataDetails.width;
-        uint32_t bytesCount = FrameDataDetails.bytesCount;
-
-        if (type == "ab") {
-            frame_size = sizeof(uint16_t) * height * width;
-        } else if (type == "depth") {
-            frame_size = sizeof(uint16_t) * height * width;
-        } else if (type == "conf") {
-            frame_size = sizeof(float) * height * width;
-        } else if (type == "metadata") {
-            frame_size = bytesCount;
-        } else {
-            LOG(WARNING) << "Can't recognize frame data type!";
-        }
-
-        LOG(INFO) << "Frame type: : " << type;
-        LOG(INFO) << "Height: " << height;
-        LOG(INFO) << "width: " << width;
-        LOG(INFO) << "bytecount: " << bytesCount;
-
-        status = frame.getData(type, &pData);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Could not get frame data " + type + "!";
-            return 1;
-        }
-
-        if (!pData) {
-            LOG(ERROR) << "no memory allocated in frame";
-            return 1;
-        }
-
-        std::ofstream g("data_dir/out_" + type + "_" + modeName + ".bin",
-                        std::ios::binary);
-
-        g.write((char *)pData, frame_size);
-        g.close();
-
-        if (modeName == "pcm-native") {
-            LOG(WARNING) << "pcm-native only contains ab frame";
-            break;
-        }
-    }
 
     status = camera->stop();
     if (status != Status::OK) {
         LOG(ERROR) << "Could not stop the camera!";
         return 1;
     }
-    //}
 
     return 0;
 }

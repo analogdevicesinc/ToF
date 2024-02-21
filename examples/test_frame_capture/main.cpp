@@ -49,14 +49,31 @@
 using namespace aditof;
 
 int main(int argc, char *argv[]) {
+    std::string configFile;
+    int modeNum;
+    std::string ip;
+    // check argument for modeName
+    if (argc > 3) {
+        // convert the string argument to an integer
+        modeNum = std::stoi(argv[1]);
+        ip = argv[2];
+        configFile = argv[3];
+
+    } else {
+        // set num to default: 0(sr-native)
+        modeNum = 0;
+        ip = "ip:10.42.0.1";
+        configFile = "config/config_adsd3500_adsd3100.json";
+    }
+
+    LOG(INFO) << "value: " << modeNum;
+
     Status status = Status::OK;
     LOG(INFO) << "SDK version: " << aditof::getApiVersion()
               << " | branch: " << aditof::getBranchVersion()
               << " | commit: " << aditof::getCommitVersion();
 
     System system;
-    std::string ip = "ip:10.42.0.1";
-    std::string configFile = "config/config_adsd3500_adsd3100.json";
     std::vector<std::shared_ptr<Camera>> cameras;
 
     if (!ip.empty()) {
@@ -101,10 +118,7 @@ int main(int argc, char *argv[]) {
     }
 
     std::string modeName;
-    //for (int id_num = 0; id_num <= 6; id_num++)
-    //{
-    //    camera->getFrameTypeNameFromId(id_num, modeName);
-    camera->getFrameTypeNameFromId(0, modeName);
+    camera->getFrameTypeNameFromId(modeNum, modeName);
     status = camera->setFrameType(modeName);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
@@ -189,7 +203,6 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "Could not stop the camera!";
         return 1;
     }
-    //}
 
     return 0;
 }

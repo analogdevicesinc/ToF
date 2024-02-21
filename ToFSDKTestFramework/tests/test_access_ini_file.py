@@ -40,19 +40,10 @@ import re
 
 Logger = logging.getLogger(__name__)
 
-@pytest.fixture(params=[0,1,2,3,4,5,6])
-def available_modes_ini(request):
-    return request.param
+def test_access_ini_apis_program(available_modes_ini, ip_set,config_file):
 
-@pytest.fixture(autouse=True)
-def delay_between_tests():
-    time.sleep(2) # sleep for 1 second
-    
-
- 
-def test_access_ini_apis_program(available_modes_ini):
-
-    mode_name = {0: "3500_sr-native", 1: "3500_lr-native", 2: "3500_sr-qnative", 3: "3500_lr-qnative", 4: "_pcm-native", 5: "3500_lr-mixed", 6: "3500_sr-mixed"}
+    mode_name = {0: "3500_sr-native", 1: "3500_lr-native", 2: "3500_sr-qnative", 3: "3500_lr-qnative",
+        4: "_pcm-native", 5: "3500_lr-mixed", 6: "3500_sr-mixed"}
    
     #parse the ini file
     with open('./config/RawToDepthAdsd' + mode_name[available_modes_ini] + '.ini', mode='r') as file:
@@ -65,11 +56,12 @@ def test_access_ini_apis_program(available_modes_ini):
         except ValueError:
             ini_data[variable] = str(value)  
     
-    
     #Run the exe file
     exe_path = "../../build/examples/test_access_ini/release/test_access_ini.exe"
-    process = subprocess.run([exe_path, str(available_modes_ini)],text=True,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-
+    process = subprocess.run([exe_path, str(available_modes_ini), ip_set, config_file],text=True,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    
+    assert process.returncode == 0
     print(process.stdout)
     output = process.stdout
     
@@ -77,57 +69,132 @@ def test_access_ini_apis_program(available_modes_ini):
     assert match is not None    # Checks if the pattern is found
     value = match.groups()[0]
     abThreshMinVal = int(value)
-    assert abThreshMinVal == ini_data['abThreshMin']  # Checks with the .ini file
+    assert abThreshMinVal == ini_data['abThreshMin'],"does not match with .ini file"
+    print("abThreshMin verified with .ini file")
     
     match = re.search("confThresh: *?(\\d+)", output)
     assert match is not None    # Checks if the pattern is found
     value = match.groups()[0]
     confThreshVal = int(value)
-    assert confThreshVal == ini_data['confThresh']  # Checks with the .ini file
+    assert confThreshVal == ini_data['confThresh'],"does not match with .ini file"
+    print("confThresh verified with .ini file")
     
     match = re.search("RadialThresholdMin: *?(\\d+)", output)
     assert match is not None    # Checks if the pattern is found
     value = match.groups()[0]
     RadialThresholdMinVal = int(value)
-    assert RadialThresholdMinVal == ini_data['radialThreshMin']  # Checks with the .ini file
+    assert RadialThresholdMinVal == ini_data['radialThreshMin'],"does not match with .ini file"
+    print("confThreshVal verified with .ini file")
     
     match = re.search("RadialThresholdMax: *?(\\d+)", output)
     assert match is not None    # Checks if the pattern is found
     value = match.groups()[0]
     RadialThresholdMaxVal = int(value)
-    assert RadialThresholdMaxVal == ini_data['radialThreshMax']  # Checks with the .ini file
+    assert RadialThresholdMaxVal == ini_data['radialThreshMax'],"does not match with .ini file"
+    print("RadialThresholdMax verified with .ini file")
     
     match = re.search("jblfApplyFlag: *?(\\d+)", output)
     assert match is not None    # Checks if the pattern is found
     value = match.groups()[0]
     jblfApplyFlagVal = bool(value)
-    assert jblfApplyFlagVal == ini_data['jblfApplyFlag']  # Checks with the .ini file
+    assert jblfApplyFlagVal == ini_data['jblfApplyFlag'],"does not match with .ini file"
+    print("jblfApplyFlag verified with .ini file")
     
     match = re.search("jblfWindowSize: *?(\\d+)", output)
     assert match is not None    # Checks if the pattern is found
     value = match.groups()[0]
     jblfWindowSizeVal = int(value)
-    assert jblfWindowSizeVal == ini_data['jblfWindowSize']  # Checks with the .ini file
+    assert jblfWindowSizeVal == ini_data['jblfWindowSize'],"does not match with .ini file"
+    print("jblfWindowSize verified with .ini file")
     
     match = re.search("JBLFGaussianSigma: *?(\\d+)", output)
     assert match is not None    # Checks if the pattern is found
     value = match.groups()[0]
     JBLFGaussianSigmaVal = int(value)
-    assert JBLFGaussianSigmaVal == ini_data['jblfGaussianSigma']  # Checks with the .ini file
-    
+    assert JBLFGaussianSigmaVal == ini_data['jblfGaussianSigma'],"does not match with .ini file"
+    print("JBLFGaussianSigma verified with .ini file")
     
     match = re.search("jblfExponentialTerm: *?(\\d+)", output)
     assert match is not None    # Checks if the pattern is found
     value = match.groups()[0]
     jblfExponentialTermVal = int(value)
-    assert jblfExponentialTermVal == ini_data['jblfExponentialTerm']  # Checks with the .ini file
+    assert jblfExponentialTermVal == ini_data['jblfExponentialTerm'],"does not match with .ini file"
+    print("jblfExponentialTerm verified with .ini file")
+    
+    if available_modes_ini != 4:
+        match = re.search("EnableMetadatainABValue: *?(\\d+)", output)
+        assert match is not None    # Checks if the pattern is found
+        value = match.groups()[0]
+        EnableMetadatainABinLogs = int(value)
+        if ini_data['headerSize'] == 128:
+            EnableMetadatainABinINI = 1
+        else:
+            EnableMetadatainABinINI = 0
+        assert EnableMetadatainABinLogs == EnableMetadatainABinINI,"does not match with .ini file"
+        print("headerSize verified with .ini file")
+    
+    match = re.search("partialDepthEnable: *?(\\d+)", output)
+    assert match is not None    # Checks if the pattern is found
+    value = match.groups()[0]
+    partialDepthEnableVal = int(value)
+    assert partialDepthEnableVal == ini_data['partialDepthEnable'], "does not match with .ini file"  
+    print("partialDepthEnable verified with .ini file")
+    
+    match = re.search("bitsInConf: *?(\\d+)", output)
+    assert match is not None    # Checks if the pattern is found
+    value = match.groups()[0]
+    bitsInConfVal = int(value)
+    if bitsInConfVal == 2:
+        bitsInConfVal = 8
+    elif bitsInConfVal == 1:
+        bitsInConfVal = 4      
+    elif bitsInConfVal == 0:
+        bitsInConfVal = ini_data['bitsInConf']   
+    assert bitsInConfVal == ini_data['bitsInConf'], "does not match with .ini file"  
+    print("bitsInConf verified with .ini file")
+    
+    match = re.search("bitsInPhaseOrDepth: *?(\\d+)", output)
+    assert match is not None    # Checks if the pattern is found
+    value = match.groups()[0]
+    bitsInPhaseOrDepthVal = int(value)
+    if bitsInPhaseOrDepthVal == 6:
+        bitsInPhaseOrDepthVal = 16
+    elif bitsInPhaseOrDepthVal == 5:
+        bitsInPhaseOrDepthVal = 14   
+    elif bitsInPhaseOrDepthVal == 4:
+        bitsInPhaseOrDepthVal = 12 
+    elif bitsInPhaseOrDepthVal == 3:
+        bitsInPhaseOrDepthVal = 10    
+    elif bitsInPhaseOrDepthVal == 2:
+        bitsInPhaseOrDepthVal = ini_data['bitsInPhaseOrDepth']   
+    assert bitsInPhaseOrDepthVal == ini_data['bitsInPhaseOrDepth'], "does not match with .ini file"  
+    print("bitsInPhaseOrDepth verified with .ini file")
+    
+    match = re.search("bitsInAB: *?(\\d+)", output)
+    assert match is not None    # Checks if the pattern is found
+    value = match.groups()[0]
+    bitsInABVal = int(value)
+    if bitsInABVal == 6:
+        bitsInABVal = 16
+    elif bitsInABVal == 5:
+        bitsInABVal = 14   
+    elif bitsInABVal == 4:
+        bitsInABVal = 12 
+    elif bitsInABVal == 3:
+        bitsInABVal = 10    
+    elif bitsInABVal == 2:
+        bitsInABVal = 8   
+    elif bitsInABVal == 0:
+        bitsInABVal == ini_data['bitsInAB']
+    assert bitsInABVal == ini_data['bitsInAB'], "does not match with .ini file"  
+    print("bitsInAB verified with .ini file")
+    
     
     match = re.search("fps: *?(\\d+)", output)
     assert match is not None    # Checks if the pattern is found
     value = match.groups()[0]
     fpsVal = int(value)
-    assert fpsVal == ini_data['fps']  # Checks with the .ini file
-    
-    assert process.returncode == 0
+    assert fpsVal == ini_data['fps'],"does not match with .ini file"  # Checks with the .ini file
+    print("fps verified with .ini file")
 
     Logger.info(process.stdout)

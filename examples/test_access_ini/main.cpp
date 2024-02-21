@@ -49,18 +49,22 @@
 using namespace aditof;
 
 int main(int argc, char *argv[]) {
-
+    std::string configFile;
     int modeNum;
+    std::string ip;
+
     // check argument for modeName
-    if (argc > 1) {
+    if (argc > 3) {
         // convert the string argument to an integer
         modeNum = std::stoi(argv[1]);
+        ip = argv[2];
+        configFile = argv[3];
     } else {
         // set num to default: 0(sr-native)
         modeNum = 0;
+        ip = "ip:10.42.0.1";
+        configFile = "config/config_adsd3500_adsd3100.json";
     }
-    
-    LOG(INFO) << "value: " << modeNum;
 
     Status status = Status::OK;
     LOG(INFO) << "SDK version: " << aditof::getApiVersion()
@@ -68,8 +72,6 @@ int main(int argc, char *argv[]) {
               << " | commit: " << aditof::getCommitVersion();
 
     System system;
-    std::string ip = "ip:10.42.0.1";
-    std::string configFile = "config/config_adsd3500_adsd3100.json";
     std::vector<std::shared_ptr<Camera>> cameras;
 
     if (!ip.empty()) {
@@ -108,6 +110,7 @@ int main(int argc, char *argv[]) {
     }
     LOG(INFO) << "mode name: " << modeName;
 
+    //abThreshMin
     int abThreshMinValue;
     int test_abThreshMinValue = 5;
     status = camera->adsd3500GetABinvalidationThreshold(abThreshMinValue);
@@ -135,6 +138,7 @@ int main(int argc, char *argv[]) {
     }
     LOG(INFO) << "abThreshMin value after: " << abThreshMinValue;
 
+    //confThresh
     int confThreshValue;
     int test_confThreshValue = 20;
     status = camera->adsd3500GetConfidenceThreshold(confThreshValue);
@@ -163,6 +167,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    //radialThreshMin
     int RadialThresholdMinValue;
     int test_RadialThresholdMinValue = 20;
     status = camera->adsd3500GetRadialThresholdMin(RadialThresholdMinValue);
@@ -192,6 +197,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    //radialThreshMax
     int RadialThresholdMaxValue;
     int test_RadialThresholdMaxValue = 17000;
     status = camera->adsd3500GetRadialThresholdMax(RadialThresholdMaxValue);
@@ -221,6 +227,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    //jblfApplyFlag
     bool jblfApplyFlagValue;
     bool test_jblfApplyFlagValue = 0;
     status = camera->adsd3500GetJBLFfilterEnableState(jblfApplyFlagValue);
@@ -249,6 +256,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     
+    //jblfWindowSize
     int jblfWindowSizeValue;
     int test_jblfWindowSizeValue = 5;
     status = camera->adsd3500GetJBLFfilterSize(jblfWindowSizeValue);
@@ -277,6 +285,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    //jblfGaussianSigma
     uint16_t JBLFGaussianSigmaValue;
     uint16_t test_JBLFGaussianSigmaValue = 12;
     status = camera->adsd3500GetJBLFGaussianSigma(JBLFGaussianSigmaValue);
@@ -305,6 +314,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    //jblfExponentialTerm
     uint16_t jblfExponentialTermValue;
     uint16_t test_jblfExponentialTermValue = 12;
     status = camera->adsd3500GetJBLFExponentialTerm(jblfExponentialTermValue);
@@ -336,6 +346,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    //jblfMaxEdge
     uint16_t jblfMaxEdgeValue;
     status = camera->adsd3500SetJBLFMaxEdgeThreshold(12);
     if (status != Status::OK) {
@@ -344,8 +355,7 @@ int main(int argc, char *argv[]) {
     }
     LOG(INFO) << "jblfMaxEdge value set ";
 
-
-    
+    //jblfABThreshold
     uint16_t test_jblfABThresholdValue = 12;
     status = camera->adsd3500SetJBLFABThreshold(test_jblfABThresholdValue);
     if (status != Status::OK) {
@@ -354,13 +364,193 @@ int main(int argc, char *argv[]) {
     }
     LOG(INFO) << "jblfABThreshold value set ";
 
-    //header size
-    //deltaCompEnable
-    //inputFormat
-    //depthComputeIspEnable
-    //partialDepthEnable
-    //xyzEnanle
+ 
+    //headerSize
+    if (modeName != "pcm-native") {
+        uint16_t EnableMetadatainABValue;
+        uint16_t test_EnableMetadatainAB = 0;
+        status = camera->adsd3500GetEnableMetadatainAB(EnableMetadatainABValue);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Cannnot retreive EnableMetadata value!";
+            return 1;
+        }
+        LOG(INFO) << "EnableMetadatainABValue: " << EnableMetadatainABValue;
+        
+        status =
+            camera->adsd3500SetEnableMetadatainAB(test_EnableMetadatainAB);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Cannnot set EnableMetadata value!";
+            return 1;
+        }
+        LOG(INFO) << "EnableMetadata value set ";
 
+        status = camera->adsd3500GetEnableMetadatainAB(EnableMetadatainABValue);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Cannnot set EnableMetadata value!";
+            return 1;
+        }
+        LOG(INFO) << "EnableMetadatainAB value after: " << EnableMetadatainABValue;
+
+        if (EnableMetadatainABValue != test_EnableMetadatainAB) {
+            LOG(ERROR) << "value set is not value get!";
+            return 1;
+        }
+    }
+    
+    std::shared_ptr<DepthSensorInterface> depthSensor = camera->getSensor();
+    /*
+    std::string inputFormatVal = "mipiRaw12_8";
+    //std::string test_phaseDepthBitsVal = "6";
+    status = depthSensor->setControl("inputFormat", inputFormatVal);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Cannnot retreive inputFormat setting!";
+        return 1;
+    }
+    LOG(INFO) << "inputFormat: " << inputFormatVal;
+    status = depthSensor->getControl("inputFormat", inputFormatVal);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Cannnot retreive inputFormat setting!";
+        return 1;
+    }
+    LOG(INFO) << "inputFormat: " << inputFormatVal;
+    
+    status = depthSensor->setControl("phaseDepthBits", test_phaseDepthBitsVal);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Cannnot set phaseDepthBits value!";
+        return 1;
+    }
+    LOG(INFO) << "phaseDepthBits value set ";
+
+    status = depthSensor->getControl("phaseDepthBits", phaseDepthBitsVal);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Cannnot retreive phaseDepthBits!";
+        return 1;
+    }
+    LOG(INFO) << "bitsInPhaseOrDepth value after: " << phaseDepthBitsVal;
+
+    if (phaseDepthBitsVal != test_phaseDepthBitsVal) {
+        LOG(ERROR) << "value set is not value get!";
+        return 1;
+    }
+    */
+
+    //partialDepthEnable
+    std::string depthEnVal, abAveragingVal, partialDepthEnableVal;
+    std::string test_depthEnVal = "1";
+    std::string test_abAveragingVal = "1";
+    std::string test_partialDepthEnableVal =
+        (test_depthEnVal == "1" && test_abAveragingVal == "1") ? "0" : "1";
+    status = depthSensor->getControl("depthEnable", depthEnVal);
+    status = depthSensor->getControl("abAveraging", abAveragingVal);
+    LOG(INFO) << "depthEnVal: " << depthEnVal << " abAveragingVal: " << abAveragingVal;
+    partialDepthEnableVal =
+        (depthEnVal == "1" && abAveragingVal == "1") ? "0" : "1";
+    LOG(INFO) << "partialDepthEnable: " << partialDepthEnableVal;
+    
+    depthSensor->setControl("depthEnable", test_depthEnVal);
+    depthSensor->setControl("abAveraging", test_abAveragingVal);
+    LOG(INFO) << "partialDepthEnable value set ";
+    
+    status = depthSensor->getControl("depthEnable", depthEnVal);
+    status = depthSensor->getControl("abAveraging", abAveragingVal);
+    LOG(INFO) << "depthEnVal: " << depthEnVal << " abAveragingVal: " << abAveragingVal;
+    partialDepthEnableVal =
+        (depthEnVal == "1" && abAveragingVal == "1") ? "0" : "1";
+    LOG(INFO) << "partialDepthEnable after: " << partialDepthEnableVal;
+
+    if (partialDepthEnableVal != test_partialDepthEnableVal) {
+        LOG(ERROR) << "value set is not value get!";
+        return 1;
+    }
+    
+    //bitsInPhaseOrDepth
+    std::string phaseDepthBitsVal;
+    std::string test_phaseDepthBitsVal = "6";
+    status = depthSensor->getControl("phaseDepthBits", phaseDepthBitsVal);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Cannnot retreive phaseDepthBits value!";
+        return 1;
+    }
+    LOG(INFO) << "bitsInPhaseOrDepth: " << phaseDepthBitsVal;
+    
+    status = depthSensor->setControl("phaseDepthBits", test_phaseDepthBitsVal);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Cannnot set phaseDepthBits value!";
+        return 1;
+    }
+    LOG(INFO) << "phaseDepthBits value set ";
+    
+    status = depthSensor->getControl("phaseDepthBits", phaseDepthBitsVal);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Cannnot retreive phaseDepthBits!";
+        return 1;
+    }
+    LOG(INFO) << "bitsInPhaseOrDepth value after: " << phaseDepthBitsVal;
+    
+    if (phaseDepthBitsVal != test_phaseDepthBitsVal) {
+        LOG(ERROR) << "value set is not value get!";
+        return 1;
+    }
+    
+    //bitsInConf
+    std::string bitsInConfVal;
+    std::string test_bitsInConfVal = "2";
+    status = depthSensor->getControl("confidenceBits", bitsInConfVal);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Cannnot retreive confidenceBits value!";
+        return 1;
+    }
+    LOG(INFO) << "bitsInConf: " << bitsInConfVal;
+    
+    status = depthSensor->setControl("confidenceBits", test_bitsInConfVal);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Cannnot set confidenceBits value!";
+        return 1;
+    }
+    LOG(INFO) << "bitsInConf value set ";
+    
+    status = depthSensor->getControl("confidenceBits", bitsInConfVal);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Cannnot retreive confidenceBits!";
+        return 1;
+    }
+    LOG(INFO) << "confidenceBits value after: " << bitsInConfVal;
+
+    if (bitsInConfVal != test_bitsInConfVal) {
+        LOG(ERROR) << "value set is not value get!";
+        return 1;
+    }
+
+    //bitsInAB
+    std::string bitsInABVal;
+    std::string test_bitsInABVal = "0";
+    status = depthSensor->getControl("abBits", bitsInABVal);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Cannnot retreive bitsInAB value!";
+        return 1;
+    }
+    LOG(INFO) << "bitsInAB: " << bitsInABVal;
+
+    status = depthSensor->setControl("abBits", test_bitsInABVal);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Cannnot set bitsInAB value!";
+        return 1;
+    }
+    LOG(INFO) << "bitsInAB value set ";
+
+    status = depthSensor->getControl("abBits", bitsInABVal);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Cannnot retreive bitsInAB!";
+        return 1;
+    }
+    LOG(INFO) << "bitsInAB value after: " << bitsInABVal;
+
+    if (bitsInABVal != test_bitsInABVal) {
+        LOG(ERROR) << "value set is not value get!";
+        return 1;
+    }
+
+    //fps
     uint16_t fpsValue;
     status = camera->adsd3500GetFrameRate(fpsValue);
     if (status != Status::OK) {

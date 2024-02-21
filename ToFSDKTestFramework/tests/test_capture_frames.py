@@ -35,17 +35,25 @@ import os.path
 import numpy as np
 import logging
 import os
+import math
 
 Logger = logging.getLogger(__name__)
 
+metadataLength = 128
+
 frame_dir = "./data_dir/"
 frame_types = ["ab" , "depth" , "conf" , "metadata"]
-#mode_names = ["sr-native" , "lr-native" , "sr-qnative" , "lr-qnative" , "pcm-native" , "lr-mixed" , "sr-mixed"]
-modeName = 'sr-native'
-def test_cpp_program():
+mode_name = {0: "sr-native", 1: "lr-native", 2: "sr-qnative", 3: "lr-qnative",
+    4: "pcm-native", 5: "lr-mixed", 6: "sr-mixed"}
+DataTypeSize = {"ab":2 , "depth":2 , "conf":4 , "metadata":128}
+FrameSize = {0:1024, 1: 1024, 2: 512, 3:512,
+    4: 1024, 5: 512, 6: 512}
+    
+def test_capture_frames(available_modes_ini, ip_set, config_file):
     # Run the 'dir ..' command and capture the output
     exe_path = "../../build/examples/test_frame_capture/release/test_frame_capture.exe"
-    process = subprocess.run(exe_path, text=True,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    process = subprocess.run([exe_path, str(available_modes_ini), ip_set, config_file], 
+        text=True,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     print(process.stdout)
     assert process.returncode == 0 
     Logger.info(process.stdout)
@@ -53,5 +61,20 @@ def test_cpp_program():
     
     #for modeName in modeName:
     for frameType in frame_types:
-        assert os.path.exists(frame_dir + 'out_' + frameType + "_" + modeName + ".bin" )
-    
+        assert os.path.exists(frame_dir + 'out_' + frameType + "_" + 
+            mode_name[available_modes_ini] + ".bin" ),"binary file, not saved"
+        
+        if frameType == "metadata":
+            data_size = metadataLength
+        else:
+            data_size = (FrameSize[available_modes_ini]**2)*DataTypeSize[frameType]
+     
+        file_size = os.path.getsize (frame_dir + 'out_' + frameType + "_" + mode_name[available_modes_ini] + ".bin")
+        
+        assert data_size == file_size,"not compatible with data size"
+     
+        if mode_name[available_modes_ini] == "pcm-native":
+            break
+        
+        
+
