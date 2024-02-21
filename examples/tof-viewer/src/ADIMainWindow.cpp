@@ -1335,6 +1335,10 @@ void ADIMainWindow::prepareCamera(std::string mode) {
     status = getActiveCamera()->getDetails(camDetails);
     int totalCaptures = camDetails.frameType.totalCaptures;
 
+    if (expectedFPS == 0) {
+        status = getActiveCamera()->adsd3500GetFrameRate(expectedFPS);
+    }
+
     view->m_ctrl->m_recorder->m_frameDetails.totalCaptures = totalCaptures;
 
     if (!view->getUserABMaxState()) {
@@ -1509,7 +1513,7 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                 Status status = frame->getMetadataStruct(metadata);
                 if (status != Status::OK) {
                     LOG(ERROR) << "Failed to get frame metadata.";
-                } else if (isPlaying || isRecording) {
+                } else {
                     int32_t frameNum = (metadata.frameNumber);
                     if (!firstFrame) {
                         firstFrame = frameNum;
@@ -1517,10 +1521,6 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                     int32_t sensorTemp = (metadata.sensorTemperature);
                     int32_t laserTemp = (metadata.laserTemperature);
                     ImGui::Text(" Current FPS: %i", fps);
-                    if (expectedFPS == 0) {
-                        Status status =
-                            camera->adsd3500GetFrameRate(expectedFPS);
-                    }
                     if (expectedFPS) {
                         ImGui::SameLine();
                         ImGui::Text(" | Expected FPS: %i", expectedFPS);
