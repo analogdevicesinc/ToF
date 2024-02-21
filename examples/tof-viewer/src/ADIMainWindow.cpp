@@ -1486,48 +1486,52 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
         ImGui::Text("%ipx x %ipx -> %ipx x %ipx", view->frameWidth,
                     view->frameHeight, (uint32_t)displayABDimensions.x,
                     (uint32_t)displayABDimensions.y);
-        auto camera = getActiveCamera();
-        if (!camera) {
-            LOG(ERROR) << "No camera found";
-            return;
-        }
-        auto frame = view->m_capturedFrame;
-        frameRecvd++;
-        if (!frame) {
-            LOG(ERROR) << "No frame received";
-            return;
-        }
-        CameraDetails cameraDetails;
-        camera->getDetails(cameraDetails);
-        std::string camera_mode = cameraDetails.mode;
-        if (camera_mode != "pcm-native") {
-            Metadata metadata;
-            Status status = frame->getMetadataStruct(metadata);
-            if (status != Status::OK) {
-                LOG(ERROR) << "Failed to get frame metadata.";
-            } else if (isPlaying || isRecording) {
-                int32_t frameNum = (metadata.frameNumber);
-                if (!firstFrame) {
-                    firstFrame = frameNum;
-                }
-                int32_t sensorTemp = (metadata.sensorTemperature);
-                int32_t laserTemp = (metadata.laserTemperature);
-                ImGui::Text(" Current FPS: %i", fps);
-                if (expectedFPS == 0) {
-                    Status status = camera->adsd3500GetFrameRate(expectedFPS);
-                }
-                if (expectedFPS) {
+
+        if (isPlaying || isRecording) {
+            auto camera = getActiveCamera();
+            if (!camera) {
+                LOG(ERROR) << "No camera found";
+                return;
+            }
+            auto frame = view->m_capturedFrame;
+            frameRecvd++;
+            if (!frame) {
+                LOG(ERROR) << "No frame received";
+                return;
+            }
+            CameraDetails cameraDetails;
+            camera->getDetails(cameraDetails);
+            std::string camera_mode = cameraDetails.mode;
+            if (camera_mode != "pcm-native") {
+                Metadata metadata;
+                Status status = frame->getMetadataStruct(metadata);
+                if (status != Status::OK) {
+                    LOG(ERROR) << "Failed to get frame metadata.";
+                } else if (isPlaying || isRecording) {
+                    int32_t frameNum = (metadata.frameNumber);
+                    if (!firstFrame) {
+                        firstFrame = frameNum;
+                    }
+                    int32_t sensorTemp = (metadata.sensorTemperature);
+                    int32_t laserTemp = (metadata.laserTemperature);
+                    ImGui::Text(" Current FPS: %i", fps);
+                    if (expectedFPS == 0) {
+                        Status status =
+                            camera->adsd3500GetFrameRate(expectedFPS);
+                    }
+                    if (expectedFPS) {
+                        ImGui::SameLine();
+                        ImGui::Text(" | Expected FPS: %i", expectedFPS);
+                    }
+                    uint32_t totalFrames = frameNum - firstFrame;
+                    uint32_t frameLost = totalFrames - frameRecvd;
+                    ImGui::Text(" Number of frames lost: %i", frameLost);
                     ImGui::SameLine();
-                    ImGui::Text(" | Expected FPS: %i", expectedFPS);
+                    ImGui::Text(" | Number of frames received: %i", frameRecvd);
+                    ImGui::Text(" Laser Temperature: %iC", laserTemp);
+                    ImGui::SameLine();
+                    ImGui::Text(" | Sensor Temperature: %iC", sensorTemp);
                 }
-                uint32_t totalFrames = frameNum - firstFrame;
-                uint32_t frameLost = totalFrames - frameRecvd;
-                ImGui::Text(" Number of frames lost: %i", frameLost);
-                ImGui::SameLine();
-                ImGui::Text(" | Number of frames received: %i", frameRecvd);
-                ImGui::Text(" Laser Temperature: %iC", laserTemp);
-                ImGui::SameLine();
-                ImGui::Text(" | Sensor Temperature: %iC", sensorTemp);
             }
         }
 
