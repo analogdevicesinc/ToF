@@ -30,3 +30,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "sensor-tables/custom_modes.h"
+#include "sensor-tables/custom_raw_modes.h"
+#include "sensor-tables/standard_modes.h"
+#include "sensor-tables/standard_raw_modes.h"
+
+#include <aditof/status_definitions.h>
+
+#include <map>
+
+class Adsd3500ModeSelector {
+  public:
+    Adsd3500ModeSelector();
+    ~Adsd3500ModeSelector() = default;
+
+    //functions to set which table configuration to use
+    aditof::Status setConfiguration(std::string &configuration);
+    aditof::Status
+    getConfigurationTable(aditof::DepthSensorFrameType &configurationTable);
+
+    //Functions used to set mode, number of bits, pixel format, etc
+    aditof::Status setControl(std::string &control, std::string &value);
+    aditof::Status getControl(std::string &control, std::string &value);
+
+  private:
+    std::string m_configuration;
+    const std::vector<std::string> m_availableConfigurations;
+    std::map<std::string, std::string> m_controls;
+    std::vector<aditof::DepthSensorFrameType> m_tableInUse;
+};
