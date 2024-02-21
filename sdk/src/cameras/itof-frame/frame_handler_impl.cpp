@@ -95,10 +95,6 @@ Status FrameHandlerImpl::saveFrameToFile(aditof::Frame &frame,
     uint16_t *xyzData;
 
     frame.getData("metadata", &metaData);
-    frame.getData("depth", &depthData);
-    frame.getData("ab", &abData);
-    frame.getData("conf", &confData);
-    frame.getData("xyz", &xyzData);
 
     Metadata metadataStruct;
     frame.getMetadataStruct(metadataStruct);
@@ -107,18 +103,29 @@ Status FrameHandlerImpl::saveFrameToFile(aditof::Frame &frame,
     //TO DO: implement use-case where we don't have metadata
     m_file.write(reinterpret_cast<char *>(metaData), METADATA_SIZE);
 
-    if (metadataStruct.bitsInDepth)
+    if (metadataStruct.bitsInDepth) {
+        frame.getData("depth", &depthData);
         m_file.write(reinterpret_cast<char *>(depthData),
                      metadataStruct.width * metadataStruct.height * 2);
-    if (metadataStruct.bitsInAb)
+    }
+
+    if (metadataStruct.bitsInAb) {
+        frame.getData("ab", &abData);
         m_file.write(reinterpret_cast<char *>(abData),
                      metadataStruct.width * metadataStruct.height * 2);
-    if (metadataStruct.bitsInConfidence)
+    }
+
+    if (metadataStruct.bitsInConfidence) {
+        frame.getData("conf", &confData);
         m_file.write(reinterpret_cast<char *>(confData),
                      metadataStruct.width * metadataStruct.height * 4);
-    if (metadataStruct.xyzEnabled)
+    }
+
+    if (metadataStruct.xyzEnabled) {
+        frame.getData("xyz", &xyzData);
         m_file.write(reinterpret_cast<char *>(xyzData),
                      metadataStruct.width * metadataStruct.height * 6);
+    }
 
     m_file.close();
 
@@ -218,25 +225,33 @@ Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
     frDataDetails.height = 1;
     m_frDetails.dataDetails.emplace_back(frDataDetails);
 
-    frDataDetails.type = "depth";
-    frDataDetails.width = m_metadataStruct.width;
-    frDataDetails.height = m_metadataStruct.height;
-    m_frDetails.dataDetails.emplace_back(frDataDetails);
+    if (m_metadataStruct.bitsInDepth) {
+        frDataDetails.type = "depth";
+        frDataDetails.width = m_metadataStruct.width;
+        frDataDetails.height = m_metadataStruct.height;
+        m_frDetails.dataDetails.emplace_back(frDataDetails);
+    }
 
-    frDataDetails.type = "ab";
-    frDataDetails.width = m_metadataStruct.width;
-    frDataDetails.height = m_metadataStruct.height;
-    m_frDetails.dataDetails.emplace_back(frDataDetails);
+    if (m_metadataStruct.bitsInAb) {
+        frDataDetails.type = "ab";
+        frDataDetails.width = m_metadataStruct.width;
+        frDataDetails.height = m_metadataStruct.height;
+        m_frDetails.dataDetails.emplace_back(frDataDetails);
+    }
 
-    frDataDetails.type = "conf";
-    frDataDetails.width = m_metadataStruct.width;
-    frDataDetails.height = m_metadataStruct.height;
-    m_frDetails.dataDetails.emplace_back(frDataDetails);
+    if (m_metadataStruct.bitsInConfidence) {
+        frDataDetails.type = "conf";
+        frDataDetails.width = m_metadataStruct.width;
+        frDataDetails.height = m_metadataStruct.height;
+        m_frDetails.dataDetails.emplace_back(frDataDetails);
+    }
 
-    frDataDetails.type = "xyz";
-    frDataDetails.width = m_metadataStruct.width;
-    frDataDetails.height = m_metadataStruct.height;
-    m_frDetails.dataDetails.emplace_back(frDataDetails);
+    if (m_metadataStruct.xyzEnabled) {
+        frDataDetails.type = "xyz";
+        frDataDetails.width = m_metadataStruct.width;
+        frDataDetails.height = m_metadataStruct.height;
+        m_frDetails.dataDetails.emplace_back(frDataDetails);
+    }
 
     status = frame.setDetails(m_frDetails);
     if (status != aditof::Status::OK) {
@@ -255,26 +270,29 @@ Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
     memcpy(metaData, reinterpret_cast<uint8_t *>(&m_metadataStruct),
            METADATA_SIZE);
 
-    frame.getData("depth", &depthData);
-    frame.getData("ab", &abData);
-    frame.getData("conf", &confData);
-    frame.getData("xyz", &xyzData);
-
-    //at first we assume that we have metadata enabled by default
-    //TO DO: implement use-case where we don't have metadata
-
-    if (m_metadataStruct.bitsInDepth)
+    if (m_metadataStruct.bitsInDepth) {
+        frame.getData("depth", &depthData);
         m_file.read(reinterpret_cast<char *>(depthData),
                     m_metadataStruct.width * m_metadataStruct.height * 2);
-    if (m_metadataStruct.bitsInAb)
+    }
+
+    if (m_metadataStruct.bitsInAb) {
+        frame.getData("ab", &abData);
         m_file.read(reinterpret_cast<char *>(abData),
                     m_metadataStruct.width * m_metadataStruct.height * 2);
-    if (m_metadataStruct.bitsInConfidence)
+    }
+
+    if (m_metadataStruct.bitsInConfidence) {
+        frame.getData("conf", &confData);
         m_file.read(reinterpret_cast<char *>(confData),
                     m_metadataStruct.width * m_metadataStruct.height * 4);
-    if (m_metadataStruct.xyzEnabled)
+    }
+
+    if (m_metadataStruct.xyzEnabled) {
+        frame.getData("xyz", &xyzData);
         m_file.read(reinterpret_cast<char *>(xyzData),
                     m_metadataStruct.width * m_metadataStruct.height * 6);
+    }
 
     m_pos = m_file.tellg();
     m_file.close();
