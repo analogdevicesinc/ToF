@@ -709,7 +709,6 @@ void ADIMainWindow::showDeviceMenu() {
                     if (ImGuiExtensions::ADIButton("Stop", isPlaying)) {
                         isPlaying = false;
                         isPlayRecorded = false;
-                        firstFrame = 0;
                         frameRecvd = 0;
                         stopPlayCCD();
                         if (isRecording) {
@@ -951,6 +950,7 @@ void ADIMainWindow::stopPlayCCD() {
     openGLCleanUp();
     isPlaying = false;
     isPlayRecorded = false;
+    firstFrame = 0;
 }
 
 void ADIMainWindow::openGLCleanUp() {
@@ -1102,7 +1102,6 @@ void ADIMainWindow::showIniWindow(bool *p_open) {
             {
                 isPlaying = false;
                 isPlayRecorded = false;
-                firstFrame = 0;
                 frameRecvd = 0;
                 stopPlayCCD();
                 if (isRecording) {
@@ -1141,7 +1140,6 @@ void ADIMainWindow::showIniWindow(bool *p_open) {
             {
                 isPlaying = false;
                 isPlayRecorded = false;
-                firstFrame = 0;
                 frameRecvd = 0;
                 stopPlayCCD();
                 if (isRecording) {
@@ -1553,7 +1551,6 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
             if (ImGuiExtensions::ADIButton("Stop Streaming", isPlaying)) {
                 isPlaying = false;
                 isPlayRecorded = false;
-                firstFrame = 0;
                 frameRecvd = 0;
                 stopPlayCCD();
                 if (isRecording) {
@@ -1573,7 +1570,6 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
             if (ImGuiExtensions::ADIButton("Stop Recording", isPlaying)) {
                 isPlaying = false;
                 isPlayRecorded = false;
-                firstFrame = 0;
                 frameRecvd = 0;
                 stopPlayCCD();
                 if (isRecording) {
@@ -1627,7 +1623,6 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                     customColorStop, isPlayRecorded);
                 if (ImGuiExtensions::ADIButton("Close Recording",
                                                isPlayRecorded)) {
-                    firstFrame = 0;
                     stopPlayback();
                 }
             }
