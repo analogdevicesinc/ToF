@@ -49,11 +49,6 @@ namespace aditof {
 class Frame;
 
 /**
- * @brief Callback for frame updates
- */
-typedef std::function<void(Status, Frame *)> FrameUpdateCallback;
-
-/**
  * @struct IntrinsicParameters
  * @brief Describes the intrinsic parameters of a camera.
  */
