@@ -81,7 +81,8 @@ class SDK_API Camera {
     virtual Status stop() = 0;
 
     /**
-     * @brief Puts the camera into the given mode. DEPRECATED!
+     * * \deprecated
+     * @brief Puts the camera into the given mode. **DEPRECATED!**
      * NOTE: This method is deprecated. Use 'setFrameType' instead.
      * @param mode - The mode of the camera
      * @param modeFilename - When there is a need to use a custom mode
@@ -93,7 +94,8 @@ class SDK_API Camera {
                            const std::string &modeFilename = {}) = 0;
 
     /**
-     * @brief Returns all the modes that are supported by the camera. DEPRECATED!
+     * \deprecated
+     * @brief Returns all the modes that are supported by the camera. **DEPRECATED!**
      * NOTE: This method is deprecated. Use 'getAvailableFrameTypes' instead.
      * @param[out] availableModes
      * @return Status
