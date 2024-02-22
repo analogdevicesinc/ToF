@@ -44,6 +44,7 @@
 #include <ios>
 #include <iostream>
 #include <map>
+#include <thread>
 
 using namespace aditof;
 
@@ -99,6 +100,12 @@ Status save_frame(aditof::Frame &frame, std::string frameType) {
 }
 
 int main(int argc, char *argv[]) {
+
+    // Start time
+    auto start_time = std::chrono::steady_clock::now();
+    // Duration of 30 minutes
+    auto duration = std::chrono::minutes(30);
+
     std::map<std::string, struct Argument> command_map = {
         {"-h", {"--help", false, "", ""}},
         {"-ip", {"--ip", false, "", ""}},
@@ -242,35 +249,51 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "Could not start the camera!";
         return 0;
     }
-    aditof::Frame frame;
 
-    status = camera->requestFrame(&frame);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not request frame!";
-        return 0;
-    } else {
-        LOG(INFO) << "succesfully requested frame!";
-    }
-
-    save_frame(frame, "ir");
-    save_frame(frame, "depth");
-
-    // Get the timestamp of the frame
+    std::ofstream file("timestampDifference_and_requestFrameExecutionTime_values.txt", std::ios_base::trunc);
     int64_t *timestamp;
-    frame.getData("timestamp", reinterpret_cast<uint16_t **>(&timestamp));
-    if (timestamp) {
-        LOG(INFO) << "frame timestamp is: " << *timestamp;
+    
+    while(true) {        
+        aditof::Frame frame;
 
-        // Display amount of time between the moment the frame was captured and this moment
-        auto frameCapturedTimepointMs =
-            std::chrono::time_point_cast<std::chrono::milliseconds>(
-                std::chrono::system_clock::time_point(
-                    std::chrono::milliseconds(*timestamp)));
-        const auto nowMs =
-            std::chrono::time_point_cast<std::chrono::milliseconds>(
-                std::chrono::system_clock::now());
-        LOG(INFO) << "time passed since the frame was captured: "
-                  << (nowMs - frameCapturedTimepointMs).count() << "ms";
+        // Check if 30 minutes have elapsed
+        if (std::chrono::steady_clock::now() - start_time >= duration) {
+            break;  // Exit the loop if 30 minutes have elapsed
+        }
+
+        auto start = std::chrono::high_resolution_clock::now();
+        status = camera->requestFrame(&frame);
+        auto end = std::chrono::high_resolution_clock::now();
+
+        // Calculate duration in milliseconds
+        std::chrono::duration<double, std::milli> requestFrameDuration = end - start;
+        // Print duration
+        LOG(INFO) << "requestFrame Execution time: " << requestFrameDuration.count() << " ms" << std::endl;
+
+        if (status != Status::OK) {
+            LOG(ERROR) << "Could not request frame!";
+            file << "Unable to get the frame" << "\n";
+        } else {
+            LOG(INFO) << "succesfully requested frame!";
+
+            frame.getData("timestamp", reinterpret_cast<uint16_t **>(&timestamp));
+            if (timestamp) {
+                LOG(INFO) << "frame timestamp is: " << *timestamp;
+
+                // Display amount of time between the moment the frame was captured and this moment
+                auto frameCapturedTimepointMs =
+                    std::chrono::time_point_cast<std::chrono::milliseconds>(
+                        std::chrono::system_clock::time_point(
+                            std::chrono::milliseconds(*timestamp)));
+                const auto nowMs =
+                    std::chrono::time_point_cast<std::chrono::milliseconds>(
+                        std::chrono::system_clock::now());
+                LOG(INFO) << "time passed since the frame was captured: "
+                    << (nowMs - frameCapturedTimepointMs).count() << "ms";
+                file << "requestFrameDuration: " << requestFrameDuration.count() << ", timestamp_diff: " << (nowMs - frameCapturedTimepointMs).count() << "\n";
+            }
+        }
+
     }
 
     // Example of reading temperature from hardware
@@ -280,11 +303,12 @@ int main(int argc, char *argv[]) {
     if (status != Status::OK) {
         LOG(ERROR) << "Could not read sensor temperature!";
     }
-
     status = camera->adsd3500GetLaserTemperature(laserTmp);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not read laser temperature!";
     }
+    LOG(INFO) << "Sensor temperature: " << sensorTmp;
+    LOG(INFO) << "Laser temperature: " << laserTmp;
 
     status = camera->stop();
     if (status != Status::OK) {
@@ -292,8 +316,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    LOG(INFO) << "Sensor temperature: " << sensorTmp;
-    LOG(INFO) << "Laser temperature: " << laserTmp;
+    file.close();
 
     return 0;
 }
