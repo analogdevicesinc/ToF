@@ -141,16 +141,10 @@ class SDK_API Camera {
 
     /**
      * @brief Captures data from the camera and assigns it to the given frame.
-     * If cb parameter is not given this operation will be blocking. If a
-     * callback is provided this operation will be unblocking and once the data
-     * for the frame is ready, an internal thread will call the specified
-     * callback.
      * @param frame - The frame to which the camera data should be assign
-     * @param cb - Callback to be called when frame is updated
      * @return Status
      */
-    virtual Status requestFrame(Frame *frame,
-                                FrameUpdateCallback cb = nullptr) = 0;
+    virtual Status requestFrame(Frame *frame) = 0;
 
     /**
      * @brief Gets the current details of the camera

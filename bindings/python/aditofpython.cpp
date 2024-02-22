@@ -329,8 +329,7 @@ PYBIND11_MODULE(aditofpython, m) {
                 return std::make_pair(status, name);
             },
             py::arg("id"), py::arg("name"))
-        .def("requestFrame", &aditof::Camera::requestFrame, py::arg("frame"),
-             py::arg("cb") = nullptr)
+        .def("requestFrame", &aditof::Camera::requestFrame, py::arg("frame"))
         .def("getDetails", &aditof::Camera::getDetails, py::arg("details"))
         .def(
             "getAvailableControls",
