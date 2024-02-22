@@ -1330,6 +1330,11 @@ void ADIMainWindow::prepareCamera(std::string mode) {
     if (mode == last_mode) {
         if (!modified_ini_params.empty()) {
             if (use_modified_ini_params) {
+                status = getActiveCamera()->setIniParams(modified_ini_params);
+                if (status != aditof::Status::OK) {
+                    LOG(ERROR)
+                        << "Could not set ini params for Depth Compute Library";
+                }
                 status = getActiveCamera()->adsd3500SetIniParams(
                     modified_ini_params);
                 if (status != aditof::Status::OK) {
