@@ -118,7 +118,17 @@ class SDK_API Camera {
      * @param params - a dictionary of parameters
      * @return Status
     */
-    virtual Status setIniParams(std::map<std::string, float> &params) = 0;
+    virtual Status
+    setIniParams(std::map<std::string, float> &params) = 0; // will deprecate
+
+    /**
+     * @brief Set the Depth Compute Library ini parameters
+     * @param iniKeyValPairs - a dictionary of parameters
+     * @return Status
+    */
+    virtual Status adsd3500SetIniParams(
+        const std::map<std::string, float> &iniKeyValPairs) = 0;
+
     /**
      * @brief Returns all the frame types that are supported by the camera
      * @param[out] availableFrameTypes
