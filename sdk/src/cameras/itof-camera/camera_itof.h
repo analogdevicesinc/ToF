@@ -127,6 +127,8 @@ class CameraItof : public aditof::Camera {
     aditof::Status readSerialNumber(std::string &serialNumber,
                                     bool useCacheValue = false) override;
     aditof::Status getImagerType(aditof::ImagerType &imagerType) const override;
+    aditof::Status
+    adsd3500SetIniParams(const std::map<std::string, float> &iniKeyValPairs);
 
   private:
     /**

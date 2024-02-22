@@ -1929,6 +1929,161 @@ void CameraItof::setAdsd3500WithIniParams(
     }
 }
 
+aditof::Status CameraItof::adsd3500SetIniParams(
+    const std::map<std::string, float> &iniKeyValPairs) {
+    using namespace aditof;
+    Status status = Status::OK;
+
+    auto it = iniKeyValPairs.find("ab_thresh_min");
+    if (it != iniKeyValPairs.end()) {
+        status = adsd3500SetABinvalidationThreshold(int(it->second));
+        if (status != Status::OK) {
+            LOG(ERROR) << "Request to write registers failed";
+            return status;
+        }
+    } else {
+        LOG(WARNING)
+            << "ab_thresh_min was not found in ini params, not setting.";
+    }
+
+    it = iniKeyValPairs.find("conf_thresh");
+    if (it != iniKeyValPairs.end()) {
+        status = adsd3500SetConfidenceThreshold(int(it->second));
+        if (status != Status::OK) {
+            LOG(ERROR) << "Request to write registers failed";
+            return status;
+        }
+    } else {
+        LOG(WARNING) << "conf_thresh was not found in ini params, not setting.";
+    }
+
+    it = iniKeyValPairs.find("radial_thresh_min");
+    if (it != iniKeyValPairs.end()) {
+        status = adsd3500SetRadialThresholdMin(int(it->second));
+        if (status != Status::OK) {
+            LOG(ERROR) << "Request to write registers failed";
+            return status;
+        }
+    } else {
+        LOG(WARNING)
+            << "radial_thresh_min was not found in ini params, not setting.";
+    }
+
+    it = iniKeyValPairs.find("radial_thresh_max");
+    if (it != iniKeyValPairs.end()) {
+        status = adsd3500SetRadialThresholdMax(int(it->second));
+        if (status != Status::OK) {
+            LOG(ERROR) << "Request to write registers failed";
+            return status;
+        }
+    } else {
+        LOG(WARNING)
+            << "radial_thresh_max was not found in ini params, not setting.";
+    }
+
+    it = iniKeyValPairs.find("jblf_window_size");
+    if (it != iniKeyValPairs.end()) {
+        status = adsd3500SetJBLFfilterSize(int(it->second));
+        if (status != Status::OK) {
+            LOG(ERROR) << "Request to write registers failed";
+            return status;
+        }
+    } else {
+        LOG(WARNING)
+            << "jblf_window_size was not found in ini params, not setting.";
+    }
+
+    it = iniKeyValPairs.find("jblf_apply_flag");
+    if (it != iniKeyValPairs.end()) {
+        status = adsd3500SetJBLFfilterEnableState(it->second);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Request to write registers failed";
+            return status;
+        }
+    } else {
+        LOG(WARNING)
+            << "jblf_apply_flag was not found in ini params, not setting.";
+    }
+
+    it = iniKeyValPairs.find("fps");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500SetFrameRate(it->second);
+    } else {
+        LOG(WARNING) << "fps was not found in ini params, not setting.";
+    }
+
+    it = iniKeyValPairs.find("vcselDelay");
+    if (it != iniKeyValPairs.end()) {
+        status = adsd3500SetVCSELDelay(uint16_t(it->second));
+        if (status != Status::OK) {
+            LOG(ERROR) << "Request to write registers failed";
+            return status;
+        }
+    } else {
+        LOG(WARNING) << "vcselDelay was not found in ini params, not setting.";
+    }
+
+    it = iniKeyValPairs.find("jblf_max_edge");
+    if (it != iniKeyValPairs.end()) {
+        status = adsd3500SetJBLFMaxEdgeThreshold(uint16_t(it->second));
+        if (status != Status::OK) {
+            LOG(ERROR) << "Request to write registers failed";
+            return status;
+        }
+    } else {
+        LOG(WARNING) << "jblf_max_edge was not found in ini params, "
+                        "not setting.";
+    }
+
+    it = iniKeyValPairs.find("jblf_ab_threshold");
+    if (it != iniKeyValPairs.end()) {
+        status = adsd3500SetJBLFABThreshold(uint16_t(it->second));
+        if (status != Status::OK) {
+            LOG(ERROR) << "Request to write registers failed";
+            return status;
+        }
+    } else {
+        LOG(WARNING) << "jblf_ab_threshold was not found in ini params";
+    }
+
+    it = iniKeyValPairs.find("jblf_gaussian_sigma");
+    if (it != iniKeyValPairs.end()) {
+        status = adsd3500SetJBLFGaussianSigma(uint16_t(it->second));
+        if (status != Status::OK) {
+            LOG(ERROR) << "Request to write registers failed";
+            return status;
+        }
+    } else {
+        LOG(WARNING)
+            << "jblf_gaussian_sigma was not found in ini params, not setting.";
+    }
+
+    it = iniKeyValPairs.find("jblf_exponential_term");
+    if (it != iniKeyValPairs.end()) {
+        status = adsd3500SetJBLFExponentialTerm(uint16_t(it->second));
+        if (status != Status::OK) {
+            LOG(ERROR) << "Request to write registers failed";
+            return status;
+        }
+    } else {
+        LOG(WARNING) << "jblf_exponential_term was not found in ini paramse, "
+                        "not setting.";
+    }
+
+    it = iniKeyValPairs.find("enablePhaseInvalidation");
+    if (it != iniKeyValPairs.end()) {
+        status = adsd3500SetEnablePhaseInvalidation(uint16_t(it->second));
+        if (status != Status::OK) {
+            LOG(ERROR) << "Request to write registers failed";
+            return status;
+        }
+    } else {
+        LOG(WARNING) << "enablePhaseInvalidation was not found in ini params, "
+                        "not setting.";
+    }
+    return status;
+}
+
 void CameraItof::cleanupXYZtables() {
     if (m_xyzTable.p_x_table) {
         free((void *)m_xyzTable.p_x_table);
