@@ -122,11 +122,10 @@ class SDK_API Camera {
      * @param params - a dictionary of parameters
      * @return Status
     */
-    virtual Status
-    setIniParams(std::map<std::string, float> &params) = 0; // will deprecate
+    virtual Status setIniParams(std::map<std::string, float> &params) = 0;
 
     /**
-     * @brief Set the Depth Compute Library ini parameters
+     * @brief Set the adsd3500 ini parameters
      * @param iniKeyValPairs - a dictionary of parameters
      * @return Status
     */
