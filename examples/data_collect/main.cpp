@@ -66,7 +66,7 @@ static const char kUsagePublic[] =
       --ip <ip>          Camera IP
       --fw <firmware>    Adsd3500 fw file
       --split            Save each frame into a separate file (Debug)
-      --netlinktest      Sends the same frame (Debug)
+      --netlinktest      Puts server on target in test mode (Debug)
       --singlethread     Store the frame to file using same tread
 
     Note: --m argument supports both index and string (0/sr-native) 
