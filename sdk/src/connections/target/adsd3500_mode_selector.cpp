@@ -31,24 +31,77 @@
  */
 #include "adsd3500_mode_selector.h"
 
-Adsd3500ModeSelector::Adsd3500ModeSelector() : m_configuration("standard"){};
+Adsd3500ModeSelector::Adsd3500ModeSelector() : m_configuration("standard") {
+
+    m_availableConfigurations.emplace_back("standard");
+    m_availableConfigurations.emplace_back("standardRaw");
+    m_availableConfigurations.emplace_back("custom");
+    m_availableConfigurations.emplace_back("customRaw");
+
+    m_controls.emplace("imagerType", "");
+    m_controls.emplace("modeInfoVersion", "");
+
+    m_controls.emplace("phaseDepthBits", "");
+    m_controls.emplace("abBits", "");
+    m_controls.emplace("confidenceBits", "");
+
+    m_controls.emplace("inputFormat", "");
+};
 
 //functions to set which table configuration to use
 aditof::Status
-Adsd3500ModeSelector::setConfiguration(std::string &configuration) {
-    return aditof::Status::UNAVAILABLE;
+Adsd3500ModeSelector::setConfiguration(const std::string &configuration) {
+    if (std::find(m_availableConfigurations.begin(),
+                  m_availableConfigurations.end(),
+                  configuration) != m_availableConfigurations.end()) {
+        m_configuration = configuration;
+        return aditof::Status::OK;
+    } else {
+        return aditof::Status::INVALID_ARGUMENT;
+    }
 }
 
-aditof::Status
-getConfigurationTable(aditof::DepthSensorFrameType &configurationTable) {
-    return aditof::Status::UNAVAILABLE;
+aditof::Status Adsd3500ModeSelector::getConfigurationTable(
+    aditof::DepthSensorFrameType &configurationTable) {
+        aditof::Status status;
+    if (m_controls["imagerType"] == "adsd3100") {
+        if(m_configuration == "standard"){
+            status = computeConfigurationTable(configurationTable);
+        } 
+    } else if (m_controls["imagerType"] == "adsd3030") {
+
+    } else {
+        return aditof::Status::GENERIC_ERROR;
+    }
 };
 
 //Functions used to set mode, number of bits, pixel format, etc
-aditof::Status setControl(std::string &control, std::string &value) {
-    return aditof::Status::UNAVAILABLE;
+aditof::Status Adsd3500ModeSelector::setControl(const std::string &control, const std::string &value) {
+using namespace aditof;
+    Status status = Status::OK;
+
+    if (m_controls.count(control) == 0) {
+        return Status::INVALID_ARGUMENT;
+    }
+
+    m_controls[control] = value;
+
+    return status;
 };
 
-aditof::Status getControl(std::string &control, std::string &value) {
-    return aditof::Status::UNAVAILABLE;
+aditof::Status Adsd3500ModeSelector::getControl(const std::string &control, std::string &value) {
+    using namespace aditof;
+    Status status = Status::OK;
+
+    if (m_controls.count(control) == 0) {
+        return Status::INVALID_ARGUMENT;
+    }
+
+    value = m_controls[control];
+
+    return status;
 };
+
+aditof::Status Adsd3500ModeSelector::computeConfigurationTable(aditof::DepthSensorFrameType &configurationTable){
+    return aditof::Status::UNAVAILABLE;
+}
