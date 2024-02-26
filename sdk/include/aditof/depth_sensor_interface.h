@@ -322,6 +322,15 @@ class DepthSensorInterface {
     */
     virtual aditof::Status
     setIniParams(const std::map<std::string, float> &params) = 0;
+
+    /**
+     * @brief Set sensor configutation table
+     * @param sensorConf - Configuration table name string like
+     * e.g. standard, standardraw, custom and customraw
+     * @return Status
+     */
+    virtual aditof::Status
+    setSensorConfiguration(const std::string &sensorConf) = 0;
 };
 
 } // namespace aditof
