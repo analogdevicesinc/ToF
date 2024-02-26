@@ -1101,6 +1101,23 @@ void ADIMainWindow::showIniWindow(bool *p_open) {
         }
         ImGui::Checkbox("Metadata Over AB", &metadata);
 
+        // modify ini params
+        modified_ini_params["ab_thresh_min"] = abThreshMin;
+        modified_ini_params["ab_sum_thresh"] = abSumThresh;
+        modified_ini_params["conf_thresh"] = confThresh;
+        modified_ini_params["radial_thresh_min"] = radialThreshMin;
+        modified_ini_params["radial_thresh_max"] = radialThreshMax;
+        if (jblfApplyFlag) {
+            modified_ini_params["jblf_apply_flag"] = 1;
+        } else {
+            modified_ini_params["jblf_apply_flag"] = 0;
+        }
+        modified_ini_params["jblf_window_size"] = jblfWindowSize;
+        modified_ini_params["jblf_gaussian_sigma"] = jblfGaussianSigma;
+        modified_ini_params["jblf_exponential_term"] = jblfExponentialTerm;
+        modified_ini_params["jblf_max_edge"] = jblfMaxEdge;
+        modified_ini_params["jblf_ab_threshold"] = jblfABThreshold;
+
         if (ImGui::Button("Modify")) {
             // stop streaming
             {
@@ -1113,22 +1130,6 @@ void ADIMainWindow::showIniWindow(bool *p_open) {
                     isRecording = false;
                 }
             }
-            // modify ini params
-            modified_ini_params["ab_thresh_min"] = abThreshMin;
-            modified_ini_params["ab_sum_thresh"] = abSumThresh;
-            modified_ini_params["conf_thresh"] = confThresh;
-            modified_ini_params["radial_thresh_min"] = radialThreshMin;
-            modified_ini_params["radial_thresh_max"] = radialThreshMax;
-            if (jblfApplyFlag) {
-                modified_ini_params["jblf_apply_flag"] = 1;
-            } else {
-                modified_ini_params["jblf_apply_flag"] = 0;
-            }
-            modified_ini_params["jblf_window_size"] = jblfWindowSize;
-            modified_ini_params["jblf_gaussian_sigma"] = jblfGaussianSigma;
-            modified_ini_params["jblf_exponential_term"] = jblfExponentialTerm;
-            modified_ini_params["jblf_max_edge"] = jblfMaxEdge;
-            modified_ini_params["jblf_ab_threshold"] = jblfABThreshold;
             use_modified_ini_params = true;
             // restart streaming
             {
