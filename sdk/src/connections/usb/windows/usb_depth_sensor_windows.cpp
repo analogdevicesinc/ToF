@@ -1422,3 +1422,9 @@ UsbDepthSensor::setIniParams(const std::map<std::string, float> &params) {
     Status status = Status::UNAVAILABLE;
     return status;
 }
+
+aditof::Status
+UsbDepthSensor::setSensorConfiguration(const std::string &sensorConf) {
+    // TODO: select sensor table configuration
+    return aditof::Status::OK;
+}
