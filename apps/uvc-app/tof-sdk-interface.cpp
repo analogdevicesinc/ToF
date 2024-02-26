@@ -225,6 +225,15 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
         break;
     }
 
+    case uvc_payload::FunctionName::SET_SENSOR_CONFIGURATION: {
+        std::string sensorConf = request.func_strings_param(0);
+        aditof::Status status =
+            camDepthSensor->setSensorConfiguration(sensorConf);
+        response.set_status(static_cast<::uvc_payload::Status>(status));
+
+        break;
+    }
+
     case uvc_payload::FunctionName::START: {
         aditof::Status status = camDepthSensor->start();
         response.set_status(static_cast<::uvc_payload::Status>(status));
