@@ -1246,3 +1246,40 @@ void NetworkDepthSensor::checkForServerUpdates() {
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
 }
+
+aditof::Status
+NetworkDepthSensor::setSensorConfiguration(const std::string &sensorConf) {
+    using namespace aditof;
+
+    Network *net = m_implData->handle.net;
+    std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
+
+    if (!net->isServer_Connected()) {
+        LOG(WARNING) << "Not connected to server";
+        return Status::UNREACHABLE;
+    }
+
+    net->send_buff[m_sensorIndex].set_func_name("SetSensorConfiguration");
+    net->send_buff[m_sensorIndex].add_func_strings_param(sensorConf);
+    net->send_buff[m_sensorIndex].set_expect_reply(true);
+
+    if (net->SendCommand() != 0) {
+        LOG(WARNING) << "Send Command Failed";
+        return Status::INVALID_ARGUMENT;
+    }
+
+    if (net->recv_server_data() != 0) {
+        LOG(WARNING) << "Receive Data Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    if (net->recv_buff[m_sensorIndex].server_status() !=
+        payload::ServerStatus::REQUEST_ACCEPTED) {
+        LOG(WARNING) << "API execution on Target Failed";
+        return Status::GENERIC_ERROR;
+    }
+
+    Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
+
+    return status;
+}

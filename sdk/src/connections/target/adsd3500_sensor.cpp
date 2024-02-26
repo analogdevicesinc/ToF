@@ -1739,6 +1739,13 @@ aditof::Status Adsd3500Sensor::adsd3500_get_status(int &chipStatus,
     return status;
 }
 
+aditof::Status
+Adsd3500Sensor::setSensorConfiguration(const std::string &sensorConf) {
+    // TODO: select sensor table configuration
+    LOG(INFO) << "setSensorConfiguration: " << sensorConf;
+    return aditof::Status::OK;
+}
+
 aditof::Adsd3500Status Adsd3500Sensor::convertIdToAdsd3500Status(int status) {
     using namespace aditof;
 

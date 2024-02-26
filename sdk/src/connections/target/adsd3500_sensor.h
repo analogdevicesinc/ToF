@@ -98,6 +98,8 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
         aditof::SensorInterruptCallback &cb) override;
     virtual aditof::Status adsd3500_get_status(int &chipStatus,
                                                int &imagerStatus) override;
+    virtual aditof::Status
+    setSensorConfiguration(const std::string &sensorConf) override;
 
   public: // implements V4lBufferAccessInterface
     // Methods that give a finer control than getFrame()

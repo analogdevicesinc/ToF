@@ -430,3 +430,9 @@ aditof::Status
 OfflineDepthSensor::setIniParams(const std::map<std::string, float> &params) {
     return aditof::Status::OK;
 }
+
+aditof::Status
+OfflineDepthSensor::setSensorConfiguration(const std::string &sensorConf) {
+    // TODO: select sensor table configuration
+    return aditof::Status::OK;
+}
