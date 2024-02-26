@@ -62,6 +62,7 @@ enum api_Values {
     HANG_UP,
     GET_INI_PARAM,
     SET_INI_PARAM,
+    SET_SENSOR_CONFIGURATION
 };
 
 enum protocols { PROTOCOL_EXAMPLE, PROTOCOL_COUNT };

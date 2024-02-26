@@ -1037,6 +1037,7 @@ aditof::Status CameraItof::saveModuleCCB(const std::string &filepath) {
 
     std::string ccbContent;
     aditof::Status status = readAdsd3500CCB(ccbContent);
+
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Failed to read CCB from adsd3500 module!";
         return aditof::Status::GENERIC_ERROR;
@@ -1306,6 +1307,7 @@ aditof::Status CameraItof::readAdsd3500CCB(std::string &ccb) {
 
     //remove the trailling 4 bytes containing the crc
     ccb = std::string((char *)ccbContent, ccbFileSize - 4);
+
     delete[] ccbContent;
 
     return status;
@@ -1601,6 +1603,11 @@ bool CameraItof::isConvertibleToDouble(const std::string &str) {
     } catch (...) {
     }
     return result;
+}
+
+aditof::Status
+CameraItof::setSensorConfiguration(const std::string &sensorConf) {
+    return m_depthSensor->setSensorConfiguration(sensorConf);
 }
 
 aditof::Status CameraItof::adsd3500SetToggleMode(int mode) {
