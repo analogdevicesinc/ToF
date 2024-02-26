@@ -1350,7 +1350,7 @@ void ADIMainWindow::prepareCamera(std::string mode) {
     status = getActiveCamera()->getDetails(camDetails);
     int totalCaptures = camDetails.frameType.totalCaptures;
 
-    if (expectedFPS == 0) {
+    if (mode == last_mode) {
         status = getActiveCamera()->adsd3500GetFrameRate(expectedFPS);
     }
 
