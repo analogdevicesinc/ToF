@@ -1235,7 +1235,12 @@ void NetworkDepthSensor::checkForServerUpdates() {
             // check server for interrupts
             std::unique_lock<std::mutex> mutex_lock(
                 m_implData->handle.net_mutex);
-            m_implData->cb();
+            if (m_implData->handle.net->isServer_Connected()) {
+                m_implData->cb();
+            } else {
+                m_stopServerCheck = true;
+                break;
+            }
         }
         // go back to sleep
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));

@@ -709,8 +709,7 @@ aditof::Status setAttributesByMode(aditof::Frame &frame,
     return status;
 }
 
-aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
-                                        aditof::FrameUpdateCallback /*cb*/) {
+aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
     using namespace aditof;
     Status status = Status::OK;
     ModeInfo::modeInfo aModeInfo;
