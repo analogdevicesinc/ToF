@@ -563,7 +563,6 @@ void ADIMainWindow::showRecordMenu() {
                 view->m_ctrl->stopRecording();
                 isRecording = false;
                 isPlayRecorded = false;
-                firstFrame = 0;
                 stopPlayCCD(); //TODO: Create a Stop ToF camera
                 isPlaying = false;
             }
@@ -1506,10 +1505,11 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                 return;
             }
             auto frame = view->m_capturedFrame;
-            frameRecvd++;
             if (!frame) {
                 LOG(ERROR) << "No frame received";
                 return;
+            } else {
+                frameRecvd++;
             }
             CameraDetails cameraDetails;
             camera->getDetails(cameraDetails);
@@ -1531,7 +1531,7 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                         ImGui::SameLine();
                         ImGui::Text(" | Expected FPS: %i", expectedFPS);
                     }
-                    uint32_t totalFrames = frameNum - firstFrame;
+                    uint32_t totalFrames = frameNum - firstFrame + 1;
                     uint32_t frameLost = totalFrames - frameRecvd;
                     ImGui::Text(" Number of frames lost: %i", frameLost);
                     ImGui::SameLine();
