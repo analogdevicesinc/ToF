@@ -30,35 +30,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "sensor-tables/depth_sensor_frame_types.h"
-#include "sensor-tables/driver_configuration_table.h"
+#include <vector>
+#include <aditof/depth_sensor_interface.h>
 
-#include <aditof/status_definitions.h>
+struct DriverConfiguration {
+    std::string configuration;
+    std::string imagerType;
+    std::string mode;
+    std::string depthBits;
+    std::string abBits;
+    std::string confBits;
+    std::string pixelFormat;
+    int driverWidth;
+    int driverHeigth;
+    int pixelFormatIndex;
 
-#include <map>
-
-class Adsd3500ModeSelector {
-  public:
-    Adsd3500ModeSelector();
-    ~Adsd3500ModeSelector() = default;
-
-    //functions to set which table configuration to use
-    aditof::Status setConfiguration(const std::string &configuration);
-
-    //populate table with hardcoded values depending on input
-    aditof::Status
-    getConfigurationTable(DepthSensorFrameTypeUpdated &configurationTable);
-
-    //this function should update the table with driver details
-    aditof::Status updateConfigurationTable(DepthSensorFrameTypeUpdated &configurationTable);
-
-    //Functions used to set mode, number of bits, pixel format, etc
-    aditof::Status setControl(const std::string &control,const  std::string &value);
-    aditof::Status getControl(const std::string &control, std::string &value);
-
-  private:
-    std::string m_configuration;
-    std::vector<std::string> m_availableConfigurations;
-    std::map<std::string, std::string> m_controls;
-    std::vector<aditof::DepthSensorFrameType> m_tableInUse;
 };
+
+const std::vector<DriverConfiguration> m_driverConfigurationTable = {
+  // imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
+  // sr-native
+    {"standard", "adsd3100", "0", "16", "16", "0", "raw16", 2048, 3072, 0},
+    {"standard", "adsd3100", "0", "12", "12", "0", "raw16_bits12_shift4", 1024, 3072, 1},
+    {"standard", "adsd3100", "0", "12", "16", "0", "mipiRaw12_8", 2048, 2560, 0},
+    
+  /* lr-native */
+    {"standard", "adsd3100", "1", "16", "16", "0", "raw16", 2048, 4096, 0},
+    {"standard", "adsd3100", "1", "12", "12", "0", "raw16_bits12_shift4", 1024, 4096, 1},
+    {"standard", "adsd3100", "1", "12", "16", "0", "mipiRaw12_8", 2048, 3328, 0},
+    };
