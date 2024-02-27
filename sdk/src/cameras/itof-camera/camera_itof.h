@@ -64,8 +64,7 @@ class CameraItof : public aditof::Camera {
         std::vector<std::string> &availableFrameTypes) const override;
     aditof::Status getFrameTypeNameFromId(int id,
                                           std::string &name) const override;
-    aditof::Status requestFrame(aditof::Frame *frame,
-                                aditof::FrameUpdateCallback cb) override;
+    aditof::Status requestFrame(aditof::Frame *frame) override;
     aditof::Status getDetails(aditof::CameraDetails &details) const override;
     aditof::Status
     getAvailableControls(std::vector<std::string> &controls) const override;
@@ -128,6 +127,8 @@ class CameraItof : public aditof::Camera {
     aditof::Status readSerialNumber(std::string &serialNumber,
                                     bool useCacheValue = false) override;
     aditof::Status getImagerType(aditof::ImagerType &imagerType) const override;
+    aditof::Status
+    adsd3500SetIniParams(const std::map<std::string, float> &iniKeyValPairs);
 
   private:
     /**

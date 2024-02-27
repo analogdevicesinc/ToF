@@ -81,7 +81,9 @@ class SDK_API Camera {
     virtual Status stop() = 0;
 
     /**
-     * @brief Puts the camera into the given mode.
+     * * \deprecated
+     * @brief Puts the camera into the given mode. **DEPRECATED!**
+     * NOTE: This method is deprecated. Use 'setFrameType' instead.
      * @param mode - The mode of the camera
      * @param modeFilename - When there is a need to use a custom mode
      * then mode parameter needs to be set to 'custom' and a firmware
@@ -92,7 +94,9 @@ class SDK_API Camera {
                            const std::string &modeFilename = {}) = 0;
 
     /**
-     * @brief Returns all the modes that are supported by the camera
+     * \deprecated
+     * @brief Returns all the modes that are supported by the camera. **DEPRECATED!**
+     * NOTE: This method is deprecated. Use 'getAvailableFrameTypes' instead.
      * @param[out] availableModes
      * @return Status
      */
@@ -119,6 +123,15 @@ class SDK_API Camera {
      * @return Status
     */
     virtual Status setIniParams(std::map<std::string, float> &params) = 0;
+
+    /**
+     * @brief Set the adsd3500 ini parameters
+     * @param iniKeyValPairs - a dictionary of parameters
+     * @return Status
+    */
+    virtual Status adsd3500SetIniParams(
+        const std::map<std::string, float> &iniKeyValPairs) = 0;
+
     /**
      * @brief Returns all the frame types that are supported by the camera
      * @param[out] availableFrameTypes
@@ -137,16 +150,10 @@ class SDK_API Camera {
 
     /**
      * @brief Captures data from the camera and assigns it to the given frame.
-     * If cb parameter is not given this operation will be blocking. If a
-     * callback is provided this operation will be unblocking and once the data
-     * for the frame is ready, an internal thread will call the specified
-     * callback.
      * @param frame - The frame to which the camera data should be assign
-     * @param cb - Callback to be called when frame is updated
      * @return Status
      */
-    virtual Status requestFrame(Frame *frame,
-                                FrameUpdateCallback cb = nullptr) = 0;
+    virtual Status requestFrame(Frame *frame) = 0;
 
     /**
      * @brief Gets the current details of the camera

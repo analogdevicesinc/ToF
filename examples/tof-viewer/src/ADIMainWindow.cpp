@@ -404,7 +404,10 @@ void ADIMainWindow::render() {
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        handleInterruptCallback();
+        if (!m_callbackInitialized) {
+            handleInterruptCallback();
+            m_callbackInitialized = true;
+        }
         /***************************************************/
         //Create windows here:
         showMainMenu();
@@ -497,7 +500,7 @@ void ADIMainWindow::showMainMenu() {
 }
 
 void ADIMainWindow::showRecordMenu() {
-    if (ImGui::BeginMenu("Record Options")) {
+    if (ImGui::BeginMenu("Record Options", cameraWorkerDone)) {
         //Allow the user to choose from 1 to 120 frames. Default value is 5 frames
         ImGui::InputInt("Frames", &recordingSeconds, 1, 300);
 
@@ -633,6 +636,7 @@ void ADIMainWindow::showDeviceMenu() {
                 stopPlayback();
                 stopPlayCCD();
                 cameraWorkerDone = false;
+                m_callbackInitialized = false;
                 m_cameraModes.clear();
                 _cameraModes.clear();
                 if (initCameraWorker.joinable()) {
@@ -1316,10 +1320,17 @@ void ADIMainWindow::prepareCamera(std::string mode) {
             if (use_modified_ini_params) {
                 status = getActiveCamera()->setIniParams(modified_ini_params);
                 if (status != aditof::Status::OK) {
-                    LOG(ERROR) << "Could not set ini params";
+                    LOG(ERROR)
+                        << "Could not set ini params for Depth Compute Library";
+                }
+                status = getActiveCamera()->adsd3500SetIniParams(
+                    modified_ini_params);
+                if (status != aditof::Status::OK) {
+                    LOG(ERROR) << "Could not set ini params for Adsd3500";
                 } else {
                     LOG(INFO) << "Using user defined ini parameters.";
                     use_modified_ini_params = false;
+                    modified_ini_params.clear();
                 }
             }
         }
