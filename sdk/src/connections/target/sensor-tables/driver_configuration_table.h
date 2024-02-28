@@ -30,13 +30,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <vector>
 #include <aditof/depth_sensor_interface.h>
+#include <vector>
 
 struct DriverConfiguration {
-    std::string configuration;
-    std::string imagerType;
-    std::string mode;
     std::string depthBits;
     std::string abBits;
     std::string confBits;
@@ -44,18 +41,89 @@ struct DriverConfiguration {
     int driverWidth;
     int driverHeigth;
     int pixelFormatIndex;
-
 };
 
-const std::vector<DriverConfiguration> m_driverConfigurationTable = {
-  // imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
-  // sr-native
-    {"standard", "adsd3100", "[0]", "16", "16", "0", "raw16", 2048, 3072, 0},
-    {"standard", "adsd3100", "[0]", "12", "12", "0", "raw16_bits12_shift4", 1024, 3072, 1},
-    {"standard", "adsd3100", "[0]", "12", "16", "0", "mipiRaw12_8", 2048, 2560, 0},
-    
-  /* lr-native */
-    {"standard", "adsd3100", "[1]", "16", "16", "0", "raw16", 2048, 4096, 0},
-    {"standard", "adsd3100", "[1]", "12", "12", "0", "raw16_bits12_shift4", 1024, 4096, 1},
-    {"standard", "adsd3100", "[1]", "12", "16", "0", "mipiRaw12_8", 2048, 3328, 0},
-    };
+const std::vector<DriverConfiguration> m_adsd3100Mode0 = {
+    /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
+   sr-native */
+    {"16", "16", "0", "raw16", 2048, 3072, 0},
+    {"12", "12", "0", "raw16_bits12_shift4", 1024, 3072, 1},
+    {"12", "16", "0", "mipiRaw12_8", 2048, 2560, 0},
+};
+const std::vector<DriverConfiguration> m_adsd3100Mode1 = {
+    /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
+   sr-native */
+    {"16", "16", "0", "raw16", 2048, 3072, 0},
+    {"12", "12", "0", "raw16_bits12_shift4", 1024, 3072, 1},
+    {"12", "16", "0", "mipiRaw12_8", 2048, 2560, 0},
+};
+const std::vector<DriverConfiguration> m_adsd3100Mode2_3_4_6 = {
+    /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
+   sr-native */
+    {"16", "16", "0", "raw16", 2048, 3072, 0},
+    {"12", "12", "0", "raw16_bits12_shift4", 1024, 3072, 1},
+    {"12", "16", "0", "mipiRaw12_8", 2048, 2560, 0},
+};
+
+const std::vector<DriverConfiguration> m_adsd3030Mode0 = {
+    /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
+   sr-native */
+    {"16", "16", "0", "raw16", 2048, 3072, 0},
+    {"12", "12", "0", "raw16_bits12_shift4", 1024, 3072, 1},
+    {"12", "16", "0", "mipiRaw12_8", 2048, 2560, 0},
+};
+const std::vector<DriverConfiguration> m_adsd3030Mode1 = {
+    /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
+   sr-native */
+    {"16", "16", "0", "raw16", 2048, 3072, 0},
+    {"12", "12", "0", "raw16_bits12_shift4", 1024, 3072, 1},
+    {"12", "16", "0", "mipiRaw12_8", 2048, 2560, 0},
+};
+const std::vector<DriverConfiguration> m_adsd3030Mode2_3_4_6 = {
+    /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
+   sr-native */
+    {"16", "16", "0", "raw16", 2048, 3072, 0},
+    {"12", "12", "0", "raw16_bits12_shift4", 1024, 3072, 1},
+    {"12", "16", "0", "mipiRaw12_8", 2048, 2560, 0},
+};
+
+//defined locally. To be updated
+struct DepthSensorFrameTypeUpdated {
+    std::string mode;
+    std::vector<std::string> frameContent;
+    uint8_t modeNumer;
+    int pixelFormatIndex;
+
+    //driver width/height. Can be used for both chipRaw and imagerRaw.
+    int frameWidthInBytes;
+    int frameHeightInBytes;
+
+    //processed data witdh/height
+    int baseResolutionWidth;
+    int baseResolutionHeight;
+
+    int metadataSize;
+    std::vector<DriverConfiguration>
+};
+
+std::vector<DepthSensorFrameTypeUpdated> adsd3100_standardModes = {
+    {"sr-native",
+     {"raw", "depth", "ab", "conf", "xyz", "metadata"},
+     0,
+     0,
+     0,
+     0,
+     1024,
+     1024,
+     128,
+     m_adsd3100Mode0},
+    {"lr-native",
+     {"raw", "depth", "ab", "conf", "xyz", "metadata"},
+     1,
+     0,
+     0,
+     0,
+     1024,
+     1024,
+     128,
+     m_adsd3100Mode1}};
