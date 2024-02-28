@@ -2611,10 +2611,6 @@ int ADIMainWindow::saveIniFile() {
 }
 
 void ADIMainWindow::iniParamWarn(std::string variable, std::string validVal) {
-    if (ImGui::BeginPopupModal("Error", NULL,
-                               ImGuiWindowFlags_AlwaysAutoResize)) {
-        ImGui::Text("Invalid %s value.", variable.c_str());
-        ImGui::Text(validVal.c_str());
-        ImGui::EndPopup();
-    }
+    ImGui::Text("Invalid %s value.", variable.c_str());
+    ImGui::Text(validVal.c_str());
 }
