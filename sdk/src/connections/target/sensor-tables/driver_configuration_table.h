@@ -50,12 +50,12 @@ struct DriverConfiguration {
 const std::vector<DriverConfiguration> m_driverConfigurationTable = {
   // imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
   // sr-native
-    {"standard", "adsd3100", "0", "16", "16", "0", "raw16", 2048, 3072, 0},
-    {"standard", "adsd3100", "0", "12", "12", "0", "raw16_bits12_shift4", 1024, 3072, 1},
-    {"standard", "adsd3100", "0", "12", "16", "0", "mipiRaw12_8", 2048, 2560, 0},
+    {"standard", "adsd3100", "[0]", "16", "16", "0", "raw16", 2048, 3072, 0},
+    {"standard", "adsd3100", "[0]", "12", "12", "0", "raw16_bits12_shift4", 1024, 3072, 1},
+    {"standard", "adsd3100", "[0]", "12", "16", "0", "mipiRaw12_8", 2048, 2560, 0},
     
   /* lr-native */
-    {"standard", "adsd3100", "1", "16", "16", "0", "raw16", 2048, 4096, 0},
-    {"standard", "adsd3100", "1", "12", "12", "0", "raw16_bits12_shift4", 1024, 4096, 1},
-    {"standard", "adsd3100", "1", "12", "16", "0", "mipiRaw12_8", 2048, 3328, 0},
+    {"standard", "adsd3100", "[1]", "16", "16", "0", "raw16", 2048, 4096, 0},
+    {"standard", "adsd3100", "[1]", "12", "12", "0", "raw16_bits12_shift4", 1024, 4096, 1},
+    {"standard", "adsd3100", "[1]", "12", "16", "0", "mipiRaw12_8", 2048, 3328, 0},
     };
