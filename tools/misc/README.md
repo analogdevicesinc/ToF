@@ -8,11 +8,11 @@ metadata is saved as a text file.
 
 Usage:
 - put raw recording files in the same directory of the `rawparser.py`
-- run `python rawparser.py --filename [RAW_RECORDING_FILENAME]` (file extension `.raw` excluded)
+- run `python rawparser.py --filename [RAW_RECORDING_FILENAME]`
 
-`sample_raw` folder will be created
+A folder with the same name as the raw recording file will be created
 first point cloud frame 3d image will be visualized. Close the visualize window to proceed saving all data
-`.png` files for each frame of AB and Depth will be found in `sample_raw/[RAW_RECORDING_FILENAME]`
+`.png` files for each frame of AB, Depth and confidence data will be found in the folder created
 
 ### Dependencies
 ```
