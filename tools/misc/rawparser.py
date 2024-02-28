@@ -49,13 +49,11 @@ depthPerPx = 2
 startOfFrame = 0
 metadataLength = 128
 logImage = False
-raw_img_dir = '\\sample_raw\\'
-fileName = 'frames202309111819'
-rawFileType = '.RAW'
-binFileType = '.bin'
 pngFileType = '.png'
 plyFileType = '.ply'
 
+rawParserVersion = "1.0.0"
+TOFEvalVersion = "5.0.0"
 def parse_metadata(filename, directory, index):
     elemsList = [
         ('frameWidth',             'H'),
@@ -88,7 +86,7 @@ def parse_metadata(filename, directory, index):
         elements = [(name, value) for (name, fmt), value in zip(elemsList, values)]
         
         # Save the elements list
-        with open(directory + 'metadata_' + args.filename + '_' + index +'.txt', 'w') as outfile:
+        with open(directory + 'metadata_' + base_filename + '_' + index +'.txt', 'w') as outfile:
             outfile.writelines([str(i)+'\n' for i in elements])
 
 def visualize_depth(filename, directory, index):
@@ -106,7 +104,7 @@ def visualize_depth(filename, directory, index):
         #save depth frame as
         img = o3d.geometry.Image(norm_depth_frame)
         #Save the image to a file
-        o3d.io.write_image(directory + 'depth_' + args.filename + '_' + index + pngFileType, img)
+        o3d.io.write_image(directory + 'depth_' + base_filename + '_' + index + pngFileType, img)
 
 def visualize_ab(filename, directory, index):
     ab_frame = np.zeros([height,width])
@@ -130,7 +128,7 @@ def visualize_ab(filename, directory, index):
         #save depth frame as
         img = o3d.geometry.Image(norm_ab_frame)
         #Save the image to a file
-        o3d.io.write_image(directory + 'ab_' + args.filename + '_' + index + pngFileType, img)
+        o3d.io.write_image(directory + 'ab_' + base_filename + '_' + index + pngFileType, img)
 
 def visualize_confidence(filename, directory, index):
     conf_frame = np.zeros([height,width])
@@ -147,8 +145,7 @@ def visualize_confidence(filename, directory, index):
         #save depth frame as
         img = o3d.geometry.Image(norm_conf_frame)
         #Save the image to a file
-        o3d.io.write_image(directory + 'conf_' + args.filename + '_' + index + pngFileType, img)
-
+        o3d.io.write_image(directory + 'conf_' + base_filename + '_' + index + pngFileType, img)
 
 def visualize_pcloud(filename, directory, index):
     # Create visualizer
@@ -171,7 +168,7 @@ def visualize_pcloud(filename, directory, index):
 
         point_cloud.points = o3d.utility.Vector3dVector(xyz_frame)
         point_cloud.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
-        o3d.io.write_point_cloud(directory + 'pointcloud_' + args.filename 
+        o3d.io.write_point_cloud(directory + 'pointcloud_' + base_filename 
             + '_' + index + plyFileType,point_cloud)
         vis.add_geometry(point_cloud)
         vis.update_geometry(point_cloud)
@@ -179,21 +176,20 @@ def visualize_pcloud(filename, directory, index):
         vis.poll_events()
         vis.update_renderer()
         
-
-
 def generate_vid(mainDir,numberOfFrames,width,height):
     #create video directory
-    vidDir = new_dir + '\\vid_' + args.filename
-    os.mkdir(vidDir)
-    
+    vidDir = mainDir + '\\vid_' + base_filename
+    if not os.path.exists(vidDir):
+        os.makedirs(vidDir)
+        
     #Create a video writer object
-    video = cv.VideoWriter(vidDir + '\\vid_' + args.filename + '.mp4', cv.VideoWriter_fourcc(*"mp4v"), 10, (width*2, height))
+    video = cv.VideoWriter(vidDir + '\\vid_' + base_filename + '.mp4', cv.VideoWriter_fourcc(*"mp4v"), 10, (width*2, height))
     
     #Loop over the AB and depth images and and write them to video
     for i in range(0,numberOfFrames):
-        binDir = mainDir +  '\\' + args.filename + '_' + str(i) +'\\' 
-        depth_img = cv.imread(binDir + 'depth_' + args.filename + '_' + str(i) + pngFileType)
-        ab_img = cv.imread(binDir + 'ab_' + args.filename + '_' + str(i) + pngFileType)
+        binDir = mainDir +  '\\' + base_filename + '_' + str(i) +'\\' 
+        depth_img = cv.imread(binDir + 'depth_' + base_filename + '_' + str(i) + pngFileType)
+        ab_img = cv.imread(binDir + 'ab_' + base_filename + '_' + str(i) + pngFileType)
 
         # concatenate the images horizontally
         new_img = cv.hconcat([depth_img, ab_img])
@@ -202,36 +198,46 @@ def generate_vid(mainDir,numberOfFrames,width,height):
         video.write(new_img)
  
     
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description='Scrip to parse a raw file and extract different frame data ')
+        description='Script to parse a raw file and extract different frame data ')
     parser.add_argument("--filename",  help="filename to parse")
+    if len(sys.argv) == 1:
+        parser.print_help(sys.stderr)
+        sys.exit(1)
     args = parser.parse_args()
+    
+    print("rawparser version: ", rawParserVersion)
+    print("TOF SDK Version: ", TOFEvalVersion)
+    
     print(f"filename: {args.filename}")
-    dir_path = os.path.dirname( os.path.abspath(__file__)) + raw_img_dir
+    base_dir, _ = os.path.splitext(args.filename)
+    dir_path = base_dir + "_parsed"
     if os.path.exists(dir_path):
         print(f"The directory {dir_path} already exists.")
     else:
         # Create the directory
         os.makedirs(dir_path)
         print(f"The directory {dir_path} was created.")
-    
+
     #identify width, height and number of frames from raw file
-    with open(os.path.dirname( os.path.abspath(__file__))+ '\\' + args.filename + rawFileType, 'rb') as f:
+    with open(args.filename , 'rb') as f:
         data = f.read(4)
         width = int.from_bytes(data[:2], 'little')
         height = int.from_bytes(data[2:4], 'little')
         print(f"width: {width} height: {height}")
         
         #show frame details
-        file_size = os.path.getsize(os.path.dirname( os.path.abspath(__file__)) + '\\' + args.filename + rawFileType)
+        file_size = os.path.getsize(args.filename)
         print("file size: " + str(file_size))
-        
+
+        #identify the image size
         if width == qMegaPixel and height == qMegaPixel:
             bytePerPx = abBytesPerPx + depthPerPx + confBytesPerPx + xyzBytesPerPx
         elif width == MegaPixel and height == MegaPixel:
             bytePerPx = abBytesPerPx + depthPerPx + xyzBytesPerPx
+        else:
+            sys.exit("Error: no byte per pixel data on this file, cannot parse.")
             
         sizeOfFrame = (bytePerPx * height * width)+ metadataLength;
         print("frame size: " + str(sizeOfFrame))
@@ -241,26 +247,19 @@ if __name__ == "__main__":
         f.seek(0)
         data = f.read(file_size)
         m_frameData = np.frombuffer(data, dtype=np.uint8)
-        print(np.size(m_frameData))
-            
-    #create directory for output frames
-    new_dir = os.path.dirname( os.path.abspath(__file__)) + raw_img_dir + args.filename
-    if os.path.exists(new_dir):
-        print(f"The directory {new_dir} already exists.")
-    else:
-        os.makedirs(new_dir)
-        print(f"The directory {new_dir} was created.")        
-    
+      
     #set to identify  for rendering xyz at first frame
     first_time_render_pc = 1
     
     for i in range(0, m_numberOfFrames):
         # Create frame folders
-        frameDir = new_dir + '\\' + args.filename + '_' + str(i) +'\\'
-        os.mkdir(frameDir)
-        binFileName = frameDir + args.filename + '_' + str(i) + binFileType
+        base_filename, _ = os.path.splitext(os.path.basename(args.filename))
+        frameDir = dir_path + '\\' + base_filename + '_' + str(i) +'\\'
+        if not os.path.exists(frameDir):
+            os.makedirs(frameDir)
+        binFileName = frameDir + base_filename + '_' + str(i) + ".bin"
         print(binFileName)
-        
+     
         # Open the file in binary mode
         with open(binFileName , "wb") as f:
             endOfFrame = startOfFrame + sizeOfFrame
@@ -280,4 +279,5 @@ if __name__ == "__main__":
             first_time_render_pc = 0
             
     #generate video stitched from ab and depth    
-    generate_vid(new_dir,m_numberOfFrames,width,height)
+    generate_vid(dir_path, m_numberOfFrames, width, height)
+    
