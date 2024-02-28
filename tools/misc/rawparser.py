@@ -207,6 +207,10 @@ if __name__ == "__main__":
         sys.exit(1)
     args = parser.parse_args()
     
+    #check if file exist
+    if not os.path.exists(args.filename):
+        sys.exit(f"Error: {args.filename} does not exist")
+    
     print("rawparser version: ", rawParserVersion)
     print("TOF SDK Version: ", TOFEvalVersion)
     
