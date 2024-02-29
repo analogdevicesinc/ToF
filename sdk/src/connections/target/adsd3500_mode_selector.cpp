@@ -63,22 +63,44 @@ Adsd3500ModeSelector::setConfiguration(const std::string &configuration) {
 
 aditof::Status Adsd3500ModeSelector::getConfigurationTable(
     DepthSensorFrameTypeUpdated &configurationTable) {
-    aditof::Status status;
-    DepthSensorFrameTypeUpdated tempConfigurationTable;
 
-    if (m_controls["imagerType"] == "adsd3100") {
-        for (auto modes : adsd3100_standardModes) {
-            if (m_controls["mode"] == modes.mode)
-                tempConfigurationTable = modes;
+    if (m_configuration == "standard") {
+        if (m_controls["imagerType"] == "adsd3100") {
+            for (auto modes : adsd3100_standardModes) {
+                if (m_controls["mode"] == modes.mode)
+                    configurationTable = modes;
+                return aditof::Status::OK;
+            }
+        } else if (m_controls["imagerType"] == "adsd3030") {
+            for (auto modes : adsd3030_standardModes) {
+                if (m_controls["mode"] == modes.mode) {
+                    configurationTable = modes;
+                    return aditof::Status::OK;
+                }
+            }
         }
     }
 
-    return status;
+    return aditof::Status::INVALID_ARGUMENT;
 };
 
 aditof::Status Adsd3500ModeSelector::updateConfigurationTable(
     DepthSensorFrameTypeUpdated &configurationTable) {
-    return aditof::Status::OK;
+
+    for (auto driverConf : configurationTable.driverConfiguration) {
+        if (driverConf.depthBits == m_controls["depthBits"] &&
+            driverConf.abBits == m_controls["abBits"] &&
+            driverConf.confBits == m_controls["confBits"] &&
+            driverConf.pixelFormat == m_controls["inputFormat"]) {
+            configurationTable.baseResolutionWidth = driverConf.driverWidth;
+            configurationTable.baseResolutionHeight = driverConf.driverHeigth;
+            configurationTable.pixelFormatIndex = driverConf.pixelFormatIndex;
+
+            return aditof::Status::OK;
+        }
+    }
+
+    return aditof::Status::INVALID_ARGUMENT;
 }
 
 //Functions used to set mode, number of bits, pixel format, etc

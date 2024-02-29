@@ -103,10 +103,32 @@ struct DepthSensorFrameTypeUpdated {
     int baseResolutionHeight;
 
     int metadataSize;
-    std::vector<DriverConfiguration>
+    std::vector<DriverConfiguration> driverConfiguration;
 };
 
 std::vector<DepthSensorFrameTypeUpdated> adsd3100_standardModes = {
+    {"sr-native",
+     {"raw", "depth", "ab", "conf", "xyz", "metadata"},
+     0,
+     0,
+     0,
+     0,
+     1024,
+     1024,
+     128,
+     m_adsd3100Mode0},
+    {"lr-native",
+     {"raw", "depth", "ab", "conf", "xyz", "metadata"},
+     1,
+     0,
+     0,
+     0,
+     1024,
+     1024,
+     128,
+     m_adsd3100Mode1}};
+
+std::vector<DepthSensorFrameTypeUpdated> adsd3030_standardModes = {
     {"sr-native",
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      0,
