@@ -30,7 +30,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "sensor-tables/depth_sensor_frame_types.h"
 #include "sensor-tables/driver_configuration_table.h"
 
 #include <aditof/status_definitions.h>
