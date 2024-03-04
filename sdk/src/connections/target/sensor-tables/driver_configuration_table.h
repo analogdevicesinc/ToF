@@ -48,43 +48,49 @@ const std::vector<DriverConfiguration> m_adsd3100Mode0 = {
    sr-native */
     {"16", "16", "0", "raw16", 2048, 3072, 0},
     {"12", "12", "0", "raw16_bits12_shift4", 1024, 3072, 1},
-    {"12", "16", "0", "mipiRaw12_8", 2048, 2560, 0},
-};
+    {"12", "0", "0", "raw16_bits12_shift4", 1024, 1024, 1},
+    {"12", "16", "0", "mipiRaw12_8", 2048, 2560, 0}};
+
 const std::vector<DriverConfiguration> m_adsd3100Mode1 = {
     /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
    sr-native */
     {"16", "16", "0", "raw16", 2048, 3072, 0},
-    {"12", "12", "0", "raw16_bits12_shift4", 1024, 3072, 1},
-    {"12", "16", "0", "mipiRaw12_8", 2048, 2560, 0},
-};
-const std::vector<DriverConfiguration> m_adsd3100Mode2_3_4_6 = {
+    {"12", "12", "0", "raw16_bits12_shift4", 1024, 4096, 1},
+    {"12", "0", "0", "raw16_bits12_shift4", 1024, 1024, 1},
+    {"12", "16", "0", "mipiRaw12_8", 2048, 2560, 0}};
+
+const std::vector<DriverConfiguration> m_adsd3100Mode4 = {
     /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
    sr-native */
-    {"16", "16", "0", "raw16", 2048, 3072, 0},
-    {"12", "12", "0", "raw16_bits12_shift4", 1024, 3072, 1},
-    {"12", "16", "0", "mipiRaw12_8", 2048, 2560, 0},
+    {"0", "0", "0", "", 1024, 1024, 1}};
+
+// This table will be generated
+const std::vector<DriverConfiguration> m_adsd3100Mode2_3_5_6 = {
+    /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
+   sr-native */
 };
 
+// This table will be generated
 const std::vector<DriverConfiguration> m_adsd3030Mode0 = {
     /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
    sr-native */
-    {"16", "16", "0", "raw16", 2048, 3072, 0},
-    {"12", "12", "0", "raw16_bits12_shift4", 1024, 3072, 1},
-    {"12", "16", "0", "mipiRaw12_8", 2048, 2560, 0},
 };
+
+// This table will be generated
 const std::vector<DriverConfiguration> m_adsd3030Mode1 = {
     /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
    sr-native */
-    {"16", "16", "0", "raw16", 2048, 3072, 0},
-    {"12", "12", "0", "raw16_bits12_shift4", 1024, 3072, 1},
-    {"12", "16", "0", "mipiRaw12_8", 2048, 2560, 0},
 };
-const std::vector<DriverConfiguration> m_adsd3030Mode2_3_4_6 = {
+
+const std::vector<DriverConfiguration> m_adsd3030Mode4 = {
     /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
    sr-native */
-    {"16", "16", "0", "raw16", 2048, 3072, 0},
-    {"12", "12", "0", "raw16_bits12_shift4", 1024, 3072, 1},
-    {"12", "16", "0", "mipiRaw12_8", 2048, 2560, 0},
+    {"0", "0", "0", "", 512, 640, 1}};
+
+// This table will be generated
+const std::vector<DriverConfiguration> m_adsd3030Mode2_3_5_6 = {
+    /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
+   sr-native */
 };
 
 //defined locally. To be updated
@@ -126,20 +132,8 @@ std::vector<DepthSensorFrameTypeUpdated> adsd3100_standardModes = {
      1024,
      1024,
      128,
-     m_adsd3100Mode1}};
-
-std::vector<DepthSensorFrameTypeUpdated> adsd3030_standardModes = {
-    {"sr-native",
-     {"raw", "depth", "ab", "conf", "xyz", "metadata"},
-     0,
-     0,
-     0,
-     0,
-     1024,
-     1024,
-     128,
-     m_adsd3100Mode0},
-    {"lr-native",
+     m_adsd3100Mode1},
+    {"pcm-native",
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      1,
      0,
@@ -148,4 +142,116 @@ std::vector<DepthSensorFrameTypeUpdated> adsd3030_standardModes = {
      1024,
      1024,
      128,
-     m_adsd3100Mode1}};
+     m_adsd3100Mode4},
+    {"sr-qnative",
+     {"raw", "depth", "ab", "conf", "xyz", "metadata"},
+     1,
+     0,
+     0,
+     0,
+     512,
+     512,
+     128,
+     m_adsd3100Mode2_3_5_6},
+    {"lr-qnative",
+     {"raw", "depth", "ab", "conf", "xyz", "metadata"},
+     1,
+     0,
+     0,
+     0,
+     512,
+     512,
+     128,
+     m_adsd3100Mode2_3_5_6},
+    {"sr-mixed",
+     {"raw", "depth", "ab", "conf", "xyz", "metadata"},
+     1,
+     0,
+     0,
+     0,
+     512,
+     512,
+     128,
+     m_adsd3100Mode2_3_5_6},
+    {"lr-mixed",
+     {"raw", "depth", "ab", "conf", "xyz", "metadata"},
+     1,
+     0,
+     0,
+     0,
+     512,
+     512,
+     128,
+     m_adsd3100Mode2_3_5_6}};
+
+std::vector<DepthSensorFrameTypeUpdated> adsd3030_standardModes = {
+    {"sr-native",
+     {"raw", "depth", "ab", "conf", "xyz", "metadata"},
+     0,
+     0,
+     0,
+     0,
+     512,
+     640,
+     128,
+     m_adsd3100Mode0},
+    {"lr-native",
+     {"raw", "depth", "ab", "conf", "xyz", "metadata"},
+     1,
+     0,
+     0,
+     0,
+     512,
+     640,
+     128,
+     m_adsd3100Mode1},
+    {"pcm-native",
+     {"raw", "depth", "ab", "conf", "xyz", "metadata"},
+     1,
+     0,
+     0,
+     0,
+     512,
+     640,
+     128,
+     m_adsd3030Mode4},
+    {"sr-qnative",
+     {"raw", "depth", "ab", "conf", "xyz", "metadata"},
+     1,
+     0,
+     0,
+     0,
+     256,
+     320,
+     128,
+     m_adsd3030Mode2_3_5_6},
+    {"lr-qnative",
+     {"raw", "depth", "ab", "conf", "xyz", "metadata"},
+     1,
+     0,
+     0,
+     0,
+     256,
+     320,
+     128,
+     m_adsd3030Mode2_3_5_6},
+    {"sr-mixed",
+     {"raw", "depth", "ab", "conf", "xyz", "metadata"},
+     1,
+     0,
+     0,
+     0,
+     256,
+     320,
+     128,
+     m_adsd3030Mode2_3_5_6},
+    {"lr-mixed",
+     {"raw", "depth", "ab", "conf", "xyz", "metadata"},
+     1,
+     0,
+     0,
+     0,
+     256,
+     320,
+     128,
+     m_adsd3030Mode2_3_5_6}};

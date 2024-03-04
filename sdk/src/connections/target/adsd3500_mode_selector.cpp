@@ -46,7 +46,7 @@ Adsd3500ModeSelector::Adsd3500ModeSelector() : m_configuration("standard") {
     m_controls.emplace("confidenceBits", "");
 
     m_controls.emplace("inputFormat", "");
-};
+}
 
 //functions to set which table configuration to use
 aditof::Status
@@ -82,7 +82,7 @@ aditof::Status Adsd3500ModeSelector::getConfigurationTable(
     }
 
     return aditof::Status::INVALID_ARGUMENT;
-};
+}
 
 aditof::Status Adsd3500ModeSelector::updateConfigurationTable(
     DepthSensorFrameTypeUpdated &configurationTable) {
@@ -100,7 +100,62 @@ aditof::Status Adsd3500ModeSelector::updateConfigurationTable(
         }
     }
 
-    return aditof::Status::INVALID_ARGUMENT;
+    int depth_i = std::stoi(m_controls["depthBits"]);
+    int ab_i = std::stoi(m_controls["abBits"]);
+    int conf_i = std::stoi(m_controls["confBits"]);
+    std::vector<int> depth_v = {16, 14, 12, 10, 8, 0};
+    std::vector<int> ab_v = {16, 14, 12, 10, 8, 0};
+    std::vector<int> conf_v = {8, 4, 0};
+
+    if (std::find(depth_v.begin(), depth_v.end(), depth_i) == depth_v.end()) {
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+    if (std::find(ab_v.begin(), ab_v.end(), ab_i) == ab_v.end()) {
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+    if (std::find(conf_v.begin(), conf_v.end(), conf_i) == conf_v.end()) {
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    int frameWidth = 512;
+    int totalBits = depth_i + ab_i + conf_i;
+    int width = frameWidth * totalBits / 8;
+
+    int height = 512;
+
+    if ((configurationTable.modeNumer == 2 ||
+         configurationTable.modeNumer == 3 ||
+         configurationTable.modeNumer == 5 ||
+         configurationTable.modeNumer == 6) &&
+        m_controls["imagerType"] == "adsd3100") {
+        height = 512;
+    } else if ((configurationTable.modeNumer == 0 ||
+                configurationTable.modeNumer == 1) &&
+               m_controls["imagerType"] == "adsd3030") {
+        height = 640;
+    } else if (configurationTable.modeNumer >= 2 &&
+               m_controls["imagerType"] == "adsd3030") {
+        configurationTable.baseResolutionWidth = 1280;
+        configurationTable.baseResolutionHeight = 320;
+        configurationTable.pixelFormatIndex = 0;
+        return aditof::Status::OK;
+    } else {
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    DriverConfiguration driverConfigStruct = {std::to_string(depth_i),
+                                              std::to_string(ab_i),
+                                              std::to_string(conf_i),
+                                              "raw8",
+                                              width,
+                                              height,
+                                              0};
+
+    configurationTable.baseResolutionWidth = driverConfigStruct.driverWidth;
+    configurationTable.baseResolutionHeight = driverConfigStruct.driverHeigth;
+    configurationTable.pixelFormatIndex = driverConfigStruct.pixelFormatIndex;
+
+    return aditof::Status::OK;
 }
 
 //Functions used to set mode, number of bits, pixel format, etc
@@ -116,7 +171,7 @@ aditof::Status Adsd3500ModeSelector::setControl(const std::string &control,
     m_controls[control] = value;
 
     return status;
-};
+}
 
 aditof::Status Adsd3500ModeSelector::getControl(const std::string &control,
                                                 std::string &value) {
@@ -130,4 +185,4 @@ aditof::Status Adsd3500ModeSelector::getControl(const std::string &control,
     value = m_controls[control];
 
     return status;
-};
+}
