@@ -49,10 +49,12 @@ class Adsd3500ModeSelector {
     getConfigurationTable(DepthSensorFrameTypeUpdated &configurationTable);
 
     //this function should update the table with driver details
-    aditof::Status updateConfigurationTable(DepthSensorFrameTypeUpdated &configurationTable);
+    aditof::Status
+    updateConfigurationTable(DepthSensorFrameTypeUpdated &configurationTable);
 
     //Functions used to set mode, number of bits, pixel format, etc
-    aditof::Status setControl(const std::string &control,const  std::string &value);
+    aditof::Status setControl(const std::string &control,
+                              const std::string &value);
     aditof::Status getControl(const std::string &control, std::string &value);
 
   private:
