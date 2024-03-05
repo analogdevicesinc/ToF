@@ -35,46 +35,45 @@ import os.path
 import numpy as np
 import logging
 import os
-import shutil
+import re
 
 Logger = logging.getLogger(__name__)
 
-metadataLength = 128
+test_filename = "trial"
 
-frame_dir = "./data_dir/"
-frame_types = ["ab" , "depth" , "conf" , "metadata"]
-mode_name = {0: "sr-native", 1: "lr-native", 2: "sr-qnative", 3: "lr-qnative",
-    4: "pcm-native", 5: "lr-mixed", 6: "sr-mixed"}
-DataTypeSize = {"ab":2 , "depth":2 , "conf":4 , "metadata":128}
-FrameSize = {0:1024, 1: 1024, 2: 512, 3:512,
-    4: 1024, 5: 512, 6: 512}
+def test_saveCCBCFG(ip_set, config_file):
+
+    ccb_file_extension = ".ccb"
+    cfg_file_extension = ".cfg"
     
-def test_capture_frames(available_modes_ini, ip_set, config_file):
-    # Run the 'dir ..' command and capture the output
-    exe_path = "../../build/examples/test_frame_capture/release/test_frame_capture.exe"
-    process = subprocess.run([exe_path, str(available_modes_ini), ip_set, config_file], 
+    #delete all ccb files in current directiry
+    files_to_delete = [fname for fname in os.listdir('.') if fname.endswith(ccb_file_extension)]
+    # Delete each file
+    for file_name in files_to_delete:
+        try:
+            os.remove(file_name)
+        except OSError:
+            print(f"Error deleting: {file_name}")
+            
+    #delete all cfg files in current directiry
+    files_to_delete = [fname for fname in os.listdir('.') if fname.endswith(cfg_file_extension)]
+    # Delete each file
+    for file_name in files_to_delete:
+        try:
+            os.remove(file_name)
+        except OSError:
+            print(f"Error deleting: {file_name}")
+        
+    #Run the exe file
+    exe_path = "../../build/examples/test_saveCCBCFG/release/test_saveCCBCFG.exe"
+    process = subprocess.run([exe_path,  ip_set, config_file, test_filename], 
         text=True,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        
+    assert process.returncode == 0
     print(process.stdout)
-    assert process.returncode == 0 
-    Logger.info(process.stdout)
-    assert os.path.isdir(frame_dir),"folder does not exist"
+    output = process.stdout
     
-    #for modeName in modeName:
-    for frameType in frame_types:
-        assert os.path.exists(frame_dir + 'out_' + frameType + "_" + 
-            mode_name[available_modes_ini] + ".bin" ),"binary file, not saved"
-        
-        if frameType == "metadata":
-            data_size = metadataLength
-        else:
-            data_size = (FrameSize[available_modes_ini]**2)*DataTypeSize[frameType]
-     
-        file_size = os.path.getsize (frame_dir + 'out_' + frameType + "_" + mode_name[available_modes_ini] + ".bin")
-        
-        assert data_size == file_size,"not compatible with data size"
-     
-        if mode_name[available_modes_ini] == "pcm-native":
-            break
-        
-    shutil.rmtree("data_dir")    
-
+    assert os.path.exists(test_filename + ".ccb")
+    os.remove(test_filename + ".ccb")
+    assert os.path.exists(test_filename + ".cfg")
+    os.remove(test_filename + ".cfg")

@@ -6,6 +6,8 @@ add_subdirectory(data_collect)
 add_subdirectory(test_frame_capture)
 add_subdirectory(test_access_ini)
 add_subdirectory(test_measure_fps)
+add_subdirectory(test_getMetadata)
+add_subdirectory(test_saveCCBCFG)
 
 if (NOT NXP)
     add_subdirectory(tof-viewer)
@@ -20,6 +22,8 @@ if (NXP)
         $<TARGET_FILE:test_frame_capture>
 	$<TARGET_FILE:test_access_ini>
 	$<TARGET_FILE:test_measure_fps>
+	$<TARGET_FILE:test_getMetadata>
+	$<TARGET_FILE:test_saveCCBCFG>
 
         DESTINATION ${CMAKE_INSTALL_BINDIR} )
 elseif(WIN32)
@@ -29,6 +33,8 @@ elseif(WIN32)
 	$<TARGET_FILE:test_frame_capture>
 	$<TARGET_FILE:test_access_ini>
 	$<TARGET_FILE:test_measure_fps>
+	$<TARGET_FILE:test_getMetadata>
+	$<TARGET_FILE:test_saveCCBCFG>
         $<TARGET_FILE:ADIToFGUI>
         DESTINATION ${CMAKE_INSTALL_BINDIR} )
 endif()
