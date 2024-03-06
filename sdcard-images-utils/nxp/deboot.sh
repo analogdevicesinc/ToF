@@ -273,8 +273,6 @@ cp -r /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/config/ /home/
 cp /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/data_collect /home/${USERNAME}/Workspace/bin
 cp /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/*.so* /home/${USERNAME}/Workspace/bin
 cp /home/${USERNAME}/Workspace/ToF/build/examples/first-frame/first-frame /home/${USERNAME}/Workspace/bin
-cp /home/${USERNAME}/Workspace/ToF/build/examples/point_cloud/point_cloud /home/${USERNAME}/Workspace/bin
-
 
 
 #generate licences file
