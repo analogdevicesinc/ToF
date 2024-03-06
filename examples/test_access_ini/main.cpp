@@ -398,37 +398,40 @@ int main(int argc, char *argv[]) {
     }
     
     std::shared_ptr<DepthSensorInterface> depthSensor = camera->getSensor();
-    /*
+    
     std::string inputFormatVal = "mipiRaw12_8";
     //std::string test_phaseDepthBitsVal = "6";
+    
     status = depthSensor->setControl("inputFormat", inputFormatVal);
     if (status != Status::OK) {
-        LOG(ERROR) << "Cannnot retreive inputFormat setting!";
+        LOG(ERROR) << "Cannnot set inputFormat setting!";
         return 1;
     }
+    
     LOG(INFO) << "inputFormat: " << inputFormatVal;
     status = depthSensor->getControl("inputFormat", inputFormatVal);
     if (status != Status::OK) {
         LOG(ERROR) << "Cannnot retreive inputFormat setting!";
+        LOG(ERROR) << status;
         return 1;
     }
     LOG(INFO) << "inputFormat: " << inputFormatVal;
-    
-    status = depthSensor->setControl("phaseDepthBits", test_phaseDepthBitsVal);
+    /*
+    status = depthSensor->setControl("inputFormat", test_inputFormatVal);
     if (status != Status::OK) {
-        LOG(ERROR) << "Cannnot set phaseDepthBits value!";
+        LOG(ERROR) << "Cannnot set inputFormat value!";
         return 1;
     }
-    LOG(INFO) << "phaseDepthBits value set ";
+    LOG(INFO) << "inputFormat value set ";
 
-    status = depthSensor->getControl("phaseDepthBits", phaseDepthBitsVal);
+    status = depthSensor->getControl("inputFormat", inputFormatVal);
     if (status != Status::OK) {
-        LOG(ERROR) << "Cannnot retreive phaseDepthBits!";
+        LOG(ERROR) << "Cannnot retreive inputFormat!";
         return 1;
     }
-    LOG(INFO) << "bitsInPhaseOrDepth value after: " << phaseDepthBitsVal;
+    LOG(INFO) << "bitsInPhaseOrDepth value after: " << inputFormatVal;
 
-    if (phaseDepthBitsVal != test_phaseDepthBitsVal) {
+    if (inputFormatVal != test_inputFormatVal) {
         LOG(ERROR) << "value set is not value get!";
         return 1;
     }
