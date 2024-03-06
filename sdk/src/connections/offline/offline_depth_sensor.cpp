@@ -141,7 +141,7 @@ aditof::Status
 OfflineDepthSensor::getAvailableFrameTypes(std::vector<std::string> &types) {
     types.clear();
     for (const auto &frameType : availableFrameTypes) {
-        types.emplace_back(frameType.type);
+        types.emplace_back(frameType.mode);
     }
     return aditof::Status::OK;
 }
@@ -152,7 +152,7 @@ OfflineDepthSensor::getFrameTypeDetails(const std::string &frameName,
     using namespace aditof;
     Status status = Status::OK;
     for (const auto &frameDetails : availableFrameTypes) {
-        if (frameDetails.type == frameName) {
+        if (frameDetails.mode == frameName) {
             details = frameDetails;
             break;
         }
