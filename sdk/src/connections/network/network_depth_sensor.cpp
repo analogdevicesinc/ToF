@@ -458,24 +458,27 @@ NetworkDepthSensor::getFrameTypeDetails(const std::string &frameName,
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
-
-    for (int i = 0;
-         i < net->recv_buff[m_sensorIndex].depthsensorframecontent_size();
-         i++) {
-        aditof::DepthSensorFrameContent aditofFrameContent;
-        payload::DepthSensorFrameContent protoFrameType =
-            net->recv_buff[m_sensorIndex].depthsensorframecontent(i);
-
-        aditofFrameContent.type = protoFrameType.type();
-        aditofFrameContent.width = protoFrameType.width();
-        aditofFrameContent.height = protoFrameType.height();
-        details.content.emplace_back(aditofFrameContent);
-    }
-    details.type = frameName;
-    details.width =
-        net->recv_buff[m_sensorIndex].depthsensorframecontent(1).width();
-    details.height =
-        net->recv_buff[m_sensorIndex].depthsensorframecontent(1).height();
+    details.mode = frameName;
+    details.frameContent =
+        net->recv_buff[m_sensorIndex].depthSensorFrameType().frameContent;
+    details.modeNumber =
+        net->recv_buff[m_sensorIndex].depthSensorFrameType().modeNumber();
+    details.pixelFormatIndex =
+        net->recv_buff[m_sensorIndex].depthSensorFrameType().pixelFormatIndex();
+    details.frameWidthInBytes = net->recv_buff[m_sensorIndex]
+                                    .depthSensorFrameType()
+                                    .frameWidthInBytes();
+    details.frameHeightInBytes = net->recv_buff[m_sensorIndex]
+                                     .depthSensorFrameType()
+                                     .frameHeightInBytes();
+    details.baseResolutionWidth = net->recv_buff[m_sensorIndex]
+                                      .depthSensorFrameType()
+                                      .baseResolutionWidth();
+    details.baseResolutionHeight = net->recv_buff[m_sensorIndex]
+                                       .depthSensorFrameType()
+                                       .baseResolutionHeight();
+    details.metadataSize =
+        net->recv_buff[m_sensorIndex].depthSensorFrameType().metadataSize();
     Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
     return status;
 }
