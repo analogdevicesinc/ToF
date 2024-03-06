@@ -243,6 +243,11 @@ update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 pushd /home/${USERNAME}
 mkdir Workspace
 pushd Workspace
+mkdir libs
+if ls /*.so 1> /dev/null 2>&1; then
+	sudo cp /*.so /home/${USERNAME}/Workspace/libs 1> /dev/null 2>&1
+	sudo rm -rf /*.so 1> /dev/null 2>&1
+fi
 TOF_GIT_LOCATION=${TOF_GIT_LOCATION:=https://github.com/analogdevicesinc/ToF.git}
 echo "Clone ToF source code from: $TOF_GIT_LOCATION"
 git clone ${TOF_GIT_LOCATION}
@@ -324,7 +329,7 @@ function main() {
 
   # debootstrap 1st
   sudo debootstrap --arch=${TARGET_ARCH} --include="${INCLUDE_LIST}" --foreign ${DISTRO_CODE} ${ROOTFS_TMP} ${DISTRO_MIRROR}
-
+  # copy libs to ${SCRIPT_DIR}/build/ubuntu/rootfs_tmp/home/temp(Make sure to add a path to .so files here)
   # debootstrap 2nd
   sudo chroot ${ROOTFS_TMP} /debootstrap/debootstrap --second-stage
 
