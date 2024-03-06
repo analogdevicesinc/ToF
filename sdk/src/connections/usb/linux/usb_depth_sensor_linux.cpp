@@ -242,7 +242,7 @@ aditof::Status
 UsbDepthSensor::getAvailableFrameTypes(std::vector<std::string> &types) {
     types.clear();
     for (const auto &frameType : m_depthSensorFrameTypes) {
-        types.emplace_back(frameType.type);
+        types.emplace_back(frameType.mode);
     }
 
     return aditof::Status::OK;
@@ -254,7 +254,7 @@ UsbDepthSensor::getFrameTypeDetails(const std::string &frameName,
     using namespace aditof;
     Status status = Status::OK;
     for (const auto &frameDetails : m_depthSensorFrameTypes) {
-        if (frameDetails.type == frameName) {
+        if (frameDetails.mode == frameName) {
             details = frameDetails;
             break;
         }
