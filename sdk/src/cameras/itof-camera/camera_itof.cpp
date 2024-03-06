@@ -676,7 +676,7 @@ aditof::Status CameraItof::getAvailableFrameTypes(
     availableFrameTypes.clear();
 
     for (const auto &frameType : m_availableSensorFrameTypes) {
-        availableFrameTypes.emplace_back(frameType.type);
+        availableFrameTypes.emplace_back(frameType.mode);
     }
 
     return status;
