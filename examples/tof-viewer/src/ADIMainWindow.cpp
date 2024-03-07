@@ -488,7 +488,6 @@ void ADIMainWindow::showMainMenu() {
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Tools")) {
-            showTestMode();
             showRecordMenu();
             showPlaybackMenu();
             ImGui::Separator();
@@ -497,21 +496,6 @@ void ADIMainWindow::showMainMenu() {
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
-    }
-}
-
-void ADIMainWindow::showTestMode() {
-    if (ImGui::BeginMenu("Test mode")) {
-        if (ImGui::Checkbox("Netlinktest", &m_netLinkTest)) {
-            if (m_netLinkTest) {
-                m_cameraIp += ":netlinktest";
-            } else {
-                int netLinkRemover = m_cameraIp.find_last_of(":");
-                m_cameraIp.erase(netLinkRemover);
-            }
-            RefreshDevices();
-        }
-        ImGui::EndMenu();
     }
 }
 
@@ -660,6 +644,16 @@ void ADIMainWindow::showDeviceMenu() {
                     initCameraWorker.join();
                 }
             }
+
+            if (ImGuiExtensions::ADICheckbox("Max FPS Network Test (Debug)", &m_netLinkTest, _isOpenDevice)) {
+                if (m_netLinkTest) {
+                    m_ipSuffix = ":netlinktest";
+                } else {
+                    m_ipSuffix.clear();
+                }
+                RefreshDevices();
+            }
+
             ImGui::EndMenu();
         }
     }
@@ -770,7 +764,7 @@ void ADIMainWindow::RefreshDevices() {
 
     if (!m_skipNetworkCameras) {
         // Add network camera
-        m_system.getCameraList(m_camerasList, m_cameraIp);
+        m_system.getCameraList(m_camerasList, m_cameraIp + m_ipSuffix);
         if (m_camerasList.size() > 0) {
             int index = m_connectedDevices.size();
             m_connectedDevices.emplace_back(index, "ToF Camera" +
