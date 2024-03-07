@@ -324,6 +324,7 @@ class ADIMainWindow {
     int frameCounter = 0;
     int fps = 0;
     bool m_netLinkTest = false;
+    std::string m_ipSuffix;
 
     /**
 		* @brief Rotation of an ImGui texture.
