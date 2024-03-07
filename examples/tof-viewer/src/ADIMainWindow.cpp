@@ -339,8 +339,6 @@ bool ADIMainWindow::startImGUI(const ADIViewerArgs &args) {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    m_controller = std::make_shared<adicontroller::ADIController>(
-        std::vector<std::shared_ptr<aditof::Camera>>());
     RefreshDevices();
 
     //Look for Company Logo
@@ -638,15 +636,17 @@ void ADIMainWindow::showDeviceMenu() {
                 stopPlayCCD();
                 cameraWorkerDone = false;
                 m_callbackInitialized = false;
-                m_netLinkTest = false;
                 m_cameraModes.clear();
                 _cameraModes.clear();
                 if (initCameraWorker.joinable()) {
                     initCameraWorker.join();
                 }
+                view.reset();
+                RefreshDevices();
             }
 
-            if (ImGuiExtensions::ADICheckbox("Max FPS Network Test (Debug)", &m_netLinkTest, _isOpenDevice)) {
+            if (ImGuiExtensions::ADICheckbox("Max FPS Network Test (Debug)",
+                                             &m_netLinkTest, _isOpenDevice)) {
                 if (m_netLinkTest) {
                     m_ipSuffix = ":netlinktest";
                 } else {
@@ -858,7 +858,9 @@ void ADIMainWindow::showPlaybackMenu() {
 
                     if (view == NULL) {
                         view = std::make_shared<adiviewer::ADIView>(
-                            m_controller, "Record Viewer");
+                            std::make_shared<adicontroller::ADIController>(
+                                std::vector<std::shared_ptr<aditof::Camera>>()),
+                            "Record Viewer");
                     }
 
                     view->m_ctrl->startPlayback(path, recordingSeconds);
@@ -1240,11 +1242,10 @@ void ADIMainWindow::InitCamera() {
     std::string version = aditof::getApiVersion();
     //my_log.AddLog("Preparing camera. Please wait...\n");
     LOG(INFO) << "Preparing camera. Please wait...\n";
-    m_controller =
-        std::make_shared<adicontroller::ADIController>(m_camerasList);
-
-    view = std::make_shared<adiviewer::ADIView>(m_controller,
-                                                "ToFViewer " + version);
+    view = std::make_shared<adiviewer::ADIView>(
+        std::make_shared<adicontroller::ADIController>(m_camerasList),
+        "ToFViewer " + version);
+    m_camerasList.clear();
 
     aditof::Status status = aditof::Status::OK;
     auto camera = getActiveCamera(); //already initialized on constructor
