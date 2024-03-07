@@ -364,8 +364,6 @@ class ADIMainWindow {
 
     void showRecordMenu();
 
-    void showTestMode();
-
     /**
 		* @brief	Open Device menu will give you the information of
 		*			the supported camera. It will also fetch for
