@@ -1532,10 +1532,10 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
 
     if (ImGui::Begin("Information Window", nullptr,
                      overlayFlags | ImGuiWindowFlags_NoTitleBar)) {
-        char formattedIP[27];
+        std::string formattedIP;
         for (int i = 0; i < m_cameraIp.length(); i++)
-            formattedIP[i] = toupper(m_cameraIp[i]);
-        ImGui::Text(" Camera %s", formattedIP);
+            formattedIP += toupper(m_cameraIp[i]);
+        ImGui::Text(" Camera %s", formattedIP.c_str());
         ImGui::Text(" Rotate: ");
         ImGui::SameLine();
         bool rotate = ImGui::Button("+");
