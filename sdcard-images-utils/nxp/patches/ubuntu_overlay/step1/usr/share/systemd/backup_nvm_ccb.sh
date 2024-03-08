@@ -1,5 +1,4 @@
 #!/bin/bash
-chown -R analog:analog /home/analog/Workspace
 nvm_size=741376
 sleep 15
 if [ -d "/boot" ]; then
@@ -22,3 +21,5 @@ if [ -d "/boot" ]; then
 		/home/analog/Workspace/Tools/host_boot_tools/NVM_Flash_Utility/CCB_READ /boot/ccb_backup.ccb
 	fi
 fi
+
+chown -R analog:analog /home/analog/Workspace
