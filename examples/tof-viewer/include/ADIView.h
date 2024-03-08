@@ -35,7 +35,7 @@ class ADIView {
     /**
 		* @brief Constructor
 		*/
-    ADIView(std::shared_ptr<adicontroller::ADIController> &ctrl,
+    ADIView(std::shared_ptr<adicontroller::ADIController> ctrl,
             const std::string &name);
 
     /**
