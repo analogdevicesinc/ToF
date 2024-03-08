@@ -30,7 +30,7 @@
 using namespace adiviewer;
 using namespace adicontroller;
 
-ADIView::ADIView(std::shared_ptr<ADIController> &ctrl, const std::string &name)
+ADIView::ADIView(std::shared_ptr<ADIController> ctrl, const std::string &name)
     : m_ctrl(ctrl), m_viewName(name), m_depthFrameAvailable(false),
       m_center(true), m_waitKeyBarrier(0), m_distanceVal(0),
       m_smallSignal(false), m_crtSmallSignalState(false) {
