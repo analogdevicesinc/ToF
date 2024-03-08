@@ -1,5 +1,5 @@
-ADI provide 4 executables (built for ARM64) to interract with imager Flash memory through ADSD3500
-These 4 tools can be used in both host-boot usecase and self-boot.
+ADI provide 5 executables (built for ARM64) to interract with imager Flash memory through ADSD3500
+These 5 tools can be used in both host-boot usecase and self-boot.
 For host-boot please check host_boot.sh
 
 	1. NVM_WRITE - is used to flash a new image into the imager SPI flash memory.
@@ -22,6 +22,12 @@ For host-boot please check host_boot.sh
 !!ATTENTION!! For modules with non ADSD3500 Flash memory layout, the CRC mismatch is expected. !!ATTENTION!!
 	It takes only one parameter, a file name where the calibration read from the imager module should be saved
 		ex: ./CFG_READ imager_firmware.cfg
+
+	5. INIT_FW_WRITE - is used to write init firmware to the imager flash memory.
+!!ATTENTION!! For modules with non ADSD3500 Flash memory layout, the CRC mismatch is expected. !!ATTENTION!!
+        It takes only one parameter, path to the file which need to be written to the imager flash memory.
+                ex: ./INIT_FW_WRITE init_fw.stream
+
 
 
 If module is not self-booting because Flash memory content is corrupted or does not contain ADSD3500 firmware, NVM_Utils tool can be used to fix it.
