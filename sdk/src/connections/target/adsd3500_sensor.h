@@ -32,6 +32,7 @@
 
 #include "aditof/depth_sensor_interface.h"
 #include "buffer_processor.h"
+#include "adsd3500_mode_selector.h"
 #include "connections/target/v4l_buffer_access_interface.h"
 #include <memory>
 #include <unordered_map>
@@ -177,6 +178,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     aditof::Adsd3500Status m_adsd3500Status;
     bool m_chipResetDone;
     std::vector<iniFileStruct> m_iniFileStructList;
+    aditof::Adsd3500ModeSelector m_modeSelector;
 
     const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
         {
