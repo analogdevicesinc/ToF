@@ -447,11 +447,7 @@ aditof::Status Adsd3500Sensor::stop() {
 aditof::Status
 Adsd3500Sensor::getAvailableFrameTypes(std::vector<std::string> &types) {
     types.clear();
-<<<<<<< HEAD
     for (const auto &frameType : m_availableFrameTypes) {
-=======
-    for (const auto &frameType : availableFrameTypes) {
->>>>>>> 08272dd2 (sdk/src/connections: started implementation for new tables)
         types.emplace_back(frameType.mode);
     }
     return aditof::Status::OK;
@@ -462,11 +458,7 @@ Adsd3500Sensor::getFrameTypeDetails(const std::string &frameName,
                                     aditof::DepthSensorFrameType &details) {
     using namespace aditof;
     Status status = Status::OK;
-<<<<<<< HEAD
     for (const auto &frameDetails : m_availableFrameTypes) {
-=======
-    for (const auto &frameDetails : availableFrameTypes) {
->>>>>>> 08272dd2 (sdk/src/connections: started implementation for new tables)
         if (frameDetails.mode == frameName) {
             details = frameDetails;
             break;
