@@ -303,8 +303,8 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         frmenum.pixel_format = fmtdesc.pixelformat;
         while (UsbLinuxUtils::xioctl(m_implData->fd, VIDIOC_ENUM_FRAMESIZES,
                                      &frmenum) == 0) {
-            if ((frmenum.discrete.width == type.width) &&
-                (frmenum.discrete.height == type.height)) {
+            if ((frmenum.discrete.width == type.frameWidthInBytes) &&
+                (frmenum.discrete.height == type.frameHeightInBytes)) {
                 found = true;
                 break;
             }
@@ -322,8 +322,8 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         return Status::GENERIC_ERROR;
     }
 
-    m_implData->fmt.fmt.pix.width = type.width;
-    m_implData->fmt.fmt.pix.height = type.height;
+    m_implData->fmt.fmt.pix.width = type.frameWidthInBytes;
+    m_implData->fmt.fmt.pix.height = type.frameHeightInBytes;
     m_implData->fmt.fmt.pix.pixelformat = fmtdesc.pixelformat;
     m_implData->fmt.fmt.pix.field = V4L2_FIELD_ANY;
 

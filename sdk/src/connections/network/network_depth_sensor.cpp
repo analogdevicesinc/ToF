@@ -460,7 +460,7 @@ NetworkDepthSensor::getFrameTypeDetails(const std::string &frameName,
     }
     details.mode = frameName;
     details.frameContent =
-        net->recv_buff[m_sensorIndex].depthSensorFrameType().frameContent;
+        net->recv_buff[m_sensorIndex].depthSensorFrameType().frameContent();
     details.modeNumber =
         net->recv_buff[m_sensorIndex].depthSensorFrameType().modeNumber();
     details.pixelFormatIndex =
@@ -497,10 +497,16 @@ NetworkDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
     net->send_buff[m_sensorIndex].set_func_name("SetFrameType");
     auto protoFrameContent =
-        net->send_buff[m_sensorIndex].add_depthsensorframecontent();
-    protoFrameContent->set_type(type.type);
-    protoFrameContent->set_width(type.width);
-    protoFrameContent->set_height(type.height);
+        net->send_buff[m_sensorIndex].add_depthsensorframetype();
+    protoFrameContent->set_mode(type.mode);
+    protoFrameContent->set_frameContent(type.frameContent);
+    protoFrameContent->set_modeNuber(type.modeNumber);
+    protoFrameContent->set_pixelFormatIndex(type.pixelFormatIndex);
+    protoFrameContent->set_frameWidthInBytes(type.frameWidthInBytes);
+    protoFrameContent->set_frameHeightInBytes(type.frameHeightInBytes);
+    protoFrameContent->set_baseResolutionWidth(type.baseResolutionWidth);
+    protoFrameContent->set_baseResolutionHeight(type.baseResolutionHeight);
+    protoFrameContent->set_metadataSize(type.metadataSize);
 
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 

@@ -118,7 +118,7 @@ OfflineDepthSensor::getFrameTypeDetails(const std::string &frameName,
 
 aditof::Status
 OfflineDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
-    m_frameTypeSelected = type.type;
+    m_frameTypeSelected = type.mode;
     return aditof::Status::OK;
 }
 
