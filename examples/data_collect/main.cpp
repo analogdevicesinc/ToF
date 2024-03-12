@@ -29,6 +29,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <algorithm>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -50,7 +51,7 @@ static const char kUsagePublic[] =
     R"(Data Collect.
     Usage:
       data_collect CONFIG
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [-s | --split] [-t | --netlinktest] CONFIG
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [-s | --split] [-t | --netlinktest] [--ic <imager-configuration>] CONFIG
       data_collect (-h | --help)
 
     Arguments:
@@ -68,6 +69,8 @@ static const char kUsagePublic[] =
       --split            Save each frame into a separate file (Debug)
       --netlinktest      Puts server on target in test mode (Debug)
       --singlethread     Store the frame to file using same tread
+      --ic <imager-configuration>   Select imager configuration: standard, standard-raw,
+                         custom, custom-raw. By default is standard.
 
     Note: --m argument supports both index and string (0/sr-native) 
 
@@ -95,6 +98,7 @@ int main(int argc, char *argv[]) {
         {"-s", {"--split", false, "", "", false}},
         {"-t", {"--netlinktest", false, "", "", false}},
         {"-st", {"--singlethread", false, "", "", false}},
+        {"-ic", {"--ic", false, "", "", false}},
         {"-config", {"-CONFIG", true, "last", "", true}}};
 
     CommandParser command;
@@ -160,6 +164,7 @@ int main(int argc, char *argv[]) {
     uint32_t warmup_time = 0;
     std::string ip;
     std::string firmware;
+    std::string configuration = "standard";
 
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
@@ -265,11 +270,25 @@ int main(int argc, char *argv[]) {
     //Parsing netLinkTest option
     bool useNetLinkTest = !command_map["-t"].value.empty();
 
+    // Parsing configuration option
+    std::vector<std::string> configurationlist = {"standard","standard-raw",
+                                                 "coustom","custom-raw"};
+
+    std::string configurationValue = command_map["-ic"].value;
+    if(!configurationValue.empty()) {
+        unsigned int pos = std::find(configurationlist.begin(), configurationlist.end(),
+                            configurationValue) - configurationlist.begin();
+        if(pos < configurationlist.size()) {
+          configuration = configurationValue;
+        }
+    }
+
     LOG(INFO) << "Output folder: " << folder_path;
     LOG(INFO) << "Mode: " << command_map["-m"].value;
     LOG(INFO) << "Number of frames: " << n_frames;
     LOG(INFO) << "Json file: " << json_file_path;
     LOG(INFO) << "Warm Up Time is: " << warmup_time << " seconds";
+    LOG(INFO) << "Configuration is: " << configuration;
 
     if (!ip.empty()) {
         LOG(INFO) << "Ip address is: " << ip;
@@ -307,6 +326,13 @@ int main(int argc, char *argv[]) {
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
         return 0;
+    }
+
+    status = camera->setSensorConfiguration(configuration);
+    if (status != Status::OK) {
+        LOG(INFO) << "Could not configure camera with " << configuration;
+    } else {
+        LOG(INFO) << "Configure camera with " << configuration;
     }
 
     aditof::CameraDetails cameraDetails;
