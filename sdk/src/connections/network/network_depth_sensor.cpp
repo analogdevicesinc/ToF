@@ -459,26 +459,34 @@ NetworkDepthSensor::getFrameTypeDetails(const std::string &frameName,
         return Status::GENERIC_ERROR;
     }
     details.mode = frameName;
-    details.frameContent =
-        net->recv_buff[m_sensorIndex].depthSensorFrameType().frameContent;
     details.modeNumber =
-        net->recv_buff[m_sensorIndex].depthSensorFrameType().modeNumber();
-    details.pixelFormatIndex =
-        net->recv_buff[m_sensorIndex].depthSensorFrameType().pixelFormatIndex();
+        net->recv_buff[m_sensorIndex].depth_sensor_frame_type().mode_number();
+    details.pixelFormatIndex = net->recv_buff[m_sensorIndex]
+                                   .depth_sensor_frame_type()
+                                   .pixel_format_index();
     details.frameWidthInBytes = net->recv_buff[m_sensorIndex]
-                                    .depthSensorFrameType()
-                                    .frameWidthInBytes();
+                                    .depth_sensor_frame_type()
+                                    .frame_width_in_bytes();
     details.frameHeightInBytes = net->recv_buff[m_sensorIndex]
-                                     .depthSensorFrameType()
-                                     .frameHeightInBytes();
+                                     .depth_sensor_frame_type()
+                                     .frame_height_in_bytes();
     details.baseResolutionWidth = net->recv_buff[m_sensorIndex]
-                                      .depthSensorFrameType()
-                                      .baseResolutionWidth();
+                                      .depth_sensor_frame_type()
+                                      .base_resolution_width();
     details.baseResolutionHeight = net->recv_buff[m_sensorIndex]
-                                       .depthSensorFrameType()
-                                       .baseResolutionHeight();
+                                       .depth_sensor_frame_type()
+                                       .base_resolution_height();
     details.metadataSize =
-        net->recv_buff[m_sensorIndex].depthSensorFrameType().metadataSize();
+        net->recv_buff[m_sensorIndex].depth_sensor_frame_type().metadata_size();
+    for (int i = 0; i < net->recv_buff[m_sensorIndex]
+                            .depth_sensor_frame_type()
+                            .frame_content_size();
+         i++) {
+        details.frameContent.emplace_back(net->recv_buff[m_sensorIndex]
+                                              .depth_sensor_frame_type()
+                                              .frame_content(i));
+    }
+
     Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
     return status;
 }
@@ -496,11 +504,37 @@ NetworkDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     }
 
     net->send_buff[m_sensorIndex].set_func_name("SetFrameType");
-    auto protoFrameContent =
-        net->send_buff[m_sensorIndex].add_depthsensorframecontent();
-    protoFrameContent->set_type(type.type);
-    protoFrameContent->set_width(type.width);
-    protoFrameContent->set_height(type.height);
+    net->send_buff[m_sensorIndex].mutable_frame_type()->set_mode(type.mode);
+    net->send_buff[m_sensorIndex].mutable_frame_type()->set_mode_number(
+        type.modeNumber);
+    net->send_buff[m_sensorIndex].mutable_frame_type()->set_pixel_format_index(
+        type.pixelFormatIndex);
+    net->send_buff[m_sensorIndex]
+        .mutable_frame_type()
+        ->set_frame_width_in_bytes(type.frameWidthInBytes);
+    net->send_buff[m_sensorIndex]
+        .mutable_frame_type()
+        ->set_frame_height_in_bytes(type.frameHeightInBytes);
+    net->send_buff[m_sensorIndex]
+        .mutable_frame_type()
+        ->set_base_resolution_width(type.baseResolutionWidth);
+    net->send_buff[m_sensorIndex]
+        .mutable_frame_type()
+        ->set_base_resolution_height(type.baseResolutionHeight);
+    net->send_buff[m_sensorIndex].mutable_frame_type()->set_metadata_size(
+        type.metadataSize);
+
+    // auto protoFrameContent =
+    //     net->send_buff[m_sensorIndex].mutable_sensor_frame_type();
+    // protoFrameContent->set_mode(type.mode);
+    // protoFrameContent->set_frame_content(type.frameContent);
+    // protoFrameContent->set_modeNuber(type.modeNumber);
+    // protoFrameContent->set_pixelFormatIndex(type.pixelFormatIndex);
+    // protoFrameContent->set_frameWidthInBytes(type.frameWidthInBytes);
+    // protoFrameContent->set_frameHeightInBytes(type.frameHeightInBytes);
+    // protoFrameContent->set_baseResolutionWidth(type.baseResolutionWidth);
+    // protoFrameContent->set_baseResolutionHeight(type.baseResolutionHeight);
+    // protoFrameContent->set_metadataSize(type.metadataSize);
 
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 

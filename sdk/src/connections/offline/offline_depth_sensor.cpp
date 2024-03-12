@@ -162,8 +162,7 @@ OfflineDepthSensor::getFrameTypeDetails(const std::string &frameName,
 
 aditof::Status
 OfflineDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
-
-    m_frameTypeSelected = type.type;
+    m_frameTypeSelected = type.mode;
 #ifdef TARGET
     m_outputFrameWidth = type.content.at(1).width * 4;
     m_outputFrameHeight = type.content.at(1).height;
