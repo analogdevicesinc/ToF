@@ -847,13 +847,13 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
     }
 
     if (control == "phaseDepthBits")
-        ModeInfo::getInstance()->setSensorPixelParam("bitsInDepth", value);
+        m_sensorConfiguration.setControl("bitsInDepth", value);
     if (control == "abBits")
-        ModeInfo::getInstance()->setSensorPixelParam("bitsInAb", value);
+        m_sensorConfiguration.setControl("bitsInAb", value);
     if (control == "confidenceBits")
-        ModeInfo::getInstance()->setSensorPixelParam("bitsInConf", value);
+        m_sensorConfiguration.setControl("bitsInConf", value);
     if (control == "inputFormat") {
-        ModeInfo::getInstance()->setSensorPixelParam("pixelFormat", value);
+        m_sensorConfiguration.setControl("pixelFormat", value);
         return Status::OK;
     }
     if (control == "netlinktest") {
@@ -1624,10 +1624,12 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
             switch (imager_version) {
             case 1: {
                 m_implData->imagerType = SensorImagerType::IMAGER_ADSD3100;
+                m_sensorConfiguration.setControl("imagerType", "adsd3100");
                 break;
             }
             case 2: {
                 m_implData->imagerType = SensorImagerType::IMAGER_ADSD3030;
+                m_sensorConfiguration.setControl("imagerType", "adsd3030");
                 break;
             }
             default: {
@@ -1649,8 +1651,10 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
                         "flag to determine imager type";
 #ifdef ADSD3030 // TO DO: remove this fallback mechanism once we no longer support old firmwares that don't support command 0x32
         m_implData->imagerType = SensorImagerType::IMAGER_ADSD3030;
+        m_sensorConfiguration.setControl("imagerType", "adsd3030");
 #else
         m_implData->imagerType = SensorImagerType::IMAGER_ADSD3100;
+        m_sensorConfiguration.setControl("imagerType", "adsd3100");
 #endif
     }
 
