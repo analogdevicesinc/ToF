@@ -440,43 +440,49 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         std::string frameName = buff_recv.func_strings_param(0);
         aditof::Status status =
             camDepthSensor->getFrameTypeDetails(frameName, frameDetails);
-        for (auto &aditofContent : frameDetails.content) {
-            auto protoContent = buff_send.add_depthsensorframecontent();
-            protoContent->set_type(aditofContent.type);
-            protoContent->set_width(aditofContent.width);
-            protoContent->set_height(aditofContent.height);
-        }
+        auto protoContent = buff_send.add_depthsensorframetype();
+        protoContent->set_mode(frameDetails.mode);
+        protoContent->set_frameContent(frameDetails.frameContent);
+        protoContent->set_modeNumber(frameDetails.modeNumber);
+        protoContent->set_pixelFormatIndex(frameDetails.pixelFormatIndex);
+        protoContent->set_frameWidthInBytes(frameDetails.frameWidthInBytes);
+        protoContent->set_frameHeightInBytes(frameDetails.frameHeightInBytes);
+        protoContent->set_baseResolutionInWidth(
+            frameDetails.baseResolutionInWidth);
+        protoContent->set_baseresolutionInHeight(
+            frameDetails.baseResolutionInHeight);
+        protoContent->set_metadataSize(frameDetails.metadataSize);
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
 
     case SET_FRAME_TYPE: {
         aditof::DepthSensorFrameType aditofFrameType;
-        for (int i = 0; i < buff_recv.depthsensorframecontent().size(); ++i) {
-            aditofFrameType.type = buff_recv.depthsensorframecontent(i).type();
-            aditofFrameType.width =
-                buff_recv.depthsensorframecontent(i).width();
-            aditofFrameType.height =
-                buff_recv.depthsensorframecontent(i).height();
-        }
+        aditofFrameType.mode = buff_recv.depthsensorframetype().mode();
+        aditofFrameType.frameContent =
+            buff_recv.depthsensorframetype().frameContent();
+        aditofFrameType.modeNumer =
+            buff_recv.depthsensorframetype().modeNumer();
+        aditofFrameType.pixelFormatIndex =
+            buff_recv.depthsensorframetype().pixelFormatIndex();
+        aditofFrameType.frameWidthInBytes =
+            buff_recv.depthsensorframetype().frameWidthInBytes();
+        aditofFrameType.frameHeightInBytes =
+            buff_recv.depthsensorframetype().frameHeightInBytes();
+        aditofFrameType.baseResolutionWidth =
+            buff_recv.depthsensorframetype().baseResolutionWidth();
+        aditofFrameType.baseResolutionHeight =
+            buff_recv.depthsensorframetype().baseResolutionHeight();
+        aditofFrameType.metadataSize =
+            buff_recv.depthsensorframetype().metadataSize();
 
         aditof::Status status = camDepthSensor->setFrameType(aditofFrameType);
 
         if (status == aditof::Status::OK) {
-            //width * height * 2 bytes/pixel * 2 frames(depth/ab)
-            //Looking for depth resolution
-            int width_tmp = aditofFrameType.width;
-            int height_tmp = aditofFrameType.height;
+            int width_tmp = aditofFrameType.frameWidthInBytes;
+            int height_tmp = aditofFrameType.frameHeightInBytes;
 
-            for (auto it = aditofFrameType.content.begin();
-                 it != aditofFrameType.content.end(); ++it) {
-                if (!(it->type.compare(std::string("depth")))) {
-                    width_tmp = it->width;
-                    height_tmp = it->height;
-                }
-            }
-
-            if (aditofFrameType.type == "pcm-native") {
+            if (aditofFrameType.mode == "pcm-native") {
                 processedFrameSize = width_tmp * height_tmp;
             } else {
                 processedFrameSize = width_tmp * height_tmp * 4;
