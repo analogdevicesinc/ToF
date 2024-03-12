@@ -57,46 +57,50 @@ int init_tof_sdk(char *cap_dev_path) {
 void convertDepthSensorFrameTypesToProtoMsg(
     std::vector<aditof::DepthSensorFrameType> depthSensorFrameTypes,
     uvc_payload::DepthSensorFrameTypeVector &depthSensorFrameTypesPayload) {
-    for (const aditof::DepthSensorFrameType &depthSensorFrameType :
-         depthSensorFrameTypes) {
-        LOG(INFO) << depthSensorFrameType.type << " "
-                  << depthSensorFrameType.width << " "
-                  << depthSensorFrameType.content.size();
-        uvc_payload::DepthSensorFrameType *depthSensorFrameTypePayload =
-            depthSensorFrameTypesPayload.add_depthsensorframetypes();
-        depthSensorFrameTypePayload->set_type(depthSensorFrameType.type);
-        depthSensorFrameTypePayload->set_width(depthSensorFrameType.width);
-        depthSensorFrameTypePayload->set_height(depthSensorFrameType.height);
 
-        for (const aditof::DepthSensorFrameContent &depthSensorFrameContent :
-             depthSensorFrameType.content) {
-            uvc_payload::DepthSensorFrameContent
-                *depthSensorFrameContentPayload =
-                    depthSensorFrameTypePayload->add_depthsensorframecontent();
-            depthSensorFrameContentPayload->set_type(
-                depthSensorFrameContent.type);
-            depthSensorFrameContentPayload->set_width(
-                depthSensorFrameContent.width);
-            depthSensorFrameContentPayload->set_height(
-                depthSensorFrameContent.height);
-        }
-    }
+    // TO DO: Change based on refactoring
+    // for (const aditof::DepthSensorFrameType &depthSensorFrameType :
+    //      depthSensorFrameTypes) {
+    //     LOG(INFO) << depthSensorFrameType.type << " "
+    //               << depthSensorFrameType.width << " "
+    //               << depthSensorFrameType.content.size();
+    //     uvc_payload::DepthSensorFrameType *depthSensorFrameTypePayload =
+    //         depthSensorFrameTypesPayload.add_depthsensorframetypes();
+    //     depthSensorFrameTypePayload->set_type(depthSensorFrameType.type);
+    //     depthSensorFrameTypePayload->set_width(depthSensorFrameType.width);
+    //     depthSensorFrameTypePayload->set_height(depthSensorFrameType.height);
+
+    //     for (const aditof::DepthSensorFrameContent &depthSensorFrameContent :
+    //          depthSensorFrameType.content) {
+    //         uvc_payload::DepthSensorFrameContent
+    //             *depthSensorFrameContentPayload =
+    //                 depthSensorFrameTypePayload->add_depthsensorframecontent();
+    //         depthSensorFrameContentPayload->set_type(
+    //             depthSensorFrameContent.type);
+    //         depthSensorFrameContentPayload->set_width(
+    //             depthSensorFrameContent.width);
+    //         depthSensorFrameContentPayload->set_height(
+    //             depthSensorFrameContent.height);
+    //     }
+    // }
 }
 
 void convertProtoMsgToDepthSensorFrameType(
     const uvc_payload::DepthSensorFrameType &protoMsg,
     aditof::DepthSensorFrameType &aditofStruct) {
-    aditofStruct.type = protoMsg.type();
-    aditofStruct.width = protoMsg.width();
-    aditofStruct.height = protoMsg.height();
-    for (int i = 0; i < protoMsg.depthsensorframecontent_size(); ++i) {
-        aditof::DepthSensorFrameContent content;
 
-        content.type = protoMsg.depthsensorframecontent(i).type();
-        content.width = protoMsg.depthsensorframecontent(i).width();
-        content.height = protoMsg.depthsensorframecontent(i).height();
-        aditofStruct.content.emplace_back(content);
-    }
+    // TO DO: Change based on refactoring
+    // aditofStruct.type = protoMsg.type();
+    // aditofStruct.width = protoMsg.width();
+    // aditofStruct.height = protoMsg.height();
+    // for (int i = 0; i < protoMsg.depthsensorframecontent_size(); ++i) {
+    //     aditof::DepthSensorFrameContent content;
+
+    //     content.type = protoMsg.depthsensorframecontent(i).type();
+    //     content.width = protoMsg.depthsensorframecontent(i).width();
+    //     content.height = protoMsg.depthsensorframecontent(i).height();
+    //     aditofStruct.content.emplace_back(content);
+    // }
 }
 
 void handleClientRequest(const char *in_buf, const size_t in_len,
