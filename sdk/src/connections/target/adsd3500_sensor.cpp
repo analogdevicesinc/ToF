@@ -447,12 +447,27 @@ aditof::Status Adsd3500Sensor::stop() {
     return status;
 }
 
-aditof::Status Adsd3500Sensor::getAvailableFrameTypes(
-    std::vector<aditof::DepthSensorFrameType> &types) {
-
-    types =
-        m_availableFrameTypes; //TBD shall we copy / move vector instead of assign
+aditof::Status
+Adsd3500Sensor::getAvailableFrameTypes(std::vector<std::string> &types) {
+    types.clear();
+    for (const auto &frameType : availableFrameTypes) {
+        types.emplace_back(frameType.mode);
+    }
     return aditof::Status::OK;
+}
+
+aditof::Status
+Adsd3500Sensor::getFrameTypeDetails(const std::string &frameName,
+                                    aditof::DepthSensorFrameType &details) {
+    using namespace aditof;
+    Status status = Status::OK;
+    for (const auto &frameDetails : availableFrameTypes) {
+        if (frameDetails.mode == frameName) {
+            details = frameDetails;
+            break;
+        }
+    }
+    return status;
 }
 
 aditof::Status Adsd3500Sensor::setModeByIndex(uint8_t modeIndex) {
@@ -550,7 +565,7 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     struct v4l2_buffer buf;
     size_t length, offset;
 
-    status = setMode(type.type);
+    status = setMode(type.mode);
     if (status != aditof::Status::OK) {
         LOG(INFO) << "Failed to set camera mode";
         return status;
@@ -564,7 +579,7 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
         for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
             dev = &m_implData->videoDevs[i];
-            if (type.type != m_implData->frameType.type) {
+            if (type.mode != m_implData->frameType.mode) {
                 for (unsigned int i = 0; i < dev->nVideoBuffers; i++) {
                     if (munmap(dev->videoBuffers[i].start,
                                dev->videoBuffers[i].length) == -1) {
@@ -597,7 +612,7 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
             uint8_t pixFmt;
 
             status = ModeInfo::getInstance()->getSensorProperties(
-                type.type, &width, &height, &pixFmt);
+                type.mode, &width, &height, &pixFmt);
             if (status != Status::OK) {
                 LOG(ERROR) << "Invalid configuration provided!";
                 return status;
@@ -689,10 +704,10 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
     m_implData->frameType = type;
 
-    if (type.type != "pcm-native") {
+    if (type.mode != "pcm-native") {
         //TO DO: update this values when frame_impl gets restructured
         status = m_bufferProcessor->setVideoProperties(
-            type.content.at(1).width * 4, type.content.at(1).height);
+            type.frameWidthInBytes * 4, type.frameHeightInBytes);
         if (status != Status::OK) {
             LOG(ERROR) << "Failed to set bufferProcessor properties!";
             return status;

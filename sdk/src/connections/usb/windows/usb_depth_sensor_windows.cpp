@@ -607,13 +607,27 @@ aditof::Status UsbDepthSensor::stop() {
     return status;
 }
 
-aditof::Status UsbDepthSensor::getAvailableFrameTypes(
-    std::vector<aditof::DepthSensorFrameType> &types) {
+aditof::Status
+UsbDepthSensor::getAvailableFrameTypes(std::vector<std::string> &types) {
+    types.clear();
+    for (const auto &frameType : m_depthSensorFrameTypes) {
+        types.emplace_back(frameType.mode);
+    }
+    return aditof::Status::OK;
+}
+
+aditof::Status
+UsbDepthSensor::getFrameTypeDetails(const std::string &frameName,
+                                    aditof::DepthSensorFrameType &details) {
+    // TO DO: Get information from the camera
     using namespace aditof;
     Status status = Status::OK;
-
-    types = m_depthSensorFrameTypes;
-
+    for (const auto &frameDetails : m_depthSensorFrameTypes) {
+        if (frameDetails.mode == frameName) {
+            details = frameDetails;
+            break;
+        }
+    }
     return status;
 }
 

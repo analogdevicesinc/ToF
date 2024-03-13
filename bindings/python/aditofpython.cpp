@@ -607,7 +607,7 @@ PYBIND11_MODULE(aditofpython, m) {
         .def(
             "getAvailableFrameTypes",
             [](aditof::DepthSensorInterface &device, py::list types) {
-                std::vector<aditof::DepthSensorFrameType> typeList;
+                std::vector<std::string> typeList;
                 aditof::Status status = device.getAvailableFrameTypes(typeList);
 
                 for (const auto &type : typeList)
@@ -616,6 +616,9 @@ PYBIND11_MODULE(aditofpython, m) {
                 return status;
             },
             py::arg("types"))
+        .def("getFrameTypeDetails",
+             &aditof::DepthSensorInterface::getFrameTypeDetails,
+             py::arg("frameName"), py::arg("details"))
         .def("setFrameType", &aditof::DepthSensorInterface::setFrameType,
              py::arg("details"))
         .def(
