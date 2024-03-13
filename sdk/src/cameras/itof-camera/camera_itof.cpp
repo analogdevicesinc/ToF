@@ -623,7 +623,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     }
 
     // If we compute XYZ then prepare the XYZ tables which depend on the mode
-    if (!m_pcmFrame) {
+    if (m_xyzEnabled && !m_pcmFrame) {
         uint8_t mode =
             ModeInfo::getInstance()->getModeInfo(m_details.frameType.type).mode;
         const int GEN_XYZ_ITERATIONS = 20;
