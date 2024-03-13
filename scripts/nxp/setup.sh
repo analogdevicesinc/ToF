@@ -129,7 +129,7 @@ setup() {
         build_and_install_protobuf ${deps_dir}/protobuf ${deps_install_dir}/protobuf
         build_and_install_websockets ${deps_dir}/libwebsockets ${deps_install_dir}/websockets
 
-        if [ -d ../../../libs ]; then
+        if [[ -f ../../../libs/libtofi_compute.so && -f ../../../libs/libtofi_config.so ]]; then
                 CMAKE_OPTIONS="-DNXP=1 -DWITH_PYTHON=1"
         else
                 CMAKE_OPTIONS="-DNXP=1 -DUSE_DEPTH_COMPUTE_OPENSOURCE=ON -DWITH_PYTHON=1"
