@@ -37,43 +37,38 @@ import logging
 import os
 import re
 
+@pytest.fixture()
+def ip_invalid_string():
+    return "None"
+    
+@pytest.fixture()
+def ip_no_camera():
+    return "10.43.0.1"
+    
 Logger = logging.getLogger(__name__)
 
-test_filename = "trial"
+@pytest.mark.parametrize("ip_list", ["10.42.0.1", "10.43.0.1", "None", 1234])
 
-def test_saveCCBCFG(ip_set, config_file):
-
-    ccb_file_extension = ".ccb"
-    cfg_file_extension = ".cfg"
-    
-    #delete all ccb files in current directiry
-    files_to_delete = [fname for fname in os.listdir('.') if fname.endswith(ccb_file_extension)]
-    # Delete each file
-    for file_name in files_to_delete:
-        try:
-            os.remove(file_name)
-        except OSError:
-            print(f"Error deleting: {file_name}")
+def test_get_cameralist_input(ip_set,ip_list,ip_no_camera):
+    try:
+        #Run the exe file
+        exe_path = "../../build/examples/test_get_camera_list/release/test_get_camera_list.exe"
+        process = subprocess.run([exe_path, ip_list],
+            text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             
-    #delete all cfg files in current directiry
-    files_to_delete = [fname for fname in os.listdir('.') if fname.endswith(cfg_file_extension)]
-    # Delete each file
-    for file_name in files_to_delete:
-        try:
-            os.remove(file_name)
-        except OSError:
-            print(f"Error deleting: {file_name}")
+        print(process.stdout)
+        output = process.stdout
         
-    #Run the exe file
-    exe_path = "../../build/examples/test_saveCCBCFG/release/test_saveCCBCFG.exe"
-    process = subprocess.run([exe_path,  ip_set, config_file, test_filename], 
-        text=True,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        if ip_list == ip_set:
+            assert process.returncode == 0
+            assert "Status::OK" in output,"camera not detected @ ip_set for camera"
         
-    assert os.path.exists(test_filename + ".ccb"),"ccb file not saved"
-    os.remove(test_filename + ".ccb")
-    assert os.path.exists(test_filename + ".cfg"),"cfg file not saved"
-    os.remove(test_filename + ".cfg")
+        elif ip_list == ip_no_camera:
+            assert "Status::UNREACHABLE" in output,"wrong status"
+        
+        else:
+            assert "getaddrinfo failed: 11001" in output,"wrong status"
+            
+    except TypeError:  
+        print("tried an integer as an input")
     
-    assert process.returncode == 0
-    print(process.stdout)
-    output = process.stdout

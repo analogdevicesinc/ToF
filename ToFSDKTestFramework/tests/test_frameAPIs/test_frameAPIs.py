@@ -102,7 +102,7 @@ def test_frameAPIs(available_modes_ini, ip_set,config_file):
     assert passiveIRCaptured == ini_data['fdetails_passiveIRCaptured'],"does not match with .ini file"
     print("fdetails_passiveIRCaptured verified with .ini file")
     
-    frame_types = {"ab", "depth", "xyz", "metadata", "conf"}
+    frame_types = {"ab", "depth", "conf", "xyz", "metadata"}
     
     for frame_type in frame_types:
         if mode_name[available_modes_ini] == "pcm-native" and frame_type != "ab":
@@ -142,14 +142,14 @@ def test_frameAPIs(available_modes_ini, ip_set,config_file):
             assert match is not None    # Checks if the pattern is found
             value = match.groups()[0]
             subelementsPerElement = int(value)
-            assert subelementsPerElement == ini_data[frame_type+"-subelementsPerElement"],"does not match with .ini file"
+            assert subelementsPerElement ==ini_data[frame_type+"-subelementsPerElement"],"does not match with .ini file"
             print(frame_type+"-subelementsPerElement verified with .ini file")
             
             match = re.search((frame_type +"-bytesCount: *?(\\d+)"), output)
             assert match is not None    # Checks if the pattern is found
             value = match.groups()[0]
             bytesCount = int(value)
-            assert bytesCount == ini_data[frame_type+"-bytesCount"],"does not match with .ini file"
+            assert bytesCount == ini_data[frame_type+"-bytesCount"] == width*height*subelementsPerElement*subelementSize, "does not match with .ini file"
             print(frame_type+"-bytesCount verified with .ini file")
         
     match = re.search("embed_hdr_length: *?(\\d+)", output)

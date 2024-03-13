@@ -51,23 +51,18 @@ using namespace aditof;
 
 int main(int argc, char *argv[]) {
     std::string configFile;
-    int modeNum;
+
     std::string ip;
     // check argument for modeName
-    if (argc > 3) {
-        // convert the string argument to an integer
-        modeNum = std::stoi(argv[1]);
-        ip = argv[2];
-        configFile = argv[3];
+    if (argc > 2) {
+
+        ip = argv[1];
+        configFile = argv[2];
 
     } else {
-        // set num to default: 0(sr-native)
-        modeNum = 0;
         ip = "10.42.0.1";
         configFile = "config/config_adsd3500_adsd3100.json";
     }
-
-    LOG(INFO) << "value: " << modeNum;
 
     Status status = Status::OK;
     LOG(INFO) << "SDK version: " << aditof::getApiVersion()
@@ -95,60 +90,6 @@ int main(int argc, char *argv[]) {
     status = camera->initialize(configFile);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
-        return 1;
-    }
-
-    std::vector<std::string> frameTypes;
-    camera->getAvailableFrameTypes(frameTypes);
-    if (frameTypes.empty()) {
-        std::cout << "no frame type avaialble!";
-        return 1;
-    }
-
-    std::string modeName;
-    camera->getFrameTypeNameFromId(modeNum, modeName);
-    status = camera->setFrameType(modeName);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not set camera frame type!";
-        return 1;
-    }
-
-    status = camera->start();
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not start the camera!";
-        return 1;
-    }
-
-    aditof::Frame frame;
-
-    int nFrames = 50;
-    LOG(INFO) << "Requesting " << nFrames << " frames!";
-
-    auto start_time = std::chrono::high_resolution_clock::now();
-
-    // Request the frames for the respective mode
-    for (uint32_t loopcount = 0; loopcount < nFrames; loopcount++) {
-
-        status = camera->requestFrame(&frame);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Could not request frame!";
-            return 0;
-        }
-
-    } // End of for Loop
-
-    auto end_time = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> total_time = end_time - start_time;
-    if (total_time.count() > 0.0) {
-        double measured_fps = (double)nFrames / total_time.count();
-        LOG(INFO) << "Measured FPS: " << measured_fps;
-    }
-
-
-
-    status = camera->stop();
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not stop the camera!";
         return 1;
     }
 

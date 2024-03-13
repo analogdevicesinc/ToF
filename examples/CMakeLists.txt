@@ -10,6 +10,8 @@ add_subdirectory(test_getMetadata)
 add_subdirectory(test_frameHandler)
 add_subdirectory(test_saveCCBCFG)
 add_subdirectory(test_frameAPIs)
+add_subdirectory(test_get_camera_list)
+add_subdirectory(test_initialize_load_config)
 
 if (NOT NXP)
     add_subdirectory(tof-viewer)
@@ -28,6 +30,8 @@ if (NXP)
 	$<TARGET_FILE:test_frameHandler>
 	$<TARGET_FILE:test_saveCCBCFG>
 	$<TARGET_FILE:test_frameAPIs>
+	$<TARGET_FILE:test_get_camera_list>
+	$<TARGET_FILE:test_initialize_load_config>
 
         DESTINATION ${CMAKE_INSTALL_BINDIR} )
 elseif(WIN32)
@@ -41,6 +45,8 @@ elseif(WIN32)
 	$<TARGET_FILE:test_frameHandler>
 	$<TARGET_FILE:test_saveCCBCFG>
 	$<TARGET_FILE:test_frameAPIs>
+	$<TARGET_FILE:test_get_camera_list>
+	$<TARGET_FILE:test_initialize_load_config>
         $<TARGET_FILE:ADIToFGUI>
         DESTINATION ${CMAKE_INSTALL_BINDIR} )
 endif()

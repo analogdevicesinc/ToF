@@ -12,7 +12,7 @@ def delay_between_tests():
     
 @pytest.fixture(autouse=True)
 def ip_set():
-    return "ip:10.42.0.1"
+    return "10.42.0.1"
     
 @pytest.fixture(autouse=True)
 def config_file():

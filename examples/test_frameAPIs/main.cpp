@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
     } else {
         // set num to default: 0(sr-native)
         modeNum = 0;
-        ip = "ip:10.42.0.1";
+        ip = "10.42.0.1";
         configFile = "config/config_adsd3500_adsd3100.json";
     }
 
@@ -78,6 +78,7 @@ int main(int argc, char *argv[]) {
     std::vector<std::shared_ptr<Camera>> cameras;
 
     if (!ip.empty()) {
+        ip = "ip:" + ip;
         status = system.getCameraList(cameras, ip);
         std::cout << status;
     } else {
@@ -132,7 +133,7 @@ int main(int argc, char *argv[]) {
 
     aditof::FrameDataDetails frameDataDetails;
     std::string types[] = {
-        "ab", "depth", "conf ", "xyz ", "metadata"};
+        "ab", "depth", "conf", "xyz", "metadata"};
     for (const std::string &type : types) {
         frame.getDataDetails(type, frameDataDetails);
 
