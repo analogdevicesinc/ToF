@@ -243,8 +243,9 @@ update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 pushd /home/${USERNAME}
 mkdir Workspace
 pushd Workspace
-mkdir libs
+
 if ls /*.so 1> /dev/null 2>&1; then
+	mkdir libs
 	sudo cp /*.so /home/${USERNAME}/Workspace/libs 1> /dev/null 2>&1
 	sudo rm -rf /*.so 1> /dev/null 2>&1
 fi
