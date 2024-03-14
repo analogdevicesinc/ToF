@@ -306,10 +306,7 @@ EOF
 
   # Apply step3 overlay (configs)
   sudo cp -R ${SCRIPT_DIR}/patches/ubuntu_overlay/step3/* ${ROOTFS_TMP}/
-  
-  #Adding rsz script to .bashrc
-  sudo cat ${ROOTFS_TMP}/home/${USERNAME}/bashrc_extension >> ${ROOTFS_TMP}/home/${USERNAME}/.bashrc 1> /dev/null 2>&1
-  sudo rm -rf ${ROOTFS_TMP}/home/${USERNAME}/bashrc_extension 1> /dev/null 2>&1
+
 }
 
 function main() {
@@ -336,6 +333,10 @@ function main() {
   run_3rd_stage_script
 
   uninstall_qemu
+  
+  #Append rsz function to bashrc
+  sudo cat ${SCRIPT_DIR}/build/ubuntu/rootfs_tmp/home/bashrc_extension >> ${SCRIPT_DIR}/build/ubuntu/rootfs_tmp/home/${USERNAME}/.bashrc 1> /dev/null 2>&1
+  sudo rm -rf ${SCRIPT_DIR}/build/ubuntu/rootfs_tmp/home/bashrc_extension 1> /dev/null 2>&1
   
   # cleanup
   sync
