@@ -289,7 +289,10 @@ void ADIView::_displayAbImage() {
 
         auto camera = m_ctrl->m_cameras[static_cast<unsigned int>(
             m_ctrl->getCameraInUse())];
-        camera->normalizeABdata(m_capturedFrame.get(), true);
+
+        if (getAutoScale()) {
+            camera->normalizeABdata(m_capturedFrame.get(), getLogImage());
+        }
 
         m_capturedFrame->getData("ab", &ab_video_data);
 

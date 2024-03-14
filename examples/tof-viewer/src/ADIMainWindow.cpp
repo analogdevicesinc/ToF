@@ -1775,11 +1775,17 @@ void ADIMainWindow::displayActiveBrightnessWindow(
         CaptureABVideo();
 
         bool logImage = view->getLogImage();
-        ImGui::Checkbox("Log Image", &logImage);
-        view->setLogImage(logImage);
-        ImGui::SameLine();
         bool autoScale = view->getAutoScale();
+
         ImGui::Checkbox("Auto-scale", &autoScale);
+
+        if (!autoScale && logImage) {
+            logImage = false;
+        } else if (autoScale) {
+            ImGui::SameLine();
+            ImGui::Checkbox("Log Image", &logImage);
+        }
+        view->setLogImage(logImage);
         view->setAutoScale(autoScale);
 
         // fix a y offset caused by the checkbox
