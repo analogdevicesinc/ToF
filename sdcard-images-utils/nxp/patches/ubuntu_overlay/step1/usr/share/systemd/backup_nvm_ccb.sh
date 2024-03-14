@@ -2,7 +2,7 @@
 nvm_size=741376
 sleep 15
 if [ -d "/boot" ]; then
-	if [ ! -f "/boot/nvm_backup.bin" ]; then
+	if [ ! -s "/boot/nvm_backup.bin" ]; then
 		echo "Backup NVM_Flash image to /boot"
 		chmod +x /home/analog/Workspace/Tools/host_boot_tools/NVM_Utils/NVM_READ
 		/home/analog/Workspace/Tools/host_boot_tools/NVM_Utils/NVM_READ /boot/nvm_backup.bin
@@ -15,10 +15,12 @@ if [ -d "/boot" ]; then
 		fi
 
 	fi
-	if [ ! -f "/boot/ccb_backup.ccb" ]; then
+	if [ ! -s "/boot/ccb_backup.ccb" ]; then
 		echo "Backup CCB to /boot"
 		chmod +x /home/analog/Workspace/Tools/host_boot_tools/NVM_Utils/CCB_READ
 		/home/analog/Workspace/Tools/host_boot_tools/NVM_Utils/CCB_READ /boot/ccb_backup.ccb
+	else
+		echo "CCB backup already sucessful"
 	fi
 fi
 
