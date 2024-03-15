@@ -337,6 +337,7 @@ function main() {
   
   #Append rsz function to bashrc
   sudo cat ${SCRIPT_DIR}/build/ubuntu/rootfs_tmp/home/bashrc_extension >> ${SCRIPT_DIR}/build/ubuntu/rootfs_tmp/home/${USERNAME}/.bashrc 1> /dev/null 2>&1
+  sleep 1
   sudo rm -rf ${SCRIPT_DIR}/build/ubuntu/rootfs_tmp/home/bashrc_extension 1> /dev/null 2>&1
   
   # cleanup
