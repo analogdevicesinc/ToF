@@ -4,3 +4,4 @@
 | Directory | Description |
 | --------- | ----------- |
 | nxp | Utilities required to create SD card image for NXP platform |
+| rpi | Utilities required to create SD card image for Raspberry-4b platform |
