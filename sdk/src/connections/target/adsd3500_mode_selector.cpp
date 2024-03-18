@@ -40,6 +40,7 @@ Adsd3500ModeSelector::Adsd3500ModeSelector() : m_configuration("standard") {
 
     m_controls.emplace("imagerType", "");
     m_controls.emplace("mode", "");
+    m_controls.emplace("mixedModes", "");
 
     m_controls.emplace("phaseDepthBits", "");
     m_controls.emplace("abBits", "");
@@ -58,6 +59,31 @@ Adsd3500ModeSelector::setConfiguration(const std::string &configuration) {
         return aditof::Status::OK;
     } else {
         return aditof::Status::INVALID_ARGUMENT;
+    }
+}
+
+aditof::Status Adsd3500ModeSelector::getAvailableFrameTypes(
+    std::vector<DepthSensorFrameTypeUpdated> &m_depthSensorFrameTypes) {
+
+    m_depthSensorFrameTypes.clear();
+
+    if (m_configuration == "standard") {
+        if (m_controls["imagerType"] == "adsd3100") {
+            m_depthSensorFrameTypes = adsd3100_standardModes;
+        } else if (m_controls["imagerType"] == "adsd3030") {
+            m_depthSensorFrameTypes = adsd3030_standardModes;
+        }
+    }
+
+    if (m_controls["mixedModes"] == "0") {
+        for (int i = 0; i < m_depthSensorFrameTypes.size(); i++) {
+            if (m_depthSensorFrameTypes.mode.find("mixed") !=
+                std::string::npos) {
+                m_depthSensorFrameTypes.erase(m_depthSensorFrameTypes.begin() +
+                                              i);
+                i--;
+            }
+        }
     }
 }
 
