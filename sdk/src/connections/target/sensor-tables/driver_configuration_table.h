@@ -31,17 +31,10 @@
  */
 
 #include <aditof/depth_sensor_interface.h>
+#include <aditof/sensor_definitions.h>
 #include <vector>
 
-struct DriverConfiguration {
-    std::string depthBits;
-    std::string abBits;
-    std::string confBits;
-    std::string pixelFormat;
-    int driverWidth;
-    int driverHeigth;
-    int pixelFormatIndex;
-};
+using namespace aditof;
 
 const std::vector<DriverConfiguration> m_adsd3100Mode0 = {
     /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
@@ -93,26 +86,7 @@ const std::vector<DriverConfiguration> m_adsd3030Mode2_3_5_6 = {
    sr-native */
 };
 
-//defined locally. To be updated
-struct DepthSensorFrameTypeUpdated {
-    std::string mode;
-    std::vector<std::string> frameContent;
-    uint8_t modeNumer;
-    int pixelFormatIndex;
-
-    //driver width/height. Can be used for both chipRaw and imagerRaw.
-    int frameWidthInBytes;
-    int frameHeightInBytes;
-
-    //processed data witdh/height
-    int baseResolutionWidth;
-    int baseResolutionHeight;
-
-    int metadataSize;
-    std::vector<DriverConfiguration> driverConfiguration;
-};
-
-std::vector<DepthSensorFrameTypeUpdated> adsd3100_standardModes = {
+std::vector<DepthSensorFrameType> adsd3100_standardModes = {
     {"sr-native",
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      0,
@@ -134,7 +108,7 @@ std::vector<DepthSensorFrameTypeUpdated> adsd3100_standardModes = {
      128,
      m_adsd3100Mode1},
     {"pcm-native",
-     {"raw", "depth", "ab", "conf", "xyz", "metadata"},
+     {"ab", "metadata"},
      1,
      0,
      0,
@@ -184,7 +158,7 @@ std::vector<DepthSensorFrameTypeUpdated> adsd3100_standardModes = {
      128,
      m_adsd3100Mode2_3_5_6}};
 
-std::vector<DepthSensorFrameTypeUpdated> adsd3030_standardModes = {
+std::vector<DepthSensorFrameType> adsd3030_standardModes = {
     {"sr-native",
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      0,
@@ -206,7 +180,7 @@ std::vector<DepthSensorFrameTypeUpdated> adsd3030_standardModes = {
      128,
      m_adsd3100Mode1},
     {"pcm-native",
-     {"raw", "depth", "ab", "conf", "xyz", "metadata"},
+     {"ab", "metadata"},
      1,
      0,
      0,
