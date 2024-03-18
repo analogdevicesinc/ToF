@@ -243,8 +243,9 @@ update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 pushd /home/${USERNAME}
 mkdir Workspace
 pushd Workspace
-mkdir libs
+
 if ls /*.so 1> /dev/null 2>&1; then
+	mkdir libs
 	sudo cp /*.so /home/${USERNAME}/Workspace/libs 1> /dev/null 2>&1
 	sudo rm -rf /*.so 1> /dev/null 2>&1
 fi
@@ -307,9 +308,7 @@ EOF
   # Apply step3 overlay (configs)
   sudo cp -R ${SCRIPT_DIR}/patches/ubuntu_overlay/step3/* ${ROOTFS_TMP}/
   
-  #Adding rsz script to .bashrc
-  sudo cat ${ROOTFS_TMP}/home/${USERNAME}/bashrc_extension >> ${ROOTFS_TMP}/home/${USERNAME}/.bashrc 1> /dev/null 2>&1
-  sudo rm -rf ${ROOTFS_TMP}/home/${USERNAME}/bashrc_extension 1> /dev/null 2>&1
+  
 }
 
 function main() {
@@ -336,6 +335,12 @@ function main() {
   run_3rd_stage_script
 
   uninstall_qemu
+  
+  #Add resize function to bashrc
+	
+  #Adding rsz script to .bashrc
+  sudo cat ${ROOTFS_TMP}/home/${USERNAME}/bashrc_extension >> ${ROOTFS_TMP}/home/${USERNAME}/.bashrc 1> /dev/null 2>&1
+  sudo rm -rf ${ROOTFS_TMP}/home/${USERNAME}/bashrc_extension 1> /dev/null 2>&1
   
   # cleanup
   sync

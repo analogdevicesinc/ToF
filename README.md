@@ -26,7 +26,7 @@ Host Platform:
 * Ubuntu 22.04
 
 Other
-* Python 3.9
+* Python 3.10
 
 ## Supported Embedded Platforms
 
