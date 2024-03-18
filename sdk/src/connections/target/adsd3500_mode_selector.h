@@ -44,6 +44,8 @@ class Adsd3500ModeSelector {
     //functions to set which table configuration to use
     aditof::Status setConfiguration(const std::string &configuration);
 
+    aditof::Status getAvailableFrameTypes(std::vector<DepthSensorFrameTypeUpdated> &m_depthSensorFrameTypes);
+
     //populate table with hardcoded values depending on input
     aditof::Status
     getConfigurationTable(DepthSensorFrameTypeUpdated &configurationTable);

@@ -495,15 +495,10 @@ aditof::Status Adsd3500Sensor::setMode(const std::string &mode) {
     uint8_t modeIndex;
     aditof::Status status = aditof::Status::OK;
     LOG(INFO) << "Setting camera mode to " << mode;
-    //get mode index by name
-    status = ModeInfo::getInstance()->convertCameraMode(mode, modeIndex);
-    if (status != aditof::Status::OK) {
-        return status;
-    }
 
     //get register value by mode index - nothing to do, the value corresponds to the index
     //set register / control
-    status = setModeByIndex(modeIndex);
+    status = setModeByIndex(m_implData->type.modeNumber);
     if (status != aditof::Status::OK) {
         return status;
     }
@@ -611,12 +606,15 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
             uint16_t width, height;
             uint8_t pixFmt;
 
-            status = ModeInfo::getInstance()->getSensorProperties(
-                type.type, &width, &height, &pixFmt);
+            status = m_sensorConfiguration.getConfigurationTable(type);
             if (status != Status::OK) {
                 LOG(ERROR) << "Invalid configuration provided!";
                 return status;
             }
+
+            width = type.driverWidth;
+            height = type.driverHeight;
+            pixFmt = type.pixelFormatIndex;
 
             if (pixFmt == 1) {
                 pixelFormat = V4L2_PIX_FMT_SBGGR12;
@@ -795,23 +793,30 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
             LOG(ERROR) << "Old modes have been detected but they are no "
                           "longer supported!";
             return Status::INVALID_ARGUMENT;
-        } else if (n == 2) {
+        } else if (n == 2 || n == 3) {
             m_implData->ccbVersion = CCBVersion::CCB_VERSION1;
-            if (m_implData->imagerType == SensorImagerType::IMAGER_ADSD3100) {
-                m_availableFrameTypes = availableFrameTypes;
-            } else if (m_implData->imagerType ==
-                       SensorImagerType::IMAGER_ADSD3030) {
-                m_availableFrameTypes = availableFrameTypesAdsd3030;
+            if (m_implData->imagerType != SensorImagerType::IMAGER_UNKNOWN) {
+                status = m_sensorConfiguration.setControl(
+                    "mixedModes", std::to_string(n - 2));
+                status = m_sensorConfiguration.getAvailableFrameTypes(
+                    m_availableFrameTypes);
+                if (status != aditof::Status::OK) {
+                    LOG(ERROR) << "Failed to get available frame types for the "
+                                  "current configuration.";
+                    return status;
+                }
             } else {
                 LOG(ERROR) << "Unknown imager type. Because of this, cannot "
                               "set control:"
                            << control;
                 return Status::GENERIC_ERROR;
             }
+
+            return status;
+        } else {
+            LOG(ERROR) << "Invalid value provided for ccb version";
+            return aditof::Status::GENERIC_ERROR;
         }
-        ModeInfo::getInstance()->setImagerTypeAndModeVersion(
-            (int)m_implData->imagerType, std::stoi(value));
-        return status;
     } else if (control == "fps") {
         int fps = std::stoi(value);
 #ifdef NVIDIA
@@ -1375,12 +1380,9 @@ aditof::Status Adsd3500Sensor::initTargetDepthCompute(uint8_t *iniFile,
     using namespace aditof;
     Status status = Status::OK;
 
-    uint8_t convertedMode;
-    status = ModeInfo::getInstance()->convertCameraMode(
-        m_implData->frameType.type, convertedMode);
-
     status = m_bufferProcessor->setProcessorProperties(
-        iniFile, iniFileLength, calData, calDataLength, convertedMode, true);
+        iniFile, iniFileLength, calData, calDataLength,
+        m_implData->frameType.type.modeNumber, true);
     if (status != Status::OK) {
         LOG(ERROR) << "Failed to initialize depth compute on target!";
         return status;
@@ -1678,9 +1680,10 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
 >>>>>>> 965b8918 (sdk/connections/target/adsd3500_sensor: initialize m_modeSelector object)
     if (m_implData->ccbVersion != CCBVersion::CCB_UNKNOWN) {
         if (m_implData->ccbVersion == CCBVersion::CCB_VERSION0) {
-            setControl("modeInfoVersion", "0");
+            LOG(ERROR) << "Old modes are no longer supported!";
+            return Status::GENERIC_ERROR;
         } else if (m_implData->ccbVersion == CCBVersion::CCB_VERSION1) {
-            setControl("modeInfoVersion", "2");
+            m_sensorConfiguration.setControl("mixedModes", "1");
         }
     }
 
