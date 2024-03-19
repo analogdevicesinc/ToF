@@ -384,7 +384,6 @@ void ADIView::_displayDepthImage() {
         //TODO: Implement temp display
 #if 0
         std::string attrVal;
-        m_capturedFrame->getAttribute("total_captures", attrVal);
         uint8_t totalcaptures = static_cast<uint8_t>(std::stoi(attrVal));
 
 
