@@ -604,7 +604,6 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
             __u32 pixelFormat = 0;
 
             uint16_t width, height;
-            uint8_t pixFmt;
 
             status = m_sensorConfiguration.getConfigurationTable(type);
             if (status != Status::OK) {
@@ -614,9 +613,8 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
             width = type.driverWidth;
             height = type.driverHeight;
-            pixFmt = type.pixelFormatIndex;
 
-            if (pixFmt == 1) {
+            if (type.pixelFormatIndex == 1) {
                 pixelFormat = V4L2_PIX_FMT_SBGGR12;
             } else {
 #ifdef NXP
