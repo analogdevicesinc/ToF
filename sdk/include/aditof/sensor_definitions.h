@@ -82,7 +82,7 @@ struct DriverConfiguration {
 struct DepthSensorFrameType {
     std::string mode;
     std::vector<std::string> frameContent;
-    uint8_t modeNumer;
+    uint8_t modeNumber;
     int pixelFormatIndex;
 
     //driver width/height. Can be used for both chipRaw and imagerRaw.
@@ -98,22 +98,13 @@ struct DepthSensorFrameType {
 };
 
 /**
- * @brief prints human readable frame content details
- */
-inline std::ostream &operator<<(std::ostream &o,
-                                const DepthSensorFrameContent &a) {
-    o << "T: " << a.type << "\tW: " << a.width << "\tH: " << a.height << "\n";
-    return o;
-}
-
-/**
  * @brief prints human readable frame details
  */
 inline std::ostream &operator<<(std::ostream &o,
                                 const DepthSensorFrameType &a) {
-    o << "DepthSensorFrame: T: " << a.type << "\tW: " << a.width
-      << "\tH: " << a.height << " contains:\n";
-    for (const DepthSensorFrameContent &content : a.content) {
+    o << "DepthSensorFrame: T: " << a.mode << "\tW: " << a.baseResolutionWidth
+      << "\tH: " << a.baseResolutionHeight << " contains:\n";
+    for (auto &content : a.frameContent) {
         o << "\t" << content;
     }
     return o;
