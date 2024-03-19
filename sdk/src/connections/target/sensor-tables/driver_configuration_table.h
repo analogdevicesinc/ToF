@@ -30,6 +30,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef DRIVER_CONFIGURATION_TABLE
+#define DRIVER_CONFIGURATION_TABLE
+
 #include <aditof/depth_sensor_interface.h>
 #include <aditof/sensor_definitions.h>
 #include <vector>
@@ -86,7 +89,7 @@ const std::vector<DriverConfiguration> m_adsd3030Mode2_3_5_6 = {
    sr-native */
 };
 
-std::vector<DepthSensorFrameType> adsd3100_standardModes = {
+const std::vector<DepthSensorFrameType> adsd3100_standardModes = {
     {"sr-native",
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      0,
@@ -158,7 +161,7 @@ std::vector<DepthSensorFrameType> adsd3100_standardModes = {
      128,
      m_adsd3100Mode2_3_5_6}};
 
-std::vector<DepthSensorFrameType> adsd3030_standardModes = {
+const std::vector<DepthSensorFrameType> adsd3030_standardModes = {
     {"sr-native",
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      0,
@@ -229,3 +232,5 @@ std::vector<DepthSensorFrameType> adsd3030_standardModes = {
      320,
      128,
      m_adsd3030Mode2_3_5_6}};
+
+#endif
