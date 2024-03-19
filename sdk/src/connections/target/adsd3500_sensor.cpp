@@ -450,8 +450,8 @@ aditof::Status Adsd3500Sensor::stop() {
 aditof::Status
 Adsd3500Sensor::getAvailableFrameTypes(std::vector<std::string> &types) {
     types.clear();
-    for (const auto &frameType : availableFrameTypes) {
-        types.emplace_back(frameType.type);
+    for (const auto &frameType : m_availableFrameTypes) {
+        types.emplace_back(frameType.mode);
     }
     return aditof::Status::OK;
 }
@@ -461,8 +461,8 @@ Adsd3500Sensor::getFrameTypeDetails(const std::string &frameName,
                                     aditof::DepthSensorFrameType &details) {
     using namespace aditof;
     Status status = Status::OK;
-    for (const auto &frameDetails : availableFrameTypes) {
-        if (frameDetails.type == frameName) {
+    for (const auto &frameDetails : m_availableFrameTypes) {
+        if (frameDetails.mode == frameName) {
             details = frameDetails;
             break;
         }
@@ -498,7 +498,7 @@ aditof::Status Adsd3500Sensor::setMode(const std::string &mode) {
 
     //get register value by mode index - nothing to do, the value corresponds to the index
     //set register / control
-    status = setModeByIndex(m_implData->type.modeNumber);
+    status = setModeByIndex(m_implData->frameType.modeNumber);
     if (status != aditof::Status::OK) {
         return status;
     }
@@ -560,7 +560,7 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     struct v4l2_buffer buf;
     size_t length, offset;
 
-    status = setMode(type.type);
+    status = setMode(type.mode);
     if (status != aditof::Status::OK) {
         LOG(INFO) << "Failed to set camera mode";
         return status;
@@ -574,7 +574,7 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
         for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
             dev = &m_implData->videoDevs[i];
-            if (type.type != m_implData->frameType.type) {
+            if (type.mode != m_implData->frameType.mode) {
                 for (unsigned int i = 0; i < dev->nVideoBuffers; i++) {
                     if (munmap(dev->videoBuffers[i].start,
                                dev->videoBuffers[i].length) == -1) {
@@ -605,16 +605,17 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
             uint16_t width, height;
 
-            status = m_sensorConfiguration.getConfigurationTable(type);
+            aditof::DepthSensorFrameType tempType = type;
+            status = m_modeSelector.updateConfigurationTable(tempType);
             if (status != Status::OK) {
                 LOG(ERROR) << "Invalid configuration provided!";
                 return status;
             }
 
-            width = type.driverWidth;
-            height = type.driverHeight;
+            width = tempType.frameWidthInBytes;
+            height = tempType.frameHeightInBytes;
 
-            if (type.pixelFormatIndex == 1) {
+            if (tempType.pixelFormatIndex == 1) {
                 pixelFormat = V4L2_PIX_FMT_SBGGR12;
             } else {
 #ifdef NXP
@@ -700,10 +701,10 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
     m_implData->frameType = type;
 
-    if (type.type != "pcm-native") {
+    if (type.mode != "pcm-native") {
         //TO DO: update this values when frame_impl gets restructured
         status = m_bufferProcessor->setVideoProperties(
-            type.content.at(1).width * 4, type.content.at(1).height);
+            type.baseResolutionWidth * 4, type.baseResolutionHeight);
         if (status != Status::OK) {
             LOG(ERROR) << "Failed to set bufferProcessor properties!";
             return status;
@@ -718,7 +719,7 @@ aditof::Status Adsd3500Sensor::getFrame(uint16_t *buffer) {
     using namespace aditof;
     Status status;
 
-    if (m_depthComputeOnTarget && m_implData->frameType.type != "pcm-native") {
+    if (m_depthComputeOnTarget && m_implData->frameType.mode != "pcm-native") {
         status = m_bufferProcessor->processBuffer(buffer);
         if (status != Status::OK) {
             LOG(ERROR) << "Failed to process buffer!";
@@ -794,9 +795,9 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
         } else if (n == 2 || n == 3) {
             m_implData->ccbVersion = CCBVersion::CCB_VERSION1;
             if (m_implData->imagerType != SensorImagerType::IMAGER_UNKNOWN) {
-                status = m_sensorConfiguration.setControl(
-                    "mixedModes", std::to_string(n - 2));
-                status = m_sensorConfiguration.getAvailableFrameTypes(
+                status = m_modeSelector.setControl("mixedModes",
+                                                   std::to_string(n - 2));
+                status = m_modeSelector.getAvailableFrameTypes(
                     m_availableFrameTypes);
                 if (status != aditof::Status::OK) {
                     LOG(ERROR) << "Failed to get available frame types for the "
@@ -864,14 +865,17 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
         return Status::UNAVAILABLE;
     }
 
+    std::vector<std::string> convertor = {"0",  "4",  "8", "10",
+                                          "12", "14", "16"};
+
     if (control == "phaseDepthBits")
-        m_sensorConfiguration.setControl("bitsInDepth", value);
+        m_modeSelector.setControl("depthBits", convertor.at(stoi(value)));
     if (control == "abBits")
-        m_sensorConfiguration.setControl("bitsInAb", value);
+        m_modeSelector.setControl("abBits", convertor.at(stoi(value)));
     if (control == "confidenceBits")
-        m_sensorConfiguration.setControl("bitsInConf", value);
+        m_modeSelector.setControl("confBits", convertor.at(stoi(value)));
     if (control == "inputFormat") {
-        m_sensorConfiguration.setControl("pixelFormat", value);
+        m_modeSelector.setControl("inputFormat", value);
         return Status::OK;
     }
     if (control == "netlinktest") {
@@ -1380,7 +1384,7 @@ aditof::Status Adsd3500Sensor::initTargetDepthCompute(uint8_t *iniFile,
 
     status = m_bufferProcessor->setProcessorProperties(
         iniFile, iniFileLength, calData, calDataLength,
-        m_implData->frameType.type.modeNumber, true);
+        m_implData->frameType.modeNumber, true);
     if (status != Status::OK) {
         LOG(ERROR) << "Failed to initialize depth compute on target!";
         return status;
@@ -1639,12 +1643,12 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
             switch (imager_version) {
             case 1: {
                 m_implData->imagerType = SensorImagerType::IMAGER_ADSD3100;
-                m_sensorConfiguration.setControl("imagerType", "adsd3100");
+                m_modeSelector.setControl("imagerType", "adsd3100");
                 break;
             }
             case 2: {
                 m_implData->imagerType = SensorImagerType::IMAGER_ADSD3030;
-                m_sensorConfiguration.setControl("imagerType", "adsd3030");
+                m_modeSelector.setControl("imagerType", "adsd3030");
                 break;
             }
             default: {
@@ -1668,10 +1672,10 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
                         "flag to determine imager type";
 #ifdef ADSD3030 // TO DO: remove this fallback mechanism once we no longer support old firmwares that don't support command 0x32
         m_implData->imagerType = SensorImagerType::IMAGER_ADSD3030;
-        m_sensorConfiguration.setControl("imagerType", "adsd3030");
+        m_modeSelector.setControl("imagerType", "adsd3030");
 #else
         m_implData->imagerType = SensorImagerType::IMAGER_ADSD3100;
-        m_sensorConfiguration.setControl("imagerType", "adsd3100");
+        m_modeSelector.setControl("imagerType", "adsd3100");
 #endif
     }
 
@@ -1681,7 +1685,7 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
             LOG(ERROR) << "Old modes are no longer supported!";
             return Status::GENERIC_ERROR;
         } else if (m_implData->ccbVersion == CCBVersion::CCB_VERSION1) {
-            m_sensorConfiguration.setControl("mixedModes", "1");
+            m_modeSelector.setControl("mixedModes", "1");
         }
     }
 
