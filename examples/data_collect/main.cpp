@@ -51,7 +51,7 @@ static const char kUsagePublic[] =
     R"(Data Collect.
     Usage:
       data_collect CONFIG
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [-s | --split] [-t | --netlinktest] [--ic <imager-configuration>] CONFIG
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [-s | --split] [-t | --netlinktest] [--ic <imager-configuration>] [-scf <save-configuration-file>] CONFIG
       data_collect (-h | --help)
 
     Arguments:
@@ -71,6 +71,7 @@ static const char kUsagePublic[] =
       --singlethread     Store the frame to file using same tread
       --ic <imager-configuration>   Select imager configuration: standard, standard-raw,
                          custom, custom-raw. By default is standard.
+      --scf <save-configuration-file>    Save current configuration to json file
 
     Note: --m argument supports both index and string (0/sr-native) 
 
@@ -99,6 +100,7 @@ int main(int argc, char *argv[]) {
         {"-t", {"--netlinktest", false, "", "", false}},
         {"-st", {"--singlethread", false, "", "", false}},
         {"-ic", {"--ic", false, "", "", false}},
+        {"-scf", {"--scf", false, "", "", false}},
         {"-config", {"-CONFIG", true, "last", "", true}}};
 
     CommandParser command;
@@ -275,12 +277,21 @@ int main(int argc, char *argv[]) {
                                                  "coustom","custom-raw"};
 
     std::string configurationValue = command_map["-ic"].value;
-    if(!configurationValue.empty()) {
+    if (!configurationValue.empty()) {
         unsigned int pos = std::find(configurationlist.begin(), configurationlist.end(),
                             configurationValue) - configurationlist.begin();
         if(pos < configurationlist.size()) {
           configuration = configurationValue;
         }
+    }
+
+    bool saveconfigurationFile = false;
+    std::string saveconfigurationFileValue = command_map["-scf"].value;
+    if (!saveconfigurationFileValue.empty()) {
+        if (saveconfigurationFileValue.find(".json") == std::string::npos) {
+            saveconfigurationFileValue += ".json";
+        }
+        saveconfigurationFile = true;
     }
 
     LOG(INFO) << "Output folder: " << folder_path;
@@ -333,6 +344,15 @@ int main(int argc, char *argv[]) {
         LOG(INFO) << "Could not configure camera with " << configuration;
     } else {
         LOG(INFO) << "Configure camera with " << configuration;
+    }
+
+    if (saveconfigurationFile) {
+        status = camera->saveDepthParamsToJsonFile(saveconfigurationFileValue);
+        if (status != Status::OK) {
+            LOG(INFO) << "Could not save current configuration info to " << saveconfigurationFileValue;
+        } else {
+            LOG(INFO) << "Current configuration info saved to file " << saveconfigurationFileValue;
+        }
     }
 
     aditof::CameraDetails cameraDetails;
