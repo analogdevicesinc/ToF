@@ -700,23 +700,6 @@ aditof::Status CameraItof::getFrameTypeNameFromId(int id,
     return status;
 }
 
-aditof::Status setAttributesByMode(aditof::Frame &frame,
-                                   const ModeInfo::modeInfo &modeInfo) {
-    aditof::Status status = aditof::Status::OK;
-
-    frame.setAttribute("embed_hdr_length",
-                       std::to_string(skMetaDataBytesCount));
-    frame.setAttribute("mode", std::to_string(modeInfo.mode));
-    frame.setAttribute("width", std::to_string(modeInfo.width));
-    frame.setAttribute("height", std::to_string(modeInfo.height));
-    frame.setAttribute("total_captures", std::to_string(modeInfo.subframes));
-    frame.setAttribute("embed_width", std::to_string(modeInfo.embed_width));
-    frame.setAttribute("embed_height", std::to_string(modeInfo.embed_height));
-    frame.setAttribute("passive_ir", std::to_string(modeInfo.passive_ir));
-
-    return status;
-}
-
 aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
     using namespace aditof;
     Status status = Status::OK;
@@ -731,8 +714,6 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
         LOG(WARNING) << "Failed to get mode info";
         return status;
     }
-
-    setAttributesByMode(*frame, aModeInfo);
 
     FrameDetails frameDetails;
     frame->getDetails(frameDetails);
