@@ -46,35 +46,16 @@
 
 static const int skMetaDataBytesCount = 128;
 
-const std::vector<std::string> availableAttributes = {
-    "mode",       "width",          "height",
-    "subframes",  "embed_width",    "embed_height",
-    "passive_ir", "total_captures", "embed_hdr_length"};
-
 struct FrameImpl::ImplData {
     std::unordered_map<std::string, uint16_t *> m_dataLocations;
     std::shared_ptr<uint16_t[]> m_allData;
     size_t allDataNbBytes;
 };
 
-FrameImpl::FrameImpl() : m_implData(new FrameImpl::ImplData) {
-    for (auto attributeKey : availableAttributes) {
-        m_attributes.emplace(attributeKey, "");
-        if (attributeKey == "embed_hdr_length") {
-            m_attributes[attributeKey] = std::to_string(skMetaDataBytesCount);
-        }
-    }
-}
-
+FrameImpl::FrameImpl() : m_implData(new FrameImpl::ImplData){};
 FrameImpl::~FrameImpl() = default;
 
 FrameImpl::FrameImpl(const FrameImpl &op) {
-    for (auto attributeKey : availableAttributes) {
-        m_attributes.emplace(attributeKey, "");
-        if (attributeKey == "embed_hdr_length") {
-            m_attributes[attributeKey] = std::to_string(skMetaDataBytesCount);
-        }
-    }
     allocFrameData(op.m_details);
     memcpy(m_implData->m_allData.get(), op.m_implData->m_allData.get(),
            m_implData->allDataNbBytes);
@@ -83,13 +64,6 @@ FrameImpl::FrameImpl(const FrameImpl &op) {
 
 FrameImpl &FrameImpl::operator=(const FrameImpl &op) {
     if (this != &op) {
-        for (auto attributeKey : availableAttributes) {
-            m_attributes.emplace(attributeKey, "");
-            if (attributeKey == "embed_hdr_length") {
-                m_attributes[attributeKey] =
-                    std::to_string(skMetaDataBytesCount);
-            }
-        }
         allocFrameData(op.m_details);
         memcpy(m_implData->m_allData.get(), op.m_implData->m_allData.get(),
                m_implData->allDataNbBytes);
@@ -154,21 +128,6 @@ aditof::Status FrameImpl::getData(const std::string &dataType,
     return Status::OK;
 }
 
-template <typename IntType>
-aditof::Status FrameImpl::getIntAttribute(const std::string &attribute_key,
-                                          IntType &attribute_value) {
-    aditof::Status status = aditof::Status::OK;
-    std::string attribute_str;
-    status = FrameImpl::getAttribute(attribute_key, attribute_str);
-
-    if (status == aditof::Status::INVALID_ARGUMENT) {
-        return status;
-    }
-
-    attribute_value = std::atoi(attribute_str.c_str());
-    return aditof::Status::OK;
-}
-
 aditof::FrameDataDetails
 FrameImpl::getFrameDetailByName(const aditof::FrameDetails &details,
                                 const std::string name) {
@@ -192,19 +151,6 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
     uint16_t embed_hdr_length = 0;
     uint8_t total_captures = 0;
     Status status;
-
-    //get attributes
-    status = getIntAttribute<uint16_t>("embed_hdr_length", embed_hdr_length);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Failed to get embed_hdr_length attribute!";
-        return;
-    }
-
-    status = getIntAttribute<uint8_t>("total_captures", total_captures);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Failed to get total_captures attribute!";
-        return;
-    }
 
     auto getSubframeSize = [embed_hdr_length,
                             total_captures](FrameDataDetails frameDetail) {
@@ -238,39 +184,6 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
 
         pos += getSubframeSize(frameDetail);
     }
-}
-
-aditof::Status
-FrameImpl::getAvailableAttributes(std::vector<std::string> &attributes) const {
-    attributes.clear();
-
-    for (auto const &key_value_pair : m_attributes) {
-        attributes.emplace_back(key_value_pair.first);
-    }
-    return aditof::Status::OK;
-}
-
-aditof::Status FrameImpl::setAttribute(const std::string &attribute,
-                                       const std::string &value) {
-    /*if (m_attributes.find(attribute) == m_attributes.end()) {
-        LOG(WARNING) << "Could not find any attribute with name: " << attribute;
-        return aditof::Status::INVALID_ARGUMENT;
-    }*/
-
-    m_attributes[attribute] = value;
-    return aditof::Status::OK;
-}
-
-aditof::Status FrameImpl::getAttribute(const std::string &attribute,
-                                       std::string &value) {
-    if (m_attributes.find(attribute) == m_attributes.end() &&
-        m_attributes.find(attribute) == m_attributes.begin()) {
-        LOG(WARNING) << "Could not find any attribute with name: " << attribute;
-        return aditof::Status::INVALID_ARGUMENT;
-    }
-
-    value = m_attributes[attribute];
-    return aditof::Status::OK;
 }
 
 aditof::Status FrameImpl::getMetadataStruct(aditof::Metadata &metadata) const {
