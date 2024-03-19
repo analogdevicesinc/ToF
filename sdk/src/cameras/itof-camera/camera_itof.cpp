@@ -311,8 +311,7 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
             TofiXYZDealiasData dealiasStruct;
             //the first element of readback_data for adsd3500_read_payload is used for the custom command
             //it will be overwritten by the returned data
-            uint8_t mode =
-                ModeInfo::getInstance()->getModeInfo(m_frameDetails.type).mode;
+            uint8_t mode = m_frameDetails.modeNumber;
 
             intrinsics[0] = mode;
             dealiasParams[0] = mode;
@@ -475,7 +474,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     auto frameTypeIt = std::find_if(
         m_availableSensorFrameTypes.begin(), m_availableSensorFrameTypes.end(),
         [&frameType](const DepthSensorFrameType &d) {
-            return (d.type == frameType);
+            return (d.mode == frameType);
         });
 
     if (frameTypeIt == m_availableSensorFrameTypes.end()) {
@@ -545,7 +544,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     }
 
     // Store the frame details in camera details
-    m_details.frameType.type = (*frameTypeIt).type;
+    m_details.frameType.type = (*frameTypeIt).mode;
     // TO DO: m_details.frameType.cameraMode =
     m_details.frameType.width =
         ModeInfo::getInstance()->getModeInfo(frameType).width;
@@ -553,24 +552,24 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         ModeInfo::getInstance()->getModeInfo(frameType).height;
     m_details.frameType.totalCaptures = 1;
     m_details.frameType.dataDetails.clear();
-    for (const auto &item : (*frameTypeIt).content) {
-        if (item.type == "xyz" && !m_xyzEnabled) {
+    for (const auto &item : (*frameTypeIt).frameContent) {
+        if (item == "xyz" && !m_xyzEnabled) {
             continue;
         }
-        if (item.type == "raw") { // "raw" is not supported right now
+        if (item == "raw") { // "raw" is not supported right now
             continue;
         }
 
         FrameDataDetails fDataDetails;
-        fDataDetails.type = item.type;
-        fDataDetails.width = item.width;
-        fDataDetails.height = item.height;
+        fDataDetails.type = item;
+        fDataDetails.width = (*frameTypeIt).baseResolutionWidth;
+        fDataDetails.height = (*frameTypeIt).baseResolutionHeight;
         fDataDetails.subelementSize = sizeof(uint16_t);
         fDataDetails.subelementsPerElement = 1;
 
-        if (item.type == "xyz") {
+        if (item == "xyz") {
             fDataDetails.subelementsPerElement = 3;
-        } else if (item.type == "raw") {
+        } else if (item == "raw") {
             // We overwrite the maximum width&height with the actual width&height calculated based on .ini params
             uint8_t pixFmt;
             ModeInfo::getInstance()->getSensorProperties(
@@ -578,11 +577,11 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
                 (uint16_t *)&fDataDetails.height, &pixFmt);
             fDataDetails.subelementSize = 1;
             fDataDetails.subelementsPerElement = 1;
-        } else if (item.type == "metadata") {
+        } else if (item == "metadata") {
             fDataDetails.subelementSize = 1;
             fDataDetails.width = 128;
             fDataDetails.height = 1;
-        } else if (item.type == "conf") {
+        } else if (item == "conf") {
             fDataDetails.subelementSize = sizeof(float);
         }
         fDataDetails.bytesCount = fDataDetails.width * fDataDetails.height *
@@ -681,7 +680,7 @@ aditof::Status CameraItof::getAvailableFrameTypes(
     availableFrameTypes.clear();
 
     for (const auto &frameType : m_availableSensorFrameTypes) {
-        availableFrameTypes.emplace_back(frameType.type);
+        availableFrameTypes.emplace_back(frameType.mode);
     }
 
     return status;
