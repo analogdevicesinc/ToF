@@ -569,28 +569,6 @@ PYBIND11_MODULE(aditofpython, m) {
                 return f;
             },
             py::arg("dataType"))
-        .def(
-            "getAvailableAttributes",
-            [](aditof::Frame &frame, py::list attributes) {
-                std::vector<std::string> attributesList;
-                aditof::Status status =
-                    frame.getAvailableAttributes(attributesList);
-
-                for (const auto &s : attributesList)
-                    attributes.append(s);
-
-                return status;
-            },
-            py::arg("attributes"))
-        .def(
-            "setAttribute",
-            [](aditof::Frame &frame, std::string attribute, std::string value) {
-                aditof::Status status = frame.setAttribute(attribute, value);
-                return status;
-            },
-            py::arg("attribute"), py::arg("value"))
-        .def("getAttribute", &aditof::Frame::getAttribute, py::arg("attribute"),
-             py::arg("value"))
         .def("getMetadataStruct", [](aditof::Frame &frame) {
             aditof::Metadata metadata;
             aditof::Status status = frame.getMetadataStruct(metadata);

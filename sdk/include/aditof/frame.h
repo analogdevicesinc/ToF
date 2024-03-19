@@ -111,32 +111,6 @@ class Frame {
     SDK_API Status getData(const std::string &dataType, uint16_t **dataPtr);
 
     /**
-     * @brief Gets the frames's list of attributes
-     * @param[out] attributes
-     * @return Status
-     */
-    SDK_API virtual Status
-    getAvailableAttributes(std::vector<std::string> &attributes) const;
-
-    /**
-     * @brief Sets a specific frame attribute
-     * @param[in] attribute - Attribute name
-     * @param[in] value - Attribute value
-     * @return Status
-     */
-    SDK_API virtual Status setAttribute(const std::string &attribute,
-                                        const std::string &value);
-
-    /**
-     * @brief Gets the value of a specific frame attribute
-     * @param[in] attribute - Attribute name
-     * @param[out] value - Attribute value
-     * @return Status
-     */
-    SDK_API virtual Status getAttribute(const std::string &attribute,
-                                        std::string &value) const;
-
-    /**
      * @brief Extracts the metadata content and returns a struct with values
      * @param[out] metadata - struct containing all metadata fields 
      * @return Status
