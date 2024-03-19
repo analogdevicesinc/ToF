@@ -30,6 +30,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "adsd3500_mode_selector.h"
+#include <algorithm>
 
 Adsd3500ModeSelector::Adsd3500ModeSelector() : m_configuration("standard") {
 
@@ -42,9 +43,9 @@ Adsd3500ModeSelector::Adsd3500ModeSelector() : m_configuration("standard") {
     m_controls.emplace("mode", "");
     m_controls.emplace("mixedModes", "");
 
-    m_controls.emplace("phaseDepthBits", "");
+    m_controls.emplace("depthBits", "");
     m_controls.emplace("abBits", "");
-    m_controls.emplace("confidenceBits", "");
+    m_controls.emplace("confBits", "");
 
     m_controls.emplace("inputFormat", "");
 }
@@ -63,7 +64,7 @@ Adsd3500ModeSelector::setConfiguration(const std::string &configuration) {
 }
 
 aditof::Status Adsd3500ModeSelector::getAvailableFrameTypes(
-    std::vector<DepthSensorFrameTypeUpdated> &m_depthSensorFrameTypes) {
+    std::vector<DepthSensorFrameType> &m_depthSensorFrameTypes) {
 
     m_depthSensorFrameTypes.clear();
 
@@ -77,7 +78,7 @@ aditof::Status Adsd3500ModeSelector::getAvailableFrameTypes(
 
     if (m_controls["mixedModes"] == "0") {
         for (int i = 0; i < m_depthSensorFrameTypes.size(); i++) {
-            if (m_depthSensorFrameTypes.mode.find("mixed") !=
+            if (m_depthSensorFrameTypes.at(i).mode.find("mixed") !=
                 std::string::npos) {
                 m_depthSensorFrameTypes.erase(m_depthSensorFrameTypes.begin() +
                                               i);
@@ -85,10 +86,12 @@ aditof::Status Adsd3500ModeSelector::getAvailableFrameTypes(
             }
         }
     }
+
+    return aditof::Status::OK;
 }
 
 aditof::Status Adsd3500ModeSelector::getConfigurationTable(
-    DepthSensorFrameTypeUpdated &configurationTable) {
+    DepthSensorFrameType &configurationTable) {
 
     if (m_configuration == "standard") {
         if (m_controls["imagerType"] == "adsd3100") {
@@ -111,15 +114,15 @@ aditof::Status Adsd3500ModeSelector::getConfigurationTable(
 }
 
 aditof::Status Adsd3500ModeSelector::updateConfigurationTable(
-    DepthSensorFrameTypeUpdated &configurationTable) {
+    DepthSensorFrameType &configurationTable) {
 
     for (auto driverConf : configurationTable.driverConfiguration) {
         if (driverConf.depthBits == m_controls["depthBits"] &&
             driverConf.abBits == m_controls["abBits"] &&
             driverConf.confBits == m_controls["confBits"] &&
             driverConf.pixelFormat == m_controls["inputFormat"]) {
-            configurationTable.baseResolutionWidth = driverConf.driverWidth;
-            configurationTable.baseResolutionHeight = driverConf.driverHeigth;
+            configurationTable.frameWidthInBytes = driverConf.driverWidth;
+            configurationTable.frameHeightInBytes = driverConf.driverHeigth;
             configurationTable.pixelFormatIndex = driverConf.pixelFormatIndex;
 
             return aditof::Status::OK;
@@ -149,17 +152,17 @@ aditof::Status Adsd3500ModeSelector::updateConfigurationTable(
 
     int height = 512;
 
-    if ((configurationTable.modeNumer == 2 ||
-         configurationTable.modeNumer == 3 ||
-         configurationTable.modeNumer == 5 ||
-         configurationTable.modeNumer == 6) &&
+    if ((configurationTable.modeNumber == 2 ||
+         configurationTable.modeNumber == 3 ||
+         configurationTable.modeNumber == 5 ||
+         configurationTable.modeNumber == 6) &&
         m_controls["imagerType"] == "adsd3100") {
         height = 512;
-    } else if ((configurationTable.modeNumer == 0 ||
-                configurationTable.modeNumer == 1) &&
+    } else if ((configurationTable.modeNumber == 0 ||
+                configurationTable.modeNumber == 1) &&
                m_controls["imagerType"] == "adsd3030") {
         height = 640;
-    } else if (configurationTable.modeNumer >= 2 &&
+    } else if (configurationTable.modeNumber >= 2 &&
                m_controls["imagerType"] == "adsd3030") {
         configurationTable.baseResolutionWidth = 1280;
         configurationTable.baseResolutionHeight = 320;
@@ -177,8 +180,8 @@ aditof::Status Adsd3500ModeSelector::updateConfigurationTable(
                                               height,
                                               0};
 
-    configurationTable.baseResolutionWidth = driverConfigStruct.driverWidth;
-    configurationTable.baseResolutionHeight = driverConfigStruct.driverHeigth;
+    configurationTable.frameWidthInBytes = driverConfigStruct.driverWidth;
+    configurationTable.frameHeightInBytes = driverConfigStruct.driverHeigth;
     configurationTable.pixelFormatIndex = driverConfigStruct.pixelFormatIndex;
 
     return aditof::Status::OK;
