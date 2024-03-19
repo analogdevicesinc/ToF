@@ -29,12 +29,16 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef ADSD3500_MODE_SELECTOR
+#define ADSD3500_MODE_SELECTOR
 
 #include "sensor-tables/driver_configuration_table.h"
 
 #include <aditof/status_definitions.h>
 
 #include <map>
+
+namespace aditof {
 
 class Adsd3500ModeSelector {
   public:
@@ -44,15 +48,16 @@ class Adsd3500ModeSelector {
     //functions to set which table configuration to use
     aditof::Status setConfiguration(const std::string &configuration);
 
-    aditof::Status getAvailableFrameTypes(std::vector<DepthSensorFrameTypeUpdated> &m_depthSensorFrameTypes);
+    aditof::Status getAvailableFrameTypes(
+        std::vector<DepthSensorFrameType> &m_depthSensorFrameTypes);
 
     //populate table with hardcoded values depending on input
     aditof::Status
-    getConfigurationTable(DepthSensorFrameTypeUpdated &configurationTable);
+    getConfigurationTable(DepthSensorFrameType &configurationTable);
 
     //this function should update the table with driver details
     aditof::Status
-    updateConfigurationTable(DepthSensorFrameTypeUpdated &configurationTable);
+    updateConfigurationTable(DepthSensorFrameType &configurationTable);
 
     //Functions used to set mode, number of bits, pixel format, etc
     aditof::Status setControl(const std::string &control,
@@ -65,3 +70,6 @@ class Adsd3500ModeSelector {
     std::map<std::string, std::string> m_controls;
     std::vector<aditof::DepthSensorFrameType> m_tableInUse;
 };
+} // namespace aditof
+
+#endif
