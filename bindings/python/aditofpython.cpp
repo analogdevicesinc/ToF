@@ -607,66 +607,6 @@ PYBIND11_MODULE(aditofpython, m) {
             },
             py::arg("buffer"))
         .def(
-            "regread",
-            [](aditof::DepthSensorInterface &device, uint16_t address) {
-                uint16_t addrPtr[1], dataPtr[1];
-                addrPtr[0] = address;
-                device.readRegisters(addrPtr, dataPtr, 1);
-                return dataPtr[0];
-            },
-            py::arg("address"))
-        .def(
-            "regwrite",
-            [](aditof::DepthSensorInterface &device, uint16_t address,
-               uint16_t data) {
-                uint16_t addrPtr[1], dataPtr[1];
-                addrPtr[0] = address;
-                dataPtr[0] = data;
-                return device.writeRegisters(addrPtr, dataPtr, 1);
-            },
-            py::arg("address"), py::arg("data"))
-        .def(
-            "regwriteburst",
-            [](aditof::DepthSensorInterface &device, uint16_t address,
-               py::array_t<uint16_t> data, const std::string &incr) {
-                uint16_t addrPtr[1];
-                addrPtr[0] = address;
-                if (incr.compare("increment") == 0)
-                    addrPtr[0] |= 0x4000;
-                py::buffer_info dataBuffInfo = data.request();
-                uint16_t *dataPtr = static_cast<uint16_t *>(dataBuffInfo.ptr);
-                return device.writeRegisters(addrPtr, dataPtr, data.size());
-            },
-            py::arg("address"), py::arg("data"), py::arg("increment"))
-        .def(
-            "readRegisters",
-            [](aditof::DepthSensorInterface &device,
-               py::array_t<uint16_t> address, py::array_t<uint16_t> data,
-               size_t length) {
-                py::buffer_info addrBuffInfo = address.request();
-                uint16_t *addrPtr = static_cast<uint16_t *>(addrBuffInfo.ptr);
-
-                py::buffer_info dataBuffInfo = data.request(true);
-                uint16_t *dataPtr = static_cast<uint16_t *>(dataBuffInfo.ptr);
-
-                return device.readRegisters(addrPtr, dataPtr, length);
-            },
-            py::arg("address"), py::arg("data"), py::arg("length"))
-        .def(
-            "writeRegisters",
-            [](aditof::DepthSensorInterface &device,
-               py::array_t<uint16_t> address, py::array_t<uint16_t> data,
-               size_t length) {
-                py::buffer_info addrBuffInfo = address.request();
-                uint16_t *addrPtr = static_cast<uint16_t *>(addrBuffInfo.ptr);
-
-                py::buffer_info dataBuffInfo = data.request();
-                uint16_t *dataPtr = static_cast<uint16_t *>(dataBuffInfo.ptr);
-
-                return device.writeRegisters(addrPtr, dataPtr, length);
-            },
-            py::arg("address"), py::arg("data"), py::arg("length"))
-        .def(
             "getAvailableControls",
             [](const aditof::DepthSensorInterface &device, py::list controls) {
                 std::vector<std::string> controlsList;

@@ -94,27 +94,6 @@ aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
     return status;
 }
 
-aditof::Status UsbDepthSensor::readRegisters(const uint16_t *address,
-                                             uint16_t *data, size_t length) {
-    using namespace aditof;
-    Status status = Status::OK;
-
-    // TO DO
-
-    return status;
-}
-
-aditof::Status UsbDepthSensor::writeRegisters(const uint16_t *address,
-                                              const uint16_t *data,
-                                              size_t length) {
-    using namespace aditof;
-    Status status = Status::OK;
-
-    // TO DO
-
-    return status;
-}
-
 aditof::Status UsbDepthSensor::readAfeTemp(float &temperature) {
     using namespace aditof;
     Status status = Status::OK;

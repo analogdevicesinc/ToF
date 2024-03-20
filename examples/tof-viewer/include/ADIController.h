@@ -74,11 +74,6 @@ class ADIController {
 		*/
     std::pair<float, float> getTemperature();
 
-    aditof::Status writeAFEregister(uint16_t *address, uint16_t *data,
-                                    uint16_t noOfEntries = 1);
-    aditof::Status readAFEregister(uint16_t *address, uint16_t *data,
-                                   uint16_t noOfEntries = 1);
-
     /**
 		* @brief			Start recording video.
 		* @param fileName	User sets a file name, along with its file extension

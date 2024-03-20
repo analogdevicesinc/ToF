@@ -101,25 +101,8 @@ std::pair<float, float> ADIController::getTemperature() {
 
     // TODO: Implement
     //std::shared_ptr<aditof::DepthSensorInterface> device = camera->getSensor();
-    //device->readRegistersTemp(returnValue.first);
     //device->readLaserTemp(returnValue.second);
     return returnValue;
-}
-
-aditof::Status ADIController::writeAFEregister(uint16_t *address,
-                                               uint16_t *data,
-                                               uint16_t noOfEntries) {
-    auto depthSensor =
-        m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getSensor();
-    return depthSensor->writeRegisters(address, data, noOfEntries);
-}
-
-aditof::Status ADIController::readAFEregister(uint16_t *address, uint16_t *data,
-                                              uint16_t noOfEntries) {
-
-    auto depthSensor =
-        m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getSensor();
-    return depthSensor->readRegisters(address, data, noOfEntries);
 }
 
 void ADIController::startRecording(const std::string &fileName,
