@@ -597,16 +597,6 @@ PYBIND11_MODULE(aditofpython, m) {
         .def("setFrameType", &aditof::DepthSensorInterface::setFrameType,
              py::arg("details"))
         .def(
-            "program",
-            [](aditof::DepthSensorInterface &device,
-               py::array_t<uint8_t> firmware, size_t size) {
-                py::buffer_info buffInfo = firmware.request();
-                uint8_t *ptr = static_cast<uint8_t *>(buffInfo.ptr);
-
-                return device.program(ptr, size);
-            },
-            py::arg("firmware"), py::arg("size"))
-        .def(
             "getFrame",
             [](aditof::DepthSensorInterface &device,
                py::array_t<uint16_t> buffer) {

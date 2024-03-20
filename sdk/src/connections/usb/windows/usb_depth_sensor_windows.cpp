@@ -654,52 +654,6 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     return status;
 }
 
-aditof::Status UsbDepthSensor::program(const uint8_t *firmware, size_t size) {
-    using namespace aditof;
-
-    ExUnitHandle handle;
-
-    HRESULT hr = UsbWindowsUtils::UvcFindNodeAndGetControl(
-        &handle, &m_implData->handle.pVideoInputFilter);
-    if (hr != S_OK) {
-        LOG(WARNING) << "Failed to find node and get control. Error: "
-                     << std::hex << hr;
-        return Status::GENERIC_ERROR;
-    }
-
-    OAFilterState state;
-    m_implData->handle.pControl->GetState(1, &state);
-    if (state == _FilterState::State_Running) {
-        hr = m_implData->handle.pControl->Pause();
-    }
-
-    size_t written_bytes = 0;
-    BYTE buf[MAX_BUF_SIZE];
-
-    while (written_bytes < size) {
-        if ((size - written_bytes) > MAX_PACKET_SIZE) {
-            memcpy(&buf[2], &firmware[written_bytes], MAX_PACKET_SIZE);
-            buf[0] = 0x01;
-            buf[1] = MAX_PACKET_SIZE;
-            written_bytes += MAX_PACKET_SIZE;
-        } else {
-            memset(buf, 0, MAX_BUF_SIZE);
-            buf[0] = 0x02;
-            buf[1] = static_cast<BYTE>(size - written_bytes);
-            memcpy(&buf[2], &firmware[written_bytes], size - written_bytes);
-            written_bytes = size;
-        }
-        hr = UsbWindowsUtils::UvcExUnitSetProperty(&handle, 1, &buf[0],
-                                                   MAX_BUF_SIZE);
-        if (FAILED(hr)) {
-            LOG(WARNING) << " Error in Programming AFE";
-            return Status::GENERIC_ERROR;
-        }
-    }
-
-    return Status::OK;
-}
-
 aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
     using namespace aditof;
     Status status = Status::OK;
