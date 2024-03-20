@@ -749,20 +749,6 @@ aditof::Status Adsd3500Sensor::getFrame(uint16_t *buffer) {
     return status;
 }
 
-aditof::Status Adsd3500Sensor::readRegisters(const uint16_t *address,
-                                             uint16_t *data, size_t length,
-                                             bool burst /*= true*/) {
-
-    return aditof::Status::OK;
-}
-
-aditof::Status Adsd3500Sensor::writeRegisters(const uint16_t *address,
-                                              const uint16_t *data,
-                                              size_t length,
-                                              bool burst /*= true*/) {
-    return aditof::Status::OK;
-}
-
 aditof::Status
 Adsd3500Sensor::getAvailableControls(std::vector<std::string> &controls) const {
     controls.clear();
