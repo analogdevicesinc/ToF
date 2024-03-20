@@ -356,7 +356,7 @@ FrameHandlerImpl::getOutputFileFullPath(const std::string &fileName) {
     const std::string pathSeparator = "\\";
 #else
     const std::string pathSeparator = "//";
-#endif;
+#endif
 
     if (m_dir.empty()) {
         fullPath = fileName;
