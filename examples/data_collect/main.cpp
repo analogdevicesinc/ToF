@@ -442,8 +442,6 @@ int main(int argc, char *argv[]) {
 
     aditof::Frame frame;
     FrameDetails fDetails;
-
-    uint64_t frame_size = 0;
     uint64_t elapsed_time;
 
     auto warmup_start = std::chrono::steady_clock::now();
