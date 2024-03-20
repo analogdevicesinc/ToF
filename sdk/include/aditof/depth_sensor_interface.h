@@ -96,14 +96,6 @@ class DepthSensorInterface {
     setFrameType(const aditof::DepthSensorFrameType &type) = 0;
 
     /**
-     * @brief Program the sensor with the given firmware
-     * @param firmware - chunk of data representin the firmware
-     * @param size - the size of the firmware data in bytes
-     * @return Status
-     */
-    virtual aditof::Status program(const uint8_t *firmware, size_t size) = 0;
-
-    /**
      * @brief Request a frame from the sensor
      * @param buffer - a valid location where the new frame should be stored.
      * The size of the frame is known (cached) internally and gets updated each

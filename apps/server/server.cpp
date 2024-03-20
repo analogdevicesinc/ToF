@@ -502,15 +502,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
-    case PROGRAM: {
-        size_t programSize = static_cast<size_t>(buff_recv.func_int32_param(0));
-        const uint8_t *pdata = reinterpret_cast<const uint8_t *>(
-            buff_recv.func_bytes_param(0).c_str());
-        aditof::Status status = camDepthSensor->program(pdata, programSize);
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
     case GET_FRAME: {
         aditof::Status status = aditof::Status::OK;
 
@@ -860,7 +851,6 @@ void Initialize() {
     s_map_api_Values["Stop"] = STOP;
     s_map_api_Values["GetAvailableFrameTypes"] = GET_AVAILABLE_FRAME_TYPES;
     s_map_api_Values["SetFrameType"] = SET_FRAME_TYPE;
-    s_map_api_Values["Program"] = PROGRAM;
     s_map_api_Values["GetFrame"] = GET_FRAME;
     s_map_api_Values["ReadRegisters"] = READ_REGISTERS;
     s_map_api_Values["WriteRegisters"] = WRITE_REGISTERS;
