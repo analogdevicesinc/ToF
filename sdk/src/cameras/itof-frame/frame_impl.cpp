@@ -150,7 +150,6 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
     unsigned int pos = 0;
     uint16_t embed_hdr_length = 0;
     uint8_t total_captures = 0;
-    Status status;
 
     auto getSubframeSize = [embed_hdr_length,
                             total_captures](FrameDataDetails frameDetail) {
@@ -188,7 +187,6 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
 
 aditof::Status FrameImpl::getMetadataStruct(aditof::Metadata &metadata) const {
     using namespace aditof;
-    Status status = Status::OK;
 
     uint8_t *header;
     if (m_implData->m_dataLocations.count("metadata") > 0) {
