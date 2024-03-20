@@ -55,8 +55,6 @@ class UsbDepthSensor : public aditof::DepthSensorInterface {
         std::vector<aditof::DepthSensorFrameType> &types) override;
     virtual aditof::Status
     setFrameType(const aditof::DepthSensorFrameType &type) override;
-    virtual aditof::Status program(const uint8_t *firmware,
-                                   size_t size) override;
     virtual aditof::Status getFrame(uint16_t *buffer) override;
     virtual aditof::Status readRegisters(const uint16_t *address,
                                          uint16_t *data, size_t length,
