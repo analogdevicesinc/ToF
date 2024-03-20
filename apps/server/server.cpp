@@ -584,35 +584,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
-    case READ_REGISTERS: {
-        size_t length = static_cast<size_t>(buff_recv.func_int32_param(0));
-        const uint16_t *address = reinterpret_cast<const uint16_t *>(
-            buff_recv.func_bytes_param(0).c_str());
-        uint16_t *data = new uint16_t[length];
-        bool burst = static_cast<bool>(buff_recv.func_int32_param(1));
-        aditof::Status status =
-            camDepthSensor->readRegisters(address, data, length, burst);
-        if (status == aditof::Status::OK) {
-            buff_send.add_bytes_payload(data, length * sizeof(uint16_t));
-        }
-        delete[] data;
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case WRITE_REGISTERS: {
-        size_t length = static_cast<size_t>(buff_recv.func_int32_param(0));
-        const uint16_t *address = reinterpret_cast<const uint16_t *>(
-            buff_recv.func_bytes_param(0).c_str());
-        const uint16_t *data = reinterpret_cast<const uint16_t *>(
-            buff_recv.func_bytes_param(1).c_str());
-        bool burst = static_cast<bool>(buff_recv.func_int32_param(1));
-        aditof::Status status =
-            camDepthSensor->writeRegisters(address, data, length, burst);
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
     case GET_AVAILABLE_CONTROLS: {
         std::vector<std::string> aditofControls;
 
@@ -852,8 +823,6 @@ void Initialize() {
     s_map_api_Values["GetAvailableFrameTypes"] = GET_AVAILABLE_FRAME_TYPES;
     s_map_api_Values["SetFrameType"] = SET_FRAME_TYPE;
     s_map_api_Values["GetFrame"] = GET_FRAME;
-    s_map_api_Values["ReadRegisters"] = READ_REGISTERS;
-    s_map_api_Values["WriteRegisters"] = WRITE_REGISTERS;
     s_map_api_Values["GetAvailableControls"] = GET_AVAILABLE_CONTROLS;
     s_map_api_Values["SetControl"] = SET_CONTROL;
     s_map_api_Values["GetControl"] = GET_CONTROL;

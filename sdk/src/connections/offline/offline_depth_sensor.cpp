@@ -156,19 +156,6 @@ OfflineDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     return aditof::Status::OK;
 }
 
-aditof::Status OfflineDepthSensor::readRegisters(const uint16_t *address,
-                                                 uint16_t *data, size_t length,
-                                                 bool burst /*=true*/) {
-    return aditof::Status::UNAVAILABLE;
-}
-
-aditof::Status OfflineDepthSensor::writeRegisters(const uint16_t *address,
-                                                  const uint16_t *data,
-                                                  size_t length,
-                                                  bool burst /*=true*/) {
-    return aditof::Status::UNAVAILABLE;
-}
-
 aditof::Status OfflineDepthSensor::getAvailableControls(
     std::vector<std::string> &controls) const {
     return aditof::Status::OK;
