@@ -161,38 +161,6 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
         break;
     }
 
-    case uvc_payload::FunctionName::READ_REGISTERS: {
-        size_t length = static_cast<size_t>(request.func_int32_param(0));
-        const uint16_t *address = reinterpret_cast<const uint16_t *>(
-            request.func_bytes_param(0).c_str());
-        uint16_t *data = new uint16_t[length];
-        bool burst = static_cast<bool>(request.func_int32_param(1));
-
-        aditof::Status status =
-            camDepthSensor->readRegisters(address, data, length, burst);
-        if (status == aditof::Status::OK) {
-            response.add_bytes_payload(data, length * sizeof(uint16_t));
-        }
-        delete[] data;
-        response.set_status(static_cast<::uvc_payload::Status>(status));
-
-        break;
-    }
-
-    case uvc_payload::FunctionName::WRITE_REGISTERS: {
-        size_t length = static_cast<size_t>(request.func_int32_param(0));
-        const uint16_t *address = reinterpret_cast<const uint16_t *>(
-            request.func_bytes_param(0).c_str());
-        const uint16_t *data = reinterpret_cast<const uint16_t *>(
-            request.func_bytes_param(1).c_str());
-        bool burst = static_cast<bool>(request.func_int32_param(1));
-
-        aditof::Status status =
-            camDepthSensor->writeRegisters(address, data, length, burst);
-        response.set_status(static_cast<::uvc_payload::Status>(status));
-
-        break;
-    }
     case uvc_payload::FunctionName::GET_AVAILABLE_CONTROLS: {
         std::vector<std::string> controls;
         aditof::Status status = camDepthSensor->getAvailableControls(controls);
