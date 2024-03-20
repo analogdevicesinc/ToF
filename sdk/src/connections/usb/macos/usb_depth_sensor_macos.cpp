@@ -85,15 +85,6 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     return status;
 }
 
-aditof::Status UsbDepthSensor::program(const uint8_t *firmware, size_t size) {
-    using namespace aditof;
-    Status status = Status::OK;
-
-    // TO DO
-
-    return status;
-}
-
 aditof::Status UsbDepthSensor::getFrame(uint16_t *buffer) {
     using namespace aditof;
     Status status = Status::OK;
