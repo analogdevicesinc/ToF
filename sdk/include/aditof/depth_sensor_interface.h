@@ -105,35 +105,6 @@ class DepthSensorInterface {
     virtual aditof::Status getFrame(uint16_t *buffer) = 0;
 
     /**
-     * @brief Read multiple registers from AFE.
-     * @param address - memory location pointing to addresses of registers to be
-     * read
-     * @param data - a valid location to store the content read from AFE
-     * registers
-     * @param length - the number of registers to read
-     * @param burst - if enabled the function will read data starting from the provided
-     * address; if disabled it will read data from the provided address list .
-     * @return Status
-     */
-    virtual aditof::Status readRegisters(const uint16_t *address,
-                                         uint16_t *data, size_t length,
-                                         bool burst = true) = 0;
-
-    /**
-     * @brief Write to multiple AFE registers.
-     * @param address - memory location pointing to addresses of registers to be
-     * written
-     * @param data - the location of the content to be written to AFE registers
-     * @param length - the number of registers to write
-     * @param burst - if enabled the function will write data starting from the provided
-     * address; if disabled it will write data at the provided address list .
-     * @return Status
-     */
-    virtual aditof::Status writeRegisters(const uint16_t *address,
-                                          const uint16_t *data, size_t length,
-                                          bool burst = true) = 0;
-
-    /**
      * @brief Send a read command to adsd3500.
      * @param cmd - the command to be sent
      * @param[out] data - the variable where the read data will be stored

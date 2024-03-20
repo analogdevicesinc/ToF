@@ -26,12 +26,6 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
     virtual aditof::Status
     setFrameType(const aditof::DepthSensorFrameType &type) override;
     virtual aditof::Status getFrame(uint16_t *buffer) override;
-    virtual aditof::Status readRegisters(const uint16_t *address,
-                                         uint16_t *data, size_t length,
-                                         bool burst = true) override;
-    virtual aditof::Status writeRegisters(const uint16_t *address,
-                                          const uint16_t *data, size_t length,
-                                          bool burst = true) override;
     virtual aditof::Status
     getAvailableControls(std::vector<std::string> &controls) const override;
     virtual aditof::Status setControl(const std::string &control,
