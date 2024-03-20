@@ -42,6 +42,8 @@
 #else
 #include <aditof/log.h>
 #endif
+#include <algorithm>
+#include <condition_variable>
 #include <iostream>
 #include <linux/videodev2.h>
 #include <map>
@@ -70,7 +72,8 @@ static payload::ClientRequest buff_recv;
 static payload::ServerResponse buff_send;
 
 //sending frames separately without serializing it
-uint8_t *buff_frame_to_send = NULL;
+uint8_t *buff_frame_to_be_captured = nullptr;
+uint8_t *buff_frame_to_send = nullptr;
 unsigned int buff_frame_length;
 bool m_frame_ready = false;
 
@@ -87,6 +90,20 @@ static std::queue<aditof::Adsd3500Status> adsd3500InterruptsQueue;
 // testing the network link speed because it eliminates operations on target such as getting the frame
 // from v4l2 interface, passing the frame through depth compute and any deep copying.
 static bool sameFrameEndlessRepeat = false;
+
+// Variables for synchronizing the main thread and the thread responsible for capturing frames from hardware
+std::mutex
+    frameMutex; // used for making sure operations on queue are not done simultaneously by the 2 threads
+std::condition_variable
+    cvGetFrame; // used for threads to signal when to start capturing a frame or when a frame has become available
+bool goCaptureFrame =
+    false; // Flag used by main thread to tell the frame capturing thread to start capturing a frame
+bool frameCaptured =
+    false; // Flag used by frame capturing thread to tell the main thread that a frame has become available
+std::thread
+    frameCaptureThread; // The thread instance for the capturing frame thread
+bool keepCaptureThreadAlive =
+    false; // Flag used by frame capturing thread to know whether to continue or finish
 
 struct clientData {
     bool hasFragments;
@@ -107,6 +124,39 @@ aditof::SensorInterruptCallback callback = [](aditof::Adsd3500Status status) {
     adsd3500InterruptsQueue.push(status);
     DLOG(INFO) << "ADSD3500 interrupt occured: status = " << status;
 };
+
+// Function executed in the capturing frame thread
+static void captureFrameFromHardware() {
+    while (keepCaptureThreadAlive) {
+
+        // 1. Wait for the signal to start capturing a new frame
+        std::unique_lock<std::mutex> lock(frameMutex);
+        cvGetFrame.wait(
+            lock, [] { return goCaptureFrame || !keepCaptureThreadAlive; });
+
+        if (!keepCaptureThreadAlive) {
+            break;
+        }
+
+        // 2. The signal has been received, now go capture the frame
+        goCaptureFrame = false;
+
+        aditof::Status status = camDepthSensor->getFrame(
+            (uint16_t *)(buff_frame_to_be_captured +
+                         LWS_SEND_BUFFER_PRE_PADDING + FRAME_PREPADDING_BYTES));
+        if (status != aditof::Status::OK) {
+            LOG(ERROR) << "Failed to get frame!";
+            //TO DO: buff_send.set_status(static_cast<::payload::Status>(status));
+        }
+
+        // 3. Notify others that there is a new frame available
+        frameCaptured = true;
+        lock.unlock();
+        cvGetFrame.notify_one();
+    }
+
+    return;
+}
 
 static void cleanup_sensors() {
     camDepthSensor->adsd3500_unregister_interrupt_callback(callback);
@@ -393,6 +443,11 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         aditof::Status status = camDepthSensor->open();
         buff_send.set_status(static_cast<::payload::Status>(status));
         clientEngagedWithSensors = true;
+
+        // At this stage, start the capturing frames thread
+        keepCaptureThreadAlive = true;
+        frameCaptureThread = std::thread(captureFrameFromHardware);
+
         break;
     }
 
@@ -411,6 +466,12 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                     LOG(ERROR) << "Failed to get frame!";
                 }
             }
+        } else { // When in normal mode, trigger the capture thread to fetch a frame
+            {
+                std::lock_guard<std::mutex> lock(frameMutex);
+                goCaptureFrame = true;
+            }
+            cvGetFrame.notify_one();
         }
 
         buff_send.set_status(static_cast<::payload::Status>(status));
@@ -495,6 +556,16 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                 new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
                             FRAME_PREPADDING_BYTES +
                             processedFrameSize * sizeof(uint16_t)];
+
+            if (buff_frame_to_be_captured != nullptr) {
+                delete[] buff_frame_to_be_captured;
+                buff_frame_to_be_captured = nullptr;
+            }
+            buff_frame_to_be_captured =
+                new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
+                            FRAME_PREPADDING_BYTES +
+                            processedFrameSize * sizeof(uint16_t)];
+
             buff_frame_length = processedFrameSize * 2 + FRAME_PREPADDING_BYTES;
         }
 
@@ -518,31 +589,40 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             m_frame_ready = true;
             buff_send.set_status(static_cast<::payload::Status>(status));
             break;
-        }
+        } else {
+            // 1. Wait for frame to be captured on the other thread
+            std::unique_lock<std::mutex> lock(frameMutex);
+            cvGetFrame.wait(lock, []() { return frameCaptured; });
 
-        //TO DO: get value of m_depthComputeOnTarget from sensor
-        status = camDepthSensor->getFrame(
-            (uint16_t *)(buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING +
-                         FRAME_PREPADDING_BYTES));
-        if (status != aditof::Status::OK) {
-            LOG(ERROR) << "Failed to get frame!";
-            buff_send.set_status(static_cast<::payload::Status>(status));
+            // 2. Get your hands on the captured frame
+            std::swap(buff_frame_to_send, buff_frame_to_be_captured);
+            frameCaptured = false;
+            lock.unlock();
+
+            // 3. Trigger the other thread to capture another frame while we do stuff with current frame
+            {
+                std::lock_guard<std::mutex> lock(frameMutex);
+                goCaptureFrame = true;
+            }
+            cvGetFrame.notify_one();
+
+            // 4. Send current frame over network
+            // This will be done by the callback_function()
+
+            uint8_t *pInterruptOccuredByte =
+                &buff_frame_to_send[LWS_SEND_BUFFER_PRE_PADDING +
+                                    0]; // 1st byte after LWS prepadding bytes
+            if (!adsd3500InterruptsQueue.empty()) {
+                *pInterruptOccuredByte = 123;
+            } else {
+                *pInterruptOccuredByte = 0;
+            }
+
+            m_frame_ready = true;
+
+            buff_send.set_status(payload::Status::OK);
             break;
         }
-
-        uint8_t *pInterruptOccuredByte =
-            &buff_frame_to_send[LWS_SEND_BUFFER_PRE_PADDING +
-                                0]; // 1st byte after LWS prepadding bytes
-        if (!adsd3500InterruptsQueue.empty()) {
-            *pInterruptOccuredByte = 123;
-        } else {
-            *pInterruptOccuredByte = 0;
-        }
-
-        m_frame_ready = true;
-
-        buff_send.set_status(payload::Status::OK);
-        break;
 
         status = sensorV4lBufAccess->waitForBuffer();
 
@@ -793,6 +873,14 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     case HANG_UP: {
         if (sensors_are_created) {
             cleanup_sensors();
+
+            // Stop the frame capturing thread
+            if (frameCaptureThread.joinable()) {
+                keepCaptureThreadAlive = false;
+                { std::lock_guard<std::mutex> lock(frameMutex); }
+                cvGetFrame.notify_one();
+                frameCaptureThread.join();
+            }
         }
 
         break;
