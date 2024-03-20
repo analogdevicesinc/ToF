@@ -702,11 +702,6 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     return status;
 }
 
-aditof::Status Adsd3500Sensor::program(const uint8_t *firmware, size_t size) {
-
-    return aditof::Status::OK;
-}
-
 aditof::Status Adsd3500Sensor::getFrame(uint16_t *buffer) {
 
     using namespace aditof;
