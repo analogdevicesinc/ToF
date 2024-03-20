@@ -156,11 +156,6 @@ OfflineDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     return aditof::Status::OK;
 }
 
-aditof::Status OfflineDepthSensor::program(const uint8_t *firmware,
-                                           size_t size) {
-    return aditof::Status::OK;
-}
-
 aditof::Status OfflineDepthSensor::readRegisters(const uint16_t *address,
                                                  uint16_t *data, size_t length,
                                                  bool burst /*=true*/) {
