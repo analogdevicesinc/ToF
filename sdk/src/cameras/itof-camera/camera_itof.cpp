@@ -1579,6 +1579,54 @@ CameraItof::saveDepthParamsToJsonFile(const std::string &savePathFile) {
     return status;
 }
 
+aditof::Status
+CameraItof::loadDepthParamsFromJsonFile(const std::string &pathFile,
+                                        const std::string &frameType) {
+
+    using namespace aditof;
+    Status status = Status::OK;
+
+    // Parse json
+    std::ifstream ifs(pathFile.c_str());
+    std::string content((std::istreambuf_iterator<char>(ifs)),
+                        (std::istreambuf_iterator<char>()));
+
+    cJSON *config_json = cJSON_Parse(content.c_str());
+    if (config_json != NULL) {
+
+        const cJSON *depthParams =
+            cJSON_GetObjectItemCaseSensitive(config_json, "depthParams");
+
+        if (depthParams) {
+
+            cJSON *depthframeType = cJSON_GetObjectItemCaseSensitive(
+                depthParams, frameType.c_str());
+
+            if (depthframeType) {
+
+                std::map<std::string, std::string> iniKeyValPairs;
+
+                cJSON *elem;
+                cJSON_ArrayForEach(elem, depthframeType) {
+
+                    std::string value = "";
+                    if (elem->valuestring != nullptr) {
+                        value = std::string(elem->valuestring);
+                    } else {
+                        value = std::to_string(elem->valuedouble);
+                    }
+                    iniKeyValPairs.emplace(std::string(elem->string), value);
+                    LOG(INFO)
+                        << "Found key value: " << std::string(elem->string)
+                        << " - " << value;
+                }
+                setAdsd3500WithIniParams(iniKeyValPairs);
+            }
+        }
+    }
+    return status;
+}
+
 bool CameraItof::isConvertibleToDouble(const std::string &str) {
     bool result = false;
     try {
