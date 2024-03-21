@@ -51,7 +51,7 @@ static const char kUsagePublic[] =
     R"(Data Collect.
     Usage:
       data_collect CONFIG
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [-s | --split] [-t | --netlinktest] [--ic <imager-configuration>] [-scf <save-configuration-file>] CONFIG
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [-s | --split] [-t | --netlinktest] [--ic <imager-configuration>] [-scf <save-configuration-file>] [-lcf <load-configuration-file>] CONFIG
       data_collect (-h | --help)
 
     Arguments:
@@ -72,6 +72,7 @@ static const char kUsagePublic[] =
       --ic <imager-configuration>   Select imager configuration: standard, standard-raw,
                          custom, custom-raw. By default is standard.
       --scf <save-configuration-file>    Save current configuration to json file
+      --lcf <load-configuration-file>    Load configuration from json file
 
     Note: --m argument supports both index and string (0/sr-native) 
 
@@ -101,6 +102,7 @@ int main(int argc, char *argv[]) {
         {"-st", {"--singlethread", false, "", "", false}},
         {"-ic", {"--ic", false, "", "", false}},
         {"-scf", {"--scf", false, "", "", false}},
+        {"-lcf", {"--lcf", false, "", "", false}},
         {"-config", {"-CONFIG", true, "last", "", true}}};
 
     CommandParser command;
@@ -294,6 +296,15 @@ int main(int argc, char *argv[]) {
         saveconfigurationFile = true;
     }
 
+    bool loadconfigurationFile = false;
+    std::string loadconfigurationFileValue = command_map["-lcf"].value;
+    if (!loadconfigurationFileValue.empty()) {
+        if (loadconfigurationFileValue.find(".json") == std::string::npos) {
+            loadconfigurationFileValue += ".json";
+        }
+        loadconfigurationFile = true;
+    }
+
     LOG(INFO) << "Output folder: " << folder_path;
     LOG(INFO) << "Mode: " << command_map["-m"].value;
     LOG(INFO) << "Number of frames: " << n_frames;
@@ -394,6 +405,15 @@ int main(int argc, char *argv[]) {
             LOG(ERROR) << "Mode: " << mode
                        << " is invalid for this type of camera!";
             return 0;
+        }
+    }
+
+    if (loadconfigurationFile) {
+        status = camera->loadDepthParamsFromJsonFile(loadconfigurationFileValue, modeName);
+        if (status != Status::OK) {
+            LOG(INFO) << "Could not load current configuration info to " << loadconfigurationFileValue;
+        } else {
+            LOG(INFO) << "Current configuration info from file " << loadconfigurationFileValue;
         }
     }
 

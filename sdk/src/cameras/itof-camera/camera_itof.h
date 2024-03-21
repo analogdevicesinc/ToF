@@ -135,6 +135,10 @@ class CameraItof : public aditof::Camera {
     saveDepthParamsToJsonFile(const std::string &savePathFile) override;
 
     aditof::Status
+    loadDepthParamsFromJsonFile(const std::string &pathFile,
+                                const std::string &frameType) override;
+
+    aditof::Status
     setSensorConfiguration(const std::string &sensorConf) override;
 
   private:

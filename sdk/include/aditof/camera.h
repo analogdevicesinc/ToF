@@ -551,6 +551,16 @@ class SDK_API Camera {
     saveDepthParamsToJsonFile(const std::string &savePathFile) = 0;
 
     /**
+     * @brief Load adsd parameters from json file.
+     * @param pathFile - Path to load from json file
+     * @param frameType - The frame type of the camera
+     * @return Status
+     */
+    virtual aditof::Status
+    loadDepthParamsFromJsonFile(const std::string &pathFile,
+                                const std::string &frameType) = 0;
+
+    /**
      * @brief Set sensor configutation table
      * @param sensorConf - Configuration table name string like
      * e.g. standard, standardraw, custom and customraw

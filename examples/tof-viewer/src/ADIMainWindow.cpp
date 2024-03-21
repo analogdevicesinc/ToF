@@ -181,6 +181,8 @@ ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
     if (!ifs.fail()) {
         ifs.close();
     }
+
+    saveConfigurationPath = "currentconfiguration.json";
 }
 
 ADIMainWindow::~ADIMainWindow() {
@@ -491,6 +493,7 @@ void ADIMainWindow::showMainMenu() {
             ImGui::Separator();
             ImGui::MenuItem("Debug Log", NULL, &show_app_log);
             ImGui::MenuItem("Ini Params", NULL, &show_ini_window);
+            showSaveLoadAdsdParamsMenu();
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
@@ -577,6 +580,84 @@ void ADIMainWindow::showRecordMenu() {
                     view->setSaveBinaryFormat(m_saveBinaryFormatTmp);
                 }
                 */
+        ImGui::EndMenu();
+    }
+}
+
+void ADIMainWindow::showSaveLoadAdsdParamsMenu() {
+
+    char pathname[512];
+    std::strcpy(pathname, saveConfigurationPath.c_str());
+
+    if (ImGui::BeginMenu("Save-Load Configuration", view != nullptr)) {
+
+        ImGui::Text("File name:");
+        ImGui::InputText("", pathname, 300);
+        ImGui::NewLine();
+
+        { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
+            ImGuiExtensions::ButtonColorChanger colorChangerStartRec(
+                customColorPlay, isPlaying);
+            if (ImGuiExtensions::ADIButton("Save", true)) {
+
+                bool saveconfigurationFile = false;
+                std::string saveconfigurationFileValue = std::string(pathname);
+                if (!saveconfigurationFileValue.empty()) {
+                    if (saveconfigurationFileValue.find(".json") ==
+                        std::string::npos) {
+                        saveconfigurationFileValue += ".json";
+                    }
+                    saveconfigurationFile = true;
+                }
+                if (saveconfigurationFile && view) {
+                    auto camera =
+                        view->m_ctrl->m_cameras[static_cast<unsigned int>(
+                            view->m_ctrl->getCameraInUse())];
+
+                    aditof::Status status = camera->saveDepthParamsToJsonFile(
+                        saveconfigurationFileValue);
+                    if (status != aditof::Status::OK) {
+                        LOG(INFO)
+                            << "Could not save current configuration info to "
+                            << saveconfigurationFileValue << std::endl;
+                    } else {
+                        LOG(INFO) << "Current configuration info saved to file "
+                                  << saveconfigurationFileValue << std::endl;
+                    }
+                }
+            }
+            ImGui::SameLine();
+
+            if (ImGuiExtensions::ADIButton("Load", true)) {
+
+                bool loadconfigurationFile = false;
+                std::string loadconfigurationFileValue = std::string(pathname);
+                if (!loadconfigurationFileValue.empty()) {
+                    if (loadconfigurationFileValue.find(".json") ==
+                        std::string::npos) {
+                        loadconfigurationFileValue += ".json";
+                    }
+                    loadconfigurationFile = true;
+                }
+                if (loadconfigurationFile && view) {
+                    auto camera =
+                        view->m_ctrl->m_cameras[static_cast<unsigned int>(
+                            view->m_ctrl->getCameraInUse())];
+
+                    aditof::Status status = camera->loadDepthParamsFromJsonFile(
+                        loadconfigurationFileValue,
+                        m_cameraModes[modeSelection].second);
+                    if (status != aditof::Status::OK) {
+                        LOG(INFO) << "Could not load current configuration "
+                                     "info to "
+                                  << loadconfigurationFileValue;
+                    } else {
+                        LOG(INFO) << "Current configuration info from file "
+                                  << loadconfigurationFileValue;
+                    }
+                }
+            }
+        }
         ImGui::EndMenu();
     }
 }

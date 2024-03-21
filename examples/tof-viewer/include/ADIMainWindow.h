@@ -239,6 +239,8 @@ class ADIMainWindow {
     std::thread initCameraWorker;
     bool cameraWorkerDone = false;
 
+    std::string saveConfigurationPath;
+
     /**
 		* @brief	CPU percentage Usage
 		*/
@@ -363,6 +365,8 @@ class ADIMainWindow {
     void showMainMenu();
 
     void showRecordMenu();
+
+    void showSaveLoadAdsdParamsMenu();
 
     /**
 		* @brief	Open Device menu will give you the information of
