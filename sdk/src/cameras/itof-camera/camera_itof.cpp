@@ -650,6 +650,16 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         return status;
     }
 
+    if (frameType == "lr-native") {
+        status = m_depthSensor->adsd3500_write_cmd(0x98, 0x01);
+    } else {
+        status = m_depthSensor->adsd3500_write_cmd(0x98, 0x00);
+    }
+    if (status != Status::OK) {
+        LOG(WARNING) << "Failed to enable/disable all ab frequencies.";
+        return status;
+    }
+
     // Store the frame details in camera details
     m_details.frameType.type = (*frameTypeIt).type;
     // TO DO: m_details.frameType.cameraMode =

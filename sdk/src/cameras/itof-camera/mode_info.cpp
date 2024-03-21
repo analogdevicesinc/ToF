@@ -211,12 +211,6 @@ aditof::Status ModeInfo::getSensorProperties(const std::string mode,
         }
     }
 
-    if (mode == "3phase+3ab") {
-        *width = 3584;
-        *height = 3072;
-        *pixelFormatIndex = 1;
-    }
-
     //convert values from driver settings to pixel number
     depthBits = std::stoi(m_sensorConfigBits["bitsInDepth"]);
     if (depthBits) {
@@ -290,6 +284,11 @@ aditof::Status ModeInfo::getSensorProperties(const std::string mode,
                 }
             }
         } else if (pixelFormat == "raw8") {
+            if (m_mode == 1) {
+                *width = 3584;
+                *height = 3072;
+                *pixelFormatIndex = 0;
+            }
             if (m_mode > 1) {
                 float totalBits = depthBits + abBits + confBits;
                 *width = frameWidth * totalBits / 8;
