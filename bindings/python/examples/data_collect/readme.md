@@ -9,6 +9,8 @@
 usage: data_collect.py [-h] [-f <folder>] [-n <ncapture>] [-m <mode>]
                        [-wt <warmup>] [-ccb <FILE>] [-ip <ip>]
                        [-fw <firmware>] [-s] [-t] [-st]
+					   [-ic <imager-configuration>]
+                       [-scf <save-configuration-file>]
                        config
 
 Script to run data collect python script
