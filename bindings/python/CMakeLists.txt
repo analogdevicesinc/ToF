@@ -57,6 +57,7 @@ if (WITH_EXAMPLES)
     PopulateforPython("examples/skeletal_tracking")
     PopulateforPython("examples/skeletal_tracking_in_pointcloud")
     PopulateforPython("examples/saveCCBToFile")
+    PopulateforPython("examples/data_collect")
 
 endif()
 
