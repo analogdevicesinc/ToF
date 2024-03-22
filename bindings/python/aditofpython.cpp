@@ -359,6 +359,11 @@ PYBIND11_MODULE(aditofpython, m) {
              py::arg("enable"))
         .def("adsd3500UpdateFirmware", &aditof::Camera::adsd3500UpdateFirmware,
              py::arg("filePath"))
+        .def("saveDepthParamsToJsonFile",
+             &aditof::Camera::saveDepthParamsToJsonFile,
+             py::arg("savePathFile"))
+        .def("setSensorConfiguration", &aditof::Camera::setSensorConfiguration,
+             py::arg("sensorConf"))
         .def("adsd3500SetToggleMode", &aditof::Camera::adsd3500SetToggleMode,
              py::arg("mode"))
         .def("adsd3500ToggleFsync", &aditof::Camera::adsd3500ToggleFsync)
@@ -750,10 +755,10 @@ PYBIND11_MODULE(aditofpython, m) {
         .def("setInputFileName", &aditof::FrameHandler::setInputFileName,
              py::arg("fullFileName"))
         .def("saveFrameToFile", &aditof::FrameHandler::saveFrameToFile,
-             py::arg("frame"), py::arg("fileName"))
+             py::arg("frame"), py::arg("fileName") = "")
         .def("saveFrameToFileMultithread",
              &aditof::FrameHandler::saveFrameToFileMultithread,
-             py::arg("frame"), py::arg("fileName"))
+             py::arg("frame"), py::arg("fileName") = "")
         .def("readNextFrame", &aditof::FrameHandler::readNextFrame,
              py::arg("frame"), py::arg("fullFileName"))
         .def("setCustomFormat", &aditof::FrameHandler::setCustomFormat,
