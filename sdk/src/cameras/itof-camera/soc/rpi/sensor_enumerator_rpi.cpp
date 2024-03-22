@@ -85,8 +85,8 @@ aditof::Status findDevicePathsAtVideo(const std::string &video,
 
     size_t pos = str.find("unicam-image");
     if (pos != string::npos) {
-        dev_path = str.substr(pos + strlen("unicam-image") + 2,
-                              strlen("/dev/mediaX"));
+        dev_path = 
+            str.substr(pos + strlen("unicam-image") + 2, strlen("/dev/mediaX"));
     } else {
         return Status::GENERIC_ERROR;
     }
