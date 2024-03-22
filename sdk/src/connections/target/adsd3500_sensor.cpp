@@ -1264,7 +1264,16 @@ aditof::Status Adsd3500Sensor::adsd3500_reset() {
     system("echo 1 > /sys/class/gpio/gpio122/value");
     usleep(7000000);
 #elif defined(RPI)
-    #warning "update for rpi"
+    system("echo 509 > /sys/class/gpio/export");
+    usleep(100000);
+    system("echo out > /sys/class/gpio/gpio509/direction");
+    usleep(100000);
+    system("echo 0 > /sys/class/gpio/gpio509/value");
+    usleep(100000);
+    system("echo 1 > /sys/class/gpio/gpio509/value");
+    usleep(5000000);
+    system("echo 509 > /sys/class/gpio/unexport");
+    usleep(100000);
 #elif defined(NVIDIA)
     struct stat st;
     if (stat("/sys/class/gpio/PP.04/value", &st) == 0) {
