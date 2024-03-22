@@ -201,7 +201,7 @@ if ( ON_TARGET AND UNIX )
 endif()	
 
 
-if (CMAKE_COMPILER_IS_GNUCC)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(${PROJECT_NAME} PUBLIC
             -Wall
             -Wno-unknown-pragmas
