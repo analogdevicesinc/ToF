@@ -336,11 +336,12 @@ function main() {
 
   uninstall_qemu
   
-  #Add resize function to bashrc
-	
+  	
   #Adding rsz script to .bashrc
-  sudo cat ${ROOTFS_TMP}/home/${USERNAME}/bashrc_extension >> ${ROOTFS_TMP}/home/${USERNAME}/.bashrc 1> /dev/null 2>&1
-  sudo rm -rf ${ROOTFS_TMP}/home/${USERNAME}/bashrc_extension 1> /dev/null 2>&1
+  sudo cat ${ROOTFS_TMP}/home/bashrc_extension >> ${ROOTFS_TMP}/home/${USERNAME}/.bashrc
+  sudo cat ${ROOTFS_TMP}/home/${USERNAME}/.bashrc >> ${SCRIPT_DIR}/build/log_rc.txt
+  sudo rm -rf ${ROOTFS_TMP}/home/bashrc_extension 1> /dev/null 2>&1
+
   
   # cleanup
   sync
