@@ -159,6 +159,14 @@ static void captureFrameFromHardware() {
 }
 
 static void cleanup_sensors() {
+    // Stop the frame capturing thread
+    if (frameCaptureThread.joinable()) {
+        keepCaptureThreadAlive = false;
+        { std::lock_guard<std::mutex> lock(frameMutex); }
+        cvGetFrame.notify_one();
+        frameCaptureThread.join();
+    }
+
     camDepthSensor->adsd3500_unregister_interrupt_callback(callback);
     sensorV4lBufAccess.reset();
     camDepthSensor.reset();
@@ -834,14 +842,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     case HANG_UP: {
         if (sensors_are_created) {
             cleanup_sensors();
-
-            // Stop the frame capturing thread
-            if (frameCaptureThread.joinable()) {
-                keepCaptureThreadAlive = false;
-                { std::lock_guard<std::mutex> lock(frameMutex); }
-                cvGetFrame.notify_one();
-                frameCaptureThread.join();
-            }
         }
         clientEngagedWithSensors = false;
 
