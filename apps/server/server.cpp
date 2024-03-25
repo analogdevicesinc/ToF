@@ -290,6 +290,10 @@ int Network::callback_function(struct lws *wsi,
         if (Client_Connected == true && no_of_client_connected == false) {
             /*CONN_CLOSED event is for first and only client connected*/
             std::cout << "Connection Closed" << std::endl;
+            if (clientEngagedWithSensors) {
+                cleanup_sensors();
+                clientEngagedWithSensors = false;
+            }
 
             Client_Connected = false;
             break;
@@ -371,11 +375,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     switch (s_map_api_Values[buff_recv.func_name()]) {
 
     case FIND_SENSORS: {
-        // Check if client didn't hang up (why would want to search for sensor if it already tried to open one)
-        if (clientEngagedWithSensors) {
-            cleanup_sensors();
-        }
-
         if (!sensors_are_created) {
             sensorsEnumerator =
                 aditof::SensorEnumeratorFactory::buildTargetSensorEnumerator();
@@ -844,6 +843,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                 frameCaptureThread.join();
             }
         }
+        clientEngagedWithSensors = false;
 
         break;
     }
