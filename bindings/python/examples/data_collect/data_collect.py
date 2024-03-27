@@ -43,7 +43,7 @@ mode_help_message = """Valid mode (-m) options are:
         3: long-range Qnative
         4: pcm-native;
         5: long-range mixed;
-        6: short-range mixed
+        6: short-range mixed;
         
         Note: --m argument supports both index and string (Default: 0/sr-native) """
 
@@ -202,8 +202,6 @@ if __name__ == '__main__':
                 mode_name = args.mode
                 print(f'Mode: {mode_name}')
     
-    depthSensor = tof.DepthSensorInterface
-
     status = camera1.setFrameType(mode_name)
     if status != tof.Status.Ok:
         sys.exit("Could not set camera frame type!")
