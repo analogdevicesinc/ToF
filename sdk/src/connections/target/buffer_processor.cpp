@@ -211,6 +211,7 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
     unsigned int buf_data_len;
     uint8_t *pdata;
     dev = m_inputVideoDev;
+    uint8_t *pdata_user_space = nullptr;
 
     status = waitForBufferPrivate(dev);
     if (status != Status::OK) {
@@ -227,6 +228,9 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
         return status;
     }
 
+    pdata_user_space = (uint8_t *)malloc(sizeof(uint8_t) * buf_data_len);
+    memcpy(pdata_user_space, pdata, buf_data_len);
+
     uint16_t *tempDepthFrame = m_tofiComputeContext->p_depth_frame;
     uint16_t *tempAbFrame = m_tofiComputeContext->p_ab_frame;
     float *tempConfFrame = m_tofiComputeContext->p_conf_frame;
@@ -238,8 +242,8 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
         m_tofiComputeContext->p_conf_frame =
             (float *)(buffer + m_outputFrameWidth * m_outputFrameHeight / 2);
 
-        uint32_t ret =
-            TofiCompute((uint16_t *)pdata, m_tofiComputeContext, NULL);
+        uint32_t ret = TofiCompute((uint16_t *)pdata_user_space,
+                                   m_tofiComputeContext, NULL);
 
         if (ret != ADI_TOFI_SUCCESS) {
             LOG(ERROR) << "TofiCompute failed";
@@ -255,8 +259,8 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
             (float *)(m_processedBuffer +
                       m_outputFrameWidth * m_outputFrameHeight / 2);
 
-        uint32_t ret =
-            TofiCompute((uint16_t *)pdata, m_tofiComputeContext, NULL);
+        uint32_t ret = TofiCompute((uint16_t *)pdata_user_space,
+                                   m_tofiComputeContext, NULL);
 
         if (ret != ADI_TOFI_SUCCESS) {
             LOG(ERROR) << "TofiCompute failed";
@@ -270,6 +274,9 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
     m_tofiComputeContext->p_depth_frame = tempDepthFrame;
     m_tofiComputeContext->p_ab_frame = tempAbFrame;
     m_tofiComputeContext->p_conf_frame = tempConfFrame;
+
+    if (pdata_user_space)
+        free(pdata_user_space);
 
     status = enqueueInternalBufferPrivate(buf[0], dev);
     if (status != Status::OK) {
