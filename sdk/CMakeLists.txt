@@ -5,11 +5,12 @@ if(UNIX)
     set(CMAKE_POSITION_INDEPENDENT_CODE "1")
 endif()
 
-if(USE_DEPTH_COMPUTE_OPENSOURCE AND ON_TARGET)
-    add_subdirectory(common/adi/depth-compute-opensource)
-endif()
-
 add_definitions(-DSDK_EXPORTS)
+
+# Add general optimization flag
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+        add_compile_options(-Ofast)
+endif()
 
 if(WITH_GLOG_DEPENDENCY)
     find_package(glog 0.3.5 REQUIRED)
@@ -48,6 +49,10 @@ if( WIN32 )
 elseif( APPLE )
         set(OS_SPECIFIC_DIR "connections/usb/macos")
 elseif ( NXP )
+        # Add optimization for specific architecture
+        if(CMAKE_BUILD_TYPE STREQUAL "Release")
+                add_compile_options(-march=armv8-a+simd)
+        endif()
         set(OS_SPECIFIC_DIR "connections/target")
         set(TARGET_SPECIFIC_DIR "soc/imx")
         add_definitions(-DNXP)
@@ -84,6 +89,10 @@ file(GLOB PLATFORM_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/${FRAME_DIR}/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/${COMMON_DIR}/tofi/*.h
 )
+
+if(USE_DEPTH_COMPUTE_OPENSOURCE AND ON_TARGET)
+    add_subdirectory(common/adi/depth-compute-opensource)
+endif()
 
 file(GLOB USB_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/src/connections/usb/*.cpp
