@@ -30,6 +30,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 import aditofpython as tof
+import argparse
 import numpy as np
 import cv2 as cv
 import open3d as o3d
@@ -52,134 +53,201 @@ def transform_image(np_image):
 
 if __name__ == "__main__":
 
-    if len(sys.argv) < 2  or sys.argv[1] == "--help" or sys.argv[1] == "-h" :
-        print("showPointCloud.py usage:")
-        print("USB / Local connection: showPointCloud.py <config>")
-        print("Network connection: showPointCloud.py <ip> <config>")
-        exit(1)
-
+    parser = argparse.ArgumentParser(
+        description='Script to run PointCloud')
+    parser.add_argument('-ip', '--ip', help='Ip address of the ToF device')
+    parser.add_argument('-f', '--frame', help='Name of an acquired frame to be used')
+    parser.add_argument('config', help='Config file of the ToF device used')
+    args = parser.parse_args()
     system = tof.System()
 
     print("SDK version: ", tof.getApiVersion(), " | branch: ", tof.getBranchVersion(), " | commit: ", tof.getCommitVersion())
     
     cameras = []
-    ip = ""
-    if len(sys.argv) == 3 :
-        ip = sys.argv[1]
-        config = sys.argv[2]
-        print (f"Looking for camera on network @ {ip}. Will use {config}.")
-        ip = "ip:" + ip
-    elif len(sys.argv) == 2 :
-        config = sys.argv[1]
-        print (f"Looking for camera on UVC. Will use {config}.")
-    else :
-        print("Too many arguments provided!")
-        exit(1)
-    
-    status = system.getCameraList(cameras, ip)
-    print("system.getCameraList()", status)
+    ip = ''
+    fileName = args.frame
+    config = args.config
+    if args.ip is not None:
+        ip = 'ip:' + args.ip
 
-    camera1 = cameras[0]
+    if fileName is None:
+        status = system.getCameraList(cameras, ip)
+        print("system.getCameraList()", status)
 
-    status = cameras[0].initialize(config)
-    if not status:
-        print("cameras[0].initialize() failed with status: ", status)
+        camera1 = cameras[0]
 
-    modes = []
-    status = cameras[0].getAvailableModes(modes)
-    if not status:
-        print("system.getAvailableModes() failed with status: ", status)
-
-    status = cameras[0].setMode("lr-qnative")
-    if not status:
-        print("cameras[0].setMode() failed with status:", status)
-
-    camDetails = tof.CameraDetails()
-    status = cameras[0].getDetails(camDetails)
-    if not status:
-        print("system.getDetails() failed with status: ", status)
-
-    status = camera1.start()
-    print("camera1.start()", status)
-
-    # Get the first frame for details
-    frame = tof.Frame()
-    status = cameras[0].requestFrame(frame)
-
-    frameDataDetails = tof.FrameDataDetails()
-    status = frame.getDataDetails("depth", frameDataDetails)
-    width = frameDataDetails.width
-    height = frameDataDetails.height
-
-    # Get intrinsic parameters from camera
-    intrinsicParameters = camDetails.intrinsics
-    fx = intrinsicParameters.fx
-    fy = intrinsicParameters.fy
-    cx = intrinsicParameters.cx
-    cy = intrinsicParameters.cy
-    cameraIntrinsics = o3d.camera.PinholeCameraIntrinsic(width, height, fx, fy, cx, cy)
-
-    # Get camera details for frame correction
-    # TO DO: Get the range from camera details when it will be defined
-    camera_range = 4096
-    bitCount = 12
-    max_value_of_AB_pixel = 2 ** bitCount - 1
-    distance_scale_ab = 255.0 / max_value_of_AB_pixel
-    distance_scale = 255.0 / camera_range
-
-    # Create visualizer for depth and ab
-    vis_depth = o3d.visualization.Visualizer()
-    vis_depth.create_window("Depth", 2 * width, 2 * height)
-
-    vis_ab = o3d.visualization.Visualizer()
-    vis_ab.create_window("AB", 2 * width, 2 * height)
-
-    # Create visualizer
-    vis = o3d.visualization.Visualizer()
-    vis.create_window("PointCloud", 1200, 1200)
-    first_time_render_pc = 1
-    point_cloud = o3d.geometry.PointCloud()
-
-    while True:
-        # Capture frame-by-frame
-        status = cameras[0].requestFrame(frame)
+        status = cameras[0].initialize(config)
         if not status:
-            print("cameras[0].requestFrame() failed with status: ", status)
-            
-        depth_map = np.array(frame.getData("depth"), dtype="uint16", copy=False)
-        ab_map = np.array(frame.getData("ab"), dtype="uint16", copy=False)
-        xyz_map = np.array(frame.getData("xyz"), dtype="int16", copy=False)
+            print("cameras[0].initialize() failed with status: ", status)
 
-        # Create the AB image
-        ab_map = ab_map[0: int(ab_map.shape[0]), :]
-        ab_map = distance_scale_ab * ab_map
-        ab_map = np.uint8(ab_map)
-        ab_map = cv.cvtColor(ab_map, cv.COLOR_GRAY2RGB)
+        types = []
+        status = cameras[0].getAvailableFrameTypes(types)
+        if not status:
+            print("system.getAvailableFrameTypes() failed with status: ", status)
 
-        # Show AB image
-        vis_ab.add_geometry(transform_image(ab_map))
-        vis_ab.poll_events()
+        status = cameras[0].setFrameType("lr-qnative")
+        if not status:
+            print("cameras[0].setFrameType() failed with status:", status)
 
-        # Create the Depth image
-        xyz_points = np.resize(xyz_map, (int(depth_map.shape[0]) * depth_map.shape[1], 3))
-        depth_map = depth_map[0: int(depth_map.shape[0]), :]
-        depth_map = distance_scale * depth_map
-        depth_map = np.uint8(depth_map)
-        depth_map = cv.applyColorMap(depth_map, cv.COLORMAP_WINTER)
+        camDetails = tof.CameraDetails()
+        status = cameras[0].getDetails(camDetails)
+        if not status:
+            print("system.getDetails() failed with status: ", status)
 
-        # Show depth image
-        vis_depth.add_geometry(transform_image(depth_map))
-        vis_depth.poll_events()
+        status = camera1.start()
+        print("camera1.start()", status)
 
-        # Show the point cloud
-        point_cloud.points = o3d.utility.Vector3dVector(xyz_points)
-        point_cloud.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
-        if first_time_render_pc:
-            vis.add_geometry(point_cloud)
-            first_time_render_pc = 0
-        vis.update_geometry(point_cloud)
-        vis.poll_events()
-        vis.update_renderer()
+        # Get the first frame for details
+        frame = tof.Frame()
+        status = cameras[0].requestFrame(frame)
 
-        if cv.waitKey(1) >= 0:
-            break
+        frameDataDetails = tof.FrameDataDetails()
+        status = frame.getDataDetails("depth", frameDataDetails)
+        width = frameDataDetails.width
+        height = frameDataDetails.height
+
+        # Get intrinsic parameters from camera
+        intrinsicParameters = camDetails.intrinsics
+        fx = intrinsicParameters.fx
+        fy = intrinsicParameters.fy
+        cx = intrinsicParameters.cx
+        cy = intrinsicParameters.cy
+        cameraIntrinsics = o3d.camera.PinholeCameraIntrinsic(width, height, fx, fy, cx, cy)
+
+        # Get camera details for frame correction
+        # TO DO: Get the range from camera details when it will be defined
+        camera_range = 4096
+        bitCount = 12
+        max_value_of_AB_pixel = 2 ** bitCount - 1
+        distance_scale_ab = 255.0 / max_value_of_AB_pixel
+        distance_scale = 255.0 / camera_range
+
+        # Create visualizer for depth and ab
+        vis_depth = o3d.visualization.Visualizer()
+        vis_depth.create_window("Depth", 2 * width, 2 * height)
+
+        vis_ab = o3d.visualization.Visualizer()
+        vis_ab.create_window("AB", 2 * width, 2 * height)
+
+        # Create visualizer
+        vis = o3d.visualization.Visualizer()
+        vis.create_window("PointCloud", 1200, 1200)
+        first_time_render_pc = 1
+        point_cloud = o3d.geometry.PointCloud()
+
+        while True:
+            # Capture frame-by-frame
+            status = cameras[0].requestFrame(frame)
+            if not status:
+                print("cameras[0].requestFrame() failed with status: ", status)
+                
+            depth_map = np.array(frame.getData("depth"), dtype="uint16", copy=False)
+            ab_map = np.array(frame.getData("ab"), dtype="uint16", copy=False)
+            xyz_map = np.array(frame.getData("xyz"), dtype="int16", copy=False)
+
+            # Create the AB image
+            ab_map = ab_map[0: int(ab_map.shape[0]), :]
+            ab_map = distance_scale_ab * ab_map
+            ab_map = np.uint8(ab_map)
+            ab_map = cv.cvtColor(ab_map, cv.COLOR_GRAY2RGB)
+
+            # Show AB image
+            vis_ab.add_geometry(transform_image(ab_map))
+            vis_ab.poll_events()
+
+            # Create the Depth image
+            xyz_points = np.resize(xyz_map, (int(depth_map.shape[0]) * depth_map.shape[1], 3))
+            depth_map = depth_map[0: int(depth_map.shape[0]), :]
+            depth_map = distance_scale * depth_map
+            depth_map = np.uint8(depth_map)
+            depth_map = cv.applyColorMap(depth_map, cv.COLORMAP_WINTER)
+
+            # Show depth image
+            vis_depth.add_geometry(transform_image(depth_map))
+            vis_depth.poll_events()
+
+            # Show the point cloud
+            point_cloud.points = o3d.utility.Vector3dVector(xyz_points)
+            point_cloud.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
+            if first_time_render_pc:
+                vis.add_geometry(point_cloud)
+                first_time_render_pc = 0
+            vis.update_geometry(point_cloud)
+            vis.poll_events()
+            vis.update_renderer()
+
+            if cv.waitKey(1) >= 0:
+                break
+    else:
+        # Reading binary file 
+        frame = tof.Frame()
+        frameHandler = tof.FrameHandler()
+        status = frameHandler.readNextFrame(frame, fileName)
+        if not status:
+            print('Failed to read frame with status: ', status)
+
+        frameDataDetails = tof.FrameDataDetails()
+        status = frame.getDataDetails("depth", frameDataDetails)
+        width = frameDataDetails.width
+        height = frameDataDetails.height
+
+        # Get camera details for frame correction
+        # TO DO: Get the range from camera details when it will be defined
+        camera_range = 4096
+        bitCount = 12
+        max_value_of_AB_pixel = 2 ** bitCount - 1
+        distance_scale_ab = 255.0 / max_value_of_AB_pixel
+        distance_scale = 255.0 / camera_range
+
+        # Create visualizer for depth and ab
+        vis_depth = o3d.visualization.Visualizer()
+        vis_depth.create_window("Depth", 2 * width, 2 * height)
+
+        vis_ab = o3d.visualization.Visualizer()
+        vis_ab.create_window("AB", 2 * width, 2 * height)
+
+        # Create visualizer
+        vis = o3d.visualization.Visualizer()
+        vis.create_window("PointCloud", 1200, 1200)
+        first_time_render_pc = 1
+        point_cloud = o3d.geometry.PointCloud()
+
+        while True:
+
+            depth_map = np.array(frame.getData("depth"), dtype="uint16", copy=False)
+            ab_map = np.array(frame.getData("ab"), dtype="uint16", copy=False)
+            xyz_map = np.array(frame.getData("xyz"), dtype="int16", copy=False)
+
+            # Create the AB image
+            ab_map = ab_map[0: int(ab_map.shape[0]), :]
+            ab_map = distance_scale_ab * ab_map
+            ab_map = np.uint8(ab_map)
+            ab_map = cv.cvtColor(ab_map, cv.COLOR_GRAY2RGB)
+
+            # Show AB image
+            vis_ab.add_geometry(transform_image(ab_map))
+            vis_ab.poll_events()
+
+            # Create the Depth image
+            xyz_points = np.resize(xyz_map, (int(depth_map.shape[0]) * depth_map.shape[1], 3))
+            depth_map = depth_map[0: int(depth_map.shape[0]), :]
+            depth_map = distance_scale * depth_map
+            depth_map = np.uint8(depth_map)
+            depth_map = cv.applyColorMap(depth_map, cv.COLORMAP_WINTER)
+
+            # Show depth image
+            vis_depth.add_geometry(transform_image(depth_map))
+            vis_depth.poll_events()
+
+            # Show the point cloud
+            point_cloud.points = o3d.utility.Vector3dVector(xyz_points)
+            point_cloud.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
+            if first_time_render_pc:
+                vis.add_geometry(point_cloud)
+                first_time_render_pc = 0
+            vis.update_geometry(point_cloud)
+            vis.poll_events()
+            vis.update_renderer()
+
+            if cv.waitKey(1) >= 0:
+                break
