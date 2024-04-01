@@ -771,7 +771,7 @@ PYBIND11_MODULE(aditofpython, m) {
              &aditof::FrameHandler::saveFrameToFileMultithread,
              py::arg("frame"), py::arg("fileName") = "")
         .def("readNextFrame", &aditof::FrameHandler::readNextFrame,
-             py::arg("frame"), py::arg("fullFileName"))
+             py::arg("frame"), py::arg("fullFileName"), py::return_value_policy::reference_internal)
         .def("setCustomFormat", &aditof::FrameHandler::setCustomFormat,
              py::arg("format"))
         .def("storeFramesToSingleFile",
