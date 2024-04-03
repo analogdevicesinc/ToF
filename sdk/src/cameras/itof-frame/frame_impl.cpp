@@ -157,7 +157,7 @@ void FrameImpl::allocFrameData(const aditof::FrameDetails &details) {
             return (unsigned long int)(embed_hdr_length / 2) * total_captures;
         } else if (frameDetail.type == "xyz") {
             return (unsigned long int)(frameDetail.height * frameDetail.width *
-                                       sizeof(Point3I) / 2);
+                                       sizeof(Point3I_sdk) / 2);
         } else if (frameDetail.type == "conf") {
             return (unsigned long int)(frameDetail.height * frameDetail.width *
                                        2);
