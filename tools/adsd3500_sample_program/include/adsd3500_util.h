@@ -133,6 +133,8 @@ class Adsd3500 {
 		// Destructor
 		~Adsd3500();
 
+		int OpenAdsd3500();
+		int CloseAdsd3500();
 		int ResetAdsd3500();
 		int SetImageMode(uint8_t modeNumber);
 		int GetImageMode(uint8_t* result);

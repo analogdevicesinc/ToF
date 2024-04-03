@@ -90,8 +90,6 @@ int main(int argc, char *argv[]) {
         printf("Unable to start stream.\n");
     }
 
-    
-
     // 7. Receive Frames
     uint16_t* buffer;
     ret = adsd3500.RequestFrame(buffer);

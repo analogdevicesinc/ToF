@@ -151,6 +151,25 @@ uint8_t getImagerTypeAndCCB_cmd[] = {0x00, 0x32};
 *********************************Public functions*********************************
 */ 
 
+// Opens ADSD3500 device.
+int Adsd3500::OpenAdsd3500() {
+	// Open the ADI ToF Camera Sensor Device Driver.
+	videoDevice.cameraSensorDeviceId = tof_open(CAMERA_SENSOR_DRIVER);
+	if (videoDevice.cameraSensorDeviceId < 0) {
+		std::cout << "Unable to open camera sensor device: " << CAMERA_SENSOR_DRIVER << std::endl;
+        return -1;
+	}
+    
+    // Open Host device's V4L2 Video Capture Device Driver.
+    videoDevice.videoCaptureDeviceId = tof_open(VIDEO_CAPTURE_DRIVER);
+    if (videoDevice.videoCaptureDeviceId < 0) {
+		std::cout << "Unable to open video capture device:  " << VIDEO_CAPTURE_DRIVER << std::endl;
+        return -1;
+    }
+
+	return 0;
+}
+
 // Resets ADSD3500 device.
 int Adsd3500::ResetAdsd3500() {
 	printf("Resetting ADSD3500 Device.\n");
@@ -202,18 +221,20 @@ int Adsd3500::StartStream() {
 	printf("Starting the stream.\n");
     std::cout << "Number of video buffers: " << videoDevice.nVideoBuffers << std::endl;
 
-    CLEAR(buf);
-    buf.type = videoDevice.videoBuffersType;
-    buf.memory = V4L2_MEMORY_MMAP;
-    buf.index = 0;
-    buf.m.planes = videoDevice.planes;
-    buf.length = 1;
+    for (unsigned int i = 0; i < videoDevice.nVideoBuffers; i++) {
+        CLEAR(buf);
+        buf.type = videoDevice.videoBuffersType;
+        buf.memory = V4L2_MEMORY_MMAP;
+        buf.index = i;
+        buf.m.planes = videoDevice.planes;
+        buf.length = 1;
 
-    if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_QBUF, &buf) == -1) {
-        std::cout
-            << "mmap error "
-            << "errno: " << errno << " error: " << strerror(errno) << std::endl;
-        return -1;
+        if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_QBUF, &buf) == -1) {
+            std::cout
+                << "mmap error "
+                << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+            return -1;
+        }
     }
 
     if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_STREAMON, &videoDevice.videoBuffersType) != 0) {
@@ -322,8 +343,10 @@ int Adsd3500::ConfigureDeviceDrivers() {
 
     if (cap.capabilities & V4L2_CAP_VIDEO_CAPTURE_MPLANE) {
         videoDevice.videoBuffersType = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+        printf("Video buffers type: V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE.\n");
     } else {
         videoDevice.videoBuffersType = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+        printf("Video buffers type: V4L2_BUF_TYPE_VIDEO_CAPTURE.\n");
     }
 
     if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
@@ -1178,11 +1201,24 @@ int Adsd3500::SetFrameType() {
     }
     free(videoDevice.videoBuffers);
 
+    if (videoDevice.videoCaptureDeviceId != -1) {
+        if (close(videoDevice.videoCaptureDeviceId) == -1) {
+            std::cout << "Unable to close V4L2 Capture Device driver" << std::endl;
+        }
+    }
+
+    if (videoDevice.cameraSensorDeviceId != -1) {
+        if (close(videoDevice.cameraSensorDeviceId) == -1) {
+            std::cout << "Unable to close V4L2 Camera Sensor driver" << std::endl;
+        }
+    }
+
+    ret = OpenAdsd3500();
+    if (ret < 0) printf("Unable to Open Adsd3500.\n");
+
     struct v4l2_requestbuffers req;
     struct v4l2_format fmt;
     struct v4l2_buffer buf;
-
-    videoDevice.nVideoBuffers = 0;
 
     float depthBits, abBits, confBits;
 
@@ -1244,42 +1280,47 @@ int Adsd3500::SetFrameType() {
         return -1;
     }
 
-    buf.type = videoDevice.videoBuffersType;
-    buf.memory = V4L2_MEMORY_MMAP;
-    buf.index = videoDevice.nVideoBuffers;
-    buf.m.planes = videoDevice.planes;
-    buf.length = 1;
-
-    if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_QUERYBUF, &buf) == -1) {
-        std::cout
-        << "VIDIOC_QUERYBUF error "
-        << "errno: " << errno << " error: " << strerror(errno) << std::endl;
-        return -1;
-    }
-
-    videoDevice.nVideoBuffers = 1;
+    std::cout << "videoDevice.nVideoBuffers: " << videoDevice.nVideoBuffers << std::endl;
 
     int length, offset;
+    for (videoDevice.nVideoBuffers = 0; videoDevice.nVideoBuffers < req.count;
+                 videoDevice.nVideoBuffers++) {
 
-    if (videoDevice.videoBuffersType == V4L2_BUF_TYPE_VIDEO_CAPTURE) {
-        length = buf.length;
-        offset = buf.m.offset;
-    } else {
-        length = buf.m.planes[0].length;
-        offset = buf.m.planes[0].m.mem_offset;
-    }
+        CLEAR(buf);
+        buf.type = videoDevice.videoBuffersType;
+        buf.memory = V4L2_MEMORY_MMAP;
+        buf.index = videoDevice.nVideoBuffers;
+        buf.m.planes = videoDevice.planes;
+        buf.length = 1;
 
-    videoDevice.videoBuffers[videoDevice.nVideoBuffers].start = 
-        mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_SHARED, videoDevice.videoCaptureDeviceId, offset);
-
-    if (videoDevice.videoBuffers[videoDevice.nVideoBuffers].start == MAP_FAILED) {
-        std::cout
-            << "mmap error "
+        if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_QUERYBUF, &buf) == -1) {
+            std::cout
+            << "VIDIOC_QUERYBUF error "
             << "errno: " << errno << " error: " << strerror(errno) << std::endl;
-        return -1;
-    }
+            return -1;
+        }
 
-    videoDevice.videoBuffers[videoDevice.nVideoBuffers].length = length;
+        if (videoDevice.videoBuffersType == V4L2_BUF_TYPE_VIDEO_CAPTURE) {
+            length = buf.length;
+            offset = buf.m.offset;
+        } else {
+            length = buf.m.planes[0].length;
+            offset = buf.m.planes[0].m.mem_offset;
+        }
+
+        videoDevice.videoBuffers[videoDevice.nVideoBuffers].start = 
+            mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_SHARED, videoDevice.videoCaptureDeviceId, offset);
+
+        if (videoDevice.videoBuffers[videoDevice.nVideoBuffers].start == MAP_FAILED) {
+            std::cout
+                << "mmap error "
+                << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+            return -1;
+        }
+
+        videoDevice.videoBuffers[videoDevice.nVideoBuffers].length = length;
+
+    }
 
     return 0;
 }
