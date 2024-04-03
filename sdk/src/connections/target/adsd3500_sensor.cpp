@@ -559,6 +559,9 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     struct v4l2_format fmt;
     struct v4l2_buffer buf;
     size_t length, offset;
+    
+    m_implData->frameType = type;
+    aditof::DepthSensorFrameType tempType = type;
 
     status = setMode(type.mode);
     if (status != aditof::Status::OK) {
@@ -605,7 +608,6 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
             uint16_t width, height;
 
-            aditof::DepthSensorFrameType tempType = type;
             status = m_modeSelector.updateConfigurationTable(tempType);
             if (status != Status::OK) {
                 LOG(ERROR) << "Invalid configuration provided!";
@@ -698,8 +700,6 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
             }
         }
     }
-
-    m_implData->frameType = type;
 
     if (type.mode != "pcm-native") {
         //TO DO: update this values when frame_impl gets restructured
