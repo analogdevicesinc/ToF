@@ -133,7 +133,7 @@ struct FrameDetails {
  * @struct Point3I
  * @brief Holds the xyz values of a frame
  */
-struct Point3I {
+struct Point3I_sdk {
     int16_t a; //!< X Information
     int16_t b; //!< Y Information
     int16_t c; //!< Z Information

@@ -168,9 +168,12 @@ aditof::Status Adsd3500ModeSelector::updateConfigurationTable(
         configurationTable.baseResolutionHeight = 320;
         configurationTable.pixelFormatIndex = 0;
         return aditof::Status::OK;
-    } else {
-        return aditof::Status::INVALID_ARGUMENT;
-    }
+    } else if((configurationTable.modeNumber < 0 ||
+         configurationTable.modeNumber > 6 ) &&
+        m_controls["imagerType"] != "adsd3100" &&
+        m_controls["imagerType"] != "adsd3030") {
+            return aditof::Status::INVALID_ARGUMENT;
+        }
 
     DriverConfiguration driverConfigStruct = {std::to_string(depth_i),
                                               std::to_string(ab_i),
