@@ -185,6 +185,7 @@ class Adsd3500 {
 };
 
 // Non-member functions
+void print_planes(const struct v4l2_plane planes[], int num_planes);
 void PrintByteArray(unsigned char *byteArray, int arraySize);
 int xioctl(int fd, int request, void *arg);
 bool v4l2_ctrl_set(int fd, uint32_t id, uint8_t *val);
@@ -196,4 +197,4 @@ int32_t tof_open(const char *tof_device);
 // Static functions
 static uint32_t cal_crc32(uint32_t crc, unsigned char *buf, size_t len);
 
-#endif //FIRMWARE_UPDATE_ADSD3500_H
+#endif

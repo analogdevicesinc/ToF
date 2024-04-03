@@ -50,23 +50,6 @@ typedef unsigned int u32;
 #define ADSD3500_ADDR (0x70 >> 1)
 #define DEBUG 1
 
-typedef enum {
-	ADSD3500_MODE_STANDARD = 0,
-	ADSD3500_MODE_BURST,
-} adsd3500_access_mode;
-
-typedef union {
-	uint8_t cmd_header_byte[16];
-	struct __attribute__((__packed__)) 	{
-		uint8_t  id8;               // 0xAD
-		uint16_t chunk_size16;      // 256 is flash page size
-		uint8_t  cmd8;              // 0x04 is the CMD for fw upgrade
-		uint32_t total_size_fw32;   // 4 bytes (total size of firmware)
-		uint32_t header_checksum32; // 4 bytes header checksum
-		uint32_t crc_of_fw32;       // 4 bytes CRC of the Firmware Binary
-	};
-} cmd_header_t;
-
 Adsd3500::Adsd3500() {
     // Open the ADI ToF Camera Sensor Device Driver.
 	videoDevice.cameraSensorDeviceId = tof_open(CAMERA_SENSOR_DRIVER);
@@ -109,12 +92,6 @@ Adsd3500::~Adsd3500() {
         }
     }
 }
-
-static u8 chip_id[2];
-static u8 status_command[2];
-static u8 fps_rec[2];
-static u8 imager[2];
-static u8 current_firmware_buf[44];
 
 /*
 *****************************ADSD3500 Control Commands****************************
@@ -218,17 +195,6 @@ int Adsd3500::GetImageMode(uint8_t* result) {
 	return ret;
 }
 
-void print_planes(const struct v4l2_plane planes[], int num_planes) {
-    for (int i = 0; i < num_planes; ++i) {
-        std::cout << "Plane " << i << ":" << std::endl;
-        std::cout << "  Bytesused: " << planes[i].bytesused << std::endl;
-        std::cout << "  Length: " << planes[i].length << std::endl;
-        std::cout << "  Data_offset: " << planes[i].data_offset << std::endl;
-        std::cout << "  Reserved: " << planes[i].reserved[0] << " " << planes[i].reserved[1] << " "
-                  << planes[i].reserved[2] << " " << planes[i].reserved[3] << std::endl;
-    }
-}
-
 // Starts the stream.
 int Adsd3500::StartStream() {
     struct v4l2_buffer buf;
@@ -236,7 +202,6 @@ int Adsd3500::StartStream() {
 	printf("Starting the stream.\n");
     std::cout << "Number of video buffers: " << videoDevice.nVideoBuffers << std::endl;
 
-    //for (unsigned int i = 0; i < videoDevice.nVideoBuffers; i++) {
     CLEAR(buf);
     buf.type = videoDevice.videoBuffersType;
     buf.memory = V4L2_MEMORY_MMAP;
@@ -250,36 +215,12 @@ int Adsd3500::StartStream() {
             << "errno: " << errno << " error: " << strerror(errno) << std::endl;
         return -1;
     }
-    //}
-
-	// int32_t ret = write_cmd(videoDevice.cameraSensorDeviceId, streamOn_cmd, ARRAY_SIZE(streamOn_cmd));
-	// std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
-
-    // StopStream();
 
     if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_STREAMON, &videoDevice.videoBuffersType) != 0) {
         std::cout << "VIDIOC_STREAMON error "
                          << "errno: " << errno << " error: " << strerror(errno) << std::endl;
         return -1;
     }
-
-    // fd_set fds;
-    // FD_ZERO(&fds);
-    // FD_SET(videoDevice.videoCaptureDeviceId, &fds);
-    // struct timeval tv = {0};
-    // tv.tv_sec = 2;
-    // int r = select(videoDevice.videoCaptureDeviceId+1, &fds, NULL, NULL, &tv);    
-    // if(-1 == r)
-    // {
-    //     perror("Waiting for Frame");
-    //     return -1;
-    // }
-
-    // if(-1 == xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_DQBUF, &buf))
-    // {
-    //     perror("Retrieving Frame");
-    //     return -1;
-    // }
 
     videoDevice.started = true;
 
@@ -337,182 +278,6 @@ int Adsd3500::RequestFrame(uint16_t* buffer) {
 
     return 0;
 }
-
-// Receive Frames.
-// int Adsd3500::ReceiveFrames() {
-// 	// Open the ToF Camera device
-// 	int32_t fd = tof_open(VIDEO_CAPTURE_DRIVER);
-// 	if (fd < 0) {
-// 		std::cout << "Unable to find camera: " << VIDEO_CAPTURE_DRIVER << std::endl;
-//         return fd;
-// 	}
-
-//     struct v4l2_capability cap;
-//     if (xioctl(fd, VIDIOC_QUERYCAP, &cap) == -1) {
-//         std::cerr << "Failed to query device capabilities" << std::endl;
-//         return -1;
-//     }
-
-// 	// Request buffers from the camera
-//     struct v4l2_requestbuffers req;
-//     req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE; //V4L2_BUF_TYPE_VIDEO_CAPTURE;
-//     req.memory = V4L2_MEMORY_MMAP;
-//     req.count = 4;
-//     if (xioctl(fd, VIDIOC_REQBUFS, &req) == -1) {
-//         std::cerr << "Failed to request buffers" << std::endl;
-//         close(fd);
-//         return -1;
-//     }
-
-//     // Query buffers
-//     struct v4l2_buffer buf = {0};
-//     buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-//     buf.memory = V4L2_MEMORY_MMAP;
-//     buf.index = 0; //bufferindex;
-//     if(xioctl(fd, VIDIOC_QUERYBUF, &buf) == -1) {
-//         perror("Querying Buffer");
-//         return 1;
-//     }
-
-//     void* buffer = mmap(NULL, buf.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, buf.m.offset);
-//     if (buffer == MAP_FAILED) {
-//         std::cerr << "Failed to map buffer" << std::endl;
-//         close(fd);
-//         return -1;
-//     }
-
-//     if(xioctl(fd, VIDIOC_STREAMON, &buf.type) == -1) {
-//         perror("Start Capture");
-//         return 1;
-//     }
-
-//     fd_set fds;
-//     FD_ZERO(&fds);
-//     FD_SET(fd, &fds);
-//     struct timeval tv = {0};
-//     tv.tv_sec = 2;
-//     int r = select(fd+1, &fds, NULL, NULL, &tv);
-//     if (-1 == r) {
-//         perror("Waiting for Frame");
-//         return 1;
-//     }
-
-//     if (-1 == xioctl(fd, VIDIOC_DQBUF, &buf)) {
-//         perror("Retrieving Frame");
-//         return 1;
-//     }
-
-//     // Cleanup
-//     if (munmap(buffer, buf.length) == -1) {
-//         std::cerr << "Failed to unmap buffer" << std::endl;
-//     }
-//     close(fd);
-
-//     return 0;
-
-// 	// Memory map the buffers
-//     // struct buffer {
-//     //     void *start;
-//     //     size_t length;
-//     // } *buffers = new buffer[NUM_BUFFERS];
-
-// 	// for (int i = 0; i < NUM_BUFFERS; ++i) {
-//     //     struct v4l2_buffer buf;
-//     //     buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-//     //     buf.memory = V4L2_MEMORY_MMAP;
-//     //     buf.index = i;
-//     //     if (xioctl(fd, VIDIOC_QUERYBUF, &buf) == -1) {
-//     //         std::cerr << "Failed to query buffer" << std::endl;
-//     //         close(fd);
-//     //         delete[] buffers;
-//     //         return -1;
-//     //     }
-
-//     //     buffers[i].length = buf.length;
-//     //     buffers[i].start = mmap(NULL, buf.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, buf.m.offset);
-//     //     if (buffers[i].start == MAP_FAILED) {
-//     //         std::cerr << "Failed to map buffer" << std::endl;
-//     //         close(fd);
-//     //         delete[] buffers;
-//     //         return -1;
-//     //     }
-//     // }
-
-// 	// // Queue the buffers for capture
-//     // for (int i = 0; i < NUM_BUFFERS; ++i) {
-//     //     struct v4l2_buffer buf;
-//     //     buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-//     //     buf.memory = V4L2_MEMORY_MMAP;
-//     //     buf.index = i;
-//     //     if (ioctl(fd, VIDIOC_QBUF, &buf) == -1) {
-//     //         std::cerr << "Failed to queue buffer" << std::endl;
-//     //         close(fd);
-//     //         delete[] buffers;
-//     //         return -1;
-//     //     }
-//     // }
-
-// 	// // Start capturing frames
-//     // // enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-//     // // if (ioctl(fd, VIDIOC_STREAMON, &type) == -1) {
-//     // //     std::cerr << "Failed to start streaming" << std::endl;
-//     // //     close(fd);
-//     // //     delete[] buffers;
-//     // //     return -1;
-//     // // }
-// 	// StartStream();
-
-// 	// // Capture frames and process them
-//     // for (int i = 0; i < 10; ++i) {
-//     //     // Dequeue buffer for capture
-//     //     struct v4l2_buffer buf;
-//     //     buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-//     //     buf.memory = V4L2_MEMORY_MMAP;
-//     //     if (ioctl(fd, VIDIOC_DQBUF, &buf) == -1) {
-//     //         std::cerr << "Failed to dequeue buffer" << std::endl;
-//     //         close(fd);
-//     //         delete[] buffers;
-//     //         return -1;
-//     //     }
-
-//     //     // Process the frame (example: save to file)
-//     //     // std::ofstream outfile("frame_" + std::to_string(i) + ".raw", std::ios::binary);
-//     //     // if (!outfile.is_open()) {
-//     //     //     std::cerr << "Failed to open output file" << std::endl;
-//     //     //     close(fd);
-//     //     //     delete[] buffers;
-//     //     //     return -1;
-//     //     // }
-//     //     // outfile.write((char *)buffers[buf.index].start, buf.bytesused);
-//     //     // outfile.close();
-
-//     //     // Requeue the buffer for capture
-//     //     if (ioctl(fd, VIDIOC_QBUF, &buf) == -1) {
-//     //         std::cerr << "Failed to requeue buffer" << std::endl;
-//     //         close(fd);
-//     //         delete[] buffers;
-//     //         return -1;
-//     //     }
-//     // }
-
-// 	// // Stop Capturing frames
-// 	// // if (ioctl(fd, VIDIOC_STREAMOFF, &type) == -1) {
-//     // //     std::cerr << "Failed to stop streaming" << std::endl;
-//     // //     close(fd);
-//     // //     delete[] buffers;
-//     // //     return -1;
-//     // // }
-// 	// StopStream();
-
-// 	// // Cleanup
-//     // for (int i = 0; i < NUM_BUFFERS; ++i) {
-//     //     munmap(buffers[i].start, buffers[i].length);
-//     // }
-//     // close(fd);
-//     // delete[] buffers;
-
-// 	//return 0;
-// }
 
 int Adsd3500::ConfigureAdsd3500WithIniParams() {
     int ret = 0;
@@ -582,16 +347,6 @@ int Adsd3500::ConfigureDeviceDrivers() {
         perror("Unable to set Toggle mode.");
         return -1;
     }
-
-    // // Request Buffers
-    // struct v4l2_requestbuffers req;
-    // req.count = 1;
-    // req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    // req.memory = V4L2_MEMORY_MMAP;
-    // if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_REQBUFS, &req) == -1) {
-    //     perror("VIDIOC_REQBUFS error");
-    //     return -1;
-    // }
 
     return 0;
 }
@@ -1173,10 +928,10 @@ int Adsd3500::adsd3500_wait_for_buffer() {
 int Adsd3500::adsd3500_dequeue_internal_buffer(struct v4l2_buffer &buf) {
 
     CLEAR(buf);
-    // buf.type = videoDevice.videoBuffersType;
-    // buf.memory = V4L2_MEMORY_MMAP;
-    // buf.length = 1;
-    // buf.m.planes = videoDevice.planes;
+    buf.type = videoDevice.videoBuffersType;
+    buf.memory = V4L2_MEMORY_MMAP;
+    buf.length = 1;
+    buf.m.planes = videoDevice.planes;
 
     if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_DQBUF, &buf) == -1) {
         std::cout << "VIDIOC_DQBUF error "
@@ -1190,10 +945,10 @@ int Adsd3500::adsd3500_dequeue_internal_buffer(struct v4l2_buffer &buf) {
         }
     }
 
-    // if (buf.index >= videoDevice.nVideoBuffers) {
-    //     std::cout << "Not enough buffers avaialable";
-    //     return -1;
-    // }
+    if (buf.index >= videoDevice.nVideoBuffers) {
+        std::cout << "Not enough buffers avaialable";
+        return -1;
+    }
 
     return 0;
 }
@@ -1428,15 +1183,6 @@ int Adsd3500::SetFrameType() {
     struct v4l2_buffer buf;
 
     videoDevice.nVideoBuffers = 0;
-    // CLEAR(req);
-    // req.count = 0;
-    // req.type = videoDevice.videoBuffersType;
-    // req.memory = V4L2_MEMORY_MMAP;
-
-    // if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_REQBUFS, &req) == -1) {
-    //     std::cout << "VIDIOC_REQBUFS error" << std::endl;
-    //     return -1;
-    // }
 
     float depthBits, abBits, confBits;
 
@@ -1498,7 +1244,6 @@ int Adsd3500::SetFrameType() {
         return -1;
     }
 
-    CLEAR(buf);
     buf.type = videoDevice.videoBuffersType;
     buf.memory = V4L2_MEMORY_MMAP;
     buf.index = videoDevice.nVideoBuffers;
@@ -1543,6 +1288,18 @@ int Adsd3500::SetFrameType() {
 /*
 *********************************Non-member functions*****************************
 */
+
+// Print v4l2 buffer plane.
+void print_planes(const struct v4l2_plane planes[], int num_planes) {
+    for (int i = 0; i < num_planes; ++i) {
+        std::cout << "Plane " << i << ":" << std::endl;
+        std::cout << "  Bytesused: " << planes[i].bytesused << std::endl;
+        std::cout << "  Length: " << planes[i].length << std::endl;
+        std::cout << "  Data_offset: " << planes[i].data_offset << std::endl;
+        std::cout << "  Reserved: " << planes[i].reserved[0] << " " << planes[i].reserved[1] << " "
+                  << planes[i].reserved[2] << " " << planes[i].reserved[3] << std::endl;
+    }
+}
 
 // Prints Byte Array
 void PrintByteArray(unsigned char *byteArray, int arraySize) {
