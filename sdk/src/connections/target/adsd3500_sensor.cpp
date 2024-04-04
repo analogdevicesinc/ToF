@@ -1759,9 +1759,14 @@ aditof::Status Adsd3500Sensor::adsd3500_get_status(int &chipStatus,
 
 aditof::Status
 Adsd3500Sensor::setSensorConfiguration(const std::string &sensorConf) {
-    // TODO: select sensor table configuration
-    LOG(INFO) << "setSensorConfiguration: " << sensorConf;
-    return aditof::Status::OK;
+    aditof::Status status;
+    status = m_modeSelector.setConfiguration(sensorConf);
+    if (status == aditof::Status::OK) {
+        LOG(INFO) << "Using sensor configuration: " << sensorConf;
+    } else {
+        LOG(ERROR) << "Invalid sensor configuration provided!";
+    }
+    return status;
 }
 
 aditof::Adsd3500Status Adsd3500Sensor::convertIdToAdsd3500Status(int status) {
