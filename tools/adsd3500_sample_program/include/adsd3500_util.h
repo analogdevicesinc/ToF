@@ -53,6 +53,7 @@
 #define NUM_BUFFERS 4
 #define ADSD3500_CTRL_PACKET_SIZE 4099
 #define V4L2_CID_AD_DEV_CHIP_CONFIG (0x9819e1)
+#define CTRL_SET_MODE (0x9819e0)
 
 #define MAX_SUBFRAMES_COUNT 10                                                 \
     // maximum number of subframes that are used to create a full frame (maximum total_captures of all modes)

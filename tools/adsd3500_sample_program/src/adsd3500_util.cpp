@@ -51,17 +51,19 @@ typedef unsigned int u32;
 #define DEBUG 1
 
 Adsd3500::Adsd3500() {
-    // Open the ADI ToF Camera Sensor Device Driver.
-	videoDevice.cameraSensorDeviceId = tof_open(CAMERA_SENSOR_DRIVER);
-	if (videoDevice.cameraSensorDeviceId < 0) {
-		std::cout << "Unable to open camera sensor device: " << CAMERA_SENSOR_DRIVER << std::endl;
-	}
+    // // Open the ADI ToF Camera Sensor Device Driver.
+	// //videoDevice.cameraSensorDeviceId = tof_open(CAMERA_SENSOR_DRIVER);
+	// videoDevice.cameraSensorDeviceId = 
+    // if (videoDevice.cameraSensorDeviceId < 0) {
+	// 	std::cout << "Unable to open camera sensor device: " << CAMERA_SENSOR_DRIVER << std::endl;
+	// }
     
-    // Open Host device's V4L2 Video Capture Device Driver.
-    videoDevice.videoCaptureDeviceId = tof_open(VIDEO_CAPTURE_DRIVER);
-    if (videoDevice.videoCaptureDeviceId < 0) {
-		std::cout << "Unable to open video capture device:  " << VIDEO_CAPTURE_DRIVER << std::endl;
-    }
+    // // Open Host device's V4L2 Video Capture Device Driver.
+    // //videoDevice.videoCaptureDeviceId = tof_open(VIDEO_CAPTURE_DRIVER);
+    // videoDevice.videoCaptureDeviceId = 
+    // if (videoDevice.videoCaptureDeviceId < 0) {
+	// 	std::cout << "Unable to open video capture device:  " << VIDEO_CAPTURE_DRIVER << std::endl;
+    // }
 }
 
 Adsd3500::~Adsd3500() {
@@ -155,13 +157,15 @@ uint8_t getImagerTypeAndCCB_cmd[] = {0x00, 0x32};
 int Adsd3500::OpenAdsd3500() {
 	// Open the ADI ToF Camera Sensor Device Driver.
 	videoDevice.cameraSensorDeviceId = tof_open(CAMERA_SENSOR_DRIVER);
-	if (videoDevice.cameraSensorDeviceId < 0) {
+	//videoDevice.cameraSensorDeviceId = ::open(CAMERA_SENSOR_DRIVER, O_RDWR | O_NONBLOCK);
+    if (videoDevice.cameraSensorDeviceId < 0) {
 		std::cout << "Unable to open camera sensor device: " << CAMERA_SENSOR_DRIVER << std::endl;
         return -1;
 	}
     
     // Open Host device's V4L2 Video Capture Device Driver.
     videoDevice.videoCaptureDeviceId = tof_open(VIDEO_CAPTURE_DRIVER);
+    //videoDevice.videoCaptureDeviceId = ::open(CAMERA_SENSOR_DRIVER, O_RDWR | O_NONBLOCK, 0);
     if (videoDevice.videoCaptureDeviceId < 0) {
 		std::cout << "Unable to open video capture device:  " << VIDEO_CAPTURE_DRIVER << std::endl;
         return -1;
@@ -173,27 +177,38 @@ int Adsd3500::OpenAdsd3500() {
 // Resets ADSD3500 device.
 int Adsd3500::ResetAdsd3500() {
 	printf("Resetting ADSD3500 Device.\n");
-	int32_t ret = write_cmd(videoDevice.cameraSensorDeviceId, reset_cmd, ARRAY_SIZE(reset_cmd));
-	std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
+	// int32_t ret = write_cmd(videoDevice.cameraSensorDeviceId, reset_cmd, ARRAY_SIZE(reset_cmd));
+	// std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
 
-	return ret;
+    system("echo 0 > /sys/class/gpio/gpio122/value");
+    usleep(1000000);
+    system("echo 1 > /sys/class/gpio/gpio122/value");
+    usleep(7000000);
+
+	return 0;
 }
 
 // Sets Imaging mode.
 int Adsd3500::SetImageMode(uint8_t modeNumber) {
-	// Open the ToF Camera device
-	int32_t fd = tof_open(CAMERA_SENSOR_DRIVER);
-	if (fd < 0) {
-		std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER << std::endl;
-        return fd;
-	}
-
 	setMode_cmd[1] = modeNumber;
 
 	printf("Setting Imaging mode number as %d.\n", modeNumber);
 
-	int32_t ret = write_cmd(fd, setMode_cmd, ARRAY_SIZE(setMode_cmd));
+	int32_t ret = write_cmd(videoDevice.cameraSensorDeviceId, setMode_cmd, ARRAY_SIZE(setMode_cmd));
 	std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
+
+    static struct v4l2_control ctrl;
+
+    memset(&ctrl, 0, sizeof(ctrl));
+
+    ctrl.id = CTRL_SET_MODE;
+    ctrl.value = modeNumber;
+
+    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_CTRL, &ctrl) == -1) {
+        std::cout << "Setting Mode error "
+                     << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+        return -1;
+    }
 
 	return ret;
 }
@@ -217,6 +232,13 @@ int Adsd3500::GetImageMode(uint8_t* result) {
 // Starts the stream.
 int Adsd3500::StartStream() {
     struct v4l2_buffer buf;
+
+    // Set Toggle mode
+    int ret = adsd3500_write_cmd(0x0025, 1); /* Mode = 1 adsd3500 fsync automatically toggles at user specified framerate*/
+    if (ret < 0) {
+        perror("Unable to set Toggle mode.");
+        return -1;
+    }
 
 	printf("Starting the stream.\n");
     std::cout << "Number of video buffers: " << videoDevice.nVideoBuffers << std::endl;
@@ -362,13 +384,6 @@ int Adsd3500::ConfigureDeviceDrivers() {
         return -1;
     } else {
         PrintByteArray(chip_id_value, ARRAY_SIZE(chip_id_value));
-    }
-
-    // Set Toggle mode
-    ret = adsd3500_write_cmd(0x0025, 1); /* Mode = 1 adsd3500 fsync automatically toggles at user specified framerate*/
-    if (ret < 0) {
-        perror("Unable to set Toggle mode.");
-        return -1;
     }
 
     return 0;
@@ -1220,6 +1235,20 @@ int Adsd3500::SetFrameType() {
     struct v4l2_format fmt;
     struct v4l2_buffer buf;
 
+    ret = SetImageMode(3);
+    if (ret < 0)  printf("Unable to Set mode in Adsd3500.\n");
+
+    CLEAR(req);
+    req.count = 0;
+    req.type = videoDevice.videoBuffersType;
+    req.memory = V4L2_MEMORY_MMAP;
+    if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_REQBUFS, &req) == -1) {
+        std::cout
+            << "VIDIOC_REQBUFS error "
+            << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+        return -1;
+    }
+
     float depthBits, abBits, confBits;
 
     std::cout << "Values from INI file" << std::endl;
@@ -1246,7 +1275,10 @@ int Adsd3500::SetFrameType() {
     float totalBits = depthBits + abBits + confBits;
     uint16_t width = frameWidth * totalBits / 8;
     uint16_t height = frameHeight;
-    uint32_t pixelFormat = V4L2_PIX_FMT_SBGGR8;
+    __u32 pixelFormat = V4L2_PIX_FMT_SBGGR8;
+
+    std::cout << "width: " << width << std::endl;
+    std::cout << "height: " << height << std::endl;
 
     // Set the frame format in the driver.
     CLEAR(fmt);
@@ -1279,8 +1311,6 @@ int Adsd3500::SetFrameType() {
         std::cout << "Unable to allocate video buffers in the driver" << std::endl;
         return -1;
     }
-
-    std::cout << "videoDevice.nVideoBuffers: " << videoDevice.nVideoBuffers << std::endl;
 
     int length, offset;
     for (videoDevice.nVideoBuffers = 0; videoDevice.nVideoBuffers < req.count;
@@ -1458,7 +1488,7 @@ int32_t read_cmd(int fd, uint8_t *ptr, uint16_t len, uint8_t *rcmd,
 
 // Opens ToF Camera Device
 int32_t tof_open(const char *tof_device) {
-    int fd = open(tof_device, O_RDWR | O_NONBLOCK);
+    int fd = ::open(tof_device, O_RDWR | O_NONBLOCK, 0);
     if (fd == -1) {
         std::cout << "Failed to open the camera" << std::endl;
         return -1;

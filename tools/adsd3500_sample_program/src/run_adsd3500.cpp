@@ -30,23 +30,16 @@ int main(int argc, char *argv[]) {
         printf("Unable to reset Adsd3500.\n");
     }
 
-    usleep(1000 * 5000); // Wait for a period for 5 seconds.
-
-    // 2. Configure the ADSD3500 and depth compute library with the ini file.   
-    ret = adsd3500.ConfigureAdsd3500WithIniParams();
+    ret = adsd3500.OpenAdsd3500();
     if (ret < 0) {
-      printf("Unable to configure Adsd3500 with ini file.\n");
-    }
+        printf("Unable to open Adsd3500.\n");
+    } 
     
     ret = adsd3500.ConfigureDeviceDrivers();
     if (ret < 0) {
         printf("Unable to open Adsd3500.\n");
     }    
 
-    ret = adsd3500.SetFrameType();
-    if (ret < 0) {
-        printf("Unable to set frame type Adsd3500.\n");
-    }  
     // 3. Complete configuration of depth compute library with CCB parameters from the ADSD3500.
     // ImagerType imagerType;
     // CCBVersion ccb;
@@ -61,28 +54,39 @@ int main(int argc, char *argv[]) {
 
 
     // 5. Set the Imager Mode.
-    int modeNumber = 3; // lr-qnative
+    // int modeNumber = 3; // lr-qnative
 
-    if (modeNumber < 0 || modeNumber > 4) {
-        printf("Invalid mode number given. Valid Imaging modes are 0, 1, 2, 3 and 4.\n");
-        return 0;
-    }
+    // if (modeNumber < 0 || modeNumber > 4) {
+    //     printf("Invalid mode number given. Valid Imaging modes are 0, 1, 2, 3 and 4.\n");
+    //     return 0;
+    // }
 
-    ret = adsd3500.SetImageMode(modeNumber);
-    if (ret < 0) {
-        printf("Unable to set the Image Mode in Adsd3500.\n");
-    }
+    // ret = adsd3500.SetImageMode(modeNumber);
+    // if (ret < 0) {
+    //     printf("Unable to set the Image Mode in Adsd3500.\n");
+    // }
 
-    uint8_t set_image_mode[2] = {0x00, 0x00};
+    // uint8_t set_image_mode[2] = {0x00, 0x00};
 
-    ret = adsd3500.GetImageMode(set_image_mode);
-    if (ret < 0) {
-        printf("Unable to get the Image Mode from Adsd3500.\n");
-    }
+    // ret = adsd3500.GetImageMode(set_image_mode);
+    // if (ret < 0) {
+    //     printf("Unable to get the Image Mode from Adsd3500.\n");
+    // }
 
-    PrintByteArray(set_image_mode, ARRAY_SIZE(set_image_mode));
+    // PrintByteArray(set_image_mode, ARRAY_SIZE(set_image_mode));
 
     usleep(1000 * 5000); // Wait for a period for 5 seconds.
+
+    // 2. Configure the ADSD3500 and depth compute library with the ini file. 
+    ret = adsd3500.ConfigureAdsd3500WithIniParams();
+    if (ret < 0) {
+      printf("Unable to configure Adsd3500 with ini file.\n");
+    }
+
+    ret = adsd3500.SetFrameType();
+    if (ret < 0) {
+        printf("Unable to set frame type Adsd3500.\n");
+    }  
 
     // 6. Set the Stream on
     ret = adsd3500.StartStream();
