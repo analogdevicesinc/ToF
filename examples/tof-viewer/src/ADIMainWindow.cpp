@@ -1570,6 +1570,13 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
             } else {
                 frameRecvd++;
             }
+
+            ImGui::Text(" Current FPS: %i", fps);
+            if (expectedFPS) {
+                ImGui::SameLine();
+                ImGui::Text(" | Expected FPS: %i", expectedFPS);
+            }
+
             CameraDetails cameraDetails;
             camera->getDetails(cameraDetails);
             std::string camera_mode = cameraDetails.mode;
@@ -1585,11 +1592,6 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                     }
                     int32_t sensorTemp = (metadata.sensorTemperature);
                     int32_t laserTemp = (metadata.laserTemperature);
-                    ImGui::Text(" Current FPS: %i", fps);
-                    if (expectedFPS) {
-                        ImGui::SameLine();
-                        ImGui::Text(" | Expected FPS: %i", expectedFPS);
-                    }
                     uint32_t totalFrames = frameNum - firstFrame + 1;
                     uint32_t frameLost = totalFrames - frameRecvd;
                     ImGui::Text(" Number of frames lost: %i", frameLost);
