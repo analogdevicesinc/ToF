@@ -1841,12 +1841,19 @@ void ADIMainWindow::displayActiveBrightnessWindow(
     dictWinPosition["ab"] = std::array<float, 4>(
         {offsetfromleft,
          dictWinPosition["info"][1] + dictWinPosition["info"][3], size.x,
-         size.y});
+         size.y + 10});
     setWindowPosition(dictWinPosition["ab"][0], dictWinPosition["ab"][1]);
-    setWindowSize(dictWinPosition["ab"][2] + 40, dictWinPosition["ab"][3] + 40);
+    setWindowSize(dictWinPosition["ab"][2] + 40,
+                  dictWinPosition["ab"][3] + 130);
 
     if (ImGui::Begin("Active Brightness Window", nullptr, overlayFlags)) {
+
         CaptureABVideo();
+
+        ImVec2 imageStartPos = ImGui::GetCursorScreenPos();
+        ImVec2 pos = ImGui::GetCursorScreenPos();
+        pos.y += size.y + 10;
+        ImGui::SetCursorScreenPos(pos);
 
         bool logImage = view->getLogImage();
         bool autoScale = view->getAutoScale();
@@ -1861,11 +1868,6 @@ void ADIMainWindow::displayActiveBrightnessWindow(
         }
         view->setLogImage(logImage);
         view->setAutoScale(autoScale);
-
-        // fix a y offset caused by the checkbox
-        ImVec2 imageStartPos = ImGui::GetCursorScreenPos();
-        int y_offset = (_isHighDPI) ? 46 : 23;
-        imageStartPos.y -= y_offset;
 
         ImVec2 hoveredImagePixel = InvalidHoveredPixel;
         GetHoveredImagePix(hoveredImagePixel, imageStartPos,
@@ -1904,20 +1906,27 @@ void ADIMainWindow::displayDepthWindow(ImGuiWindowFlags overlayFlags) {
     setWindowPosition(dictWinPosition["depth"][0] + 40,
                       dictWinPosition["depth"][1]);
     setWindowSize(dictWinPosition["depth"][2] + 40,
-                  dictWinPosition["depth"][3] + 40);
+                  dictWinPosition["depth"][3] + 140);
 
     std::string title =
         "Depth"; //std::format("Depth: {} x {}", static_cast<uint32_t>(view->frameWidth), static_cast<uint32_t>(view->frameWidth));
     if (ImGui::Begin(title.c_str(), nullptr, overlayFlags)) {
+
+        CaptureDepthVideo();
+
+        ImVec2 imageStartPos = ImGui::GetCursorScreenPos();
+        ImVec2 pos = ImGui::GetCursorScreenPos();
+        pos.y += size.y + 10;
+        ImGui::SetCursorScreenPos(pos);
+
         ImVec2 hoveredImagePixel = InvalidHoveredPixel;
-        GetHoveredImagePix(hoveredImagePixel, ImGui::GetCursorScreenPos(),
+        GetHoveredImagePix(hoveredImagePixel, imageStartPos,
                            ImGui::GetIO().MousePos, displayDepthDimensions);
         RenderInfoPane(hoveredImagePixel, view->depth_video_data,
                        view->frameWidth, ImGui::IsWindowHovered(),
                        ADI_Image_Format_t::ADI_IMAGE_FORMAT_DEPTH16, "mm");
     }
 
-    CaptureDepthVideo();
     ImGui::End();
 }
 
@@ -1937,13 +1946,20 @@ void ADIMainWindow::displayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
     dictWinPosition["pc"] = std::array<float, 4>(
         {offsetfromleft,
          dictWinPosition["info"][1] + dictWinPosition["info"][3], size.x,
-         size.y});
+         size.y + 10});
 
     setWindowPosition(dictWinPosition["pc"][0], dictWinPosition["pc"][1]);
-    setWindowSize(dictWinPosition["pc"][2] + 40, dictWinPosition["pc"][3] + 40);
+    setWindowSize(dictWinPosition["pc"][2] + 40,
+                  dictWinPosition["pc"][3] + 130);
 
     if (ImGui::Begin("Point Cloud Window", nullptr, overlayFlags)) {
+
         CapturePointCloudVideo();
+
+        ImVec2 pos = ImGui::GetCursorScreenPos();
+        pos.y += size.y + 10;
+        ImGui::SetCursorScreenPos(pos);
+
         ImGuiExtensions::ADISliderInt("", &pointSize, 1, 10,
                                       "Point Size: %d px");
         ImGui::SameLine();
@@ -2377,7 +2393,8 @@ void ADIMainWindow::CaptureDepthVideo() {
 
         ImageRotated(
             (ImTextureID)depth_video_texture,
-            ImVec2(dictWinPosition["depth"][2], dictWinPosition["depth"][3]),
+            ImVec2(dictWinPosition["depth"][2],
+                   dictWinPosition["depth"][3] + 15),
             ImVec2(_displayDepthDimensions.x, _displayDepthDimensions.y),
             rotationangleradians);
         //ImGui::Image((void*)(intptr_t)depth_video_texture, displayDepthDimensions);
