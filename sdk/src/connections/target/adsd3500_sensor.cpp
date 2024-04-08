@@ -135,7 +135,6 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     m_controls.emplace("phaseDepthBits", "0");
     m_controls.emplace("abBits", "0");
     m_controls.emplace("confidenceBits", "0");
-    m_controls.emplace("modeInfoVersion", "0");
     m_controls.emplace("fps", "0");
     m_controls.emplace("imagerType", "");
     m_controls.emplace("inputFormat", "");
@@ -786,38 +785,7 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
 
     m_controls[control] = value;
 
-    if (control == "modeInfoVersion") {
-        int n = std::stoi(value);
-        if (n == 0) {
-            m_implData->ccbVersion = CCBVersion::CCB_VERSION0;
-            LOG(ERROR) << "Old modes have been detected but they are no "
-                          "longer supported!";
-            return Status::INVALID_ARGUMENT;
-        } else if (n == 2 || n == 3) {
-            m_implData->ccbVersion = CCBVersion::CCB_VERSION1;
-            if (m_implData->imagerType != SensorImagerType::IMAGER_UNKNOWN) {
-                status = m_modeSelector.setControl("mixedModes",
-                                                   std::to_string(n - 2));
-                status = m_modeSelector.getAvailableFrameTypes(
-                    m_availableFrameTypes);
-                if (status != aditof::Status::OK) {
-                    LOG(ERROR) << "Failed to get available frame types for the "
-                                  "current configuration.";
-                    return status;
-                }
-            } else {
-                LOG(ERROR) << "Unknown imager type. Because of this, cannot "
-                              "set control:"
-                           << control;
-                return Status::GENERIC_ERROR;
-            }
-
-            return status;
-        } else {
-            LOG(ERROR) << "Invalid value provided for ccb version";
-            return aditof::Status::GENERIC_ERROR;
-        }
-    } else if (control == "fps") {
+    if (control == "fps") {
         int fps = std::stoi(value);
 #ifdef NVIDIA
         struct v4l2_ext_control extCtrl;
@@ -910,11 +878,6 @@ aditof::Status Adsd3500Sensor::getControl(const std::string &control,
     if (m_controls.count(control) > 0) {
         if (control == "imagerType") {
             value = std::to_string((int)m_implData->imagerType);
-            return Status::OK;
-        }
-
-        if (control == "modeInfoVersion") {
-            value = std::to_string((int)m_implData->ccbVersion);
             return Status::OK;
         }
 
@@ -1705,7 +1668,39 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
             LOG(ERROR) << "Old modes are no longer supported!";
             return Status::GENERIC_ERROR;
         } else if (m_implData->ccbVersion == CCBVersion::CCB_VERSION1) {
-            m_modeSelector.setControl("mixedModes", "1");
+
+            //TO DO: overwrite this once ccbm is added
+            int modeToTest = 5; // We are looking at width and height for mode 5
+            uint8_t tempDealiasParams[32] = {0};
+            tempDealiasParams[0] = modeToTest;
+
+            TofiXYZDealiasData tempDealiasStruct;
+            uint16_t width1 = 512;
+            uint16_t height1 = 512;
+
+            uint16_t width2 = 320;
+            uint16_t height2 = 256;
+
+            // We read dealias parameters to find out the width and height for mode 5
+            status = m_depthSensor->adsd3500_read_payload_cmd(
+                0x02, tempDealiasParams, 32);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to read dealias parameters for adsd3500!";
+                return status;
+            }
+
+            memcpy(&tempDealiasStruct, tempDealiasParams,
+                   sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
+
+            // If mixed modes don't have accurate dimensions, switch back to simple new modes table
+            if ((tempDealiasStruct.n_rows == width1 &&
+                 tempDealiasStruct.n_cols == height1) ||
+                (tempDealiasStruct.n_rows == width2 &&
+                 tempDealiasStruct.n_cols == height2)) {
+                m_modeSelector.setControl("mixedModes", "1");
+            } else {
+                m_modeSelector.setControl("mixedModes", "0");
+            }
         }
     }
 
