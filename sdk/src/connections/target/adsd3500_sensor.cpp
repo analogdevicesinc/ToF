@@ -866,6 +866,11 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
         return Status::UNAVAILABLE;
     }
 
+    if (control == "depthComputeOpenSource") {
+        LOG(WARNING) << "Control: " << control << " is read only!";
+        return Status::UNAVAILABLE;
+    }
+
     std::vector<std::string> convertor = {"0",  "4",  "8", "10",
                                           "12", "14", "16"};
 
