@@ -49,6 +49,8 @@
 
 #include "buffer_processor.h"
 
+uint8_t depthComputeOpenSourceEnabled = 0;
+
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
 static int xioctl(int fh, unsigned int request, void *arg) {
@@ -403,3 +405,8 @@ aditof::Status BufferProcessor::enqueueInternalBuffer(struct v4l2_buffer &buf) {
 }
 
 TofiConfig *BufferProcessor::getTofiCongfig() { return m_tofiConfig; }
+
+aditof::Status BufferProcessor::getDepthComputeVersion(uint8_t &enabled) {
+    enabled = depthComputeOpenSourceEnabled;
+    return aditof::Status::OK;
+}

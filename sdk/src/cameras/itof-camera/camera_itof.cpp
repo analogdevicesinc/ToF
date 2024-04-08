@@ -620,6 +620,20 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
                 LOG(ERROR) << "Failed to initialize depth compute on target!";
                 return localStatus;
             }
+
+            std::string depthComputeStatus;
+            localStatus = m_depthSensor->getControl("depthComputeOpenSource",
+                                                    depthComputeStatus);
+            if (localStatus == aditof::Status::OK) {
+                if (depthComputeStatus == "0") {
+                    LOG(INFO) << "Using closed source depth compute library.";
+                } else {
+                    LOG(INFO) << "Using open source depth compute library.";
+                }
+            } else {
+                LOG(ERROR)
+                    << "Failed to get depth compute version from target!";
+            }
         }
     }
 

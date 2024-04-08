@@ -140,6 +140,7 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     m_controls.emplace("imagerType", "");
     m_controls.emplace("inputFormat", "");
     m_controls.emplace("netlinktest", "0");
+    m_controls.emplace("depthComputeOpenSource", "0");
 
     // Define the commands that correspond to the sensor controls
     m_implData->controlsCommands["abAveraging"] = 0x9819e5;
@@ -559,7 +560,7 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     struct v4l2_format fmt;
     struct v4l2_buffer buf;
     size_t length, offset;
-    
+
     m_implData->frameType = type;
     aditof::DepthSensorFrameType tempType = type;
 
@@ -909,6 +910,11 @@ aditof::Status Adsd3500Sensor::getControl(const std::string &control,
 
         if (control == "modeInfoVersion") {
             value = std::to_string((int)m_implData->ccbVersion);
+            return Status::OK;
+        }
+
+        if(control == "depthComputeOpenSource"){
+            value = m_controls.at("depthComputeOpenSource");
             return Status::OK;
         }
 
@@ -1389,6 +1395,15 @@ aditof::Status Adsd3500Sensor::initTargetDepthCompute(uint8_t *iniFile,
         LOG(ERROR) << "Failed to initialize depth compute on target!";
         return status;
     }
+
+    uint8_t depthComputeStatus;
+    status = m_bufferProcessor->getDepthComputeVersion(depthComputeStatus);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to get depth compute version!";
+        return status;
+    }
+
+    m_controls["depthComputeOpenSource"] = std::to_string(depthComputeStatus);
 
     return aditof::Status::OK;
 }
