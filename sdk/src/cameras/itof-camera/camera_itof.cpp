@@ -321,16 +321,6 @@ aditof::Status CameraItof::setMode(const std::string &mode,
     return aditof::Status::OK;
 }
 
-aditof::Status
-CameraItof::getAvailableModes(std::vector<std::string> &availableModes) const {
-    using namespace aditof;
-    Status status = Status::OK;
-
-    availableModes = ModeInfo::getInstance()->GetAvailableModes();
-
-    return status;
-}
-
 aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     using namespace aditof;
     Status status = Status::OK;
@@ -407,13 +397,16 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         return status;
     }
 
+    status = m_depthSensor->getFrameTypeDetails(frameType, m_frameDetails);
+    if(status != Status::OK) {
+        LOG(ERROR) << "Failed to get frame type details!";
+        return status;
+    }
+
     // Store the frame details in camera details
     m_details.frameType.type = (*frameTypeIt).mode;
-    // TO DO: m_details.frameType.cameraMode =
-    m_details.frameType.width =
-        ModeInfo::getInstance()->getModeInfo(frameType).width;
-    m_details.frameType.height =
-        ModeInfo::getInstance()->getModeInfo(frameType).height;
+    m_details.frameType.width = (*frameTypeIt).baseResolutionWidth;
+    m_details.frameType.height = (*frameTypeIt).baseResolutionHeight;
     m_details.frameType.totalCaptures = 1;
     m_details.frameType.dataDetails.clear();
     for (const auto &item : (*frameTypeIt).frameContent) {
@@ -426,19 +419,16 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
 
         FrameDataDetails fDataDetails;
         fDataDetails.type = item;
-        fDataDetails.width = (*frameTypeIt).baseResolutionWidth;
-        fDataDetails.height = (*frameTypeIt).baseResolutionHeight;
+        fDataDetails.width = m_frameDetails.baseResolutionWidth;
+        fDataDetails.height = m_frameDetails.baseResolutionHeight;
         fDataDetails.subelementSize = sizeof(uint16_t);
         fDataDetails.subelementsPerElement = 1;
 
         if (item == "xyz") {
             fDataDetails.subelementsPerElement = 3;
         } else if (item == "raw") {
-            // We overwrite the maximum width&height with the actual width&height calculated based on .ini params
-            uint8_t pixFmt;
-            ModeInfo::getInstance()->getSensorProperties(
-                frameType, (uint16_t *)&fDataDetails.width,
-                (uint16_t *)&fDataDetails.height, &pixFmt);
+            fDataDetails.width =  m_frameDetails.frameWidthInBytes;
+            fDataDetails.height = m_frameDetails.frameHeightInBytes;
             fDataDetails.subelementSize = 1;
             fDataDetails.subelementsPerElement = 1;
         } else if (item == "metadata") {
@@ -503,8 +493,8 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
 
     // If we compute XYZ then prepare the XYZ tables which depend on the mode
     if (m_xyzEnabled && !m_pcmFrame) {
-        uint8_t mode =
-            ModeInfo::getInstance()->getModeInfo(m_details.frameType.type).mode;
+        uint8_t mode = m_frameDetails.modeNumber;
+            
         const int GEN_XYZ_ITERATIONS = 20;
         TofiXYZDealiasData *pDealias = &m_xyz_dealias_data[mode];
 
@@ -513,8 +503,8 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
             &m_xyzTable.p_x_table, &m_xyzTable.p_y_table, &m_xyzTable.p_z_table,
             &(pDealias->camera_intrinsics), pDealias->n_sensor_rows,
             pDealias->n_sensor_cols,
-            ModeInfo::getInstance()->getModeInfo(frameType).width,
-            ModeInfo::getInstance()->getModeInfo(frameType).height,
+           m_frameDetails.frameWidthInBytes,
+            m_frameDetails.frameHeightInBytes,
             pDealias->n_offset_rows, pDealias->n_offset_cols,
             pDealias->row_bin_factor, pDealias->col_bin_factor,
             GEN_XYZ_ITERATIONS);
@@ -564,34 +554,12 @@ aditof::Status CameraItof::getAvailableFrameTypes(
     return status;
 }
 
-aditof::Status CameraItof::getFrameTypeNameFromId(int id,
-                                                  std::string &name) const {
-    using namespace aditof;
-    Status status = Status::OK;
-
-    ModeInfo::modeInfo info = ModeInfo::getInstance()->getModeInfo(id);
-    if (!info.mode_name.empty()) {
-        name = info.mode_name;
-    } else {
-        status = Status::INVALID_ARGUMENT;
-    }
-
-    return status;
-}
-
 aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
     using namespace aditof;
     Status status = Status::OK;
-    ModeInfo::modeInfo aModeInfo;
 
     if (frame == nullptr) {
         return Status::INVALID_ARGUMENT;
-    }
-
-    status = getCurrentModeInfo(aModeInfo);
-    if (status != Status::OK) {
-        LOG(WARNING) << "Failed to get mode info";
-        return status;
     }
 
     FrameDetails frameDetails;
@@ -632,8 +600,8 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
         frame->getData("xyz", &xyzFrame);
 
         Algorithms::ComputeXYZ((const uint16_t *)depthFrame, &m_xyzTable,
-                               (int16_t *)xyzFrame, m_details.frameType.height,
-                               m_details.frameType.width);
+                               (int16_t *)xyzFrame,m_frameDetails.baseResolutionHeight,
+                               m_frameDetails.baseResolutionWidth);
     }
 
     Metadata metadata;
@@ -658,9 +626,9 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
     } else {
         // If metadata from ADSD3500 is not available/disabled, generate one here
         memset(static_cast<void *>(&metadata), 0, sizeof(metadata));
-        metadata.width = aModeInfo.width;
-        metadata.height = aModeInfo.height;
-        metadata.imagerMode = aModeInfo.mode;
+        metadata.width = m_frameDetails.baseResolutionWidth;
+        metadata.height = m_frameDetails.baseResolutionHeight;
+        metadata.imagerMode = m_frameDetails.modeNumber;
         metadata.bitsInDepth = m_depthBitsPerPixel;
         metadata.bitsInAb = m_abBitsPerPixel;
         metadata.bitsInConfidence = m_confBitsPerPixel;
