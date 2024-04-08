@@ -32,7 +32,6 @@
 #ifndef FRAME_HANDLER
 #define FRAME_HANDLER
 
-#include "mode_info.h"
 #include <aditof/camera.h>
 #include <aditof/frame.h>
 #include <aditof/frame_handler.h>
