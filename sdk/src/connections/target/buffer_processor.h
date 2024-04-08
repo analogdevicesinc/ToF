@@ -74,6 +74,7 @@ class BufferProcessor : public aditof::V4lBufferAccessInterface {
                                           bool ispEnabled);
     aditof::Status processBuffer(uint16_t *buffer);
     TofiConfig *getTofiCongfig();
+    aditof::Status getDepthComputeVersion(uint8_t &enabled);
 
   public:
     virtual aditof::Status waitForBuffer() override;
