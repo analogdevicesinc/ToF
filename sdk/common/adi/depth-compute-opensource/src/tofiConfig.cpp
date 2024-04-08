@@ -25,6 +25,9 @@ TofiConfig *InitTofiConfig(ConfigFileData *p_cal_file_data,
     Obj->p_tofi_cal_config = 0;
     Obj->p_tofi_config_str = 0;
     Obj->xyz_table = xyzObj;
+
+    depthComputeOpenSourceEnabled = 1;
+
     return Obj;
 };
 
@@ -85,6 +88,9 @@ TofiConfig *InitTofiConfig_isp(ConfigFileData *p_ini_file_data, uint16_t mode,
         dealiasDataObj); // Not nice but couldn't find a way to store all content of p_xyz_dealias_data without changing API
     Obj->p_tofi_config_str = reinterpret_cast<const char *>(configFileObj);
     Obj->xyz_table = xyzObj;
+
+    depthComputeOpenSourceEnabled = 1;
+
     return Obj;
 };
 
