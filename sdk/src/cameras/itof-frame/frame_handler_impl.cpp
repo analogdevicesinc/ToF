@@ -215,11 +215,7 @@ Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
     m_frDetails.height = m_metadataStruct.height;
     m_frDetails.cameraMode = std::to_string(m_metadataStruct.imagerMode);
     m_frDetails.totalCaptures = 1;
-
-    m_info = ModeInfo::getInstance()->getModeInfo(m_metadataStruct.imagerMode);
-    if (!m_info.mode_name.empty()) {
-        m_frDetails.type = m_info.mode_name;
-    }
+    m_frDetails.cameraMode = m_metadataStruct.imagerMode;
 
     FrameDataDetails frDataDetails;
     frDataDetails.type = "metadata";
