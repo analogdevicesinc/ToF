@@ -32,7 +32,6 @@
 
 #include "v4l_buffer_access_interface.h"
 
-#include "../../cameras/itof-camera/mode_info.h"
 #include "tofi/tofi_compute.h"
 #include "tofi/tofi_config.h"
 #include "tofi/tofi_util.h"

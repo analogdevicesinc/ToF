@@ -839,24 +839,6 @@ aditof::Status CameraItof::readSerialNumber(std::string &serialNumber,
     return status;
 }
 
-aditof::Status CameraItof::getCurrentModeInfo(ModeInfo::modeInfo &info) {
-    using namespace aditof;
-    Status status = Status::OK;
-
-    ModeInfo *pModeInfo = ModeInfo::getInstance();
-    if (pModeInfo) {
-        uint8_t convertedMode;
-        status = pModeInfo->convertCameraMode(m_details.mode, convertedMode);
-        if (status != aditof::Status::OK) {
-            LOG(ERROR) << "Invalid mode!";
-            return aditof::Status::GENERIC_ERROR;
-        }
-        info = pModeInfo->getModeInfo(convertedMode);
-        return Status::OK;
-    }
-    return Status::GENERIC_ERROR;
-}
-
 aditof::Status CameraItof::saveModuleCCB(const std::string &filepath) {
     if (filepath.empty()) {
         LOG(ERROR) << "File path where CCB should be written is empty.";
@@ -1159,7 +1141,6 @@ void CameraItof::configureSensorFrameType() {
         else
             value = "2";
         m_depthSensor->setControl("phaseDepthBits", value);
-        ModeInfo::getInstance()->setSensorPixelParam("bitsInDepth", value);
     } else {
         LOG(WARNING) << "bitsInPhaseOrDepth was not found in .ini file";
     }
@@ -1175,7 +1156,6 @@ void CameraItof::configureSensorFrameType() {
         else
             value = "0";
         m_depthSensor->setControl("confidenceBits", value);
-        ModeInfo::getInstance()->setSensorPixelParam("bitsInConf", value);
     } else {
         LOG(WARNING) << "bitsInConf was not found in .ini file";
     }
@@ -1200,7 +1180,6 @@ void CameraItof::configureSensorFrameType() {
             m_abEnabled = 0;
         }
         m_depthSensor->setControl("abBits", value);
-        ModeInfo::getInstance()->setSensorPixelParam("bitsInAb", value);
     } else {
         LOG(WARNING) << "bitsInAB was not found in .ini file";
     }
@@ -1218,7 +1197,6 @@ void CameraItof::configureSensorFrameType() {
     if (it != m_iniKeyValPairs.end()) {
         value = it->second;
         m_depthSensor->setControl("inputFormat", value);
-        ModeInfo::getInstance()->setSensorPixelParam("pixelFormat", value);
     } else {
         LOG(WARNING) << "inputFormat was not found in .ini file";
     }
