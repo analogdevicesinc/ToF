@@ -37,8 +37,6 @@
 #include <memory>
 #include <unordered_map>
 
-#include "cameras/itof-camera/mode_info.h"
-
 class Adsd3500Sensor : public aditof::DepthSensorInterface,
                        public aditof::V4lBufferAccessInterface,
                        public std::enable_shared_from_this<Adsd3500Sensor> {
