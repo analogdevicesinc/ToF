@@ -120,7 +120,6 @@ class FrameHandlerImpl {
 
     aditof::Frame m_swapFrame;
     aditof::FrameDetails m_frDetails;
-    ModeInfo::modeInfo m_info;
     aditof::Metadata m_metadataStruct;
 
     //variables used for file handling
