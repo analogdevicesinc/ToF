@@ -108,6 +108,8 @@ TOFI_CONFIG_API uint32_t TofiGetINIParams(void *p_config_params,
                                           int params_group,
                                           const void *p_tofi_cal_config);
 
+extern uint8_t depthComputeOpenSourceEnabled;
+
 #ifdef __cplusplus
 }
 #endif
