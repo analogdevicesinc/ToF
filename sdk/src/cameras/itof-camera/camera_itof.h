@@ -32,7 +32,6 @@
 #ifndef CAMERA_ITOF_H
 #define CAMERA_ITOF_H
 
-#include "mode_info.h"
 #include "tofi/tofi_compute.h"
 #include "tofi/tofi_config.h"
 #include "tofi/tofi_util.h"
@@ -155,16 +154,6 @@ class CameraItof : public aditof::Camera {
      * @return None
      */
     void freeConfigData(void);
-
-    /**
-     * @brief Gets the information about the current mode set
-     * @param[out] info - This gets filled with all the mode information (width, height, subframes, embed_width, embed_height)
-     * @return aditof::Status
-     * @note This function has to be called after calling setMode(), this is private function,
-     * @see ModeInfo::modeInfo
-     * @see aditof::Status
-     */
-    aditof::Status getCurrentModeInfo(ModeInfo::modeInfo &info);
 
     // Methods available only when Adsd3500 is detected as part of the entire setup
 
