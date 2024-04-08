@@ -1706,7 +1706,7 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                 "Progress", &rawSeeker, 0,
                 (view->m_ctrl->m_recorder->m_numberOfFrames) - 1, "%d", true);
             view->m_ctrl->m_recorder->currentPBPos =
-                rawSeeker *
+                size_t(rawSeeker) *
                     (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
                          ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
                          (view->m_ctrl->m_recorder->totalBits) +

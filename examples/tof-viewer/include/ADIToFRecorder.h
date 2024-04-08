@@ -173,10 +173,10 @@ class ADIToFRecorder {
     bool m_saveBinaryFormat = false;
     bool m_finishRecording = true;
     bool _stopPlayback = false;
-    int currentPBPos = 0;
+    size_t currentPBPos = 0;
     int totalBits = 0;
     int m_numberOfFrames;
-    int fileSize = 0;
+    size_t fileSize = 0;
     uint16_t m_sizeOfHeader;
 
   private:

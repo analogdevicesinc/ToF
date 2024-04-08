@@ -164,7 +164,7 @@ int ADIToFRecorder::startPlaybackRaw(const std::string &fileName, int &fps) {
         width = m_metadataStruct.width;
     }
 
-    int sizeOfFrame = height * width * totalBits;
+    size_t sizeOfFrame = height * width * totalBits;
     currentPBPos = m_sizeOfHeader;
     m_numberOfFrames = fileSize / (m_sizeOfHeader + sizeOfFrame);
 
