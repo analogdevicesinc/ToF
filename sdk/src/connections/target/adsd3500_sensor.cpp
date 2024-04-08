@@ -11,7 +11,6 @@
 #include "utils.h"
 #include "utils_ini.h"
 
-#include "cameras/itof-camera/mode_info.h"
 #include <algorithm>
 #include <arm_neon.h>
 #include <cmath>
