@@ -140,6 +140,8 @@ class CameraItof : public aditof::Camera {
     aditof::Status
     setSensorConfiguration(const std::string &sensorConf) override;
 
+    void dropFirstFrame(bool dropFrame) override;
+
   private:
     /**
      * @brief Opens the CCB file passed in as part of Json file using initialize(), and loads the calibration blocks into member variable
@@ -259,6 +261,8 @@ class CameraItof : public aditof::Camera {
     bool m_enableDepthCompute;
     std::string m_initConfigFilePath;
     aditof::ImagerType m_imagerType;
+    bool m_dropFirstFrame;
+    bool m_dropFrameOnce;
 };
 
 #endif // CAMERA_ITOF_H
