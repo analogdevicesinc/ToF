@@ -650,6 +650,13 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         return status;
     }
 
+    //set the chip in bypass mode
+    status = m_depthSensor->adsd3500_write_cmd(0x33, 0x01);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to set the chip in bypass mode!";
+        return status;
+    }
+
     // Store the frame details in camera details
     m_details.frameType.type = (*frameTypeIt).type;
     // TO DO: m_details.frameType.cameraMode =

@@ -297,10 +297,16 @@ aditof::Status ModeInfo::getSensorProperties(const std::string mode,
         //TO DO: add raw12 modes for adsd3030
         if (pixelFormat == "raw8") {
             if (m_mode < 2) {
-                float totalBits = depthBits + abBits + confBits;
-                *width = frameWidth * totalBits / 8;
-                *height = frameHeight;
-                *pixelFormatIndex = 0;
+                if (depthBits == 12 && abBits == 0 && confBits == 0) {
+                    *width = 1024;
+                    *height = 2880;
+                    *pixelFormatIndex = 1;
+                } else {
+                    float totalBits = depthBits + abBits + confBits;
+                    *width = frameWidth * totalBits / 8;
+                    *height = frameHeight;
+                    *pixelFormatIndex = 0;
+                }
             } else {
                 *width = 1280;
                 *height = 320;
