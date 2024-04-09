@@ -70,7 +70,8 @@ CameraItof::CameraItof(
       m_enableTempCompenstation(-1), m_enableMetaDatainAB(-1),
       m_enableEdgeConfidence(-1), m_modesVersion(0),
       m_xyzTable({nullptr, nullptr, nullptr}),
-      m_imagerType(aditof::ImagerType::UNSET) {
+      m_imagerType(aditof::ImagerType::UNSET), m_dropFirstFrame(true),
+      m_dropFrameOnce(true) {
 
     FloatToLinGenerateTable();
     memset(&m_xyzTable, 0, sizeof(m_xyzTable));
@@ -732,6 +733,12 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
     if (!frameDataLocation) {
         LOG(WARNING) << "getframe failed to allocated valid frame";
         return status;
+    }
+
+    if (m_dropFirstFrame && m_dropFrameOnce) {
+        m_depthSensor->getFrame(frameDataLocation);
+        m_dropFrameOnce = false;
+        LOG(INFO) << "Dropped first frame";
     }
 
     status = m_depthSensor->getFrame(frameDataLocation);
@@ -1545,6 +1552,9 @@ CameraItof::saveDepthParamsToJsonFile(const std::string &savePathFile) {
         status =
             UtilsIni::getKeyValuePairsFromIni(pfile->second, iniKeyValPairs);
 
+        iniKeyValPairs.emplace("errata1",
+                               std::to_string(m_dropFirstFrame ? 1 : 0));
+
         if (status == Status::OK) {
             cJSON *json = cJSON_CreateObject();
             for (auto item = iniKeyValPairs.begin();
@@ -1613,6 +1623,13 @@ CameraItof::loadDepthParamsFromJsonFile(const std::string &pathFile,
                     } else {
                         value = std::to_string(elem->valuedouble);
                     }
+                    if (std::string(elem->string) == "errata1") {
+                        if (elem->valuedouble == 1) {
+                            m_dropFirstFrame = true;
+                        } else {
+                            m_dropFirstFrame = false;
+                        }
+                    }
                     iniKeyValPairs.emplace(std::string(elem->string), value);
                     LOG(INFO)
                         << "Found key value: " << std::string(elem->string)
@@ -1633,6 +1650,10 @@ bool CameraItof::isConvertibleToDouble(const std::string &str) {
     } catch (...) {
     }
     return result;
+}
+
+void CameraItof::dropFirstFrame(bool dropFrame) {
+    m_dropFirstFrame = dropFrame;
 }
 
 aditof::Status

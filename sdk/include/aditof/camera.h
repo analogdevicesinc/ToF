@@ -568,6 +568,13 @@ class SDK_API Camera {
      */
     virtual aditof::Status
     setSensorConfiguration(const std::string &sensorConf) = 0;
+
+    /**
+     * @brief Allow drop first frame
+     * @param dropFrame - Drop the first frame if true
+     * @return void
+     */
+    virtual void dropFirstFrame(bool dropFrame) = 0;
 };
 
 } // namespace aditof

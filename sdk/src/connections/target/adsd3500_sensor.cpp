@@ -559,7 +559,7 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     struct v4l2_format fmt;
     struct v4l2_buffer buf;
     size_t length, offset;
-    
+
     m_implData->frameType = type;
     aditof::DepthSensorFrameType tempType = type;
 
