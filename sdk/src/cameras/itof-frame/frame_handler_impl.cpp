@@ -36,6 +36,8 @@
 #else
 #include <aditof/log.h>
 #endif
+#include <cstring>
+
 using namespace aditof;
 
 FrameHandlerImpl::FrameHandlerImpl()
