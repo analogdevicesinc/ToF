@@ -34,7 +34,6 @@ option(NXP "Set to ON when building on NXP" OFF)
 option(NVIDIA "Set to ON when building on NVIDIA" OFF)
 option(WITH_PROTOBUF_DEPENDENCY "Build with PROTOBUF dependency?" ON)
 option(USE_DEPTH_COMPUTE_OPENSOURCE "Use an open source implementation?" OFF)
-option(USE_ADSD3030 "Is the imager of type ADSD3030?" OFF)
 
 ################################## Git ########################################
 include(FindGit OPTIONAL)
@@ -91,10 +90,6 @@ endif()
 
 if(CI_BUILD)
     set(USE_DEPTH_COMPUTE_OPENSOURCE ON)
-endif()
-
-if (USE_ADSD3030)
-        add_definitions(-DADSD3030)
 endif()
 
 if (WITH_NETWORK)
