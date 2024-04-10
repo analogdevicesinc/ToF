@@ -38,7 +38,11 @@
 #include <cmath>
 #include <fcntl.h>
 #include <fstream>
+#ifdef USE_GLOG
 #include <glog/logging.h>
+#else
+#include <aditof/log.h>
+#endif
 #include <linux/videodev2.h>
 #include <memory>
 #include <sstream>
