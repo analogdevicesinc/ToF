@@ -1490,21 +1490,11 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
             } // switch (imager_version)
         } else {
             status = Status::OK;
-            LOG(WARNING)
-                << "Failed to read imager type and CCB version (command "
-                   "0x0032). Possibly command is not implemented on the "
-                   "current adsd3500 firmware.";
+            LOG(ERROR) << "Failed to read imager type and CCB version (command "
+                          "0x0032). Possibly command is not implemented on the "
+                          "current adsd3500 firmware.";
+            return aditof::Status::UNAVAILABLE;
         }
-    }
-
-    if (m_implData->imagerType == ImagerType::IMAGER_UNKNOWN) {
-        LOG(WARNING) << "Since the image type is unknown, fall back on compile "
-                        "flag to determine imager type";
-#ifdef ADSD3030 // TO DO: remove this fallback mechanism once we no longer support old firmwares that don't support command 0x32
-        m_implData->imagerType = ImagerType::IMAGER_ADSD3030;
-#else
-        m_implData->imagerType = ImagerType::IMAGER_ADSD3100;
-#endif
     }
 
     if (m_implData->ccbVersion != CCBVersion::CCB_UNKNOWN) {
