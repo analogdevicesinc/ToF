@@ -187,18 +187,18 @@ PYBIND11_MODULE(aditofpython, m) {
         .def_readwrite("connectionType",
                        &aditof::SensorDetails::connectionType);
 
-    py::class_<aditof::DepthSensorFrameContent>(m, "DepthSensorFrameContent")
-        .def(py::init<>())
-        .def_readwrite("type", &aditof::DepthSensorFrameContent::type)
-        .def_readwrite("width", &aditof::DepthSensorFrameContent::width)
-        .def_readwrite("height", &aditof::DepthSensorFrameContent::height);
+    // py::class_<aditof::DepthSensorFrameContent>(m, "DepthSensorFrameContent")
+    //     .def(py::init<>())
+    //     .def_readwrite("type", &aditof::DepthSensorFrameContent::type)
+    //     .def_readwrite("width", &aditof::DepthSensorFrameContent::width)
+    //     .def_readwrite("height", &aditof::DepthSensorFrameContent::height);
 
-    py::class_<aditof::DepthSensorFrameType>(m, "DepthSensorFrameType")
-        .def(py::init<>())
-        .def_readwrite("type", &aditof::DepthSensorFrameType::type)
-        .def_readwrite("content", &aditof::DepthSensorFrameType::content)
-        .def_readwrite("width", &aditof::DepthSensorFrameType::width)
-        .def_readwrite("height", &aditof::DepthSensorFrameType::height);
+    // py::class_<aditof::DepthSensorFrameType>(m, "DepthSensorFrameType")
+    //     .def(py::init<>())
+    //     .def_readwrite("type", &aditof::DepthSensorFrameType::type)
+    //     .def_readwrite("content", &aditof::DepthSensorFrameType::content)
+    //     .def_readwrite("width", &aditof::DepthSensorFrameType::width)
+    //     .def_readwrite("height", &aditof::DepthSensorFrameType::height);
 
     // Helpers
 
