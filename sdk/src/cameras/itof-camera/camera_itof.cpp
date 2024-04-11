@@ -399,7 +399,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     }
 
     status = m_depthSensor->getFrameTypeDetails(frameType, m_frameDetails);
-    if(status != Status::OK) {
+    if (status != Status::OK) {
         LOG(ERROR) << "Failed to get frame type details!";
         return status;
     }
@@ -428,7 +428,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         if (item == "xyz") {
             fDataDetails.subelementsPerElement = 3;
         } else if (item == "raw") {
-            fDataDetails.width =  m_frameDetails.frameWidthInBytes;
+            fDataDetails.width = m_frameDetails.frameWidthInBytes;
             fDataDetails.height = m_frameDetails.frameHeightInBytes;
             fDataDetails.subelementSize = 1;
             fDataDetails.subelementsPerElement = 1;
@@ -495,7 +495,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     // If we compute XYZ then prepare the XYZ tables which depend on the mode
     if (m_xyzEnabled && !m_pcmFrame) {
         uint8_t mode = m_frameDetails.modeNumber;
-            
+
         const int GEN_XYZ_ITERATIONS = 20;
         TofiXYZDealiasData *pDealias = &m_xyz_dealias_data[mode];
 
@@ -503,12 +503,10 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         int ret = Algorithms::GenerateXYZTables(
             &m_xyzTable.p_x_table, &m_xyzTable.p_y_table, &m_xyzTable.p_z_table,
             &(pDealias->camera_intrinsics), pDealias->n_sensor_rows,
-            pDealias->n_sensor_cols,
-           m_frameDetails.frameWidthInBytes,
-            m_frameDetails.frameHeightInBytes,
-            pDealias->n_offset_rows, pDealias->n_offset_cols,
-            pDealias->row_bin_factor, pDealias->col_bin_factor,
-            GEN_XYZ_ITERATIONS);
+            pDealias->n_sensor_cols, m_frameDetails.frameWidthInBytes,
+            m_frameDetails.frameHeightInBytes, pDealias->n_offset_rows,
+            pDealias->n_offset_cols, pDealias->row_bin_factor,
+            pDealias->col_bin_factor, GEN_XYZ_ITERATIONS);
         if (ret != 0 || !m_xyzTable.p_x_table || !m_xyzTable.p_y_table ||
             !m_xyzTable.p_z_table) {
             LOG(ERROR) << "Failed to generate the XYZ tables";
@@ -548,8 +546,8 @@ aditof::Status CameraItof::getAvailableFrameTypes(
     Status status = Status::OK;
     availableFrameTypes.clear();
 
-    for (const auto &frameType : m_availableSensorFrameTypes) {
-        availableFrameTypes.emplace_back(frameType.mode);
+    for (const auto &frameType : m_availableFrameTypesName) {
+        availableFrameTypes.emplace_back(frameType);
     }
 
     return status;
@@ -607,7 +605,8 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
         frame->getData("xyz", &xyzFrame);
 
         Algorithms::ComputeXYZ((const uint16_t *)depthFrame, &m_xyzTable,
-                               (int16_t *)xyzFrame,m_frameDetails.baseResolutionHeight,
+                               (int16_t *)xyzFrame,
+                               m_frameDetails.baseResolutionHeight,
                                m_frameDetails.baseResolutionWidth);
     }
 
