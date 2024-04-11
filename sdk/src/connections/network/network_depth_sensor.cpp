@@ -523,18 +523,10 @@ NetworkDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         ->set_base_resolution_height(type.baseResolutionHeight);
     net->send_buff[m_sensorIndex].mutable_frame_type()->set_metadata_size(
         type.metadataSize);
-
-    // auto protoFrameContent =
-    //     net->send_buff[m_sensorIndex].mutable_sensor_frame_type();
-    // protoFrameContent->set_mode(type.mode);
-    // protoFrameContent->set_frame_content(type.frameContent);
-    // protoFrameContent->set_modeNuber(type.modeNumber);
-    // protoFrameContent->set_pixelFormatIndex(type.pixelFormatIndex);
-    // protoFrameContent->set_frameWidthInBytes(type.frameWidthInBytes);
-    // protoFrameContent->set_frameHeightInBytes(type.frameHeightInBytes);
-    // protoFrameContent->set_baseResolutionWidth(type.baseResolutionWidth);
-    // protoFrameContent->set_baseResolutionHeight(type.baseResolutionHeight);
-    // protoFrameContent->set_metadataSize(type.metadataSize);
+    auto content = net->send_buff[m_sensorIndex].mutable_frame_type();
+    for (int i = 0; i < type.frameContent.size(); i++) {
+        content->add_frame_content(type.frameContent.at(i));
+    }
 
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 
