@@ -551,8 +551,8 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         aditof::Status status = camDepthSensor->setFrameType(aditofFrameType);
 
         if (status == aditof::Status::OK) {
-            int width_tmp = aditofFrameType.frameWidthInBytes;
-            int height_tmp = aditofFrameType.frameHeightInBytes;
+            int width_tmp = aditofFrameType.baseResolutionWidth;
+            int height_tmp = aditofFrameType.baseResolutionHeight;
 
             if (aditofFrameType.mode == "pcm-native") {
                 processedFrameSize = width_tmp * height_tmp;
