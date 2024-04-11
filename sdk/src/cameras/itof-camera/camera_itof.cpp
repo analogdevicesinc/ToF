@@ -710,6 +710,12 @@ aditof::Status setAttributesByMode(aditof::Frame &frame,
 }
 
 aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
+#ifdef TIME_PROFILING
+    using namespace std::chrono;
+
+    steady_clock::time_point rf_t0 = steady_clock::now();
+#endif
+
     using namespace aditof;
     Status status = Status::OK;
     ModeInfo::modeInfo aModeInfo;
@@ -748,13 +754,21 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
         LOG(WARNING) << "getframe failed to allocated valid frame";
         return status;
     }
-
+#ifdef TIME_PROFILING
+    steady_clock::time_point sgf_t0 = steady_clock::now();
+#endif
     status = m_depthSensor->getFrame(frameDataLocation);
+#ifdef TIME_PROFILING
+    steady_clock::time_point sgf_t1 = steady_clock::now();
+#endif
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to get frame from device";
         return status;
     }
 
+#ifdef TIME_PROFILING
+    steady_clock::time_point cxyz_t0 = steady_clock::now();
+#endif
     // The incoming sensor frames are already processed. Need to just create XYZ data
     if (m_xyzEnabled) {
         uint16_t *depthFrame;
@@ -762,11 +776,13 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
 
         frame->getData("depth", &depthFrame);
         frame->getData("xyz", &xyzFrame);
-
         Algorithms::ComputeXYZ((const uint16_t *)depthFrame, &m_xyzTable,
                                (int16_t *)xyzFrame, m_details.frameType.height,
                                m_details.frameType.width);
     }
+#ifdef TIME_PROFILING
+    steady_clock::time_point cxyz_t1 = steady_clock::now();
+#endif
 
     Metadata metadata;
     status = frame->getMetadataStruct(metadata);
@@ -806,6 +822,47 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
     metadata.xyzEnabled = m_xyzEnabled;
     memcpy(reinterpret_cast<uint8_t *>(metadataLocation),
            reinterpret_cast<uint8_t *>(&metadata), sizeof(metadata));
+
+#ifdef TIME_PROFILING
+    steady_clock::time_point rf_t1 = steady_clock::now();
+#endif
+
+#ifdef TIME_PROFILING
+    // Measure execution times, display statistics
+    auto request_frame_elapsed_time =
+        std::chrono::duration_cast<std::chrono::microseconds>(rf_t1 - rf_t0);
+    auto compute_xyz_elapsed_time =
+        std::chrono::duration_cast<std::chrono::microseconds>(cxyz_t1 -
+                                                              cxyz_t0);
+    auto sensor_get_frame_elapsed_time =
+        std::chrono::duration_cast<std::chrono::microseconds>(sgf_t1 - sgf_t0);
+
+    auto total_profiled_time =
+        compute_xyz_elapsed_time + sensor_get_frame_elapsed_time;
+
+    std::cout << "CameraItof::requestFrame() took: "
+              << request_frame_elapsed_time.count() << "us" << std::endl;
+    std::cout << "|--> DepthSensorInterface::getFrame() took: "
+              << sensor_get_frame_elapsed_time.count() << "us"
+              << "("
+              << ((double)sensor_get_frame_elapsed_time.count() /
+                  request_frame_elapsed_time.count()) *
+                     100.0
+              << "%)" << std::endl;
+    std::cout << "|--> Algorithms::computeXYZ() took: "
+              << compute_xyz_elapsed_time.count() << "us"
+              << "("
+              << ((double)compute_xyz_elapsed_time.count() /
+                  request_frame_elapsed_time.count()) *
+                     100.0
+              << "%)" << std::endl;
+    std::cout << "Total profiled time: " << total_profiled_time.count() << "us"
+              << "("
+              << ((double)total_profiled_time.count() /
+                  request_frame_elapsed_time.count()) *
+                     100.0
+              << "%)" << std::endl;
+#endif
 
     return Status::OK;
 }
