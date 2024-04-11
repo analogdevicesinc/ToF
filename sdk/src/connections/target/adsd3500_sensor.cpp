@@ -168,9 +168,8 @@ Adsd3500Sensor::~Adsd3500Sensor() {
         for (unsigned int i = 0; i < dev->nVideoBuffers; i++) {
             if (munmap(dev->videoBuffers[i].start,
                        dev->videoBuffers[i].length) == -1) {
-                LOG(WARNING)
-                    << "munmap error "
-                    << "errno: " << errno << " error: " << strerror(errno);
+                LOG(WARNING) << "munmap error " << "errno: " << errno
+                             << " error: " << strerror(errno);
             }
         }
         free(dev->videoBuffers);
@@ -178,16 +177,16 @@ Adsd3500Sensor::~Adsd3500Sensor() {
         if (dev->fd != -1) {
             if (close(dev->fd) == -1) {
                 LOG(WARNING)
-                    << "close m_implData->fd error "
-                    << "errno: " << errno << " error: " << strerror(errno);
+                    << "close m_implData->fd error " << "errno: " << errno
+                    << " error: " << strerror(errno);
             }
         }
 
         if (dev->sfd != -1) {
             if (close(dev->sfd) == -1) {
                 LOG(WARNING)
-                    << "close m_implData->sfd error "
-                    << "errno: " << errno << " error: " << strerror(errno);
+                    << "close m_implData->sfd error " << "errno: " << errno
+                    << " error: " << strerror(errno);
             }
         }
     }
@@ -402,16 +401,15 @@ aditof::Status Adsd3500Sensor::start() {
             buf.length = 1;
 
             if (xioctl(dev->fd, VIDIOC_QBUF, &buf) == -1) {
-                LOG(WARNING)
-                    << "mmap error "
-                    << "errno: " << errno << " error: " << strerror(errno);
+                LOG(WARNING) << "mmap error " << "errno: " << errno
+                             << " error: " << strerror(errno);
                 return Status::GENERIC_ERROR;
             }
         }
 
         if (xioctl(dev->fd, VIDIOC_STREAMON, &dev->videoBuffersType) != 0) {
-            LOG(WARNING) << "VIDIOC_STREAMON error "
-                         << "errno: " << errno << " error: " << strerror(errno);
+            LOG(WARNING) << "VIDIOC_STREAMON error " << "errno: " << errno
+                         << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
         }
 
@@ -436,8 +434,8 @@ aditof::Status Adsd3500Sensor::stop() {
         LOG(INFO) << "Stopping device";
 
         if (xioctl(dev->fd, VIDIOC_STREAMOFF, &dev->videoBuffersType) != 0) {
-            LOG(WARNING) << "VIDIOC_STREAMOFF error "
-                         << "errno: " << errno << " error: " << strerror(errno);
+            LOG(WARNING) << "VIDIOC_STREAMOFF error " << "errno: " << errno
+                         << " error: " << strerror(errno);
             return Status::GENERIC_ERROR;
         }
 
@@ -482,8 +480,8 @@ aditof::Status Adsd3500Sensor::setModeByIndex(uint8_t modeIndex) {
     ctrl.value = modeIndex;
 
     if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
-        LOG(WARNING) << "Setting Mode error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "Setting Mode error " << "errno: " << errno
+                     << " error: " << strerror(errno);
         status = Status::GENERIC_ERROR;
     }
 
@@ -524,9 +522,8 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         for (unsigned int i = 0; i < dev->nVideoBuffers; i++) {
             if (munmap(dev->videoBuffers[i].start,
                        dev->videoBuffers[i].length) == -1) {
-                LOG(WARNING)
-                    << "munmap error "
-                    << "errno: " << errno << " error: " << strerror(errno);
+                LOG(WARNING) << "munmap error " << "errno: " << errno
+                             << " error: " << strerror(errno);
             }
         }
         free(dev->videoBuffers);
@@ -534,16 +531,16 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         if (dev->fd != -1) {
             if (close(dev->fd) == -1) {
                 LOG(WARNING)
-                    << "close m_implData->fd error "
-                    << "errno: " << errno << " error: " << strerror(errno);
+                    << "close m_implData->fd error " << "errno: " << errno
+                    << " error: " << strerror(errno);
             }
         }
 
         if (dev->sfd != -1) {
             if (close(dev->sfd) == -1) {
                 LOG(WARNING)
-                    << "close m_implData->sfd error "
-                    << "errno: " << errno << " error: " << strerror(errno);
+                    << "close m_implData->sfd error " << "errno: " << errno
+                    << " error: " << strerror(errno);
             }
         }
     }
@@ -580,8 +577,7 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
                 for (unsigned int i = 0; i < dev->nVideoBuffers; i++) {
                     if (munmap(dev->videoBuffers[i].start,
                                dev->videoBuffers[i].length) == -1) {
-                        LOG(WARNING) << "munmap error "
-                                     << "errno: " << errno
+                        LOG(WARNING) << "munmap error " << "errno: " << errno
                                      << " error: " << strerror(errno);
                         return Status::GENERIC_ERROR;
                     }
@@ -595,8 +591,8 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
                 if (xioctl(dev->fd, VIDIOC_REQBUFS, &req) == -1) {
                     LOG(WARNING)
-                        << "VIDIOC_REQBUFS error "
-                        << "errno: " << errno << " error: " << strerror(errno);
+                        << "VIDIOC_REQBUFS error " << "errno: " << errno
+                        << " error: " << strerror(errno);
                     return Status::GENERIC_ERROR;
                 }
             } else if (dev->nVideoBuffers) {
@@ -646,9 +642,8 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
             req.memory = V4L2_MEMORY_MMAP;
 
             if (xioctl(dev->fd, VIDIOC_REQBUFS, &req) == -1) {
-                LOG(WARNING)
-                    << "VIDIOC_REQBUFS error "
-                    << "errno: " << errno << " error: " << strerror(errno);
+                LOG(WARNING) << "VIDIOC_REQBUFS error " << "errno: " << errno
+                             << " error: " << strerror(errno);
                 return Status::GENERIC_ERROR;
             }
 
@@ -671,8 +666,8 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
 
                 if (xioctl(dev->fd, VIDIOC_QUERYBUF, &buf) == -1) {
                     LOG(WARNING)
-                        << "VIDIOC_QUERYBUF error "
-                        << "errno: " << errno << " error: " << strerror(errno);
+                        << "VIDIOC_QUERYBUF error " << "errno: " << errno
+                        << " error: " << strerror(errno);
                     return Status::GENERIC_ERROR;
                 }
 
@@ -689,9 +684,8 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
                          dev->fd, offset);
 
                 if (dev->videoBuffers[dev->nVideoBuffers].start == MAP_FAILED) {
-                    LOG(WARNING)
-                        << "mmap error "
-                        << "errno: " << errno << " error: " << strerror(errno);
+                    LOG(WARNING) << "mmap error " << "errno: " << errno
+                                 << " error: " << strerror(errno);
                     return Status::GENERIC_ERROR;
                 }
 
@@ -880,7 +874,7 @@ aditof::Status Adsd3500Sensor::getControl(const std::string &control,
             return Status::OK;
         }
 
-        if(control == "depthComputeOpenSource"){
+        if (control == "depthComputeOpenSource") {
             value = m_controls.at("depthComputeOpenSource");
             return Status::OK;
         }
@@ -1465,8 +1459,8 @@ aditof::Status Adsd3500Sensor::waitForBufferPrivate(struct VideoDev *dev) {
     r = select(dev->fd + 1, &fds, NULL, NULL, &tv);
 
     if (r == -1) {
-        LOG(WARNING) << "select error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "select error " << "errno: " << errno
+                     << " error: " << strerror(errno);
         return aditof::Status::GENERIC_ERROR;
     } else if (r == 0) {
         LOG(WARNING) << "select timeout";
@@ -1491,8 +1485,8 @@ Adsd3500Sensor::dequeueInternalBufferPrivate(struct v4l2_buffer &buf,
     buf.m.planes = dev->planes;
 
     if (xioctl(dev->fd, VIDIOC_DQBUF, &buf) == -1) {
-        LOG(WARNING) << "VIDIOC_DQBUF error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "VIDIOC_DQBUF error " << "errno: " << errno
+                     << " error: " << strerror(errno);
         switch (errno) {
         case EAGAIN:
         case EIO:
@@ -1529,8 +1523,8 @@ Adsd3500Sensor::enqueueInternalBufferPrivate(struct v4l2_buffer &buf,
         dev = &m_implData->videoDevs[0];
 
     if (xioctl(dev->fd, VIDIOC_QBUF, &buf) == -1) {
-        LOG(WARNING) << "VIDIOC_QBUF error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+        LOG(WARNING) << "VIDIOC_QBUF error " << "errno: " << errno
+                     << " error: " << strerror(errno);
         return aditof::Status::GENERIC_ERROR;
     }
 
@@ -1681,8 +1675,7 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
             uint16_t height2 = 256;
 
             // We read dealias parameters to find out the width and height for mode 5
-            status = m_depthSensor->adsd3500_read_payload_cmd(
-                0x02, tempDealiasParams, 32);
+            status = adsd3500_read_payload_cmd(0x02, tempDealiasParams, 32);
             if (status != Status::OK) {
                 LOG(ERROR) << "Failed to read dealias parameters for adsd3500!";
                 return status;
@@ -1701,6 +1694,12 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
                 m_modeSelector.setControl("mixedModes", "0");
             }
         }
+    }
+
+    status = m_modeSelector.getAvailableFrameTypes(m_availableFrameTypes);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to get available frame types for the "
+                      "current configuration.";
     }
 
     return status;
