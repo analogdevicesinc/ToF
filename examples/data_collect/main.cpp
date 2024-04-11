@@ -542,7 +542,7 @@ int main(int argc, char *argv[]) {
 
             frame_size = rawFrameDetails.width * rawFrameDetails.height *
                          rawFrameDetails.subelementsPerElement *
-                         rawFrameDetails.subelementSize;
+                         rawFrameDetails.subelementSize * 2;
             frameType = "raw";
         } else {
             LOG(WARNING) << "Can't recognize frame data type!";
