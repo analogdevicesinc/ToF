@@ -478,6 +478,7 @@ NetworkDepthSensor::getFrameTypeDetails(const std::string &frameName,
                                        .base_resolution_height();
     details.metadataSize =
         net->recv_buff[m_sensorIndex].depth_sensor_frame_type().metadata_size();
+    details.frameContent.clear();
     for (int i = 0; i < net->recv_buff[m_sensorIndex]
                             .depth_sensor_frame_type()
                             .frame_content_size();
