@@ -400,12 +400,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (modeName.empty()) {
-        status = camera->getFrameTypeNameFromId(mode, modeName);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Mode: " << mode
-                       << " is invalid for this type of camera!";
-            return 0;
-        }
+        //TO DO: convert mode number/name once getFrameTypeDetails is added in the public api
     }
 
     if (loadconfigurationFile) {
