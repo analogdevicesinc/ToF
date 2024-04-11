@@ -94,16 +94,6 @@ class SDK_API Camera {
                            const std::string &modeFilename = {}) = 0;
 
     /**
-     * \deprecated
-     * @brief Returns all the modes that are supported by the camera. **DEPRECATED!**
-     * NOTE: This method is deprecated. Use 'getAvailableFrameTypes' instead.
-     * @param[out] availableModes
-     * @return Status
-     */
-    virtual Status
-    getAvailableModes(std::vector<std::string> &availableModes) const = 0;
-
-    /**
      * @brief Set the camera frame type to the given type
      * @param frameType - The frame type of the camera
      * @return Status
@@ -139,14 +129,6 @@ class SDK_API Camera {
      */
     virtual Status getAvailableFrameTypes(
         std::vector<std::string> &availableFrameTypes) const = 0;
-
-    /**
-     * @brief Returns the name of the frame type for the given ID
-     * @param id - the ID of the frame type
-     * @param[out] name - will be set with the name of the frame type in case of success
-     * @return Status
-     */
-    virtual Status getFrameTypeNameFromId(int id, std::string &name) const = 0;
 
     /**
      * @brief Captures data from the camera and assigns it to the given frame.
