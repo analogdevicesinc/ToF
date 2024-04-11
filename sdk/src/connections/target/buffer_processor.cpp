@@ -53,6 +53,10 @@
 
 #include "buffer_processor.h"
 
+#ifdef TIME_PROFILING
+#include <chrono>
+#endif
+
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
 
 static int xioctl(int fh, unsigned int request, void *arg) {
@@ -208,6 +212,12 @@ aditof::Status BufferProcessor::setProcessorProperties(
 }
 
 aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
+#ifdef TIME_PROFILING
+    using namespace std::chrono;
+
+    steady_clock::time_point pb_t0 = steady_clock::now();
+#endif
+
     using namespace aditof;
     struct v4l2_buffer buf[4];
     struct VideoDev *dev;
@@ -232,13 +242,22 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
         return status;
     }
 
+#ifdef TIME_PROFILING
+    steady_clock::time_point mc_t0 = steady_clock::now();
+#endif
     pdata_user_space = (uint8_t *)malloc(sizeof(uint8_t) * buf_data_len);
     memcpy(pdata_user_space, pdata, buf_data_len);
+#ifdef TIME_PROFILING
+    steady_clock::time_point mc_t1 = steady_clock::now();
+#endif
 
     uint16_t *tempDepthFrame = m_tofiComputeContext->p_depth_frame;
     uint16_t *tempAbFrame = m_tofiComputeContext->p_ab_frame;
     float *tempConfFrame = m_tofiComputeContext->p_conf_frame;
 
+#ifdef TIME_PROFILING
+    steady_clock::time_point tc_t0 = steady_clock::now();
+#endif
     if (buffer != nullptr) {
         m_tofiComputeContext->p_depth_frame = buffer;
         m_tofiComputeContext->p_ab_frame =
@@ -274,6 +293,9 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
         ::write(m_outputVideoDev->fd, m_processedBuffer,
                 m_outputFrameWidth * m_outputFrameHeight);
     }
+#ifdef TIME_PROFILING
+    steady_clock::time_point tc_t1 = steady_clock::now();
+#endif
 
     m_tofiComputeContext->p_depth_frame = tempDepthFrame;
     m_tofiComputeContext->p_ab_frame = tempAbFrame;
@@ -286,6 +308,48 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
     if (status != Status::OK) {
         return status;
     }
+
+#ifdef TIME_PROFILING
+    steady_clock::time_point pb_t1 = steady_clock::now();
+#endif
+
+#ifdef TIME_PROFILING
+    // Measure execution times, display statistics
+    auto process_buffer_elapsed_time =
+        std::chrono::duration_cast<std::chrono::microseconds>(pb_t1 - pb_t0);
+    auto tofi_compute_elapsed_time =
+        std::chrono::duration_cast<std::chrono::microseconds>(tc_t1 - tc_t0);
+    auto frame_memcpy_elapsed_time =
+        std::chrono::duration_cast<std::chrono::microseconds>(mc_t1 - mc_t0);
+
+    auto total_profiled_time =
+        tofi_compute_elapsed_time + frame_memcpy_elapsed_time;
+
+    std::cout << std::endl;
+    std::cout << "BufferProcessor::processBuffer() took: "
+              << process_buffer_elapsed_time.count() << "us" << std::endl;
+    std::cout << "|--> TofiCompute() took: "
+              << tofi_compute_elapsed_time.count() << "us"
+              << "("
+              << ((double)tofi_compute_elapsed_time.count() /
+                  process_buffer_elapsed_time.count()) *
+                     100.0
+              << "%)" << std::endl;
+    std::cout << "|--> Frame memcpy() took: "
+              << frame_memcpy_elapsed_time.count() << "us"
+              << "("
+              << ((double)frame_memcpy_elapsed_time.count() /
+                  process_buffer_elapsed_time.count()) *
+                     100.0
+              << "%)" << std::endl;
+    std::cout << "Total profiled time: " << total_profiled_time.count() << "us"
+              << "("
+              << ((double)total_profiled_time.count() /
+                  process_buffer_elapsed_time.count()) *
+                     100.0
+              << "%)" << std::endl;
+    std::cout << std::endl;
+#endif
 
     return status;
 }
