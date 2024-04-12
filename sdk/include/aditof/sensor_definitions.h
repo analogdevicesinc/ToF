@@ -61,17 +61,43 @@ struct SensorDetails {
 };
 
 /**
- * @struct DepthSensorFrameContent
- * @brief Describes the content of a frame. For example: A frame could contain
- * depth and IR data.
+ * @struct DriverConfiguration
+ * @brief Describes the configuration of the used driver
  */
 struct DriverConfiguration {
+    /**
+     * @brief Stores depth data
+    */
     std::string depthBits;
+
+    /**
+     * @brief Stores ab data
+    */
     std::string abBits;
+
+    /**
+     * @brief Stores conf data
+    */
     std::string confBits;
+
+    /**
+     * @brief Stores value from driver
+    */
     std::string pixelFormat;
+
+    /**
+     * @brief Stores driver width
+    */
     int driverWidth;
+
+    /**
+     * @brief Stores driver height
+    */
     int driverHeigth;
+
+    /**
+     * @brief Index of two possbile values sensor values (8bit, 12/16bit)
+    */
     int pixelFormatIndex;
 };
 
@@ -80,20 +106,54 @@ struct DriverConfiguration {
  * @brief Describes the type of entire frame that a depth sensor can capture and transmit
  */
 struct DepthSensorFrameType {
+    /**
+     * @brief Name of the frame
+    */
     std::string mode;
+
+    /**
+     * @brief Stores the content of each frame
+    */
     std::vector<std::string> frameContent;
+
+    /**
+     * @brief Number associated with the mode
+    */
     uint8_t modeNumber;
+
+    /**
+     * @brief Index of two possbile values sensor values (8bit, 12/16bit) 
+    */
     int pixelFormatIndex;
 
-    //driver width/height. Can be used for both chipRaw and imagerRaw.
+    /**
+     * @brief Driver width, can be used for both chipRaw and imagerRaw.
+    */
     int frameWidthInBytes;
+
+    /**
+     * @brief Driver height, can be used for both chipRaw and imagerRaw.
+    */
     int frameHeightInBytes;
 
-    //processed data witdh/height
+    /**
+     * @brief Processed data witdh.
+    */
     int baseResolutionWidth;
+
+    /**
+     * @brief Processed data height.
+    */
     int baseResolutionHeight;
 
+    /**
+     * @brief Stores the size of metadata
+    */
     int metadataSize;
+
+    /**
+     * @brief Stores the content of a frame
+    */
     std::vector<DriverConfiguration> driverConfiguration;
 };
 
