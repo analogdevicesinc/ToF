@@ -271,10 +271,10 @@ PYBIND11_MODULE(aditofpython, m) {
         .def("setMode", &aditof::Camera::setMode, py::arg("mode"),
              py::arg("modeFilename") = "")
         .def(
-            "getAvailableModes",
+            "getAvailableControls",
             [](const aditof::Camera &camera, py::list modes) {
                 std::vector<std::string> modeList;
-                aditof::Status status = camera.getAvailableModes(modeList);
+                aditof::Status status = camera.getAvailableControls(modeList);
 
                 for (const auto &mode : modeList)
                     modes.append(mode);
@@ -322,13 +322,13 @@ PYBIND11_MODULE(aditofpython, m) {
                 return camera.setIniParams(cppParams);
             },
             py::arg("params"))
-        .def(
-            "getFrameTypeNameFromId",
-            [](const aditof::Camera &camera, int id, std::string name) {
-                aditof::Status status = camera.getFrameTypeNameFromId(id, name);
-                return std::make_pair(status, name);
-            },
-            py::arg("id"), py::arg("name"))
+        // .def(
+        //     "getFrameTypeNameFromId",
+        //     [](const aditof::Camera &camera, int id, std::string name) {
+        //         aditof::Status status = camera.getFrameTypeNameFromId(id, name);
+        //         return std::make_pair(status, name);
+        //     },
+        //     py::arg("id"), py::arg("name"))
         .def("requestFrame", &aditof::Camera::requestFrame, py::arg("frame"))
         .def("getDetails", &aditof::Camera::getDetails, py::arg("details"))
         .def(
