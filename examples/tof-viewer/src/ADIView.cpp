@@ -200,7 +200,7 @@ void ADIView::render() {
 
                 // Place the camera in a specific mode
                 std::vector<std::string> modes;
-                camera1->getAvailableModes(modes);
+                camera1->getAvailableControls(modes);
 
                 // Create a TOF frame and request data from the TOF camera
                 aditof::Frame frame;
