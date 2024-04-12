@@ -130,7 +130,7 @@ struct FrameDetails {
 };
 
 /**
- * @struct Point3I
+ * @struct Point3I_sdk
  * @brief Holds the xyz values of a frame
  */
 struct Point3I_sdk {
