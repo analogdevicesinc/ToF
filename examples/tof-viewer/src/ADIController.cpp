@@ -85,7 +85,7 @@ ADIController::getAvailableModes(std::vector<std::string> &availableModes) {
         return availableModes;
     }
 
-    m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getAvailableModes(
+    m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getAvailableControls(
         availableModes);
     return availableModes;
 }
