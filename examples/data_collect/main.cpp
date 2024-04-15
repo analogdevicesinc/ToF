@@ -416,9 +416,9 @@ int main(int argc, char *argv[]) {
     std::string sensorName;
     status = depthSensor->getName(sensorName);
 
-    status = camera->setFrameType(modeName);
+    status = camera->setMode(modeName);
     if (status != Status::OK) {
-        LOG(ERROR) << "Could not set camera frame type!";
+        LOG(ERROR) << "Could not set camera mode!";
         return 0;
     }
 

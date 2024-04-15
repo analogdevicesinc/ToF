@@ -469,43 +469,8 @@ Adsd3500Sensor::getFrameTypeDetails(const std::string &frameName,
     return status;
 }
 
-aditof::Status Adsd3500Sensor::setModeByIndex(uint8_t modeIndex) {
-    using namespace aditof;
-    struct VideoDev *dev = &m_implData->videoDevs[0];
-    Status status = Status::OK;
-
-    static struct v4l2_control ctrl;
-
-    memset(&ctrl, 0, sizeof(ctrl));
-
-    ctrl.id = CTRL_SET_MODE;
-    ctrl.value = modeIndex;
-
-    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
-        LOG(WARNING) << "Setting Mode error "
-                     << "errno: " << errno << " error: " << strerror(errno);
-        status = Status::GENERIC_ERROR;
-    }
-
-    return status;
-}
-
-aditof::Status Adsd3500Sensor::setMode(const std::string &mode) {
-    uint8_t modeIndex;
-    aditof::Status status = aditof::Status::OK;
-    LOG(INFO) << "Setting camera mode to " << mode;
-
-    //get register value by mode index - nothing to do, the value corresponds to the index
-    //set register / control
-    status = setModeByIndex(m_implData->frameType.modeNumber);
-    if (status != aditof::Status::OK) {
-        return status;
-    }
-    return aditof::Status::OK;
-}
-
 aditof::Status
-Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
+Adsd3500Sensor::setMode(const aditof::DepthSensorFrameType &type) {
 
     using namespace aditof;
     Status status = Status::OK;
@@ -555,20 +520,28 @@ Adsd3500Sensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     }
 
     struct v4l2_requestbuffers req;
-    struct v4l2_format fmt;
     struct v4l2_buffer buf;
+    struct v4l2_format fmt;
     size_t length, offset;
 
     m_implData->frameType = type;
     aditof::DepthSensorFrameType tempType = type;
 
-    status = setMode(type.mode);
-    if (status != aditof::Status::OK) {
-        LOG(INFO) << "Failed to set camera mode";
+    dev = &m_implData->videoDevs[0];
+
+    static struct v4l2_control ctrl;
+
+    memset(&ctrl, 0, sizeof(ctrl));
+
+    ctrl.id = CTRL_SET_MODE;
+    ctrl.value = m_implData->frameType.modeNumber;
+
+    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
+        LOG(WARNING) << "Setting Mode error "
+                     << "errno: " << errno << " error: " << strerror(errno);
+        status = Status::GENERIC_ERROR;
         return status;
     }
-
-    dev = &m_implData->videoDevs[0];
 
     // Don't request buffers & set fromat for UVC context. It is already done in uvc-app/lib/v4l2.c
     if (m_hostConnectionType != ConnectionType::USB) {

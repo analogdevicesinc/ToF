@@ -98,12 +98,12 @@ class DepthSensorInterface {
                         aditof::DepthSensorFrameType &details) = 0;
 
     /**
-     * @brief Set the sensor frame type to the given type
+     * @brief Set the sensor frame mode to the given type
      * @param type - frame details structure containing the frame type
      * @return Status
      */
     virtual aditof::Status
-    setFrameType(const aditof::DepthSensorFrameType &type) = 0;
+    setMode(const aditof::DepthSensorFrameType &type) = 0;
 
     /**
      * @brief Request a frame from the sensor
