@@ -95,12 +95,14 @@ aditof::Status Adsd3500ModeSelector::getConfigurationTable(
 
     if (m_configuration == "standard") {
         if (m_controls["imagerType"] == "adsd3100") {
+            m_tableInUse = adsd3100_standardModes;
             for (auto modes : adsd3100_standardModes) {
                 if (m_controls["mode"] == modes.mode)
                     configurationTable = modes;
                 return aditof::Status::OK;
             }
         } else if (m_controls["imagerType"] == "adsd3030") {
+            m_tableInUse = adsd3030_standardModes;
             for (auto modes : adsd3030_standardModes) {
                 if (m_controls["mode"] == modes.mode) {
                     configurationTable = modes;
@@ -116,16 +118,19 @@ aditof::Status Adsd3500ModeSelector::getConfigurationTable(
 aditof::Status Adsd3500ModeSelector::updateConfigurationTable(
     DepthSensorFrameType &configurationTable) {
 
-    for (auto driverConf : configurationTable.driverConfiguration) {
-        if (driverConf.depthBits == m_controls["depthBits"] &&
-            driverConf.abBits == m_controls["abBits"] &&
-            driverConf.confBits == m_controls["confBits"] &&
-            driverConf.pixelFormat == m_controls["inputFormat"]) {
-            configurationTable.frameWidthInBytes = driverConf.driverWidth;
-            configurationTable.frameHeightInBytes = driverConf.driverHeigth;
-            configurationTable.pixelFormatIndex = driverConf.pixelFormatIndex;
+    for (auto tableInUse : m_tableInUse) {
+        for (auto driverConf : tableInUse.driverConfiguration) {
+            if (driverConf.depthBits == m_controls["depthBits"] &&
+                driverConf.abBits == m_controls["abBits"] &&
+                driverConf.confBits == m_controls["confBits"] &&
+                driverConf.pixelFormat == m_controls["inputFormat"]) {
+                configurationTable.frameWidthInBytes = driverConf.driverWidth;
+                configurationTable.frameHeightInBytes = driverConf.driverHeigth;
+                configurationTable.pixelFormatIndex =
+                    driverConf.pixelFormatIndex;
 
-            return aditof::Status::OK;
+                return aditof::Status::OK;
+            }
         }
     }
 
@@ -201,6 +206,15 @@ aditof::Status Adsd3500ModeSelector::setControl(const std::string &control,
     }
 
     m_controls[control] = value;
+
+    //ccbm will work only with standard modes
+    if (control == "imagerType") {
+        if (value == "adsd3100") {
+            m_tableInUse = adsd3100_standardModes;
+        } else if (value == "adsd3030") {
+            m_tableInUse = adsd3030_standardModes;
+        }
+    }
 
     return status;
 }
