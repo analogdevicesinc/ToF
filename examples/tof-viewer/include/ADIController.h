@@ -64,12 +64,6 @@ class ADIController {
     void setMode(const std::string &mode);
 
     /**
-		* @brief	Fetch all supported modes. The information comes directly from SDK
-		*/
-    std::vector<std::string>
-    getAvailableModes(std::vector<std::string> &availableModes);
-
-    /**
 		* @brief	Get camera temperature
 		*/
     std::pair<float, float> getTemperature();
