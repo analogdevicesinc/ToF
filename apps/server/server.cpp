@@ -527,7 +527,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
-    case SET_FRAME_TYPE: {
+    case SET_MODE: {
         aditof::DepthSensorFrameType aditofFrameType;
         aditofFrameType.mode = buff_recv.frame_type().mode();
         aditofFrameType.modeNumber = buff_recv.frame_type().mode_number();
@@ -548,7 +548,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                 buff_recv.frame_type().frame_content(i));
         }
 
-        aditof::Status status = camDepthSensor->setFrameType(aditofFrameType);
+        aditof::Status status = camDepthSensor->setMode(aditofFrameType);
 
         if (status == aditof::Status::OK) {
             int width_tmp = aditofFrameType.baseResolutionWidth;
@@ -915,7 +915,7 @@ void Initialize() {
     s_map_api_Values["Stop"] = STOP;
     s_map_api_Values["GetAvailableFrameTypes"] = GET_AVAILABLE_FRAME_TYPES;
     s_map_api_Values["GetFrameTypeDetails"] = GET_FRAME_TYPE_DETAILS;
-    s_map_api_Values["SetFrameType"] = SET_FRAME_TYPE;
+    s_map_api_Values["SetMode"] = SET_MODE;
     s_map_api_Values["GetFrame"] = GET_FRAME;
     s_map_api_Values["GetAvailableControls"] = GET_AVAILABLE_CONTROLS;
     s_map_api_Values["SetControl"] = SET_CONTROL;

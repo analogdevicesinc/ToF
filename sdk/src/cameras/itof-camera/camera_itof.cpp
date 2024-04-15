@@ -314,32 +314,21 @@ aditof::Status CameraItof::stop() {
     return status;
 }
 
-aditof::Status CameraItof::setMode(const std::string &mode,
-                                   const std::string &modeFilename = "") {
-    LOG(INFO) << "Chosen mode: " << mode;
-    m_details.mode = mode;
-
-    return aditof::Status::OK;
-}
-
-aditof::Status CameraItof::setFrameType(const std::string &frameType) {
+aditof::Status CameraItof::setMode(const std::string &mode) {
     using namespace aditof;
     Status status = Status::OK;
 
-    auto frameTypeIt = std::find_if(
+    auto modeIt = std::find_if(
         m_availableSensorFrameTypes.begin(), m_availableSensorFrameTypes.end(),
-        [&frameType](const DepthSensorFrameType &d) {
-            return (d.mode == frameType);
-        });
+        [&mode](const DepthSensorFrameType &d) { return (d.mode == mode); });
 
-    if (frameTypeIt == m_availableSensorFrameTypes.end()) {
-        LOG(WARNING) << "Frame type: " << frameType
-                     << " not supported by camera";
+    if (modeIt == m_availableSensorFrameTypes.end()) {
+        LOG(WARNING) << "Mode: " << mode << " not supported by camera";
         return Status::INVALID_ARGUMENT;
     }
 
     if (m_ini_depth_map.size() > 1) {
-        m_ini_depth = m_ini_depth_map[frameType];
+        m_ini_depth = m_ini_depth_map[mode];
     }
 
     if (m_details.connection == ConnectionType::USB) {
@@ -350,7 +339,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
         }
     }
 
-    if (frameType == "pcm-native") {
+    if (mode == "pcm-native") {
         m_pcmFrame = true;
     } else {
         m_pcmFrame = false;
@@ -359,7 +348,7 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
     UtilsIni::getKeyValuePairsFromIni(m_ini_depth, m_iniKeyValPairs);
     setAdsd3500WithIniParams(m_iniKeyValPairs);
     configureSensorFrameType();
-    setMode(frameType);
+    m_details.mode = mode;
 
     if (m_enableMetaDatainAB > 0) {
         if (!m_pcmFrame) {
@@ -392,25 +381,25 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
 
     LOG(INFO) << "Using ini file: " << m_ini_depth;
 
-    status = m_depthSensor->setFrameType(*frameTypeIt);
+    status = m_depthSensor->setMode(*modeIt);
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to set frame type";
         return status;
     }
 
-    status = m_depthSensor->getFrameTypeDetails(frameType, m_frameDetails);
+    status = m_depthSensor->getFrameTypeDetails(mode, m_frameDetails);
     if (status != Status::OK) {
         LOG(ERROR) << "Failed to get frame type details!";
         return status;
     }
 
     // Store the frame details in camera details
-    m_details.frameType.type = (*frameTypeIt).mode;
-    m_details.frameType.width = (*frameTypeIt).baseResolutionWidth;
-    m_details.frameType.height = (*frameTypeIt).baseResolutionHeight;
+    m_details.frameType.type = (*modeIt).mode;
+    m_details.frameType.width = (*modeIt).baseResolutionWidth;
+    m_details.frameType.height = (*modeIt).baseResolutionHeight;
     m_details.frameType.totalCaptures = 1;
     m_details.frameType.dataDetails.clear();
-    for (const auto &item : (*frameTypeIt).frameContent) {
+    for (const auto &item : (*modeIt).frameContent) {
         if (item == "xyz" && !m_xyzEnabled) {
             continue;
         }

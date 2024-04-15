@@ -263,7 +263,7 @@ UsbDepthSensor::getFrameTypeDetails(const std::string &frameName,
 }
 
 aditof::Status
-UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
+UsbDepthSensor::setMode(const aditof::DepthSensorFrameType &type) {
     using namespace aditof;
 
     Status status = Status::OK;
@@ -273,7 +273,7 @@ UsbDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
     auto frameTypeMsg = requestMsg.mutable_frame_type();
     UsbUtils::depthSensorFrameTypeToProtoMsg(type, frameTypeMsg);
     // Send request
-    requestMsg.set_func_name(usb_payload::FunctionName::SET_FRAME_TYPE);
+    requestMsg.set_func_name(usb_payload::FunctionName::SET_MODE);
     std::string requestStr;
     requestMsg.SerializeToString(&requestStr);
     status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);

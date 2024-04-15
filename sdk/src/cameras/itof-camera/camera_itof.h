@@ -54,9 +54,7 @@ class CameraItof : public aditof::Camera {
     aditof::Status initialize(const std::string &configFilepath = {}) override;
     aditof::Status start() override;
     aditof::Status stop() override;
-    aditof::Status setMode(const std::string &mode,
-                           const std::string &modeFilename) override;
-    aditof::Status setFrameType(const std::string &frameType) override;
+    aditof::Status setMode(const std::string &mode) override;
     aditof::Status getAvailableFrameTypes(
         std::vector<std::string> &availableFrameTypes) const override;
     aditof::Status requestFrame(aditof::Frame *frame) override;

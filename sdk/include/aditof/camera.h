@@ -81,24 +81,11 @@ class SDK_API Camera {
     virtual Status stop() = 0;
 
     /**
-     * * \deprecated
-     * @brief Puts the camera into the given mode. **DEPRECATED!**
-     * NOTE: This method is deprecated. Use 'setFrameType' instead.
+     * @brief Puts the camera into the given mode.
      * @param mode - The mode of the camera
-     * @param modeFilename - When there is a need to use a custom mode
-     * then mode parameter needs to be set to 'custom' and a firmware
-     * file needs to be provided.
      * @return Status
      */
-    virtual Status setMode(const std::string &mode,
-                           const std::string &modeFilename = {}) = 0;
-
-    /**
-     * @brief Set the camera frame type to the given type
-     * @param frameType - The frame type of the camera
-     * @return Status
-     */
-    virtual Status setFrameType(const std::string &frameType) = 0;
+    virtual Status setMode(const std::string &mode) = 0;
 
     /**
      * @brief Get the Depth Compute Library ini parameters

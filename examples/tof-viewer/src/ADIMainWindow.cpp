@@ -1457,7 +1457,7 @@ void ADIMainWindow::prepareCamera(std::string mode) {
         return;
     }
 
-    status = getActiveCamera()->setFrameType(mode);
+    status = getActiveCamera()->setMode(mode);
     if (status != aditof::Status::OK) {
         my_log.AddLog("Could not set camera mode!");
         return;
