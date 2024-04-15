@@ -76,7 +76,6 @@ void ADIController::setMode(const std::string &mode) {
     }
     auto camera = m_cameras[static_cast<unsigned int>(m_cameraInUse)];
     camera->setMode(mode);
-    //camera->setFrameType(mode);
 }
 
 std::vector<std::string>

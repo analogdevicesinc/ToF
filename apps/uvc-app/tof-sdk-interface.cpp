@@ -166,11 +166,11 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
         break;
     }
 
-    case uvc_payload::FunctionName::SET_FRAME_TYPE: {
+    case uvc_payload::FunctionName::SET_MODE: {
         aditof::DepthSensorFrameType frameType;
         convertProtoMsgToDepthSensorFrameType(request.frame_type(), frameType);
 
-        aditof::Status status = camDepthSensor->setFrameType(frameType);
+        aditof::Status status = camDepthSensor->setMode(frameType);
         response.set_status(static_cast<::uvc_payload::Status>(status));
 
         break;

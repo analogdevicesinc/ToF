@@ -196,7 +196,7 @@ void ADIView::render() {
                 // Choose the frame type the camera should produce
                 std::vector<std::string> frameTypes;
                 camera1->getAvailableFrameTypes(frameTypes);
-                status = camera1->setFrameType(frameTypes.front());
+                status = camera1->setMode(frameTypes.front());
 
                 // Place the camera in a specific mode
                 std::vector<std::string> modes;

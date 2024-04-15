@@ -56,7 +56,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     getFrameTypeDetails(const std::string &frameName,
                         aditof::DepthSensorFrameType &details) override;
     virtual aditof::Status
-    setFrameType(const aditof::DepthSensorFrameType &type) override;
+    setMode(const aditof::DepthSensorFrameType &type) override;
     virtual aditof::Status getFrame(uint16_t *buffer) override;
     virtual aditof::Status
     getAvailableControls(std::vector<std::string> &controls) const override;
@@ -139,9 +139,6 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
                                             struct VideoDev *dev = nullptr);
     aditof::Status enqueueInternalBufferPrivate(struct v4l2_buffer &buf,
                                                 struct VideoDev *dev = nullptr);
-
-    aditof::Status setModeByIndex(uint8_t modeIndex);
-    aditof::Status setMode(const std::string &mode);
     aditof::Status queryAdsd3500();
     aditof::Adsd3500Status convertIdToAdsd3500Status(int status);
     aditof::Status getIniParamsImpl(void *p_config_params, int params_group,

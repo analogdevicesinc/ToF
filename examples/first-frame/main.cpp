@@ -243,9 +243,9 @@ int main(int argc, char *argv[]) {
         //TO DO: convert mode number/name once getFrameTypeDetails is added in the public api
     }
 
-    status = camera->setFrameType(modeName);
+    status = camera->setMode(modeName);
     if (status != Status::OK) {
-        LOG(ERROR) << "Could not set camera frame type!";
+        LOG(ERROR) << "Could not set camera mode!";
         return 0;
     }
 
