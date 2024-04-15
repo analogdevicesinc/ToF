@@ -525,7 +525,6 @@ Adsd3500Sensor::setMode(const aditof::DepthSensorFrameType &type) {
     size_t length, offset;
 
     m_implData->frameType = type;
-    aditof::DepthSensorFrameType tempType = type;
 
     dev = &m_implData->videoDevs[0];
 
@@ -580,16 +579,14 @@ Adsd3500Sensor::setMode(const aditof::DepthSensorFrameType &type) {
 
             uint16_t width, height;
 
-            status = m_modeSelector.updateConfigurationTable(tempType);
+            status =
+                m_modeSelector.updateConfigurationTable(m_implData->frameType);
             if (status != Status::OK) {
                 LOG(ERROR) << "Invalid configuration provided!";
                 return status;
             }
 
-            width = tempType.frameWidthInBytes;
-            height = tempType.frameHeightInBytes;
-
-            if (tempType.pixelFormatIndex == 1) {
+            if (m_implData->frameType.pixelFormatIndex == 1) {
                 pixelFormat = V4L2_PIX_FMT_SBGGR12;
             } else {
 #ifdef NXP
@@ -603,8 +600,8 @@ Adsd3500Sensor::setMode(const aditof::DepthSensorFrameType &type) {
             CLEAR(fmt);
             fmt.type = dev->videoBuffersType;
             fmt.fmt.pix.pixelformat = pixelFormat;
-            fmt.fmt.pix.width = width;
-            fmt.fmt.pix.height = height;
+            fmt.fmt.pix.width = m_implData->frameType.frameWidthInBytes;
+            fmt.fmt.pix.height = m_implData->frameType.frameHeightInBytes;
 
             if (xioctl(dev->fd, VIDIOC_S_FMT, &fmt) == -1) {
                 LOG(WARNING) << "Setting Pixel Format error, errno: " << errno
