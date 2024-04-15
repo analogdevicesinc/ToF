@@ -26,7 +26,7 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
     getFrameTypeDetails(const std::string &frameName,
                         aditof::DepthSensorFrameType &details) override;
     virtual aditof::Status
-    setFrameType(const aditof::DepthSensorFrameType &type) override;
+    setMode(const aditof::DepthSensorFrameType &type) override;
     virtual aditof::Status getFrame(uint16_t *buffer) override;
     virtual aditof::Status
     getAvailableControls(std::vector<std::string> &controls) const override;
