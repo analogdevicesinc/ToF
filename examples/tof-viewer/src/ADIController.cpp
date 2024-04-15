@@ -79,17 +79,6 @@ void ADIController::setMode(const std::string &mode) {
     //camera->setFrameType(mode);
 }
 
-std::vector<std::string>
-ADIController::getAvailableModes(std::vector<std::string> &availableModes) {
-    if (m_cameraInUse == -1) {
-        return availableModes;
-    }
-
-    m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getAvailableControls(
-        availableModes);
-    return availableModes;
-}
-
 std::pair<float, float> ADIController::getTemperature() {
     auto returnValue = std::make_pair<float, float>(0.0, 0.0);
 
