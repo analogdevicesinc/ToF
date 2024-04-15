@@ -493,7 +493,7 @@ NetworkDepthSensor::getFrameTypeDetails(const std::string &frameName,
 }
 
 aditof::Status
-NetworkDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
+NetworkDepthSensor::setMode(const aditof::DepthSensorFrameType &type) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -504,7 +504,7 @@ NetworkDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
         return Status::UNREACHABLE;
     }
 
-    net->send_buff[m_sensorIndex].set_func_name("SetFrameType");
+    net->send_buff[m_sensorIndex].set_func_name("SetMode");
     net->send_buff[m_sensorIndex].mutable_frame_type()->set_mode(type.mode);
     net->send_buff[m_sensorIndex].mutable_frame_type()->set_mode_number(
         type.modeNumber);

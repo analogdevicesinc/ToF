@@ -288,8 +288,6 @@ PYBIND11_MODULE(aditofpython, m) {
              py::arg("configFilepath") = "")
         .def("start", &aditof::Camera::start)
         .def("stop", &aditof::Camera::stop)
-        .def("setMode", &aditof::Camera::setMode, py::arg("mode"),
-             py::arg("modeFilename") = "")
         .def(
             "getAvailableControls",
             [](const aditof::Camera &camera, py::list modes) {
@@ -302,8 +300,7 @@ PYBIND11_MODULE(aditofpython, m) {
                 return status;
             },
             py::arg("availableModes"))
-        .def("setFrameType", &aditof::Camera::setFrameType,
-             py::arg("frameType"))
+        .def("setMode", &aditof::Camera::setMode, py::arg("mode"))
         .def(
             "getAvailableFrameTypes",
             [](const aditof::Camera &camera, py::list types) {
@@ -615,8 +612,7 @@ PYBIND11_MODULE(aditofpython, m) {
         .def("getFrameTypeDetails",
              &aditof::DepthSensorInterface::getFrameTypeDetails,
              py::arg("frameName"), py::arg("details"))
-        .def("setFrameType", &aditof::DepthSensorInterface::setFrameType,
-             py::arg("details"))
+        .def("setMode", &aditof::DepthSensorInterface::setMode, py::arg("mode"))
         .def(
             "getFrame",
             [](aditof::DepthSensorInterface &device,
