@@ -119,19 +119,22 @@ aditof::Status Adsd3500ModeSelector::updateConfigurationTable(
     DepthSensorFrameType &configurationTable) {
 
     for (auto tableInUse : m_tableInUse) {
-        for (auto driverConf : tableInUse.driverConfiguration) {
-            if (driverConf.depthBits == m_controls["depthBits"] &&
-                driverConf.abBits == m_controls["abBits"] &&
-                driverConf.confBits == m_controls["confBits"] &&
-                driverConf.pixelFormat == m_controls["inputFormat"]) {
-                configurationTable.frameWidthInBytes = driverConf.driverWidth;
-                configurationTable.frameHeightInBytes = driverConf.driverHeigth;
-                configurationTable.pixelFormatIndex =
-                    driverConf.pixelFormatIndex;
+        if (configurationTable.mode == tableInUse.mode)
+            for (auto driverConf : tableInUse.driverConfiguration) {
+                if (driverConf.depthBits == m_controls["depthBits"] &&
+                    driverConf.abBits == m_controls["abBits"] &&
+                    driverConf.confBits == m_controls["confBits"] &&
+                    driverConf.pixelFormat == m_controls["inputFormat"]) {
+                    configurationTable.frameWidthInBytes =
+                        driverConf.driverWidth;
+                    configurationTable.frameHeightInBytes =
+                        driverConf.driverHeigth;
+                    configurationTable.pixelFormatIndex =
+                        driverConf.pixelFormatIndex;
 
-                return aditof::Status::OK;
+                    return aditof::Status::OK;
+                }
             }
-        }
     }
 
     int depth_i = std::stoi(m_controls["depthBits"]);
