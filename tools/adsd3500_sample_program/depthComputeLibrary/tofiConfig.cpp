@@ -5,6 +5,7 @@
 #include "tofi_error.h"
 
 #include <sstream>
+#include <iostream>
 
 TofiConfig *InitTofiConfig(ConfigFileData *p_cal_file_data,
                            ConfigFileData *p_config_file_data,
@@ -49,6 +50,28 @@ std::string iniFileContentFindKeyAndGetValue(std::istream &iniContent,
 TofiConfig *InitTofiConfig_isp(ConfigFileData *p_ini_file_data, uint16_t mode,
                                uint32_t *p_status,
                                TofiXYZDealiasData *p_xyz_dealias_data) {
+    
+    std::cout << "Dealias Parameters: " << std::endl;
+    std::cout << "n_rows: " << p_xyz_dealias_data->n_rows << std::endl;
+    std::cout << "n_cols: " << p_xyz_dealias_data->n_cols << std::endl;
+    std::cout << "n_freqs: " << static_cast<int>(p_xyz_dealias_data->n_freqs) << std::endl;
+    std::cout << "row_bin_factor: " << static_cast<int>(p_xyz_dealias_data->row_bin_factor) << std::endl;
+    std::cout << "col_bin_factor: " << static_cast<int>(p_xyz_dealias_data->col_bin_factor) << std::endl;
+    std::cout << "n_offset_rows: " << p_xyz_dealias_data->n_offset_rows << std::endl;
+    std::cout << "n_offset_cols: " << p_xyz_dealias_data->n_offset_cols << std::endl;
+    std::cout << "n_sensor_rows: " << p_xyz_dealias_data->n_sensor_rows << std::endl;
+    std::cout << "n_sensor_cols: " << p_xyz_dealias_data->n_sensor_cols << std::endl;
+    std::cout << "FreqIndex: ";
+    for (int i = 0; i < MAX_N_FREQS; ++i) {
+        std::cout << static_cast<int>(p_xyz_dealias_data->FreqIndex[i]) << " ";
+    }
+    std::cout << std::endl;
+    std::cout << "Freq: ";
+    for (int i = 0; i < MAX_N_FREQS; ++i) {
+        std::cout << p_xyz_dealias_data->Freq[i] << " ";
+    }
+    std::cout << std::endl;
+    
     XYZTable xyzObj;
     xyzObj.p_x_table = 0;
     xyzObj.p_y_table = 0;
@@ -67,6 +90,10 @@ TofiConfig *InitTofiConfig_isp(ConfigFileData *p_ini_file_data, uint16_t mode,
         std::stoi(iniFileContentFindKeyAndGetValue(is, "bitsInAB"));
     uint16_t nb_conf =
         std::stoi(iniFileContentFindKeyAndGetValue(is, "bitsInConf"));
+
+    std::cout << "nb_depth: " << nb_depth << std::endl;
+    std::cout << "nb_ab: " << nb_ab << std::endl;
+    std::cout << "nb_conf: " << nb_conf << std::endl;
 
     TofiXYZDealiasData *dealiasDataObj = new TofiXYZDealiasData;
     *dealiasDataObj = p_xyz_dealias_data[mode];

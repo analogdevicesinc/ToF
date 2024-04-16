@@ -36,24 +36,35 @@ int main(int argc, char *argv[]) {
         printf("Unable to open Adsd3500.\n");
     }
 
-    const char*  iniFileName = "config/RawToDepthAdsd3500_lr-qnative.ini";
+    // Set Image mode number
+    adsd3500.mode_num = 3; //lr-qnative mode
+
+    // Read .ini config file
+    const char*  iniFileName = "config/RawToDepthAdsd3030_lr-qnative.ini";
     ret = adsd3500.GetIniKeyValuePairFromConfig(iniFileName);
     if (ret < 0) {
         printf("Unable to read ini parameters from the Config file.\n");
     }
+
+    // Read Camera Intrinsic and Dealias Parameters from Adsd3500.
+    ret = adsd3500.GetIntrinsicsAndDealiasParams();
+    if (ret < 0) {
+      printf("Unable to get Intrinsic and Dealias parameters from Adsd3500.\n");
+    }
     
+    // Configure Adsd3500 with .ini file
     ret = adsd3500.ConfigureAdsd3500WithIniParams();
     if (ret < 0) {
       printf("Unable to configure Adsd3500 with ini file.\n");
     }
 
+    // Configure Depth Compute library with Ini Params
     ret = adsd3500.ConfigureDepthComputeLibraryWithIniParams();
     if (ret < 0) {
         printf("Unable to configure Depth Compute Library.\n");
-    }
-
-    return 0;    
+    } 
     
+    // Configure V4L2 MIPI Capture Driver and V4L2 Capture Sensor Driver.
     ret = adsd3500.ConfigureDeviceDrivers();
     if (ret < 0) {
         printf("Unable to open Adsd3500.\n");

@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright (c) 2023 - Analog Devices Inc. All Rights Reserved.
+* Copyright (c) 2024 - Analog Devices Inc. All Rights Reserved.
 * This software is proprietary & confidential to Analog Devices, Inc.
 * and its licensors.
 ******************************************************************************
@@ -47,6 +47,8 @@
 #include <memory>
 #include <string>
 #include <iostream>
+#include "../depthComputeLibrary/tofi_compute.h"
+#include "../depthComputeLibrary/tofi_config.h"
 
 #define ADSD3500_INTRINSIC_SIZE		56
 #define ADSD3500_DEALIAS_SIZE		32
@@ -112,51 +114,17 @@ class DealiasParams {
  		uint16_t Freq[3]; 
 };
 
-class CameraIntrinsics {
-	public:
-		float fx; 
-		float fy; 
-		float cx; 	
-		float cy; 
-		float codx; 
-		float cody; 
-		float k1; 
-		float k2; 	
-		float k3; 
-		float k4; 
-		float k5; 
-		float k6; 
-		float p2; 
-		float p1;
-};
-
-// Structure for the CCB data
-typedef struct {
-    int n_rows;
-    int n_cols;
-    uint8_t n_freqs;
-    uint8_t row_bin_factor;
-    uint8_t col_bin_factor;
-    uint16_t n_offset_rows;
-    uint16_t n_offset_cols;
-    uint16_t n_sensor_rows;
-    uint16_t n_sensor_cols;
-    uint8_t FreqIndex[MAX_N_FREQS];
-    uint16_t Freq[MAX_N_FREQS];
-    CameraIntrinsics camera_intrinsics;
-} TofiXYZDealiasData;
-
-typedef struct ConfigFileData {
-    unsigned char *p_data; ///< Pointer to the data
-    size_t size;           ///< Size of the data
-} ConfigFileData;
-
 class Adsd3500 {
 	public:
 		// Constructor
 		Adsd3500();
 		// Destructor
 		~Adsd3500();
+
+		int mode_num;
+		TofiXYZDealiasData xyzDealiasData;
+		ImagerType imagerType;
+		CCBVersion ccbVersion;
 
 		int OpenAdsd3500();
 		int CloseAdsd3500();
@@ -176,13 +144,12 @@ class Adsd3500 {
 		int RequestFrame(uint16_t* buffer);
 		int GetImagerTypeAndCCB();
 		int GetIniKeyValuePairFromConfig(const char* iniFileName);
+		int GetIntrinsicsAndDealiasParams();
 
 	private:
 		ConfigFileData iniFileData;
 		std::map<std::string, std::string> iniKeyValPairs;
 		VideoDev videoDevice;
-		ImagerType imagerType;
-		CCBVersion ccbVersion;
 		int adsd3500_switch_to_burst_mode(int fd);
 		int adsd3500_switch_to_standard_mode(int fd);
 		int adsd3500_wait_for_buffer();
@@ -228,25 +195,5 @@ int32_t tof_open(const char *tof_device);
 
 // Static functions
 static uint32_t cal_crc32(uint32_t crc, unsigned char *buf, size_t len);
-
-typedef struct TofiConfig {
-    uint32_t n_rows; ///< Number of rows
-    uint32_t n_cols; ///< Number of Columns
-    CameraIntrinsics
-        *p_camera_intrinsics; ///< Pointer to the camera intrinsic parameters
-    XYZTable xyz_table; ///< Structure holding pointer to the X,Y,and Z table
-    const struct CAL_LSDAC_BLOCK_V1
-        *p_lsdac_block; ///< Pointer to the LSDAC Block
-    const struct CAL_GAIN_CORRECTION_BLOCK
-        *p_cal_gain_block; ///< Pointer to the Gain Block
-    const struct CAL_ADDRVAL_REG_BLOCK_V1
-        *p_cal_reg_block;          ///< Pointer to the register writes block
-    const void *p_tofi_cal_config; ///< Pointer to the calibration config block
-    const char *p_tofi_config_str; ///< Pointer to a string of ini config data
-    char raw_format[MAX_CHAR_SIZE];
-    uint32_t hdr_size;
-    uint32_t phases;
-    uint32_t freqs;
-} TofiConfig;
 
 #endif

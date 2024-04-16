@@ -349,8 +349,32 @@ int Adsd3500::ConfigureAdsd3500WithIniParams() {
 
 int Adsd3500::ConfigureDepthComputeLibraryWithIniParams() {
     
+    uint32_t ret = 0;
     std::cout << "Initializing Depth Compute Library" << std::endl;
-    TofiConfig *m_tofi_config = InitTofiConfig_isp(iniFileData, 3, &status, m_xyz_dealias_data);
+
+    std::cout << "Ini File Size: " << iniFileData.size << std::endl;
+    if (iniFileData.p_data == nullptr) {
+        perror("iniFileData is NULL.\n");
+    }
+
+    TofiConfig *tofi_config = InitTofiConfig_isp(&iniFileData, 0, &ret, &xyzDealiasData);
+
+    if (tofi_config == NULL) {
+        perror("InitTofiConfig failed.\n");
+        return -1;
+    }
+
+    std::cout << "Columns: " << tofi_config->n_cols << std::endl;
+    std::cout << "Rows: " << tofi_config->n_rows << std::endl;
+
+    TofiComputeContext *tofi_compute_context = 
+        InitTofiCompute(tofi_config->p_tofi_cal_config, &ret);
+    if (tofi_compute_context == NULL) {
+        perror("InitTofiCompute failed.\n");
+        return -1;
+    }
+
+    return 0;
 }
 
 int Adsd3500::ConfigureDeviceDrivers() {  
@@ -398,6 +422,36 @@ int Adsd3500::ConfigureDeviceDrivers() {
     } else {
         PrintByteArray(chip_id_value, ARRAY_SIZE(chip_id_value));
     }
+
+    return 0;
+}
+
+int Adsd3500::GetIntrinsicsAndDealiasParams() {
+    int ret = 0;
+
+    uint8_t intrinsics[56] = {0};
+    uint8_t dealiasParams[32] = {0};
+
+    intrinsics[0] = mode_num;
+    dealiasParams[0] = mode_num;
+
+    ret = adsd3500_read_payload_cmd(0x01, intrinsics, 56);
+    if (ret < 0) {
+        perror("Unable to get intrinsics.\n");
+    }
+
+    ret = adsd3500_read_payload_cmd(0x02, dealiasParams, 32);
+    if (ret < 0) {
+        perror("Unable to get dealias params.\n");
+    }
+
+    memcpy(&xyzDealiasData, dealiasParams,
+            sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
+    memcpy(&xyzDealiasData.camera_intrinsics, intrinsics,
+            sizeof(CameraIntrinsics));
+
+    // xyzDealiasData.n_rows = rows;
+    // xyzDealiasData.n_cols = cols;
 
     return 0;
 }
@@ -1035,11 +1089,27 @@ int Adsd3500::adsd3500_get_key_value_pairs_from_ini(
         return -1;
     }
 
-    // Store the contents of the .ini File to ConfigFileData to be used for Depth Compute Libraries.
-    iniFileData.size = iniStream.tellg();
+    // Get the size of the file
+    iniStream.seekg(0, std::ios::end);
+    std::streampos fileSize = iniStream.tellg();
     iniStream.seekg(0, std::ios::beg);
-    iniFileData.p_data = new unsigned char[data.size];
-    iniStream.read(reinterpret_cast<char*>(data.p_data), data.size);
+    
+    // Check if the fileSize is representable as size_t
+    if (fileSize < 0 || static_cast<size_t>(fileSize) != static_cast<std::streampos>(fileSize)) {
+        std::cerr << "File size is too large to be represented as size_t." << std::endl;
+        return -1;
+    }
+
+    iniFileData.size = static_cast<size_t>(fileSize);
+
+    // Allocate memory for the unsigned char array
+    iniFileData.p_data = new unsigned char[fileSize];
+
+    // Read the contents of the file into the buffer
+    iniStream.read(reinterpret_cast<char*>(iniFileData.p_data), fileSize);
+
+    // Going to the start of the file to read it's contents.
+    iniStream.seekg(0, std::ios::beg);
 
     iniKeyValPairs.clear();
 
@@ -1264,7 +1334,7 @@ int Adsd3500::SetFrameType() {
     struct v4l2_format fmt;
     struct v4l2_buffer buf;
 
-    ret = SetImageMode(3);
+    ret = SetImageMode(mode_num);
     if (ret < 0)  printf("Unable to Set mode in Adsd3500.\n");
 
     CLEAR(req);
