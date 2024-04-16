@@ -59,9 +59,11 @@ uint8_t irShiftValue = 0;
 uint8_t buf[LWS_PRE + MAX_MESSAGE_LEN], *p = &buf[LWS_PRE];
 
 // This string is returned upon reqest from application. Needs data populated from available frame types of sensor
-string availableFrameTypes = "ft:sr-native,sr-qnative,lr-native,lr-qnative";
+string availableFrameTypes_prefix = "ft:";
+string availableFrameTypes = "";
 // This string is returned upon reqest from application. Needs data populated with supported frame formats
-string availableFormats = "format:depth,ab,depth+ab";
+string availableFormats_prefix = "format:";
+string availableFormats = "depth,ab,depth+ab";
 
 string process_message(char *in) {
     std::string message = (const char *)in;
