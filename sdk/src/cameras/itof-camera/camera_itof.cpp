@@ -575,6 +575,10 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
     if (m_dropFirstFrame && m_dropFrameOnce) {
         m_depthSensor->getFrame(frameDataLocation);
         m_dropFrameOnce = false;
+        if (status != Status::OK) {
+            LOG(INFO) << "Failed to drop first frame!";
+            return status;
+        }
         LOG(INFO) << "Dropped first frame";
     }
 
