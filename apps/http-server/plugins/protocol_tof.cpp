@@ -199,13 +199,16 @@ aditof::Status setFrameType(std::string frameTypeNew) {
     std::cout << "Sending width and height: " << frameWidth << ", "
               << frameHeight << std::endl;
 
-    std::string availableSize = "size:" + std::to_string(frameWidth) + "," +
-                                std::to_string(frameHeight);
-
     // Send available size for the frame:
-    send_message(availableSize.c_str(), availableSize.length());
+    std::string availableSize_msg = "size:" + std::to_string(frameWidth) + "," +
+                                    std::to_string(frameHeight);
+
+    send_message(availableSize_msg.c_str(), availableSize_msg.length());
+
     // Send available formats (depth/ab)
-    send_message(availableFormats.c_str(), availableFormats.length());
+    std::string availableFormats_msg =
+        availableFormats_prefix + availableFormats;
+    send_message(availableFormats_msg.c_str(), availableFormats_msg.length());
 
     return status;
 }
@@ -268,10 +271,19 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
                 send_error_message(std::string("Unsupported camera type"));
                 break;
             }
-
             // Send available frame types
-            send_message(availableFrameTypes.c_str(),
-                         availableFrameTypes.length());
+            availableFrameTypes = "";
+            std::vector<std::string> availableFrameTypes_vec;
+            camera->getAvailableFrameTypes(availableFrameTypes_vec);
+            for (auto iter : availableFrameTypes_vec) {
+                availableFrameTypes += iter.c_str();
+                if (iter != availableFrameTypes_vec.back())
+                    availableFrameTypes += ",";
+            }
+            std::string availableFrameTypes_msg =
+                availableFrameTypes_prefix + availableFrameTypes;
+            send_message(availableFrameTypes_msg.c_str(),
+                         availableFrameTypes_msg.length());
 
         } else if (strncmp((const char *)in, "setft:", 6) == 0) {
             // Set chosen frame type
