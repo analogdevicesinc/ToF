@@ -54,6 +54,9 @@
 #define ADSD3500_CTRL_PACKET_SIZE 4099
 #define V4L2_CID_AD_DEV_CHIP_CONFIG (0x9819e1)
 #define CTRL_SET_MODE (0x9819e0)
+#define MAX_N_FREQS 3
+#define MAX_N_MODES 10
+#define MAX_CHAR_SIZE 12
 
 #define MAX_SUBFRAMES_COUNT 10                                                 \
     // maximum number of subframes that are used to create a full frame (maximum total_captures of all modes)
@@ -127,6 +130,27 @@ class CameraIntrinsics {
 		float p1;
 };
 
+// Structure for the CCB data
+typedef struct {
+    int n_rows;
+    int n_cols;
+    uint8_t n_freqs;
+    uint8_t row_bin_factor;
+    uint8_t col_bin_factor;
+    uint16_t n_offset_rows;
+    uint16_t n_offset_cols;
+    uint16_t n_sensor_rows;
+    uint16_t n_sensor_cols;
+    uint8_t FreqIndex[MAX_N_FREQS];
+    uint16_t Freq[MAX_N_FREQS];
+    CameraIntrinsics camera_intrinsics;
+} TofiXYZDealiasData;
+
+typedef struct ConfigFileData {
+    unsigned char *p_data; ///< Pointer to the data
+    size_t size;           ///< Size of the data
+} ConfigFileData;
+
 class Adsd3500 {
 	public:
 		// Constructor
@@ -147,17 +171,22 @@ class Adsd3500 {
 		int ReadChipId(uint8_t* result);
 		int ConfigureDeviceDrivers();
 		int ConfigureAdsd3500WithIniParams();
+		int ConfigureDepthComputeLibraryWithIniParams();
 		int SetFrameType();
 		int RequestFrame(uint16_t* buffer);
-		int GetImagerTypeAndCCB(ImagerType* imagerType, CCBVersion* ccb);
+		int GetImagerTypeAndCCB();
+		int GetIniKeyValuePairFromConfig(const char* iniFileName);
 
 	private:
+		ConfigFileData iniFileData;
 		std::map<std::string, std::string> iniKeyValPairs;
-
 		VideoDev videoDevice;
+		ImagerType imagerType;
+		CCBVersion ccbVersion;
 		int adsd3500_switch_to_burst_mode(int fd);
 		int adsd3500_switch_to_standard_mode(int fd);
 		int adsd3500_wait_for_buffer();
+		int adsd3500_enqueue_internal_buffer(struct v4l2_buffer &buf);
 		int adsd3500_dequeue_internal_buffer(struct v4l2_buffer &buf);
 		int adsd3500_get_internal_buffer(uint8_t **buffer, uint32_t &buf_data_len, const struct v4l2_buffer &buf);
 		int adsd3500_get_key_value_pairs_from_ini(const std::string &iniFileName, std::map<std::string, std::string> &iniKeyValPairs);
@@ -199,5 +228,25 @@ int32_t tof_open(const char *tof_device);
 
 // Static functions
 static uint32_t cal_crc32(uint32_t crc, unsigned char *buf, size_t len);
+
+typedef struct TofiConfig {
+    uint32_t n_rows; ///< Number of rows
+    uint32_t n_cols; ///< Number of Columns
+    CameraIntrinsics
+        *p_camera_intrinsics; ///< Pointer to the camera intrinsic parameters
+    XYZTable xyz_table; ///< Structure holding pointer to the X,Y,and Z table
+    const struct CAL_LSDAC_BLOCK_V1
+        *p_lsdac_block; ///< Pointer to the LSDAC Block
+    const struct CAL_GAIN_CORRECTION_BLOCK
+        *p_cal_gain_block; ///< Pointer to the Gain Block
+    const struct CAL_ADDRVAL_REG_BLOCK_V1
+        *p_cal_reg_block;          ///< Pointer to the register writes block
+    const void *p_tofi_cal_config; ///< Pointer to the calibration config block
+    const char *p_tofi_config_str; ///< Pointer to a string of ini config data
+    char raw_format[MAX_CHAR_SIZE];
+    uint32_t hdr_size;
+    uint32_t phases;
+    uint32_t freqs;
+} TofiConfig;
 
 #endif

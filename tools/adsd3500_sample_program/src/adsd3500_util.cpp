@@ -318,26 +318,39 @@ int Adsd3500::RequestFrame(uint16_t* buffer) {
 
     memcpy(buffer, pdata, buf_data_len);
 
+    ret = adsd3500_enqueue_internal_buffer(buf[0]);
+    if (ret < 0) {
+        return -1;
+    }
 
     return 0;
 }
 
-int Adsd3500::ConfigureAdsd3500WithIniParams() {
+int Adsd3500::GetIniKeyValuePairFromConfig(const char* iniFileName) {
+
     int ret = 0;
-
-    const std::string iniFileName = "config/RawToDepthAdsd3500_lr-qnative.ini";
-
     ret = adsd3500_get_key_value_pairs_from_ini(iniFileName, iniKeyValPairs);
     if (ret < 0) {
         perror("Unable to get Ini Key Value pairs from the .ini file");
     }
 
-    ret = adsd3500_set_ini_params(iniKeyValPairs);
+    return ret;
+}
+
+int Adsd3500::ConfigureAdsd3500WithIniParams() {
+
+    int ret = adsd3500_set_ini_params(iniKeyValPairs);
     if (ret < 0) {
-        perror("Unable to set Ini parameters.");
+        perror("Unable to set Ini parameters in Adsd3500.");
     }
 
     return ret;
+}
+
+int Adsd3500::ConfigureDepthComputeLibraryWithIniParams() {
+    
+    std::cout << "Initializing Depth Compute Library" << std::endl;
+    TofiConfig *m_tofi_config = InitTofiConfig_isp(iniFileData, 3, &status, m_xyz_dealias_data);
 }
 
 int Adsd3500::ConfigureDeviceDrivers() {  
@@ -552,7 +565,7 @@ int Adsd3500::ReadCCB(const char* filename) {
     return 0;
 }
 
-int Adsd3500::GetImagerTypeAndCCB(ImagerType* imagerType, CCBVersion* ccb) {
+int Adsd3500::GetImagerTypeAndCCB() {
 
     uint8_t result[2] = {0x00, 0x00};
 
@@ -566,34 +579,34 @@ int Adsd3500::GetImagerTypeAndCCB(ImagerType* imagerType, CCBVersion* ccb) {
 
     switch(imager_version){
         case 1: {
-            *imagerType = ImagerType::IMAGER_ADSD3100;
+            imagerType = ImagerType::IMAGER_ADSD3100;
             printf("Imager type is  IMAGER_ADSD3100.\n");
             break;
         }
         case 2: {
-            *imagerType = ImagerType::IMAGER_ADSD3030;
+            imagerType = ImagerType::IMAGER_ADSD3030;
             printf("Imager type is  IMAGER_ADSD3030.\n");
             break;
         }
         default: {
-            *imagerType = ImagerType::IMAGER_UNKNOWN;
+            imagerType = ImagerType::IMAGER_UNKNOWN;
             std::cout << "Unsupported Imager found." << std::endl; 
         }
     }
 
     switch(ccb_version){
         case 1: {
-            *ccb = CCBVersion::CCB_VERSION0;
+            ccbVersion = CCBVersion::CCB_VERSION0;
             printf("CCB Version is  CCB_VERSION0.\n");
             break;
         }
         case 2: {
-            *ccb = CCBVersion::CCB_VERSION1;
+            ccbVersion = CCBVersion::CCB_VERSION1;
             printf("CCB version is  CCB_VERSION1.\n");
             break;
         }
         default: {
-            *ccb = CCBVersion::CCB_UNKNOWN;
+            ccbVersion = CCBVersion::CCB_UNKNOWN;
             std::cout << "Unsupported CCB version found." << std::endl; 
         }
     }
@@ -991,6 +1004,17 @@ int Adsd3500::adsd3500_dequeue_internal_buffer(struct v4l2_buffer &buf) {
     return 0;
 }
 
+int Adsd3500::adsd3500_enqueue_internal_buffer(struct v4l2_buffer &buf) {
+
+    if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_QBUF, &buf) == -1) {
+        std::cout << "VIDIOC_QBUF error "
+                     << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+        return -1;
+    }
+
+    return 0;
+}
+
 int Adsd3500::adsd3500_get_internal_buffer(
     uint8_t **buffer, uint32_t &buf_data_len, const struct v4l2_buffer &buf
 ) {
@@ -1001,16 +1025,21 @@ int Adsd3500::adsd3500_get_internal_buffer(
     return 0;
 }
 
-
 int Adsd3500::adsd3500_get_key_value_pairs_from_ini(
     const std::string &iniFileName,
     std::map<std::string, std::string> &iniKeyValPairs) {
 
     std::ifstream iniStream(iniFileName);
     if (!iniStream.is_open()) {
-        std::cout << "Failed to open: " << iniFileName;
+        std::cout << "Failed to open: " << iniFileName << std::endl;
         return -1;
     }
+
+    // Store the contents of the .ini File to ConfigFileData to be used for Depth Compute Libraries.
+    iniFileData.size = iniStream.tellg();
+    iniStream.seekg(0, std::ios::beg);
+    iniFileData.p_data = new unsigned char[data.size];
+    iniStream.read(reinterpret_cast<char*>(data.p_data), data.size);
 
     iniKeyValPairs.clear();
 
@@ -1349,7 +1378,6 @@ int Adsd3500::SetFrameType() {
         }
 
         videoDevice.videoBuffers[videoDevice.nVideoBuffers].length = length;
-
     }
 
     return 0;

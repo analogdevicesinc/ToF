@@ -30,10 +30,29 @@ int main(int argc, char *argv[]) {
         printf("Unable to reset Adsd3500.\n");
     }
 
+    // 2. Configure the ADSD3500 and depth compute library with the ini file. 
     ret = adsd3500.OpenAdsd3500();
     if (ret < 0) {
         printf("Unable to open Adsd3500.\n");
-    } 
+    }
+
+    const char*  iniFileName = "config/RawToDepthAdsd3500_lr-qnative.ini";
+    ret = adsd3500.GetIniKeyValuePairFromConfig(iniFileName);
+    if (ret < 0) {
+        printf("Unable to read ini parameters from the Config file.\n");
+    }
+    
+    ret = adsd3500.ConfigureAdsd3500WithIniParams();
+    if (ret < 0) {
+      printf("Unable to configure Adsd3500 with ini file.\n");
+    }
+
+    ret = adsd3500.ConfigureDepthComputeLibraryWithIniParams();
+    if (ret < 0) {
+        printf("Unable to configure Depth Compute Library.\n");
+    }
+
+    return 0;    
     
     ret = adsd3500.ConfigureDeviceDrivers();
     if (ret < 0) {
@@ -41,14 +60,11 @@ int main(int argc, char *argv[]) {
     }    
 
     // 3. Complete configuration of depth compute library with CCB parameters from the ADSD3500.
-    // ImagerType imagerType;
-    // CCBVersion ccb;
-    // ret = adsd3500.GetImagerTypeAndCCB(&imagerType, &ccb); 
-    // if (ret < 0) {
-    //     std::cout << "Unable to get the Imager type and CCB." << std::endl;
-    //     return ret;
-    // }
-
+    ret = adsd3500.GetImagerTypeAndCCB(); 
+    if (ret < 0) {
+        std::cout << "Unable to get the Imager type and CCB." << std::endl;
+        return ret;
+    }
 
     // 4. Set up Interrupt Support.
 
@@ -77,12 +93,6 @@ int main(int argc, char *argv[]) {
 
     usleep(1000 * 5000); // Wait for a period for 5 seconds.
 
-    // 2. Configure the ADSD3500 and depth compute library with the ini file. 
-    ret = adsd3500.ConfigureAdsd3500WithIniParams();
-    if (ret < 0) {
-      printf("Unable to configure Adsd3500 with ini file.\n");
-    }
-
     ret = adsd3500.SetFrameType();
     if (ret < 0) {
         printf("Unable to set frame type Adsd3500.\n");
@@ -95,9 +105,9 @@ int main(int argc, char *argv[]) {
     }
 
     // 7. Receive Frames
-    uint16_t* buffer;
+    uint16_t* buffer = new uint16_t[1024*1024*2];
     ret = adsd3500.RequestFrame(buffer);
-    if (ret < 0) {
+    if (ret < 0 || buffer == nullptr) {
         std::cout << "Unable to receive frames from Adsd3500" << std::endl;
     }
     
