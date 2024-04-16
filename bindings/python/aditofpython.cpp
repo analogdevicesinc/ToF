@@ -187,18 +187,38 @@ PYBIND11_MODULE(aditofpython, m) {
         .def_readwrite("connectionType",
                        &aditof::SensorDetails::connectionType);
 
-    // py::class_<aditof::DepthSensorFrameContent>(m, "DepthSensorFrameContent")
-    //     .def(py::init<>())
-    //     .def_readwrite("type", &aditof::DepthSensorFrameContent::type)
-    //     .def_readwrite("width", &aditof::DepthSensorFrameContent::width)
-    //     .def_readwrite("height", &aditof::DepthSensorFrameContent::height);
+    py::class_<aditof::DriverConfiguration>(m, "DriverConfiguration")
+        .def(py::init<>())
+        .def_readwrite("depthBits", &aditof::DriverConfiguration::depthBits)
+        .def_readwrite("abBits", &aditof::DriverConfiguration::abBits)
+        .def_readwrite("confBits", &aditof::DriverConfiguration::confBits)
+        .def_readwrite("pixelFormat", &aditof::DriverConfiguration::pixelFormat)
+        .def_readwrite("driverWidth", &aditof::DriverConfiguration::driverWidth)
+        .def_readwrite("driverHeigth",
+                       &aditof::DriverConfiguration::driverHeigth)
+        .def_readwrite("pixelFromatIndex",
+                       &aditof::DriverConfiguration::pixelFormatIndex);
 
-    // py::class_<aditof::DepthSensorFrameType>(m, "DepthSensorFrameType")
-    //     .def(py::init<>())
-    //     .def_readwrite("type", &aditof::DepthSensorFrameType::type)
-    //     .def_readwrite("content", &aditof::DepthSensorFrameType::content)
-    //     .def_readwrite("width", &aditof::DepthSensorFrameType::width)
-    //     .def_readwrite("height", &aditof::DepthSensorFrameType::height);
+    py::class_<aditof::DepthSensorFrameType>(m, "DepthSensorFrameType")
+        .def(py::init<>())
+        .def_readwrite("mode", &aditof::DepthSensorFrameType::mode)
+        .def_readwrite("frameContent",
+                       &aditof::DepthSensorFrameType::frameContent)
+        .def_readwrite("modeNumber", &aditof::DepthSensorFrameType::modeNumber)
+        .def_readwrite("pixelFormatIndex",
+                       &aditof::DepthSensorFrameType::pixelFormatIndex)
+        .def_readwrite("frameWidthInBytes",
+                       &aditof::DepthSensorFrameType::frameWidthInBytes)
+        .def_readwrite("frameHeightInBytes",
+                       &aditof::DepthSensorFrameType::frameHeightInBytes)
+        .def_readwrite("baseResolutionWidth",
+                       &aditof::DepthSensorFrameType::baseResolutionWidth)
+        .def_readwrite("baseResolutionHeight",
+                       &aditof::DepthSensorFrameType::baseResolutionHeight)
+        .def_readwrite("metadataSize",
+                       &aditof::DepthSensorFrameType::metadataSize)
+        .def_readwrite("driverConfiguration",
+                       &aditof::DepthSensorFrameType::driverConfiguration);
 
     // Helpers
 
@@ -322,13 +342,6 @@ PYBIND11_MODULE(aditofpython, m) {
                 return camera.setIniParams(cppParams);
             },
             py::arg("params"))
-        // .def(
-        //     "getFrameTypeNameFromId",
-        //     [](const aditof::Camera &camera, int id, std::string name) {
-        //         aditof::Status status = camera.getFrameTypeNameFromId(id, name);
-        //         return std::make_pair(status, name);
-        //     },
-        //     py::arg("id"), py::arg("name"))
         .def("requestFrame", &aditof::Camera::requestFrame, py::arg("frame"))
         .def("getDetails", &aditof::Camera::getDetails, py::arg("details"))
         .def(
