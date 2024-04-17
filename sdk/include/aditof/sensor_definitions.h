@@ -66,6 +66,18 @@ struct SensorDetails {
  */
 struct DriverConfiguration {
     /**
+     * @brief Base width value of the frame
+    */
+    std::string baseWidth;
+    /**
+     * @brief Base heigth value of the frame
+    */
+    std::string baseHeigth;
+    /**
+     * @brief Number of phases
+    */
+    std::string noOfPhases;
+    /**
      * @brief Stores depth data
     */
     std::string depthBits;
