@@ -39,55 +39,19 @@
 
 using namespace aditof;
 
-const std::vector<DriverConfiguration> m_adsd3100Mode0 = {
+const std::vector<DriverConfiguration> m_adsd3100standard = {
     /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
    sr-native */
-    {"16", "16", "0", "raw16", 2048, 3072, 0},
-    {"12", "12", "0", "raw16_bits12_shift4", 1024, 3072, 1},
-    {"12", "0", "0", "raw16_bits12_shift4", 1024, 1024, 1},
-    {"12", "16", "0", "mipiRaw12_8", 2048, 2560, 0}};
-
-const std::vector<DriverConfiguration> m_adsd3100Mode1 = {
-    /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
-   sr-native */
-    {"16", "16", "0", "raw16", 2048, 3072, 0},
-    {"12", "12", "0", "raw16_bits12_shift4", 1024, 4096, 1},
-    {"12", "0", "0", "raw16_bits12_shift4", 1024, 1024, 1},
-    {"12", "16", "0", "mipiRaw12_8", 2048, 2560, 0}};
-
-const std::vector<DriverConfiguration> m_adsd3100Mode4 = {
-    /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
-   sr-native */
-    {"0", "0", "0", "", 1024, 1024, 1}};
-
-// This table will be generated
-const std::vector<DriverConfiguration> m_adsd3100Mode2_3_5_6 = {
-    /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
-   sr-native */
-};
-
-// This table will be generated
-const std::vector<DriverConfiguration> m_adsd3030Mode0 = {
-    /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
-   sr-native */
-};
-
-// This table will be generated
-const std::vector<DriverConfiguration> m_adsd3030Mode1 = {
-    /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
-   sr-native */
-};
-
-const std::vector<DriverConfiguration> m_adsd3030Mode4 = {
-    /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
-   sr-native */
-    {"0", "0", "0", "", 512, 640, 1}};
-
-// This table will be generated
-const std::vector<DriverConfiguration> m_adsd3030Mode2_3_5_6 = {
-    /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
-   sr-native */
-};
+    {"1024", "1024", "2", "16", "16", "0", "raw16", 2048, 3072, 0},
+    {"1024", "1024", "2", "12", "12", "0", "raw16_bits12_shift4", 1024, 3072,
+     1},
+    {"1024", "1024", "2", "12", "0", "0", "raw16_bits12_shift4", 1024, 1024, 1},
+    {"1024", "1024", "2", "12", "16", "0", "mipiRaw12_8", 2048, 2560, 0},
+    {"1024", "1024", "3", "16", "16", "0", "raw16", 2048, 3072, 0},
+    {"1024", "1024", "3", "12", "12", "0", "raw16_bits12_shift4", 1024, 4096,
+     1},
+    {"1024", "1024", "3", "12", "0", "0", "raw16_bits12_shift4", 1024, 1024, 1},
+    {"1024", "1024", "3", "12", "16", "0", "mipiRaw12_8", 2048, 2560, 0}};
 
 const std::vector<DepthSensorFrameType> adsd3100_standardModes = {
     {"sr-native",
@@ -99,7 +63,7 @@ const std::vector<DepthSensorFrameType> adsd3100_standardModes = {
      1024,
      1024,
      128,
-     m_adsd3100Mode0},
+     DriverConfiguration},
     {"lr-native",
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      1,
@@ -109,7 +73,7 @@ const std::vector<DepthSensorFrameType> adsd3100_standardModes = {
      1024,
      1024,
      128,
-     m_adsd3100Mode1},
+     DriverConfiguration},
     {"pcm-native",
      {"ab", "metadata"},
      4,
@@ -119,7 +83,7 @@ const std::vector<DepthSensorFrameType> adsd3100_standardModes = {
      1024,
      1024,
      128,
-     m_adsd3100Mode4},
+     DriverConfiguration},
     {"sr-qnative",
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      2,
@@ -129,7 +93,7 @@ const std::vector<DepthSensorFrameType> adsd3100_standardModes = {
      512,
      512,
      128,
-     m_adsd3100Mode2_3_5_6},
+     DriverConfiguration},
     {"lr-qnative",
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      3,
@@ -139,7 +103,7 @@ const std::vector<DepthSensorFrameType> adsd3100_standardModes = {
      512,
      512,
      128,
-     m_adsd3100Mode2_3_5_6},
+     DriverConfiguration},
     {"sr-mixed",
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      6,
@@ -149,7 +113,7 @@ const std::vector<DepthSensorFrameType> adsd3100_standardModes = {
      512,
      512,
      128,
-     m_adsd3100Mode2_3_5_6},
+     DriverConfiguration},
     {"lr-mixed",
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      5,
@@ -159,7 +123,7 @@ const std::vector<DepthSensorFrameType> adsd3100_standardModes = {
      512,
      512,
      128,
-     m_adsd3100Mode2_3_5_6}};
+     DriverConfiguration}};
 
 const std::vector<DepthSensorFrameType> adsd3030_standardModes = {
     {"sr-native",
@@ -171,7 +135,7 @@ const std::vector<DepthSensorFrameType> adsd3030_standardModes = {
      512,
      640,
      128,
-     m_adsd3030Mode0},
+     DriverConfiguration},
     {"lr-native",
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      1,
@@ -181,7 +145,7 @@ const std::vector<DepthSensorFrameType> adsd3030_standardModes = {
      512,
      640,
      128,
-     m_adsd3030Mode1},
+     DriverConfiguration},
     {"pcm-native",
      {"ab", "metadata"},
      4,
@@ -191,7 +155,7 @@ const std::vector<DepthSensorFrameType> adsd3030_standardModes = {
      512,
      640,
      128,
-     m_adsd3030Mode4},
+     DriverConfiguration},
     {"sr-qnative",
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      2,
@@ -201,7 +165,7 @@ const std::vector<DepthSensorFrameType> adsd3030_standardModes = {
      256,
      320,
      128,
-     m_adsd3030Mode2_3_5_6},
+     DriverConfiguration},
     {"lr-qnative",
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      3,
@@ -211,7 +175,7 @@ const std::vector<DepthSensorFrameType> adsd3030_standardModes = {
      256,
      320,
      128,
-     m_adsd3030Mode2_3_5_6},
+     DriverConfiguration},
     {"sr-mixed",
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      6,
@@ -221,7 +185,7 @@ const std::vector<DepthSensorFrameType> adsd3030_standardModes = {
      256,
      320,
      128,
-     m_adsd3030Mode2_3_5_6},
+     DriverConfiguration},
     {"lr-mixed",
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      5,
@@ -231,6 +195,6 @@ const std::vector<DepthSensorFrameType> adsd3030_standardModes = {
      256,
      320,
      128,
-     m_adsd3030Mode2_3_5_6}};
+     DriverConfiguration}};
 
 #endif
