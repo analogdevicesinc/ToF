@@ -226,8 +226,13 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
     uint8_t *pdata;
     dev = m_inputVideoDev;
     uint8_t *pdata_user_space = nullptr;
-
+#ifdef TIME_PROFILING
+    steady_clock::time_point wfb_t0 = steady_clock::now();
+#endif
     status = waitForBufferPrivate(dev);
+#ifdef TIME_PROFILING
+    steady_clock::time_point wfb_t1 = steady_clock::now();
+#endif
     if (status != Status::OK) {
         return status;
     }
@@ -317,17 +322,27 @@ aditof::Status BufferProcessor::processBuffer(uint16_t *buffer = nullptr) {
     // Measure execution times, display statistics
     auto process_buffer_elapsed_time =
         std::chrono::duration_cast<std::chrono::microseconds>(pb_t1 - pb_t0);
+    auto wait_for_buffer_elapsed_time =
+        std::chrono::duration_cast<std::chrono::microseconds>(wfb_t1 - wfb_t0);
     auto tofi_compute_elapsed_time =
         std::chrono::duration_cast<std::chrono::microseconds>(tc_t1 - tc_t0);
     auto frame_memcpy_elapsed_time =
         std::chrono::duration_cast<std::chrono::microseconds>(mc_t1 - mc_t0);
 
-    auto total_profiled_time =
-        tofi_compute_elapsed_time + frame_memcpy_elapsed_time;
+    auto total_profiled_time = wait_for_buffer_elapsed_time +
+                               tofi_compute_elapsed_time +
+                               frame_memcpy_elapsed_time;
 
     std::cout << std::endl;
     std::cout << "BufferProcessor::processBuffer() took: "
               << process_buffer_elapsed_time.count() << "us" << std::endl;
+    std::cout << "|--> WaitForBuffer() took: "
+              << wait_for_buffer_elapsed_time.count() << "us"
+              << "("
+              << ((double)wait_for_buffer_elapsed_time.count() /
+                  process_buffer_elapsed_time.count()) *
+                     100.0
+              << "%)" << std::endl;
     std::cout << "|--> TofiCompute() took: "
               << tofi_compute_elapsed_time.count() << "us"
               << "("
