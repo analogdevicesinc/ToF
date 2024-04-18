@@ -51,10 +51,10 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     virtual aditof::Status start() override;
     virtual aditof::Status stop() override;
     virtual aditof::Status
-    getAvailableFrameTypes(std::vector<std::string> &types) override;
+    getAvailableModes(std::vector<std::string> &modes) override;
     virtual aditof::Status
-    getFrameTypeDetails(const std::string &frameName,
-                        aditof::DepthSensorFrameType &details) override;
+    getModeDetails(const std::string &modeName,
+                   aditof::DepthSensorFrameType &details) override;
     virtual aditof::Status
     setMode(const aditof::DepthSensorFrameType &type) override;
     virtual aditof::Status getFrame(uint16_t *buffer) override;
@@ -168,7 +168,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     bool m_adsd3500Queried;
     std::unordered_map<void *, aditof::SensorInterruptCallback>
         m_interruptCallbackMap;
-    std::vector<aditof::DepthSensorFrameType> m_availableFrameTypes;
+    std::vector<aditof::DepthSensorFrameType> m_availableModes;
     BufferProcessor *m_bufferProcessor;
     bool m_depthComputeOnTarget;
     int m_chipStatus;

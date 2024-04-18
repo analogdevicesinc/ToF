@@ -391,16 +391,16 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Get frame types
-    std::vector<std::string> frameTypes;
-    status = camera->getAvailableFrameTypes(frameTypes);
-    if (status != Status::OK || frameTypes.empty()) {
-        LOG(ERROR) << "Could not aquire frame types";
+    // Get modes
+    std::vector<std::string> availableModes;
+    status = camera->getAvailableModes(availableModes);
+    if (status != Status::OK || availableModes.empty()) {
+        LOG(ERROR) << "Could not aquire modes";
         return 0;
     }
 
     if (modeName.empty()) {
-        //TO DO: convert mode number/name once getFrameTypeDetails is added in the public api
+        //TO DO: convert mode number/name once getModeDetails is added in the public api
     }
 
     if (loadconfigurationFile) {

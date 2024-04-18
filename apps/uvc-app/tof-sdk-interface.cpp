@@ -140,19 +140,19 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
         break;
     }
 
-    case uvc_payload::FunctionName::GET_AVAILABLE_FRAME_TYPES: {
-        std::vector<std::string> frameTypes;
-        std::vector<aditof::DepthSensorFrameType> availableFrameTypes;
+    case uvc_payload::FunctionName::GET_AVAILABLE_MODES: {
+        std::vector<std::string> modes;
+        std::vector<aditof::DepthSensorFrameType> availableModes;
         auto depthSensorFrameTypesMsg =
             response.mutable_available_frame_types();
 
-        camDepthSensor->getAvailableFrameTypes(frameTypes);
-        for (auto &frame : frameTypes) {
+        camDepthSensor->getAvailableModes(modes);
+        for (auto &mode : modes) {
             aditof::DepthSensorFrameType frameDetails;
-            camDepthSensor->getFrameTypeDetails(frame, frameDetails);
-            availableFrameTypes.emplace_back(frameDetails);
+            camDepthSensor->getModeDetails(mode, frameDetails);
+            availableModes.emplace_back(frameDetails);
         }
-        convertDepthSensorFrameTypesToProtoMsg(availableFrameTypes,
+        convertDepthSensorFrameTypesToProtoMsg(availableModes,
                                                *depthSensorFrameTypesMsg);
 
         response.set_status(
@@ -161,7 +161,7 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
         break;
     }
 
-    case uvc_payload::FunctionName::GET_FRAME_TYPE_DETAILS: {
+    case uvc_payload::FunctionName::GET_MODE_DETAILS: {
         // TO DO
         break;
     }

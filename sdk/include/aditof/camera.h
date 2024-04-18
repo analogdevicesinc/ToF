@@ -110,12 +110,12 @@ class SDK_API Camera {
         const std::map<std::string, float> &iniKeyValPairs) = 0;
 
     /**
-     * @brief Returns all the frame types that are supported by the camera
-     * @param[out] availableFrameTypes
+     * @brief Returns all the modes that are supported by the camera
+     * @param[out] availableModes
      * @return Status
      */
-    virtual Status getAvailableFrameTypes(
-        std::vector<std::string> &availableFrameTypes) const = 0;
+    virtual Status
+    getAvailableModes(std::vector<std::string> &availableModes) const = 0;
 
     /**
      * @brief Captures data from the camera and assigns it to the given frame.

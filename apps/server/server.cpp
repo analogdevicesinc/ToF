@@ -492,22 +492,21 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
-    case GET_AVAILABLE_FRAME_TYPES: {
-        std::vector<std::string> aditofFrameTypes;
-        aditof::Status status =
-            camDepthSensor->getAvailableFrameTypes(aditofFrameTypes);
-        for (auto &frameName : aditofFrameTypes) {
-            buff_send.add_strings_payload(frameName);
+    case GET_AVAILABLE_MODES: {
+        std::vector<std::string> aditofModes;
+        aditof::Status status = camDepthSensor->getAvailableModes(aditofModes);
+        for (auto &modeName : aditofModes) {
+            buff_send.add_strings_payload(modeName);
         }
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
 
-    case GET_FRAME_TYPE_DETAILS: {
+    case GET_MODE_DETAILS: {
         aditof::DepthSensorFrameType frameDetails;
-        std::string frameName = buff_recv.func_strings_param(0);
+        std::string modeName = buff_recv.func_strings_param(0);
         aditof::Status status =
-            camDepthSensor->getFrameTypeDetails(frameName, frameDetails);
+            camDepthSensor->getModeDetails(modeName, frameDetails);
         auto protoContent = buff_send.mutable_depth_sensor_frame_type();
         protoContent->set_mode(frameDetails.mode);
         protoContent->set_mode_number(frameDetails.modeNumber);
@@ -913,8 +912,8 @@ void Initialize() {
     s_map_api_Values["Open"] = OPEN;
     s_map_api_Values["Start"] = START;
     s_map_api_Values["Stop"] = STOP;
-    s_map_api_Values["GetAvailableFrameTypes"] = GET_AVAILABLE_FRAME_TYPES;
-    s_map_api_Values["GetFrameTypeDetails"] = GET_FRAME_TYPE_DETAILS;
+    s_map_api_Values["GetAvailableModes"] = GET_AVAILABLE_MODES;
+    s_map_api_Values["GetModeDetails"] = GET_MODE_DETAILS;
     s_map_api_Values["SetMode"] = SET_MODE;
     s_map_api_Values["GetFrame"] = GET_FRAME;
     s_map_api_Values["GetAvailableControls"] = GET_AVAILABLE_CONTROLS;
