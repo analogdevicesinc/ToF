@@ -1432,7 +1432,7 @@ void ADIMainWindow::InitCamera() {
     }
 
     if (!_usesExternalModeDefinition)
-        camera->getAvailableFrameTypes(_cameraModes);
+        camera->getAvailableModes(_cameraModes);
 
     int modeIndex = 0;
     for (int i = 0; i < _cameraModes.size(); ++i) {

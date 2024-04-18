@@ -382,7 +382,7 @@ aditof::Status NetworkDepthSensor::stop() {
 }
 
 aditof::Status
-NetworkDepthSensor::getAvailableFrameTypes(std::vector<std::string> &types) {
+NetworkDepthSensor::getAvailableModes(std::vector<std::string> &modes) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -393,7 +393,7 @@ NetworkDepthSensor::getAvailableFrameTypes(std::vector<std::string> &types) {
         return Status::UNREACHABLE;
     }
 
-    net->send_buff[m_sensorIndex].set_func_name("GetAvailableFrameTypes");
+    net->send_buff[m_sensorIndex].set_func_name("GetAvailableModes");
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
@@ -413,13 +413,13 @@ NetworkDepthSensor::getAvailableFrameTypes(std::vector<std::string> &types) {
     }
 
     // Cleanup array (if required) before filling it with the available types
-    if (types.size() != 0) {
-        types.clear();
+    if (modes.size() != 0) {
+        modes.clear();
     }
 
     for (int i = 0; i < net->recv_buff[m_sensorIndex].strings_payload_size();
          i++) {
-        types.emplace_back(net->recv_buff[m_sensorIndex].strings_payload(i));
+        modes.emplace_back(net->recv_buff[m_sensorIndex].strings_payload(i));
     }
 
     Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
@@ -428,8 +428,8 @@ NetworkDepthSensor::getAvailableFrameTypes(std::vector<std::string> &types) {
 }
 
 aditof::Status
-NetworkDepthSensor::getFrameTypeDetails(const std::string &frameName,
-                                        aditof::DepthSensorFrameType &details) {
+NetworkDepthSensor::getModeDetails(const std::string &modeName,
+                                   aditof::DepthSensorFrameType &details) {
     using namespace aditof;
     Network *net = m_implData->handle.net;
     std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
@@ -439,8 +439,8 @@ NetworkDepthSensor::getFrameTypeDetails(const std::string &frameName,
         return Status::UNREACHABLE;
     }
 
-    net->send_buff[m_sensorIndex].set_func_name("GetFrameTypeDetails");
-    net->send_buff[m_sensorIndex].add_func_strings_param(frameName);
+    net->send_buff[m_sensorIndex].set_func_name("GetModeDetails");
+    net->send_buff[m_sensorIndex].add_func_strings_param(modeName);
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
@@ -458,7 +458,7 @@ NetworkDepthSensor::getFrameTypeDetails(const std::string &frameName,
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
-    details.mode = frameName;
+    details.mode = modeName;
     details.modeNumber =
         net->recv_buff[m_sensorIndex].depth_sensor_frame_type().mode_number();
     details.pixelFormatIndex = net->recv_buff[m_sensorIndex]

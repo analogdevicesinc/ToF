@@ -363,8 +363,7 @@ aditof::Status UsbDepthSensor::open() {
 
     // Send request
     usb_payload::ClientRequest requestMsg;
-    requestMsg.set_func_name(
-        usb_payload::FunctionName::GET_AVAILABLE_FRAME_TYPES);
+    requestMsg.set_func_name(usb_payload::FunctionName::GET_AVAILABLE_MODES);
     std::string requestStr;
     requestMsg.SerializeToString(&requestStr);
     status = UsbWindowsUtils::uvcExUnitSendRequest(
@@ -398,7 +397,7 @@ aditof::Status UsbDepthSensor::open() {
 
     // If request and response went well, extract data from response
     UsbUtils::protoMsgToDepthSensorFrameTypes(
-        m_depthSensorFrameTypes, responseMsg.available_frame_types());
+        m_depthSensorModes, responseMsg.available_frame_types());
 
     std::wstring stemp = s2ws(m_driverPath);
     hr = m_implData->handle.pGraph->AddFilter(
@@ -608,23 +607,23 @@ aditof::Status UsbDepthSensor::stop() {
 }
 
 aditof::Status
-UsbDepthSensor::getAvailableFrameTypes(std::vector<std::string> &types) {
-    types.clear();
-    for (const auto &frameType : m_depthSensorFrameTypes) {
-        types.emplace_back(frameType.mode);
+UsbDepthSensor::getAvailableModes(std::vector<std::string> &modes) {
+    modes.clear();
+    for (const auto &mode : m_depthSensorModes) {
+        modes.emplace_back(mode.mode);
     }
     return aditof::Status::OK;
 }
 
 aditof::Status
-UsbDepthSensor::getFrameTypeDetails(const std::string &frameName,
-                                    aditof::DepthSensorFrameType &details) {
+UsbDepthSensor::getModeDetails(const std::string &modeName,
+                               aditof::DepthSensorFrameType &details) {
     // TO DO: Get information from the camera
     using namespace aditof;
     Status status = Status::OK;
-    for (const auto &frameDetails : m_depthSensorFrameTypes) {
-        if (frameDetails.mode == frameName) {
-            details = frameDetails;
+    for (const auto &modeDetails : m_depthSensorModes) {
+        if (modeDetails.mode == modeName) {
+            details = modeDetails;
             break;
         }
     }

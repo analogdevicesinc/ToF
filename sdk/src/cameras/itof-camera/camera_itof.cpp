@@ -156,16 +156,15 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
             return Status::UNAVAILABLE;
         }
 
-        status =
-            m_depthSensor->getAvailableFrameTypes(m_availableFrameTypesName);
+        status = m_depthSensor->getAvailableModes(m_availableModesName);
         if (status != Status::OK) {
             LOG(ERROR) << "Failed to get available frame types name!";
             return status;
         }
 
-        for (auto availableFrameTypes : m_availableFrameTypesName) {
-            status = m_depthSensor->getFrameTypeDetails(availableFrameTypes,
-                                                        m_frameDetails);
+        for (auto availablemodes : m_availableModesName) {
+            status =
+                m_depthSensor->getModeDetails(availablemodes, m_frameDetails);
             if (status != Status::OK) {
                 LOG(ERROR) << "Failed to get available frame types details!";
                 return status;
@@ -387,7 +386,7 @@ aditof::Status CameraItof::setMode(const std::string &mode) {
         return status;
     }
 
-    status = m_depthSensor->getFrameTypeDetails(mode, m_frameDetails);
+    status = m_depthSensor->getModeDetails(mode, m_frameDetails);
     if (status != Status::OK) {
         LOG(ERROR) << "Failed to get frame type details!";
         return status;
@@ -529,14 +528,14 @@ aditof::Status CameraItof::setIniParams(std::map<std::string, float> &params) {
     return status;
 }
 
-aditof::Status CameraItof::getAvailableFrameTypes(
-    std::vector<std::string> &availableFrameTypes) const {
+aditof::Status
+CameraItof::getAvailableModes(std::vector<std::string> &availableModes) const {
     using namespace aditof;
     Status status = Status::OK;
-    availableFrameTypes.clear();
+    availableModes.clear();
 
-    for (const auto &frameType : m_availableFrameTypesName) {
-        availableFrameTypes.emplace_back(frameType);
+    for (const auto &mode : m_availableModesName) {
+        availableModes.emplace_back(mode);
     }
 
     return status;
