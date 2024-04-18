@@ -610,15 +610,6 @@ Adsd3500Sensor::setMode(const aditof::DepthSensorFrameType &type) {
 
             __u32 pixelFormat = 0;
 
-            uint16_t width, height;
-
-            status =
-                m_modeSelector.updateConfigurationTable(m_implData->frameType);
-            if (status != Status::OK) {
-                LOG(ERROR) << "Invalid configuration provided!";
-                return status;
-            }
-
             if (m_implData->frameType.pixelFormatIndex == 1) {
                 pixelFormat = V4L2_PIX_FMT_SBGGR12;
             } else {
