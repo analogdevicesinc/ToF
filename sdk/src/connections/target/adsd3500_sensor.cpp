@@ -447,22 +447,22 @@ aditof::Status Adsd3500Sensor::stop() {
 }
 
 aditof::Status
-Adsd3500Sensor::getAvailableFrameTypes(std::vector<std::string> &types) {
-    types.clear();
-    for (const auto &frameType : m_availableFrameTypes) {
-        types.emplace_back(frameType.mode);
+Adsd3500Sensor::getAvailableModes(std::vector<std::string> &modes) {
+    modes.clear();
+    for (const auto &availableMode : m_availableModes) {
+        modes.emplace_back(availableMode.mode);
     }
     return aditof::Status::OK;
 }
 
 aditof::Status
-Adsd3500Sensor::getFrameTypeDetails(const std::string &frameName,
-                                    aditof::DepthSensorFrameType &details) {
+Adsd3500Sensor::getModeDetails(const std::string &modeName,
+                               aditof::DepthSensorFrameType &details) {
     using namespace aditof;
     Status status = Status::OK;
-    for (const auto &frameDetails : m_availableFrameTypes) {
-        if (frameDetails.mode == frameName) {
-            details = frameDetails;
+    for (const auto &modeDetails : m_availableModes) {
+        if (modeDetails.mode == modeName) {
+            details = modeDetails;
             break;
         }
     }
@@ -1675,7 +1675,7 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
         }
     }
 
-    status = m_modeSelector.getAvailableFrameTypes(m_availableFrameTypes);
+    status = m_modeSelector.getAvailableFrameTypes(m_availableModes);
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Failed to get available frame types for the "
                       "current configuration.";

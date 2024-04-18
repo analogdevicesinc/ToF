@@ -241,9 +241,9 @@ aditof::Status getMetadataInfo() {
 aditof::Status setFrameType(std::string frameTypeNew) {
     status = aditof::Status::OK;
 
-    status = camera->setFrameType(frameTypeNew);
+    status = camera->setMode(frameTypeNew);
     if (status != aditof::Status::OK) {
-        send_error_message(std::string("Error while selecting frame type"));
+        send_error_message(std::string("Error while selecting mode"));
         return status;
     }
 

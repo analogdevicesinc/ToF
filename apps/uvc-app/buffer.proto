@@ -15,7 +15,7 @@ enum Status   // This must match precisely the Status list from status_definitio
 enum FunctionName
 {
   SEARCH_SENSORS = 0;
-  GET_AVAILABLE_FRAME_TYPES = 1;
+  GET_AVAILABLE_MODES = 1;
   SET_MODE = 2;
   READ_REGISTERS = 3;
   WRITE_REGISTERS = 4;
@@ -37,7 +37,7 @@ enum FunctionName
   INIT_TARGET_DEPTH_COMPUTE = 20;
   PROCESS_FRAME = 21;
   START = 22;
-  GET_FRAME_TYPE_DETAILS = 23;
+  GET_MODE_DETAILS = 23;
   SET_SENSOR_CONFIGURATION = 24;
 }
 
