@@ -96,10 +96,10 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    std::vector<std::string> frameTypes;
-    camera->getAvailableFrameTypes(frameTypes);
-    if (frameTypes.empty()) {
-        LOG(ERROR) << "No frame type available!";
+    std::vector<std::string> modesList;
+    camera->getAvailableModes(modesList);
+    if (modesList.empty()) {
+        LOG(ERROR) << "No mode available!";
         return 0;
     }
 

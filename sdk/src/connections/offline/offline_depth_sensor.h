@@ -21,10 +21,10 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
     virtual aditof::Status start() override;
     virtual aditof::Status stop() override;
     virtual aditof::Status
-    getAvailableFrameTypes(std::vector<std::string> &types) override;
+    getAvailableModes(std::vector<std::string> &modes) override;
     virtual aditof::Status
-    getFrameTypeDetails(const std::string &frameName,
-                        aditof::DepthSensorFrameType &details) override;
+    getModeDetails(const std::string &modeName,
+                   aditof::DepthSensorFrameType &details) override;
     virtual aditof::Status
     setMode(const aditof::DepthSensorFrameType &type) override;
     virtual aditof::Status getFrame(uint16_t *buffer) override;
@@ -80,7 +80,7 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
     std::string m_path;
     std::string m_frameTypeSelected;
     std::map<std::string, std::pair<std::uint16_t *, std::size_t>> m_frameTypes;
-    const std::vector<aditof::DepthSensorFrameType> availableFrameTypes = {
+    const std::vector<aditof::DepthSensorFrameType> availableModes = {
         {"sr-native",
          {"raw", "depth", "ab", "conf", "xyz", "metadata"},
          0,

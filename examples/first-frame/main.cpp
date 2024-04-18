@@ -232,15 +232,15 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
     LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
 
-    std::vector<std::string> frameTypes;
-    camera->getAvailableFrameTypes(frameTypes);
-    if (frameTypes.empty()) {
-        std::cout << "no frame type avaialble!";
+    std::vector<std::string> availableModes;
+    camera->getAvailableModes(availableModes);
+    if (availableModes.empty()) {
+        std::cout << "no mode available!";
         return 0;
     }
 
     if (modeName.empty()) {
-        //TO DO: convert mode number/name once getFrameTypeDetails is added in the public api
+        //TO DO: convert mode number/name once getModeDetails is added in the public api
     }
 
     status = camera->setMode(modeName);

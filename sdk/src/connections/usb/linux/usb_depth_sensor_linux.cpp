@@ -141,13 +141,12 @@ aditof::Status UsbDepthSensor::open() {
 
     // Send request
     usb_payload::ClientRequest requestMsg;
-    requestMsg.set_func_name(
-        usb_payload::FunctionName::GET_AVAILABLE_FRAME_TYPES);
+    requestMsg.set_func_name(usb_payload::FunctionName::GET_AVAILABLE_MODES);
     std::string requestStr;
     requestMsg.SerializeToString(&requestStr);
     status = UsbLinuxUtils::uvcExUnitSendRequest(m_implData->fd, requestStr);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Request to get available frame types failed";
+        LOG(ERROR) << "Request to get available modes failed";
         return status;
     }
 
@@ -174,7 +173,7 @@ aditof::Status UsbDepthSensor::open() {
 
     // If request and response went well, extract data from response
     UsbUtils::protoMsgToDepthSensorFrameTypes(
-        m_depthSensorFrameTypes, responseMsg.available_frame_types());
+        m_depthSensorModes, responseMsg.available_frame_types());
 
     m_implData->opened = true;
 
@@ -239,22 +238,22 @@ aditof::Status UsbDepthSensor::stop() {
 }
 
 aditof::Status
-UsbDepthSensor::getAvailableFrameTypes(std::vector<std::string> &types) {
-    types.clear();
-    for (const auto &frameType : m_depthSensorFrameTypes) {
-        types.emplace_back(frameType.mode);
+UsbDepthSensor::getAvailableModes(std::vector<std::string> &modes) {
+    modes.clear();
+    for (const auto &frameType : m_depthSensorModes) {
+        modes.emplace_back(frameType.mode);
     }
 
     return aditof::Status::OK;
 }
 
 aditof::Status
-UsbDepthSensor::getFrameTypeDetails(const std::string &frameName,
-                                    aditof::DepthSensorFrameType &details) {
+UsbDepthSensor::getModeDetails(const std::string &modeName,
+                               aditof::DepthSensorFrameType &details) {
     using namespace aditof;
     Status status = Status::OK;
-    for (const auto &frameDetails : m_depthSensorFrameTypes) {
-        if (frameDetails.mode == frameName) {
+    for (const auto &frameDetails : m_depthSensorModes) {
+        if (frameDetails.mode == modeName) {
             details = frameDetails;
             break;
         }
