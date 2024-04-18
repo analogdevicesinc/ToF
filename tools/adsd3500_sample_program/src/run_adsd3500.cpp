@@ -81,27 +81,6 @@ int main(int argc, char *argv[]) {
 
 
     // 5. Set the Imager Mode.
-    // int modeNumber = 3; // lr-qnative
-
-    // if (modeNumber < 0 || modeNumber > 4) {
-    //     printf("Invalid mode number given. Valid Imaging modes are 0, 1, 2, 3 and 4.\n");
-    //     return 0;
-    // }
-
-    // ret = adsd3500.SetImageMode(modeNumber);
-    // if (ret < 0) {
-    //     printf("Unable to set the Image Mode in Adsd3500.\n");
-    // }
-
-    // uint8_t set_image_mode[2] = {0x00, 0x00};
-
-    // ret = adsd3500.GetImageMode(set_image_mode);
-    // if (ret < 0) {
-    //     printf("Unable to get the Image Mode from Adsd3500.\n");
-    // }
-
-    // PrintByteArray(set_image_mode, ARRAY_SIZE(set_image_mode));
-
     usleep(1000 * 5000); // Wait for a period for 5 seconds.
 
     ret = adsd3500.SetFrameType();
@@ -116,11 +95,17 @@ int main(int argc, char *argv[]) {
     }
 
     // 7. Receive Frames
-    uint16_t* buffer = new uint16_t[1024*1024*2];
+    int buffer_height = adsd3500.xyzDealiasData.n_rows;
+    int buffer_width = adsd3500.xyzDealiasData.n_cols;
+
+    uint16_t* buffer = new uint16_t[buffer_height*buffer_width*2];
     ret = adsd3500.RequestFrame(buffer);
     if (ret < 0 || buffer == nullptr) {
         std::cout << "Unable to receive frames from Adsd3500" << std::endl;
     }
+
+    // 8. Get Depth, AB, Confidence Data using Depth Compute Library
+    adsd3500.ParseFramesWithDCL(buffer);
     
     return 0;
 }

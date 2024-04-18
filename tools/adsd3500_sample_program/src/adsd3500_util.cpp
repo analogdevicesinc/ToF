@@ -364,9 +364,6 @@ int Adsd3500::ConfigureDepthComputeLibraryWithIniParams() {
         return -1;
     }
 
-    std::cout << "Columns: " << tofi_config->n_cols << std::endl;
-    std::cout << "Rows: " << tofi_config->n_rows << std::endl;
-
     TofiComputeContext *tofi_compute_context = 
         InitTofiCompute(tofi_config->p_tofi_cal_config, &ret);
     if (tofi_compute_context == NULL) {
@@ -454,6 +451,22 @@ int Adsd3500::GetIntrinsicsAndDealiasParams() {
     // xyzDealiasData.n_cols = cols;
 
     return 0;
+}
+
+int Adsd3500::ParseFramesWithDCL(uint16_t* buffer) {
+
+    int enableXyz = 0;
+    auto it = iniKeyValPairs.find("xyzEnable");
+    if (it != iniKeyValPairs.end()) {
+        enableXyz = (std::stoi(it->second));
+    }
+
+    if (enableXyz) {
+        uint16_t* xyzFrame;
+        
+    }
+    
+
 }
 
 // Read ADSD3500 Status
@@ -1369,12 +1382,12 @@ int Adsd3500::SetFrameType() {
     }
 
     // Pixel format is "raw8" for lr-qnative mode.
-    int frameHeight = 512;
-    int frameWidth = 512;
+    int frameHeight = xyzDealiasData.n_rows;
+    int frameWidth = xyzDealiasData.n_cols;
     float totalBits = depthBits + abBits + confBits;
     uint16_t width = frameWidth * totalBits / 8;
     uint16_t height = frameHeight;
-    __u32 pixelFormat = V4L2_PIX_FMT_SBGGR8;
+    __u32 pixelFormat = V4L2_PIX_FMT_SBGGR8; // if raw8 format, use this as pixel format.
 
     std::cout << "width: " << width << std::endl;
     std::cout << "height: " << height << std::endl;

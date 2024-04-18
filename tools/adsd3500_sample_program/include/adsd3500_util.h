@@ -145,6 +145,7 @@ class Adsd3500 {
 		int GetImagerTypeAndCCB();
 		int GetIniKeyValuePairFromConfig(const char* iniFileName);
 		int GetIntrinsicsAndDealiasParams();
+		int ParseFramesWithDCL(uint16_t* buffer);
 
 	private:
 		ConfigFileData iniFileData;
