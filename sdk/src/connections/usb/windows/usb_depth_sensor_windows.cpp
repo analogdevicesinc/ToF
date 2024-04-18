@@ -630,6 +630,10 @@ UsbDepthSensor::getModeDetails(const std::string &modeName,
     return status;
 }
 
+aditof::Status UsbDepthSensor::setMode(const uint8_t &mode) {
+    return aditof::Status::UNAVAILABLE;
+}
+
 aditof::Status
 UsbDepthSensor::setMode(const aditof::DepthSensorFrameType &type) {
     using namespace aditof;
