@@ -99,6 +99,14 @@ class DepthSensorInterface {
 
     /**
      * @brief Set the sensor frame mode to the given type
+     * @param mode - desired mode
+     * @return Status
+     */
+    virtual aditof::Status
+    setMode(const uint8_t &mode) = 0;
+
+    /**
+     * @brief Set the sensor frame mode to the given type
      * @param type - frame details structure containing the frame type
      * @return Status
      */
