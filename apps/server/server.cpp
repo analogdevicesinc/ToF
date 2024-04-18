@@ -526,6 +526,53 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
+    case SET_MODE_BY_INDEX: {
+
+        uint8_t mode = buff_recv.func_int32_param(0);
+
+        aditof::Status status = camDepthSensor->setMode(mode);
+        if (status == aditof::Status::OK) {
+            aditof::DepthSensorFrameType aditofFrameType;
+            status = camDepthSensor->getFrameTypeDetails(mode, aditofFrameType);
+            if (status != aditof::Status::OK) {
+                buff_send.set_status(static_cast<::payload::Status>(status));
+                break;
+            }
+
+            int width_tmp = aditofFrameType.baseResolutionWidth;
+            int height_tmp = aditofFrameType.baseResolutionHeight;
+
+            if (aditofFrameType.mode == "pcm-native") {
+                processedFrameSize = width_tmp * height_tmp;
+            } else {
+                processedFrameSize = width_tmp * height_tmp * 4;
+            }
+
+            if (buff_frame_to_send != nullptr) {
+                delete[] buff_frame_to_send;
+                buff_frame_to_send = nullptr;
+            }
+            buff_frame_to_send =
+                new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
+                            FRAME_PREPADDING_BYTES +
+                            processedFrameSize * sizeof(uint16_t)];
+
+            if (buff_frame_to_be_captured != nullptr) {
+                delete[] buff_frame_to_be_captured;
+                buff_frame_to_be_captured = nullptr;
+            }
+            buff_frame_to_be_captured =
+                new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
+                            FRAME_PREPADDING_BYTES +
+                            processedFrameSize * sizeof(uint16_t)];
+
+            buff_frame_length = processedFrameSize * 2 + FRAME_PREPADDING_BYTES;
+        }
+
+        buff_send.set_status(static_cast<::payload::Status>(status));
+        break;
+    }
+
     case SET_MODE: {
         aditof::DepthSensorFrameType aditofFrameType;
         aditofFrameType.mode = buff_recv.frame_type().mode();
@@ -914,6 +961,7 @@ void Initialize() {
     s_map_api_Values["Stop"] = STOP;
     s_map_api_Values["GetAvailableModes"] = GET_AVAILABLE_MODES;
     s_map_api_Values["GetModeDetails"] = GET_MODE_DETAILS;
+    s_map_api_Values["SetModeByIndex"] = SET_MODE_BY_INDEX;
     s_map_api_Values["SetMode"] = SET_MODE;
     s_map_api_Values["GetFrame"] = GET_FRAME;
     s_map_api_Values["GetAvailableControls"] = GET_AVAILABLE_CONTROLS;

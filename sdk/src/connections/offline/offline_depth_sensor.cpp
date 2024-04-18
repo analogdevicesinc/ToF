@@ -160,6 +160,10 @@ OfflineDepthSensor::getModeDetails(const std::string &modeName,
     return status;
 }
 
+aditof::Status OfflineDepthSensor::setMode(const uint8_t &mode) {
+    return aditof::Status::UNAVAILABLE;
+}
+
 aditof::Status
 OfflineDepthSensor::setMode(const aditof::DepthSensorFrameType &type) {
     m_frameTypeSelected = type.mode;

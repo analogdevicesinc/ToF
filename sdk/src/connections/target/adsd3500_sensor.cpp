@@ -469,6 +469,38 @@ Adsd3500Sensor::getModeDetails(const std::string &modeName,
     return status;
 }
 
+aditof::Status Adsd3500Sensor::setMode(const uint8_t &mode) {
+    aditof::DepthSensorFrameType modeTable;
+    aditof::Status status = aditof::Status::OK;
+
+    //decide if we read this from ccb or from sdk
+    if (0) {
+        //TO DO: master ccb read from nvm goes here
+    } else {
+        status = m_modeSelector->getConfigurationTable(modeTable);
+        if (status != aditof::Status::OK) {
+            LOG(ERROR) << "Failed to get configuration table!";
+            return aditof::Status::GENERIC_ERROR;
+        }
+    }
+
+    status = m_modeSelector->updateConfigurationTable(modeTable);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to update configuration table for currrent "
+                      "configuration";
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    status = setMode(modeTable);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to set mode for the current configuration!";
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    m_implData->type = modeTable;
+    return aditof::Status::OK;
+}
+
 aditof::Status
 Adsd3500Sensor::setMode(const aditof::DepthSensorFrameType &type) {
 
@@ -519,35 +551,36 @@ Adsd3500Sensor::setMode(const aditof::DepthSensorFrameType &type) {
         return status;
     }
 
-    struct v4l2_requestbuffers req;
-    struct v4l2_buffer buf;
-    struct v4l2_format fmt;
-    size_t length, offset;
-
-    m_implData->frameType = type;
-
-    dev = &m_implData->videoDevs[0];
-
-    static struct v4l2_control ctrl;
-
-    memset(&ctrl, 0, sizeof(ctrl));
-
-    ctrl.id = CTRL_SET_MODE;
-    ctrl.value = m_implData->frameType.modeNumber;
-
-    if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
-        LOG(WARNING) << "Setting Mode error "
-                     << "errno: " << errno << " error: " << strerror(errno);
-        status = Status::GENERIC_ERROR;
-        return status;
-    }
-
     // Don't request buffers & set fromat for UVC context. It is already done in uvc-app/lib/v4l2.c
     if (m_hostConnectionType != ConnectionType::USB) {
         m_capturesPerFrame = 1;
 
         for (unsigned int i = 0; i < m_implData->numVideoDevs; i++) {
             dev = &m_implData->videoDevs[i];
+
+            //Set mode in chip code block
+            struct v4l2_requestbuffers req;
+            struct v4l2_buffer buf;
+            struct v4l2_format fmt;
+            size_t length, offset;
+
+            static struct v4l2_control ctrl;
+
+            memset(&ctrl, 0, sizeof(ctrl));
+
+            ctrl.id = CTRL_SET_MODE;
+            ctrl.value = m_implData->frameType.modeNumber;
+
+            if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
+                LOG(WARNING)
+                    << "Setting Mode error "
+                    << "errno: " << errno << " error: " << strerror(errno);
+                status = Status::GENERIC_ERROR;
+                return status;
+            }
+
+            //End of set mode in chip
+
             if (type.mode != m_implData->frameType.mode) {
                 for (unsigned int i = 0; i < dev->nVideoBuffers; i++) {
                     if (munmap(dev->videoBuffers[i].start,
