@@ -79,14 +79,14 @@ if __name__ == "__main__":
     if not status:
         print("camera1.initialize() failed with status: ", status)
 
-    types = []
-    status = camera1.getAvailableFrameTypes(types)
+    modes = []
+    status = camera1.getAvailableModes(modes)
     if not status:
-        print("system.getAvailableFrameTypes() failed with status: ", status)
+        print("system.getAvailableModes() failed with status: ", status)
         
-    status = camera1.setFrameType(mode)
+    status = camera1.setMode(mode)
     if not status:
-        print("camera1.setFrameType() failed with status:", status)
+        print("camera1.setMode() failed with status:", status)
     
     status = camera1.start()
     if not status:
