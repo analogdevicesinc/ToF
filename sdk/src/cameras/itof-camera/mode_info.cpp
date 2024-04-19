@@ -21,10 +21,10 @@ ModeInfo::modeInfo ModeInfo::g_newModesAdsd3500Adsd3100[] = {
     {4, 1024, 1024, 1, 18438, 96, 1, "pcm-native"}};
 
 ModeInfo::modeInfo ModeInfo::g_newModesAdsd3500Adsd3030[] = {
-    {0, 512, 640, 1, 1670, 1472, 1, "sr-native"},
-    {1, 512, 640, 1, 1670, 1472, 1, "lr-native"},
-    {2, 256, 320, 1, 1670, 1472, 1, "sr-qnative"},
-    {3, 256, 320, 1, 1670, 1472, 1, "lr-qnative"},
+    {2, 512, 640, 1, 1670, 1472, 1, "sr-qnative"},
+    {3, 512, 640, 1, 1670, 1472, 1, "lr-qnative"},
+    {0, 256, 320, 1, 1670, 1472, 1, "sr-native"},
+    {1, 256, 320, 1, 1670, 1472, 1, "lr-native"},
     {4, 512, 640, 1, 18438, 96, 1, "pcm-native"}};
 
 ModeInfo::modeInfo ModeInfo::g_newMixedModesAdsd3500Adsd3100[] = {
@@ -37,13 +37,14 @@ ModeInfo::modeInfo ModeInfo::g_newMixedModesAdsd3500Adsd3100[] = {
     {5, 512, 512, 1, 18438, 96, 0, "lr-mixed"}};
 
 ModeInfo::modeInfo ModeInfo::g_newMixedModesAdsd3500Adsd3030[] = {
-    {0, 512, 640, 1, 1670, 1472, 1, "sr-native"},
-    {1, 512, 640, 1, 1670, 1472, 1, "lr-native"},
-    {2, 256, 320, 1, 1670, 1472, 1, "sr-qnative"},
-    {3, 256, 320, 1, 1670, 1472, 1, "lr-qnative"},
+    {0, 256, 320, 1, 1670, 1472, 1, "sr-qnative"},
+    {1, 256, 320, 1, 1670, 1472, 1, "lr-qnative"},
+    {2, 512, 640, 1, 1670, 1472, 1, "sr-native"},
+    {3, 512, 640, 1, 1670, 1472, 1, "lr-native"},
     {4, 512, 640, 1, 18438, 96, 1, "pcm-native"},
     {6, 256, 320, 1, 1670, 1472, 0, "sr-mixed"},
-    {5, 256, 320, 1, 1670, 1472, 0, "lr-mixed"}};
+    //{5, 256, 320, 1, 1670, 1472, 0, "lr-mixed"}
+    };
 
 int ModeInfo::g_imagerType = 1;
 int ModeInfo::g_modeVersion = 2;
