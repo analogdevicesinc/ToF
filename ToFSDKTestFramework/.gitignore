@@ -1,0 +1,12 @@
+tof_sdk_env/
+tests/test_reports/
+tests/test_adtofpython/
+tests/data_dir/
+tests/test_adtofpython/__pycache__/
+tests/*.ccb
+tests/test_framehandler/frame_multiple/
+tests/test_framehandler/frame_multithread/
+tests/test_framehandler/frame_rename/
+tests/test_framehandler/frame_single/
+open_putty.bat
+**/__pycache__
