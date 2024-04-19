@@ -170,12 +170,12 @@ class GestureDemo(Frame):
             return
         print("camera1.initialize()", status)
 
-        types = []
-        status = self.cameras[0].getAvailableFrameTypes(types)
+        modes = []
+        status = self.cameras[0].getAvailableModes(modes)
         if not status:
             return
-        print("camera1.getAvailableFrameTypes()", status)
-        print(types)
+        print("camera1.getAvailableModes()", status)
+        print(modes)
 
         camDetails = tof.CameraDetails()
         status = self.cameras[0].getDetails(camDetails)
@@ -189,10 +189,10 @@ class GestureDemo(Frame):
             "connection:",
             camDetails.connection)
 
-        status = self.cameras[0].setFrameType(MODE_OPTIONS_CHOSEN)
+        status = self.cameras[0].setMode(MODE_OPTIONS_CHOSEN)
         if not status:
             return
-        print("camera1.setFrameType()", status)
+        print("camera1.setMode()", status)
         print("Chosen mode: ", MODE_OPTIONS_CHOSEN)
 
         IS_INITIALIZED = True
