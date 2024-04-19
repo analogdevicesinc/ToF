@@ -428,7 +428,7 @@ NetworkDepthSensor::getAvailableModes(std::vector<std::string> &modes) {
 }
 
 aditof::Status
-NetworkDepthSensor::getModeDetails(const std::string &modeName,
+NetworkDepthSensor::getModeDetails(const uint8_t &mode,
                                    aditof::DepthSensorFrameType &details) {
     using namespace aditof;
     Network *net = m_implData->handle.net;
@@ -440,7 +440,7 @@ NetworkDepthSensor::getModeDetails(const std::string &modeName,
     }
 
     net->send_buff[m_sensorIndex].set_func_name("GetModeDetails");
-    net->send_buff[m_sensorIndex].add_func_strings_param(modeName);
+    net->send_buff[m_sensorIndex].add_func_int32_param(mode);
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
@@ -458,9 +458,7 @@ NetworkDepthSensor::getModeDetails(const std::string &modeName,
         LOG(WARNING) << "API execution on Target Failed";
         return Status::GENERIC_ERROR;
     }
-    details.mode = modeName;
-    details.modeNumber =
-        net->recv_buff[m_sensorIndex].depth_sensor_frame_type().mode_number();
+    details.modeNumber = mode;
     details.pixelFormatIndex = net->recv_buff[m_sensorIndex]
                                    .depth_sensor_frame_type()
                                    .pixel_format_index();

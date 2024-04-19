@@ -248,12 +248,12 @@ UsbDepthSensor::getAvailableModes(std::vector<std::string> &modes) {
 }
 
 aditof::Status
-UsbDepthSensor::getModeDetails(const std::string &modeName,
+UsbDepthSensor::getModeDetails(const uint8_t &mode,
                                aditof::DepthSensorFrameType &details) {
     using namespace aditof;
     Status status = Status::OK;
     for (const auto &frameDetails : m_depthSensorModes) {
-        if (frameDetails.mode == modeName) {
+        if (frameDetails.modeNumber == mode) {
             details = frameDetails;
             break;
         }
