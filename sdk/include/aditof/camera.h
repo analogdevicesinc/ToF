@@ -85,7 +85,7 @@ class SDK_API Camera {
      * @param mode - The mode of the camera
      * @return Status
      */
-    virtual Status setMode(const std::string &mode) = 0;
+    virtual Status setMode(const uint8_t &mode) = 0;
 
     /**
      * @brief Get the Depth Compute Library ini parameters
