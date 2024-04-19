@@ -147,12 +147,12 @@ OfflineDepthSensor::getAvailableModes(std::vector<std::string> &types) {
 }
 
 aditof::Status
-OfflineDepthSensor::getModeDetails(const std::string &modeName,
+OfflineDepthSensor::getModeDetails(const uint8_t &mode,
                                    aditof::DepthSensorFrameType &details) {
     using namespace aditof;
     Status status = Status::OK;
     for (const auto &modeDetails : availableModes) {
-        if (modeDetails.mode == modeName) {
+        if (modeDetails.modeNumber == mode) {
             details = modeDetails;
             break;
         }
