@@ -137,7 +137,7 @@ struct CameraDetails {
     /**
      * @brief The mode in which the camera operates
      */
-    std::string mode;
+    std::uint8_t mode;
 
     /**
      * @brief Details about the frames that camera is capturing
