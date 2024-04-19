@@ -35,37 +35,22 @@ import os.path
 import numpy as np
 import logging
 import os
-import time
-import re
+import shutil
 
 Logger = logging.getLogger(__name__)
-
-def test_frameHandler(available_modes_ini, ip_set, config_file):
-    '''
-    mode_name = {0: "3500_sr-native", 1: "3500_lr-native", 2: "3500_sr-qnative", 3: "3500_lr-qnative",
-        4: "_pcm-native", 5: "3500_lr-mixed", 6: "3500_sr-mixed"}
-        
-    if(available_modes_ini != 4):
-        #parse the ini file
-        with open('./config/RawToDepthAdsd' + mode_name[available_modes_ini] + '.ini', mode='r') as file:
-            lines = file.readlines()
-        ini_data = {}
-        for line in lines:
-            variable, value = line.strip().split('=')
-            try:
-                ini_data[variable] = float(value)
-            except ValueError:
-                ini_data[variable] = str(value)  
-    '''        
-    #Run the exe file
-    exe_path = "../../build/examples/test_frameHandler/release/test_frameHandler.exe"
-    process = subprocess.run([exe_path, str(available_modes_ini), ip_set, config_file],text=True,
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     
-    assert process.returncode == 0
+def test_temp_compensation(available_modes_ini, ip_set, config_file):
+    
+    exe_path = "../../build/examples/test_temp_compensation1/Release/test_temp_compensation1.exe"
+    process = subprocess.run([exe_path, str(available_modes_ini), ip_set, config_file, test_dir], 
+        text=True,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     print(process.stdout)
-    output = process.stdout
+    assert process.returncode == 0 
+    Logger.info(process.stdout)
     
-
-    
+    exe_path = "../../build/examples/test_temp_compensation2/Release/test_temp_compensation2.exe"
+    process = subprocess.run([exe_path, str(available_modes_ini), ip_set, config_file, test_dir], 
+        text=True,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    print(process.stdout)
+    assert process.returncode == 0 
     Logger.info(process.stdout)

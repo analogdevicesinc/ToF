@@ -37,6 +37,8 @@
 #include <aditof/version.h>
 #include <command_parser.h>
 #include <fstream>
+#include <chrono>
+#include <thread>
 #ifdef USE_GLOG
 #include <glog/logging.h>
 #else
@@ -50,25 +52,28 @@
 using namespace aditof;
 
 int main(int argc, char *argv[]) {
+    using namespace std::this_thread; // sleep_for, sleep_until
+    using namespace std::chrono; // nanoseconds, system_clock, seconds
+
     std::string configFile;
-    int modeNum;
+    int modeNum = 0;
+    int mipispeed;
     std::string ip;
-    std::string filename_1, filename_2;
+    std::string directory;
+
     // check argument for modeName
-    if (argc > 5) {
+    if (argc > 3) {
         // convert the string argument to an integer
-        modeNum = std::stoi(argv[1]);
-        ip = argv[2];
-        configFile = argv[3];
-        filename_1 = argv[4];
-        filename_2 = argv[5];
+        ip = argv[1];
+        configFile = argv[2];
+        mipispeed = std::stoi(argv[3]);
+        
     } else {
         // set num to default: 0(sr-native)
-        modeNum = 0;
         ip = "10.42.0.1";
         configFile = "config/config_adsd3500_adsd3100.json";
-        filename_1 = "trial_1.bin";
-        filename_2 = "trial_2.bin";
+        directory = "";
+        mipispeed = 3;
     }
 
     LOG(INFO) << "value: " << modeNum;
@@ -102,7 +107,7 @@ int main(int argc, char *argv[]) {
     std::vector<std::string> frameTypes;
     camera->getAvailableFrameTypes(frameTypes);
     if (frameTypes.empty()) {
-        LOG(ERROR) << "no frame type avaialble!";
+        std::cout << "no frame type avaialble!";
         return 1;
     }
 
@@ -113,106 +118,37 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 1;
     }
+    
 
-    status = camera->start();
+    LOG(INFO) << "Validating Mipi Speed for config val";
+
+    LOG(INFO) << mipispeed;
+    status = camera->adsd3500SetMIPIOutputSpeed(mipispeed);
     if (status != Status::OK) {
-        LOG(ERROR) << "Could not start the camera!";
-        return 1;
-    }
-
-    aditof::Frame frame;
-
-    status = camera->requestFrame(&frame);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not request frame!";
+        LOG(ERROR) << "failed to set mipispeed!";
         return 1;
     } else {
-        LOG(INFO) << "succesfully requested frame!";
+        LOG(INFO) << "mipi output speed set ";
     }
 
-    FrameHandler frameSaver;
-
-    //save  frames  in multiple files
-    frameSaver.storeFramesToSingleFile(true);
-    std::string path = "./test_framehandler/frame_multiple";
-    frameSaver.setOutputFilePath(path);
+    uint16_t val;
+    status = camera->adsd3500GetMIPIOutputSpeed(val);
     if (status != Status::OK) {
-        LOG(ERROR) << "Could not set path to " << path;
-        return 0;
+        LOG(ERROR) << "failed to get mipispeed!";
+        return 1;
+    } else {
+        LOG(INFO) << "mipi output speed: " << val;
     }
 
-    for (uint32_t loopcount = 0; loopcount < 10; loopcount++) {
-
-        status = camera->requestFrame(&frame);
+    if (mipispeed == 9) {
+        LOG(INFO) << mipispeed;
+        status = camera->adsd3500SetMIPIOutputSpeed(mipispeed);
         if (status != Status::OK) {
-            LOG(ERROR) << "Could not request frame!";
-            return 0;
-        }
-        frameSaver.saveFrameToFile(frame);
-    } // End of for Loop
-
-    //save  frames  in single file
-    frameSaver.storeFramesToSingleFile(false);
-    path = "./test_framehandler/frame_single";
-    frameSaver.setOutputFilePath(path);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not set path to " << path;
-        return 0;
-    }
-
-    for (uint32_t loopcount = 0; loopcount < 10; loopcount++) {
-
-        status = camera->requestFrame(&frame);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Could not request frame!";
+            LOG(ERROR) << "failed to set mipispeed!";
             return 1;
+        } else {
+            LOG(INFO) << "mipi output speed set to 1.5Gbps ";
         }
-        frameSaver.saveFrameToFile(frame);
-    } // End of for Loop
-
-    //save  frames  in single file
-    path = "./test_framehandler/frame_multithread";
-    status = frameSaver.setOutputFilePath(path);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not set path to " << path;
-        return 1;
-    }
-
-    status = camera->requestFrame(&frame);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not request frame!";
-        return 1;
-    }
-    frameSaver.saveFrameToFile(frame);
-
-    // test set input filename API
-    path = "./test_framehandler/frame_rename";
-    status = frameSaver.setOutputFilePath(path);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not set path to " << path;
-        return 1;
-    }
-
-    status = camera->requestFrame(&frame);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not request frame!";
-        return 1;
-    }
-
-    frameSaver.setInputFileName(filename_1);
-    frameSaver.saveFrameToFile(frame);
-
-    // test save input file name with optinal name argument
-    status = camera->requestFrame(&frame);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not request frame!";
-        return 1;
-    }
-    frameSaver.saveFrameToFile(frame, filename_2);
-
-    status = camera->stop();
-    if (status != Status::OK) {
-        LOG(INFO) << "Error stopping camera!";
     }
     return 0;
 }

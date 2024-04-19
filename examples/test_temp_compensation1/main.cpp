@@ -32,7 +32,6 @@
 #include <aditof/camera.h>
 #include <aditof/depth_sensor_interface.h>
 #include <aditof/frame.h>
-#include <aditof/frame_handler.h>
 #include <aditof/system.h>
 #include <aditof/version.h>
 #include <command_parser.h>
@@ -50,28 +49,27 @@
 using namespace aditof;
 
 int main(int argc, char *argv[]) {
+    
+    uint16_t metadata_en_status;
+    uint16_t temp_comp_status;
+    uint16_t laserTempVal;
+    uint16_t sensorTempVal;
+
     std::string configFile;
     int modeNum;
     std::string ip;
-    std::string filename_1, filename_2;
     // check argument for modeName
-    if (argc > 5) {
+    if (argc > 3) {
         // convert the string argument to an integer
         modeNum = std::stoi(argv[1]);
         ip = argv[2];
         configFile = argv[3];
-        filename_1 = argv[4];
-        filename_2 = argv[5];
     } else {
         // set num to default: 0(sr-native)
         modeNum = 0;
         ip = "10.42.0.1";
         configFile = "config/config_adsd3500_adsd3100.json";
-        filename_1 = "trial_1.bin";
-        filename_2 = "trial_2.bin";
     }
-
-    LOG(INFO) << "value: " << modeNum;
 
     Status status = Status::OK;
 
@@ -102,7 +100,7 @@ int main(int argc, char *argv[]) {
     std::vector<std::string> frameTypes;
     camera->getAvailableFrameTypes(frameTypes);
     if (frameTypes.empty()) {
-        LOG(ERROR) << "no frame type avaialble!";
+        std::cout << "no frame type avaialble!";
         return 1;
     }
 
@@ -114,105 +112,97 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    status = camera->start();
+    status = camera->adsd3500SetEnableMetadatainAB(0);
     if (status != Status::OK) {
-        LOG(ERROR) << "Could not start the camera!";
-        return 1;
-    }
-
-    aditof::Frame frame;
-
-    status = camera->requestFrame(&frame);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not request frame!";
+        LOG(ERROR) << "failed to disable metadata in AB!";
         return 1;
     } else {
-        LOG(INFO) << "succesfully requested frame!";
+        LOG(INFO) << "disabled metadata in AB";
     }
 
-    FrameHandler frameSaver;
-
-    //save  frames  in multiple files
-    frameSaver.storeFramesToSingleFile(true);
-    std::string path = "./test_framehandler/frame_multiple";
-    frameSaver.setOutputFilePath(path);
+    status = camera->adsd3500GetEnableMetadatainAB(metadata_en_status);
     if (status != Status::OK) {
-        LOG(ERROR) << "Could not set path to " << path;
-        return 0;
+        LOG(ERROR) << "failed to get metadata in AB!";
+    } else {
+        LOG(INFO) << "Metadatain AB enable status: " << metadata_en_status;
     }
 
-    for (uint32_t loopcount = 0; loopcount < 10; loopcount++) {
-
-        status = camera->requestFrame(&frame);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Could not request frame!";
-            return 0;
-        }
-        frameSaver.saveFrameToFile(frame);
-    } // End of for Loop
-
-    //save  frames  in single file
-    frameSaver.storeFramesToSingleFile(false);
-    path = "./test_framehandler/frame_single";
-    frameSaver.setOutputFilePath(path);
+    status = camera->adsd3500SetEnableTemperatureCompensation(0);
     if (status != Status::OK) {
-        LOG(ERROR) << "Could not set path to " << path;
-        return 0;
-    }
-
-    for (uint32_t loopcount = 0; loopcount < 10; loopcount++) {
-
-        status = camera->requestFrame(&frame);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Could not request frame!";
-            return 1;
-        }
-        frameSaver.saveFrameToFile(frame);
-    } // End of for Loop
-
-    //save  frames  in single file
-    path = "./test_framehandler/frame_multithread";
-    status = frameSaver.setOutputFilePath(path);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not set path to " << path;
+        LOG(ERROR) << "failed to disable temp compensation!";
         return 1;
+    } else {
+        LOG(INFO) << "disable temp compensation";
     }
 
-    status = camera->requestFrame(&frame);
+    status = camera->adsd3500GetTemperatureCompensationStatus(temp_comp_status);
     if (status != Status::OK) {
-        LOG(ERROR) << "Could not request frame!";
+        LOG(ERROR) << "failed to get temp compensation status!";
+    } else {
+        LOG(INFO) << "Temp comensation enable status: " << temp_comp_status;
+    } 
+    
+    status = camera->adsd3500GetSensorTemperature(sensorTempVal);
+    if (status != Status::OK) {
+        LOG(ERROR) << "failed to get sensor temperature!";
         return 1;
+    } else {
+        LOG(INFO) << "sensor temp value: " << sensorTempVal;
     }
-    frameSaver.saveFrameToFile(frame);
 
-    // test set input filename API
-    path = "./test_framehandler/frame_rename";
-    status = frameSaver.setOutputFilePath(path);
+    status = camera->adsd3500GetLaserTemperature(laserTempVal);
     if (status != Status::OK) {
-        LOG(ERROR) << "Could not set path to " << path;
+        LOG(ERROR) << "failed to get laser temperature!";
         return 1;
+    } else {
+        LOG(INFO) << "laser temp value: " << laserTempVal;
     }
 
-    status = camera->requestFrame(&frame);
+    status = camera->adsd3500SetEnableMetadatainAB(1);
     if (status != Status::OK) {
-        LOG(ERROR) << "Could not request frame!";
+        LOG(ERROR) << "failed to disable metadata in AB!";
         return 1;
+    } else {
+        LOG(INFO) << "disabled metadata in AB";
     }
 
-    frameSaver.setInputFileName(filename_1);
-    frameSaver.saveFrameToFile(frame);
-
-    // test save input file name with optinal name argument
-    status = camera->requestFrame(&frame);
+    status = camera->adsd3500GetEnableMetadatainAB(metadata_en_status);
     if (status != Status::OK) {
-        LOG(ERROR) << "Could not request frame!";
+        LOG(ERROR) << "failed to get metadata in AB!";
+    } else {
+        LOG(INFO) << "Metadatain AB enable status: " << metadata_en_status;
+    }
+
+    status = camera->adsd3500SetEnableTemperatureCompensation(1);
+    if (status != Status::OK) {
+        LOG(ERROR) << "failed to disable temp compensation!";
         return 1;
+    } else {
+        LOG(INFO) << "disable temp compensation";
     }
-    frameSaver.saveFrameToFile(frame, filename_2);
 
-    status = camera->stop();
+    status = camera->adsd3500GetTemperatureCompensationStatus(temp_comp_status);
     if (status != Status::OK) {
-        LOG(INFO) << "Error stopping camera!";
+        LOG(ERROR) << "failed to get temp compensation status!";
+    } else {
+        LOG(INFO) << "Temp compensation enable status: " << temp_comp_status;
+    } 
+
+    status = camera->adsd3500GetSensorTemperature(sensorTempVal);
+    if (status != Status::OK) {
+        LOG(ERROR) << "failed to get sensor temperature!";
+        return 1;
+    } else {
+        LOG(INFO) << "sensor temp value: " << sensorTempVal;
     }
+
+    status = camera->adsd3500GetLaserTemperature(laserTempVal);
+    if (status != Status::OK) {
+        LOG(ERROR) << "failed to get laser temperature!";
+        return 1;
+    } else {
+        LOG(INFO) << "laser temp value: " << laserTempVal;
+    }
+
     return 0;
 }

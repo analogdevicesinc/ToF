@@ -37,38 +37,33 @@ import logging
 import os
 import re
 
-@pytest.fixture()
-def ip_invalid_string():
-    return "None"
-    
-@pytest.fixture()
-def ip_no_camera():
-    return "10.43.0.1"
-    
 Logger = logging.getLogger(__name__)
 
-@pytest.mark.parametrize("ip_list", ["10.42.0.1", "10.43.0.1", "None", 1234])
+@pytest.fixture(params=[1,2,3,4,5,6,7,8,9])
+def mipi_speed_val(request):
+    return request.param
 
-def test_get_cameralist_input(ip_set,ip_list,ip_no_camera):
-    try:
-        #Run the exe file
-        exe_path = "../../build/examples/test_get_camera_list/release/test_get_camera_list.exe"
-        process = subprocess.run([exe_path, ip_list],
-            text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            
-        print(process.stdout)
-        output = process.stdout
+    
+def test_mipispeed(ip_set, config_file, mipi_speed_val):
+    
+    
+    exe_path = "../../build/examples/test_mipi_speed/Release/test_mipi_speed.exe"
+    process = subprocess.run([exe_path, ip_set, config_file, str(mipi_speed_val)], 
+        text=True,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    print(process.stdout)
+    output = process.stdout
+    
+    if mipi_speed_val == 9:
+        assert process.returncode == 1
+    else:
+        assert process.returncode == 0 
         
-        if ip_list == ip_set:
-            assert process.returncode == 0
-            assert "Status::OK" in output,"camera not detected @ ip_set for camera"
-        
-        elif ip_list == ip_no_camera:
-            assert "Status::UNREACHABLE" in output,"wrong status"
-        
-        else:
-            assert "getaddrinfo failed: 11001" in output,"wrong status"
-            
-    except TypeError:  
-        print("tried an integer as an input")
-        assert True
+    Logger.info(process.stdout)
+    
+    match = re.search("mipi output speed: *?(\\d+)", output)
+    assert match is not None    # Checks if the pattern is found
+    value = match.groups()[0]
+    mipiSpeedVal = int(value)
+    assert mipiSpeedVal == mipi_speed_val,"does not match with desired mipi speed"
+    print("mipi speed verified")
+

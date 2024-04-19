@@ -153,6 +153,12 @@ int main(int argc, char *argv[]) {
     if (attributes.empty()) {
         LOG(INFO) << "no attributes avaialble!";
         return 1;
+    } else {
+        std::cout << "Attributes: ";
+        for (const auto &str : attributes) {
+            std::cout << str << ' ';
+        }
+        std::cout << std::endl;
     }
 
     std::string hdr_length;

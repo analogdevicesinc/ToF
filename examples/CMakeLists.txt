@@ -12,6 +12,9 @@ add_subdirectory(test_saveCCBCFG)
 add_subdirectory(test_frameAPIs)
 add_subdirectory(test_get_camera_list)
 add_subdirectory(test_initialize_load_config)
+add_subdirectory(test_temp_compensation1)
+add_subdirectory(test_temp_compensation2)
+add_subdirectory(test_mipi_speed)
 
 if (NOT NXP)
     add_subdirectory(tof-viewer)
@@ -32,6 +35,9 @@ if (NXP)
 	$<TARGET_FILE:test_frameAPIs>
 	$<TARGET_FILE:test_get_camera_list>
 	$<TARGET_FILE:test_initialize_load_config>
+	$<TARGET_FILE:test_temp_compensation1>
+	$<TARGET_FILE:test_temp_compensation2>
+	$<TARGET_FILE:test_mipi_speed>
 
         DESTINATION ${CMAKE_INSTALL_BINDIR} )
 elseif(WIN32)
@@ -47,6 +53,9 @@ elseif(WIN32)
 	$<TARGET_FILE:test_frameAPIs>
 	$<TARGET_FILE:test_get_camera_list>
 	$<TARGET_FILE:test_initialize_load_config>
+	$<TARGET_FILE:test_temp_compensation1>
+	$<TARGET_FILE:test_temp_compensation2>
+	$<TARGET_FILE:test_mipi_speed>
         $<TARGET_FILE:ADIToFGUI>
         DESTINATION ${CMAKE_INSTALL_BINDIR} )
 endif()

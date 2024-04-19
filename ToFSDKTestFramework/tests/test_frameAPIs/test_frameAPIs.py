@@ -47,7 +47,7 @@ def test_frameAPIs(available_modes_ini, ip_set,config_file):
 
     
     #parse the ini file
-    with open('./test_frameAPIs_details/frame_details_' + str(available_modes_ini) + '.ini', mode='r') as file:
+    with open('./test_frameAPIs/frame_details_' + str(available_modes_ini) + '.ini', mode='r') as file:
         lines = file.readlines()
     ini_data = {}
     for line in lines:
