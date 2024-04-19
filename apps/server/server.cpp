@@ -493,10 +493,10 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
 
     case GET_AVAILABLE_MODES: {
-        std::vector<std::string> aditofModes;
+        std::vector<uint8_t> aditofModes;
         aditof::Status status = camDepthSensor->getAvailableModes(aditofModes);
         for (auto &modeName : aditofModes) {
-            buff_send.add_strings_payload(modeName);
+            buff_send.add_int32_payload(modeName);
         }
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
@@ -508,7 +508,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         aditof::Status status =
             camDepthSensor->getModeDetails(modeName, frameDetails);
         auto protoContent = buff_send.mutable_depth_sensor_frame_type();
-        protoContent->set_mode(frameDetails.mode);
         protoContent->set_mode_number(frameDetails.modeNumber);
         protoContent->set_pixel_format_index(frameDetails.pixelFormatIndex);
         protoContent->set_frame_width_in_bytes(frameDetails.frameWidthInBytes);
@@ -575,7 +574,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
     case SET_MODE: {
         aditof::DepthSensorFrameType aditofFrameType;
-        aditofFrameType.mode = buff_recv.frame_type().mode();
         aditofFrameType.modeNumber = buff_recv.frame_type().mode_number();
         aditofFrameType.pixelFormatIndex =
             buff_recv.frame_type().pixel_format_index();

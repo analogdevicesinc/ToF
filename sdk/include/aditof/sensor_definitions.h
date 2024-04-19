@@ -175,7 +175,7 @@ struct DepthSensorFrameType {
  */
 inline std::ostream &operator<<(std::ostream &o,
                                 const DepthSensorFrameType &a) {
-    o << "DepthSensorFrame: T: " << a.mode << "\tW: " << a.baseResolutionWidth
+    o << "DepthSensorFrame: T: " << a.modeNumber << "\tW: " << a.baseResolutionWidth
       << "\tH: " << a.baseResolutionHeight << " contains:\n";
     for (auto &content : a.frameContent) {
         o << "\t" << content;

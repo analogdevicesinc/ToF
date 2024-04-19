@@ -75,7 +75,7 @@ CameraItof::CameraItof(
 
     FloatToLinGenerateTable();
     memset(&m_xyzTable, 0, sizeof(m_xyzTable));
-    m_details.mode = "sr-native";
+    m_details.mode = 0;
     m_details.uBootVersion = ubootVersion;
     m_details.kernelVersion = kernelVersion;
     m_details.sdCardImageVersion = sdCardImageVersion;
@@ -156,13 +156,13 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
             return Status::UNAVAILABLE;
         }
 
-        status = m_depthSensor->getAvailableModes(m_availableModesName);
+        status = m_depthSensor->getAvailableModes(m_availableModes);
         if (status != Status::OK) {
             LOG(ERROR) << "Failed to get available frame types name!";
             return status;
         }
 
-        for (auto availablemodes : m_availableModesName) {
+        for (auto availablemodes : m_availableModes) {
             status =
                 m_depthSensor->getModeDetails(availablemodes, m_frameDetails);
             if (status != Status::OK) {
@@ -533,12 +533,12 @@ aditof::Status CameraItof::setIniParams(std::map<std::string, float> &params) {
 }
 
 aditof::Status
-CameraItof::getAvailableModes(std::vector<std::string> &availableModes) const {
+CameraItof::getAvailableModes(std::vector<uint8_t> &availableModes) const {
     using namespace aditof;
     Status status = Status::OK;
     availableModes.clear();
 
-    for (const auto &mode : m_availableModesName) {
+    for (const auto &mode : m_availableModes) {
         availableModes.emplace_back(mode);
     }
 

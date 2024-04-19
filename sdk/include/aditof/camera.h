@@ -115,7 +115,7 @@ class SDK_API Camera {
      * @return Status
      */
     virtual Status
-    getAvailableModes(std::vector<std::string> &availableModes) const = 0;
+    getAvailableModes(std::vector<uint8_t> &availableModes) const = 0;
 
     /**
      * @brief Captures data from the camera and assigns it to the given frame.
