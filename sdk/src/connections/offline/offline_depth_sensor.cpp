@@ -138,10 +138,10 @@ aditof::Status OfflineDepthSensor::start() { return aditof::Status::OK; }
 aditof::Status OfflineDepthSensor::stop() { return aditof::Status::OK; }
 
 aditof::Status
-OfflineDepthSensor::getAvailableModes(std::vector<std::string> &types) {
-    types.clear();
+OfflineDepthSensor::getAvailableModes(std::vector<uint8_t> &modes) {
+    modes.clear();
     for (const auto &mode : availableModes) {
-        types.emplace_back(mode.mode);
+        modes.emplace_back(mode.modeNumber);
     }
     return aditof::Status::OK;
 }
