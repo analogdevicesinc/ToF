@@ -179,10 +179,10 @@ if __name__ == '__main__':
             print('Please reboot the board')
 
     #Get frame types
-    frame_types = []
-    status = camera1.getAvailableFrameTypes(frame_types)
-    if status != tof.Status.Ok or len(frame_types) == 0:
-        sys.exit('Cound not aquire frame types')
+    modes = []
+    status = camera1.getAvailableModes(modes)
+    if status != tof.Status.Ok or len(modes) == 0:
+        sys.exit('Could not acquire available modes')
    
     #check mode, accepts both string and index
     if (args.mode):
@@ -196,15 +196,15 @@ if __name__ == '__main__':
             else:
                 sys.exit(f'Mode: {args.mode} is invalid for this type of camera')
         except ValueError:
-            if args.mode not in frame_types:
+            if args.mode not in modes:
                 sys.exit(f'{args.mode} is not a valid mode')
             else:
                 mode_name = args.mode
                 print(f'Mode: {mode_name}')
     
-    status = camera1.setFrameType(mode_name)
+    status = camera1.setMode(mode_name)
     if status != tof.Status.Ok:
-        sys.exit("Could not set camera frame type!")
+        sys.exit("Could not set camera mode!")
 
     if (args.ccb):
         status = camera1.saveModuleCCB(args.ccb)

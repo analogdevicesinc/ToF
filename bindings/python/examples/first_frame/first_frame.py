@@ -108,19 +108,19 @@ status = sensor.adsd3500_register_interrupt_callback(callbackFunction)
 status = camera1.initialize(config)
 print("camera1.initialize()", status)
 
-types = []
-status = camera1.getAvailableFrameTypes(types)
-print("camera1.getAvailableFrameTypes()", status)
-print(types)
+modes = []
+status = camera1.getAvailableModes(modes)
+print("camera1.getAvailableModes()", status)
+print(modes)
 
 camDetails = tof.CameraDetails()
 status = camera1.getDetails(camDetails)
 print("camera1.getDetails()", status)
 print("camera1 details:", "id:", camDetails.cameraId, "connection:", camDetails.connection)
 
-status = camera1.setFrameType(mode)
-print("camera1.setFrameType()", status)
-print('Chosen mode: %s' %mode)
+status = camera1.setMode(mode)
+print("camera1.setMode()", status)
+print(mode)
 
 # Example of getting/modifying/setting the current ADSD3500 parameters
 # status, currentIniParams = camera1.getIniParams()
