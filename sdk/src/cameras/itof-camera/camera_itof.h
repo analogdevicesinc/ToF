@@ -56,7 +56,7 @@ class CameraItof : public aditof::Camera {
     aditof::Status stop() override;
     aditof::Status setMode(const uint8_t &mode) override;
     aditof::Status
-    getAvailableModes(std::vector<std::string> &availableModes) const override;
+    getAvailableModes(std::vector<uint8_t> &availableModes) const override;
     aditof::Status requestFrame(aditof::Frame *frame) override;
     aditof::Status normalizeABdata(aditof::Frame *frame,
                                    bool useLogScaling) override;
@@ -235,7 +235,7 @@ class CameraItof : public aditof::Camera {
     bool m_xyzSetViaApi;
     bool m_pcmFrame;
     std::vector<aditof::DepthSensorFrameType> m_availableSensorFrameTypes;
-    std::vector<std::string> m_availableModesName;
+    std::vector<uint8_t> m_availableModes;
     aditof::DepthSensorFrameType m_frameDetails;
     std::vector<std::pair<std::string, int32_t>> m_sensor_settings;
     int16_t m_cameraFps;

@@ -447,10 +447,10 @@ aditof::Status Adsd3500Sensor::stop() {
 }
 
 aditof::Status
-Adsd3500Sensor::getAvailableModes(std::vector<std::string> &modes) {
+Adsd3500Sensor::getAvailableModes(std::vector<uint8_t> &modes) {
     modes.clear();
     for (const auto &availableMode : m_availableModes) {
-        modes.emplace_back(availableMode.mode);
+        modes.emplace_back(availableMode.modeNumber);
     }
     return aditof::Status::OK;
 }

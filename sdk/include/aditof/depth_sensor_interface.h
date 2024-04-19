@@ -85,7 +85,7 @@ class DepthSensorInterface {
      * @return Status
      */
     virtual aditof::Status
-    getAvailableModes(std::vector<std::string> &modes) = 0;
+    getAvailableModes(std::vector<uint8_t> &modes) = 0;
 
     /**
      * @brief Returns details of specified mode
