@@ -313,13 +313,15 @@ aditof::Status CameraItof::stop() {
     return status;
 }
 
-aditof::Status CameraItof::setMode(const std::string &mode) {
+aditof::Status CameraItof::setMode(const uint8_t &mode) {
     using namespace aditof;
     Status status = Status::OK;
 
-    auto modeIt = std::find_if(
-        m_availableSensorFrameTypes.begin(), m_availableSensorFrameTypes.end(),
-        [&mode](const DepthSensorFrameType &d) { return (d.mode == mode); });
+    auto modeIt = std::find_if(m_availableSensorFrameTypes.begin(),
+                               m_availableSensorFrameTypes.end(),
+                               [&mode](const DepthSensorFrameType &d) {
+                                   return (d.modeNumber == mode);
+                               });
 
     if (modeIt == m_availableSensorFrameTypes.end()) {
         LOG(WARNING) << "Mode: " << mode << " not supported by camera";
@@ -327,7 +329,7 @@ aditof::Status CameraItof::setMode(const std::string &mode) {
     }
 
     if (m_ini_depth_map.size() > 1) {
-        m_ini_depth = m_ini_depth_map[mode];
+        m_ini_depth = m_ini_depth_map[std::to_string(mode)];
     }
 
     if (m_details.connection == ConnectionType::USB) {
@@ -336,12 +338,6 @@ aditof::Status CameraItof::setMode(const std::string &mode) {
             LOG(WARNING) << "Failed to reset the camera!";
             return status;
         }
-    }
-
-    if (mode == "pcm-native") {
-        m_pcmFrame = true;
-    } else {
-        m_pcmFrame = false;
     }
 
     UtilsIni::getKeyValuePairsFromIni(m_ini_depth, m_iniKeyValPairs);
@@ -380,20 +376,28 @@ aditof::Status CameraItof::setMode(const std::string &mode) {
 
     LOG(INFO) << "Using ini file: " << m_ini_depth;
 
-    status = m_depthSensor->setMode(*modeIt);
-    if (status != Status::OK) {
-        LOG(WARNING) << "Failed to set frame type";
-        return status;
-    }
-
     status = m_depthSensor->getModeDetails(mode, m_frameDetails);
     if (status != Status::OK) {
         LOG(ERROR) << "Failed to get frame type details!";
         return status;
     }
 
+    status = m_depthSensor->setMode(mode);
+    if (status != Status::OK) {
+        LOG(WARNING) << "Failed to set frame type";
+        return status;
+    }
+
+    if (std::find(m_frameDetails.frameContent.begin(),
+                  m_frameDetails.frameContent.end(),
+                  "depth") != m_frameDetails.frameContent.end()) {
+        m_pcmFrame = false;
+    } else {
+        m_pcmFrame = true;
+    }
+
     // Store the frame details in camera details
-    m_details.frameType.type = (*modeIt).mode;
+    m_details.mode = mode;
     m_details.frameType.width = (*modeIt).baseResolutionWidth;
     m_details.frameType.height = (*modeIt).baseResolutionHeight;
     m_details.frameType.totalCaptures = 1;
