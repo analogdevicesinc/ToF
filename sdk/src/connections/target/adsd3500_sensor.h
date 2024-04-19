@@ -53,7 +53,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     virtual aditof::Status
     getAvailableModes(std::vector<std::string> &modes) override;
     virtual aditof::Status
-    getModeDetails(const std::string &modeName,
+    getModeDetails(const uint8_t &mode,
                    aditof::DepthSensorFrameType &details) override;
     virtual aditof::Status
     setMode(const aditof::DepthSensorFrameType &type) override;

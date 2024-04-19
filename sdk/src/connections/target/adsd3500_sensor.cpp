@@ -456,12 +456,12 @@ Adsd3500Sensor::getAvailableModes(std::vector<std::string> &modes) {
 }
 
 aditof::Status
-Adsd3500Sensor::getModeDetails(const std::string &modeName,
+Adsd3500Sensor::getModeDetails(const uint8_t &mode,
                                aditof::DepthSensorFrameType &details) {
     using namespace aditof;
     Status status = Status::OK;
     for (const auto &modeDetails : m_availableModes) {
-        if (modeDetails.mode == modeName) {
+        if (modeDetails.modeNumber == mode) {
             details = modeDetails;
             break;
         }
