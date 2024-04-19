@@ -189,18 +189,9 @@ if __name__ == "__main__":
     if not status:
         print("system.getAvailableModes() failed with status: ", status)
 
-    types = []
-    status = cameras[0].getAvailableFrameTypes(types)
+    status = cameras[0].setMode(modes[0])
     if not status:
-        print("system.getAvailableFrameTypes() failed with status: ", status)
-
-    status = cameras[0].setFrameType(types[0])
-    if not status:
-        print("cameras[0].setFrameType() failed with status:", status)
-
-    status = cameras[0].setMode(modes[ModesEnum.MODE_NEAR.value])
-    if not status:
-        print("cameras[0].setMode() failed with status: ", status)
+        print("cameras[0].setMode() failed with status:", status)
 
     camDetails = tof.CameraDetails()
     status = cameras[0].getDetails(camDetails)

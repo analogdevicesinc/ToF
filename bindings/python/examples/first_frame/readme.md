@@ -41,10 +41,10 @@ status = camera1.getAvailableModes(modes)
 print("system.getAvailableModes()", status)
 print(modes)
 
-types = []
-status = camera1.getAvailableFrameTypes(types)
-print("system.getAvailableFrameTypes()", status)
-print(types)
+modes = []
+status = camera1.getAvailableModes(modes)
+print("system.getAvailableModes()", status)
+print(modes)
 
 status = camera1.initialize()
 print("camera1.initialize()", status)
