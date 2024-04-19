@@ -118,10 +118,11 @@ struct DriverConfiguration {
  * @brief Describes the type of entire frame that a depth sensor can capture and transmit
  */
 struct DepthSensorFrameType {
+    
     /**
-     * @brief Name of the frame
+     * @brief Number associated with the mode
     */
-    std::string mode;
+    uint8_t modeNumber;
 
     /**
      * @brief Stores the content of each frame
@@ -129,9 +130,9 @@ struct DepthSensorFrameType {
     std::vector<std::string> frameContent;
 
     /**
-     * @brief Number associated with the mode
+     * @brief Number of phases
     */
-    uint8_t modeNumber;
+    uint8_t numberOfPhases;
 
     /**
      * @brief Index of two possbile values sensor values (8bit, 12/16bit) 
@@ -166,7 +167,7 @@ struct DepthSensorFrameType {
     /**
      * @brief Stores the content of a frame
     */
-    std::vector<DriverConfiguration> driverConfiguration;
+    DriverConfiguration driverConfiguration;
 };
 
 /**
