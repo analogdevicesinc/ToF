@@ -48,7 +48,7 @@ class NetworkDepthSensor : public aditof::DepthSensorInterface {
     virtual aditof::Status start() override;
     virtual aditof::Status stop() override;
     virtual aditof::Status
-    getAvailableModes(std::vector<std::string> &modes) override;
+    getAvailableModes(std::vector<uint8_t> &modes) override;
     virtual aditof::Status
     getModeDetails(const uint8_t &mode,
                    aditof::DepthSensorFrameType &details) override;

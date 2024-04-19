@@ -382,7 +382,7 @@ aditof::Status NetworkDepthSensor::stop() {
 }
 
 aditof::Status
-NetworkDepthSensor::getAvailableModes(std::vector<std::string> &modes) {
+NetworkDepthSensor::getAvailableModes(std::vector<uint8_t> &modes) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -417,9 +417,9 @@ NetworkDepthSensor::getAvailableModes(std::vector<std::string> &modes) {
         modes.clear();
     }
 
-    for (int i = 0; i < net->recv_buff[m_sensorIndex].strings_payload_size();
+    for (int i = 0; i < net->recv_buff[m_sensorIndex].int32_payload_size();
          i++) {
-        modes.emplace_back(net->recv_buff[m_sensorIndex].strings_payload(i));
+        modes.emplace_back(net->recv_buff[m_sensorIndex].int32_payload(i));
     }
 
     Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
@@ -539,7 +539,6 @@ NetworkDepthSensor::setMode(const aditof::DepthSensorFrameType &type) {
     }
 
     net->send_buff[m_sensorIndex].set_func_name("SetMode");
-    net->send_buff[m_sensorIndex].mutable_frame_type()->set_mode(type.mode);
     net->send_buff[m_sensorIndex].mutable_frame_type()->set_mode_number(
         type.modeNumber);
     net->send_buff[m_sensorIndex].mutable_frame_type()->set_pixel_format_index(
