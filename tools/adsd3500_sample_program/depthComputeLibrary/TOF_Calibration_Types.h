@@ -35,6 +35,7 @@ BLOCK ID Definitions
 #define CAL_BLOCK_ID_SPATIAL_TEMPCOR  'S'
 #define CAL_BLOCK_ID_TEMPCORRECTION   'T'
 #define CAL_BLOCK_ID_RELATIVE_ILLUM   'V'
+#define CAL_BLOCK_ID_LD_SETTINGS      'Z'
 #define CAL_BLOCK_ID_COLUMN_DEFECT    '|'
 #define CAL_BLOCK_ID_GAINCORRECTION   0xD7
 #define CAL_BLOCK_ID_HDR              0xFF
@@ -146,6 +147,16 @@ struct CAL_LSDAC_BLOCK_V1
   uint16_t ChecksumLSB;
   uint16_t ChecksumMSB;
   uint16_t Settings[]; // Length: nWrites
+};
+
+struct CAL_LD_SETTINGS_BLOCK_V1
+{
+  struct CAL_BLOCK_INFO_V1 BlockInfo;
+
+  uint16_t nWrites;
+  uint8_t nModes; // There must be an even number of modes
+  uint16_t Checksum;
+  uint16_t Settings[]; // Includes pointers for each mode in nmodes at the top followed by the mode data. Length = nWrites. 
 };
 
 struct CAL_ILLUM_PROFILE_BLOCK_V2

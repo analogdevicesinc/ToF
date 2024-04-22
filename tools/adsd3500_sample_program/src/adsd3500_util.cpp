@@ -32,6 +32,10 @@
 #include <fstream>
 #include "../include/adsd3500_util.h"
 
+const char ver_info[] =
+    "VERSIONINFO:"
+    "TOF_DepthComputeEngine_ARM64-Rel4.4.0";
+
 #define ADSD3500_ADDR (0x70 >> 1)
 #define ADSD3500_INTRINSIC_SIZE		56
 #define ADSD3500_DEALIAS_SIZE		32
@@ -466,7 +470,7 @@ int Adsd3500::ParseFramesWithDCL(uint16_t* buffer) {
         
     }
     
-
+    return 0;
 }
 
 // Read ADSD3500 Status
