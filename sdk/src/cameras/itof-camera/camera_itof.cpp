@@ -208,7 +208,7 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
             } else if (m_imagerType ==
                        ImagerType::ADSD3030) { // Find for Tembin
                 int modeToTest =
-                    0; // We are looking at width and height for mode 0
+                    2; // We are looking at width and height for mode 0
                 uint8_t tempDealiasParams[32] = {0};
                 tempDealiasParams[0] = modeToTest;
 
@@ -239,7 +239,7 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
         }
         // Check weather new mixed modes are present, in case no, switch back to simple new modes
         if (m_modesVersion == 2) {
-            int modeToTest = 5; // We are looking at width and height for mode 5
+            int modeToTest = 6; // We are looking at width and height for mode 5
             uint8_t tempDealiasParams[32] = {0};
             tempDealiasParams[0] = modeToTest;
 
@@ -272,9 +272,9 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
 
         // From release version 4.3 old modes are not supported
         if (m_modesVersion == 0 || m_modesVersion == 1) {
-            LOG(ERROR) << "Old modes detected on camera. SDK no longer "
-                          "supports them. Please update your hardware!";
-            return Status::GENERIC_ERROR;
+            LOG(INFO) << "ByPassing Old modes and "
+                          "Populating required modes!";
+            m_modesVersion =2;
         }
 
         int imgTypeId = 0;

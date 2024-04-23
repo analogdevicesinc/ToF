@@ -789,12 +789,14 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
 
     if (control == "modeInfoVersion") {
         int n = std::stoi(value);
-        if (n == 0) {
+        if (n == 10) {
             m_implData->ccbVersion = CCBVersion::CCB_VERSION0;
             LOG(ERROR) << "Old modes have been detected but they are no "
                           "longer supported!";
             return Status::INVALID_ARGUMENT;
-        } else if (n == 2) {
+        } else if (n == 0) {
+            LOG(INFO) << "ByPassing Old modes and "
+                          "Populating required modes!";
             m_implData->ccbVersion = CCBVersion::CCB_VERSION1;
             if (m_implData->imagerType == SensorImagerType::IMAGER_ADSD3100) {
                 m_availableFrameTypes = availableFrameTypes;
