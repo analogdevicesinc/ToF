@@ -219,12 +219,16 @@ Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
     frDataDetails.type = "metadata";
     frDataDetails.width = METADATA_SIZE;
     frDataDetails.height = 1;
+    frDataDetails.subelementSize = sizeof(uint8_t);
+    frDataDetails.subelementsPerElement = 1;
     m_frDetails.dataDetails.emplace_back(frDataDetails);
 
     if (m_metadataStruct.bitsInDepth) {
         frDataDetails.type = "depth";
         frDataDetails.width = m_metadataStruct.width;
         frDataDetails.height = m_metadataStruct.height;
+        frDataDetails.subelementSize = sizeof(uint16_t);
+        frDataDetails.subelementsPerElement = 1;
         m_frDetails.dataDetails.emplace_back(frDataDetails);
     }
 
@@ -232,6 +236,8 @@ Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
         frDataDetails.type = "ab";
         frDataDetails.width = m_metadataStruct.width;
         frDataDetails.height = m_metadataStruct.height;
+        frDataDetails.subelementSize = sizeof(uint16_t);
+        frDataDetails.subelementsPerElement = 1;
         m_frDetails.dataDetails.emplace_back(frDataDetails);
     }
 
@@ -239,6 +245,8 @@ Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
         frDataDetails.type = "conf";
         frDataDetails.width = m_metadataStruct.width;
         frDataDetails.height = m_metadataStruct.height;
+        frDataDetails.subelementSize = sizeof(float);
+        frDataDetails.subelementsPerElement = 1;
         m_frDetails.dataDetails.emplace_back(frDataDetails);
     }
 
@@ -246,6 +254,8 @@ Status FrameHandlerImpl::readNextFrame(aditof::Frame &frame,
         frDataDetails.type = "xyz";
         frDataDetails.width = m_metadataStruct.width;
         frDataDetails.height = m_metadataStruct.height;
+        frDataDetails.subelementSize = sizeof(uint16_t);
+        frDataDetails.subelementsPerElement = 3;
         m_frDetails.dataDetails.emplace_back(frDataDetails);
     }
 
