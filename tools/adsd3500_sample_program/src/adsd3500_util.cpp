@@ -55,26 +55,16 @@ typedef unsigned int u32;
 #define DEBUG 1
 
 Adsd3500::Adsd3500() {
-    // // Open the ADI ToF Camera Sensor Device Driver.
-	// //videoDevice.cameraSensorDeviceId = tof_open(CAMERA_SENSOR_DRIVER);
-	// videoDevice.cameraSensorDeviceId = 
-    // if (videoDevice.cameraSensorDeviceId < 0) {
-	// 	std::cout << "Unable to open camera sensor device: " << CAMERA_SENSOR_DRIVER << std::endl;
-	// }
-    
-    // // Open Host device's V4L2 Video Capture Device Driver.
-    // //videoDevice.videoCaptureDeviceId = tof_open(VIDEO_CAPTURE_DRIVER);
-    // videoDevice.videoCaptureDeviceId = 
-    // if (videoDevice.videoCaptureDeviceId < 0) {
-	// 	std::cout << "Unable to open video capture device:  " << VIDEO_CAPTURE_DRIVER << std::endl;
-    // }
+    // Do Nothing.
 }
 
 Adsd3500::~Adsd3500() {
+    // Stop the Stream.
     if (videoDevice.started) {
         StopStream();
     }
 
+    // Close the Camera.
     for (unsigned int i = 0; i < videoDevice.nVideoBuffers; i++) {
         if (munmap(videoDevice.videoBuffers[i].start,
                    videoDevice.videoBuffers[i].length) == -1) {
@@ -161,7 +151,6 @@ uint8_t getImagerTypeAndCCB_cmd[] = {0x00, 0x32};
 int Adsd3500::OpenAdsd3500() {
 	// Open the ADI ToF Camera Sensor Device Driver.
 	videoDevice.cameraSensorDeviceId = tof_open(CAMERA_SENSOR_DRIVER);
-	//videoDevice.cameraSensorDeviceId = ::open(CAMERA_SENSOR_DRIVER, O_RDWR | O_NONBLOCK);
     if (videoDevice.cameraSensorDeviceId < 0) {
 		std::cout << "Unable to open camera sensor device: " << CAMERA_SENSOR_DRIVER << std::endl;
         return -1;
@@ -169,7 +158,6 @@ int Adsd3500::OpenAdsd3500() {
     
     // Open Host device's V4L2 Video Capture Device Driver.
     videoDevice.videoCaptureDeviceId = tof_open(VIDEO_CAPTURE_DRIVER);
-    //videoDevice.videoCaptureDeviceId = ::open(CAMERA_SENSOR_DRIVER, O_RDWR | O_NONBLOCK, 0);
     if (videoDevice.videoCaptureDeviceId < 0) {
 		std::cout << "Unable to open video capture device:  " << VIDEO_CAPTURE_DRIVER << std::endl;
         return -1;
@@ -181,9 +169,6 @@ int Adsd3500::OpenAdsd3500() {
 // Resets ADSD3500 device.
 int Adsd3500::ResetAdsd3500() {
 	printf("Resetting ADSD3500 Device.\n");
-	// int32_t ret = write_cmd(videoDevice.cameraSensorDeviceId, reset_cmd, ARRAY_SIZE(reset_cmd));
-	// std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
-
     system("echo 0 > /sys/class/gpio/gpio122/value");
     usleep(1000000);
     system("echo 1 > /sys/class/gpio/gpio122/value");
@@ -220,16 +205,8 @@ int Adsd3500::SetImageMode(uint8_t modeNumber) {
 // Gets Imaging mode.
 int Adsd3500::GetImageMode(uint8_t* result) {
 
-	// Open the ToF Camera device
-	int32_t fd = tof_open(CAMERA_SENSOR_DRIVER);
-	if (fd < 0) {
-		std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER << std::endl;
-        return fd;
-	}
-
-	int32_t ret = read_cmd(fd, getMode_cmd, ARRAY_SIZE(getMode_cmd), result, ARRAY_SIZE(result));
+	int32_t ret = read_cmd(videoDevice.cameraSensorDeviceId, getMode_cmd, ARRAY_SIZE(getMode_cmd), result, ARRAY_SIZE(result));
     std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
-
 	return ret;
 }
 
@@ -276,24 +253,14 @@ int Adsd3500::StartStream() {
 
 // Stops the stream.
 int Adsd3500::StopStream() {
-	// Open the ToF Camera device
-	int32_t fd = tof_open(CAMERA_SENSOR_DRIVER);
-	if (fd < 0) {
-		std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER << std::endl;
-        return fd;
-	}
-
 	printf("Stopping the stream.\n");
-
-	int32_t ret = write_cmd(fd, streamOff_cmd, ARRAY_SIZE(streamOff_cmd));
+	int32_t ret = write_cmd(videoDevice.cameraSensorDeviceId, streamOff_cmd, ARRAY_SIZE(streamOff_cmd));
 	std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
-
     videoDevice.started = false;
-
 	return ret;
 }
 
-// Get Frames
+// Get Frames from the Imager.
 int Adsd3500::RequestFrame(uint16_t* buffer) {
     struct v4l2_buffer buf[MAX_SUBFRAMES_COUNT];
     unsigned int buf_data_len;
@@ -330,6 +297,7 @@ int Adsd3500::RequestFrame(uint16_t* buffer) {
     return 0;
 }
 
+// Reads the .ini file and stores them as key-value pairs.
 int Adsd3500::GetIniKeyValuePairFromConfig(const char* iniFileName) {
 
     int ret = 0;
@@ -341,34 +309,40 @@ int Adsd3500::GetIniKeyValuePairFromConfig(const char* iniFileName) {
     return ret;
 }
 
+// Configure Adsd3500 with parameters from .ini file.
 int Adsd3500::ConfigureAdsd3500WithIniParams() {
 
+    if (iniKeyValPairs.empty()) {
+        perror("Key-value pairs from the .ini file not read.\n");
+        return -1;
+    }
     int ret = adsd3500_set_ini_params(iniKeyValPairs);
     if (ret < 0) {
-        perror("Unable to set Ini parameters in Adsd3500.");
+        perror("Unable to set Ini parameters in Adsd3500.\n");
     }
 
     return ret;
 }
 
+// Configure Depth Compute Library with parameters from .ini file.
 int Adsd3500::ConfigureDepthComputeLibraryWithIniParams() {
     
     uint32_t ret = 0;
-    std::cout << "Initializing Depth Compute Library" << std::endl;
+    std::cout << "Initializing Depth Compute Library." << std::endl;
 
     std::cout << "Ini File Size: " << iniFileData.size << std::endl;
     if (iniFileData.p_data == nullptr) {
         perror("iniFileData is NULL.\n");
+        return -1;
     }
 
-    TofiConfig *tofi_config = InitTofiConfig_isp(&iniFileData, 0, &ret, &xyzDealiasData);
-
+    tofi_config = InitTofiConfig_isp(&iniFileData, 0, &ret, &xyzDealiasData);
     if (tofi_config == NULL) {
         perror("InitTofiConfig failed.\n");
         return -1;
     }
 
-    TofiComputeContext *tofi_compute_context = 
+    tofi_compute_context = 
         InitTofiCompute(tofi_config->p_tofi_cal_config, &ret);
     if (tofi_compute_context == NULL) {
         perror("InitTofiCompute failed.\n");
@@ -378,6 +352,7 @@ int Adsd3500::ConfigureDepthComputeLibraryWithIniParams() {
     return 0;
 }
 
+// Configures V4L2 MIPI Capture Driver and Camera Sensor Driver.
 int Adsd3500::ConfigureDeviceDrivers() {  
     int ret = 0;  
     struct v4l2_capability cap;
@@ -385,19 +360,19 @@ int Adsd3500::ConfigureDeviceDrivers() {
 
     // Check if the video capture device is valid.
     if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_QUERYCAP, &cap) == -1) {
-        perror("VIDIOC_QUERYCAP error");
+        perror("VIDIOC_QUERYCAP error.\n");
         return -1;
     }
 
     if (strncmp((char *)cap.card, expectedCaptureDeviceName, strlen(expectedCaptureDeviceName))) {
-        perror("Invalid Capture Device name read");
+        perror("Invalid Capture Device name read.\n");
         return -1;
     }
 
     if (!(cap.capabilities &
         (V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE))
     ) {
-        perror("The device is not a video capture device");
+        perror("The device is not a video capture device.\n");
         return -1;
     }
 
@@ -410,7 +385,7 @@ int Adsd3500::ConfigureDeviceDrivers() {
     }
 
     if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
-        perror("The device does not support streaming");
+        perror("The device does not support streaming.\n");
         return -1;
     }
 
@@ -418,7 +393,7 @@ int Adsd3500::ConfigureDeviceDrivers() {
     uint8_t chip_id_value[2] = {0x00, 0x00};
     ret = Adsd3500::ReadChipId(chip_id_value);
     if (ret < 0){
-        perror("Unable to get the Chip ID");
+        perror("Unable to get the Chip ID.\n");
         return -1;
     } else {
         PrintByteArray(chip_id_value, ARRAY_SIZE(chip_id_value));
@@ -427,6 +402,7 @@ int Adsd3500::ConfigureDeviceDrivers() {
     return 0;
 }
 
+// Gets Camera Intrinsics and Dealias Parameters from ADSD3500.
 int Adsd3500::GetIntrinsicsAndDealiasParams() {
     int ret = 0;
 
@@ -451,13 +427,11 @@ int Adsd3500::GetIntrinsicsAndDealiasParams() {
     memcpy(&xyzDealiasData.camera_intrinsics, intrinsics,
             sizeof(CameraIntrinsics));
 
-    // xyzDealiasData.n_rows = rows;
-    // xyzDealiasData.n_cols = cols;
-
     return 0;
 }
 
-int Adsd3500::ParseFramesWithDCL(uint16_t* buffer) {
+// Parses Raw frame to get Depth, AB and Confidence frames using Depth-Compute Library.
+int Adsd3500::ParseRawDataWithDCL(uint16_t* buffer) {
 
     int enableXyz = 0;
     auto it = iniKeyValPairs.find("xyzEnable");
@@ -465,22 +439,74 @@ int Adsd3500::ParseFramesWithDCL(uint16_t* buffer) {
         enableXyz = (std::stoi(it->second));
     }
 
-    if (enableXyz) {
-        uint16_t* xyzFrame;
-        
+    if (tofi_compute_context == NULL) {  
+        return -1;
     }
+
+    uint16_t *tempDepthFrame = tofi_compute_context->p_depth_frame;
+    uint16_t *tempAbFrame = tofi_compute_context->p_ab_frame;
+    //uint16_t *tempXyzFrame = (uint16_t *)tofi_compute_context->p_xyz_frame;
+
+    // Allocate memory to store Depth and IR frames.
+    // Depth Frames. 
+    tofi_compute_context->p_depth_frame = 
+        new uint16_t[xyzDealiasData.n_rows*xyzDealiasData.n_cols];
+    // IR Frames.
+    tofi_compute_context->p_ab_frame = 
+        new uint16_t[xyzDealiasData.n_rows*xyzDealiasData.n_cols];
+
+    uint32_t ret =
+            TofiCompute(buffer, tofi_compute_context, NULL);
+    if (ret < 0) {
+        perror("Failed to parse frames with Depth Compute Library.\n");
+    }
+
+    if (tofi_compute_context->p_ab_frame == NULL) {
+        perror("Error in retrieving AB frame.\n");
+        return -1;
+    }
+
+    if (tofi_compute_context->p_depth_frame == NULL) {
+        perror("Error in retrieving Depth frame.\n");
+        return -1;
+    }
+
+    if (tofi_compute_context->p_conf_frame == NULL) {
+        perror("Error in retrieving Confidence frame.\n");
+        return -1;
+    }
+
+    // Store AB frame to a .bin file.
+    std::ofstream ab("out_ab.bin", std::ios::binary);
+    ab.write((char*)tofi_compute_context->p_ab_frame, xyzDealiasData.n_rows * xyzDealiasData.n_cols*sizeof(uint16_t));
+    ab.close();
+
+    // Store Depth frame to a .bin file.
+    std::ofstream depth("out_depth.bin", std::ios::binary);
+    depth.write((char*)tofi_compute_context->p_depth_frame, xyzDealiasData.n_rows * xyzDealiasData.n_cols*sizeof(uint16_t));
+    depth.close();
+
+    // Store Confidence frame to a .bin file.
+    std::ofstream conf("out_conf.bin", std::ios::binary);
+    conf.write((char*)tofi_compute_context->p_conf_frame, xyzDealiasData.n_rows * xyzDealiasData.n_cols*sizeof(uint8_t));
+    conf.close();
     
     return 0;
 }
 
 // Read ADSD3500 Status
 int Adsd3500::ReadChipId(uint8_t* result) {
-    // Open the ToF Camera device
-	int32_t fd = tof_open(CAMERA_SENSOR_DRIVER);
-	if (fd < 0) {
-		std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER << std::endl;
-        return fd;
-	}
+    int32_t fd = 0;
+
+    if (videoDevice.cameraSensorDeviceId == -1) {
+        fd = tof_open(CAMERA_SENSOR_DRIVER);
+        if (fd < 0) {
+		    std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER << std::endl;
+            return fd;
+	    }
+    } else {
+        fd = videoDevice.cameraSensorDeviceId;
+    }
 
     int32_t ret = read_cmd(fd, getChipId_cmd, ARRAY_SIZE(getChipId_cmd), result, ARRAY_SIZE(result));
     std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
@@ -490,12 +516,17 @@ int Adsd3500::ReadChipId(uint8_t* result) {
 
 // Set FPS value.
 int Adsd3500::SetFps(int fps) {
-    // Open the ToF Camera device
-	int32_t fd = tof_open(CAMERA_SENSOR_DRIVER);
-	if (fd < 0) {
-		std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER << std::endl;
-        return fd;
-	}
+    int32_t fd = 0;
+
+    if (videoDevice.cameraSensorDeviceId == -1) {
+        int32_t fd = tof_open(CAMERA_SENSOR_DRIVER);
+        if (fd < 0) {
+		    std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER << std::endl;
+            return fd;
+	    }
+    } else {
+        fd = videoDevice.cameraSensorDeviceId;
+    }
 
     printf("Setting the desired FPS value.\n");
 
@@ -508,13 +539,17 @@ int Adsd3500::SetFps(int fps) {
 
 // Get FPS value.
 int Adsd3500::GetFps(uint8_t* result) {
-    // Open the ToF Camera device
-	int32_t fd = tof_open(CAMERA_SENSOR_DRIVER);
-	if (fd < 0) {
-		std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER << std::endl;
-        return fd;
-	}
+    int32_t fd = 0;
 
+    if (videoDevice.cameraSensorDeviceId == -1) {
+        int32_t fd = tof_open(CAMERA_SENSOR_DRIVER);
+        if (fd < 0) {
+		    std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER << std::endl;
+            return fd;
+	    }
+    } else {
+        fd = videoDevice.cameraSensorDeviceId;
+    }
     int32_t ret = read_cmd(fd, getFps_cmd, ARRAY_SIZE(getFps_cmd), result, ARRAY_SIZE(result));
     std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
 
@@ -636,6 +671,7 @@ int Adsd3500::ReadCCB(const char* filename) {
     return 0;
 }
 
+// Gets Imager Type and CCB information.
 int Adsd3500::GetImagerTypeAndCCB() {
 
     uint8_t result[2] = {0x00, 0x00};
@@ -1152,82 +1188,26 @@ int Adsd3500::adsd3500_get_key_value_pairs_from_ini(
     return 0;
 }
 
-int Adsd3500::adsd3500_set_AB_invalidation_threshold(int threshold) {
-    return adsd3500_write_cmd(0x0010, threshold);
-}
-
-int Adsd3500::adsd3500_set_confidence_threshold(int threshold) {
-    return adsd3500_write_cmd(0x0011, threshold);
-}
-
-int Adsd3500::adsd3500_set_JBLF_filter_enableState(bool enable) {
-    return adsd3500_write_cmd(0x0013, enable ? 1 : 0);
-}
-
-int Adsd3500::adsd3500_set_JBLF_filter_size(int size) {
-    return adsd3500_write_cmd(0x0014, size);
-}
-
-int Adsd3500::adsd3500_set_radial_threshold_min(int threshold) {
-    return adsd3500_write_cmd(0x0027, threshold);
-}
-
-int Adsd3500::adsd3500_set_radial_threshold_max(int threshold) {
-    return adsd3500_write_cmd(0x0029, threshold);
-}
-
-int Adsd3500::adsd3500_set_MIPI_output_speed(uint16_t speed) {
-    return adsd3500_write_cmd(0x0031, speed);
-}
-
-int Adsd3500::adsd3500_set_VCSELDelay(uint16_t delay) {
-    return adsd3500_write_cmd(0x0066, delay);
-}
-
-int Adsd3500::adsd3500_set_JBLF_max_edge_threshold(uint16_t threshold) {
-    return adsd3500_write_cmd(0x0074, threshold);
-}
-
-int Adsd3500::adsd3500_set_JBLF_AB_threshold(uint16_t threshold) {
-    return adsd3500_write_cmd(0x0075, threshold);
-}
-
-int Adsd3500::adsd3500_set_JBLF_gaussian_sigma(uint16_t value) {
-    return adsd3500_write_cmd(0x006B, value);
-}
-
-int Adsd3500::adsd3500_set_JBLF_exponential_term(uint16_t value) {
-    return adsd3500_write_cmd(0x006C, value);
-}
-
-int Adsd3500::adsd3500_set_enable_edge_confidence(uint16_t value) {
-    return adsd3500_write_cmd(0x0062, value);
-}
-
-int Adsd3500::adsd3500_set_enable_phase_invalidation(uint16_t value) {
-    return adsd3500_write_cmd(0x0072, value);
-}
-
 int Adsd3500::adsd3500_set_ini_params(
     const std::map<std::string, std::string> &iniKeyValPairs) {
 
     auto it = iniKeyValPairs.find("abThreshMin");
     if (it != iniKeyValPairs.end()) {
-        adsd3500_set_AB_invalidation_threshold(std::stoi(it->second));
+        adsd3500_write_cmd(0x0010, std::stoi(it->second));
     } else {
         std::cout << "abThreshMin was not found in .ini file, not setting." << std::endl;
     }
 
     it = iniKeyValPairs.find("confThresh");
     if (it != iniKeyValPairs.end()) {
-        adsd3500_set_confidence_threshold(std::stoi(it->second));
+        adsd3500_write_cmd(0x0011, std::stoi(it->second));
     } else {
         std::cout << "confThresh was not found in .ini file, not setting." << std::endl;;
     }
 
     it = iniKeyValPairs.find("radialThreshMin");
     if (it != iniKeyValPairs.end()) {
-        adsd3500_set_radial_threshold_min(std::stoi(it->second));
+        adsd3500_write_cmd(0x0027, std::stoi(it->second));
     } else {
         std::cout
             << "radialThreshMin was not found in .ini file, not setting." << std::endl;;
@@ -1235,7 +1215,7 @@ int Adsd3500::adsd3500_set_ini_params(
 
     it = iniKeyValPairs.find("radialThreshMax");
     if (it != iniKeyValPairs.end()) {
-        adsd3500_set_radial_threshold_max(std::stoi(it->second));
+        adsd3500_write_cmd(0x0029, std::stoi(it->second));
     } else {
         std::cout
             << "radialThreshMax was not found in .ini file, not setting." << std::endl;
@@ -1243,7 +1223,7 @@ int Adsd3500::adsd3500_set_ini_params(
 
     it = iniKeyValPairs.find("jblfWindowSize");
     if (it != iniKeyValPairs.end()) {
-        adsd3500_set_JBLF_filter_size(std::stoi(it->second));
+        adsd3500_write_cmd(0x0014, std::stoi(it->second));
     } else {
         std::cout
             << "jblfWindowSize was not found in .ini file, not setting." << std::endl;
@@ -1252,7 +1232,7 @@ int Adsd3500::adsd3500_set_ini_params(
     it = iniKeyValPairs.find("jblfApplyFlag");
     if (it != iniKeyValPairs.end()) {
         bool en = !(it->second == "0");
-        adsd3500_set_JBLF_filter_enableState(en);
+        adsd3500_write_cmd(0x0013, en ? 1 : 0);
     } else {
         std::cout
             << "jblfApplyFlag was not found in .ini file, not setting." << std::endl;
@@ -1267,14 +1247,14 @@ int Adsd3500::adsd3500_set_ini_params(
 
     it = iniKeyValPairs.find("vcselDelay");
     if (it != iniKeyValPairs.end()) {
-        adsd3500_set_VCSELDelay(std::stoi(it->second));
+        adsd3500_write_cmd(0x0066, std::stoi(it->second));
     } else {
         std::cout << "vcselDelay was not found in .ini file, not setting." << std::endl;
     }
 
     it = iniKeyValPairs.find("jblfMaxEdge");
     if (it != iniKeyValPairs.end()) {
-        adsd3500_set_JBLF_max_edge_threshold(std::stoi(it->second));
+        adsd3500_write_cmd(0x0074, std::stoi(it->second));
     } else {
         std::cout << "jblfMaxEdge was not found in .ini file, "
                         "not setting." << std::endl;
@@ -1282,14 +1262,14 @@ int Adsd3500::adsd3500_set_ini_params(
 
     it = iniKeyValPairs.find("jblfABThreshold");
     if (it != iniKeyValPairs.end()) {
-        adsd3500_set_JBLF_AB_threshold(std::stoi(it->second));
+        adsd3500_write_cmd(0x0075, std::stoi(it->second));
     } else {
         std::cout << "jblfABThreshold was not found in .ini file" << std::endl;
     }
 
     it = iniKeyValPairs.find("jblfGaussianSigma");
     if (it != iniKeyValPairs.end()) {
-        adsd3500_set_JBLF_gaussian_sigma(std::stoi(it->second));
+        adsd3500_write_cmd(0x006B, std::stoi(it->second));
     } else {
         std::cout
             << "jblfGaussianSigma was not found in .ini file, not setting." << std::endl;
@@ -1297,7 +1277,7 @@ int Adsd3500::adsd3500_set_ini_params(
 
     it = iniKeyValPairs.find("jblfExponentialTerm");
     if (it != iniKeyValPairs.end()) {
-        adsd3500_set_JBLF_exponential_term(std::stoi(it->second));
+        adsd3500_write_cmd(0x006C, std::stoi(it->second));
     } else {
         std::cout << "jblfExponentialTerm was not found in .ini file, "
                         "not setting." << std::endl;
@@ -1305,7 +1285,7 @@ int Adsd3500::adsd3500_set_ini_params(
 
     it = iniKeyValPairs.find("enablePhaseInvalidation");
     if (it != iniKeyValPairs.end()) {
-        adsd3500_set_enable_phase_invalidation(std::stoi(it->second));
+        adsd3500_write_cmd(0x0072, std::stoi(it->second));
     } else {
         std::cout << "enablePhaseInvalidation was not found in .ini file, "
                         "not setting." << std::endl;
@@ -1364,8 +1344,6 @@ int Adsd3500::SetFrameType() {
             << "errno: " << errno << " error: " << strerror(errno) << std::endl;
         return -1;
     }
-
-    float depthBits, abBits, confBits;
 
     std::cout << "Values from INI file" << std::endl;
 

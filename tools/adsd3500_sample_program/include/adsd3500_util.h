@@ -124,6 +124,11 @@ class Adsd3500 {
 		TofiXYZDealiasData xyzDealiasData;
 		ImagerType imagerType;
 		CCBVersion ccbVersion;
+		int depthBits = 0;
+		int abBits = 0;
+		int confBits = 0;
+		TofiComputeContext *tofi_compute_context;
+		TofiConfig *tofi_config;
 
 		int OpenAdsd3500();
 		int CloseAdsd3500();
@@ -136,6 +141,7 @@ class Adsd3500 {
 		int GetFps(uint8_t* result);
 		int ReadCCB(const char* filename);
 		int ReadChipId(uint8_t* result);
+
 		int ConfigureDeviceDrivers();
 		int ConfigureAdsd3500WithIniParams();
 		int ConfigureDepthComputeLibraryWithIniParams();
@@ -144,7 +150,7 @@ class Adsd3500 {
 		int GetImagerTypeAndCCB();
 		int GetIniKeyValuePairFromConfig(const char* iniFileName);
 		int GetIntrinsicsAndDealiasParams();
-		int ParseFramesWithDCL(uint16_t* buffer);
+		int ParseRawDataWithDCL(uint16_t* buffer);
 
 	private:
 		ConfigFileData iniFileData;
@@ -164,23 +170,7 @@ class Adsd3500 {
 		int adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload, uint16_t payload_len);
 		int adsd3500_write_payload(uint8_t *payload, uint16_t payload_len);
 		int adsd3500_process_buffer(uint16_t *buffer = nullptr);
-
 		int adsd3500_set_ini_params(const std::map<std::string, std::string> &iniKeyValPairs);
-        int adsd3500_set_AB_invalidation_threshold(int threshold);
-        int adsd3500_set_confidence_threshold(int threshold);
-        int adsd3500_set_JBLF_filter_enableState(bool enable);
-        int adsd3500_set_JBLF_filter_size(int size);
-        int adsd3500_set_radial_threshold_min(int threshold);
-        int adsd3500_set_radial_threshold_max(int threshold);
-        int adsd3500_set_MIPI_output_speed(uint16_t speed);
-        int adsd3500_set_VCSELDelay(uint16_t delay);
-        int adsd3500_set_JBLF_max_edge_threshold(uint16_t threshold);
-        int adsd3500_set_JBLF_AB_threshold(uint16_t threshold);
-        int adsd3500_set_JBLF_gaussian_sigma(uint16_t value);
-        int adsd3500_set_JBLF_exponential_term(uint16_t value);
-        int adsd3500_set_frame_rate(uint16_t fps);
-        int adsd3500_set_enable_edge_confidence(uint16_t value);
-        int adsd3500_set_enable_phase_invalidation(uint16_t value);
 };
 
 // Non-member functions

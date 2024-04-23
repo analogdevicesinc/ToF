@@ -95,17 +95,25 @@ int main(int argc, char *argv[]) {
     }
 
     // 7. Receive Frames
-    int buffer_height = adsd3500.xyzDealiasData.n_rows;
-    int buffer_width = adsd3500.xyzDealiasData.n_cols;
+    int num_frames = 1;
+    int buffer_height = adsd3500.xyzDealiasData.n_rows; // 256
+    int buffer_width = adsd3500.xyzDealiasData.n_cols; //320
+    float totalBits = adsd3500.depthBits + adsd3500.abBits + adsd3500.confBits;
+    int buffer_size = buffer_height*buffer_width*totalBits;  // 256*320*5 bytes
 
-    uint16_t* buffer = new uint16_t[buffer_height*buffer_width*2];
-    ret = adsd3500.RequestFrame(buffer);
-    if (ret < 0 || buffer == nullptr) {
-        std::cout << "Unable to receive frames from Adsd3500" << std::endl;
+    uint16_t* buffer = new uint16_t[buffer_size];
+    for (int i = 0; i < num_frames; i++) {   
+        ret = adsd3500.RequestFrame(buffer);
+        if (ret < 0 || buffer == nullptr) {
+            std::cout << "Unable to receive frames from Adsd3500" << std::endl;
+        }
     }
 
-    // 8. Get Depth, AB, Confidence Data using Depth Compute Library
-    adsd3500.ParseFramesWithDCL(buffer);
-    
+    // 8. Get Depth, AB, Confidence Data using Depth Compute Library and store them as .bin file.
+    adsd3500.ParseRawDataWithDCL(buffer);
+    if (ret < 0) {
+        std::cout << "Unable to parse raw frames." << std::endl;
+    }
+
     return 0;
 }
