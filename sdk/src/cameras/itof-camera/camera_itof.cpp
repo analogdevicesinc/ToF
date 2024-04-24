@@ -70,7 +70,7 @@ CameraItof::CameraItof(
       m_enableTempCompenstation(-1), m_enableMetaDatainAB(-1),
       m_enableEdgeConfidence(-1), m_modesVersion(0),
       m_xyzTable({nullptr, nullptr, nullptr}),
-      m_imagerType(aditof::ImagerType::UNSET), m_dropFirstFrame(true),
+      m_imagerType(aditof::ImagerType::UNSET), m_dropFirstFrame(false),
       m_dropFrameOnce(true) {
 
     FloatToLinGenerateTable();
