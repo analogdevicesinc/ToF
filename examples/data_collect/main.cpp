@@ -24,12 +24,12 @@
 #define __STDC_FORMAT_MACROS 1
 #include <inttypes.h>
 #endif
+#include <algorithm>
 #include <iostream>
 #include <map>
 #include <string>
 #include <thread>
 #include <vector>
-#include <algorithm>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
 
     uint16_t err = 0;
     uint32_t n_frames = 0;
-    uint32_t mode = 0;
+    uint8_t mode = 0;
     uint32_t warmup_time = 0;
     std::string ip;
     std::string firmware;
@@ -221,18 +221,8 @@ int main(int argc, char *argv[]) {
     // Parsing number of frames
     n_frames = std::stoi(command_map["-n"].value);
 
-    // Parsing mode type
-    std::string modeName;
-    try {
-        std::size_t counter;
-        mode = std::stoi(command_map["-m"].value, &counter);
-        if (counter != command_map["-m"].value.size()) {
-            throw command_map["-m"].value.c_str();
-        }
-    } catch (const char *name) {
-        modeName = name;
-    } catch (const std::exception &) {
-        modeName = command_map["-m"].value;
+    if (!command_map["-m"].value.empty()) {
+        mode = std::stoi(command_map["-m"].value);
     }
 
     // Parsing ip
@@ -275,15 +265,17 @@ int main(int argc, char *argv[]) {
     bool useNetLinkTest = !command_map["-t"].value.empty();
 
     // Parsing configuration option
-    std::vector<std::string> configurationlist = {"standard","standard-raw",
-                                                 "coustom","custom-raw"};
+    std::vector<std::string> configurationlist = {"standard", "standard-raw",
+                                                  "coustom", "custom-raw"};
 
     std::string configurationValue = command_map["-ic"].value;
     if (!configurationValue.empty()) {
-        unsigned int pos = std::find(configurationlist.begin(), configurationlist.end(),
-                            configurationValue) - configurationlist.begin();
-        if(pos < configurationlist.size()) {
-          configuration = configurationValue;
+        unsigned int pos =
+            std::find(configurationlist.begin(), configurationlist.end(),
+                      configurationValue) -
+            configurationlist.begin();
+        if (pos < configurationlist.size()) {
+            configuration = configurationValue;
         }
     }
 
@@ -360,9 +352,11 @@ int main(int argc, char *argv[]) {
     if (saveconfigurationFile) {
         status = camera->saveDepthParamsToJsonFile(saveconfigurationFileValue);
         if (status != Status::OK) {
-            LOG(INFO) << "Could not save current configuration info to " << saveconfigurationFileValue;
+            LOG(INFO) << "Could not save current configuration info to "
+                      << saveconfigurationFileValue;
         } else {
-            LOG(INFO) << "Current configuration info saved to file " << saveconfigurationFileValue;
+            LOG(INFO) << "Current configuration info saved to file "
+                      << saveconfigurationFileValue;
         }
     }
 
@@ -392,23 +386,22 @@ int main(int argc, char *argv[]) {
     }
 
     // Get modes
-    std::vector<std::string> availableModes;
+    std::vector<uint8_t> availableModes;
     status = camera->getAvailableModes(availableModes);
     if (status != Status::OK || availableModes.empty()) {
         LOG(ERROR) << "Could not aquire modes";
         return 0;
     }
 
-    if (modeName.empty()) {
-        //TO DO: convert mode number/name once getModeDetails is added in the public api
-    }
-
     if (loadconfigurationFile) {
-        status = camera->loadDepthParamsFromJsonFile(loadconfigurationFileValue, modeName);
+        status = camera->loadDepthParamsFromJsonFile(loadconfigurationFileValue,
+                                                     std::to_string(mode));
         if (status != Status::OK) {
-            LOG(INFO) << "Could not load current configuration info to " << loadconfigurationFileValue;
+            LOG(INFO) << "Could not load current configuration info to "
+                      << loadconfigurationFileValue;
         } else {
-            LOG(INFO) << "Current configuration info from file " << loadconfigurationFileValue;
+            LOG(INFO) << "Current configuration info from file "
+                      << loadconfigurationFileValue;
         }
     }
 
@@ -416,7 +409,7 @@ int main(int argc, char *argv[]) {
     std::string sensorName;
     status = depthSensor->getName(sensorName);
 
-    status = camera->setMode(modeName);
+    status = camera->setMode(mode);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera mode!";
         return 0;
