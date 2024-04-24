@@ -42,14 +42,14 @@ Logger = logging.getLogger(__name__)
 def test_temp_compensation(available_modes_ini, ip_set, config_file):
     
     exe_path = "../../build/examples/test_temp_compensation1/Release/test_temp_compensation1.exe"
-    process = subprocess.run([exe_path, str(available_modes_ini), ip_set, config_file, test_dir], 
+    process = subprocess.run([exe_path, str(available_modes_ini), ip_set, config_file], 
         text=True,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     print(process.stdout)
     assert process.returncode == 0 
     Logger.info(process.stdout)
     
     exe_path = "../../build/examples/test_temp_compensation2/Release/test_temp_compensation2.exe"
-    process = subprocess.run([exe_path, str(available_modes_ini), ip_set, config_file, test_dir], 
+    process = subprocess.run([exe_path, str(available_modes_ini), ip_set, config_file], 
         text=True,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     print(process.stdout)
     assert process.returncode == 0 
