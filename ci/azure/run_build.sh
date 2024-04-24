@@ -9,6 +9,7 @@ build_default() {
     
     # setup more deps
     # TODO cache this
+    sudo rm /etc/apt/sources.list.d/microsoft-prod.list
     sudo apt-get update
     sudo apt-get install -y build-essential libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev libgl1-mesa-dev libglfw3-dev
   
