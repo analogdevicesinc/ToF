@@ -85,14 +85,15 @@ aditof::Status Adsd3500ModeSelector::getConfigurationTable(
     if (m_configuration == "standard") {
         if (m_controls["imagerType"] == "adsd3100") {
             m_tableInUse = adsd3100_standardModes;
-            for (auto modes : adsd3100_standardModes) {
-                if (m_controls["mode"] == std::to_string(modes.modeNumber))
+            for (auto &modes : adsd3100_standardModes) {
+                if (m_controls["mode"] == std::to_string(modes.modeNumber)) {
                     configurationTable = modes;
-                return aditof::Status::OK;
+                    return aditof::Status::OK;
+                }
             }
         } else if (m_controls["imagerType"] == "adsd3030") {
             m_tableInUse = adsd3030_standardModes;
-            for (auto modes : adsd3030_standardModes) {
+            for (auto &modes : adsd3030_standardModes) {
                 if (m_controls["mode"] == std::to_string(modes.modeNumber)) {
                     configurationTable = modes;
                     return aditof::Status::OK;
@@ -112,6 +113,8 @@ aditof::Status Adsd3500ModeSelector::updateConfigurationTable(
                 std::to_string(configurationTable.baseResolutionWidth) &&
             driverConf.baseHeigth ==
                 std::to_string(configurationTable.baseResolutionHeight) &&
+            std::stoi(driverConf.noOfPhases) ==
+                configurationTable.numberOfPhases &&
             driverConf.depthBits == m_controls["depthBits"] &&
             driverConf.abBits == m_controls["abBits"] &&
             driverConf.confBits == m_controls["confBits"] &&
@@ -159,8 +162,8 @@ aditof::Status Adsd3500ModeSelector::updateConfigurationTable(
         height = 640;
     } else if (configurationTable.modeNumber >= 2 &&
                m_controls["imagerType"] == "adsd3030") {
-        configurationTable.baseResolutionWidth = 1280;
-        configurationTable.baseResolutionHeight = 320;
+        configurationTable.frameWidthInBytes = 1280;
+        configurationTable.frameHeightInBytes = 320;
         configurationTable.pixelFormatIndex = 0;
         return aditof::Status::OK;
     } else if ((configurationTable.modeNumber < 0 ||
