@@ -165,6 +165,11 @@ struct DepthSensorFrameType {
     int metadataSize;
 
     /**
+     * @brief set to true if the mode is PCM
+    */
+    int isPCM;
+
+    /**
      * @brief Stores the content of a frame
     */
     DriverConfiguration driverConfiguration;
