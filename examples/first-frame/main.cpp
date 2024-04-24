@@ -168,20 +168,10 @@ int main(int argc, char *argv[]) {
     Status status = Status::OK;
     std::string configFile;
     std::string ip;
-    uint32_t mode = 0;
+    uint8_t mode = 0;
 
-    // Parsing mode type
-    std::string modeName;
-    try {
-        std::size_t counter;
-        mode = std::stoi(command_map["-m"].value, &counter);
-        if (counter != command_map["-m"].value.size()) {
-            throw command_map["-m"].value.c_str();
-        }
-    } catch (const char *name) {
-        modeName = name;
-    } catch (const std::exception &) {
-        modeName = command_map["-m"].value;
+    if (!command_map["-m"].value.empty()) {
+        mode = std::stoi(command_map["-m"].value);
     }
 
     configFile = command_map["config"].value;
@@ -232,18 +222,14 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
     LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
 
-    std::vector<std::string> availableModes;
+    std::vector<uint8_t> availableModes;
     camera->getAvailableModes(availableModes);
     if (availableModes.empty()) {
         std::cout << "no mode available!";
         return 0;
     }
 
-    if (modeName.empty()) {
-        //TO DO: convert mode number/name once getModeDetails is added in the public api
-    }
-
-    status = camera->setMode(modeName);
+    status = camera->setMode(mode);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera mode!";
         return 0;
