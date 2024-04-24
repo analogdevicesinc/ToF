@@ -55,9 +55,16 @@
 #define ADSD3500_DEALIAS_SIZE		32
 #define NUM_BUFFERS 4
 #define ADSD3500_CTRL_PACKET_SIZE 4099
-#define V4L2_CID_AD_DEV_CHIP_CONFIG (0x9819e1)
-#define CTRL_SET_MODE (0x9819e0)
 #define MAX_N_FREQS 3
+
+// V4L2 Camera Sensor Driver Control Commands
+#define V4L2_CID_AD_DEV_CHIP_CONFIG (0x9819e1)
+#define CTRL_SET_MODE (0x9819e0) // Control to set Image Mode
+#define CTRL_AB_AVG (0x9819e5) // Control to enable AB Average
+#define CTRL_DEPTH_EN (0x9819e6) // Control to enable Depth
+#define CTRL_PHASE_DEPTH_BITS (0x9819e2) // Control to set Phase Depth Bits
+#define CTRL_AB_BITS (0x9819e3) // Control to set AB bits
+#define CTRL_CONFIDENCE_BITS (0x9819e4) // Control to set Confidence Bits
 
 #define MAX_SUBFRAMES_COUNT 10                                                 \
     // maximum number of subframes that are used to create a full frame (maximum total_captures of all modes)
@@ -133,6 +140,7 @@ class Adsd3500 {
 		int OpenAdsd3500();
 		int CloseAdsd3500();
 		int ResetAdsd3500();
+		int SetControl();
 		int SetImageMode(uint8_t modeNumber);
 		int GetImageMode(uint8_t* result);
 		int StartStream();
@@ -171,6 +179,8 @@ class Adsd3500 {
 		int adsd3500_write_payload(uint8_t *payload, uint16_t payload_len);
 		int adsd3500_process_buffer(uint16_t *buffer = nullptr);
 		int adsd3500_set_ini_params(const std::map<std::string, std::string> &iniKeyValPairs);
+		int adsd3500_configure_sensor_frame_types();
+		int adsd3500_set_control(const std::string &control, const std::string &value);
 };
 
 // Non-member functions

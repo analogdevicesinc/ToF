@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include "../include/adsd3500_util.h"
+#include <math.h>
 
 int main(int argc, char *argv[]) {
 
@@ -28,12 +29,14 @@ int main(int argc, char *argv[]) {
     ret = adsd3500.ResetAdsd3500();
     if (ret < 0) {
         printf("Unable to reset Adsd3500.\n");
+        return ret;
     }
 
     // 2. Configure the ADSD3500 and depth compute library with the ini file. 
     ret = adsd3500.OpenAdsd3500();
     if (ret < 0) {
         printf("Unable to open Adsd3500.\n");
+        return ret;
     }
 
     // Set Image mode number
@@ -44,30 +47,35 @@ int main(int argc, char *argv[]) {
     ret = adsd3500.GetIniKeyValuePairFromConfig(iniFileName);
     if (ret < 0) {
         printf("Unable to read ini parameters from the Config file.\n");
+        return ret;
     }
 
     // Read Camera Intrinsic and Dealias Parameters from Adsd3500.
     ret = adsd3500.GetIntrinsicsAndDealiasParams();
     if (ret < 0) {
       printf("Unable to get Intrinsic and Dealias parameters from Adsd3500.\n");
+      return ret;
     }
     
     // Configure Adsd3500 with .ini file
     ret = adsd3500.ConfigureAdsd3500WithIniParams();
     if (ret < 0) {
       printf("Unable to configure Adsd3500 with ini file.\n");
+      return ret;
     }
 
     // Configure Depth Compute library with Ini Params
     ret = adsd3500.ConfigureDepthComputeLibraryWithIniParams();
     if (ret < 0) {
         printf("Unable to configure Depth Compute Library.\n");
+        return ret;
     } 
     
     // Configure V4L2 MIPI Capture Driver and V4L2 Capture Sensor Driver.
     ret = adsd3500.ConfigureDeviceDrivers();
     if (ret < 0) {
         printf("Unable to open Adsd3500.\n");
+        return ret;
     }    
 
     // 3. Complete configuration of depth compute library with CCB parameters from the ADSD3500.
@@ -86,20 +94,22 @@ int main(int argc, char *argv[]) {
     ret = adsd3500.SetFrameType();
     if (ret < 0) {
         printf("Unable to set frame type Adsd3500.\n");
+        return ret;
     }  
 
     // 6. Set the Stream on
     ret = adsd3500.StartStream();
     if (ret < 0) {
         printf("Unable to start stream.\n");
+        return ret;
     }
 
     // 7. Receive Frames
-    int num_frames = 1;
+    int num_frames = 10;
     int buffer_height = adsd3500.xyzDealiasData.n_rows; // 256
     int buffer_width = adsd3500.xyzDealiasData.n_cols; //320
     float totalBits = adsd3500.depthBits + adsd3500.abBits + adsd3500.confBits;
-    int buffer_size = buffer_height*buffer_width*totalBits;  // 256*320*5 bytes
+    int buffer_size = buffer_height*buffer_width*ceil(totalBits/16);  // 256*320*5 bytes
 
     uint16_t* buffer = new uint16_t[buffer_size];
     for (int i = 0; i < num_frames; i++) {   

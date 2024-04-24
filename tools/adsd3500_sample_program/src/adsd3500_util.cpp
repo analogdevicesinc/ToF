@@ -147,6 +147,17 @@ uint8_t getImagerTypeAndCCB_cmd[] = {0x00, 0x32};
 *********************************Public functions*********************************
 */ 
 
+// Resets ADSD3500 device.
+int Adsd3500::ResetAdsd3500() {
+	printf("Resetting ADSD3500 Device.\n");
+    system("echo 0 > /sys/class/gpio/gpio122/value");
+    usleep(1000000);
+    system("echo 1 > /sys/class/gpio/gpio122/value");
+    usleep(7000000);
+
+	return 0;
+}
+
 // Opens ADSD3500 device.
 int Adsd3500::OpenAdsd3500() {
 	// Open the ADI ToF Camera Sensor Device Driver.
@@ -162,17 +173,6 @@ int Adsd3500::OpenAdsd3500() {
 		std::cout << "Unable to open video capture device:  " << VIDEO_CAPTURE_DRIVER << std::endl;
         return -1;
     }
-
-	return 0;
-}
-
-// Resets ADSD3500 device.
-int Adsd3500::ResetAdsd3500() {
-	printf("Resetting ADSD3500 Device.\n");
-    system("echo 0 > /sys/class/gpio/gpio122/value");
-    usleep(1000000);
-    system("echo 1 > /sys/class/gpio/gpio122/value");
-    usleep(7000000);
 
 	return 0;
 }
@@ -260,6 +260,29 @@ int Adsd3500::StopStream() {
 	return ret;
 }
 
+void write_uint16_array_to_csv(const char* filename, uint16_t* array, size_t size) {
+    // Open the file for writing
+    FILE* file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Error opening file.\n");
+        return;
+    }
+
+    // Write each element of the array to the file
+    for (size_t i = 0; i < size; i++) {
+        fprintf(file, "%u", array[i]); // Write the element
+        if (i < size - 1) {
+            fprintf(file, ","); // Add a comma if it's not the last element in the row
+        }
+    }
+
+    // Add a newline character at the end of the row
+    fprintf(file, "\n");
+
+    // Close the file
+    fclose(file);
+}
+
 // Get Frames from the Imager.
 int Adsd3500::RequestFrame(uint16_t* buffer) {
     struct v4l2_buffer buf[MAX_SUBFRAMES_COUNT];
@@ -293,6 +316,8 @@ int Adsd3500::RequestFrame(uint16_t* buffer) {
     if (ret < 0) {
         return -1;
     }
+
+    write_uint16_array_to_csv("buffer.csv", buffer, buf_data_len);
 
     return 0;
 }
@@ -516,25 +541,65 @@ int Adsd3500::ReadChipId(uint8_t* result) {
 
 // Set FPS value.
 int Adsd3500::SetFps(int fps) {
-    int32_t fd = 0;
+    int ret = 0;
 
-    if (videoDevice.cameraSensorDeviceId == -1) {
-        int32_t fd = tof_open(CAMERA_SENSOR_DRIVER);
-        if (fd < 0) {
-		    std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER << std::endl;
-            return fd;
-	    }
-    } else {
-        fd = videoDevice.cameraSensorDeviceId;
+// #ifdef NVIDIA
+//     struct v4l2_ext_control extCtrl;
+//     struct v4l2_ext_controls extCtrls;
+//     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
+//     memset(&extCtrl, 0, sizeof(struct v4l2_ext_control));
+//     extCtrls.count = 1;
+//     extCtrls.controls = &extCtrl;
+//     extCtrl.id = CTRL_SET_FRAME_RATE;
+//     extCtrl.value = fps;
+//     if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+//         std::cout << "Failed to set FPS.  "
+//                      << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+//         return -1;
+//     }
+// #else // NXP
+    struct v4l2_streamparm fpsControl;
+    memset(&fpsControl, 0, sizeof(struct v4l2_streamparm));
+
+    fpsControl.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    fpsControl.parm.capture.timeperframe.numerator = 1;
+    fpsControl.parm.capture.timeperframe.denominator = fps;
+
+    if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_S_PARM, &fpsControl) == -1) {
+        std::cout << "Failed to set FPS."
+                     << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+        return -1;
+    }
+//#endif
+
+    ret = this->adsd3500_write_cmd(0x22, fps);
+    if (ret < 0) {
+        std::cout << "Failed to set fps at: " << fps
+                   << "via host commands!" << std::endl;
+        return -1;
     }
 
-    printf("Setting the desired FPS value.\n");
-
-    setFps_cmd[3] = fps;
-    int32_t ret = write_cmd(fd, setFps_cmd, ARRAY_SIZE(setFps_cmd));
-    std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
-
     return ret;
+
+    // int32_t fd = 0;
+
+    // if (videoDevice.cameraSensorDeviceId == -1) {
+    //     int32_t fd = tof_open(CAMERA_SENSOR_DRIVER);
+    //     if (fd < 0) {
+	// 	    std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER << std::endl;
+    //         return fd;
+	//     }
+    // } else {
+    //     fd = videoDevice.cameraSensorDeviceId;
+    // }
+
+    // printf("Setting the desired FPS value.\n");
+
+    // setFps_cmd[3] = fps;
+    // int32_t ret = write_cmd(fd, setFps_cmd, ARRAY_SIZE(setFps_cmd));
+    // std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
+
+    // return ret;
 }
 
 // Get FPS value.
@@ -1363,6 +1428,8 @@ int Adsd3500::SetFrameType() {
         std::cout << "Number of Confidence bits: " << confBits << std::endl;
     }
 
+    adsd3500_configure_sensor_frame_types();
+
     // Pixel format is "raw8" for lr-qnative mode.
     int frameHeight = xyzDealiasData.n_rows;
     int frameWidth = xyzDealiasData.n_cols;
@@ -1443,6 +1510,108 @@ int Adsd3500::SetFrameType() {
         }
 
         videoDevice.videoBuffers[videoDevice.nVideoBuffers].length = length;
+    }
+
+    return 0;
+}
+
+int Adsd3500::adsd3500_set_control(const std::string &control, const std::string &value) {
+    // Set control commands to set value in the V4L2 Camera sensor driver.
+    struct v4l2_control ctrl;
+    memset(&ctrl, 0, sizeof(ctrl));
+
+
+    if (control == "bitsInPhaseOrDepth") {
+        ctrl.id = CTRL_PHASE_DEPTH_BITS;
+    } else if (control == "bitsInAB") {
+        ctrl.id = CTRL_AB_BITS;
+    } else if (control == "bitsInConf") {
+        ctrl.id = CTRL_CONFIDENCE_BITS;
+    } else if (control == "depthEnable") {
+        ctrl.id = CTRL_DEPTH_EN;
+    } else if (control == "abAveraging") {
+        ctrl.id = CTRL_AB_AVG;
+    } else {
+        std::cout << "Invalid Control Command passed: " << control <<  std::endl;
+    }
+
+    ctrl.value = std::stoi(value);
+
+    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_CTRL, &ctrl) == -1) {
+        std::cout << "Failed to set control: " << control << " "
+                     << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+        return -1;
+    }
+
+    return 0;
+}
+
+int Adsd3500::adsd3500_configure_sensor_frame_types() {
+    std::string value;
+
+    // Configure Phase/Depth bits.
+    auto it = iniKeyValPairs.find("bitsInPhaseOrDepth");
+    if (it != iniKeyValPairs.end()) {
+        value = it->second;
+        if (value == "16")
+            value = "6";
+        else if (value == "14")
+            value = "5";
+        else if (value == "12")
+            value = "4";
+        else if (value == "10")
+            value = "3";
+        else
+            value = "2";
+        adsd3500_set_control("bitsInPhaseOrDepth", value);
+    } else {
+        std::cout <<  "bitsInPhaseOrDepth was not found in .ini file" << std::endl;
+    }
+
+    // Configure Confidence bits.
+    it = iniKeyValPairs.find("bitsInConf");
+    if (it != iniKeyValPairs.end()) {
+        value = it->second;
+        if (value == "8")
+            value = "2";
+        else if (value == "4")
+            value = "1";
+        else
+            value = "0";
+        adsd3500_set_control("bitsInConf", value);
+    } else {
+        std::cout << "bitsInConf was not found in .ini file" << std::endl;
+    }
+
+    // Configure AB bits.
+    it = iniKeyValPairs.find("bitsInAB");
+    if (it != iniKeyValPairs.end()) {
+        value = it->second;
+        if (value == "16")
+            value = "6";
+        else if (value == "14")
+            value = "5";
+        else if (value == "12")
+            value = "4";
+        else if (value == "10")
+            value = "3";
+        else if (value == "8")
+            value = "2";
+        else {
+            value = "0";
+        }
+        adsd3500_set_control("bitsInAB", value);
+        std::cout << "bitsInAB was not found in .ini file" << std::endl;
+    }
+
+    // Configure Depth Enable and AB Averaging.
+    it = iniKeyValPairs.find("partialDepthEnable");
+    if (it != iniKeyValPairs.end()) {
+        std::string en = (it->second == "0") ? "1" : "0";
+        adsd3500_set_control("depthEnable", en);
+        adsd3500_set_control("abAveraging", en);
+    } else {
+        std::cout << "partialDepthEnable was not found in .ini file" << std::endl;
     }
 
     return 0;
