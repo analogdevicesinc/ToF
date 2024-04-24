@@ -39,7 +39,7 @@
 
 using namespace aditof;
 
-const std::vector<DriverConfiguration> m_adsd3100standard = {
+const std::vector<DriverConfiguration> m_adsd3500standard = {
     /* imagerType  mode depth  ab   conf  pixelF dWidth dHeight pixFIndex
    sr-native */
     {"1024", "1024", "2", "16", "16", "0", "raw16", 2048, 3072, 0},
@@ -63,6 +63,7 @@ const std::vector<DepthSensorFrameType> adsd3100_standardModes = {
      1024,
      1024,
      128,
+     0,
      DriverConfiguration()},
     {1,
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
@@ -73,8 +74,9 @@ const std::vector<DepthSensorFrameType> adsd3100_standardModes = {
      1024,
      1024,
      128,
+     0,
      DriverConfiguration()},
-    {"pcm-native",
+    {4,
      {"ab", "metadata"},
      0,
      0,
@@ -83,6 +85,7 @@ const std::vector<DepthSensorFrameType> adsd3100_standardModes = {
      1024,
      1024,
      128,
+     1,
      DriverConfiguration()},
     {2,
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
@@ -93,6 +96,7 @@ const std::vector<DepthSensorFrameType> adsd3100_standardModes = {
      512,
      512,
      128,
+     0,
      DriverConfiguration()},
     {3,
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
@@ -103,6 +107,7 @@ const std::vector<DepthSensorFrameType> adsd3100_standardModes = {
      512,
      512,
      128,
+     0,
      DriverConfiguration()},
     {6,
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
@@ -113,6 +118,7 @@ const std::vector<DepthSensorFrameType> adsd3100_standardModes = {
      512,
      512,
      128,
+     0,
      DriverConfiguration()},
     {5,
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
@@ -123,6 +129,7 @@ const std::vector<DepthSensorFrameType> adsd3100_standardModes = {
      512,
      512,
      128,
+     0,
      DriverConfiguration()}};
 
 const std::vector<DepthSensorFrameType> adsd3030_standardModes = {
@@ -135,6 +142,7 @@ const std::vector<DepthSensorFrameType> adsd3030_standardModes = {
      512,
      640,
      128,
+     0,
      DriverConfiguration()},
     {1,
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
@@ -145,8 +153,9 @@ const std::vector<DepthSensorFrameType> adsd3030_standardModes = {
      512,
      640,
      128,
+     0,
      DriverConfiguration()},
-    {4, {"ab", "metadata"}, 0, 0, 0, 0, 512, 640, 128, DriverConfiguration()},
+    {4, {"ab", "metadata"}, 0, 0, 0, 0, 512, 640, 128,1, DriverConfiguration()},
     {2,
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      2,
@@ -156,6 +165,7 @@ const std::vector<DepthSensorFrameType> adsd3030_standardModes = {
      256,
      320,
      128,
+     0,
      DriverConfiguration()},
     {3,
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
@@ -166,6 +176,7 @@ const std::vector<DepthSensorFrameType> adsd3030_standardModes = {
      256,
      320,
      128,
+     0,
      DriverConfiguration()},
     {6,
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
@@ -176,6 +187,7 @@ const std::vector<DepthSensorFrameType> adsd3030_standardModes = {
      256,
      320,
      128,
+     0,
      DriverConfiguration()},
     {5,
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
@@ -186,6 +198,7 @@ const std::vector<DepthSensorFrameType> adsd3030_standardModes = {
      256,
      320,
      128,
+     0,
      DriverConfiguration()}};
 
 #endif

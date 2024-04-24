@@ -504,7 +504,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
     case GET_MODE_DETAILS: {
         aditof::DepthSensorFrameType frameDetails;
-        std::string modeName = buff_recv.func_strings_param(0);
+        uint8_t modeName = buff_recv.func_int32_param(0);
         aditof::Status status =
             camDepthSensor->getModeDetails(modeName, frameDetails);
         auto protoContent = buff_send.mutable_depth_sensor_frame_type();
@@ -532,7 +532,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         aditof::Status status = camDepthSensor->setMode(mode);
         if (status == aditof::Status::OK) {
             aditof::DepthSensorFrameType aditofFrameType;
-            status = camDepthSensor->getFrameTypeDetails(mode, aditofFrameType);
+            status = camDepthSensor->getModeDetails(mode, aditofFrameType);
             if (status != aditof::Status::OK) {
                 buff_send.set_status(static_cast<::payload::Status>(status));
                 break;
@@ -541,7 +541,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             int width_tmp = aditofFrameType.baseResolutionWidth;
             int height_tmp = aditofFrameType.baseResolutionHeight;
 
-            if (aditofFrameType.mode == "pcm-native") {
+            if (aditofFrameType.isPCM) {
                 processedFrameSize = width_tmp * height_tmp;
             } else {
                 processedFrameSize = width_tmp * height_tmp * 4;
@@ -598,7 +598,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             int width_tmp = aditofFrameType.baseResolutionWidth;
             int height_tmp = aditofFrameType.baseResolutionHeight;
 
-            if (aditofFrameType.mode == "pcm-native") {
+            if (aditofFrameType.isPCM) {
                 processedFrameSize = width_tmp * height_tmp;
             } else {
                 processedFrameSize = width_tmp * height_tmp * 4;
