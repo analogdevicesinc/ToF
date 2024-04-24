@@ -136,7 +136,6 @@ void ADIView::render() {
                     if (captureEnabled) {
                         // TODO: set camera mode here
                         int selectedMode = 0;
-                        m_ctrl->setMode("lrmp");
 
                         m_ctrl->StartCapture();
                         m_ctrl->requestFrame();
@@ -194,7 +193,7 @@ void ADIView::render() {
                 status = camera1->initialize();
 
                 // Choose the mode the camera should produce
-                std::vector<std::string> availableModes;
+                std::vector<uint8_t> availableModes;
                 camera1->getAvailableModes(availableModes);
                 status = camera1->setMode(availableModes.front());
 
