@@ -81,13 +81,13 @@ if __name__ == "__main__":
             print("cameras[0].initialize() failed with status: ", status)
 
         types = []
-        status = cameras[0].getAvailableFrameTypes(types)
+        status = cameras[0].getAvailableModes(types)
         if not status:
-            print("system.getAvailableFrameTypes() failed with status: ", status)
+            print("system.getAvailableModes() failed with status: ", status)
 
-        status = cameras[0].setFrameType("lr-qnative")
+        status = cameras[0].setMode("lr-qnative")
         if not status:
-            print("cameras[0].setFrameType() failed with status:", status)
+            print("cameras[0].setMode() failed with status:", status)
 
         camDetails = tof.CameraDetails()
         status = cameras[0].getDetails(camDetails)
