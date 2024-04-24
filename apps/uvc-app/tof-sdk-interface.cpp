@@ -141,7 +141,7 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
     }
 
     case uvc_payload::FunctionName::GET_AVAILABLE_MODES: {
-        std::vector<std::string> modes;
+        std::vector<uint8_t> modes;
         std::vector<aditof::DepthSensorFrameType> availableModes;
         auto depthSensorFrameTypesMsg =
             response.mutable_available_frame_types();

@@ -76,17 +76,6 @@ aditof::Status Adsd3500ModeSelector::getAvailableFrameTypes(
         }
     }
 
-    if (m_controls["mixedModes"] == "0") {
-        for (int i = 0; i < m_depthSensorFrameTypes.size(); i++) {
-            if (m_depthSensorFrameTypes.at(i).mode.find("mixed") !=
-                std::string::npos) {
-                m_depthSensorFrameTypes.erase(m_depthSensorFrameTypes.begin() +
-                                              i);
-                i--;
-            }
-        }
-    }
-
     return aditof::Status::OK;
 }
 
@@ -97,14 +86,14 @@ aditof::Status Adsd3500ModeSelector::getConfigurationTable(
         if (m_controls["imagerType"] == "adsd3100") {
             m_tableInUse = adsd3100_standardModes;
             for (auto modes : adsd3100_standardModes) {
-                if (m_controls["mode"] == modes.mode)
+                if (m_controls["mode"] == std::to_string(modes.modeNumber))
                     configurationTable = modes;
                 return aditof::Status::OK;
             }
         } else if (m_controls["imagerType"] == "adsd3030") {
             m_tableInUse = adsd3030_standardModes;
             for (auto modes : adsd3030_standardModes) {
-                if (m_controls["mode"] == modes.mode) {
+                if (m_controls["mode"] == std::to_string(modes.modeNumber)) {
                     configurationTable = modes;
                     return aditof::Status::OK;
                 }
@@ -118,23 +107,21 @@ aditof::Status Adsd3500ModeSelector::getConfigurationTable(
 aditof::Status Adsd3500ModeSelector::updateConfigurationTable(
     DepthSensorFrameType &configurationTable) {
 
-    for (auto tableInUse : m_tableInUse) {
-        if (configurationTable.mode == tableInUse.mode)
-            for (auto driverConf : tableInUse.driverConfiguration) {
-                if (driverConf.depthBits == m_controls["depthBits"] &&
-                    driverConf.abBits == m_controls["abBits"] &&
-                    driverConf.confBits == m_controls["confBits"] &&
-                    driverConf.pixelFormat == m_controls["inputFormat"]) {
-                    configurationTable.frameWidthInBytes =
-                        driverConf.driverWidth;
-                    configurationTable.frameHeightInBytes =
-                        driverConf.driverHeigth;
-                    configurationTable.pixelFormatIndex =
-                        driverConf.pixelFormatIndex;
+    for (auto driverConf : m_adsd3500standard) {
+        if (driverConf.baseWidth ==
+                std::to_string(configurationTable.baseResolutionWidth) &&
+            driverConf.baseHeigth ==
+                std::to_string(configurationTable.baseResolutionHeight) &&
+            driverConf.depthBits == m_controls["depthBits"] &&
+            driverConf.abBits == m_controls["abBits"] &&
+            driverConf.confBits == m_controls["confBits"] &&
+            driverConf.pixelFormat == m_controls["inputFormat"]) {
+            configurationTable.frameWidthInBytes = driverConf.driverWidth;
+            configurationTable.frameHeightInBytes = driverConf.driverHeigth;
+            configurationTable.pixelFormatIndex = driverConf.pixelFormatIndex;
 
-                    return aditof::Status::OK;
-                }
-            }
+            return aditof::Status::OK;
+        }
     }
 
     int depth_i = std::stoi(m_controls["depthBits"]);
@@ -183,17 +170,9 @@ aditof::Status Adsd3500ModeSelector::updateConfigurationTable(
         return aditof::Status::INVALID_ARGUMENT;
     }
 
-    DriverConfiguration driverConfigStruct = {std::to_string(depth_i),
-                                              std::to_string(ab_i),
-                                              std::to_string(conf_i),
-                                              "raw8",
-                                              width,
-                                              height,
-                                              0};
-
-    configurationTable.frameWidthInBytes = driverConfigStruct.driverWidth;
-    configurationTable.frameHeightInBytes = driverConfigStruct.driverHeigth;
-    configurationTable.pixelFormatIndex = driverConfigStruct.pixelFormatIndex;
+    configurationTable.frameWidthInBytes = width;
+    configurationTable.frameHeightInBytes = height;
+    configurationTable.pixelFormatIndex = 0;
 
     return aditof::Status::OK;
 }

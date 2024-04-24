@@ -98,7 +98,7 @@ struct Adsd3500Sensor::ImplData {
     std::string fw_ver;
 
     ImplData()
-        : numVideoDevs(1), videoDevs(nullptr), frameType{"", {}, 0, 0},
+        : numVideoDevs(1), videoDevs(nullptr), frameType{0,{},0,0,0,0,0,0,0,0,{}},
           imagerType{SensorImagerType::IMAGER_UNKNOWN},
           ccbVersion{CCBVersion::CCB_UNKNOWN} {}
 };
@@ -477,14 +477,14 @@ aditof::Status Adsd3500Sensor::setMode(const uint8_t &mode) {
     if (0) {
         //TO DO: master ccb read from nvm goes here
     } else {
-        status = m_modeSelector->getConfigurationTable(modeTable);
+        status = m_modeSelector.getConfigurationTable(modeTable);
         if (status != aditof::Status::OK) {
             LOG(ERROR) << "Failed to get configuration table!";
             return aditof::Status::GENERIC_ERROR;
         }
     }
 
-    status = m_modeSelector->updateConfigurationTable(modeTable);
+    status = m_modeSelector.updateConfigurationTable(modeTable);
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Failed to update configuration table for currrent "
                       "configuration";
@@ -497,7 +497,7 @@ aditof::Status Adsd3500Sensor::setMode(const uint8_t &mode) {
         return aditof::Status::GENERIC_ERROR;
     }
 
-    m_implData->type = modeTable;
+    m_implData->frameType = modeTable;
     return aditof::Status::OK;
 }
 
@@ -581,7 +581,7 @@ Adsd3500Sensor::setMode(const aditof::DepthSensorFrameType &type) {
 
             //End of set mode in chip
 
-            if (type.mode != m_implData->frameType.mode) {
+            if (type.modeNumber != m_implData->frameType.modeNumber) {
                 for (unsigned int i = 0; i < dev->nVideoBuffers; i++) {
                     if (munmap(dev->videoBuffers[i].start,
                                dev->videoBuffers[i].length) == -1) {
@@ -694,7 +694,7 @@ Adsd3500Sensor::setMode(const aditof::DepthSensorFrameType &type) {
         }
     }
 
-    if (type.mode != "pcm-native") {
+    if (!type.isPCM) {
         //TO DO: update this values when frame_impl gets restructured
         status = m_bufferProcessor->setVideoProperties(
             type.baseResolutionWidth * 4, type.baseResolutionHeight);
@@ -712,7 +712,7 @@ aditof::Status Adsd3500Sensor::getFrame(uint16_t *buffer) {
     using namespace aditof;
     Status status;
 
-    if (m_depthComputeOnTarget && m_implData->frameType.mode != "pcm-native") {
+    if (m_depthComputeOnTarget && !m_implData->frameType.isPCM) {
         status = m_bufferProcessor->processBuffer(buffer);
         if (status != Status::OK) {
             LOG(ERROR) << "Failed to process buffer!";
