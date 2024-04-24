@@ -1359,15 +1359,15 @@ CameraItof::saveDepthParamsToJsonFile(const std::string &savePathFile) {
     cJSON *depthParamjson = cJSON_CreateObject();
     cJSON_AddItemToObject(rootjson, "depthParams", depthParamjson);
 
+    cJSON_AddNumberToObject(depthParamjson, "errata1",
+                            m_dropFirstFrame ? 1 : 0);
+
     for (auto pfile = m_ini_depth_map.begin(); pfile != m_ini_depth_map.end();
          pfile++) {
 
         std::map<std::string, std::string> iniKeyValPairs;
         status =
             UtilsIni::getKeyValuePairsFromIni(pfile->second, iniKeyValPairs);
-
-        iniKeyValPairs.emplace("errata1",
-                               std::to_string(m_dropFirstFrame ? 1 : 0));
 
         if (status == Status::OK) {
             cJSON *json = cJSON_CreateObject();
@@ -1421,12 +1421,26 @@ CameraItof::loadDepthParamsFromJsonFile(const std::string &pathFile,
 
         if (depthParams) {
 
+            cJSON *errata1 =
+                cJSON_GetObjectItemCaseSensitive(depthParams, "errata1");
+            double errata1val = 1;
+            if (cJSON_IsNumber(errata1)) {
+                errata1val = errata1->valuedouble;
+            }
+
             cJSON *depthframeType = cJSON_GetObjectItemCaseSensitive(
                 depthParams, frameType.c_str());
 
             if (depthframeType) {
 
                 std::map<std::string, std::string> iniKeyValPairs;
+
+                iniKeyValPairs.emplace("errata1", std::to_string(errata1val));
+                if (errata1val == 1) {
+                    m_dropFirstFrame = true;
+                } else {
+                    m_dropFirstFrame = false;
+                }
 
                 cJSON *elem;
                 cJSON_ArrayForEach(elem, depthframeType) {
@@ -1436,13 +1450,6 @@ CameraItof::loadDepthParamsFromJsonFile(const std::string &pathFile,
                         value = std::string(elem->valuestring);
                     } else {
                         value = std::to_string(elem->valuedouble);
-                    }
-                    if (std::string(elem->string) == "errata1") {
-                        if (elem->valuedouble == 1) {
-                            m_dropFirstFrame = true;
-                        } else {
-                            m_dropFirstFrame = false;
-                        }
                     }
                     iniKeyValPairs.emplace(std::string(elem->string), value);
                     LOG(INFO)
