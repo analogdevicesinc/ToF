@@ -8,7 +8,7 @@ def available_modes_ini(request):
 
 @pytest.fixture(autouse=True)
 def delay_between_tests():
-    time.sleep(1) # sleep for 1 second
+    time.sleep(3) # sleep for 1 second
     
 @pytest.fixture(autouse=True)
 def ip_set():
