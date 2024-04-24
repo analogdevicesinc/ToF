@@ -498,7 +498,7 @@ class ADIMainWindow {
 		* @brief			Prepares the camera with the selected mode
 		* @param	mode	Camera mode
 		*/
-    void prepareCamera(std::string mode);
+    void prepareCamera(uint8_t mode);
 
     /**
 		* @brief Displays the Information Window
@@ -559,8 +559,9 @@ class ADIMainWindow {
     bool captureSeparateEnabled = true;
     bool captureBlendedEnabled = true;
     const ImVec2 InvalidHoveredPixel = ImVec2(-1, -1);
-    std::vector<std::string> _cameraModes;
-    std::vector<std::pair<int, std::string>> m_cameraModes;
+    std::vector<uint8_t> _cameraModes;
+    std::vector<std::pair<int, uint8_t>> m_cameraModes;
+    std::vector<std::pair<int, std::string>> m_cameraModesDropDown;
 
     const ImVec2 depthWinSize = ImVec2(0, 0);
     ImVec2 sourceDepthImageDimensions;

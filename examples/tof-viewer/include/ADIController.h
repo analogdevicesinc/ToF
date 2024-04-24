@@ -61,7 +61,7 @@ class ADIController {
 		* @brief			Set the camera mode, directly to SDK.
 		* @param	mode	Name of mode declared on SDK
 		*/
-    void setMode(const std::string &mode);
+    void setMode(const uint8_t &mode);
 
     /**
 		* @brief	Get camera temperature

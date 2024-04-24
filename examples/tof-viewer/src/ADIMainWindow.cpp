@@ -74,7 +74,7 @@ using namespace adiMainWindow;
 
 auto startTime = std::chrono::system_clock::now();
 static int numProcessors;
-static std::string last_mode = "";
+static uint8_t last_mode = 0;
 std::map<std::string, float> ini_params;
 std::map<std::string, float> modified_ini_params;
 std::map<std::string, float> last_ini_params;
@@ -646,7 +646,7 @@ void ADIMainWindow::showSaveLoadAdsdParamsMenu() {
 
                     aditof::Status status = camera->loadDepthParamsFromJsonFile(
                         loadconfigurationFileValue,
-                        m_cameraModes[modeSelection].second);
+                        std::to_string(m_cameraModes[modeSelection].second));
                     if (status != aditof::Status::OK) {
                         LOG(INFO) << "Could not load current configuration "
                                      "info to "
@@ -778,7 +778,7 @@ void ADIMainWindow::showDeviceMenu() {
             if (ImGui::BeginMenu("ToF Camera Options")) {
                 ImGuiExtensions::ADIComboBox(
                     "Mode", "Select Mode", ImGuiSelectableFlags_None,
-                    m_cameraModes, &modeSelection, true);
+                    m_cameraModesDropDown, &modeSelection, true);
 
                 ImGui::NewLine();
                 ImGui::Text("View Options:");
@@ -1409,14 +1409,7 @@ void ADIMainWindow::InitCamera() {
                 std::remove(cameraElements.begin(), cameraElements.end(), ' '),
                 cameraElements
                     .end()); //Cleanup the string to eliminate blank spaces.
-            while ((position = cameraElements.find(delimiter)) !=
-                   std::string::npos) {
-                _cameraModes.emplace_back(cameraElements.substr(0, position));
-                std::cout << token << std::endl;
-                cameraElements.erase(0, position + delimiter.length());
-            }
-            //Last element should go here:
-            _cameraModes.emplace_back(cameraElements.substr(0, position));
+
             _usesExternalModeDefinition = true;
 
         } else {
@@ -1434,23 +1427,20 @@ void ADIMainWindow::InitCamera() {
 
     int modeIndex = 0;
     for (int i = 0; i < _cameraModes.size(); ++i) {
-#ifndef ENBABLE_PASSIVE_IR
-        if ("pcm" == _cameraModes.at(i)) {
-            continue;
-        }
-#endif
         modeSelection = modeIndex;
         m_cameraModes.emplace_back(modeIndex++, _cameraModes.at(i));
+        m_cameraModesDropDown.emplace_back(modeIndex++,
+                                           std::to_string(_cameraModes.at(i)));
     }
 
     cameraWorkerDone = true;
 }
 
-void ADIMainWindow::prepareCamera(std::string mode) {
+void ADIMainWindow::prepareCamera(uint8_t mode) {
     aditof::Status status = aditof::Status::OK;
     std::vector<aditof::FrameDetails> frameTypes;
 
-    if (mode.empty()) {
+    if (mode < 0) {
         my_log.AddLog("Error: Invalid camera mode!\n");
         return;
     }
@@ -1665,33 +1655,31 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
             }
             CameraDetails cameraDetails;
             camera->getDetails(cameraDetails);
-            std::string camera_mode = cameraDetails.mode;
-            if (camera_mode != "pcm-native") {
-                Metadata metadata;
-                Status status = frame->getMetadataStruct(metadata);
-                if (status != Status::OK) {
-                    LOG(ERROR) << "Failed to get frame metadata.";
-                } else {
-                    int32_t frameNum = (metadata.frameNumber);
-                    if (!firstFrame) {
-                        firstFrame = frameNum;
-                    }
-                    int32_t sensorTemp = (metadata.sensorTemperature);
-                    int32_t laserTemp = (metadata.laserTemperature);
-                    ImGui::Text(" Current FPS: %i", fps);
-                    if (expectedFPS) {
-                        ImGui::SameLine();
-                        ImGui::Text(" | Expected FPS: %i", expectedFPS);
-                    }
-                    uint32_t totalFrames = frameNum - firstFrame + 1;
-                    uint32_t frameLost = totalFrames - frameRecvd;
-                    ImGui::Text(" Number of frames lost: %i", frameLost);
-                    ImGui::SameLine();
-                    ImGui::Text(" | Number of frames received: %i", frameRecvd);
-                    ImGui::Text(" Laser Temperature: %iC", laserTemp);
-                    ImGui::SameLine();
-                    ImGui::Text(" | Sensor Temperature: %iC", sensorTemp);
+            uint8_t camera_mode = cameraDetails.mode;
+            Metadata metadata;
+            Status status = frame->getMetadataStruct(metadata);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to get frame metadata.";
+            } else {
+                int32_t frameNum = (metadata.frameNumber);
+                if (!firstFrame) {
+                    firstFrame = frameNum;
                 }
+                int32_t sensorTemp = (metadata.sensorTemperature);
+                int32_t laserTemp = (metadata.laserTemperature);
+                ImGui::Text(" Current FPS: %i", fps);
+                if (expectedFPS) {
+                    ImGui::SameLine();
+                    ImGui::Text(" | Expected FPS: %i", expectedFPS);
+                }
+                uint32_t totalFrames = frameNum - firstFrame + 1;
+                uint32_t frameLost = totalFrames - frameRecvd;
+                ImGui::Text(" Number of frames lost: %i", frameLost);
+                ImGui::SameLine();
+                ImGui::Text(" | Number of frames received: %i", frameRecvd);
+                ImGui::Text(" Laser Temperature: %iC", laserTemp);
+                ImGui::SameLine();
+                ImGui::Text(" | Sensor Temperature: %iC", sensorTemp);
             }
         }
 
