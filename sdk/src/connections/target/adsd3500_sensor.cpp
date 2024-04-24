@@ -473,6 +473,12 @@ aditof::Status Adsd3500Sensor::setMode(const uint8_t &mode) {
     aditof::DepthSensorFrameType modeTable;
     aditof::Status status = aditof::Status::OK;
 
+    status = m_modeSelector.setControl("mode", std::to_string(mode));
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "Failed to set control in modeSelector!";
+        return status;
+    }
+
     //decide if we read this from ccb or from sdk
     if (0) {
         //TO DO: master ccb read from nvm goes here
@@ -569,7 +575,7 @@ Adsd3500Sensor::setMode(const aditof::DepthSensorFrameType &type) {
             memset(&ctrl, 0, sizeof(ctrl));
 
             ctrl.id = CTRL_SET_MODE;
-            ctrl.value = m_implData->frameType.modeNumber;
+            ctrl.value = type.modeNumber;
 
             if (xioctl(dev->sfd, VIDIOC_S_CTRL, &ctrl) == -1) {
                 LOG(WARNING)
@@ -610,7 +616,7 @@ Adsd3500Sensor::setMode(const aditof::DepthSensorFrameType &type) {
 
             __u32 pixelFormat = 0;
 
-            if (m_implData->frameType.pixelFormatIndex == 1) {
+            if (type.pixelFormatIndex == 1) {
                 pixelFormat = V4L2_PIX_FMT_SBGGR12;
             } else {
 #ifdef NXP
@@ -624,8 +630,8 @@ Adsd3500Sensor::setMode(const aditof::DepthSensorFrameType &type) {
             CLEAR(fmt);
             fmt.type = dev->videoBuffersType;
             fmt.fmt.pix.pixelformat = pixelFormat;
-            fmt.fmt.pix.width = m_implData->frameType.frameWidthInBytes;
-            fmt.fmt.pix.height = m_implData->frameType.frameHeightInBytes;
+            fmt.fmt.pix.width = type.frameWidthInBytes;
+            fmt.fmt.pix.height = type.frameHeightInBytes;
 
             if (xioctl(dev->fd, VIDIOC_S_FMT, &fmt) == -1) {
                 LOG(WARNING) << "Setting Pixel Format error, errno: " << errno
