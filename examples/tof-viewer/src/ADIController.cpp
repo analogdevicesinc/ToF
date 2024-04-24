@@ -70,7 +70,7 @@ std::string ADIController::getMode() const {
     return "";
 }
 
-void ADIController::setMode(const std::string &mode) {
+void ADIController::setMode(const uint8_t &mode) {
     if (m_cameraInUse == -1) {
         return;
     }
