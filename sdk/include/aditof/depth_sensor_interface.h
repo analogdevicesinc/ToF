@@ -84,12 +84,11 @@ class DepthSensorInterface {
      * @param[out] modes
      * @return Status
      */
-    virtual aditof::Status
-    getAvailableModes(std::vector<uint8_t> &modes) = 0;
+    virtual aditof::Status getAvailableModes(std::vector<uint8_t> &modes) = 0;
 
     /**
      * @brief Returns details of specified mode
-     * @param modeName
+     * @param mode
      * @param[out] details
      * @return Status
      */
@@ -102,8 +101,7 @@ class DepthSensorInterface {
      * @param mode - desired mode
      * @return Status
      */
-    virtual aditof::Status
-    setMode(const uint8_t &mode) = 0;
+    virtual aditof::Status setMode(const uint8_t &mode) = 0;
 
     /**
      * @brief Set the sensor frame mode to the given type

@@ -98,7 +98,8 @@ struct Adsd3500Sensor::ImplData {
     std::string fw_ver;
 
     ImplData()
-        : numVideoDevs(1), videoDevs(nullptr), frameType{0,{},0,0,0,0,0,0,0,0,{}},
+        : numVideoDevs(1),
+          videoDevs(nullptr), frameType{0, {}, 0, 0, 0, 0, 0, 0, 0, 0, {}},
           imagerType{SensorImagerType::IMAGER_UNKNOWN},
           ccbVersion{CCBVersion::CCB_UNKNOWN} {}
 };
@@ -446,8 +447,7 @@ aditof::Status Adsd3500Sensor::stop() {
     return status;
 }
 
-aditof::Status
-Adsd3500Sensor::getAvailableModes(std::vector<uint8_t> &modes) {
+aditof::Status Adsd3500Sensor::getAvailableModes(std::vector<uint8_t> &modes) {
     modes.clear();
     for (const auto &availableMode : m_availableModes) {
         modes.emplace_back(availableMode.modeNumber);
