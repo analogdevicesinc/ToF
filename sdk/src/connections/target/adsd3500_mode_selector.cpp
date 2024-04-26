@@ -150,6 +150,15 @@ aditof::Status Adsd3500ModeSelector::updateConfigurationTable(
 
     int height = 512;
 
+    if (configurationTable.isPCM) {
+        configurationTable.frameWidthInBytes =
+            configurationTable.baseResolutionWidth;
+        configurationTable.frameHeightInBytes =
+            configurationTable.baseResolutionHeight;
+        configurationTable.pixelFormatIndex = 1;
+        return aditof::Status::OK;
+    }
+
     if ((configurationTable.modeNumber == 2 ||
          configurationTable.modeNumber == 3 ||
          configurationTable.modeNumber == 5 ||
