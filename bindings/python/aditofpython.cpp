@@ -201,7 +201,8 @@ PYBIND11_MODULE(aditofpython, m) {
 
     py::class_<aditof::DepthSensorFrameType>(m, "DepthSensorFrameType")
         .def(py::init<>())
-        .def_readwrite("mode", &aditof::DepthSensorFrameType::mode)
+        .def_readwrite("numberOfPhases",
+                       &aditof::DepthSensorFrameType::numberOfPhases)
         .def_readwrite("frameContent",
                        &aditof::DepthSensorFrameType::frameContent)
         .def_readwrite("modeNumber", &aditof::DepthSensorFrameType::modeNumber)
@@ -217,6 +218,7 @@ PYBIND11_MODULE(aditofpython, m) {
                        &aditof::DepthSensorFrameType::baseResolutionHeight)
         .def_readwrite("metadataSize",
                        &aditof::DepthSensorFrameType::metadataSize)
+        .def_readwrite("isPCM", &aditof::DepthSensorFrameType::isPCM)
         .def_readwrite("driverConfiguration",
                        &aditof::DepthSensorFrameType::driverConfiguration);
 
@@ -304,7 +306,7 @@ PYBIND11_MODULE(aditofpython, m) {
         .def(
             "getAvailableModes",
             [](const aditof::Camera &camera, py::list modes) {
-                std::vector<std::string> modeList;
+                std::vector<std::uint8_t> modeList;
                 aditof::Status status = camera.getAvailableModes(modeList);
 
                 for (const auto &mode : modeList)
@@ -600,7 +602,7 @@ PYBIND11_MODULE(aditofpython, m) {
         .def(
             "getAvailableModes",
             [](aditof::DepthSensorInterface &device, py::list modes) {
-                std::vector<std::string> modeList;
+                std::vector<std::uint8_t> modeList;
                 aditof::Status status = device.getAvailableModes(modeList);
 
                 for (const auto &mode : modeList)
@@ -610,8 +612,20 @@ PYBIND11_MODULE(aditofpython, m) {
             },
             py::arg("modes"))
         .def("getModeDetails", &aditof::DepthSensorInterface::getModeDetails,
-             py::arg("modeName"), py::arg("details"))
-        .def("setMode", &aditof::DepthSensorInterface::setMode, py::arg("mode"))
+             py::arg("mode"), py::arg("details"))
+        .def(
+            "setMode",
+            [](aditof::DepthSensorInterface &device,
+               const aditof::DepthSensorFrameType &mode) {
+                return device.setMode(mode);
+            },
+            py::arg("mode"))
+        .def(
+            "setMode",
+            [](aditof::DepthSensorInterface &device, const uint8_t &mode) {
+                return device.setMode(mode);
+            },
+            py::arg("mode"))
         .def(
             "getFrame",
             [](aditof::DepthSensorInterface &device,
