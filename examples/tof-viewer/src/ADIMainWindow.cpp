@@ -1427,11 +1427,10 @@ void ADIMainWindow::InitCamera() {
     if (!_usesExternalModeDefinition)
         camera->getAvailableModes(_cameraModes);
 
-    int modeIndex = 0;
     for (int i = 0; i < _cameraModes.size(); ++i) {
-        modeSelection = modeIndex;
-        m_cameraModes.emplace_back(modeIndex++, _cameraModes.at(i));
-        m_cameraModesDropDown.emplace_back(modeIndex++,
+        modeSelection = i;
+        m_cameraModes.emplace_back(i, _cameraModes.at(i));
+        m_cameraModesDropDown.emplace_back(i,
                                            std::to_string(_cameraModes.at(i)));
     }
 

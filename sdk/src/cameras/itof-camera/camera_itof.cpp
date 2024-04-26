@@ -65,12 +65,12 @@ CameraItof::CameraItof(
     const std::string &ubootVersion, const std::string &kernelVersion,
     const std::string &sdCardImageVersion, const std::string &netLinkTest)
     : m_depthSensor(depthSensor), m_devStarted(false), m_adsd3500Enabled(false),
-      m_loadedConfigData(false), m_xyzEnabled(false), m_xyzSetViaApi(false),
+      m_loadedConfigData(false), m_xyzEnabled(true), m_xyzSetViaApi(false),
       m_cameraFps(0), m_fsyncMode(-1), m_mipiOutputSpeed(-1),
       m_enableTempCompenstation(-1), m_enableMetaDatainAB(-1),
       m_enableEdgeConfidence(-1), m_modesVersion(0),
       m_xyzTable({nullptr, nullptr, nullptr}),
-      m_imagerType(aditof::ImagerType::UNSET), m_dropFirstFrame(false),
+      m_imagerType(aditof::ImagerType::UNSET), m_dropFirstFrame(true),
       m_dropFrameOnce(true) {
 
     FloatToLinGenerateTable();
@@ -495,8 +495,8 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
         int ret = Algorithms::GenerateXYZTables(
             &m_xyzTable.p_x_table, &m_xyzTable.p_y_table, &m_xyzTable.p_z_table,
             &(pDealias->camera_intrinsics), pDealias->n_sensor_rows,
-            pDealias->n_sensor_cols, m_frameDetails.frameWidthInBytes,
-            m_frameDetails.frameHeightInBytes, pDealias->n_offset_rows,
+            pDealias->n_sensor_cols, m_frameDetails.baseResolutionWidth,
+            m_frameDetails.baseResolutionHeight, pDealias->n_offset_rows,
             pDealias->n_offset_cols, pDealias->row_bin_factor,
             pDealias->col_bin_factor, GEN_XYZ_ITERATIONS);
         if (ret != 0 || !m_xyzTable.p_x_table || !m_xyzTable.p_y_table ||
@@ -564,13 +564,9 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
     if (!m_pcmFrame) {
         frame->getData("frameData", &frameDataLocation);
     } else {
-        if ((m_details.frameType.type == "pcm-native")) {
-            frame->getData("ab", &frameDataLocation);
-        } else if (m_details.frameType.type == "") {
-            LOG(ERROR) << "Frame type not found!";
-            return Status::INVALID_ARGUMENT;
-        }
+        frame->getData("ab", &frameDataLocation);
     }
+
     if (!frameDataLocation) {
         LOG(WARNING) << "getframe failed to allocated valid frame";
         return status;
