@@ -220,23 +220,14 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
     LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
 
-    std::vector<std::string> frameTypes;
-    camera->getAvailableFrameTypes(frameTypes);
-    if (frameTypes.empty()) {
+    std::vector<std::uint8_t> modes;
+    camera->getAvailableModes(modes);
+    if (modes.empty()) {
         std::cout << "no frame type avaialble!";
         return 0;
     }
 
-    if (modeName.empty()) {
-        status = camera->getFrameTypeNameFromId(mode, modeName);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Mode: " << mode
-                       << " is invalid for this type of camera!";
-            return 0;
-        }
-    }
-
-    status = camera->setFrameType(modeName);
+    status = camera->setMode(mode);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera frame type!";
         return 0;
