@@ -122,7 +122,7 @@ aditof::Status OfflineDepthSensor::setMode(const uint8_t &mode) {
 
 aditof::Status
 OfflineDepthSensor::setMode(const aditof::DepthSensorFrameType &type) {
-    m_frameTypeSelected = type.mode;
+    m_frameTypeSelected = type.modeNumber;
     return aditof::Status::OK;
 }
 
