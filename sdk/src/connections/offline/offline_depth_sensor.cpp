@@ -166,7 +166,7 @@ aditof::Status OfflineDepthSensor::setMode(const uint8_t &mode) {
 
 aditof::Status
 OfflineDepthSensor::setMode(const aditof::DepthSensorFrameType &type) {
-    m_frameTypeSelected = type.mode;
+    m_frameTypeSelected = type.modeNumber;
 #ifdef TARGET
     m_outputFrameWidth = type.content.at(1).width * 4;
     m_outputFrameHeight = type.content.at(1).height;
