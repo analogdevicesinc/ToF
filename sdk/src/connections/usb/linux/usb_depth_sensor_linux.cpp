@@ -238,10 +238,10 @@ aditof::Status UsbDepthSensor::stop() {
 }
 
 aditof::Status
-UsbDepthSensor::getAvailableModes(std::vector<std::string> &modes) {
+UsbDepthSensor::getAvailableModes(std::vector<std::uint8_t> &modes) {
     modes.clear();
     for (const auto &frameType : m_depthSensorModes) {
-        modes.emplace_back(frameType.mode);
+        modes.emplace_back(frameType.modeNumber);
     }
 
     return aditof::Status::OK;
