@@ -239,8 +239,6 @@ class ADIMainWindow {
     std::thread initCameraWorker;
     bool cameraWorkerDone = false;
 
-    std::string saveConfigurationPath;
-
     /**
 		* @brief	CPU percentage Usage
 		*/
