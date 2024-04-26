@@ -85,6 +85,8 @@ GLFWimage logos[1];
 GLuint logo_texture;
 uint32_t firstFrame = 0;
 uint32_t frameRecvd = 0;
+char saveConfigurationPath[512] = "currentconfiguration.json";
+
 ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
 #if defined(Debug) && defined(_WIN32)
     static HANDLE self;
@@ -182,8 +184,6 @@ ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
     if (!ifs.fail()) {
         ifs.close();
     }
-
-    saveConfigurationPath = "currentconfiguration.json";
 }
 
 ADIMainWindow::~ADIMainWindow() {
@@ -586,8 +586,7 @@ void ADIMainWindow::showRecordMenu() {
 
 void ADIMainWindow::showSaveLoadAdsdParamsMenu() {
 
-    char pathname[512];
-    std::strcpy(pathname, saveConfigurationPath.c_str());
+    char *pathname = saveConfigurationPath;
 
     if (ImGui::BeginMenu("Save-Load Configuration", view != nullptr)) {
 
@@ -623,6 +622,8 @@ void ADIMainWindow::showSaveLoadAdsdParamsMenu() {
                     } else {
                         LOG(INFO) << "Current configuration info saved to file "
                                   << saveconfigurationFileValue << std::endl;
+                        std::strcpy(saveConfigurationPath,
+                                    saveconfigurationFileValue.c_str());
                     }
                 }
             }
