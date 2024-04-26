@@ -96,14 +96,14 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    std::vector<std::string> modesList;
+    std::vector<std::uint8_t> modesList;
     camera->getAvailableModes(modesList);
     if (modesList.empty()) {
         LOG(ERROR) << "No mode available!";
         return 0;
     }
 
-    status = camera->setMode("lr-qnative");
+    status = camera->setMode(2);
     if (status != Status::OK) {
         LOG(ERROR) << "Could not set camera mode!";
         return 0;
