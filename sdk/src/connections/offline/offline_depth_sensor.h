@@ -3,6 +3,11 @@
 
 #include "aditof/depth_sensor_interface.h"
 #include "aditof/sensor_definitions.h"
+#ifdef TARGET
+#include "tofi/tofi_compute.h"
+#include "tofi/tofi_config.h"
+#include "tofi/tofi_util.h"
+#endif
 
 #include <map>
 #include <memory>
@@ -145,6 +150,13 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
             2560,
             512,
         }};
+#ifdef TARGET
+    TofiConfig *m_tofiConfig;
+    TofiComputeContext *m_tofiComputeContext;
+    TofiXYZDealiasData m_xyzDealiasData[11];
+    uint16_t m_outputFrameWidth;
+    uint16_t m_outputFrameHeight;
+#endif `
 };
 
 #endif // OFFLINE_DEPTH_SENSOR_H

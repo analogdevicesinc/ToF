@@ -1,5 +1,7 @@
 #include "offline_depth_sensor.h"
+#include "cameras/itof-camera/mode_info.h"
 #include "tofi/tofi_config.h"
+
 #include <cstring>
 #ifdef __linux__
 #include <dirent.h>
@@ -11,7 +13,13 @@
 #include <map>
 #include <vector>
 
-OfflineDepthSensor::OfflineDepthSensor(std::string path) : m_path(path) {
+OfflineDepthSensor::OfflineDepthSensor(std::string path)
+    : m_path(path)
+#ifdef TARGET
+      ,
+      m_tofiConfig(nullptr), m_tofiComputeContext(nullptr)
+#endif
+{
     m_sensorDetails.connectionType = aditof::ConnectionType::OFFLINE;
     m_connectionType = "offline";
 }
@@ -21,6 +29,17 @@ OfflineDepthSensor::~OfflineDepthSensor() {
         delete[] index.second.first;
     }
     m_frameTypes.clear();
+#if TARGET
+    if (NULL != m_tofiComputeContext) {
+        FreeTofiCompute(m_tofiComputeContext);
+        m_tofiComputeContext = NULL;
+    }
+
+    if (m_tofiConfig != NULL) {
+        FreeTofiConfig(m_tofiConfig);
+        m_tofiConfig = NULL;
+    }
+#endif
 }
 
 aditof::Status OfflineDepthSensor::getFrame(uint16_t *buffer) {
@@ -30,7 +49,32 @@ aditof::Status OfflineDepthSensor::getFrame(uint16_t *buffer) {
                      << " is not found";
         return aditof::Status::GENERIC_ERROR;
     }
+
+#ifdef TARGET
+    uint16_t *tempDepthFrame = m_tofiComputeContext->p_depth_frame;
+    uint16_t *tempAbFrame = m_tofiComputeContext->p_ab_frame;
+    float *tempConfFrame = m_tofiComputeContext->p_conf_frame;
+
+    m_tofiComputeContext->p_depth_frame = buffer;
+    m_tofiComputeContext->p_ab_frame =
+        buffer + m_outputFrameWidth * m_outputFrameHeight / 4;
+    m_tofiComputeContext->p_conf_frame =
+        (float *)(buffer + m_outputFrameWidth * m_outputFrameHeight / 2);
+
+    uint32_t ret = TofiCompute((uint16_t *)frame->second.first,
+                               m_tofiComputeContext, NULL);
+    if (ret != ADI_TOFI_SUCCESS) {
+        LOG(ERROR) << "TofiCompute failed";
+        return aditof::Status::GENERIC_ERROR;
+    }
+
+    m_tofiComputeContext->p_depth_frame = tempDepthFrame;
+    m_tofiComputeContext->p_ab_frame = tempAbFrame;
+    m_tofiComputeContext->p_conf_frame = tempConfFrame;
+#else
     memcpy(buffer, frame->second.first, frame->second.second);
+#endif
+
     return aditof::Status::OK;
 }
 
@@ -102,7 +146,13 @@ aditof::Status OfflineDepthSensor::getAvailableFrameTypes(
 
 aditof::Status
 OfflineDepthSensor::setFrameType(const aditof::DepthSensorFrameType &type) {
+
     m_frameTypeSelected = type.type;
+#ifdef TARGET
+    m_outputFrameWidth = type.content.at(1).width * 4;
+    m_outputFrameHeight = type.content.at(1).height;
+#endif
+
     return aditof::Status::OK;
 }
 
@@ -301,6 +351,38 @@ aditof::Status OfflineDepthSensor::adsd3500_get_status(int &status,
 aditof::Status OfflineDepthSensor::initTargetDepthCompute(
     uint8_t *iniFile, uint16_t iniFileLength, uint8_t *calData,
     uint16_t calDataLength) {
+    using namespace aditof;
+
+#ifdef TARGET
+    uint8_t mode;
+    ModeInfo::getInstance()->convertCameraMode(m_frameTypeSelected, mode);
+
+    // Initialize Depth Compute
+    uint32_t status = ADI_TOFI_SUCCESS;
+    ConfigFileData calDataStruct = {calData, calDataLength};
+    if (iniFile != nullptr) {
+        ConfigFileData depth_ini = {iniFile, iniFileLength};
+        memcpy(m_xyzDealiasData, calData, calDataLength);
+        m_tofiConfig = InitTofiConfig_isp((ConfigFileData *)&depth_ini, mode,
+                                          &status, m_xyzDealiasData);
+    } else {
+        m_tofiConfig =
+            InitTofiConfig(&calDataStruct, NULL, NULL, mode, &status);
+    }
+
+    if ((m_tofiConfig == NULL) || (m_tofiConfig->p_tofi_cal_config == NULL) ||
+        (status != ADI_TOFI_SUCCESS)) {
+        LOG(ERROR) << "InitTofiConfig failed";
+        return aditof::Status::GENERIC_ERROR;
+    } else {
+        m_tofiComputeContext =
+            InitTofiCompute(m_tofiConfig->p_tofi_cal_config, &status);
+        if (m_tofiComputeContext == NULL || status != ADI_TOFI_SUCCESS) {
+            LOG(ERROR) << "InitTofiCompute failed";
+            return aditof::Status::GENERIC_ERROR;
+        }
+    }
+#endif
     return aditof::Status::OK;
 }
 
