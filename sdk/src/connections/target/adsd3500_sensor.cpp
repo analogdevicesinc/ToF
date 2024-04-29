@@ -140,6 +140,7 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     m_controls.emplace("inputFormat", "");
     m_controls.emplace("netlinktest", "0");
     m_controls.emplace("depthComputeOpenSource", "0");
+    m_controls.emplace("disableCCBM", "0");
 
     // Define the commands that correspond to the sensor controls
     m_implData->controlsCommands["abAveraging"] = 0x9819e5;
@@ -1668,7 +1669,7 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
             return Status::GENERIC_ERROR;
         } else if (m_implData->ccbVersion == CCBVersion::CCB_VERSION1) {
 
-            if (0) {
+            if (0 && m_controls["disableCCBM"] == "0") {
                 LOG(INFO) << "CCB master is supported. Reading mode details "
                              "from nvm.";
 
@@ -1699,8 +1700,13 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
                 }
             } else {
 
-                LOG(INFO)
-                    << "CCB master not supported, using sdk defined modes.";
+                if (m_controls["disableCCBM"] == "1") {
+                    LOG(INFO) << "CCB master is disabled via control. Using "
+                                 "sdk defined modes.";
+                } else {
+                    LOG(INFO)
+                        << "CCB master not supported. Using sdk defined modes.";
+                }
 
                 int modeToTest =
                     5; // We are looking at width and height for mode 5
