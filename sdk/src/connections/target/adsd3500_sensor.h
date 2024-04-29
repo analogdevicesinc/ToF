@@ -178,4 +178,13 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     bool m_chipResetDone;
     std::vector<iniFileStruct> m_iniFileStructList;
     aditof::Adsd3500ModeSelector m_modeSelector;
+
+    //TO DO: update this once we get the final struct details
+    struct CCBM {
+        int CFG_mode;
+        int width;
+        int heigth;
+        int noOfPhases;
+        int isPCM;
+    };
 };
