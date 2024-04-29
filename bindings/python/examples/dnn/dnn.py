@@ -39,7 +39,7 @@ import keyboard
 
 ip = "10.43.0.1" # Set to "10.43.0.1" if networking is used.
 config = "config/config_adsd3500_adsd3100.json"
-mode = "sr-qnative"
+mode = 3
 
 inWidth = 300
 inHeight = 300
