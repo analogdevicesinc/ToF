@@ -45,7 +45,7 @@ mode_help_message = """Valid mode (-m) options are:
         5: long-range mixed;
         6: short-range mixed;
         
-        Note: --m argument supports both index and string (Default: 0/sr-native) """
+        Note: --m argument supports index (Default: 0) """
 
 
 Ip= '10.43.0.1'
@@ -59,7 +59,7 @@ if __name__ == '__main__':
                         help='output folder [default: ./]', metavar = '<folder>')
     parser.add_argument('-n', dest='ncapture', type=int, default=1,
                         help='number of frame captured[default: 1]', metavar = '<ncapture>')
-    parser.add_argument('-m', dest='mode',  default='sr-native',
+    parser.add_argument('-m', dest='mode',  default='0',
                         help=mode_help_message, metavar = '<mode>')
     parser.add_argument('-wt', dest='warmup_time', type=int,
                         default=0, help='warmup time in seconds[default: 0]', metavar = '<warmup>')
@@ -186,23 +186,13 @@ if __name__ == '__main__':
    
     #check mode, accepts both string and index
     if (args.mode):
-        try:
-            mode_name = 'none'
-            args.mode = int(args.mode) # try to convert x to an int
-            status = camera1.getModeDetailNameFromId(args.mode, mode_name)
-            if status[0] == tof.Status.Ok:
-                print(f'Mode: {status[1]}')
-                mode_name = status[1]
-            else:
-                sys.exit(f'Mode: {args.mode} is invalid for this type of camera')
-        except ValueError:
-            if args.mode not in modes:
-                sys.exit(f'{args.mode} is not a valid mode')
-            else:
-                mode_name = args.mode
-                print(f'Mode: {mode_name}')
+        if int(args.mode) not in modes:
+            sys.exit(f'{args.mode} is not a valid mode')
+        else:
+            mode = int(args.mode)
+            print(f'Mode: {mode}')
     
-    status = camera1.setMode(mode_name)
+    status = camera1.setMode(mode)
     if status != tof.Status.Ok:
         sys.exit("Could not set camera mode!")
 
