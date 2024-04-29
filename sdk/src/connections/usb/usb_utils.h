@@ -39,29 +39,30 @@
 #include <vector>
 
 namespace usb_payload {
-class DepthSensorFrameTypeVector;
-class DepthSensorFrameType;
+class DepthSensorModeDetailsVector;
+class DepthSensorModeDetails;
 } // namespace usb_payload
 
 class UsbUtils {
   public:
     /**
-     * @brief Converts from protobuf message to aditof type (vector of DepthSensorFrameType)
-     * @param[out] depthSensorFrameTypes - the vector obtained from conversion
+     * @brief Converts from protobuf message to aditof type (vector of DepthSensorModeDetails)
+     * @param[out] depthSensorModeDetails - the vector obtained from conversion
      * @param protoMsg - The protobuf message to be converted
      */
-    static void protoMsgToDepthSensorFrameTypes(
-        std::vector<aditof::DepthSensorFrameType> &depthSensorFrameTypesVector,
-        const usb_payload::DepthSensorFrameTypeVector &protoMsg);
+    static void protoMsgToDepthSensorModeDetails(
+        std::vector<aditof::DepthSensorModeDetails>
+            &depthSensorModeDetailsVector,
+        const usb_payload::DepthSensorModeDetailsVector &protoMsg);
 
     /**
-     * @brief Converts a DepthSensorFrameType to a protobuf message.
-     * @param depthSensorFrameType - the structure to convert.
+     * @brief Converts a DepthSensorModeDetails to a protobuf message.
+     * @param depthSensorModeDetails - the structure to convert.
      * @param[out] protoMsg - the buffer cotaining the serialized data.
      */
-    static void depthSensorFrameTypeToProtoMsg(
-        const aditof::DepthSensorFrameType &depthSensorFrameType,
-        usb_payload::DepthSensorFrameType *protoMsg);
+    static void depthSensorModeDetailsToProtoMsg(
+        const aditof::DepthSensorModeDetails &depthSensorModeDetails,
+        usb_payload::DepthSensorModeDetails *protoMsg);
 };
 
 #endif // USB_UTILS_H

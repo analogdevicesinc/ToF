@@ -99,8 +99,8 @@ uint8_t irShiftValue = 0;
 uint8_t buf[LWS_PRE + MAX_MESSAGE_LEN], *p = &buf[LWS_PRE];
 
 // This string is returned upon reqest from application. Needs data populated from available frame types of sensor
-string availableFrameTypes_prefix = "ft:";
-string availableFrameTypes = "";
+string availableModeDetails_prefix = "ft:";
+string availableModeDetails = "";
 // This string is returned upon reqest from application. Needs data populated with supported frame formats
 string availableFormats_prefix = "format:";
 string availableFormats = "";

@@ -199,28 +199,29 @@ PYBIND11_MODULE(aditofpython, m) {
         .def_readwrite("pixelFromatIndex",
                        &aditof::DriverConfiguration::pixelFormatIndex);
 
-    py::class_<aditof::DepthSensorFrameType>(m, "DepthSensorFrameType")
+    py::class_<aditof::DepthSensorModeDetails>(m, "DepthSensorModeDetails")
         .def(py::init<>())
         .def_readwrite("numberOfPhases",
-                       &aditof::DepthSensorFrameType::numberOfPhases)
+                       &aditof::DepthSensorModeDetails::numberOfPhases)
         .def_readwrite("frameContent",
-                       &aditof::DepthSensorFrameType::frameContent)
-        .def_readwrite("modeNumber", &aditof::DepthSensorFrameType::modeNumber)
+                       &aditof::DepthSensorModeDetails::frameContent)
+        .def_readwrite("modeNumber",
+                       &aditof::DepthSensorModeDetails::modeNumber)
         .def_readwrite("pixelFormatIndex",
-                       &aditof::DepthSensorFrameType::pixelFormatIndex)
+                       &aditof::DepthSensorModeDetails::pixelFormatIndex)
         .def_readwrite("frameWidthInBytes",
-                       &aditof::DepthSensorFrameType::frameWidthInBytes)
+                       &aditof::DepthSensorModeDetails::frameWidthInBytes)
         .def_readwrite("frameHeightInBytes",
-                       &aditof::DepthSensorFrameType::frameHeightInBytes)
+                       &aditof::DepthSensorModeDetails::frameHeightInBytes)
         .def_readwrite("baseResolutionWidth",
-                       &aditof::DepthSensorFrameType::baseResolutionWidth)
+                       &aditof::DepthSensorModeDetails::baseResolutionWidth)
         .def_readwrite("baseResolutionHeight",
-                       &aditof::DepthSensorFrameType::baseResolutionHeight)
+                       &aditof::DepthSensorModeDetails::baseResolutionHeight)
         .def_readwrite("metadataSize",
-                       &aditof::DepthSensorFrameType::metadataSize)
-        .def_readwrite("isPCM", &aditof::DepthSensorFrameType::isPCM)
+                       &aditof::DepthSensorModeDetails::metadataSize)
+        .def_readwrite("isPCM", &aditof::DepthSensorModeDetails::isPCM)
         .def_readwrite("driverConfiguration",
-                       &aditof::DepthSensorFrameType::driverConfiguration);
+                       &aditof::DepthSensorModeDetails::driverConfiguration);
 
     // Helpers
 
@@ -616,7 +617,7 @@ PYBIND11_MODULE(aditofpython, m) {
         .def(
             "setMode",
             [](aditof::DepthSensorInterface &device,
-               const aditof::DepthSensorFrameType &mode) {
+               const aditof::DepthSensorModeDetails &mode) {
                 return device.setMode(mode);
             },
             py::arg("mode"))

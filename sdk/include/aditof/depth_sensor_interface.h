@@ -94,7 +94,7 @@ class DepthSensorInterface {
      */
     virtual aditof::Status
     getModeDetails(const uint8_t &mode,
-                   aditof::DepthSensorFrameType &details) = 0;
+                   aditof::DepthSensorModeDetails &details) = 0;
 
     /**
      * @brief Set the sensor frame mode to the given type
@@ -109,13 +109,13 @@ class DepthSensorInterface {
      * @return Status
      */
     virtual aditof::Status
-    setMode(const aditof::DepthSensorFrameType &type) = 0;
+    setMode(const aditof::DepthSensorModeDetails &type) = 0;
 
     /**
      * @brief Request a frame from the sensor
      * @param buffer - a valid location where the new frame should be stored.
      * The size of the frame is known (cached) internally and gets updated each
-     * time setFrameType() is called.
+     * time setMode() is called.
      * @return Status
      */
     virtual aditof::Status getFrame(uint16_t *buffer) = 0;

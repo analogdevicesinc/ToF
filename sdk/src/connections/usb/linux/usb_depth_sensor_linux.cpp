@@ -115,7 +115,7 @@ UsbDepthSensor::~UsbDepthSensor() {
 aditof::Status UsbDepthSensor::open() {
     using namespace aditof;
     Status status = Status::OK;
-    std::string availableFrameTypesBlob;
+    std::string availableModeDetailsBlob;
 
     LOG(INFO) << "Opening device";
 
@@ -172,8 +172,8 @@ aditof::Status UsbDepthSensor::open() {
     }
 
     // If request and response went well, extract data from response
-    UsbUtils::protoMsgToDepthSensorFrameTypes(
-        m_depthSensorModes, responseMsg.available_frame_types());
+    UsbUtils::protoMsgToDepthSensorModeDetails(
+        m_depthSensorModes, responseMsg.available_mode_details());
 
     m_implData->opened = true;
 
@@ -249,7 +249,7 @@ UsbDepthSensor::getAvailableModes(std::vector<std::uint8_t> &modes) {
 
 aditof::Status
 UsbDepthSensor::getModeDetails(const uint8_t &mode,
-                               aditof::DepthSensorFrameType &details) {
+                               aditof::DepthSensorModeDetails &details) {
     using namespace aditof;
     Status status = Status::OK;
     for (const auto &frameDetails : m_depthSensorModes) {
@@ -266,15 +266,15 @@ aditof::Status UsbDepthSensor::setMode(const uint8_t &mode) {
 }
 
 aditof::Status
-UsbDepthSensor::setMode(const aditof::DepthSensorFrameType &type) {
+UsbDepthSensor::setMode(const aditof::DepthSensorModeDetails &type) {
     using namespace aditof;
 
     Status status = Status::OK;
 
     // Send the frame type and all its content all the way to target
     usb_payload::ClientRequest requestMsg;
-    auto frameTypeMsg = requestMsg.mutable_frame_type();
-    UsbUtils::depthSensorFrameTypeToProtoMsg(type, frameTypeMsg);
+    auto frameTypeMsg = requestMsg.mutable_mode_details();
+    UsbUtils::depthSensorModeDetailsToProtoMsg(type, frameTypeMsg);
     // Send request
     requestMsg.set_func_name(usb_payload::FunctionName::SET_MODE);
     std::string requestStr;

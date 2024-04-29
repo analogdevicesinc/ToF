@@ -503,11 +503,11 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
 
     case GET_MODE_DETAILS: {
-        aditof::DepthSensorFrameType frameDetails;
+        aditof::DepthSensorModeDetails frameDetails;
         uint8_t modeName = buff_recv.func_int32_param(0);
         aditof::Status status =
             camDepthSensor->getModeDetails(modeName, frameDetails);
-        auto protoContent = buff_send.mutable_depth_sensor_frame_type();
+        auto protoContent = buff_send.mutable_depth_sensor_mode_details();
         protoContent->set_mode_number(frameDetails.modeNumber);
         protoContent->set_pixel_format_index(frameDetails.pixelFormatIndex);
         protoContent->set_frame_width_in_bytes(frameDetails.frameWidthInBytes);
@@ -531,17 +531,17 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
         aditof::Status status = camDepthSensor->setMode(mode);
         if (status == aditof::Status::OK) {
-            aditof::DepthSensorFrameType aditofFrameType;
-            status = camDepthSensor->getModeDetails(mode, aditofFrameType);
+            aditof::DepthSensorModeDetails aditofModeDetail;
+            status = camDepthSensor->getModeDetails(mode, aditofModeDetail);
             if (status != aditof::Status::OK) {
                 buff_send.set_status(static_cast<::payload::Status>(status));
                 break;
             }
 
-            int width_tmp = aditofFrameType.baseResolutionWidth;
-            int height_tmp = aditofFrameType.baseResolutionHeight;
+            int width_tmp = aditofModeDetail.baseResolutionWidth;
+            int height_tmp = aditofModeDetail.baseResolutionHeight;
 
-            if (aditofFrameType.isPCM) {
+            if (aditofModeDetail.isPCM) {
                 processedFrameSize = width_tmp * height_tmp;
             } else {
                 processedFrameSize = width_tmp * height_tmp * 4;
@@ -573,32 +573,34 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
 
     case SET_MODE: {
-        aditof::DepthSensorFrameType aditofFrameType;
-        aditofFrameType.modeNumber = buff_recv.frame_type().mode_number();
-        aditofFrameType.pixelFormatIndex =
-            buff_recv.frame_type().pixel_format_index();
-        aditofFrameType.frameWidthInBytes =
-            buff_recv.frame_type().frame_width_in_bytes();
-        aditofFrameType.frameHeightInBytes =
-            buff_recv.frame_type().frame_height_in_bytes();
-        aditofFrameType.baseResolutionWidth =
-            buff_recv.frame_type().base_resolution_width();
-        aditofFrameType.baseResolutionHeight =
-            buff_recv.frame_type().base_resolution_height();
-        aditofFrameType.metadataSize = buff_recv.frame_type().metadata_size();
+        aditof::DepthSensorModeDetails aditofModeDetail;
+        aditofModeDetail.modeNumber = buff_recv.mode_details().mode_number();
+        aditofModeDetail.pixelFormatIndex =
+            buff_recv.mode_details().pixel_format_index();
+        aditofModeDetail.frameWidthInBytes =
+            buff_recv.mode_details().frame_width_in_bytes();
+        aditofModeDetail.frameHeightInBytes =
+            buff_recv.mode_details().frame_height_in_bytes();
+        aditofModeDetail.baseResolutionWidth =
+            buff_recv.mode_details().base_resolution_width();
+        aditofModeDetail.baseResolutionHeight =
+            buff_recv.mode_details().base_resolution_height();
+        aditofModeDetail.metadataSize =
+            buff_recv.mode_details().metadata_size();
 
-        for (int i = 0; i < buff_recv.frame_type().frame_content_size(); i++) {
-            aditofFrameType.frameContent.emplace_back(
-                buff_recv.frame_type().frame_content(i));
+        for (int i = 0; i < buff_recv.mode_details().frame_content_size();
+             i++) {
+            aditofModeDetail.frameContent.emplace_back(
+                buff_recv.mode_details().frame_content(i));
         }
 
-        aditof::Status status = camDepthSensor->setMode(aditofFrameType);
+        aditof::Status status = camDepthSensor->setMode(aditofModeDetail);
 
         if (status == aditof::Status::OK) {
-            int width_tmp = aditofFrameType.baseResolutionWidth;
-            int height_tmp = aditofFrameType.baseResolutionHeight;
+            int width_tmp = aditofModeDetail.baseResolutionWidth;
+            int height_tmp = aditofModeDetail.baseResolutionHeight;
 
-            if (aditofFrameType.isPCM) {
+            if (aditofModeDetail.isPCM) {
                 processedFrameSize = width_tmp * height_tmp;
             } else {
                 processedFrameSize = width_tmp * height_tmp * 4;

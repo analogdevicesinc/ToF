@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
     }
 
     std::vector<std::string> frameTypes;
-    camera->getAvailableFrameTypes(frameTypes);
+    camera->getAvailableModeDetails(frameTypes);
     if (frameTypes.empty()) {
         LOG(ERROR) << "No frame type available!";
         return -1;

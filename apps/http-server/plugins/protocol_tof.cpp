@@ -338,18 +338,18 @@ static int callback_tof(struct lws *wsi, enum lws_callback_reasons reason,
                 break;
             }
             // Send available frame types
-            availableFrameTypes = "";
-            std::vector<std::string> availableFrameTypes_vec;
-            camera->getAvailableFrameTypes(availableFrameTypes_vec);
-            for (auto iter : availableFrameTypes_vec) {
-                availableFrameTypes += iter.c_str();
-                if (iter != availableFrameTypes_vec.back())
-                    availableFrameTypes += ",";
+            availableModeDetails = "";
+            std::vector<std::string> availableModeDetails_vec;
+            camera->getAvailableModeDetails(availableModeDetails_vec);
+            for (auto iter : availableModeDetails_vec) {
+                availableModeDetails += iter.c_str();
+                if (iter != availableModeDetails_vec.back())
+                    availableModeDetails += ",";
             }
-            std::string availableFrameTypes_msg =
-                availableFrameTypes_prefix + availableFrameTypes;
-            send_message(availableFrameTypes_msg.c_str(),
-                         availableFrameTypes_msg.length());
+            std::string availableModeDetails_msg =
+                availableModeDetails_prefix + availableModeDetails;
+            send_message(availableModeDetails_msg.c_str(),
+                         availableModeDetails_msg.length());
 
         } else if (strncmp((const char *)in, "setft:", 6) == 0) {
             // Set chosen frame type

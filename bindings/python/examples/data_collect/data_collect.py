@@ -189,7 +189,7 @@ if __name__ == '__main__':
         try:
             mode_name = 'none'
             args.mode = int(args.mode) # try to convert x to an int
-            status = camera1.getFrameTypeNameFromId(args.mode, mode_name)
+            status = camera1.getModeDetailNameFromId(args.mode, mode_name)
             if status[0] == tof.Status.Ok:
                 print(f'Mode: {status[1]}')
                 mode_name = status[1]

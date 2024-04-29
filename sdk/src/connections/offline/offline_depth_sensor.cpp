@@ -148,7 +148,7 @@ OfflineDepthSensor::getAvailableModes(std::vector<uint8_t> &modes) {
 
 aditof::Status
 OfflineDepthSensor::getModeDetails(const uint8_t &mode,
-                                   aditof::DepthSensorFrameType &details) {
+                                   aditof::DepthSensorModeDetails &details) {
     using namespace aditof;
     Status status = Status::OK;
     for (const auto &modeDetails : availableModes) {
@@ -165,7 +165,7 @@ aditof::Status OfflineDepthSensor::setMode(const uint8_t &mode) {
 }
 
 aditof::Status
-OfflineDepthSensor::setMode(const aditof::DepthSensorFrameType &type) {
+OfflineDepthSensor::setMode(const aditof::DepthSensorModeDetails &type) {
     m_frameTypeSelected = type.modeNumber;
 #ifdef TARGET
     m_outputFrameWidth = type.content.at(1).width * 4;
