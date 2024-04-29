@@ -91,7 +91,7 @@ enum class CCBVersion { CCB_UNKNOWN, CCB_VERSION0, CCB_VERSION1 };
 struct Adsd3500Sensor::ImplData {
     uint8_t numVideoDevs;
     struct VideoDev *videoDevs;
-    aditof::DepthSensorFrameType frameType;
+    aditof::DepthSensorModeDetails modeDetails;
     std::unordered_map<std::string, __u32> controlsCommands;
     SensorImagerType imagerType;
     CCBVersion ccbVersion;
@@ -99,7 +99,7 @@ struct Adsd3500Sensor::ImplData {
 
     ImplData()
         : numVideoDevs(1),
-          videoDevs(nullptr), frameType{0, {}, 0, 0, 0, 0, 0, 0, 0, 0, {}},
+          videoDevs(nullptr), modeDetails{0, {}, 0, 0, 0, 0, 0, 0, 0, 0, {}},
           imagerType{SensorImagerType::IMAGER_UNKNOWN},
           ccbVersion{CCBVersion::CCB_UNKNOWN} {}
 };
@@ -457,7 +457,7 @@ aditof::Status Adsd3500Sensor::getAvailableModes(std::vector<uint8_t> &modes) {
 
 aditof::Status
 Adsd3500Sensor::getModeDetails(const uint8_t &mode,
-                               aditof::DepthSensorFrameType &details) {
+                               aditof::DepthSensorModeDetails &details) {
     using namespace aditof;
     Status status = Status::OK;
     for (const auto &modeDetails : m_availableModes) {
@@ -470,7 +470,7 @@ Adsd3500Sensor::getModeDetails(const uint8_t &mode,
 }
 
 aditof::Status Adsd3500Sensor::setMode(const uint8_t &mode) {
-    aditof::DepthSensorFrameType modeTable;
+    aditof::DepthSensorModeDetails modeTable;
     aditof::Status status = aditof::Status::OK;
 
     status = m_modeSelector.setControl("mode", std::to_string(mode));
@@ -503,12 +503,12 @@ aditof::Status Adsd3500Sensor::setMode(const uint8_t &mode) {
         return aditof::Status::GENERIC_ERROR;
     }
 
-    m_implData->frameType = modeTable;
+    m_implData->modeDetails = modeTable;
     return aditof::Status::OK;
 }
 
 aditof::Status
-Adsd3500Sensor::setMode(const aditof::DepthSensorFrameType &type) {
+Adsd3500Sensor::setMode(const aditof::DepthSensorModeDetails &type) {
 
     using namespace aditof;
     Status status = Status::OK;
@@ -587,7 +587,7 @@ Adsd3500Sensor::setMode(const aditof::DepthSensorFrameType &type) {
 
             //End of set mode in chip
 
-            if (type.modeNumber != m_implData->frameType.modeNumber) {
+            if (type.modeNumber != m_implData->modeDetails.modeNumber) {
                 for (unsigned int i = 0; i < dev->nVideoBuffers; i++) {
                     if (munmap(dev->videoBuffers[i].start,
                                dev->videoBuffers[i].length) == -1) {
@@ -718,7 +718,7 @@ aditof::Status Adsd3500Sensor::getFrame(uint16_t *buffer) {
     using namespace aditof;
     Status status;
 
-    if (m_depthComputeOnTarget && !m_implData->frameType.isPCM) {
+    if (m_depthComputeOnTarget && !m_implData->modeDetails.isPCM) {
         status = m_bufferProcessor->processBuffer(buffer);
         if (status != Status::OK) {
             LOG(ERROR) << "Failed to process buffer!";
@@ -1357,7 +1357,7 @@ aditof::Status Adsd3500Sensor::initTargetDepthCompute(uint8_t *iniFile,
 
     status = m_bufferProcessor->setProcessorProperties(
         iniFile, iniFileLength, calData, calDataLength,
-        m_implData->frameType.modeNumber, true);
+        m_implData->modeDetails.modeNumber, true);
     if (status != Status::OK) {
         LOG(ERROR) << "Failed to initialize depth compute on target!";
         return status;
@@ -1702,7 +1702,7 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
         }
     }
 
-    status = m_modeSelector.getAvailableFrameTypes(m_availableModes);
+    status = m_modeSelector.getAvailableModeDetails(m_availableModes);
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Failed to get available frame types for the "
                       "current configuration.";

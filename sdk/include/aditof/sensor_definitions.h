@@ -114,10 +114,10 @@ struct DriverConfiguration {
 };
 
 /**
- * @struct DepthSensorFrameType
+ * @struct DepthSensorModeDetails
  * @brief Describes the type of entire frame that a depth sensor can capture and transmit
  */
-struct DepthSensorFrameType {
+struct DepthSensorModeDetails {
 
     /**
      * @brief Number associated with the mode
@@ -179,7 +179,7 @@ struct DepthSensorFrameType {
  * @brief prints human readable frame details
  */
 inline std::ostream &operator<<(std::ostream &o,
-                                const DepthSensorFrameType &a) {
+                                const DepthSensorModeDetails &a) {
     o << "DepthSensorFrame: T: " << a.modeNumber
       << "\tW: " << a.baseResolutionWidth << "\tH: " << a.baseResolutionHeight
       << " contains:\n";

@@ -54,8 +54,8 @@ status = camera1.getDetails(camDetails)
 print("system.getDetails()", status)
 print("camera1 details:", "id:", camDetails.cameraId, "connection:", camDetails.connection)
 
-status = camera1.setFrameType(types[0])
-print("camera1.setFrameType()", status)
+status = camera1.setModeDetail(types[0])
+print("camera1.setModeDetail()", status)
 
 status = camera1.setMode(modes[0])
 print("camera1.setMode()", status)

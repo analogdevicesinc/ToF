@@ -63,16 +63,16 @@ Adsd3500ModeSelector::setConfiguration(const std::string &configuration) {
     }
 }
 
-aditof::Status Adsd3500ModeSelector::getAvailableFrameTypes(
-    std::vector<DepthSensorFrameType> &m_depthSensorFrameTypes) {
+aditof::Status Adsd3500ModeSelector::getAvailableModeDetails(
+    std::vector<DepthSensorModeDetails> &m_depthSensorModeDetails) {
 
-    m_depthSensorFrameTypes.clear();
+    m_depthSensorModeDetails.clear();
 
     if (m_configuration == "standard") {
         if (m_controls["imagerType"] == "adsd3100") {
-            m_depthSensorFrameTypes = adsd3100_standardModes;
+            m_depthSensorModeDetails = adsd3100_standardModes;
         } else if (m_controls["imagerType"] == "adsd3030") {
-            m_depthSensorFrameTypes = adsd3030_standardModes;
+            m_depthSensorModeDetails = adsd3030_standardModes;
         }
     }
 
@@ -80,7 +80,7 @@ aditof::Status Adsd3500ModeSelector::getAvailableFrameTypes(
 }
 
 aditof::Status Adsd3500ModeSelector::getConfigurationTable(
-    DepthSensorFrameType &configurationTable) {
+    DepthSensorModeDetails &configurationTable) {
 
     if (m_configuration == "standard") {
         if (m_controls["imagerType"] == "adsd3100") {
@@ -106,7 +106,7 @@ aditof::Status Adsd3500ModeSelector::getConfigurationTable(
 }
 
 aditof::Status Adsd3500ModeSelector::updateConfigurationTable(
-    DepthSensorFrameType &configurationTable) {
+    DepthSensorModeDetails &configurationTable) {
 
     for (auto driverConf : m_adsd3500standard) {
         if (driverConf.baseWidth ==
