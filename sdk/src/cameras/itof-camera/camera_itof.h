@@ -164,7 +164,7 @@ class CameraItof : public aditof::Camera {
     /**
      * Configure the sensor with various settings that affect the frame type.
      */
-    void configureSensorFrameType();
+    void configureSensorModeDetails();
 
     /**
      * Reads the content of json file and populates the parameters
@@ -234,9 +234,9 @@ class CameraItof : public aditof::Camera {
     bool m_xyzEnabled;
     bool m_xyzSetViaApi;
     bool m_pcmFrame;
-    std::vector<aditof::DepthSensorFrameType> m_availableSensorFrameTypes;
+    std::vector<aditof::DepthSensorModeDetails> m_availableSensorModeDetails;
     std::vector<uint8_t> m_availableModes;
-    aditof::DepthSensorFrameType m_frameDetails;
+    aditof::DepthSensorModeDetails m_frameDetails;
     std::vector<std::pair<std::string, int32_t>> m_sensor_settings;
     int16_t m_cameraFps;
     int16_t m_fsyncMode;

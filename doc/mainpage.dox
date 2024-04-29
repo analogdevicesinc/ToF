@@ -60,9 +60,9 @@ aditof::Camera *camera1 = cameras.front();
 status = camera1->initialize();
  
 // Choose the frame type the camera should produce
-std::vector<std::string> frameTypes;
-camera1->getAvailableFrameTypes(frameTypes);
-status = camera1->setFrameType(frameTypes.front());
+std::vector<std::uint8_t> modeDetails;
+camera1->getAvailableModeDetails(modeDetails);
+status = camera1->setMode(modeDetails.front());
 
 // Create a TOF frame and request data from the TOF camera
 aditof::Frame frame;

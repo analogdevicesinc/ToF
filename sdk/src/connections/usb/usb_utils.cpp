@@ -37,21 +37,21 @@
 using namespace std;
 using namespace aditof;
 
-void UsbUtils::protoMsgToDepthSensorFrameTypes(
-    std::vector<aditof::DepthSensorFrameType> &depthSensorFrameTypes,
-    const usb_payload::DepthSensorFrameTypeVector &protoMsg) {
+void UsbUtils::protoMsgToDepthSensorModeDetails(
+    std::vector<aditof::DepthSensorModeDetails> &depthSensorModeDetails,
+    const usb_payload::DepthSensorModeDetailsVector &protoMsg) {
 
     // TO DO: Change based on the refactoring
     // using namespace google::protobuf::io;
 
-    // depthSensorFrameTypes.clear();
+    // depthSensorModeDetails.clear();
 
     // for (const auto &frameTypeMsg : protoMsg.depthsensorframetypes()) {
-    //     aditof::DepthSensorFrameType depthSensorFrameType;
+    //     aditof::DepthSensorModeDetails depthSensorModeDetails;
 
-    //     depthSensorFrameType.type = frameTypeMsg.type();
-    //     depthSensorFrameType.width = frameTypeMsg.width();
-    //     depthSensorFrameType.height = frameTypeMsg.height();
+    //     depthSensorModeDetails.type = frameTypeMsg.type();
+    //     depthSensorModeDetails.width = frameTypeMsg.width();
+    //     depthSensorModeDetails.height = frameTypeMsg.height();
 
     //     for (const auto &frameContentMsg :
     //          frameTypeMsg.depthsensorframecontent()) {
@@ -60,23 +60,23 @@ void UsbUtils::protoMsgToDepthSensorFrameTypes(
     //         depthSensorFrameContent.width = frameContentMsg.width();
     //         depthSensorFrameContent.height = frameContentMsg.height();
     //         depthSensorFrameContent.type = frameContentMsg.type();
-    //         depthSensorFrameType.content.push_back(depthSensorFrameContent);
+    //         depthSensorModeDetails.content.push_back(depthSensorFrameContent);
     //     }
 
-    //     depthSensorFrameTypes.push_back(depthSensorFrameType);
+    //     depthSensorModeDetails.push_back(depthSensorModeDetails);
     // }
 }
 
-void UsbUtils::depthSensorFrameTypeToProtoMsg(
-    const aditof::DepthSensorFrameType &depthSensorFrameType,
-    usb_payload::DepthSensorFrameType *protoMsg) {
+void UsbUtils::depthSensorModeDetailsToProtoMsg(
+    const aditof::DepthSensorModeDetails &depthSensorModeDetails,
+    usb_payload::DepthSensorModeDetails *protoMsg) {
 
     // TO DO: Change based on the refactoring
-    // protoMsg->set_type(depthSensorFrameType.type);
-    // protoMsg->set_width(depthSensorFrameType.width);
-    // protoMsg->set_height(depthSensorFrameType.height);
+    // protoMsg->set_type(depthSensorModeDetails.type);
+    // protoMsg->set_width(depthSensorModeDetails.width);
+    // protoMsg->set_height(depthSensorModeDetails.height);
 
-    // for (const auto &depthSensorFrameContent : depthSensorFrameType.content) {
+    // for (const auto &depthSensorFrameContent : depthSensorModeDetails.content) {
 
     //     auto depthSensorFrameContentMsg =
     //         protoMsg->add_depthsensorframecontent();

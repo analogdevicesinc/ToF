@@ -53,7 +53,7 @@ const std::vector<DriverConfiguration> m_adsd3500standard = {
     {"1024", "1024", "3", "12", "0", "0", "raw16_bits12_shift4", 1024, 1024, 1},
     {"1024", "1024", "3", "12", "16", "0", "mipiRaw12_8", 2048, 2560, 0}};
 
-const std::vector<DepthSensorFrameType> adsd3100_standardModes = {
+const std::vector<DepthSensorModeDetails> adsd3100_standardModes = {
     {0,
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      2,
@@ -132,7 +132,7 @@ const std::vector<DepthSensorFrameType> adsd3100_standardModes = {
      0,
      DriverConfiguration()}};
 
-const std::vector<DepthSensorFrameType> adsd3030_standardModes = {
+const std::vector<DepthSensorModeDetails> adsd3030_standardModes = {
     {0,
      {"raw", "depth", "ab", "conf", "xyz", "metadata"},
      2,

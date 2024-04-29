@@ -54,18 +54,18 @@ int init_tof_sdk(char *cap_dev_path) {
  * Time of flight SDK related
  */
 
-void convertDepthSensorFrameTypesToProtoMsg(
-    std::vector<aditof::DepthSensorFrameType> depthSensorFrameTypes,
-    uvc_payload::DepthSensorFrameTypeVector &depthSensorFrameTypesPayload) {
+void convertDepthSensorModeDetailsToProtoMsg(
+    std::vector<aditof::DepthSensorModeDetails> depthSensorModeDetails,
+    uvc_payload::DepthSensorFrameTypeVector &depthSensorModeDetailsPayload) {
 
     // TO DO: Change based on refactoring
-    // for (const aditof::DepthSensorFrameType &depthSensorFrameType :
-    //      depthSensorFrameTypes) {
+    // for (const aditof::DepthSensorModeDetails &depthSensorFrameType :
+    //      depthSensorModeDetails) {
     //     LOG(INFO) << depthSensorFrameType.type << " "
     //               << depthSensorFrameType.width << " "
     //               << depthSensorFrameType.content.size();
-    //     uvc_payload::DepthSensorFrameType *depthSensorFrameTypePayload =
-    //         depthSensorFrameTypesPayload.add_depthsensorframetypes();
+    //     uvc_payload::DepthSensorModeDetails *depthSensorFrameTypePayload =
+    //         depthSensorModeDetailsPayload.add_depthsensorframetypes();
     //     depthSensorFrameTypePayload->set_type(depthSensorFrameType.type);
     //     depthSensorFrameTypePayload->set_width(depthSensorFrameType.width);
     //     depthSensorFrameTypePayload->set_height(depthSensorFrameType.height);
@@ -86,8 +86,8 @@ void convertDepthSensorFrameTypesToProtoMsg(
 }
 
 void convertProtoMsgToDepthSensorFrameType(
-    const uvc_payload::DepthSensorFrameType &protoMsg,
-    aditof::DepthSensorFrameType &aditofStruct) {
+    const uvc_payload::DepthSensorModeDetails &protoMsg,
+    aditof::DepthSensorModeDetails &aditofStruct) {
 
     // TO DO: Change based on refactoring
     // aditofStruct.type = protoMsg.type();
@@ -142,18 +142,18 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
 
     case uvc_payload::FunctionName::GET_AVAILABLE_MODES: {
         std::vector<uint8_t> modes;
-        std::vector<aditof::DepthSensorFrameType> availableModes;
-        auto depthSensorFrameTypesMsg =
-            response.mutable_available_frame_types();
+        std::vector<aditof::DepthSensorModeDetails> availableModes;
+        auto depthSensorModeDetailsMsg =
+            response.mutable_available_mode_details();
 
         camDepthSensor->getAvailableModes(modes);
         for (auto &mode : modes) {
-            aditof::DepthSensorFrameType frameDetails;
+            aditof::DepthSensorModeDetails frameDetails;
             camDepthSensor->getModeDetails(mode, frameDetails);
             availableModes.emplace_back(frameDetails);
         }
-        convertDepthSensorFrameTypesToProtoMsg(availableModes,
-                                               *depthSensorFrameTypesMsg);
+        convertDepthSensorModeDetailsToProtoMsg(availableModes,
+                                                *depthSensorModeDetailsMsg);
 
         response.set_status(
             static_cast<::uvc_payload::Status>(aditof::Status::OK));
@@ -167,8 +167,9 @@ void handleClientRequest(const char *in_buf, const size_t in_len,
     }
 
     case uvc_payload::FunctionName::SET_MODE: {
-        aditof::DepthSensorFrameType frameType;
-        convertProtoMsgToDepthSensorFrameType(request.frame_type(), frameType);
+        aditof::DepthSensorModeDetails frameType;
+        convertProtoMsgToDepthSensorFrameType(request.mode_details(),
+                                              frameType);
 
         aditof::Status status = camDepthSensor->setMode(frameType);
         response.set_status(static_cast<::uvc_payload::Status>(status));
