@@ -117,7 +117,7 @@ print("camera1.getDetails()", status)
 print("camera1 details:", "id:", camDetails.cameraId, "connection:", camDetails.connection)
 
 status = camera1.setMode("lr-qnative")
-print("camera1.setFrameType()", status)
+print("camera1.setModeDetail()", status)
 print("lr-qnative")
 
 # Example of getting/modifying/setting the current ADSD3500 parameters

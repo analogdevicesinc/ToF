@@ -396,8 +396,8 @@ aditof::Status UsbDepthSensor::open() {
     }
 
     // If request and response went well, extract data from response
-    UsbUtils::protoMsgToDepthSensorFrameTypes(
-        m_depthSensorModes, responseMsg.available_frame_types());
+    UsbUtils::protoMsgToDepthSensorModeDetails(
+        m_depthSensorModes, responseMsg.available_mode_details());
 
     std::wstring stemp = s2ws(m_driverPath);
     hr = m_implData->handle.pGraph->AddFilter(
@@ -616,7 +616,7 @@ aditof::Status UsbDepthSensor::getAvailableModes(std::vector<uint8_t> &modes) {
 
 aditof::Status
 UsbDepthSensor::getModeDetails(const uint8_t &mode,
-                               aditof::DepthSensorFrameType &details) {
+                               aditof::DepthSensorModeDetails &details) {
     // TO DO: Get information from the camera
     using namespace aditof;
     Status status = Status::OK;
@@ -634,7 +634,7 @@ aditof::Status UsbDepthSensor::setMode(const uint8_t &mode) {
 }
 
 aditof::Status
-UsbDepthSensor::setMode(const aditof::DepthSensorFrameType &type) {
+UsbDepthSensor::setMode(const aditof::DepthSensorModeDetails &type) {
     using namespace aditof;
     Status status = Status::OK;
     HRESULT hr = m_implData->handle.streamConf->GetFormat(
@@ -645,8 +645,8 @@ UsbDepthSensor::setMode(const aditof::DepthSensorFrameType &type) {
     }
     // Send the frame type and all its content all the way to target
     usb_payload::ClientRequest requestMsg;
-    auto frameTypeMsg = requestMsg.mutable_frame_type();
-    UsbUtils::depthSensorFrameTypeToProtoMsg(type, frameTypeMsg);
+    auto frameTypeMsg = requestMsg.mutable_mode_details();
+    UsbUtils::depthSensorModeDetailsToProtoMsg(type, frameTypeMsg);
     // Send request
     requestMsg.set_func_name(usb_payload::FunctionName::SET_MODE);
     std::string requestStr;

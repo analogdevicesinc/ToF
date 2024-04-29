@@ -1,7 +1,7 @@
 // State diagram for GUI
 
 // +-------+--------------------------+-----------------+---------------------------+------------------------------+----------------+---------------+----------------+
-// | State | Description              | CameraList/Open | FrameTypeLit/setFrameType | FormatTypeList/setFormatType | Start (button) | Stop (button) | Reset (button) |
+// | State | Description              | CameraList/Open | ModeDetailLit/setModeDetail | FormatTypeList/setFormatType | Start (button) | Stop (button) | Reset (button) |
 // +-------+--------------------------+-----------------+---------------------------+------------------------------+----------------+---------------+----------------+
 // | 0     | web_socket not connected |        X        |             X             |               X              |        X       |       X       |        X       |
 // +-------+--------------------------+-----------------+---------------------------+------------------------------+----------------+---------------+----------------+
@@ -405,7 +405,7 @@
                                         " websocket connection CLOSED ";
                                 console.log("Network connection closed");
 
-                                disableFrameType();
+                                disableModeDetail();
 
                                 socketConnected = false;
 
@@ -453,8 +453,8 @@
         }
 
         // Set Frame Type
-        function setFrameTypeButton() {
-                document.getElementById("setFrameTypeButton").disabled = true;
+        function setModeDetailButton() {
+                document.getElementById("setModeDetailButton").disabled = true;
                 if (socketConnected == true && camera != "") {
                         // Sending frame type
                         frameType = document.getElementById("frameTypeSelect").value;
@@ -543,7 +543,7 @@
                 stopStreaming();
 
                 // Clear Drop-down menus
-                // Clear FrameType list
+                // Clear ModeDetail list
                 var i, L = document.getElementById("frameTypeSelect").options.length - 1;
                 for (i = L; i >= 0; i--) {
                         document.getElementById("frameTypeSelect").remove(i);
@@ -576,9 +576,9 @@
                 document.getElementById("connectCameraButton").disabled = false;
         }
 
-        function enableFrameType() {
+        function enableModeDetail() {
                 document.getElementById("frameTypeSelect").disabled = false;
-                document.getElementById("setFrameTypeButton").disabled = false;
+                document.getElementById("setModeDetailButton").disabled = false;
         }
 
         function enableFormat() {
@@ -600,10 +600,10 @@
                 document.getElementById("connectCameraButton").disabled = true;
         }
 
-        function disableFrameType() {
+        function disableModeDetail() {
 
                 document.getElementById("frameTypeSelect").disabled = true;
-                document.getElementById("setFrameTypeButton").disabled = true;
+                document.getElementById("setModeDetailButton").disabled = true;
         }
 
         function disableFormat() {
@@ -647,7 +647,7 @@
                 switch (generalState) {
                         case 0:
                                 disableCameraList();
-                                disableFrameType();
+                                disableModeDetail();
                                 disableFormat();
                                 disableStartStop();
                                 disableReset();
@@ -656,7 +656,7 @@
                                 break;
                         case 1:
                                 enableCameraList();
-                                disableFrameType();
+                                disableModeDetail();
                                 disableFormat();
                                 disableStartStop();
                                 enableReset();
@@ -665,7 +665,7 @@
                                 break;
                         case 2:
                                 disableCameraList();
-                                enableFrameType();
+                                enableModeDetail();
                                 disableFormat();
                                 disableStartStop();
                                 enableReset();
@@ -674,7 +674,7 @@
                                 break;
                         case 3:
                                 disableCameraList();
-                                disableFrameType();
+                                disableModeDetail();
                                 enableFormat();
                                 disableStartStop();
                                 enableReset();
@@ -683,7 +683,7 @@
                                 break;
                         case 4:
                                 disableCameraList();
-                                disableFrameType();
+                                disableModeDetail();
                                 enableFormat();
                                 enableStartStop();
                                 enableReset();
@@ -692,7 +692,7 @@
                                 break;
                         case 5:
                                 disableCameraList();
-                                disableFrameType();
+                                disableModeDetail();
                                 disableFormat();
                                 enableStartStop();
                                 disableReset();
@@ -703,7 +703,7 @@
 
                         default:
                                 disableCameraList();
-                                disableFrameType();
+                                disableModeDetail();
                                 disableFormat();
                                 disableStartStop();
                                 enableReset();
@@ -720,7 +720,7 @@
                 // lws_gray_out(true,{"zindex":"499"});
                 // document.getElementById("offset").onclick = reset;
                 document.getElementById("connectCameraButton").onclick = openCamera;
-                document.getElementById("setFrameTypeButton").onclick = setFrameTypeButton;
+                document.getElementById("setModeDetailButton").onclick = setModeDetailButton;
                 document.getElementById("setFormatButton").onclick = setFormatButton;
                 document.getElementById("startButton").onclick = startStreaming;
                 document.getElementById("stopButton").onclick = stopStreaming;

@@ -48,16 +48,16 @@ class Adsd3500ModeSelector {
     //functions to set which table configuration to use
     aditof::Status setConfiguration(const std::string &configuration);
 
-    aditof::Status getAvailableFrameTypes(
-        std::vector<DepthSensorFrameType> &m_depthSensorFrameTypes);
+    aditof::Status getAvailableModeDetails(
+        std::vector<DepthSensorModeDetails> &m_depthSensorModeDetails);
 
     //populate table with hardcoded values depending on input
     aditof::Status
-    getConfigurationTable(DepthSensorFrameType &configurationTable);
+    getConfigurationTable(DepthSensorModeDetails &configurationTable);
 
     //this function should update the table with driver details
     aditof::Status
-    updateConfigurationTable(DepthSensorFrameType &configurationTable);
+    updateConfigurationTable(DepthSensorModeDetails &configurationTable);
 
     //Functions used to set mode, number of bits, pixel format, etc
     aditof::Status setControl(const std::string &control,
@@ -68,7 +68,7 @@ class Adsd3500ModeSelector {
     std::string m_configuration;
     std::vector<std::string> m_availableConfigurations;
     std::map<std::string, std::string> m_controls;
-    std::vector<aditof::DepthSensorFrameType> m_tableInUse;
+    std::vector<aditof::DepthSensorModeDetails> m_tableInUse;
 };
 } // namespace aditof
 
