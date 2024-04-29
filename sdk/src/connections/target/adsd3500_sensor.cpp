@@ -128,6 +128,7 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     m_sensorName = "adsd3500";
     m_sensorDetails.connectionType = aditof::ConnectionType::ON_TARGET;
     m_sensorDetails.id = driverPath;
+    m_sensorConfiguration = "standard";
 
     // Define the controls that this sensor has available
     m_controls.emplace("abAveraging", "0");
@@ -480,9 +481,20 @@ aditof::Status Adsd3500Sensor::setMode(const uint8_t &mode) {
         return status;
     }
 
-    //decide if we read this from ccb or from sdk
-    if (0) {
-        //TO DO: master ccb read from nvm goes here
+    if (m_ccbmEnabled && m_sensorConfiguration == "standard") {
+        bool modeFound = false;
+        for (auto table : m_availableModes) {
+            if (mode == table.modeNumber) {
+                modeTable = table;
+                modeFound = true;
+            }
+        }
+
+        if (!modeFound) {
+            LOG(ERROR) << "Mode not found in ccb!";
+            return aditof::Status::INVALID_ARGUMENT;
+        }
+
     } else {
         status = m_modeSelector.getConfigurationTable(modeTable);
         if (status != aditof::Status::OK) {
@@ -1673,6 +1685,7 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
                 LOG(INFO) << "CCB master is supported. Reading mode details "
                              "from nvm.";
 
+                m_ccbmEnabled = true;
                 m_availableModes.clear();
 
                 //TO DO: add command to read ccmb for each mode and
