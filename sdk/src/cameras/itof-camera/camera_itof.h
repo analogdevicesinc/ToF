@@ -236,7 +236,7 @@ class CameraItof : public aditof::Camera {
     bool m_pcmFrame;
     std::vector<aditof::DepthSensorModeDetails> m_availableSensorModeDetails;
     std::vector<uint8_t> m_availableModes;
-    aditof::DepthSensorModeDetails m_frameDetails;
+    aditof::DepthSensorModeDetails m_modeDetailsCache;
     std::vector<std::pair<std::string, int32_t>> m_sensor_settings;
     int16_t m_cameraFps;
     int16_t m_fsyncMode;
