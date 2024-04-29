@@ -119,7 +119,7 @@ print("camera1.getDetails()", status)
 print("camera1 details:", "id:", camDetails.cameraId, "connection:", camDetails.connection)
 
 status = camera1.setMode(mode)
-print("camera1.setMode()", status)
+print("camera1.setModeDetail()", status)
 print(mode)
 
 # Example of getting/modifying/setting the current ADSD3500 parameters

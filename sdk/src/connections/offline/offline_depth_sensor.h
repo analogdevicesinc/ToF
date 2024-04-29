@@ -24,9 +24,9 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
     getAvailableModes(std::vector<uint8_t> &modes) override;
     virtual aditof::Status
     getModeDetails(const uint8_t &mode,
-                   aditof::DepthSensorFrameType &details) override;
+                   aditof::DepthSensorModeDetails &details) override;
     virtual aditof::Status
-    setMode(const aditof::DepthSensorFrameType &mode) override;
+    setMode(const aditof::DepthSensorModeDetails &mode) override;
     virtual aditof::Status setMode(const uint8_t &mode) override;
     virtual aditof::Status getFrame(uint16_t *buffer) override;
     virtual aditof::Status
@@ -77,11 +77,11 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
   private:
     std::string m_connectionType;
     aditof::SensorDetails m_sensorDetails;
-    std::vector<aditof::DepthSensorFrameType> m_depthSensorFrameTypes;
+    std::vector<aditof::DepthSensorModeDetails> m_depthSensorModeDetails;
     std::string m_path;
     std::string m_frameTypeSelected;
     std::map<std::string, std::pair<std::uint16_t *, std::size_t>> m_frameTypes;
-    const std::vector<aditof::DepthSensorFrameType> availableModes = {
+    const std::vector<aditof::DepthSensorModeDetails> availableModes = {
         {0,
          {"raw", "depth", "ab", "conf", "xyz", "metadata"},
          2,

@@ -169,7 +169,7 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
                 LOG(ERROR) << "Failed to get available frame types details!";
                 return status;
             }
-            m_availableSensorFrameTypes.emplace_back(m_frameDetails);
+            m_availableSensorModeDetails.emplace_back(m_frameDetails);
             uint8_t intrinsics[56] = {0};
             uint8_t dealiasParams[32] = {0};
             TofiXYZDealiasData dealiasStruct;
@@ -317,13 +317,13 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
     using namespace aditof;
     Status status = Status::OK;
 
-    auto modeIt = std::find_if(m_availableSensorFrameTypes.begin(),
-                               m_availableSensorFrameTypes.end(),
-                               [&mode](const DepthSensorFrameType &d) {
+    auto modeIt = std::find_if(m_availableSensorModeDetails.begin(),
+                               m_availableSensorModeDetails.end(),
+                               [&mode](const DepthSensorModeDetails &d) {
                                    return (d.modeNumber == mode);
                                });
 
-    if (modeIt == m_availableSensorFrameTypes.end()) {
+    if (modeIt == m_availableSensorModeDetails.end()) {
         LOG(WARNING) << "Mode: " << mode << " not supported by camera";
         return Status::INVALID_ARGUMENT;
     }
@@ -342,7 +342,7 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
 
     UtilsIni::getKeyValuePairsFromIni(m_ini_depth, m_iniKeyValPairs);
     setAdsd3500WithIniParams(m_iniKeyValPairs);
-    configureSensorFrameType();
+    configureSensorModeDetails();
     m_details.mode = mode;
 
     if (m_enableMetaDatainAB > 0) {
@@ -1126,7 +1126,7 @@ aditof::Status CameraItof::readAdsd3500CCB(std::string &ccb) {
     return status;
 }
 
-void CameraItof::configureSensorFrameType() {
+void CameraItof::configureSensorModeDetails() {
     std::string value;
 
     auto it = m_iniKeyValPairs.find("bitsInPhaseOrDepth");

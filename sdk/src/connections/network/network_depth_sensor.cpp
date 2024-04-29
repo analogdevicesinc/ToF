@@ -49,7 +49,7 @@ struct CalibrationData {
 struct NetworkDepthSensor::ImplData {
     NetworkHandle handle;
     std::string ip;
-    aditof::DepthSensorFrameType frameTypeCache;
+    aditof::DepthSensorModeDetails modeDetailsCache;
     std::unordered_map<std::string, CalibrationData> calibration_cache;
     bool opened;
     Network::InterruptNotificationCallback cb;
@@ -429,7 +429,7 @@ NetworkDepthSensor::getAvailableModes(std::vector<uint8_t> &modes) {
 
 aditof::Status
 NetworkDepthSensor::getModeDetails(const uint8_t &mode,
-                                   aditof::DepthSensorFrameType &details) {
+                                   aditof::DepthSensorModeDetails &details) {
     using namespace aditof;
     Network *net = m_implData->handle.net;
     std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
@@ -460,29 +460,30 @@ NetworkDepthSensor::getModeDetails(const uint8_t &mode,
     }
     details.modeNumber = mode;
     details.pixelFormatIndex = net->recv_buff[m_sensorIndex]
-                                   .depth_sensor_frame_type()
+                                   .depth_sensor_mode_details()
                                    .pixel_format_index();
     details.frameWidthInBytes = net->recv_buff[m_sensorIndex]
-                                    .depth_sensor_frame_type()
+                                    .depth_sensor_mode_details()
                                     .frame_width_in_bytes();
     details.frameHeightInBytes = net->recv_buff[m_sensorIndex]
-                                     .depth_sensor_frame_type()
+                                     .depth_sensor_mode_details()
                                      .frame_height_in_bytes();
     details.baseResolutionWidth = net->recv_buff[m_sensorIndex]
-                                      .depth_sensor_frame_type()
+                                      .depth_sensor_mode_details()
                                       .base_resolution_width();
     details.baseResolutionHeight = net->recv_buff[m_sensorIndex]
-                                       .depth_sensor_frame_type()
+                                       .depth_sensor_mode_details()
                                        .base_resolution_height();
-    details.metadataSize =
-        net->recv_buff[m_sensorIndex].depth_sensor_frame_type().metadata_size();
+    details.metadataSize = net->recv_buff[m_sensorIndex]
+                               .depth_sensor_mode_details()
+                               .metadata_size();
     details.frameContent.clear();
     for (int i = 0; i < net->recv_buff[m_sensorIndex]
-                            .depth_sensor_frame_type()
+                            .depth_sensor_mode_details()
                             .frame_content_size();
          i++) {
         details.frameContent.emplace_back(net->recv_buff[m_sensorIndex]
-                                              .depth_sensor_frame_type()
+                                              .depth_sensor_mode_details()
                                               .frame_content(i));
     }
 
@@ -527,7 +528,7 @@ aditof::Status NetworkDepthSensor::setMode(const uint8_t &mode) {
 }
 
 aditof::Status
-NetworkDepthSensor::setMode(const aditof::DepthSensorFrameType &type) {
+NetworkDepthSensor::setMode(const aditof::DepthSensorModeDetails &type) {
     using namespace aditof;
 
     Network *net = m_implData->handle.net;
@@ -539,25 +540,26 @@ NetworkDepthSensor::setMode(const aditof::DepthSensorFrameType &type) {
     }
 
     net->send_buff[m_sensorIndex].set_func_name("SetMode");
-    net->send_buff[m_sensorIndex].mutable_frame_type()->set_mode_number(
+    net->send_buff[m_sensorIndex].mutable_mode_details()->set_mode_number(
         type.modeNumber);
-    net->send_buff[m_sensorIndex].mutable_frame_type()->set_pixel_format_index(
-        type.pixelFormatIndex);
     net->send_buff[m_sensorIndex]
-        .mutable_frame_type()
+        .mutable_mode_details()
+        ->set_pixel_format_index(type.pixelFormatIndex);
+    net->send_buff[m_sensorIndex]
+        .mutable_mode_details()
         ->set_frame_width_in_bytes(type.frameWidthInBytes);
     net->send_buff[m_sensorIndex]
-        .mutable_frame_type()
+        .mutable_mode_details()
         ->set_frame_height_in_bytes(type.frameHeightInBytes);
     net->send_buff[m_sensorIndex]
-        .mutable_frame_type()
+        .mutable_mode_details()
         ->set_base_resolution_width(type.baseResolutionWidth);
     net->send_buff[m_sensorIndex]
-        .mutable_frame_type()
+        .mutable_mode_details()
         ->set_base_resolution_height(type.baseResolutionHeight);
-    net->send_buff[m_sensorIndex].mutable_frame_type()->set_metadata_size(
+    net->send_buff[m_sensorIndex].mutable_mode_details()->set_metadata_size(
         type.metadataSize);
-    auto content = net->send_buff[m_sensorIndex].mutable_frame_type();
+    auto content = net->send_buff[m_sensorIndex].mutable_mode_details();
     for (int i = 0; i < type.frameContent.size(); i++) {
         content->add_frame_content(type.frameContent.at(i));
     }
@@ -583,7 +585,7 @@ NetworkDepthSensor::setMode(const aditof::DepthSensorFrameType &type) {
     Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
     if (status == Status::OK) {
-        m_implData->frameTypeCache = type;
+        m_implData->modeDetailsCache = type;
     }
 
     return status;

@@ -54,9 +54,9 @@ class UsbDepthSensor : public aditof::DepthSensorInterface {
     getAvailableModes(std::vector<uint8_t> &modes) override;
     virtual aditof::Status
     getModeDetails(const uint8_t &mode,
-                   aditof::DepthSensorFrameType &details) override;
+                   aditof::DepthSensorModeDetails &details) override;
     virtual aditof::Status
-    setMode(const aditof::DepthSensorFrameType &type) override;
+    setMode(const aditof::DepthSensorModeDetails &type) override;
     virtual aditof::Status setMode(const uint8_t &mode) override;
     virtual aditof::Status getFrame(uint16_t *buffer) override;
     virtual aditof::Status
@@ -109,7 +109,7 @@ class UsbDepthSensor : public aditof::DepthSensorInterface {
     aditof::SensorDetails m_sensorDetails;
     std::string m_driverPath;
     std::unique_ptr<ImplData> m_implData;
-    std::vector<aditof::DepthSensorFrameType> m_depthSensorModes;
+    std::vector<aditof::DepthSensorModeDetails> m_depthSensorModes;
     int m_fps;
 };
 
