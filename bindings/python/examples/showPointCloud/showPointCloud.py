@@ -40,13 +40,6 @@ import sys
 WINDOW_NAME_DEPTH = "Display Depth"
 WINDOW_NAME_COLOR = "Display Color"
 
-
-class ModesEnum(Enum):
-    MODE_NEAR = 0
-    MODE_MEDIUM = 1
-    MODE_FAR = 2
-
-
 def transform_image(np_image):
     return o3d.geometry.Image(np_image)
 
@@ -80,12 +73,12 @@ if __name__ == "__main__":
         if not status:
             print("cameras[0].initialize() failed with status: ", status)
 
-        types = []
-        status = cameras[0].getAvailableModes(types)
+        modes = []
+        status = cameras[0].getAvailableModes(modes)
         if not status:
             print("system.getAvailableModes() failed with status: ", status)
 
-        status = cameras[0].setMode("lr-qnative")
+        status = cameras[0].setMode(3)
         if not status:
             print("cameras[0].setMode() failed with status:", status)
 
