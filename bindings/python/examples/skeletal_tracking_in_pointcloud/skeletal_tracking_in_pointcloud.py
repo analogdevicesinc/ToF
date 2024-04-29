@@ -50,7 +50,7 @@ start_time = time.time()
 # Initialize Parameters
 ip = "10.43.0.1" # Set to "10.43.0.1" if networking is used.
 config = "config/config_adsd3500_adsd3100.json"
-mode = "sr-qnative"
+mode = 3
 image_width = 512
 image_height = 512
 apply_scaling = 1 # Applies Scaling
@@ -64,11 +64,6 @@ WHRatio = inWidth / float(inHeight)
 inScaleFactor = 0.007843
 meanVal = 127.5
 thr = 0.2
-
-class ModesEnum(Enum):
-    MODE_NEAR = 0
-    MODE_MEDIUM = 1
-    MODE_FAR = 2
 
 def ApplyLogScaling(input_image):
     max_value = np.max(input_image)

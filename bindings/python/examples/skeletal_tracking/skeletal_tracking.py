@@ -39,7 +39,7 @@ import mediapipe as mp
 
 ip = "10.43.0.1" # Set to "10.43.0.1" if networking is used.
 config = "config/config_adsd3500_adsd3100.json"
-mode = "sr-qnative"
+mode = 3
 
 inWidth = 300
 inHeight = 300
@@ -57,12 +57,6 @@ pose = mp_pose.Pose()
 
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands()
-
-class ModesEnum(Enum):
-    MODE_NEAR = 0
-    MODE_MEDIUM = 1
-    MODE_FAR = 2
-
 
 if __name__ == "__main__":
 

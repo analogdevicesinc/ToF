@@ -37,23 +37,12 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 import os
 
-modemapping = {
-"lr-native": {"width":1024, "height":1024},
-"lr-qnative": {"width":512, "height":512},
-"sr-native": {"width":1024, "height":1024},
-"sr-qnative": {"width":512, "height":512}
-}
-
-mode = "lr-qnative"
+mode = 3
 
 def help():
     print(f"{sys.argv[0]} usage:")
-    print(f"USB: {sys.argv[0]} <mode name> <config>")
-    print(f"Network connection: {sys.argv[0]} <mode name> <ip> <config>")
-    print()
-    print("Mode names: ");
-    for mode in modemapping.keys():
-        print(f"{mode}: {modemapping[mode]['width']} x {modemapping[mode]['height']}");
+    print(f"USB: {sys.argv[0]} <mode number> <config>")
+    print(f"Network connection: {sys.argv[0]} <mode number> <ip> <config>")
     print()
     print("For example:")
     print(f"python {sys.argv[0]} lr-qnative 10.43.0.1 config\config_adsd3500_adsd3100.json")
@@ -86,10 +75,6 @@ else :
     exit(-2)
 
 #Checks on input
-if mode not in modemapping:
-    print(f"Error: Unknown mode - {mode}")
-    help()
-    exit(-3)
 if os.path.exists(config) == False:
     print(f"Error: Config file cannot be found - {config}")
     help()
@@ -108,6 +93,11 @@ status = camera1.getAvailableModes(modes)
 print("camera1.getAvailableModes()", status)
 print(modes)
 
+if mode not in modes:
+    print(f"Error: Unknown mode - {mode}")
+    help()
+    exit(-3)
+
 camDetails = tof.CameraDetails()
 status = camera1.getDetails(camDetails)
 print("camera1.getDetails()", status)
@@ -118,6 +108,10 @@ print("camera1.setMode()", status)
 
 status = camera1.start()
 print("camera1.start()", status)
+
+sensor = camera1.getSensor()
+modeDetails = tof.DepthSensorModeDetails()
+status = sensor.getModeDetails(modeDetails)
     
 def normalize(image_scalar, width, height):
     image_scalar_norm = image_scalar / image_scalar.max()
@@ -139,7 +133,7 @@ def animate():
     
 def main():
     pygame.init()
-    window_size = (modemapping[mode]["width"], modemapping[mode]["height"])
+    window_size = (modeDetails.baseResolutionWidth, modeDetails.baseResolutionHeight)
     screen = pygame.display.set_mode(window_size)
 
     # display the animation
