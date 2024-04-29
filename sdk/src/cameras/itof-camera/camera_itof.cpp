@@ -163,19 +163,20 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
         }
 
         for (auto availablemodes : m_availableModes) {
-            status =
-                m_depthSensor->getModeDetails(availablemodes, m_frameDetails);
+            DepthSensorModeDetails modeDetails;
+            status = m_depthSensor->getModeDetails(availablemodes, modeDetails);
             if (status != Status::OK) {
                 LOG(ERROR) << "Failed to get available frame types details!";
                 return status;
             }
-            m_availableSensorModeDetails.emplace_back(m_frameDetails);
+            m_availableSensorModeDetails.emplace_back(modeDetails);
+
             uint8_t intrinsics[56] = {0};
             uint8_t dealiasParams[32] = {0};
             TofiXYZDealiasData dealiasStruct;
             //the first element of readback_data for adsd3500_read_payload is used for the custom command
             //it will be overwritten by the returned data
-            uint8_t mode = m_frameDetails.modeNumber;
+            uint8_t mode = modeDetails.modeNumber;
 
             intrinsics[0] = mode;
             dealiasParams[0] = mode;
@@ -376,7 +377,7 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
 
     LOG(INFO) << "Using ini file: " << m_ini_depth;
 
-    status = m_depthSensor->getModeDetails(mode, m_frameDetails);
+    status = m_depthSensor->getModeDetails(mode, m_modeDetailsCache);
     if (status != Status::OK) {
         LOG(ERROR) << "Failed to get frame type details!";
         return status;
@@ -388,9 +389,9 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
         return status;
     }
 
-    if (std::find(m_frameDetails.frameContent.begin(),
-                  m_frameDetails.frameContent.end(),
-                  "depth") != m_frameDetails.frameContent.end()) {
+    if (std::find(m_modeDetailsCache.frameContent.begin(),
+                  m_modeDetailsCache.frameContent.end(),
+                  "depth") != m_modeDetailsCache.frameContent.end()) {
         m_pcmFrame = false;
     } else {
         m_pcmFrame = true;
@@ -412,16 +413,16 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
 
         FrameDataDetails fDataDetails;
         fDataDetails.type = item;
-        fDataDetails.width = m_frameDetails.baseResolutionWidth;
-        fDataDetails.height = m_frameDetails.baseResolutionHeight;
+        fDataDetails.width = m_modeDetailsCache.baseResolutionWidth;
+        fDataDetails.height = m_modeDetailsCache.baseResolutionHeight;
         fDataDetails.subelementSize = sizeof(uint16_t);
         fDataDetails.subelementsPerElement = 1;
 
         if (item == "xyz") {
             fDataDetails.subelementsPerElement = 3;
         } else if (item == "raw") {
-            fDataDetails.width = m_frameDetails.frameWidthInBytes;
-            fDataDetails.height = m_frameDetails.frameHeightInBytes;
+            fDataDetails.width = m_modeDetailsCache.frameWidthInBytes;
+            fDataDetails.height = m_modeDetailsCache.frameHeightInBytes;
             fDataDetails.subelementSize = 1;
             fDataDetails.subelementsPerElement = 1;
         } else if (item == "metadata") {
@@ -486,7 +487,7 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
 
     // If we compute XYZ then prepare the XYZ tables which depend on the mode
     if (m_xyzEnabled && !m_pcmFrame) {
-        uint8_t mode = m_frameDetails.modeNumber;
+        uint8_t mode = m_modeDetailsCache.modeNumber;
 
         const int GEN_XYZ_ITERATIONS = 20;
         TofiXYZDealiasData *pDealias = &m_xyz_dealias_data[mode];
@@ -495,8 +496,8 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
         int ret = Algorithms::GenerateXYZTables(
             &m_xyzTable.p_x_table, &m_xyzTable.p_y_table, &m_xyzTable.p_z_table,
             &(pDealias->camera_intrinsics), pDealias->n_sensor_rows,
-            pDealias->n_sensor_cols, m_frameDetails.baseResolutionWidth,
-            m_frameDetails.baseResolutionHeight, pDealias->n_offset_rows,
+            pDealias->n_sensor_cols, m_modeDetailsCache.baseResolutionWidth,
+            m_modeDetailsCache.baseResolutionHeight, pDealias->n_offset_rows,
             pDealias->n_offset_cols, pDealias->row_bin_factor,
             pDealias->col_bin_factor, GEN_XYZ_ITERATIONS);
         if (ret != 0 || !m_xyzTable.p_x_table || !m_xyzTable.p_y_table ||
@@ -598,8 +599,8 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
 
         Algorithms::ComputeXYZ((const uint16_t *)depthFrame, &m_xyzTable,
                                (int16_t *)xyzFrame,
-                               m_frameDetails.baseResolutionHeight,
-                               m_frameDetails.baseResolutionWidth);
+                               m_modeDetailsCache.baseResolutionHeight,
+                               m_modeDetailsCache.baseResolutionWidth);
     }
 
     Metadata metadata;
@@ -624,9 +625,9 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
     } else {
         // If metadata from ADSD3500 is not available/disabled, generate one here
         memset(static_cast<void *>(&metadata), 0, sizeof(metadata));
-        metadata.width = m_frameDetails.baseResolutionWidth;
-        metadata.height = m_frameDetails.baseResolutionHeight;
-        metadata.imagerMode = m_frameDetails.modeNumber;
+        metadata.width = m_modeDetailsCache.baseResolutionWidth;
+        metadata.height = m_modeDetailsCache.baseResolutionHeight;
+        metadata.imagerMode = m_modeDetailsCache.modeNumber;
         metadata.bitsInDepth = m_depthBitsPerPixel;
         metadata.bitsInAb = m_abBitsPerPixel;
         metadata.bitsInConfidence = m_confBitsPerPixel;
