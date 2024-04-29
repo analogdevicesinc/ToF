@@ -180,7 +180,7 @@ struct DepthSensorModeDetails {
  */
 inline std::ostream &operator<<(std::ostream &o,
                                 const DepthSensorModeDetails &a) {
-    o << "DepthSensorFrame: T: " << a.modeNumber
+    o << "DepthSensorModeDetails: \tN: " << a.modeNumber
       << "\tW: " << a.baseResolutionWidth << "\tH: " << a.baseResolutionHeight
       << " contains:\n";
     for (auto &content : a.frameContent) {
