@@ -98,8 +98,8 @@ struct Adsd3500Sensor::ImplData {
     std::string fw_ver;
 
     ImplData()
-        : numVideoDevs(1),
-          videoDevs(nullptr), modeDetails{0, {}, 0, 0, 0, 0, 0, 0, 0, 0, {}},
+        : numVideoDevs(1), videoDevs(nullptr),
+          modeDetails{0, {}, 0, 0, 0, 0, 0, 0, 0, 0, {}},
           imagerType{SensorImagerType::IMAGER_UNKNOWN},
           ccbVersion{CCBVersion::CCB_UNKNOWN} {}
 };
@@ -1668,44 +1668,82 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
             return Status::GENERIC_ERROR;
         } else if (m_implData->ccbVersion == CCBVersion::CCB_VERSION1) {
 
-            //TO DO: overwrite this once ccbm is added
-            int modeToTest = 5; // We are looking at width and height for mode 5
-            uint8_t tempDealiasParams[32] = {0};
-            tempDealiasParams[0] = modeToTest;
+            if (0) {
+                LOG(INFO) << "CCB master is supported. Reading mode details "
+                             "from nvm.";
 
-            TofiXYZDealiasData tempDealiasStruct;
-            uint16_t width1 = 512;
-            uint16_t height1 = 512;
+                m_availableModes.clear();
 
-            uint16_t width2 = 320;
-            uint16_t height2 = 256;
+                //TO DO: add command to read ccmb for each mode and
+                for (int i = 0; i < 10; i++) {
+                    //Read here
 
-            // We read dealias parameters to find out the width and height for mode 5
-            status = adsd3500_read_payload_cmd(0x02, tempDealiasParams, 32);
-            if (status != Status::OK) {
-                LOG(ERROR) << "Failed to read dealias parameters for adsd3500!";
-                return status;
-            }
+                    CCBM modeStruct;
+                    DepthSensorModeDetails modeDetails;
 
-            memcpy(&tempDealiasStruct, tempDealiasParams,
-                   sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
+                    modeDetails.modeNumber = modeStruct.CFG_mode;
+                    modeDetails.baseResolutionHeight = modeStruct.heigth;
+                    modeDetails.baseResolutionWidth = modeStruct.width;
+                    modeDetails.numberOfPhases = modeStruct.noOfPhases;
+                    modeDetails.isPCM = modeStruct.isPCM;
 
-            // If mixed modes don't have accurate dimensions, switch back to simple new modes table
-            if ((tempDealiasStruct.n_rows == width1 &&
-                 tempDealiasStruct.n_cols == height1) ||
-                (tempDealiasStruct.n_rows == width2 &&
-                 tempDealiasStruct.n_cols == height2)) {
-                m_modeSelector.setControl("mixedModes", "1");
+                    modeDetails.frameContent.clear();
+                    if (!modeDetails.isPCM) {
+                        modeDetails.frameContent = {
+                            "raw", "depth", "ab", "conf", "xyz", "metadata"};
+                    } else {
+                        modeDetails.frameContent = {"ab", "metadata"};
+                    }
+
+                    m_availableModes.emplace_back(modeDetails);
+                }
             } else {
-                m_modeSelector.setControl("mixedModes", "0");
+
+                LOG(INFO)
+                    << "CCB master not supported, using sdk defined modes.";
+
+                int modeToTest =
+                    5; // We are looking at width and height for mode 5
+                uint8_t tempDealiasParams[32] = {0};
+                tempDealiasParams[0] = modeToTest;
+
+                TofiXYZDealiasData tempDealiasStruct;
+                uint16_t width1 = 512;
+                uint16_t height1 = 512;
+
+                uint16_t width2 = 320;
+                uint16_t height2 = 256;
+
+                // We read dealias parameters to find out the width and height for mode 5
+                status = adsd3500_read_payload_cmd(0x02, tempDealiasParams, 32);
+                if (status != Status::OK) {
+                    LOG(ERROR)
+                        << "Failed to read dealias parameters for adsd3500!";
+                    return status;
+                }
+
+                memcpy(&tempDealiasStruct, tempDealiasParams,
+                       sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
+
+                // If mixed modes don't have accurate dimensions, switch back to simple new modes table
+                if ((tempDealiasStruct.n_rows == width1 &&
+                     tempDealiasStruct.n_cols == height1) ||
+                    (tempDealiasStruct.n_rows == width2 &&
+                     tempDealiasStruct.n_cols == height2)) {
+                    m_modeSelector.setControl("mixedModes", "1");
+                } else {
+                    m_modeSelector.setControl("mixedModes", "0");
+                }
+
+                //ccmb disabled. Populate struct with sdk defined variables.
+                status =
+                    m_modeSelector.getAvailableModeDetails(m_availableModes);
+                if (status != aditof::Status::OK) {
+                    LOG(ERROR) << "Failed to get available frame types for the "
+                                  "current configuration.";
+                }
             }
         }
-    }
-
-    status = m_modeSelector.getAvailableModeDetails(m_availableModes);
-    if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Failed to get available frame types for the "
-                      "current configuration.";
     }
 
     return status;
