@@ -260,29 +260,6 @@ int Adsd3500::StopStream() {
 	return ret;
 }
 
-void write_uint16_array_to_csv(const char* filename, uint16_t* array, size_t size) {
-    // Open the file for writing
-    FILE* file = fopen(filename, "w");
-    if (file == NULL) {
-        printf("Error opening file.\n");
-        return;
-    }
-
-    // Write each element of the array to the file
-    for (size_t i = 0; i < size; i++) {
-        fprintf(file, "%u", array[i]); // Write the element
-        if (i < size - 1) {
-            fprintf(file, ","); // Add a comma if it's not the last element in the row
-        }
-    }
-
-    // Add a newline character at the end of the row
-    fprintf(file, "\n");
-
-    // Close the file
-    fclose(file);
-}
-
 // Get Frames from the Imager.
 int Adsd3500::RequestFrame(uint16_t* buffer) {
     struct v4l2_buffer buf[MAX_SUBFRAMES_COUNT];
@@ -316,8 +293,6 @@ int Adsd3500::RequestFrame(uint16_t* buffer) {
     if (ret < 0) {
         return -1;
     }
-
-    write_uint16_array_to_csv("buffer.csv", buffer, buf_data_len);
 
     return 0;
 }
@@ -500,21 +475,6 @@ int Adsd3500::ParseRawDataWithDCL(uint16_t* buffer) {
         perror("Error in retrieving Confidence frame.\n");
         return -1;
     }
-
-    // Store AB frame to a .bin file.
-    std::ofstream ab("out_ab.bin", std::ios::binary);
-    ab.write((char*)tofi_compute_context->p_ab_frame, xyzDealiasData.n_rows * xyzDealiasData.n_cols*sizeof(uint16_t));
-    ab.close();
-
-    // Store Depth frame to a .bin file.
-    std::ofstream depth("out_depth.bin", std::ios::binary);
-    depth.write((char*)tofi_compute_context->p_depth_frame, xyzDealiasData.n_rows * xyzDealiasData.n_cols*sizeof(uint16_t));
-    depth.close();
-
-    // Store Confidence frame to a .bin file.
-    std::ofstream conf("out_conf.bin", std::ios::binary);
-    conf.write((char*)tofi_compute_context->p_conf_frame, xyzDealiasData.n_rows * xyzDealiasData.n_cols*sizeof(uint8_t));
-    conf.close();
     
     return 0;
 }

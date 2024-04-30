@@ -19,11 +19,16 @@
 #include <iostream>
 #include "../include/adsd3500_util.h"
 #include <math.h>
+#include <fstream>
 
 int main(int argc, char *argv[]) {
 
     int ret;
     auto adsd3500 = Adsd3500();
+
+    // Arguments from the user.
+    int mode_num = 3; // Image mode number.
+    const char*  iniFileName = "config/RawToDepthAdsd3030_lr-qnative.ini"; // Config file path.
 
     // 1. Reset ADSD3500
     ret = adsd3500.ResetAdsd3500();
@@ -40,10 +45,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Set Image mode number
-    adsd3500.mode_num = 3; //lr-qnative mode
-
-    // Read .ini config file
-    const char*  iniFileName = "config/RawToDepthAdsd3030_lr-qnative.ini";
+    adsd3500.mode_num = mode_num;    
     ret = adsd3500.GetIniKeyValuePairFromConfig(iniFileName);
     if (ret < 0) {
         printf("Unable to read ini parameters from the Config file.\n");
@@ -104,26 +106,59 @@ int main(int argc, char *argv[]) {
         return ret;
     }
 
-    // 7. Receive Frames
     int num_frames = 10;
     int buffer_height = adsd3500.xyzDealiasData.n_rows; // 256
     int buffer_width = adsd3500.xyzDealiasData.n_cols; //320
+    int total_pixels = buffer_height*buffer_width;
     float totalBits = adsd3500.depthBits + adsd3500.abBits + adsd3500.confBits;
-    int buffer_size = buffer_height*buffer_width*ceil(totalBits/16);  // 256*320*5 bytes
+    int buffer_size = total_pixels*ceil(totalBits/16);  // 256*320*5 bytes
 
-    uint16_t* buffer = new uint16_t[buffer_size];
-    for (int i = 0; i < num_frames; i++) {   
+    uint16_t* depth_buffer = new uint16_t[total_pixels*num_frames];
+    uint16_t* ab_buffer = new uint16_t[total_pixels*num_frames];
+    uint8_t* conf_buffer = new uint8_t[total_pixels*num_frames];
+
+    std::ofstream ab("out_ab.bin", std::ios::binary);
+    std::ofstream depth("out_depth.bin", std::ios::binary);
+    std::ofstream conf("out_conf.bin", std::ios::binary);
+
+    for (int i = 0; i < num_frames; i++) {  
+        // 7. Receive Frames
+        uint16_t* buffer = new uint16_t[buffer_size];
         ret = adsd3500.RequestFrame(buffer);
         if (ret < 0 || buffer == nullptr) {
             std::cout << "Unable to receive frames from Adsd3500" << std::endl;
         }
+
+        // 8. Get Depth, AB, Confidence Data using Depth Compute Library and store them as .bin file.
+        adsd3500.ParseRawDataWithDCL(buffer);
+        if (ret < 0) {
+            std::cout << "Unable to parse raw frames." << std::endl;
+        }
+
+        memcpy(ab_buffer + i * total_pixels, adsd3500.tofi_compute_context->p_ab_frame, total_pixels*sizeof(uint16_t));
+        memcpy(depth_buffer + i * total_pixels, adsd3500.tofi_compute_context->p_depth_frame, total_pixels*sizeof(uint16_t));
+        memcpy(conf_buffer + i * total_pixels, adsd3500.tofi_compute_context->p_conf_frame, total_pixels*sizeof(uint8_t));
+    
     }
 
-    // 8. Get Depth, AB, Confidence Data using Depth Compute Library and store them as .bin file.
-    adsd3500.ParseRawDataWithDCL(buffer);
-    if (ret < 0) {
-        std::cout << "Unable to parse raw frames." << std::endl;
-    }
+    // 9. Store AB, Depth and Confidence frames on to a .bin files.
+    ab.write((char*)ab_buffer, total_pixels*num_frames*sizeof(uint16_t));
+    ab.close();
+
+    // Store Depth frame to a .bin file.
+    depth.write((char*)depth_buffer, total_pixels*num_frames*sizeof(uint16_t));
+    depth.close();
+
+    // Store Confidence frame to a .bin file.
+    conf.write((char*)conf_buffer, total_pixels*num_frames*sizeof(uint8_t));
+    conf.close();  
+
+    delete[] ab_buffer;
+    delete[] depth_buffer;
+    delete[] conf_buffer; 
+
+    // 10. Stop Stream and Close Camera
+    // Handled by the ADSD3500 class destructor.   
 
     return 0;
 }
