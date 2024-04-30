@@ -1377,26 +1377,112 @@ int Adsd3500::SetFrameType() {
         depthBits = std::stoi(it->second);
         std::cout << "Number of depth bits : " << depthBits << std::endl;
     }
+
     it = iniKeyValPairs.find("bitsInAB");
     if (it != iniKeyValPairs.end()) {
         abBits = std::stoi(it->second);
         std::cout << "Number of AB bits : " << abBits << std::endl;
     }
+
     it = iniKeyValPairs.find("bitsInConf");
     if (it != iniKeyValPairs.end()) {
         confBits = std::stoi(it->second);
         std::cout << "Number of Confidence bits: " << confBits << std::endl;
     }
 
+    it = iniKeyValPairs.find("inputFormat");
+    if (it != iniKeyValPairs.end()) {
+        inputFormat = it->second;
+        std::cout << "Input Pixel format: " << inputFormat << std::endl;
+    }
+
+    // Enable/Disable Dynamic Mode switching.
+    uint16_t dynamic_mode_switch_cmd = dynamic_mode_switch ? 0x0001 : 0x0000;
+    ret = adsd3500_write_cmd(0x0080, dynamic_mode_switch_cmd);
+    if (ret < 0) {
+        std::cout << "Unable to configure Dynamic Mode Switching in ADSD3500." << std::endl;
+    }
+ 
     adsd3500_configure_sensor_frame_types();
 
     // Pixel format is "raw8" for lr-qnative mode.
     int frameHeight = xyzDealiasData.n_rows;
     int frameWidth = xyzDealiasData.n_cols;
-    float totalBits = depthBits + abBits + confBits;
-    uint16_t width = frameWidth * totalBits / 8;
-    uint16_t height = frameHeight;
-    __u32 pixelFormat = V4L2_PIX_FMT_SBGGR8; // if raw8 format, use this as pixel format.
+    uint16_t width, height;
+    __u32 pixelFormat; 
+    float totalBits;
+ 
+    if (imagerType == ImagerType::IMAGER_ADSD3030) { // For ADSD3030
+        if (inputFormat == "raw8") { 
+            if (mode_num < 2) { 
+                totalBits = depthBits + abBits + confBits;
+                width = frameWidth * totalBits / 8;
+                height = frameHeight;
+                pixelFormat = V4L2_PIX_FMT_SBGGR8;
+            } else {
+                width = 1280;
+                height = 320;
+                pixelFormat = V4L2_PIX_FMT_SBGGR8;
+            }
+        } else {
+            std::cout << "Unsupported Input Pixel Format." << std::endl;
+        }
+    } else if (imagerType == ImagerType::IMAGER_ADSD3100) { // For ADSD3100
+        if (inputFormat == "raw8") {
+            if (mode_num > 1) {
+                totalBits = depthBits + abBits + confBits;
+                width = frameWidth * totalBits / 8;
+                height = frameHeight;
+                pixelFormat= V4L2_PIX_FMT_SBGGR8;
+            }
+        } else {
+            std::cout << "Unsupported Input Pixel Format." << std::endl;
+        } //TODO: Add Support for Crosby modes 0, 1.
+    }
+
+    // TODO: Add raw12 modes for ADSD3100.
+    // } else if (inputFormat == "mipiRaw12_8") { // For MP modes
+    //     if (depthBits == 12 && abBits == 16 && confBits == 0) {
+    //         if (mode_num == 1) {
+    //             width = 2048;
+    //             height = 3328;
+    //         } else if (mode_num == 0) {
+    //             width = 2048;
+    //             height = 2560;
+    //         } else {
+    //             std::cout << "Invalid pixel format configuration for given mode!" << std::endl;
+    //             return -1;
+    //         }
+    //         pixelFormat = V4L2_PIX_FMT_SBGGR8;
+    //     }
+    // } else if (inputFormat == "raw16_bits12_shift4") { // For MP modes
+    //     if (depthBits == 12 && abBits == 12 && confBits == 0) {
+    //         if (mode_num == 1) {
+    //             width = 1024;
+    //             height = 4096;
+    //             pixelFormat = V4L2_PIX_FMT_SBGGR12;
+    //         } else if (mode_num == 0) {
+    //             width = 1024;
+    //             height = 3072;
+    //             pixelFormat = V4L2_PIX_FMT_SBGGR12;
+    //         } else {
+    //             std::cout << "Invalid pixel format configuration for given mode!" << std::endl;
+    //             return -1;
+    //         }
+    //     } else if (depthBits == 12 && !abBits && !confBits) {
+    //         if (mode_num == 1 || mode_num == 0) {
+    //             width = 1024;
+    //             height = 1024;
+    //             pixelFormat = V4L2_PIX_FMT_SBGGR12;
+    //         } else {
+    //             std::cout << "Invalid pixel format configuration for given mode!" << std::endl;
+    //             return -1;
+    //         }
+    //     } else {
+    //         std::cout << "Invalid configuration!" << std::endl;
+    //         return -1;
+    //     }
+    // }
 
     std::cout << "width: " << width << std::endl;
     std::cout << "height: " << height << std::endl;

@@ -134,8 +134,11 @@ class Adsd3500 {
 		int depthBits = 0;
 		int abBits = 0;
 		int confBits = 0;
+		std::string inputFormat;
 		TofiComputeContext *tofi_compute_context;
 		TofiConfig *tofi_config;
+		int dynamic_mode_switch = 0;
+		int ccb_as_master = 0;
 
 		int OpenAdsd3500();
 		int CloseAdsd3500();
