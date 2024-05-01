@@ -30,6 +30,7 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <cctype>
 #include "../include/adsd3500_util.h"
 
 const char ver_info[] =
@@ -1316,6 +1317,12 @@ int Adsd3500::adsd3500_set_ini_params(
                         "not setting." << std::endl;
     }
 
+    it = iniKeyValPairs.find("dynamicModeSwitchEnable");
+    if (it != iniKeyValPairs.end()) {
+        dynamic_mode_switch = std::stoi(it->second);      
+    }
+    adsd3500_configure_dynamic_mode_switching();
+
     return 0;
 }
 
@@ -1394,13 +1401,6 @@ int Adsd3500::SetFrameType() {
     if (it != iniKeyValPairs.end()) {
         inputFormat = it->second;
         std::cout << "Input Pixel format: " << inputFormat << std::endl;
-    }
-
-    // Enable/Disable Dynamic Mode switching.
-    uint16_t dynamic_mode_switch_cmd = dynamic_mode_switch ? 0x0001 : 0x0000;
-    ret = adsd3500_write_cmd(0x0080, dynamic_mode_switch_cmd);
-    if (ret < 0) {
-        std::cout << "Unable to configure Dynamic Mode Switching in ADSD3500." << std::endl;
     }
  
     adsd3500_configure_sensor_frame_types();
@@ -1556,6 +1556,116 @@ int Adsd3500::SetFrameType() {
         }
 
         videoDevice.videoBuffers[videoDevice.nVideoBuffers].length = length;
+    }
+
+    return 0;
+}
+
+// Configure Dynamic Mode switching.
+int Adsd3500::adsd3500_configure_dynamic_mode_switching() {
+
+    if (!dynamic_mode_switch) {
+        adsd3500_turnoff_dynamic_mode_switch();
+        return 0;
+    }
+
+    // Turn on Dynamic Mode Switching.
+    std::cout << "Turning on Dynamic Mode Switching." << std::endl;
+    int ret = adsd3500_write_cmd(0x0080, 0x0001);
+    if (ret < 0) {
+        std::cout << "Unable to turn on Dynamic Mode Switching in ADSD3500." << std::endl;
+        return 0;
+    }
+
+    uint8_t mode_seq0[4]; // Represents the Mode Composition sequence 0.
+    uint8_t mode_seq1[4]; // Represents the Mode Composition sequence 1.
+    uint8_t mode_repeat_count0[4]; // Represents the Mode Repeat count for Mode Composition sequence 0.
+    uint8_t mode_repeat_count1[4]; // Represents the Mode Repeat count for Mode Composition sequence 1.
+    /*Note: 
+    1. dynamicModeSeqComp0 and dynamicModeSeqComp1 represents the sequence of imaging modes to be used when multiple frames are requested from the Imager.
+    For eg., if dynamicModeSeqComp0 = 0101, then the first image would be captured with mode 0 and the second image would be captured with mode 1 and so on.
+    2. dynamicRptCntSeq0 and dynamicRptCntSeq1 represents the number of times a particular imaging mode to be used before switching the mode to 
+    the next mode mentioned on the dynamicModeSeqComp.
+    For eg., if dynamicModeSeqComp0 = 0101 and dynamicRptCntSeq0 = 2321, then first two frames captured be with mode0,
+    and the next three frames would be captured with mode 1 and so on. So the sequence would look like this.. 00111001.
+    */
+
+    adsd3500_parse_dynamic_mode_sequence_from_ini("dynamicModeSeqComp0", mode_seq0);
+    // adsd3500_parse_dynamic_mode_sequence_from_ini("dynamicModeSeqComp1", mode_seq1);
+    adsds3500_parse_dynamic_mode_repeat_count_from_ini("dynamicRptCntSeq0", mode_repeat_count0);
+    // adsds3500_parse_dynamic_mode_repeat_count_from_ini("dynamicRptCntSeq1", mode_repeat_count1);
+
+    size_t arraySize = sizeof(mode_seq0) / sizeof(mode_seq0[0]);
+    std::cout << "Elements of the mode_seq0: ";
+    for (size_t i = 0; i < arraySize; ++i) {
+        std::cout << static_cast<int>(mode_seq0[i]) << " ";
+    }
+    std::cout << std::endl;
+
+    arraySize = sizeof(mode_repeat_count0) / sizeof(mode_repeat_count0[0]);
+    std::cout << "Elements of the mode_seq0 repeat count: ";
+    for (size_t i = 0; i < arraySize; ++i) {
+        std::cout << static_cast<int>(mode_repeat_count0[i]) << " ";
+    }
+    std::cout << std::endl;
+
+    return 0;
+}
+
+int Adsd3500::adsd3500_turnoff_dynamic_mode_switch() {
+    int ret = adsd3500_write_cmd(0x0080, 0x0000);
+    if (ret < 0) {
+        std::cout << "Unable to turn off Dynamic Mode Switching in ADSD3500." << std::endl;
+    }
+    return 0;
+}
+
+int Adsd3500::adsd3500_parse_dynamic_mode_sequence_from_ini(
+    const std::string &modeSequenceString, uint8_t* mode_seq
+) {
+
+    auto it = iniKeyValPairs.find(modeSequenceString);
+    if (it != iniKeyValPairs.end()) {
+        if (!isValidHexadecimalString(it->second)) {
+            std::cout << "The Dynamic Mode Sequence Composition string is not valid. Turning off Dynamic Mode Switching." << std::endl;
+            adsd3500_turnoff_dynamic_mode_switch();
+            return 0;
+        }
+        for (char c: it->second) {
+            if (!isdigit(c)) {
+                std::cout << "Invalid Mode given. Mode number can be between 0 and 9. Turning off Dynamic Mode Switching." << std::endl;
+                adsd3500_turnoff_dynamic_mode_switch();
+                return 0;
+            }
+        }
+        for (size_t i = 0; i < it->second.size(); ++i) {
+            mode_seq[i] = std::stoi(std::string(1, it->second[i]));
+        }           
+    } else {
+        std::cout << "The Dynamic Mode Sequence Composition not found on the .ini file. Turning off Dynamic Mode Switching." << std::endl;
+        adsd3500_turnoff_dynamic_mode_switch();
+        return 0;
+    }
+    return 0;
+}
+
+int Adsd3500::adsds3500_parse_dynamic_mode_repeat_count_from_ini(
+    const std::string &modeRepeatCountString, uint8_t* mode_repeat_count
+) {
+    auto it = iniKeyValPairs.find(modeRepeatCountString);
+    if (it != iniKeyValPairs.end()) {
+        if (!isValidHexadecimalString(it->second)) {
+            std::cout << "The Dynamic Mode Repeat count sequence string is not valid. Turning off Dynamic Mode Switching." << std::endl;
+            adsd3500_turnoff_dynamic_mode_switch();
+            return 0;
+        }
+        for (size_t i = 0; i < it->second.size(); ++i) {
+            mode_repeat_count[i] = std::stoi(std::string(1, it->second[i]));
+        }           
+    } else {
+        std::cout << "The Dynamic Mode repeat count "<< modeRepeatCountString << " is not found on the .ini file. Turning off Dynamic Mode Switching." << std::endl;
+        adsd3500_turnoff_dynamic_mode_switch();
+        return 0;
     }
 
     return 0;
@@ -1802,5 +1912,21 @@ int32_t tof_open(const char *tof_device) {
         return -1;
     }
     return fd;
+}
+
+bool isValidHexadecimalString(const std::string& str) {
+    // Check if string length is 4
+    if (str.length() != 4) {
+        return false;
+    }
+
+    // Check if each character is a valid hexadecimal digit
+    for (char c : str) {
+        if (!isxdigit(c)) { // Check if character is a valid hexadecimal digit
+            return false;
+        }
+    }
+
+    return true;
 }
 

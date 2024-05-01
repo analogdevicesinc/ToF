@@ -29,7 +29,6 @@ int main(int argc, char *argv[]) {
     // Arguments from the user.
     int mode_num = 3; // Image mode number.
     const char*  iniFileName = "config/RawToDepthAdsd3030_lr-qnative.ini"; // Config file path.
-    adsd3500.dynamic_mode_switch = 0; // Enables/Disables Dynamic Mode Switching.
     adsd3500.ccb_as_master = 0; // Enables/Disbales CCB as master.
     
     // 1. Reset ADSD3500
