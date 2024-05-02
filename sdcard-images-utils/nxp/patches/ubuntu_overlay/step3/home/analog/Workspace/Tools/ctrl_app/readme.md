@@ -7,7 +7,11 @@ ADSD3500 driver accept commands from user-space through V4L2 controls. This appl
 g++ -o ctrl_app ctrl_app.cpp
 
 #### Input arguments
-ctrl_app take as input only one argument, the name of the input file containing the commands list "infile.txt"
+ctrl_app take only one argument as input, the name of the input file containing the commands list "infile.txt"
+
+#### Example command to run ctrl_app
+./ctrl_app infile.txt
+(Assuming both ctrl_app and infile.txt are in current working directory.)
 
 #### Example input commands in infile.txt
 First letter on each row of infile.txt define the transfer type.
