@@ -11,7 +11,7 @@ bus = SMBus(1)
 # Select the I2C address of the ADSD3500.
 address = 0x38
 #Binary file default name
-bin_file_name = "./walden_lite.stream"
+bin_file_name = "./host_boot.stream"
 
 ACK_ERR = 0
 ACK_RECEIVED = 0
