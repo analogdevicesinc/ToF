@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/l4t-base:r32.4.3
+FROM nvcr.io/nvidia/l4t-base:r35.2.0
 # LABEL io.balena.architecture="aarch64"
  
 # LABEL io.balena.qemu.version="5.2.0+balena-aarch64"
