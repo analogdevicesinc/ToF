@@ -37,13 +37,48 @@
 #include <memory>
 #include <unordered_map>
 
-//TO DO: update this once we get the final struct details
-struct CCBM {
-    int CFG_mode;
-    int width;
-    int heigth;
-    int noOfPhases;
-    int isPCM;
+struct CCBM_MODE {
+    uint8_t UserDefinedMode;
+    uint8_t CFG_mode;
+    uint16_t heigth;
+    uint16_t width;
+    uint8_t nFreq;
+    uint8_t P0Mode;
+    uint8_t TempMode;
+    uint8_t INIIndex;
+    uint16_t default_mode;
+    uint16_t isPCM;
+    uint16_t noOfPhases;
+    uint16_t spare3;
+    uint16_t spare4;
+    uint16_t spare5;
+    uint16_t spare6;
+    uint16_t spare7;
+    uint16_t spare8;
+};
+
+struct INI_TABLE_ENTRY {
+    uint8_t INIIndex;
+    uint8_t rsvd;
+    uint16_t abThreshMin;
+    uint16_t confThresh;
+    uint16_t radialThreshMin;
+    uint16_t radialThreshMax;
+    uint16_t jblfApplyFlag;
+    uint16_t jblfWindowSize;
+    uint16_t jblfGaussianSigma;
+    uint16_t jblfExponentialTerm;
+    uint16_t jblfMaxEdge;
+    uint16_t jblfABThreshold;
+    uint16_t spare0;
+    uint16_t spare1;
+    uint16_t spare2;
+    uint16_t spare3;
+    uint16_t spare4;
+    uint16_t spare5;
+    uint16_t spare6;
+    uint16_t spare7;
+    uint16_t spare8;
 };
 
 class Adsd3500Sensor : public aditof::DepthSensorInterface,
