@@ -45,7 +45,7 @@ def help():
     print(f"Network connection: {sys.argv[0]} <mode number> <ip> <config>")
     print()
     print("For example:")
-    print(f"python {sys.argv[0]} lr-qnative 10.43.0.1 config\config_adsd3500_adsd3100.json")
+    print(f"python {sys.argv[0]} 0 10.43.0.1 config\config_adsd3500_adsd3100.json")
     exit(1)
 
 if len(sys.argv) < 3 or len(sys.argv) > 4 or sys.argv[1] == "--help" or sys.argv[1] == "-h" :
@@ -93,7 +93,7 @@ status = camera1.getAvailableModes(modes)
 print("camera1.getAvailableModes()", status)
 print(modes)
 
-if mode not in modes:
+if int(mode) not in modes:
     print(f"Error: Unknown mode - {mode}")
     help()
     exit(-3)
@@ -103,7 +103,7 @@ status = camera1.getDetails(camDetails)
 print("camera1.getDetails()", status)
 print("camera1 details:", "id:", camDetails.cameraId, "connection:", camDetails.connection)
 
-status = camera1.setMode(mode)
+status = camera1.setMode(int(mode))
 print("camera1.setMode()", status)
 
 status = camera1.start()
