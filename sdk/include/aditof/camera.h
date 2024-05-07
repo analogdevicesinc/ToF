@@ -530,6 +530,14 @@ class SDK_API Camera {
                                 const std::string &frameType) = 0;
 
     /**
+     * @brief Reset the ini parameters from the chip and sets the ones stored in CCB
+     * @param mode - Camera mode to be reset
+     * @return Status
+     */
+    virtual aditof::Status
+    adsd3500ResetIniParamsForMode(const uint16_t &mode) = 0;
+
+    /**
      * @brief Set sensor configutation table
      * @param sensorConf - Configuration table name string like
      * e.g. standard, standardraw, custom and customraw
