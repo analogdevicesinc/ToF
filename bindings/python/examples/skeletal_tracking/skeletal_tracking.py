@@ -131,8 +131,7 @@ if __name__ == "__main__":
         if results_hands.multi_hand_landmarks:
         	for hand_landmarks in results_hands.multi_hand_landmarks:
         		for landmark in hand_landmarks.landmark:
-        			x, y, z = int(landmark.x * ab_map_bgr.shape[1]), int(landmark.y * ab_map_bgr.shape[0]), landmark.z
-        			cv.circle(ab_map_bgr, (x, y), 8, (0, 255, 0), -1)
+        			x, y, z = int(landmark.x * ab_map_bgr.shape[1]), int(landmark.y * ab_map_bgr.shape[0]), landmark.zcv.circle(ab_map_bgr, (x, y), 8, (0, 255, 0), -1)
 
         cv.namedWindow(WINDOW_NAME, cv.WINDOW_AUTOSIZE)
         cv.imshow(WINDOW_NAME, ab_map_bgr)
