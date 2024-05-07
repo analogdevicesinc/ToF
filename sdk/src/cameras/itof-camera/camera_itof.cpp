@@ -533,6 +533,10 @@ aditof::Status CameraItof::setIniParams(std::map<std::string, float> &params) {
     return status;
 }
 
+aditof::Status CameraItof::adsd3500ResetIniParamsForMode(const uint16_t &mode) {
+    return m_depthSensor->adsd3500_write_cmd(0x40, mode);
+}
+
 aditof::Status
 CameraItof::getAvailableModes(std::vector<uint8_t> &availableModes) const {
     using namespace aditof;
