@@ -266,9 +266,8 @@ int Adsd3500::RequestFrame(uint16_t* buffer) {
     struct v4l2_buffer buf[MAX_SUBFRAMES_COUNT];
     unsigned int buf_data_len;
     uint8_t *pdata;
-    int ret = 0;
 
-    ret = adsd3500_wait_for_buffer();
+    int ret = adsd3500_wait_for_buffer();
     if (ret < 0) {
         return -1;
     }
@@ -1100,10 +1099,10 @@ int Adsd3500::adsd3500_wait_for_buffer() {
 
     if (r == -1) {
         std::cout << "select error "
-                     << "errno: " << errno << " error: " << strerror(errno);
+                     << "errno: " << errno << " error: " << strerror(errno) << std::endl;
         return -1;
     } else if (r == 0) {
-        std::cout << "select timeout";
+        std::cout << "select timeout" << std::endl;
         return -1;
     }
     return 0;
@@ -1591,23 +1590,52 @@ int Adsd3500::adsd3500_configure_dynamic_mode_switching() {
     */
 
     adsd3500_parse_dynamic_mode_sequence_from_ini("dynamicModeSeqComp0", mode_seq0);
-    // adsd3500_parse_dynamic_mode_sequence_from_ini("dynamicModeSeqComp1", mode_seq1);
+    adsd3500_parse_dynamic_mode_sequence_from_ini("dynamicModeSeqComp1", mode_seq1);
     adsds3500_parse_dynamic_mode_repeat_count_from_ini("dynamicRptCntSeq0", mode_repeat_count0);
-    // adsds3500_parse_dynamic_mode_repeat_count_from_ini("dynamicRptCntSeq1", mode_repeat_count1);
+    adsds3500_parse_dynamic_mode_repeat_count_from_ini("dynamicRptCntSeq1", mode_repeat_count1);
 
-    size_t arraySize = sizeof(mode_seq0) / sizeof(mode_seq0[0]);
-    std::cout << "Elements of the mode_seq0: ";
-    for (size_t i = 0; i < arraySize; ++i) {
-        std::cout << static_cast<int>(mode_seq0[i]) << " ";
-    }
-    std::cout << std::endl;
+    uint16_t mode_seq0_cmd = ((mode_seq0[3] & 0x0F) << 12) | ((mode_seq0[2] & 0x0F) << 8) |  ((mode_seq0[1] & 0x0F) << 4) | (mode_seq0[0] & 0x0F);
+    uint16_t mode_seq1_cmd = ((mode_seq1[3] & 0x0F) << 12) | ((mode_seq1[2] & 0x0F) << 8) |  ((mode_seq1[1] & 0x0F) << 4) | (mode_seq1[0] & 0x0F);
+    uint16_t mode_repeat_count0_cmd = ((mode_repeat_count0[3] & 0x0F) << 12) | ((mode_repeat_count0[2] & 0x0F) << 8) |  ((mode_repeat_count0[1] & 0x0F) << 4) | (mode_repeat_count0[0] & 0x0F);
+    uint16_t mode_repeat_count1_cmd = ((mode_repeat_count1[3] & 0x0F) << 12) | ((mode_repeat_count1[2] & 0x0F) << 8) |  ((mode_repeat_count1[1] & 0x0F) << 4) | (mode_repeat_count1[0] & 0x0F);
 
-    arraySize = sizeof(mode_repeat_count0) / sizeof(mode_repeat_count0[0]);
-    std::cout << "Elements of the mode_seq0 repeat count: ";
-    for (size_t i = 0; i < arraySize; ++i) {
-        std::cout << static_cast<int>(mode_repeat_count0[i]) << " ";
+    // Print values from the .ini file.
+    printf("mode_seq0_cmd: 0x%04X\n", mode_seq0_cmd);
+    printf("mode_seq1_cmd: 0x%04X\n", mode_seq1_cmd);
+    printf("mode_repeat_count0_cmd: 0x%04X\n", mode_repeat_count0_cmd);
+    printf("mode_repeat_count1_cmd: 0x%04X\n", mode_repeat_count1_cmd);
+
+    // Write Dynamic Mode Sequence Composition and Repeat Count to the Registers.
+    ret = adsd3500_write_cmd(0x0081, mode_seq0_cmd);
+    if (ret < 0) {
+        std::cout << "Unable to set Mode Sequence 0 for Dynamic Mode Switching in ADSD3500." << std::endl;
+        return 0;
     }
-    std::cout << std::endl;
+
+    ret = adsd3500_write_cmd(0x0082, mode_seq1_cmd);
+    if (ret < 0) {
+        std::cout << "Unable to set Mode Sequence 1 for Dynamic Mode Switching in ADSD3500." << std::endl;
+        return 0;
+    }
+
+    ret = adsd3500_write_cmd(0x0083, mode_repeat_count0_cmd);
+    if (ret < 0) {
+        std::cout << "Unable to set Mode Repeat Count 0 for Dynamic Mode Switching in ADSD3500." << std::endl;
+        return 0;
+    }
+
+    ret = adsd3500_write_cmd(0x0084, mode_repeat_count1_cmd);
+    if (ret < 0) {
+        std::cout << "Unable to set Mode Repeat Count 1 for Dynamic Mode Switching in ADSD3500." << std::endl;
+        return 0;
+    }
+
+    // uint16_t* status;
+    // ret = adsd3500_read_cmd(0x0085, status, 0);
+    // if (ret < 0) {
+    //     std::cout << "Unable to read Dynamic Mode Switching status." << std::endl;
+    //     return 0;
+    // }
 
     return 0;
 }
@@ -1632,8 +1660,8 @@ int Adsd3500::adsd3500_parse_dynamic_mode_sequence_from_ini(
             return 0;
         }
         for (char c: it->second) {
-            if (!isdigit(c)) {
-                std::cout << "Invalid Mode given. Mode number can be between 0 and 9. Turning off Dynamic Mode Switching." << std::endl;
+            if (!isdigit(c) && c != 'F') {
+                std::cout << "Invalid Mode given. Mode number can be between 0 and 9 or F. Turning off Dynamic Mode Switching." << std::endl;
                 adsd3500_turnoff_dynamic_mode_switch();
                 return 0;
             }

@@ -27,8 +27,8 @@ int main(int argc, char *argv[]) {
     auto adsd3500 = Adsd3500();
 
     // Arguments from the user.
-    int mode_num = 3; // Image mode number.
-    const char*  iniFileName = "config/RawToDepthAdsd3030_lr-qnative.ini"; // Config file path.
+    int mode_num = 1; // Image mode number.
+    const char*  iniFileName = "config/RawToDepthAdsd3030_lr-native.ini"; // Config file path.
     adsd3500.ccb_as_master = 0; // Enables/Disbales CCB as master.
     
     // 1. Reset ADSD3500
@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
         return ret;
     }
 
-    int num_frames = 10;
+    int num_frames = 17;
     int buffer_height = adsd3500.xyzDealiasData.n_rows; // 256
     int buffer_width = adsd3500.xyzDealiasData.n_cols; //320
     int total_pixels = buffer_height*buffer_width;
@@ -139,7 +139,6 @@ int main(int argc, char *argv[]) {
         memcpy(ab_buffer + i * total_pixels, adsd3500.tofi_compute_context->p_ab_frame, total_pixels*sizeof(uint16_t));
         memcpy(depth_buffer + i * total_pixels, adsd3500.tofi_compute_context->p_depth_frame, total_pixels*sizeof(uint16_t));
         memcpy(conf_buffer + i * total_pixels, adsd3500.tofi_compute_context->p_conf_frame, total_pixels*sizeof(uint8_t));
-    
     }
 
     // 9. Store AB, Depth and Confidence frames on to a .bin files.
@@ -160,6 +159,6 @@ int main(int argc, char *argv[]) {
 
     // 10. Stop Stream and Close Camera
     // Handled by the ADSD3500 class destructor.   
-
+    
     return 0;
 }
