@@ -99,9 +99,9 @@ struct Adsd3500Sensor::ImplData {
 
     ImplData()
         : numVideoDevs(1), videoDevs(nullptr),
-          modeDetails{0, {}, 0, 0, 0, 0, 0, 0, 0, 0, {}},
           imagerType{SensorImagerType::IMAGER_UNKNOWN},
-          ccbVersion{CCBVersion::CCB_UNKNOWN} {}
+          ccbVersion{CCBVersion::CCB_UNKNOWN},
+          modeDetails{0, {}, 0, 0, 0, 0, 0, 0, 0, 0, {}} {}
 };
 
 // TO DO: This exists in linux_utils.h which is not included on Dragoboard.
@@ -1686,25 +1686,37 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
             return Status::GENERIC_ERROR;
         } else if (m_implData->ccbVersion == CCBVersion::CCB_VERSION1) {
 
-            if (0 && m_controls["disableCCBM"] == "0") {
+            uint16_t data;
+            status = adsd3500_read_cmd(0x39, &data);
+            if (status != Status::OK) {
+                LOG(ERROR)
+                    << "Failed to check if ccb has mode map table support!";
+                return status;
+            }
+
+            if (data == 0x0203 && m_controls["disableCCBM"] == "0") {
                 LOG(INFO) << "CCB master is supported. Reading mode details "
                              "from nvm.";
 
                 m_ccbmEnabled = true;
                 m_availableModes.clear();
 
-                //TO DO: add command to read ccmb for each mode and
-                for (int i = 0; i < 10; i++) {
-                    //Read here
+                CCBM_MODE modeStruct[6];
+                status = adsd3500_read_payload_cmd(
+                    0x24, (uint8_t *)&modeStruct[0], 156);
+                if (status != Status::OK) {
+                    LOG(ERROR) << "Failed to read mode map table from ccb!";
+                    return status;
+                }
 
-                    CCBM modeStruct;
+                for (int i = 0; i < 6; i++) {
                     DepthSensorModeDetails modeDetails;
 
-                    modeDetails.modeNumber = modeStruct.CFG_mode;
-                    modeDetails.baseResolutionHeight = modeStruct.heigth;
-                    modeDetails.baseResolutionWidth = modeStruct.width;
-                    modeDetails.numberOfPhases = modeStruct.noOfPhases;
-                    modeDetails.isPCM = modeStruct.isPCM;
+                    modeDetails.modeNumber = modeStruct[i].CFG_mode;
+                    modeDetails.baseResolutionHeight = modeStruct[i].heigth;
+                    modeDetails.baseResolutionWidth = modeStruct[i].width;
+                    modeDetails.numberOfPhases = modeStruct[i].noOfPhases;
+                    modeDetails.isPCM = modeStruct[i].isPCM;
 
                     modeDetails.frameContent.clear();
                     if (!modeDetails.isPCM) {
