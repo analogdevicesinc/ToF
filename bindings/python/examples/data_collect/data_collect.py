@@ -146,7 +146,7 @@ if __name__ == '__main__':
     if status != tof.Status.Ok:
         sys.exit("Could not initialize camera!")
 
-    status = camera1.setSensorConfiguration(args.ic);
+    status = camera1.setSensorConfiguration(args.ic)
     if status != tof.Status.Ok:
         print("Could not configure camera with ", args.ic)
     else:
@@ -222,7 +222,7 @@ if __name__ == '__main__':
     
     frameSaver = tof.FrameHandler()
     frameSaver.storeFramesToSingleFile(saveToSingleFile)
-    frameSaver.setOutputFilePath(args.folder);
+    frameSaver.setOutputFilePath(args.folder)
 
     print(f'Requesting {args.ncapture} frames!')
     
@@ -245,7 +245,7 @@ if __name__ == '__main__':
             frameSaver.saveFrameToFile(frame)
         
     end_time = time.perf_counter_ns()
-    total_time = (end_time - start_time) / 1e9;
+    total_time = (end_time - start_time) / 1e9
     
     if total_time > 0:
         measured_fps = args.ncapture / total_time
