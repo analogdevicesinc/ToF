@@ -1700,6 +1700,7 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
 
                 m_ccbmEnabled = true;
                 m_availableModes.clear();
+                m_ccbmINIContent.clear();
 
                 CCBM_MODE modeStruct[6];
                 status = adsd3500_read_payload_cmd(
@@ -1726,7 +1727,25 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
                         modeDetails.frameContent = {"ab", "metadata"};
                     }
 
+                    //Read ini file content and store it in the sdk
+                    INI_TABLE_ENTRY iniTableContent;
+                    iniTableContent.INIIndex = modeDetails.modeNumber;
+
+                    status = adsd3500_read_payload_cmd(
+                        25, (uint8_t *)(&iniTableContent), 0x26);
+                    if (status != Status::OK) {
+                        LOG(ERROR) << "Failed to read ini content from nvm";
+                        return status;
+                    }
+
+                    if (iniTableContent.INIIndex == 0xFF) {
+                        LOG(INFO) << "No ini content for mode "
+                                  << modeDetails.modeNumber << " in nvm!";
+                        continue;
+                    }
+
                     m_availableModes.emplace_back(modeDetails);
+                    m_ccbmINIContent.emplace_back(iniTableContent);
                 }
             } else {
 
