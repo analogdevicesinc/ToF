@@ -1,4 +1,4 @@
 {
-    "depthIni": "./config/RawToDepthAdsd3030_0.ini;./config/RawToDepthAdsd3030_1;./config/RawToDepthAdsd3030_2.ini;./config/RawToDepthAdsd3030_3.ini;./config/RawToDepthAdsd3030_6.ini;./config/RawToDepthAdsd3030_5.ini;./config/RawToDepthAdsd_4.ini",
+    "depthIni": "./config/RawToDepthAdsd3030_0.ini;./config/RawToDepthAdsd3030_1.ini;./config/RawToDepthAdsd3030_2.ini;./config/RawToDepthAdsd3030_3.ini;./config/RawToDepthAdsd3030_6.ini;./config/RawToDepthAdsd3030_5.ini;./config/RawToDepthAdsd_4.ini",
     "fsyncMode": "1"
 }
