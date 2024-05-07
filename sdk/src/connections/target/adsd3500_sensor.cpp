@@ -1716,6 +1716,7 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
 
             for (int i = 0; i < 6; i++) {
                 DepthSensorModeDetails modeDetails;
+                memset(&modeDetails, 0, sizeof(DepthSensorModeDetails));
 
                 modeDetails.modeNumber = modeStruct[i].CFG_mode;
                 modeDetails.baseResolutionHeight = modeStruct[i].heigth;
@@ -1733,10 +1734,11 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
 
                 //Read ini file content and store it in the sdk
                 INI_TABLE_ENTRY iniTableContent;
+                memset(&iniTableContent, 0, sizeof(INI_TABLE_ENTRY));
                 iniTableContent.INIIndex = modeDetails.modeNumber;
 
                 status = adsd3500_read_payload_cmd(
-                    25, (uint8_t *)(&iniTableContent), 0x26);
+                    0x25, (uint8_t *)(&iniTableContent), 0x26);
                 if (status != Status::OK) {
                     LOG(ERROR) << "Failed to read ini content from nvm";
                     return status;
