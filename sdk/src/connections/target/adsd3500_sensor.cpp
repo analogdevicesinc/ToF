@@ -86,7 +86,7 @@ enum class SensorImagerType {
     IMAGER_ADSD3030
 };
 
-enum class CCBVersion { CCB_UNKNOWN, CCB_VERSION0, CCB_VERSION1 };
+enum class CCBVersion { CCB_UNKNOWN, CCB_VERSION0, CCB_VERSION1, CCB_VERSION2 };
 
 struct Adsd3500Sensor::ImplData {
     uint8_t numVideoDevs;
@@ -1633,6 +1633,10 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
                 m_implData->ccbVersion = CCBVersion::CCB_VERSION1;
                 break;
             }
+            case 3: {
+                m_implData->ccbVersion = CCBVersion::CCB_VERSION2;
+                break;
+            }
             default: {
                 LOG(WARNING) << "Unknown CCB version read from ADSD3500: "
                              << ccb_version;
@@ -1684,7 +1688,8 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
         if (m_implData->ccbVersion == CCBVersion::CCB_VERSION0) {
             LOG(ERROR) << "Old modes are no longer supported!";
             return Status::GENERIC_ERROR;
-        } else if (m_implData->ccbVersion == CCBVersion::CCB_VERSION1) {
+        } else if (m_implData->ccbVersion == CCBVersion::CCB_VERSION2 &&
+                   m_controls["disableCCBM"] == "0") {
 
             uint16_t data;
             status = adsd3500_read_cmd(0x39, &data);
@@ -1694,109 +1699,104 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
                 return status;
             }
 
-            if (data == 0x0203 && m_controls["disableCCBM"] == "0") {
-                LOG(INFO) << "CCB master is supported. Reading mode details "
-                             "from nvm.";
+            LOG(INFO) << "CCB master is supported. Reading mode details "
+                         "from nvm.";
 
-                m_ccbmEnabled = true;
-                m_availableModes.clear();
-                m_ccbmINIContent.clear();
+            m_ccbmEnabled = true;
+            m_availableModes.clear();
+            m_ccbmINIContent.clear();
 
-                CCBM_MODE modeStruct[6];
+            CCBM_MODE modeStruct[6];
+            status =
+                adsd3500_read_payload_cmd(0x24, (uint8_t *)&modeStruct[0], 156);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to read mode map table from ccb!";
+                return status;
+            }
+
+            for (int i = 0; i < 6; i++) {
+                DepthSensorModeDetails modeDetails;
+
+                modeDetails.modeNumber = modeStruct[i].CFG_mode;
+                modeDetails.baseResolutionHeight = modeStruct[i].heigth;
+                modeDetails.baseResolutionWidth = modeStruct[i].width;
+                modeDetails.numberOfPhases = modeStruct[i].noOfPhases;
+                modeDetails.isPCM = modeStruct[i].isPCM;
+
+                modeDetails.frameContent.clear();
+                if (!modeDetails.isPCM) {
+                    modeDetails.frameContent = {"raw",  "depth", "ab",
+                                                "conf", "xyz",   "metadata"};
+                } else {
+                    modeDetails.frameContent = {"ab", "metadata"};
+                }
+
+                //Read ini file content and store it in the sdk
+                INI_TABLE_ENTRY iniTableContent;
+                iniTableContent.INIIndex = modeDetails.modeNumber;
+
                 status = adsd3500_read_payload_cmd(
-                    0x24, (uint8_t *)&modeStruct[0], 156);
+                    25, (uint8_t *)(&iniTableContent), 0x26);
                 if (status != Status::OK) {
-                    LOG(ERROR) << "Failed to read mode map table from ccb!";
+                    LOG(ERROR) << "Failed to read ini content from nvm";
                     return status;
                 }
 
-                for (int i = 0; i < 6; i++) {
-                    DepthSensorModeDetails modeDetails;
-
-                    modeDetails.modeNumber = modeStruct[i].CFG_mode;
-                    modeDetails.baseResolutionHeight = modeStruct[i].heigth;
-                    modeDetails.baseResolutionWidth = modeStruct[i].width;
-                    modeDetails.numberOfPhases = modeStruct[i].noOfPhases;
-                    modeDetails.isPCM = modeStruct[i].isPCM;
-
-                    modeDetails.frameContent.clear();
-                    if (!modeDetails.isPCM) {
-                        modeDetails.frameContent = {
-                            "raw", "depth", "ab", "conf", "xyz", "metadata"};
-                    } else {
-                        modeDetails.frameContent = {"ab", "metadata"};
-                    }
-
-                    //Read ini file content and store it in the sdk
-                    INI_TABLE_ENTRY iniTableContent;
-                    iniTableContent.INIIndex = modeDetails.modeNumber;
-
-                    status = adsd3500_read_payload_cmd(
-                        25, (uint8_t *)(&iniTableContent), 0x26);
-                    if (status != Status::OK) {
-                        LOG(ERROR) << "Failed to read ini content from nvm";
-                        return status;
-                    }
-
-                    if (iniTableContent.INIIndex == 0xFF) {
-                        LOG(INFO) << "No ini content for mode "
-                                  << modeDetails.modeNumber << " in nvm!";
-                        continue;
-                    }
-
-                    m_availableModes.emplace_back(modeDetails);
-                    m_ccbmINIContent.emplace_back(iniTableContent);
+                if (iniTableContent.INIIndex == 0xFF) {
+                    LOG(INFO) << "No ini content for mode "
+                              << modeDetails.modeNumber << " in nvm!";
+                    continue;
                 }
+
+                m_availableModes.emplace_back(modeDetails);
+                m_ccbmINIContent.emplace_back(iniTableContent);
+            }
+
+        } else {
+            if (m_controls["disableCCBM"] == "1") {
+                LOG(INFO) << "CCB master is disabled via control. Using "
+                             "sdk defined modes.";
             } else {
+                LOG(INFO)
+                    << "CCB master not supported. Using sdk defined modes.";
+            }
 
-                if (m_controls["disableCCBM"] == "1") {
-                    LOG(INFO) << "CCB master is disabled via control. Using "
-                                 "sdk defined modes.";
-                } else {
-                    LOG(INFO)
-                        << "CCB master not supported. Using sdk defined modes.";
-                }
+            int modeToTest = 5; // We are looking at width and height for mode 5
+            uint8_t tempDealiasParams[32] = {0};
+            tempDealiasParams[0] = modeToTest;
 
-                int modeToTest =
-                    5; // We are looking at width and height for mode 5
-                uint8_t tempDealiasParams[32] = {0};
-                tempDealiasParams[0] = modeToTest;
+            TofiXYZDealiasData tempDealiasStruct;
+            uint16_t width1 = 512;
+            uint16_t height1 = 512;
 
-                TofiXYZDealiasData tempDealiasStruct;
-                uint16_t width1 = 512;
-                uint16_t height1 = 512;
+            uint16_t width2 = 320;
+            uint16_t height2 = 256;
 
-                uint16_t width2 = 320;
-                uint16_t height2 = 256;
+            // We read dealias parameters to find out the width and height for mode 5
+            status = adsd3500_read_payload_cmd(0x02, tempDealiasParams, 32);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to read dealias parameters for adsd3500!";
+                return status;
+            }
 
-                // We read dealias parameters to find out the width and height for mode 5
-                status = adsd3500_read_payload_cmd(0x02, tempDealiasParams, 32);
-                if (status != Status::OK) {
-                    LOG(ERROR)
-                        << "Failed to read dealias parameters for adsd3500!";
-                    return status;
-                }
+            memcpy(&tempDealiasStruct, tempDealiasParams,
+                   sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
 
-                memcpy(&tempDealiasStruct, tempDealiasParams,
-                       sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
+            // If mixed modes don't have accurate dimensions, switch back to simple new modes table
+            if ((tempDealiasStruct.n_rows == width1 &&
+                 tempDealiasStruct.n_cols == height1) ||
+                (tempDealiasStruct.n_rows == width2 &&
+                 tempDealiasStruct.n_cols == height2)) {
+                m_modeSelector.setControl("mixedModes", "1");
+            } else {
+                m_modeSelector.setControl("mixedModes", "0");
+            }
 
-                // If mixed modes don't have accurate dimensions, switch back to simple new modes table
-                if ((tempDealiasStruct.n_rows == width1 &&
-                     tempDealiasStruct.n_cols == height1) ||
-                    (tempDealiasStruct.n_rows == width2 &&
-                     tempDealiasStruct.n_cols == height2)) {
-                    m_modeSelector.setControl("mixedModes", "1");
-                } else {
-                    m_modeSelector.setControl("mixedModes", "0");
-                }
-
-                //ccmb disabled. Populate struct with sdk defined variables.
-                status =
-                    m_modeSelector.getAvailableModeDetails(m_availableModes);
-                if (status != aditof::Status::OK) {
-                    LOG(ERROR) << "Failed to get available frame types for the "
-                                  "current configuration.";
-                }
+            //ccmb disabled. Populate struct with sdk defined variables.
+            status = m_modeSelector.getAvailableModeDetails(m_availableModes);
+            if (status != aditof::Status::OK) {
+                LOG(ERROR) << "Failed to get available frame types for the "
+                              "current configuration.";
             }
         }
     }
