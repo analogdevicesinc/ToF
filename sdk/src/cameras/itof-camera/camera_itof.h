@@ -124,6 +124,7 @@ class CameraItof : public aditof::Camera {
     aditof::Status getImagerType(aditof::ImagerType &imagerType) const override;
     aditof::Status adsd3500SetIniParams(
         const std::map<std::string, float> &iniKeyValPairs) override;
+    aditof::Status adsd3500ResetIniParamsForMode(const uint16_t &mode) override;
     aditof::Status
     saveDepthParamsToJsonFile(const std::string &savePathFile) override;
 
