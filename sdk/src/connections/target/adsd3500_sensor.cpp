@@ -98,10 +98,10 @@ struct Adsd3500Sensor::ImplData {
     std::string fw_ver;
 
     ImplData()
-        : numVideoDevs(1), videoDevs(nullptr),
-          imagerType{SensorImagerType::IMAGER_UNKNOWN},
-          ccbVersion{CCBVersion::CCB_UNKNOWN},
-          modeDetails{0, {}, 0, 0, 0, 0, 0, 0, 0, 0, {}} {}
+        : numVideoDevs(1),
+          videoDevs(nullptr), imagerType{SensorImagerType::IMAGER_UNKNOWN},
+          ccbVersion{CCBVersion::CCB_UNKNOWN}, modeDetails{0, {}, 0, 0, 0, 0,
+                                                           0, 0,  0, 0, {}} {}
 };
 
 // TO DO: This exists in linux_utils.h which is not included on Dragoboard.
@@ -1749,6 +1749,8 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
                               << modeDetails.modeNumber << " in nvm!";
                     continue;
                 }
+
+                iniTableContent.modeNumber = modeDetails.modeNumber;
 
                 m_availableModes.emplace_back(modeDetails);
                 m_ccbmINIContent.emplace_back(iniTableContent);
