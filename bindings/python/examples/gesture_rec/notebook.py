@@ -13,10 +13,10 @@ CONFIG_OPTIONS = [
 ]
 
 MODE_OPTIONS = [
-    "sr-qnative",
-    "lr-qnative",
-    "sr-native",
-    "lr-native"
+    "0",
+    "1",
+    "2",
+    "3"
 ]
 
 # Global variables for the program
@@ -189,7 +189,7 @@ class GestureDemo(Frame):
             "connection:",
             camDetails.connection)
 
-        status = self.cameras[0].setMode(MODE_OPTIONS_CHOSEN)
+        status = self.cameras[0].setMode(int(MODE_OPTIONS_CHOSEN))
         if not status:
             return
         print("camera1.setMode()", status)
