@@ -26,6 +26,8 @@
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
 #include "../crc32/crc.h"
+#include <sstream>
+#include <cstdint>
 
 #include <iostream>
 #include <vector>
@@ -1582,22 +1584,33 @@ int Adsd3500::adsd3500_configure_dynamic_mode_switching() {
     uint8_t mode_repeat_count1[4]; // Represents the Mode Repeat count for Mode Composition sequence 1.
     /*Note: 
     1. dynamicModeSeqComp0 and dynamicModeSeqComp1 represents the sequence of imaging modes to be used when multiple frames are requested from the Imager.
-    For eg., if dynamicModeSeqComp0 = 0101, then the first image would be captured with mode 0 and the second image would be captured with mode 1 and so on.
+    For eg., if dynamicModeSeqComp0=0x1010, then the first image would be captured with mode 0 and the second image would be captured with mode 1 and so on.
     2. dynamicRptCntSeq0 and dynamicRptCntSeq1 represents the number of times a particular imaging mode to be used before switching the mode to 
     the next mode mentioned on the dynamicModeSeqComp.
-    For eg., if dynamicModeSeqComp0 = 0101 and dynamicRptCntSeq0 = 2321, then first two frames captured be with mode0,
-    and the next three frames would be captured with mode 1 and so on. So the sequence would look like this.. 00111001.
+    For eg., if dynamicModeSeqComp0=0x1010 and dynamicRptCntSeq0=0x2132, then first two frames captured be with mode 0,
+    and the next three frames would be captured with mode 1 and so on. So the sequence would look like this.. 00111011.
     */
-
-    adsd3500_parse_dynamic_mode_sequence_from_ini("dynamicModeSeqComp0", mode_seq0);
-    adsd3500_parse_dynamic_mode_sequence_from_ini("dynamicModeSeqComp1", mode_seq1);
-    adsds3500_parse_dynamic_mode_repeat_count_from_ini("dynamicRptCntSeq0", mode_repeat_count0);
-    adsds3500_parse_dynamic_mode_repeat_count_from_ini("dynamicRptCntSeq1", mode_repeat_count1);
-
-    uint16_t mode_seq0_cmd = ((mode_seq0[3] & 0x0F) << 12) | ((mode_seq0[2] & 0x0F) << 8) |  ((mode_seq0[1] & 0x0F) << 4) | (mode_seq0[0] & 0x0F);
-    uint16_t mode_seq1_cmd = ((mode_seq1[3] & 0x0F) << 12) | ((mode_seq1[2] & 0x0F) << 8) |  ((mode_seq1[1] & 0x0F) << 4) | (mode_seq1[0] & 0x0F);
-    uint16_t mode_repeat_count0_cmd = ((mode_repeat_count0[3] & 0x0F) << 12) | ((mode_repeat_count0[2] & 0x0F) << 8) |  ((mode_repeat_count0[1] & 0x0F) << 4) | (mode_repeat_count0[0] & 0x0F);
-    uint16_t mode_repeat_count1_cmd = ((mode_repeat_count1[3] & 0x0F) << 12) | ((mode_repeat_count1[2] & 0x0F) << 8) |  ((mode_repeat_count1[1] & 0x0F) << 4) | (mode_repeat_count1[0] & 0x0F);
+    uint16_t mode_seq0_cmd, mode_seq1_cmd, mode_repeat_count0_cmd, mode_repeat_count1_cmd;
+    auto it = iniKeyValPairs.find("dynamicModeSeqComp0");
+    if (it != iniKeyValPairs.end()) {
+        std::istringstream iss(std::string(it->second));
+        iss >> std::hex >> mode_seq0_cmd;
+    }
+    it = iniKeyValPairs.find("dynamicModeSeqComp1");
+    if (it != iniKeyValPairs.end()) {
+        std::istringstream iss(std::string(it->second));
+        iss >> std::hex >> mode_seq1_cmd;
+    }
+    it = iniKeyValPairs.find("dynamicRptCntSeq0");
+    if (it != iniKeyValPairs.end()) {
+        std::istringstream iss(std::string(it->second));
+        iss >> std::hex >> mode_repeat_count0_cmd;
+    }
+    it = iniKeyValPairs.find("dynamicRptCntSeq1");
+    if (it != iniKeyValPairs.end()) {
+        std::istringstream iss(std::string(it->second));
+        iss >> std::hex >> mode_repeat_count1_cmd;
+    }
 
     // Print values from the .ini file.
     printf("mode_seq0_cmd: 0x%04X\n", mode_seq0_cmd);
@@ -1630,13 +1643,6 @@ int Adsd3500::adsd3500_configure_dynamic_mode_switching() {
         return 0;
     }
 
-    // uint16_t* status;
-    // ret = adsd3500_read_cmd(0x0085, status, 0);
-    // if (ret < 0) {
-    //     std::cout << "Unable to read Dynamic Mode Switching status." << std::endl;
-    //     return 0;
-    // }
-
     return 0;
 }
 
@@ -1645,57 +1651,6 @@ int Adsd3500::adsd3500_turnoff_dynamic_mode_switch() {
     if (ret < 0) {
         std::cout << "Unable to turn off Dynamic Mode Switching in ADSD3500." << std::endl;
     }
-    return 0;
-}
-
-int Adsd3500::adsd3500_parse_dynamic_mode_sequence_from_ini(
-    const std::string &modeSequenceString, uint8_t* mode_seq
-) {
-
-    auto it = iniKeyValPairs.find(modeSequenceString);
-    if (it != iniKeyValPairs.end()) {
-        if (!isValidHexadecimalString(it->second)) {
-            std::cout << "The Dynamic Mode Sequence Composition string is not valid. Turning off Dynamic Mode Switching." << std::endl;
-            adsd3500_turnoff_dynamic_mode_switch();
-            return 0;
-        }
-        for (char c: it->second) {
-            if (!isdigit(c) && c != 'F') {
-                std::cout << "Invalid Mode given. Mode number can be between 0 and 9 or F. Turning off Dynamic Mode Switching." << std::endl;
-                adsd3500_turnoff_dynamic_mode_switch();
-                return 0;
-            }
-        }
-        for (size_t i = 0; i < it->second.size(); ++i) {
-            mode_seq[i] = std::stoi(std::string(1, it->second[i]));
-        }           
-    } else {
-        std::cout << "The Dynamic Mode Sequence Composition not found on the .ini file. Turning off Dynamic Mode Switching." << std::endl;
-        adsd3500_turnoff_dynamic_mode_switch();
-        return 0;
-    }
-    return 0;
-}
-
-int Adsd3500::adsds3500_parse_dynamic_mode_repeat_count_from_ini(
-    const std::string &modeRepeatCountString, uint8_t* mode_repeat_count
-) {
-    auto it = iniKeyValPairs.find(modeRepeatCountString);
-    if (it != iniKeyValPairs.end()) {
-        if (!isValidHexadecimalString(it->second)) {
-            std::cout << "The Dynamic Mode Repeat count sequence string is not valid. Turning off Dynamic Mode Switching." << std::endl;
-            adsd3500_turnoff_dynamic_mode_switch();
-            return 0;
-        }
-        for (size_t i = 0; i < it->second.size(); ++i) {
-            mode_repeat_count[i] = std::stoi(std::string(1, it->second[i]));
-        }           
-    } else {
-        std::cout << "The Dynamic Mode repeat count "<< modeRepeatCountString << " is not found on the .ini file. Turning off Dynamic Mode Switching." << std::endl;
-        adsd3500_turnoff_dynamic_mode_switch();
-        return 0;
-    }
-
     return 0;
 }
 
@@ -1940,21 +1895,5 @@ int32_t tof_open(const char *tof_device) {
         return -1;
     }
     return fd;
-}
-
-bool isValidHexadecimalString(const std::string& str) {
-    // Check if string length is 4
-    if (str.length() != 4) {
-        return false;
-    }
-
-    // Check if each character is a valid hexadecimal digit
-    for (char c : str) {
-        if (!isxdigit(c)) { // Check if character is a valid hexadecimal digit
-            return false;
-        }
-    }
-
-    return true;
 }
 

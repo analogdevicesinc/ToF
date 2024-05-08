@@ -27,8 +27,8 @@ int main(int argc, char *argv[]) {
     auto adsd3500 = Adsd3500();
 
     // Arguments from the user.
-    int mode_num = 1; // Image mode number.
-    const char*  iniFileName = "config/RawToDepthAdsd3030_lr-native.ini"; // Config file path.
+    int mode_num = 2; // Image mode number.
+    const char*  iniFileName = "config/RawToDepthAdsd3030_sr-qnative.ini"; // Config file path.
     adsd3500.ccb_as_master = 0; // Enables/Disbales CCB as master.
     
     // 1. Reset ADSD3500
@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
         return ret;
     }
 
-    int num_frames = 17;
+    int num_frames = 10;
     int buffer_height = adsd3500.xyzDealiasData.n_rows; // 256
     int buffer_width = adsd3500.xyzDealiasData.n_cols; //320
     int total_pixels = buffer_height*buffer_width;

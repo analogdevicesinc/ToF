@@ -186,9 +186,6 @@ class Adsd3500 {
 		int adsd3500_set_control(const std::string &control, const std::string &value);
 		int adsd3500_configure_dynamic_mode_switching();
 		int adsd3500_turnoff_dynamic_mode_switch();
-		int adsd3500_parse_dynamic_mode_sequence_from_ini(const std::string &modeSequenceString, uint8_t* mode_seq);
-		int adsds3500_parse_dynamic_mode_repeat_count_from_ini(const std::string &modeRepeatCountString, uint8_t* mode_repeat_count);
-
 };
 
 // Non-member functions
@@ -200,7 +197,6 @@ bool v4l2_ctrl_get(int fd, uint32_t id, uint8_t *val);
 int32_t write_cmd(int fd, uint8_t *ptr, uint16_t len);
 int32_t read_cmd(int fd, uint8_t *ptr, uint16_t len, uint8_t *rcmd, uint16_t rlen);
 int32_t tof_open(const char *tof_device);
-bool isValidHexadecimalString(const std::string& str);
 
 // Static functions
 static uint32_t cal_crc32(uint32_t crc, unsigned char *buf, size_t len);
