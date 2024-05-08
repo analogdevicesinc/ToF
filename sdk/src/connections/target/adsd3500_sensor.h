@@ -79,6 +79,7 @@ struct INI_TABLE_ENTRY {
     uint16_t spare6;
     uint16_t spare7;
     uint16_t spare8;
+    uint16_t modeNumber;
 };
 
 class Adsd3500Sensor : public aditof::DepthSensorInterface,

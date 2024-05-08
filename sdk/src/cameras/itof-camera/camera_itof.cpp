@@ -325,7 +325,7 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
                                });
 
     if (modeIt == m_availableSensorModeDetails.end()) {
-        LOG(WARNING) << "Mode: " << mode << " not supported by camera";
+        LOG(WARNING) << "Mode: " << (int)mode << " not supported by camera";
         return Status::INVALID_ARGUMENT;
     }
 
