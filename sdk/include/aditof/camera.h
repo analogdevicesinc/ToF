@@ -535,7 +535,7 @@ class SDK_API Camera {
      * @return Status
      */
     virtual aditof::Status
-    adsd3500ResetIniParamsForMode(const uint16_t &mode) = 0;
+    adsd3500ResetIniParamsForMode(const uint16_t mode) = 0;
 
     /**
      * @brief Set sensor configutation table
