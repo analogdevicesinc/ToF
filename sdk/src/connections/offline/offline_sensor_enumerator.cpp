@@ -2,8 +2,13 @@
 #include "offline_depth_sensor.h"
 
 OfflineSensorEnumerator::OfflineSensorEnumerator() {
-    m_sensorsInfo.emplace_back(
-        std::string(std::string(RESOURCES) + "/offline"));
+#if TARGET
+    std::string pathToFrames =
+        std::string(RESOURCES) + std::string("/offline/adsd3500_raw");
+#else
+    std::string pathToFrames = std::string(RESOURCES) + std::string("/offline");
+#endif
+    m_sensorsInfo.emplace_back(pathToFrames);
 }
 
 aditof::Status OfflineSensorEnumerator::getDepthSensors(
