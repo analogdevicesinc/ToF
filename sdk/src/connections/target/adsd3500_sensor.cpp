@@ -487,6 +487,7 @@ aditof::Status Adsd3500Sensor::setMode(const uint8_t &mode) {
             if (mode == table.modeNumber) {
                 modeTable = table;
                 modeFound = true;
+                break;
             }
         }
 
