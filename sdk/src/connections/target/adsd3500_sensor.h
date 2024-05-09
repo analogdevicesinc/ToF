@@ -37,7 +37,7 @@
 #include <memory>
 #include <unordered_map>
 
-struct CCBM_MODE {
+struct CcbMode {
     uint8_t UserDefinedMode;
     uint8_t CFG_mode;
     uint16_t heigth;
@@ -57,7 +57,7 @@ struct CCBM_MODE {
     uint16_t spare8;
 };
 
-struct INI_TABLE_ENTRY {
+struct IniTableEntry {
     uint8_t INIIndex;
     uint8_t rsvd;
     uint16_t abThreshMin;
@@ -215,7 +215,7 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     std::unordered_map<void *, aditof::SensorInterruptCallback>
         m_interruptCallbackMap;
     std::vector<aditof::DepthSensorModeDetails> m_availableModes;
-    std::vector<INI_TABLE_ENTRY> m_ccbmINIContent;
+    std::vector<IniTableEntry> m_ccbmINIContent;
     BufferProcessor *m_bufferProcessor;
     bool m_depthComputeOnTarget;
     int m_chipStatus;
