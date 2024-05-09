@@ -1707,7 +1707,7 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
             m_availableModes.clear();
             m_ccbmINIContent.clear();
 
-            CCBM_MODE modeStruct[6];
+            CcbMode modeStruct[6];
             status =
                 adsd3500_read_payload_cmd(0x24, (uint8_t *)&modeStruct[0], 156);
             if (status != Status::OK) {
@@ -1734,8 +1734,8 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
                 }
 
                 //Read ini file content and store it in the sdk
-                INI_TABLE_ENTRY iniTableContent;
-                memset(&iniTableContent, 0, sizeof(INI_TABLE_ENTRY));
+                IniTableEntry iniTableContent;
+                memset(&iniTableContent, 0, sizeof(IniTableEntry));
                 iniTableContent.INIIndex = modeDetails.modeNumber;
 
                 status = adsd3500_read_payload_cmd(
