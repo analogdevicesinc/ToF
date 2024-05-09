@@ -115,6 +115,20 @@ if (WITH_OFFLINE)
                         file(DOWNLOAD "${MODE_URL}" "${MODE_PATH}")
                 endif()
         endforeach()
+
+        if (ON_TARGET)
+                make_directory("${RESOURCES_OFFLINE_DIR}/adsd3500_raw")
+
+                message("Downloading raw frames into ${RESOURCES_OFFLINE_DIR}/adsd3500_raw")
+                foreach(MODE IN LISTS MODE_FILE)
+                set(MODE_URL "swdownloads.analog.com/cse/aditof/resources/itof/offline/adsd3500_raw/${MODE}")
+                set(MODE_PATH "${RESOURCES_OFFLINE_DIR}/adsd3500_raw/${MODE}")
+
+                if (NOT EXISTS ${MODE_PATH})
+                        file(DOWNLOAD "${MODE_URL}" "${MODE_PATH}")
+                endif()
+        endforeach()
+        endif()
 endif()
 
 if(WITH_GLOG_DEPENDENCY)
