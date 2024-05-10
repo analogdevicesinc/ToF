@@ -248,55 +248,90 @@ aditof::Status OfflineDepthSensor::adsd3500_read_payload_cmd(
         if (readback_data[0] == 0) {
             dealiasStruct.n_rows = 1024;
             dealiasStruct.n_cols = 1024;
+            dealiasStruct.n_freqs = 2;
             dealiasStruct.row_bin_factor = 1;
             dealiasStruct.col_bin_factor = 1;
             dealiasStruct.n_sensor_rows = 1024;
             dealiasStruct.n_sensor_cols = 1024;
+            dealiasStruct.FreqIndex[0] = 1;
+            dealiasStruct.FreqIndex[1] = 2;
+            dealiasStruct.FreqIndex[2] = 0;
+            dealiasStruct.Freq[0] = 14200;
+            dealiasStruct.Freq[1] = 17750;
+            dealiasStruct.Freq[2] = 0;
         } else if (readback_data[0] == 1) {
             dealiasStruct.n_rows = 1024;
             dealiasStruct.n_cols = 1024;
+            dealiasStruct.n_freqs = 3;
             dealiasStruct.row_bin_factor = 1;
             dealiasStruct.col_bin_factor = 1;
             dealiasStruct.n_sensor_rows = 1024;
             dealiasStruct.n_sensor_cols = 1024;
+            dealiasStruct.FreqIndex[0] = 1;
+            dealiasStruct.FreqIndex[1] = 2;
+            dealiasStruct.FreqIndex[2] = 3;
+            dealiasStruct.Freq[0] = 19800;
+            dealiasStruct.Freq[1] = 18900;
+            dealiasStruct.Freq[2] = 5400;
         } else if (readback_data[0] == 2) {
             dealiasStruct.n_rows = 512;
             dealiasStruct.n_cols = 512;
+            dealiasStruct.n_freqs = 2;
             dealiasStruct.row_bin_factor = 1;
             dealiasStruct.col_bin_factor = 1;
             dealiasStruct.n_sensor_rows = 1024;
             dealiasStruct.n_sensor_cols = 1024;
+            dealiasStruct.FreqIndex[0] = 1;
+            dealiasStruct.FreqIndex[1] = 2;
+            dealiasStruct.FreqIndex[2] = 0;
+            dealiasStruct.Freq[0] = 14200;
+            dealiasStruct.Freq[1] = 17750;
+            dealiasStruct.Freq[2] = 0;
         } else if (readback_data[0] == 3) {
             dealiasStruct.n_rows = 512;
             dealiasStruct.n_cols = 512;
+            dealiasStruct.n_freqs = 3;
             dealiasStruct.row_bin_factor = 1;
             dealiasStruct.col_bin_factor = 1;
             dealiasStruct.n_sensor_rows = 1024;
             dealiasStruct.n_sensor_cols = 1024;
+            dealiasStruct.FreqIndex[0] = 1;
+            dealiasStruct.FreqIndex[1] = 2;
+            dealiasStruct.FreqIndex[2] = 3;
+            dealiasStruct.Freq[0] = 19800;
+            dealiasStruct.Freq[1] = 18900;
+            dealiasStruct.Freq[2] = 5400;
         } else if (readback_data[0] == 5) {
             dealiasStruct.n_rows = 512;
             dealiasStruct.n_cols = 512;
+            dealiasStruct.n_freqs = 3;
             dealiasStruct.row_bin_factor = 1;
             dealiasStruct.col_bin_factor = 1;
             dealiasStruct.n_sensor_rows = 1024;
             dealiasStruct.n_sensor_cols = 1024;
+            dealiasStruct.FreqIndex[0] = 1;
+            dealiasStruct.FreqIndex[1] = 2;
+            dealiasStruct.FreqIndex[2] = 3;
+            dealiasStruct.Freq[0] = 19800;
+            dealiasStruct.Freq[1] = 18900;
+            dealiasStruct.Freq[2] = 5400;
         } else if (readback_data[0] == 6) {
             dealiasStruct.n_rows = 512;
             dealiasStruct.n_cols = 512;
+            dealiasStruct.n_freqs = 2;
             dealiasStruct.row_bin_factor = 1;
             dealiasStruct.col_bin_factor = 1;
             dealiasStruct.n_sensor_rows = 1024;
             dealiasStruct.n_sensor_cols = 1024;
+            dealiasStruct.FreqIndex[0] = 1;
+            dealiasStruct.FreqIndex[1] = 2;
+            dealiasStruct.FreqIndex[2] = 0;
+            dealiasStruct.Freq[0] = 14200;
+            dealiasStruct.Freq[1] = 17750;
+            dealiasStruct.Freq[2] = 0;
         }
-        dealiasStruct.n_freqs = 2;
         dealiasStruct.n_offset_rows = 0;
         dealiasStruct.n_offset_cols = 0;
-        dealiasStruct.FreqIndex[0] = 1;
-        dealiasStruct.FreqIndex[1] = 2;
-        dealiasStruct.FreqIndex[2] = 0;
-        dealiasStruct.Freq[0] = 14200;
-        dealiasStruct.Freq[1] = 17750;
-        dealiasStruct.Freq[2] = 0;
         memcpy(readback_data, &dealiasStruct,
                sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
     } else {
