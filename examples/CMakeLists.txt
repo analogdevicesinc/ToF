@@ -17,6 +17,9 @@ add_subdirectory(test_temp_compensation2)
 add_subdirectory(test_misc_APIs)
 add_subdirectory(test_mipi_speed)
 add_subdirectory(test_generic_template)
+add_subdirectory(test_sensor_enum)
+add_subdirectory(test_depth_sensor)
+add_subdirectory(test_depth_sensor_control)
 
 if (NOT NXP)
     add_subdirectory(tof-viewer)
@@ -42,6 +45,9 @@ if (NXP)
 	$<TARGET_FILE:test_misc_APIs>
 	$<TARGET_FILE:test_mipi_speed>
 	$<TARGET_FILE:test_generic_template>
+	$<TARGET_FILE:test_sensor_enum>
+	$<TARGET_FILE:test_depth_sensor>
+	$<TARGET_FILE:test_depth_sensor_control>
 
         DESTINATION ${CMAKE_INSTALL_BINDIR} )
 elseif(WIN32)
@@ -62,6 +68,9 @@ elseif(WIN32)
 	$<TARGET_FILE:test_misc_APIs>
 	$<TARGET_FILE:test_mipi_speed>
 	$<TARGET_FILE:test_generic_template>
+	$<TARGET_FILE:test_sensor_enum>
+	$<TARGET_FILE:test_depth_sensor>
+	$<TARGET_FILE:test_depth_sensor_control>
         $<TARGET_FILE:ADIToFGUI>
         DESTINATION ${CMAKE_INSTALL_BINDIR} )
 endif()
