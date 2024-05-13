@@ -68,11 +68,11 @@ CameraItof::CameraItof(
       m_loadedConfigData(false), m_xyzEnabled(true), m_xyzSetViaApi(false),
       m_cameraFps(0), m_fsyncMode(-1), m_mipiOutputSpeed(-1),
       m_enableTempCompenstation(-1), m_enableMetaDatainAB(-1),
-      m_enableEdgeConfidence(-1), m_modesVersion(0),
+      m_enableMetaDataInRaw(-1), m_enableEdgeConfidence(-1), m_modesVersion(0),
       m_xyzTable({nullptr, nullptr, nullptr}),
       m_imagerType(aditof::ImagerType::UNSET), m_dropFirstFrame(true),
-      m_dropFrameOnce(true), m_enableDepthCompute(true), m_enableAdsd3500Processing(true),
-      m_sensorConfigurationCache("standard") {
+      m_dropFrameOnce(true), m_enableDepthCompute(true),
+      m_enableAdsd3500Processing(true), m_sensorConfigurationCache("standard") {
 
     FloatToLinGenerateTable();
     memset(&m_xyzTable, 0, sizeof(m_xyzTable));
@@ -346,38 +346,69 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
         }
     }
 
+    if (m_sensorConfigurationCache != m_sensorConfiguration) {
+        if (m_sensorConfiguration == "imagerRaw") {
+            //TO DO: Enable bypass function
+        } else {
+            //TO DO: Disable bypass function
+        }
+
+        m_sensorConfigurationCache = m_sensorConfiguration;
+    }
+
     UtilsIni::getKeyValuePairsFromIni(m_ini_depth, m_iniKeyValPairs);
     setAdsd3500WithIniParams(m_iniKeyValPairs);
     configureSensorModeDetails();
     m_details.mode = mode;
 
-    if (m_enableMetaDatainAB > 0) {
-        if (!m_pcmFrame) {
+    if (m_sensorConfigurationCache == "standard") {
+        if (m_enableMetaDatainAB > 0) {
+            if (!m_pcmFrame) {
+                status = adsd3500SetEnableMetadatainAB(m_enableMetaDatainAB);
+                if (status != Status::OK) {
+                    LOG(ERROR) << "Failed to set enableMetaDatainAB.";
+                    return status;
+                }
+                LOG(INFO)
+                    << "Metadata in AB is enabled and it is stored in the "
+                       "first 128 bytes.";
+
+            } else {
+                status = adsd3500SetEnableMetadatainAB(0);
+                if (status != Status::OK) {
+                    LOG(ERROR) << "Failed to disable enableMetaDatainAB.";
+                    return status;
+                }
+                LOG(INFO) << "Metadata in AB is disabled for this frame type.";
+            }
+
+        } else {
             status = adsd3500SetEnableMetadatainAB(m_enableMetaDatainAB);
             if (status != Status::OK) {
                 LOG(ERROR) << "Failed to set enableMetaDatainAB.";
                 return status;
             }
-            LOG(INFO) << "Metadata in AB is enabled and it is stored in the "
+
+            LOG(WARNING) << "Metadata in AB is disabled.";
+        }
+    } else {
+        if (m_enableMetaDataInRaw > 0) {
+            status = adsd3500SetEnableMetadataInRaw(m_enableMetaDataInRaw);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to set enableMetaDataInRaw.";
+                return status;
+            }
+            LOG(INFO) << "Metadata in Raw is enabled and it is stored in the "
                          "first 128 bytes.";
 
         } else {
-            status = adsd3500SetEnableMetadatainAB(0);
+            status = adsd3500SetEnableMetadataInRaw(0);
             if (status != Status::OK) {
-                LOG(ERROR) << "Failed to disable enableMetaDatainAB.";
+                LOG(ERROR) << "Failed to disable enableMetaDataInRaw.";
                 return status;
             }
-            LOG(INFO) << "Metadata in AB is disabled for this frame type.";
+            LOG(INFO) << "Metadata in Raw is disabled.";
         }
-
-    } else {
-        status = adsd3500SetEnableMetadatainAB(m_enableMetaDatainAB);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Failed to set enableMetaDatainAB.";
-            return status;
-        }
-
-        LOG(WARNING) << "Metadata in AB is disabled.";
     }
 
     LOG(INFO) << "Using ini file: " << m_ini_depth;
@@ -386,16 +417,6 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
     if (status != Status::OK) {
         LOG(ERROR) << "Failed to get frame type details!";
         return status;
-    }
-
-    if(m_sensorConfigurationCache != m_sensorConfiguration){
-        if(m_sensorConfiguration == "imagerRaw"){
-            //TO DO: Enable bypass function
-        } else {
-            //TO DO: Disable bypass function
-        }
-
-        m_sensorConfigurationCache = m_sensorConfiguration;
     }
 
     status = m_depthSensor->setMode(mode);
@@ -567,7 +588,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
     }
 
     uint16_t *frameDataLocation = nullptr;
-    if(m_sensorConfigurationCache != "standard"){
+    if (m_sensorConfigurationCache != "standard") {
         frame->getData("raw", &frameDataLocation);
     } else if (!m_pcmFrame) {
         frame->getData("frameData", &frameDataLocation);
@@ -596,7 +617,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
         return status;
     }
 
-    if(m_sensorConfigurationCache != "standard"){
+    if (m_sensorConfigurationCache != "standard") {
         return Status::OK;
     }
 
@@ -628,7 +649,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
         return status;
     }
 
-    if (m_enableMetaDatainAB) {
+    if (m_enableMetaDatainAB || m_enableMetaDataInRaw) {
         uint16_t *abFrame;
         frame->getData("ab", &abFrame);
         memcpy(reinterpret_cast<uint8_t *>(&metadata), abFrame,
@@ -647,6 +668,15 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
         if (m_pcmFrame) {
             metadata.bitsInAb = 16;
         }
+    }
+
+    if (m_sensorConfigurationCache != "standard") {
+        metadata.isRaw = true;
+    }
+
+    if (m_enableMetaDataInRaw) {
+        metadata.width = m_modeDetailsCache.frameWidthInBytes;
+        metadata.height = m_modeDetailsCache.frameHeightInBytes;
     }
 
     metadata.xyzEnabled = m_xyzEnabled;
@@ -1230,10 +1260,18 @@ void CameraItof::configureSensorModeDetails() {
     it = m_iniKeyValPairs.find("headerSize");
     if (it != m_iniKeyValPairs.end()) {
         value = it->second;
-        if (std::stoi(value) == 128) {
-            m_enableMetaDatainAB = 1;
+        if (m_sensorConfigurationCache == "standard") {
+            if (std::stoi(value) == 128) {
+                m_enableMetaDatainAB = 1;
+            } else {
+                m_enableMetaDatainAB = 0;
+            }
         } else {
-            m_enableMetaDatainAB = 0;
+            if (std::stoi(value) == 128) {
+                m_enableMetaDataInRaw = 1;
+            } else {
+                m_enableMetaDataInRaw = 0;
+            }
         }
     } else {
         LOG(WARNING) << "headerSize was not found in .ini file";
@@ -1746,6 +1784,15 @@ aditof::Status CameraItof::adsd3500SetEnableMetadatainAB(uint16_t value) {
 aditof::Status CameraItof::adsd3500GetEnableMetadatainAB(uint16_t &value) {
     return m_depthSensor->adsd3500_read_cmd(
         0x0037, reinterpret_cast<uint16_t *>(&value));
+}
+
+aditof::Status CameraItof::adsd3500SetEnableMetadataInRaw(uint16_t value) {
+    return m_depthSensor->adsd3500_write_cmd(0x0077, value);
+}
+
+aditof::Status CameraItof::adsd3500GetEnableMetadataInRaw(uint16_t &value) {
+    return m_depthSensor->adsd3500_read_cmd(
+        0x0078, reinterpret_cast<uint16_t *>(&value));
 }
 
 aditof::Status CameraItof::adsd3500SetGenericTemplate(uint16_t reg,

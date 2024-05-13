@@ -100,7 +100,7 @@ class CameraItof : public aditof::Camera {
     aditof::Status adsd3500SetJBLFABThreshold(uint16_t threshold) override;
     aditof::Status adsd3500SetJBLFGaussianSigma(uint16_t value) override;
     aditof::Status adsd3500GetJBLFGaussianSigma(uint16_t &value) override;
-    aditof::Status adsd3500SetJBLFExponentialTerm(uint16_t value) override;
+    aditof::Status adsd3500SetJBLFExponentialTerm(uint16_t value) overridse;
     aditof::Status adsd3500GetJBLFExponentialTerm(uint16_t &value) override;
     aditof::Status adsd3500GetFrameRate(uint16_t &fps) override;
     aditof::Status adsd3500SetFrameRate(uint16_t fps) override;
@@ -112,6 +112,8 @@ class CameraItof : public aditof::Camera {
     adsd3500SetEnableTemperatureCompensation(uint16_t value) override;
     aditof::Status adsd3500SetEnableMetadatainAB(uint16_t value) override;
     aditof::Status adsd3500GetEnableMetadatainAB(uint16_t &value) override;
+    aditof::Status adsd3500SetEnableMetadataInRaw(uint16_t value) override;
+    aditof::Status adsd3500GetEnableMetadataInRaw(uint16_t &value) override;
     aditof::Status adsd3500SetGenericTemplate(uint16_t reg,
                                               uint16_t value) override;
     aditof::Status adsd3500GetGenericTemplate(uint16_t reg,
@@ -244,6 +246,7 @@ class CameraItof : public aditof::Camera {
     int16_t m_mipiOutputSpeed;
     int16_t m_enableTempCompenstation;
     int16_t m_enableMetaDatainAB;
+    int16_t m_enableMetaDataInRaw;
     int16_t m_enableEdgeConfidence;
     std::map<std::string, std::string> m_iniKeyValPairs;
     //pair between firmware version and git hash

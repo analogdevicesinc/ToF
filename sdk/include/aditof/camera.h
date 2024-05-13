@@ -468,6 +468,20 @@ class SDK_API Camera {
      * @return Status
      */
     virtual aditof::Status adsd3500GetEnableMetadatainAB(uint16_t &value) = 0;
+ 
+    /**
+     * @brief Set Enable Metadata in the Raw frame
+     * @param[in] value - See "Enable/Disable Output Metadata in Raw Frame" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual aditof::Status adsd3500SetEnableMetadataInRaw(uint16_t value) = 0;
+
+    /**
+     * @brief Get state of Enable Metadata in the Raw frame
+     * @param[out] value - See "Get Output Metadata in Raw Frame status" at https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175x-adsd3500
+     * @return Status
+     */
+    virtual aditof::Status adsd3500GetEnableMetadataInRaw(uint16_t &value) = 0;
 
     /**
      * @brief Generic ADSD3500 function for commands not defined in the SDK (yet)

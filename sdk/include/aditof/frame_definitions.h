@@ -253,6 +253,11 @@ struct Metadata {
     * @brief Laser temperature in degrees Celsius
     */
     int32_t laserTemperature;
+
+    /**
+    * @brief Set to true if the frame is not processed or partially processed
+    */
+    int32_t isRaw;
 };
 #pragma pack(pop)
 
