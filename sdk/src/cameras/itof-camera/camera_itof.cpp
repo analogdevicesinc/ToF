@@ -71,7 +71,8 @@ CameraItof::CameraItof(
       m_enableEdgeConfidence(-1), m_modesVersion(0),
       m_xyzTable({nullptr, nullptr, nullptr}),
       m_imagerType(aditof::ImagerType::UNSET), m_dropFirstFrame(true),
-      m_dropFrameOnce(true) {
+      m_dropFrameOnce(true), m_enableDepthCompute(true), m_enableAdsd3500Processing(true),
+      m_sensorConfigurationCache("standard") {
 
     FloatToLinGenerateTable();
     memset(&m_xyzTable, 0, sizeof(m_xyzTable));
@@ -106,6 +107,10 @@ CameraItof::CameraItof(
     }
 
     m_adsd3500_master = true;
+
+    m_availableSensorConfigurations.emplace_back("standard");
+    m_availableSensorConfigurations.emplace_back("imagerRaw");
+    m_availableSensorConfigurations.emplace_back("chipRaw");
 }
 
 CameraItof::~CameraItof() {
@@ -383,6 +388,16 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
         return status;
     }
 
+    if(m_sensorConfigurationCache != m_sensorConfiguration){
+        if(m_sensorConfiguration == "imagerRaw"){
+            //TO DO: Enable bypass function
+        } else {
+            //TO DO: Disable bypass function
+        }
+
+        m_sensorConfigurationCache = m_sensorConfiguration;
+    }
+
     status = m_depthSensor->setMode(mode);
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to set frame type";
@@ -399,9 +414,6 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
     m_details.frameType.dataDetails.clear();
     for (const auto &item : (*modeIt).frameContent) {
         if (item == "xyz" && !m_xyzEnabled) {
-            continue;
-        }
-        if (item == "raw") { // "raw" is not supported right now
             continue;
         }
 
@@ -434,7 +446,7 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
     }
 
     // We want computed frames (Depth & AB). Tell target to initialize depth compute
-    if (!m_pcmFrame) {
+    if (!m_pcmFrame && m_enableDepthCompute) {
         if (!m_ini_depth.empty()) {
             size_t dataSize = m_depthINIData.size;
             unsigned char *pData = m_depthINIData.p_data;
@@ -480,7 +492,7 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
     }
 
     // If we compute XYZ then prepare the XYZ tables which depend on the mode
-    if (m_xyzEnabled && !m_pcmFrame) {
+    if (m_xyzEnabled && !m_pcmFrame && m_enableDepthCompute) {
         uint8_t mode = m_modeDetailsCache.modeNumber;
 
         const int GEN_XYZ_ITERATIONS = 20;
@@ -555,7 +567,9 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
     }
 
     uint16_t *frameDataLocation = nullptr;
-    if (!m_pcmFrame) {
+    if(m_sensorConfigurationCache != "standard"){
+        frame->getData("raw", &frameDataLocation);
+    } else if (!m_pcmFrame) {
         frame->getData("frameData", &frameDataLocation);
     } else {
         frame->getData("ab", &frameDataLocation);
@@ -580,6 +594,10 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
     if (status != Status::OK) {
         LOG(WARNING) << "Failed to get frame from device";
         return status;
+    }
+
+    if(m_sensorConfigurationCache != "standard"){
+        return Status::OK;
     }
 
     // The incoming sensor frames are already processed. Need to just create XYZ data
@@ -1479,6 +1497,25 @@ void CameraItof::dropFirstFrame(bool dropFrame) {
 
 aditof::Status
 CameraItof::setSensorConfiguration(const std::string &sensorConf) {
+    if (std::find(m_availableSensorConfigurations.begin(),
+                  m_availableSensorConfigurations.end(),
+                  sensorConf) != m_availableSensorConfigurations.end()) {
+        m_sensorConfiguration = sensorConf;
+    } else {
+        LOG(ERROR) << "Invalid sensor configuration provided!";
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    if (m_sensorConfiguration == "chipRaw") {
+        m_enableDepthCompute = false;
+    } else if (m_sensorConfiguration == "imagerRaw") {
+        m_enableDepthCompute = false;
+        m_enableAdsd3500Processing = false;
+    } else {
+        m_enableDepthCompute = true;
+        m_enableAdsd3500Processing = true;
+    }
+
     return m_depthSensor->setSensorConfiguration(sensorConf);
 }
 

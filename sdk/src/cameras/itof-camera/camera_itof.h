@@ -258,6 +258,11 @@ class CameraItof : public aditof::Camera {
     aditof::ImagerType m_imagerType;
     bool m_dropFirstFrame;
     bool m_dropFrameOnce;
+    bool m_enableAdsd3500Processing;
+    bool m_enableDepthCompute;
+    std::string m_sensorConfiguration;
+    std::string m_sensorConfigurationCache;
+    std::vector<std::string> m_availableSensorConfigurations;
 };
 
 #endif // CAMERA_ITOF_H

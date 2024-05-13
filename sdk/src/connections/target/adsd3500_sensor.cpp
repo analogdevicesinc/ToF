@@ -1724,7 +1724,7 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
 
                 modeDetails.frameContent.clear();
                 if (!modeDetails.isPCM) {
-                    modeDetails.frameContent = {"raw",  "depth", "ab",
+                    modeDetails.frameContent = {"depth", "ab",
                                                 "conf", "xyz",   "metadata"};
                 } else {
                     modeDetails.frameContent = {"ab", "metadata"};
@@ -1880,6 +1880,13 @@ Adsd3500Sensor::setSensorConfiguration(const std::string &sensorConf) {
     } else {
         LOG(ERROR) << "Invalid sensor configuration provided!";
     }
+
+    if(sensorConf == "chipRaw" || sensorConf == "imagerRaw"){
+        m_depthComputeOnTarget = false;
+    } else {
+        m_depthComputeOnTarget = true;
+    }
+
     return status;
 }
 
