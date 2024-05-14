@@ -43,7 +43,8 @@ OfflineDepthSensor::~OfflineDepthSensor() {
 }
 
 aditof::Status OfflineDepthSensor::getFrame(uint16_t *buffer) {
-    auto frame = m_frameTypes.find(m_frameTypeSelected + ".bin");
+    auto frame =
+        m_frameTypes.find(std::to_string(m_frameTypeSelected) + ".bin");
     if (frame == m_frameTypes.end()) {
         LOG(WARNING) << "get frame error " << m_frameTypeSelected
                      << " is not found";
@@ -161,7 +162,13 @@ OfflineDepthSensor::getModeDetails(const uint8_t &mode,
 }
 
 aditof::Status OfflineDepthSensor::setMode(const uint8_t &mode) {
-    return aditof::Status::UNAVAILABLE;
+    for (const auto &modeDetails : availableModes) {
+        if (modeDetails.modeNumber == mode) {
+            setMode(modeDetails);
+            return aditof::Status::OK;
+        }
+    }
+    return aditof::Status::INVALID_ARGUMENT;
 }
 
 aditof::Status
