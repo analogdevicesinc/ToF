@@ -477,6 +477,11 @@ NetworkDepthSensor::getModeDetails(const uint8_t &mode,
     details.metadataSize = net->recv_buff[m_sensorIndex]
                                .depth_sensor_mode_details()
                                .metadata_size();
+    details.isPCM =
+        net->recv_buff[m_sensorIndex].depth_sensor_mode_details().is_pcm();
+    details.numberOfPhases = net->recv_buff[m_sensorIndex]
+                                 .depth_sensor_mode_details()
+                                 .number_of_phases();
     details.frameContent.clear();
     for (int i = 0; i < net->recv_buff[m_sensorIndex]
                             .depth_sensor_mode_details()

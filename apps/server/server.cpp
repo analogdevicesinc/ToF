@@ -518,6 +518,8 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         protoContent->set_base_resolution_height(
             frameDetails.baseResolutionHeight);
         protoContent->set_metadata_size(frameDetails.metadataSize);
+        protoContent->set_is_pcm(frameDetails.isPCM);
+        protoContent->set_number_of_phases(frameDetails.numberOfPhases);
         for (int i = 0; i < frameDetails.frameContent.size(); i++) {
             protoContent->add_frame_content(frameDetails.frameContent.at(i));
         }

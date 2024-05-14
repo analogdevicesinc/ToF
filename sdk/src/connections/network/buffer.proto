@@ -59,7 +59,9 @@ message DepthSensorModeDetails
   int32 base_resolution_width = 70;
   int32 base_resolution_height = 80;
   int32 metadata_size = 90;
-  repeated DriverConfiguration driver_configuration = 100;
+  int32 is_pcm = 100;
+  int32 number_of_phases = 110;
+  repeated DriverConfiguration driver_configuration = 120;
 }
 
 message ClientRequest
