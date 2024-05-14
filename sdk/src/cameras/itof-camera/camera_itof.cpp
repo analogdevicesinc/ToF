@@ -389,13 +389,7 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
         return status;
     }
 
-    if (std::find(m_modeDetailsCache.frameContent.begin(),
-                  m_modeDetailsCache.frameContent.end(),
-                  "depth") != m_modeDetailsCache.frameContent.end()) {
-        m_pcmFrame = false;
-    } else {
-        m_pcmFrame = true;
-    }
+    m_pcmFrame = m_modeDetailsCache.isPCM;
 
     // Store the frame details in camera details
     m_details.mode = mode;
