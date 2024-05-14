@@ -777,8 +777,9 @@ void ADIMainWindow::showDeviceMenu() {
         _isOpenDevice = false;
         if (!isPlaying && !isPlayRecorded) {
             if (ImGui::BeginMenu("ToF Camera Options")) {
+                ImGui::Text("Mode:");
                 ImGuiExtensions::ADIComboBox(
-                    "Mode", "Select Mode", ImGuiSelectableFlags_None,
+                    "", "Select Mode", ImGuiSelectableFlags_None,
                     m_cameraModesDropDown, &modeSelection, true);
 
                 ImGui::NewLine();
@@ -1425,12 +1426,27 @@ void ADIMainWindow::InitCamera() {
 
     if (!_usesExternalModeDefinition)
         camera->getAvailableModes(_cameraModes);
+    sort(_cameraModes.begin(), _cameraModes.end());
 
     for (int i = 0; i < _cameraModes.size(); ++i) {
-        modeSelection = i;
+        aditof::DepthSensorModeDetails modeDetails;
+
+        auto sensor = camera->getSensor();
+        sensor->getModeDetails(_cameraModes.at(i), modeDetails);
+
+        std::string s = std::to_string(_cameraModes.at(i));
+        s = s + " (W: " + std::to_string(modeDetails.baseResolutionWidth) +
+            " H: " + std::to_string(modeDetails.baseResolutionHeight) + ") ";
+        if (!modeDetails.isPCM) {
+            s = s + "Phases: " + std::to_string(modeDetails.numberOfPhases);
+        } else {
+            s = s + "PCM";
+        }
+        m_cameraModesDropDown.emplace_back(modeDetails.modeNumber, s);
+    }
+
+    for (int i = 0; i < _cameraModes.size(); i++) {
         m_cameraModes.emplace_back(i, _cameraModes.at(i));
-        m_cameraModesDropDown.emplace_back(i,
-                                           std::to_string(_cameraModes.at(i)));
     }
 
     cameraWorkerDone = true;
