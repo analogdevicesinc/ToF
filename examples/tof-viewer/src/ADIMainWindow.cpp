@@ -1871,6 +1871,7 @@ void ADIMainWindow::displayActiveBrightnessWindow(
         bool logImage = view->getLogImage();
         bool autoScale = view->getAutoScale();
 
+        ImGui::SameLine();
         ImGui::Checkbox("Auto-scale", &autoScale);
 
         if (!autoScale && logImage) {
@@ -1932,6 +1933,7 @@ void ADIMainWindow::displayDepthWindow(ImGuiWindowFlags overlayFlags) {
         pos.y += size.y + 10;
         ImGui::SetCursorScreenPos(pos);
 
+        ImGui::SameLine();
         ImVec2 hoveredImagePixel = InvalidHoveredPixel;
         GetHoveredImagePix(hoveredImagePixel, imageStartPos,
                            ImGui::GetIO().MousePos, displayDepthDimensions);
