@@ -72,8 +72,9 @@ struct AppLog {
             ScrollToBottom = true;
     }
 
-    void Draw(const char *title, bool *p_open = NULL) {
-        if (!ImGui::Begin(title, p_open)) {
+    void Draw(const char *title, bool *p_open = NULL,
+              ImGuiWindowFlags windowFlags = NULL) {
+        if (!ImGui::Begin(title, p_open, windowFlags)) {
             ImGui::End();
             return;
         }
