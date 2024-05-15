@@ -140,11 +140,25 @@ uint8_t getDealiasParams_cmd[] = {0xAD, 0x00, 0x20, 0x02, 0x00, 0x00, 0x00, 0x00
 uint8_t getCameraIntrinsics_cmd[] = {0xAD, 0x00, 0x38, 0x01, 0x00, 0x00, 0x00, 0x00, \
 		0x39, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-// Read Chip ID
+// Read Chip ID.
 uint8_t getChipId_cmd[] = {0x01, 0x12};
 
-// Get Imager Type and CCB version
+// Get Imager Type and CCB version.
 uint8_t getImagerTypeAndCCB_cmd[] = {0x00, 0x32};
+
+// Read Read IniTable from Pulsatrix for a particular mode. 
+/* The 13th Byte in this command represents the mode number. For eg, if this byte is set as '1',
+it would fetch the IniTable for the Image mode 1 from Adsd3500.
+*/
+uint8_t readIniFromAdsd3500_cmd[] = 
+    {0xAD, 0x00, 0x28, 0x25, 0x00, 0x00, 0x00, 0x00, 0x4D, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00};
+
+// Read Mode Map Table from Pulsatrix
+uint8_t readModeMapFromAdsd3500_cmd[] =
+    {0xAD, 0x00, 0xA8, 0x24, 0x00, 0x00, 0x00, 0x00, 0xCC, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+uint8_t getFwVersion_cmd[] = 
+    {0xAD, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00};
 
 /*
 *********************************Public functions*********************************
@@ -300,12 +314,17 @@ int Adsd3500::RequestFrame(uint16_t* buffer) {
 }
 
 // Reads the .ini file and stores them as key-value pairs.
-int Adsd3500::GetIniKeyValuePairFromConfig(const char* iniFileName) {
+int Adsd3500::GetIniKeyValuePair(const char* iniFileName) {
 
     int ret = 0;
-    ret = adsd3500_get_key_value_pairs_from_ini(iniFileName, iniKeyValPairs);
-    if (ret < 0) {
-        perror("Unable to get Ini Key Value pairs from the .ini file");
+    if (ccb_as_master) {
+        //TODO.
+        adsd3500_get_ini_key_value_pairs_from_ccb();
+    } else {
+        ret = adsd3500_get_ini_key_value_pairs_from_ini_file(iniFileName);
+        if (ret < 0) {
+            perror("Unable to get Ini Key Value pairs from the .ini file");
+        }
     }
 
     return ret;
@@ -1159,9 +1178,7 @@ int Adsd3500::adsd3500_get_internal_buffer(
     return 0;
 }
 
-int Adsd3500::adsd3500_get_key_value_pairs_from_ini(
-    const std::string &iniFileName,
-    std::map<std::string, std::string> &iniKeyValPairs) {
+int Adsd3500::adsd3500_get_ini_key_value_pairs_from_ini_file(const std::string &iniFileName) {
 
     std::ifstream iniStream(iniFileName);
     if (!iniStream.is_open()) {
@@ -1211,6 +1228,85 @@ int Adsd3500::adsd3500_get_key_value_pairs_from_ini(
     }
 
     iniStream.close();
+
+    return 0;
+}
+
+int Adsd3500::adsd3500_get_ini_key_value_pairs_from_ccb() {
+
+    // Add Logic here to extract INI parameters from ADSD3500.
+
+    // Switch to Burst Mode.
+    int32_t ret = adsd3500_switch_to_burst_mode(videoDevice.cameraSensorDeviceId);
+    if (ret < 0) {
+        std::cout << "Unable to switch to Burst Mode." << std::endl;
+    }
+
+    uint8_t* fw_ver_buf = new uint8_t[44];
+    uint8_t* ini_table_buf = new uint8_t[40];
+    uint8_t* mode_map_buf = new uint8_t[168];
+
+    // ret = read_cmd(videoDevice.cameraSensorDeviceId, getFwVersion_cmd, ARRAY_SIZE(getFwVersion_cmd),  fw_ver_buf, ARRAY_SIZE(fw_ver_buf));
+    // if (ret < 0) {
+    //     std::cout << "Unable to get FW version from ADSD3500." << std::endl;
+    // }
+
+    ret = read_cmd(videoDevice.cameraSensorDeviceId, readIniFromAdsd3500_cmd, ARRAY_SIZE(readIniFromAdsd3500_cmd), ini_table_buf, ARRAY_SIZE(ini_table_buf));
+    if (ret < 0) {
+        std::cout << "Unable to get INI table entry from ADSD3500." << std::endl;
+    }
+
+    // for (size_t i = 0; i < 40; ++i) {
+    //     std::cout << static_cast<int>(ini_table_buf[i]) << " "; // Example: print each byte
+    // }
+    // std::cout << std::endl;
+
+    PrintByteArray(ini_table_buf, 40);
+    
+    adsd3500_read_ini_values_from_ccb(ini_table_buf, 40);
+
+    // Switch to Standard Mode.
+    ret = adsd3500_switch_to_standard_mode(videoDevice.cameraSensorDeviceId);
+    if (ret < 0) {
+        std::cout << "Unable to switch to Standard Mode." << std::endl;
+    }  
+
+    return 0;
+
+}
+
+int Adsd3500::adsd3500_read_ini_values_from_ccb(uint8_t* ini_table_buf, size_t buffer_size) {
+
+    if (ini_table_buf == NULL) {
+        std::cout << "Buffer does not contain ini parameters from the CCB." << std::endl;
+        return -1;
+    }
+
+    iniKeyValPairs.clear();
+
+    //PrintByteArray(ini_table_buf, buffer_size);
+
+    // iniKeyValPairs.emplace(abThreshMin, )
+
+    // std::cout << "INI Table values read from CCB..." << std::endl;
+    // std::cout << "INIIndex : " << static_cast<int>(ini_table_buf[0])<< std::endl;
+    // std::cout << "rsvd : " << static_cast<int>(ini_table_buf[1]) << std::endl;
+    // std::cout << "abThreshMin : " << static_cast<int>(ini_table_buf[0])<< std::endl;
+    // std::cout << "confThresh : " << << std::endl;
+    // std::cout << "radialThreshMin : " << << std::endl;
+    // std::cout << "radialThreshMax : " << << std::endl;
+    // std::cout << "jblfApplyFlag : " << << std::endl;
+    // std::cout << "jblfWindowSize : " << << std::endl;
+    // std::cout << "jblfGaussianSigma : " << << std::endl;
+    // std::cout << "jblfExponentialTerm : " << << std::endl;
+    // std::cout << "jblfMaxEdge : " << << std::endl;
+    // std::cout << "jblfABThreshold : " << << std::endl; 
+
+
+
+
+
+
 
     return 0;
 }
@@ -1407,8 +1503,8 @@ int Adsd3500::SetFrameType() {
     adsd3500_configure_sensor_frame_types();
 
     // Pixel format is "raw8" for lr-qnative mode.
-    int frameHeight = xyzDealiasData.n_rows;
-    int frameWidth = xyzDealiasData.n_cols;
+    int num_rows = xyzDealiasData.n_rows;
+    int num_cols = xyzDealiasData.n_cols;
     uint16_t width, height;
     __u32 pixelFormat; 
     float totalBits;
@@ -1417,13 +1513,13 @@ int Adsd3500::SetFrameType() {
         if (inputFormat == "raw8") { 
             if (mode_num < 2) { 
                 totalBits = depthBits + abBits + confBits;
-                width = frameWidth * totalBits / 8;
-                height = frameHeight;
-                pixelFormat = V4L2_PIX_FMT_SBGGR8;
+                frame.frameWidth = num_cols * totalBits / 8;
+                frame.frameHeight = num_rows;
+                frame.pixelFormat = V4L2_PIX_FMT_SBGGR8;
             } else {
-                width = 1280;
-                height = 320;
-                pixelFormat = V4L2_PIX_FMT_SBGGR8;
+                frame.frameWidth = 1280;
+                frame.frameHeight = 320;
+                frame.pixelFormat = V4L2_PIX_FMT_SBGGR8;
             }
         } else {
             std::cout << "Unsupported Input Pixel Format." << std::endl;
@@ -1432,68 +1528,62 @@ int Adsd3500::SetFrameType() {
         if (inputFormat == "raw8") {
             if (mode_num > 1) {
                 totalBits = depthBits + abBits + confBits;
-                width = frameWidth * totalBits / 8;
-                height = frameHeight;
-                pixelFormat= V4L2_PIX_FMT_SBGGR8;
+                frame.frameWidth = num_cols * totalBits / 8;
+                frame.frameHeight = num_rows;
+                frame.pixelFormat= V4L2_PIX_FMT_SBGGR8;
+            }
+        } else if (inputFormat == "mipiRaw12_8") {
+            if (depthBits == 12 && abBits == 16 && confBits == 0) {
+                if (mode_num == 1) {
+                    frame.frameWidth = 2048;
+                    frame.frameHeight = 3328;
+                } else if (mode_num == 0) {
+                    frame.frameWidth = 2048;
+                    frame.frameHeight = 2560;
+                } else {
+                    std::cout << "Invalid pixel format configuration for given mode!" << std::endl;
+                    return -1;
+                }
+                frame.pixelFormat = V4L2_PIX_FMT_SBGGR8;
+            } 
+        } else if (inputFormat == "raw16_bits12_shift4") {
+            if (depthBits == 12 && abBits == 12 && confBits == 0) {
+                if (mode_num == 1) {
+                    frame.frameWidth = 1024;
+                    frame.frameHeight = 4096;
+                    frame.pixelFormat = V4L2_PIX_FMT_SBGGR12;
+                } else if (mode_num == 0) {
+                    frame.frameWidth = 1024;
+                    frame.frameHeight = 3072;
+                    frame.pixelFormat = V4L2_PIX_FMT_SBGGR12;
+                } else {
+                    std::cout << "Invalid pixel format configuration for given mode!" << std::endl;
+                    return -1;
+                }
+            } else if (depthBits == 12 && !abBits && !confBits) {
+                if (mode_num == 1 || mode_num == 0) {
+                    frame.frameWidth = 1024;
+                    frame.frameHeight = 1024;
+                    frame.pixelFormat = V4L2_PIX_FMT_SBGGR12;
+                } else {
+                    std::cout << "Invalid pixel format configuration for given mode!" << std::endl;
+                    return -1;
+                }
             }
         } else {
             std::cout << "Unsupported Input Pixel Format." << std::endl;
-        } //TODO: Add Support for Crosby modes 0, 1.
+        }
     }
 
-    // TODO: Add raw12 modes for ADSD3100.
-    // } else if (inputFormat == "mipiRaw12_8") { // For MP modes
-    //     if (depthBits == 12 && abBits == 16 && confBits == 0) {
-    //         if (mode_num == 1) {
-    //             width = 2048;
-    //             height = 3328;
-    //         } else if (mode_num == 0) {
-    //             width = 2048;
-    //             height = 2560;
-    //         } else {
-    //             std::cout << "Invalid pixel format configuration for given mode!" << std::endl;
-    //             return -1;
-    //         }
-    //         pixelFormat = V4L2_PIX_FMT_SBGGR8;
-    //     }
-    // } else if (inputFormat == "raw16_bits12_shift4") { // For MP modes
-    //     if (depthBits == 12 && abBits == 12 && confBits == 0) {
-    //         if (mode_num == 1) {
-    //             width = 1024;
-    //             height = 4096;
-    //             pixelFormat = V4L2_PIX_FMT_SBGGR12;
-    //         } else if (mode_num == 0) {
-    //             width = 1024;
-    //             height = 3072;
-    //             pixelFormat = V4L2_PIX_FMT_SBGGR12;
-    //         } else {
-    //             std::cout << "Invalid pixel format configuration for given mode!" << std::endl;
-    //             return -1;
-    //         }
-    //     } else if (depthBits == 12 && !abBits && !confBits) {
-    //         if (mode_num == 1 || mode_num == 0) {
-    //             width = 1024;
-    //             height = 1024;
-    //             pixelFormat = V4L2_PIX_FMT_SBGGR12;
-    //         } else {
-    //             std::cout << "Invalid pixel format configuration for given mode!" << std::endl;
-    //             return -1;
-    //         }
-    //     } else {
-    //         std::cout << "Invalid configuration!" << std::endl;
-    //         return -1;
-    //     }
-    // }
-
-    std::cout << "width: " << width << std::endl;
-    std::cout << "height: " << height << std::endl;
+    std::cout << "width: " << frame.frameWidth << std::endl;
+    std::cout << "height: " << frame.frameHeight << std::endl;
 
     // Set the frame format in the driver.
     CLEAR(fmt);
     fmt.type = videoDevice.videoBuffersType;
-    fmt.fmt.pix.pixelformat = pixelFormat;
-    fmt.fmt.pix.width = width;
-    fmt.fmt.pix.height = height;
+    fmt.fmt.pix.pixelformat = frame.pixelFormat;
+    fmt.fmt.pix.width = frame.frameWidth;
+    fmt.fmt.pix.height = frame.frameHeight;
 
     if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_S_FMT, &fmt) == -1) {
         std::cout << "Setting Pixel Format error, errno: " << errno

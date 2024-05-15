@@ -120,6 +120,56 @@ class DealiasParams {
  		uint16_t Freq[3]; 
 };
 
+struct MODEMAP_TABLE_ENTRY {
+  uint8_t UserDefinedMode;
+  uint8_t CFGMode;
+  uint16_t Height;
+  uint16_t Width;
+  uint8_t nFreq;
+  uint8_t P0Mode;
+  uint8_t TempMode;
+  uint8_t INIIndex;
+  uint16_t default_mode;
+  uint16_t PassiveModeFlag;
+  uint16_t nPhases;
+  uint16_t spare3;
+  uint16_t spare4;
+  uint16_t spare5;
+  uint16_t spare6;
+  uint16_t spare7;
+  uint16_t spare8;
+};
+
+struct INI_TABLE_ENTRY {
+  uint8_t INIIndex;
+  uint8_t rsvd;                              // for byte alignment of following fields 
+  uint16_t abThreshMin;
+  uint16_t confThresh;
+  uint16_t radialThreshMin;
+  uint16_t radialThreshMax;
+  uint16_t jblfApplyFlag;
+  uint16_t jblfWindowSize;
+  uint16_t jblfGaussianSigma;
+  uint16_t jblfExponentialTerm;
+  uint16_t jblfMaxEdge;
+  uint16_t jblfABThreshold;
+  uint16_t spare0;
+  uint16_t spare1;
+  uint16_t spare2;
+  uint16_t spare3;
+  uint16_t spare4;
+  uint16_t spare5;
+  uint16_t spare6;
+  uint16_t spare7;
+  uint16_t spare8;
+};
+
+struct Frame {
+	uint16_t frameWidth;
+	uint16_t frameHeight;
+	__u32 pixelFormat;
+};
+
 class Adsd3500 {
 	public:
 		// Constructor
@@ -139,6 +189,8 @@ class Adsd3500 {
 		TofiConfig *tofi_config;
 		int dynamic_mode_switch = 0;
 		int ccb_as_master = 0;
+		INI_TABLE_ENTRY ccb_iniTableEntry;
+		Frame frame;
 
 		int OpenAdsd3500();
 		int CloseAdsd3500();
@@ -159,7 +211,7 @@ class Adsd3500 {
 		int SetFrameType();
 		int RequestFrame(uint16_t* buffer);
 		int GetImagerTypeAndCCB();
-		int GetIniKeyValuePairFromConfig(const char* iniFileName);
+		int GetIniKeyValuePair(const char* iniFileName);
 		int GetIntrinsicsAndDealiasParams();
 		int ParseRawDataWithDCL(uint16_t* buffer);
 
@@ -173,7 +225,9 @@ class Adsd3500 {
 		int adsd3500_enqueue_internal_buffer(struct v4l2_buffer &buf);
 		int adsd3500_dequeue_internal_buffer(struct v4l2_buffer &buf);
 		int adsd3500_get_internal_buffer(uint8_t **buffer, uint32_t &buf_data_len, const struct v4l2_buffer &buf);
-		int adsd3500_get_key_value_pairs_from_ini(const std::string &iniFileName, std::map<std::string, std::string> &iniKeyValPairs);
+		int adsd3500_get_ini_key_value_pairs_from_ini_file(const std::string &iniFileName);
+		int adsd3500_get_ini_key_value_pairs_from_ccb();
+		int adsd3500_read_ini_values_from_ccb(uint8_t* ini_table_buf, size_t buffer_size);
 		int adsd3500_read_cmd(uint16_t cmd, uint16_t *data, unsigned int usDelay);
 		int adsd3500_write_cmd(uint16_t cmd, uint16_t data);
 		int adsd3500_read_payload_cmd(uint32_t cmd, uint8_t *readback_data, uint16_t payload_len);

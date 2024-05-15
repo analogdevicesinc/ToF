@@ -27,8 +27,9 @@ int main(int argc, char *argv[]) {
     auto adsd3500 = Adsd3500();
 
     // Arguments from the user.
-    int mode_num = 2; // Image mode number.
-    const char*  iniFileName = "config/RawToDepthAdsd3030_sr-qnative.ini"; // Config file path.
+    int mode_num = 3; // Image mode number.
+    int num_frames = 8; // Number of frames
+    const char*  iniFileName = "config/RawToDepthAdsd3500_lr-qnative.ini"; // Config file path.
     adsd3500.ccb_as_master = 0; // Enables/Disbales CCB as master.
     
     // 1. Reset ADSD3500
@@ -47,7 +48,7 @@ int main(int argc, char *argv[]) {
 
     // Set Image mode number
     adsd3500.mode_num = mode_num;    
-    ret = adsd3500.GetIniKeyValuePairFromConfig(iniFileName);
+    ret = adsd3500.GetIniKeyValuePair(iniFileName);
     if (ret < 0) {
         printf("Unable to read ini parameters from the Config file.\n");
         return ret;
@@ -107,12 +108,18 @@ int main(int argc, char *argv[]) {
         return ret;
     }
 
-    int num_frames = 10;
-    int buffer_height = adsd3500.xyzDealiasData.n_rows; // 256
-    int buffer_width = adsd3500.xyzDealiasData.n_cols; //320
-    int total_pixels = buffer_height*buffer_width;
-    float totalBits = adsd3500.depthBits + adsd3500.abBits + adsd3500.confBits;
-    int buffer_size = total_pixels*ceil(totalBits/16);  // 256*320*5 bytes
+    int buffer_height, buffer_width, total_pixels, buffer_size;
+    buffer_height = adsd3500.xyzDealiasData.n_rows; // 256
+    buffer_width = adsd3500.xyzDealiasData.n_cols; //320
+    total_pixels = buffer_height*buffer_width;
+    if (adsd3500.inputFormat == "raw8") {        // For QMP modes.
+        float totalBits = adsd3500.depthBits + adsd3500.abBits + adsd3500.confBits;
+        buffer_size = total_pixels*ceil(totalBits/16);
+    } else if (adsd3500.inputFormat == "mipiRaw12_8") {
+        if (adsd3500.mode_num == 0 || adsd3500.mode_num == 1) { // For MP modes
+            buffer_size = adsd3500.frame.frameHeight * adsd3500.frame.frameWidth;
+        }
+    }
 
     uint16_t* depth_buffer = new uint16_t[total_pixels*num_frames];
     uint16_t* ab_buffer = new uint16_t[total_pixels*num_frames];
