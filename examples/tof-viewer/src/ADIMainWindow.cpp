@@ -1677,7 +1677,7 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
             if (status != Status::OK) {
                 LOG(ERROR) << "Failed to get frame metadata.";
             } else {
-                int32_t frameNum = (metadata.frameNumber);
+                uint32_t frameNum = (metadata.frameNumber);
                 if (!firstFrame) {
                     firstFrame = frameNum;
                 }
@@ -1690,9 +1690,9 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                 }
                 uint32_t totalFrames = frameNum - firstFrame + 1;
                 uint32_t frameLost = totalFrames - frameRecvd;
-                ImGui::Text(" Number of frames lost: %i", frameLost);
+                ImGui::Text(" Number of frames lost: %u", frameLost);
                 ImGui::SameLine();
-                ImGui::Text(" | Number of frames received: %i", frameRecvd);
+                ImGui::Text(" | Number of frames received: %u", frameRecvd);
                 ImGui::Text(" Laser Temperature: %iC", laserTemp);
                 ImGui::SameLine();
                 ImGui::Text(" | Sensor Temperature: %iC", sensorTemp);
