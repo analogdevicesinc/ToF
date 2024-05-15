@@ -151,7 +151,7 @@ uint8_t getImagerTypeAndCCB_cmd[] = {0x00, 0x32};
 it would fetch the IniTable for the Image mode 1 from Adsd3500.
 */
 uint8_t readIniFromAdsd3500_cmd[] = 
-    {0xAD, 0x00, 0x28, 0x25, 0x00, 0x00, 0x00, 0x00, 0x4D, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00};
+    {0xAD, 0x00, 0x28, 0x25, 0x00, 0x00, 0x00, 0x00, 0x4D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 // Read Mode Map Table from Pulsatrix
 uint8_t readModeMapFromAdsd3500_cmd[] =
@@ -317,14 +317,13 @@ int Adsd3500::RequestFrame(uint16_t* buffer) {
 int Adsd3500::GetIniKeyValuePair(const char* iniFileName) {
 
     int ret = 0;
+    ret = adsd3500_get_ini_key_value_pairs_from_ini_file(iniFileName);
+    if (ret < 0) {
+        perror("Unable to get Ini Key Value pairs from the .ini file");
+    }
+    
     if (ccb_as_master) {
-        //TODO.
         adsd3500_get_ini_key_value_pairs_from_ccb();
-    } else {
-        ret = adsd3500_get_ini_key_value_pairs_from_ini_file(iniFileName);
-        if (ret < 0) {
-            perror("Unable to get Ini Key Value pairs from the .ini file");
-        }
     }
 
     return ret;
@@ -337,7 +336,7 @@ int Adsd3500::ConfigureAdsd3500WithIniParams() {
         perror("Key-value pairs from the .ini file not read.\n");
         return -1;
     }
-    int ret = adsd3500_set_ini_params(iniKeyValPairs);
+    int ret = adsd3500_set_ini_params();
     if (ret < 0) {
         perror("Unable to set Ini parameters in Adsd3500.\n");
     }
@@ -1242,34 +1241,30 @@ int Adsd3500::adsd3500_get_ini_key_value_pairs_from_ccb() {
         std::cout << "Unable to switch to Burst Mode." << std::endl;
     }
 
-    uint8_t* fw_ver_buf = new uint8_t[44];
     uint8_t* ini_table_buf = new uint8_t[40];
     uint8_t* mode_map_buf = new uint8_t[168];
 
-    // ret = read_cmd(videoDevice.cameraSensorDeviceId, getFwVersion_cmd, ARRAY_SIZE(getFwVersion_cmd),  fw_ver_buf, ARRAY_SIZE(fw_ver_buf));
-    // if (ret < 0) {
-    //     std::cout << "Unable to get FW version from ADSD3500." << std::endl;
-    // }
+    // Set the Mode Number.
+    readIniFromAdsd3500_cmd[12] = mode_num;
 
     ret = read_cmd(videoDevice.cameraSensorDeviceId, readIniFromAdsd3500_cmd, ARRAY_SIZE(readIniFromAdsd3500_cmd), ini_table_buf, ARRAY_SIZE(ini_table_buf));
     if (ret < 0) {
         std::cout << "Unable to get INI table entry from ADSD3500." << std::endl;
     }
 
-    // for (size_t i = 0; i < 40; ++i) {
-    //     std::cout << static_cast<int>(ini_table_buf[i]) << " "; // Example: print each byte
-    // }
-    // std::cout << std::endl;
-
+    std::cout << "INI Table Values from ADSD3500.." << std::endl;
     PrintByteArray(ini_table_buf, 40);
+
+    // ret = read_cmd(videoDevice.cameraSensorDeviceId, readModeMapFromAdsd3500_cmd, ARRAY_SIZE(readModeMapFromAdsd3500_cmd), mode_map_buf, ARRAY_SIZE(mode_map_buf));
+    // if (ret < 0) {
+    //     std::cout << "Unable to get INI table entry from ADSD3500." << std::endl;
+    // }
+
+    // std::cout << "Mode Map Entry from ADSD3500.." << std::endl;
+    // PrintByteArray(ini_table_buf, 168);
+
     
     adsd3500_read_ini_values_from_ccb(ini_table_buf, 40);
-
-    // Switch to Standard Mode.
-    ret = adsd3500_switch_to_standard_mode(videoDevice.cameraSensorDeviceId);
-    if (ret < 0) {
-        std::cout << "Unable to switch to Standard Mode." << std::endl;
-    }  
 
     return 0;
 
@@ -1282,86 +1277,148 @@ int Adsd3500::adsd3500_read_ini_values_from_ccb(uint8_t* ini_table_buf, size_t b
         return -1;
     }
 
-    iniKeyValPairs.clear();
+    ccb_iniTableEntry.INIIndex = ini_table_buf[0];
+    ccb_iniTableEntry.rsvd = ini_table_buf[1];
+    ccb_iniTableEntry.abThreshMin = (ini_table_buf[3] << 8) | ini_table_buf[2];
+    ccb_iniTableEntry.confThresh = (ini_table_buf[5] << 8) | ini_table_buf[4];
+    ccb_iniTableEntry.radialThreshMin = (ini_table_buf[7] << 8) | ini_table_buf[6];
+    ccb_iniTableEntry.radialThreshMax = (ini_table_buf[9] << 8) | ini_table_buf[8];
+    ccb_iniTableEntry.jblfApplyFlag = (ini_table_buf[11] << 8) | ini_table_buf[10];
+    ccb_iniTableEntry.jblfWindowSize = (ini_table_buf[13] << 8) | ini_table_buf[12];
+    ccb_iniTableEntry.jblfGaussianSigma = (ini_table_buf[15] << 8) | ini_table_buf[14];
+    ccb_iniTableEntry.jblfExponentialTerm = (ini_table_buf[17] << 8) | ini_table_buf[16];
+    ccb_iniTableEntry.jblfMaxEdge = (ini_table_buf[19] << 8) | ini_table_buf[18];
+    ccb_iniTableEntry.jblfABThreshold = (ini_table_buf[21] << 8) | ini_table_buf[20];
+    ccb_iniTableEntry.spare0 = (ini_table_buf[23] << 8) | ini_table_buf[22];
+    ccb_iniTableEntry.spare1 = (ini_table_buf[25] << 8) | ini_table_buf[24];
+    ccb_iniTableEntry.spare2 = (ini_table_buf[27] << 8) | ini_table_buf[26];
+    ccb_iniTableEntry.spare3 = (ini_table_buf[29] << 8) | ini_table_buf[28];
+    ccb_iniTableEntry.spare4 = (ini_table_buf[31] << 8) | ini_table_buf[30];
+    ccb_iniTableEntry.spare5 = (ini_table_buf[33] << 8) | ini_table_buf[32];
+    ccb_iniTableEntry.spare6 = (ini_table_buf[35] << 8) | ini_table_buf[34];
+    ccb_iniTableEntry.spare7 = (ini_table_buf[37] << 8) | ini_table_buf[36];
+    ccb_iniTableEntry.spare8 = (ini_table_buf[39] << 8) | ini_table_buf[38];
 
-    //PrintByteArray(ini_table_buf, buffer_size);
-
-    // iniKeyValPairs.emplace(abThreshMin, )
-
-    // std::cout << "INI Table values read from CCB..." << std::endl;
-    // std::cout << "INIIndex : " << static_cast<int>(ini_table_buf[0])<< std::endl;
-    // std::cout << "rsvd : " << static_cast<int>(ini_table_buf[1]) << std::endl;
-    // std::cout << "abThreshMin : " << static_cast<int>(ini_table_buf[0])<< std::endl;
-    // std::cout << "confThresh : " << << std::endl;
-    // std::cout << "radialThreshMin : " << << std::endl;
-    // std::cout << "radialThreshMax : " << << std::endl;
-    // std::cout << "jblfApplyFlag : " << << std::endl;
-    // std::cout << "jblfWindowSize : " << << std::endl;
-    // std::cout << "jblfGaussianSigma : " << << std::endl;
-    // std::cout << "jblfExponentialTerm : " << << std::endl;
-    // std::cout << "jblfMaxEdge : " << << std::endl;
-    // std::cout << "jblfABThreshold : " << << std::endl; 
-
-
-
-
-
-
+    PrintIniTableEntryFromCCB(ccb_iniTableEntry);
 
     return 0;
 }
 
-int Adsd3500::adsd3500_set_ini_params(
-    const std::map<std::string, std::string> &iniKeyValPairs) {
+void PrintIniTableEntryFromCCB(struct INI_TABLE_ENTRY entry) {
 
-    auto it = iniKeyValPairs.find("abThreshMin");
-    if (it != iniKeyValPairs.end()) {
-        adsd3500_write_cmd(0x0010, std::stoi(it->second));
+    printf("INIIndex: %u\n", entry.INIIndex);
+    printf("abThreshMin: %u\n", entry.abThreshMin);
+    printf("confThresh: %u\n", entry.confThresh);
+    printf("radialThreshMin: %u\n", entry.radialThreshMin);
+    printf("radialThreshMax: %u\n", entry.radialThreshMax);
+    printf("jblfApplyFlag: %u\n", entry.jblfApplyFlag);
+    printf("jblfWindowSize: %u\n", entry.jblfWindowSize);
+    printf("jblfGaussianSigma: %u\n", entry.jblfGaussianSigma);
+    printf("jblfExponentialTerm: %u\n", entry.jblfExponentialTerm);
+    printf("jblfMaxEdge: %u\n", entry.jblfMaxEdge);
+    printf("jblfABThreshold: %u\n", entry.jblfABThreshold);
+    printf("spare0: %u\n", entry.spare0);
+    printf("spare1: %u\n", entry.spare1);
+    printf("spare2: %u\n", entry.spare2);
+    printf("spare3: %u\n", entry.spare3);
+    printf("spare4: %u\n", entry.spare4);
+    printf("spare5: %u\n", entry.spare5);
+    printf("spare6: %u\n", entry.spare6);
+    printf("spare7: %u\n", entry.spare7);
+    printf("spare8: %u\n", entry.spare8);
+}
+
+int Adsd3500::adsd3500_set_ini_params() {
+
+    if (ccb_as_master) {
+        // Sets CCB parameters from the Module's CCB on the ADSD3500.
+        adsd3500_write_cmd(0x0010, ccb_iniTableEntry.abThreshMin); 
+        adsd3500_write_cmd(0x0011, ccb_iniTableEntry.confThresh);
+        adsd3500_write_cmd(0x0027, ccb_iniTableEntry.radialThreshMin);
+        adsd3500_write_cmd(0x0029, ccb_iniTableEntry.radialThreshMax);
+        adsd3500_write_cmd(0x0013, ccb_iniTableEntry.jblfApplyFlag);
+        adsd3500_write_cmd(0x0014, ccb_iniTableEntry.jblfWindowSize);
+        adsd3500_write_cmd(0x006B, ccb_iniTableEntry.jblfGaussianSigma);
+        adsd3500_write_cmd(0x006C, ccb_iniTableEntry.jblfExponentialTerm);
+        adsd3500_write_cmd(0x0074, ccb_iniTableEntry.jblfMaxEdge);
+        adsd3500_write_cmd(0x0075, ccb_iniTableEntry.jblfABThreshold);
     } else {
-        std::cout << "abThreshMin was not found in .ini file, not setting." << std::endl;
+        // Sets parameters from the .ini file on the ADSD3500.
+        auto it = iniKeyValPairs.find("abThreshMin");
+        if (it != iniKeyValPairs.end()) {
+            adsd3500_write_cmd(0x0010, std::stoi(it->second));
+        } else {
+            std::cout << "abThreshMin was not found in .ini file, not setting." << std::endl;
+        }
+
+        it = iniKeyValPairs.find("confThresh");
+        if (it != iniKeyValPairs.end()) {
+            adsd3500_write_cmd(0x0011, std::stoi(it->second));
+        } else {
+            std::cout << "confThresh was not found in .ini file, not setting." << std::endl;;
+        }
+
+        it = iniKeyValPairs.find("radialThreshMin");
+        if (it != iniKeyValPairs.end()) {
+            adsd3500_write_cmd(0x0027, std::stoi(it->second));
+        } else {
+            std::cout << "radialThreshMin was not found in .ini file, not setting." << std::endl;
+        }
+
+        it = iniKeyValPairs.find("radialThreshMax");
+        if (it != iniKeyValPairs.end()) {
+            adsd3500_write_cmd(0x0029, std::stoi(it->second));
+        } else {
+            std::cout << "radialThreshMax was not found in .ini file, not setting." << std::endl;
+        }
+
+        it = iniKeyValPairs.find("jblfApplyFlag");
+        if (it != iniKeyValPairs.end()) {
+            bool en = !(it->second == "0");
+            adsd3500_write_cmd(0x0013, en ? 1 : 0);
+        } else {
+            std::cout << "jblfApplyFlag was not found in .ini file, not setting." << std::endl;
+        }
+
+        it = iniKeyValPairs.find("jblfWindowSize");
+        if (it != iniKeyValPairs.end()) {
+            adsd3500_write_cmd(0x0014, std::stoi(it->second));
+        } else {
+            std::cout << "jblfWindowSize was not found in .ini file, not setting." << std::endl;
+        }
+
+        it = iniKeyValPairs.find("jblfGaussianSigma");
+        if (it != iniKeyValPairs.end()) {
+            adsd3500_write_cmd(0x006B, std::stoi(it->second));
+        } else {
+            std::cout << "jblfGaussianSigma was not found in .ini file, not setting." << std::endl;
+        }
+
+        it = iniKeyValPairs.find("jblfExponentialTerm");
+        if (it != iniKeyValPairs.end()) {
+            adsd3500_write_cmd(0x006C, std::stoi(it->second));
+        } else {
+            std::cout << "jblfExponentialTerm was not found in .ini file, not setting." << std::endl;
+        }
+
+        it = iniKeyValPairs.find("jblfMaxEdge");
+        if (it != iniKeyValPairs.end()) {
+            adsd3500_write_cmd(0x0074, std::stoi(it->second));
+        } else {
+            std::cout << "jblfMaxEdge was not found in .ini file, not setting." << std::endl;
+        }
+
+        it = iniKeyValPairs.find("jblfABThreshold");
+        if (it != iniKeyValPairs.end()) {
+            adsd3500_write_cmd(0x0075, std::stoi(it->second));
+        } else {
+            std::cout << "jblfABThreshold was not found in .ini file" << std::endl;
+        }
     }
 
-    it = iniKeyValPairs.find("confThresh");
-    if (it != iniKeyValPairs.end()) {
-        adsd3500_write_cmd(0x0011, std::stoi(it->second));
-    } else {
-        std::cout << "confThresh was not found in .ini file, not setting." << std::endl;;
-    }
-
-    it = iniKeyValPairs.find("radialThreshMin");
-    if (it != iniKeyValPairs.end()) {
-        adsd3500_write_cmd(0x0027, std::stoi(it->second));
-    } else {
-        std::cout
-            << "radialThreshMin was not found in .ini file, not setting." << std::endl;;
-    }
-
-    it = iniKeyValPairs.find("radialThreshMax");
-    if (it != iniKeyValPairs.end()) {
-        adsd3500_write_cmd(0x0029, std::stoi(it->second));
-    } else {
-        std::cout
-            << "radialThreshMax was not found in .ini file, not setting." << std::endl;
-    }
-
-    it = iniKeyValPairs.find("jblfWindowSize");
-    if (it != iniKeyValPairs.end()) {
-        adsd3500_write_cmd(0x0014, std::stoi(it->second));
-    } else {
-        std::cout
-            << "jblfWindowSize was not found in .ini file, not setting." << std::endl;
-    }
-
-    it = iniKeyValPairs.find("jblfApplyFlag");
-    if (it != iniKeyValPairs.end()) {
-        bool en = !(it->second == "0");
-        adsd3500_write_cmd(0x0013, en ? 1 : 0);
-    } else {
-        std::cout
-            << "jblfApplyFlag was not found in .ini file, not setting." << std::endl;
-    }
-
-    it = iniKeyValPairs.find("fps");
+    /* NOTE: As of now, the below parameters are not supported with CCB as master feature. 
+    So they are still read from the .ini file.*/
+    auto it = iniKeyValPairs.find("fps");
     if (it != iniKeyValPairs.end()) {
         SetFps(std::stoi(it->second));
     } else {
@@ -1373,38 +1430,7 @@ int Adsd3500::adsd3500_set_ini_params(
         adsd3500_write_cmd(0x0066, std::stoi(it->second));
     } else {
         std::cout << "vcselDelay was not found in .ini file, not setting." << std::endl;
-    }
-
-    it = iniKeyValPairs.find("jblfMaxEdge");
-    if (it != iniKeyValPairs.end()) {
-        adsd3500_write_cmd(0x0074, std::stoi(it->second));
-    } else {
-        std::cout << "jblfMaxEdge was not found in .ini file, "
-                        "not setting." << std::endl;
-    }
-
-    it = iniKeyValPairs.find("jblfABThreshold");
-    if (it != iniKeyValPairs.end()) {
-        adsd3500_write_cmd(0x0075, std::stoi(it->second));
-    } else {
-        std::cout << "jblfABThreshold was not found in .ini file" << std::endl;
-    }
-
-    it = iniKeyValPairs.find("jblfGaussianSigma");
-    if (it != iniKeyValPairs.end()) {
-        adsd3500_write_cmd(0x006B, std::stoi(it->second));
-    } else {
-        std::cout
-            << "jblfGaussianSigma was not found in .ini file, not setting." << std::endl;
-    }
-
-    it = iniKeyValPairs.find("jblfExponentialTerm");
-    if (it != iniKeyValPairs.end()) {
-        adsd3500_write_cmd(0x006C, std::stoi(it->second));
-    } else {
-        std::cout << "jblfExponentialTerm was not found in .ini file, "
-                        "not setting." << std::endl;
-    }
+    }   
 
     it = iniKeyValPairs.find("enablePhaseInvalidation");
     if (it != iniKeyValPairs.end()) {
@@ -1414,6 +1440,7 @@ int Adsd3500::adsd3500_set_ini_params(
                         "not setting." << std::endl;
     }
 
+    // Configures Dynamic Mode Switching.
     it = iniKeyValPairs.find("dynamicModeSwitchEnable");
     if (it != iniKeyValPairs.end()) {
         dynamic_mode_switch = std::stoi(it->second);      
@@ -1955,7 +1982,6 @@ int32_t read_cmd(int fd, uint8_t *ptr, uint16_t len, uint8_t *rcmd,
     cmd_data[1] = (uint8_t)(len >> 8);
     cmd_data[2] = (uint8_t)(len & 0xFF);
 
-    PrintByteArray(cmd_data, len + 3);
     if (v4l2_ctrl_set(fd, 0x009819e1, cmd_data) == false) {
         return -1;
     }
@@ -1964,7 +1990,6 @@ int32_t read_cmd(int fd, uint8_t *ptr, uint16_t len, uint8_t *rcmd,
     cmd_data[0] = 0;
     cmd_data[1] = (uint8_t)(rlen >> 8);
     cmd_data[2] = (uint8_t)(rlen & 0xFF);
-    PrintByteArray(cmd_data, len + 3);
     if (v4l2_ctrl_set(fd, 0x009819e1, cmd_data) == false) {
         return -2;
     }

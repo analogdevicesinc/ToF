@@ -235,7 +235,7 @@ class Adsd3500 {
 		int adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload, uint16_t payload_len);
 		int adsd3500_write_payload(uint8_t *payload, uint16_t payload_len);
 		int adsd3500_process_buffer(uint16_t *buffer = nullptr);
-		int adsd3500_set_ini_params(const std::map<std::string, std::string> &iniKeyValPairs);
+		int adsd3500_set_ini_params();
 		int adsd3500_configure_sensor_frame_types();
 		int adsd3500_set_control(const std::string &control, const std::string &value);
 		int adsd3500_configure_dynamic_mode_switching();
@@ -251,6 +251,7 @@ bool v4l2_ctrl_get(int fd, uint32_t id, uint8_t *val);
 int32_t write_cmd(int fd, uint8_t *ptr, uint16_t len);
 int32_t read_cmd(int fd, uint8_t *ptr, uint16_t len, uint8_t *rcmd, uint16_t rlen);
 int32_t tof_open(const char *tof_device);
+void PrintIniTableEntryFromCCB(struct INI_TABLE_ENTRY entry);
 
 // Static functions
 static uint32_t cal_crc32(uint32_t crc, unsigned char *buf, size_t len);
