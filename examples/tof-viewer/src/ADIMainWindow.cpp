@@ -1068,7 +1068,9 @@ void ADIMainWindow::openGLCleanUp() {
 void ADIMainWindow::showLogWindow(bool *p_open) {
     setWindowSize(mainWindowWidth / dpiScaleFactor, 235.0f);
     setWindowPosition(0, mainWindowHeight / dpiScaleFactor - 235.0f);
-    my_log.Draw("Camera: Log", p_open);
+    ImGuiWindowFlags windowFlags =
+        ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
+    my_log.Draw("Camera: Log", p_open, windowFlags);
 
     while (fgets(buffer, 512, input)) {
         if (buffer != INIT_LOG_WARNING)
