@@ -501,6 +501,36 @@ class SDK_API Camera {
     virtual Status adsd3500DisableCCBM(bool disable) = 0;
 
     /**
+     * @brief Allows enabling or disabling the Dynamic Mode Switching.
+     * NOTE: This must be enabled before configuring the sequence!
+     * @param[in] enable - Set to true to enable and false to disable
+     * @return Status
+     */
+    virtual aditof::Status
+    adsd3500setEnableDynamicModeSwitching(bool enable) = 0;
+
+    /**
+     * @brief Configures the sequence to be captured.
+     * @param[in] sequence - accepts a list of maximum 8 pairs. The first item of the pair refers to the mode
+     * to be captured and the second item refers to how many times the mode should be repeated before moving
+     * on to the next pair. The entire sequence will repeat over and over again until streaming is stopped.
+     * The first item must be a valid mode. The modes being sequenced must have the exact same resolution.
+     * The second item must be between 0 and 15. If 0 is set, the mode will be skipped (will repeat 0 times).
+     * Usage example 1:
+     * calling this: adsds3500setDynamicModeSwitchingSequence( { {6, 1}, {5, 2}, {2, 3}, {3, 4}, {2, 5} } );
+     * will create sequence: 655222333322222655222...
+     *
+     * Usage example 2:
+     * calling this: adsds3500setDynamicModeSwitchingSequence( { {6, 15}, {6, 15}, {6, 15}, {6, 15}, {6, 15}, {5, 1} } );
+     * will create sequence: 6666(75 times)5666...
+     *
+     * NOTE: Only ADSD3030 supports setting how many times the mode should be repeated!
+     * @return Status
+     */
+    virtual aditof::Status adsds3500setDynamicModeSwitchingSequence(
+        const std::vector<std::pair<uint8_t, uint8_t>> &sequence) = 0;
+
+    /**
     * @brief Read serial number from camera and update cache
     * @param[out] serialNumber - Will contain serial number
     * @param[in] useCacheValue - If it is false it will
