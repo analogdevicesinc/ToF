@@ -170,6 +170,15 @@ struct Frame {
 	__u32 pixelFormat;
 };
 
+class IniFilePath {
+	public:
+	    // Mode to Config File Path Mapping for ADSD3030 (Tembin).
+	    static std::map<int, std::string> adsd3030ModeToConfigFileMap;
+	
+	    // Mode to Config File Path Mapping for ADSD3100 (Crosby).
+	    static std::map<int, std::string> adsd3100ModeToConfigFileMap;
+};
+
 class Adsd3500 {
 	public:
 		// Constructor

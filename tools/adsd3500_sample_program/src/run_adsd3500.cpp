@@ -27,27 +27,48 @@ int main(int argc, char *argv[]) {
     auto adsd3500 = Adsd3500();
 
     // Arguments from the user.
-    int mode_num = 3; // Image mode number.
+    adsd3500.mode_num = 0; // Image mode number.
     int num_frames = 8; // Number of frames
-    const char*  iniFileName = "config/RawToDepthAdsd3030_lr-qnative.ini"; // Config file path.
     adsd3500.ccb_as_master = 0; // Enables/Disbales CCB as master.
     
-    // 1. Reset ADSD3500
+    // Reset ADSD3500
     ret = adsd3500.ResetAdsd3500();
     if (ret < 0) {
         printf("Unable to reset Adsd3500.\n");
         return ret;
     }
 
-    // 2. Configure the ADSD3500 and depth compute library with the ini file. 
+    // Configure the ADSD3500 and depth compute library with the ini file. 
     ret = adsd3500.OpenAdsd3500();
     if (ret < 0) {
         printf("Unable to open Adsd3500.\n");
         return ret;
     }
 
-    // Set Image mode number
-    adsd3500.mode_num = mode_num;    
+    // Get the Imager Type and the CCB.
+    ret = adsd3500.GetImagerTypeAndCCB(); 
+    if (ret < 0) {
+        std::cout << "Unable to get the Imager type and CCB." << std::endl;
+        return ret;
+    }
+
+    // Set Ini file path.
+    const char*  iniFileName = nullptr;
+    if (adsd3500.imagerType == ImagerType::IMAGER_ADSD3030) {
+        iniFileName = IniFilePath::adsd3030ModeToConfigFileMap[adsd3500.mode_num].c_str();
+    } else if (adsd3500.imagerType == ImagerType::IMAGER_ADSD3100) {
+        iniFileName = IniFilePath::adsd3100ModeToConfigFileMap[adsd3500.mode_num].c_str();
+    } else {
+        std::cout << "Unsupported Imager.. Exiting!" << std::endl;
+        return 0;
+    }
+
+    // Get Ini Key value pairs.
+    if (iniFileName == nullptr) {
+        std::cout << "Ini File not found.. Exiting!" << std::endl;
+        return 0;
+    }
+    std::cout << "Ini File Path: " << iniFileName << std::endl;
     ret = adsd3500.GetIniKeyValuePair(iniFileName);
     if (ret < 0) {
         printf("Unable to read ini parameters from the Config file.\n");
@@ -80,19 +101,12 @@ int main(int argc, char *argv[]) {
     if (ret < 0) {
         printf("Unable to open Adsd3500.\n");
         return ret;
-    }    
-
-    // 3. Complete configuration of depth compute library with CCB parameters from the ADSD3500.
-    ret = adsd3500.GetImagerTypeAndCCB(); 
-    if (ret < 0) {
-        std::cout << "Unable to get the Imager type and CCB." << std::endl;
-        return ret;
     }
 
-    // 4. Set up Interrupt Support.
+    // Set up Interrupt Support.
     // TODO.
 
-    // 5. Set the Imager Mode.
+    // Set the Imager Mode.
     usleep(1000 * 5000); // Wait for a period for 5 seconds.
 
     ret = adsd3500.SetFrameType();
@@ -101,7 +115,7 @@ int main(int argc, char *argv[]) {
         return ret;
     }  
 
-    // 6. Set the Stream on
+    // Set the Stream on
     ret = adsd3500.StartStream();
     if (ret < 0) {
         printf("Unable to start stream.\n");
@@ -130,14 +144,14 @@ int main(int argc, char *argv[]) {
     std::ofstream conf("out_conf.bin", std::ios::binary);
 
     for (int i = 0; i < num_frames; i++) {  
-        // 7. Receive Frames
+        // Receive Frames
         uint16_t* buffer = new uint16_t[buffer_size];
         ret = adsd3500.RequestFrame(buffer);
         if (ret < 0 || buffer == nullptr) {
             std::cout << "Unable to receive frames from Adsd3500" << std::endl;
         }
 
-        // 8. Get Depth, AB, Confidence Data using Depth Compute Library and store them as .bin file.
+        // Get Depth, AB, Confidence Data using Depth Compute Library and store them as .bin file.
         adsd3500.ParseRawDataWithDCL(buffer);
         if (ret < 0) {
             std::cout << "Unable to parse raw frames." << std::endl;
@@ -148,7 +162,7 @@ int main(int argc, char *argv[]) {
         memcpy(conf_buffer + i * total_pixels, adsd3500.tofi_compute_context->p_conf_frame, total_pixels*sizeof(uint8_t));
     }
 
-    // 9. Store AB, Depth and Confidence frames on to a .bin files.
+    // Store AB, Depth and Confidence frames on to a .bin files.
     ab.write((char*)ab_buffer, total_pixels*num_frames*sizeof(uint16_t));
     ab.close();
 
@@ -164,7 +178,7 @@ int main(int argc, char *argv[]) {
     delete[] depth_buffer;
     delete[] conf_buffer; 
 
-    // 10. Stop Stream and Close Camera
+    // Stop Stream and Close Camera
     // Handled by the ADSD3500 class destructor.   
     
     return 0;

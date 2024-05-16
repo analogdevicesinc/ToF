@@ -93,6 +93,24 @@ Adsd3500::~Adsd3500() {
 }
 
 /*
+********************************Definitions and Initializations***************************************
+*/
+// Define and initialize the Mode to Config File Mapping.
+std::map<int, std::string> IniFilePath::adsd3030ModeToConfigFileMap = {
+    {0, "config/RawToDepthAdsd3030_sr-native.ini"},
+    {1, "config/RawToDepthAdsd3030_lr-native.ini"},
+    {2, "config/RawToDepthAdsd3030_sr-qnative.ini"},
+    {3, "config/RawToDepthAdsd3030_lr-qnative.ini"}
+};
+
+std::map<int, std::string> IniFilePath::adsd3100ModeToConfigFileMap = {
+    {0, "config/RawToDepthAdsd3500_sr-native.ini"},
+    {1, "config/RawToDepthAdsd3500_lr-native.ini"},
+    {2, "config/RawToDepthAdsd3500_sr-qnative.ini"},
+    {3, "config/RawToDepthAdsd3500_lr-qnative.ini"}
+};
+
+/*
 *****************************ADSD3500 Control Commands****************************
 */
 
@@ -1247,12 +1265,15 @@ int Adsd3500::adsd3500_get_ini_key_value_pairs_from_ccb() {
     // Set the Mode Number.
     readIniFromAdsd3500_cmd[12] = mode_num;
 
+    printf("Burst Mode Command to get Ini table entry values from CCB.\n");
+    PrintByteArray(readIniFromAdsd3500_cmd, 16);
+
     ret = read_cmd(videoDevice.cameraSensorDeviceId, readIniFromAdsd3500_cmd, ARRAY_SIZE(readIniFromAdsd3500_cmd), ini_table_buf, ARRAY_SIZE(ini_table_buf));
     if (ret < 0) {
         std::cout << "Unable to get INI table entry from ADSD3500." << std::endl;
     }
 
-    std::cout << "INI Table Values from ADSD3500.." << std::endl;
+    std::cout << "INI Table Values read from CCB.." << std::endl;
     PrintByteArray(ini_table_buf, 40);
 
     // ret = read_cmd(videoDevice.cameraSensorDeviceId, readModeMapFromAdsd3500_cmd, ARRAY_SIZE(readModeMapFromAdsd3500_cmd), mode_map_buf, ARRAY_SIZE(mode_map_buf));
@@ -1262,7 +1283,6 @@ int Adsd3500::adsd3500_get_ini_key_value_pairs_from_ccb() {
 
     // std::cout << "Mode Map Entry from ADSD3500.." << std::endl;
     // PrintByteArray(ini_table_buf, 168);
-
     
     adsd3500_read_ini_values_from_ccb(ini_table_buf, 40);
 
@@ -1300,6 +1320,13 @@ int Adsd3500::adsd3500_read_ini_values_from_ccb(uint8_t* ini_table_buf, size_t b
     ccb_iniTableEntry.spare8 = (ini_table_buf[39] << 8) | ini_table_buf[38];
 
     PrintIniTableEntryFromCCB(ccb_iniTableEntry);
+
+    // TODO: 
+    // 1. Update the values in the iniKeyValuePair dictionary.
+    // 2. Write the Modified iniKeyValuePair into a file, with Key and Value separated by a '='.
+    // 3. Update iniFileData struct with the contents from the modified file.
+
+    
 
     return 0;
 }
