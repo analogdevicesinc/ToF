@@ -2073,3 +2073,13 @@ aditof::Status CameraItof::getImagerType(aditof::ImagerType &imagerType) const {
 
     return aditof::Status::OK;
 }
+
+aditof::Status CameraItof::adsd3500setEnableDynamicModeSwitching(bool en) {
+
+    return aditof::Status::OK;
+}
+
+aditof::Status CameraItof::adsds3500setDynamicModeSwitchingSequence(
+    const std::vector<std::pair<uint8_t, uint8_t>> &sequence) {
+    return aditof::Status::OK;
+}
