@@ -303,7 +303,19 @@ PYBIND11_MODULE(aditofpython, m) {
                 return status;
             },
             py::arg("availableModes"))
-        .def("setMode", &aditof::Camera::setMode, py::arg("mode"))
+        .def(
+            "setMode",
+            [](aditof::Camera &camera, const uint8_t &mode) {
+                return camera.setMode(mode);
+            },
+            py::arg("availableModes"))
+        .def(
+            "setMode",
+            [](aditof::Camera &camera,
+               const aditof::DepthSensorModeDetails &mode) {
+                return camera.setMode(mode);
+            },
+            py::arg("availableModes"))
         .def(
             "getAvailableModes",
             [](const aditof::Camera &camera, py::list modes) {
