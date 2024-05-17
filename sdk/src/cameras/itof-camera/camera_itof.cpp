@@ -1722,7 +1722,7 @@ aditof::Status CameraItof::adsd3500GetGenericTemplate(uint16_t reg,
         reg, reinterpret_cast<uint16_t *>(&value));
 }
 
-aditof::Status CameraItof::adsd3500disableCCBM(bool disable) {
+aditof::Status CameraItof::adsd3500DisableCCBM(bool disable) {
     return m_depthSensor->setControl("disableCCBM", std::to_string(disable));
 }
 
