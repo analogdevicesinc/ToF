@@ -2079,10 +2079,64 @@ aditof::Status CameraItof::getImagerType(aditof::ImagerType &imagerType) const {
 
 aditof::Status CameraItof::adsd3500setEnableDynamicModeSwitching(bool en) {
 
-    return aditof::Status::OK;
+    return m_depthSensor->adsd3500_write_cmd(0x0080, en ? 0x0001 : 0x0000);
 }
 
 aditof::Status CameraItof::adsds3500setDynamicModeSwitchingSequence(
     const std::vector<std::pair<uint8_t, uint8_t>> &sequence) {
-    return aditof::Status::OK;
+    using namespace aditof;
+
+    Status status;
+    uint32_t entireSequence = 0xFFFFFFFF;
+    uint32_t entireRepCount = 0x00000000;
+    uint8_t *bytePtrSq = reinterpret_cast<uint8_t *>(&entireSequence);
+    uint8_t *bytePtrRc = reinterpret_cast<uint8_t *>(&entireRepCount);
+
+    for (size_t i = 0; i < sequence.size(); ++i) {
+        if (i < 8) {
+            if (i % 2) {
+                *bytePtrSq = (*bytePtrSq & 0x0F) | (sequence[i].first << 4);
+                *bytePtrRc = (*bytePtrRc & 0x0F) | (sequence[i].second << 4);
+            } else {
+                *bytePtrSq = (*bytePtrSq & 0xF0) | (sequence[i].first << 0);
+                *bytePtrRc = (*bytePtrRc & 0xF0) | (sequence[i].second << 0);
+            }
+            bytePtrSq += i % 2;
+            bytePtrRc += i % 2;
+        } else {
+            LOG(WARNING) << "More than 8 entries have been provided. Ignoring "
+                            "all entries starting from the 9th.";
+            break;
+        }
+    }
+
+    uint16_t *sequence0 = reinterpret_cast<uint16_t *>(&entireSequence);
+    uint16_t *sequence1 = reinterpret_cast<uint16_t *>(&entireSequence) + 1;
+    status = m_depthSensor->adsd3500_write_cmd(0x0081, *sequence0);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to set sequence 0 for the Dynamic Mode Switching";
+        return status;
+    }
+    status = m_depthSensor->adsd3500_write_cmd(0x0082, *sequence1);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to set sequence 1 for the Dynamic Mode Switching";
+        return status;
+    }
+
+    uint16_t *repCount0 = reinterpret_cast<uint16_t *>(&entireRepCount);
+    uint16_t *repCount1 = reinterpret_cast<uint16_t *>(&entireRepCount) + 1;
+    status = m_depthSensor->adsd3500_write_cmd(0x0083, *repCount0);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to set mode repeat count 0 for the Dynamic Mode "
+                      "Switching";
+        return status;
+    }
+    status = m_depthSensor->adsd3500_write_cmd(0x0084, *repCount1);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to set mode repeat count 0 for the Dynamic Mode "
+                      "Switching";
+        return status;
+    }
+
+    return Status::OK;
 }
