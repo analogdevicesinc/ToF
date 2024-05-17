@@ -118,7 +118,7 @@ class CameraItof : public aditof::Camera {
                                               uint16_t &value) override;
     aditof::Status adsd3500GetStatus(int &chipStatus,
                                      int &imagerStatus) override;
-    aditof::Status adsd3500disableCCBM(bool disable) override;
+    aditof::Status adsd3500DisableCCBM(bool disable) override;
     aditof::Status readSerialNumber(std::string &serialNumber,
                                     bool useCacheValue = false) override;
     aditof::Status getImagerType(aditof::ImagerType &imagerType) const override;
