@@ -36,6 +36,7 @@
 #include "camera_definitions.h"
 #include "sdk_exports.h"
 #include "status_definitions.h"
+#include "sensor_definitions.h"
 
 #include <functional>
 #include <map>
@@ -86,6 +87,14 @@ class SDK_API Camera {
      * @return Status
      */
     virtual Status setMode(const uint8_t &mode) = 0;
+
+    /**
+     * @brief Puts the camera into the given mode using user defined struct
+     * Used for custom modes. (chipRaw/imagerRaw or another defined user mode)
+     * @param mode - User defined DeptsSensorModeDetails struct
+     * @return Status
+     */
+    virtual Status setMode(const aditof::DepthSensorModeDetails &mode) = 0;
 
     /**
      * @brief Get the Depth Compute Library ini parameters

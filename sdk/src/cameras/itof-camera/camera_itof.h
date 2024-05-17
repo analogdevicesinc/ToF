@@ -55,6 +55,7 @@ class CameraItof : public aditof::Camera {
     aditof::Status start() override;
     aditof::Status stop() override;
     aditof::Status setMode(const uint8_t &mode) override;
+    aditof::Status setMode(const aditof::DepthSensorModeDetails &mode) override;
     aditof::Status
     getAvailableModes(std::vector<uint8_t> &availableModes) const override;
     aditof::Status requestFrame(aditof::Frame *frame) override;
@@ -100,7 +101,7 @@ class CameraItof : public aditof::Camera {
     aditof::Status adsd3500SetJBLFABThreshold(uint16_t threshold) override;
     aditof::Status adsd3500SetJBLFGaussianSigma(uint16_t value) override;
     aditof::Status adsd3500GetJBLFGaussianSigma(uint16_t &value) override;
-    aditof::Status adsd3500SetJBLFExponentialTerm(uint16_t value) overridse;
+    aditof::Status adsd3500SetJBLFExponentialTerm(uint16_t value) override;
     aditof::Status adsd3500GetJBLFExponentialTerm(uint16_t &value) override;
     aditof::Status adsd3500GetFrameRate(uint16_t &fps) override;
     aditof::Status adsd3500SetFrameRate(uint16_t fps) override;
@@ -257,12 +258,11 @@ class CameraItof : public aditof::Camera {
     aditof::Adsd3500Status m_adsd3500Status;
     XYZTable m_xyzTable;
     bool m_enableDepthCompute;
+    bool m_enableAdsd3500Processing;
     std::string m_initConfigFilePath;
     aditof::ImagerType m_imagerType;
     bool m_dropFirstFrame;
     bool m_dropFrameOnce;
-    bool m_enableAdsd3500Processing;
-    bool m_enableDepthCompute;
     std::string m_sensorConfiguration;
     std::string m_sensorConfigurationCache;
     std::vector<std::string> m_availableSensorConfigurations;

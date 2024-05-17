@@ -361,6 +361,20 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
     configureSensorModeDetails();
     m_details.mode = mode;
 
+    status = m_depthSensor->getModeDetails(mode, m_modeDetailsCache);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to get frame type details!";
+        return status;
+    }
+
+    status = m_depthSensor->setMode(mode);
+    if (status != Status::OK) {
+        LOG(WARNING) << "Failed to set frame type";
+        return status;
+    }
+
+    m_pcmFrame = m_modeDetailsCache.isPCM;
+
     if (m_sensorConfigurationCache == "standard") {
         if (m_enableMetaDatainAB > 0) {
             if (!m_pcmFrame) {
@@ -412,20 +426,6 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
     }
 
     LOG(INFO) << "Using ini file: " << m_ini_depth;
-
-    status = m_depthSensor->getModeDetails(mode, m_modeDetailsCache);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Failed to get frame type details!";
-        return status;
-    }
-
-    status = m_depthSensor->setMode(mode);
-    if (status != Status::OK) {
-        LOG(WARNING) << "Failed to set frame type";
-        return status;
-    }
-
-    m_pcmFrame = m_modeDetailsCache.isPCM;
 
     // Store the frame details in camera details
     m_details.mode = mode;
@@ -537,6 +537,207 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
     return status;
 }
 
+aditof::Status CameraItof::setMode(const aditof::DepthSensorModeDetails &mode) {
+    using namespace aditof;
+    Status status = Status::OK;
+
+    if (m_ini_depth_map.size() > 1) {
+        m_ini_depth = m_ini_depth_map[std::to_string(mode.modeNumber)];
+    }
+
+    if (m_details.connection == ConnectionType::USB) {
+        status = m_depthSensor->adsd3500_reset();
+        if (status != Status::OK) {
+            LOG(WARNING) << "Failed to reset the camera!";
+            return status;
+        }
+    }
+
+    if (m_sensorConfigurationCache != m_sensorConfiguration) {
+        if (m_sensorConfiguration == "imagerRaw") {
+            //TO DO: Enable bypass function
+        } else {
+            //TO DO: Disable bypass function
+        }
+
+        m_sensorConfigurationCache = m_sensorConfiguration;
+    }
+
+    UtilsIni::getKeyValuePairsFromIni(m_ini_depth, m_iniKeyValPairs);
+    setAdsd3500WithIniParams(m_iniKeyValPairs);
+    configureSensorModeDetails();
+    m_details.mode = mode.modeNumber;
+
+    status = m_depthSensor->setMode(mode);
+    if (status != Status::OK) {
+        LOG(WARNING) << "Failed to set frame type";
+        return status;
+    }
+
+    m_pcmFrame = mode.isPCM;
+
+    if (m_sensorConfigurationCache == "standard") {
+        if (m_enableMetaDatainAB > 0) {
+            if (!m_pcmFrame) {
+                status = adsd3500SetEnableMetadatainAB(m_enableMetaDatainAB);
+                if (status != Status::OK) {
+                    LOG(ERROR) << "Failed to set enableMetaDatainAB.";
+                    return status;
+                }
+                LOG(INFO)
+                    << "Metadata in AB is enabled and it is stored in the "
+                       "first 128 bytes.";
+
+            } else {
+                status = adsd3500SetEnableMetadatainAB(0);
+                if (status != Status::OK) {
+                    LOG(ERROR) << "Failed to disable enableMetaDatainAB.";
+                    return status;
+                }
+                LOG(INFO) << "Metadata in AB is disabled for this frame type.";
+            }
+
+        } else {
+            status = adsd3500SetEnableMetadatainAB(m_enableMetaDatainAB);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to set enableMetaDatainAB.";
+                return status;
+            }
+
+            LOG(WARNING) << "Metadata in AB is disabled.";
+        }
+    } else {
+        if (m_enableMetaDataInRaw > 0) {
+            status = adsd3500SetEnableMetadataInRaw(m_enableMetaDataInRaw);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to set enableMetaDataInRaw.";
+                return status;
+            }
+            LOG(INFO) << "Metadata in Raw is enabled and it is stored in the "
+                         "first 128 bytes.";
+
+        } else {
+            status = adsd3500SetEnableMetadataInRaw(0);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Failed to disable enableMetaDataInRaw.";
+                return status;
+            }
+            LOG(INFO) << "Metadata in Raw is disabled.";
+        }
+    }
+
+    LOG(INFO) << "Using ini file: " << m_ini_depth;
+
+    // Store the frame details in camera details
+    m_details.mode = mode.modeNumber;
+    m_details.frameType.width = mode.baseResolutionWidth;
+    m_details.frameType.height = mode.baseResolutionHeight;
+    m_details.frameType.totalCaptures = 1;
+    m_details.frameType.dataDetails.clear();
+    for (const auto &item : mode.frameContent) {
+        if (item == "xyz" && !m_xyzEnabled) {
+            continue;
+        }
+
+        FrameDataDetails fDataDetails;
+        fDataDetails.type = item;
+        fDataDetails.width = mode.baseResolutionWidth;
+        fDataDetails.height = mode.baseResolutionHeight;
+        fDataDetails.subelementSize = sizeof(uint16_t);
+        fDataDetails.subelementsPerElement = 1;
+
+        if (item == "xyz") {
+            fDataDetails.subelementsPerElement = 3;
+        } else if (item == "raw") {
+            fDataDetails.width = mode.frameWidthInBytes;
+            fDataDetails.height = mode.frameHeightInBytes;
+            fDataDetails.subelementSize = 1;
+            fDataDetails.subelementsPerElement = 1;
+        } else if (item == "metadata") {
+            fDataDetails.subelementSize = 1;
+            fDataDetails.width = 128;
+            fDataDetails.height = 1;
+        } else if (item == "conf") {
+            fDataDetails.subelementSize = sizeof(float);
+        }
+        fDataDetails.bytesCount = fDataDetails.width * fDataDetails.height *
+                                  fDataDetails.subelementSize *
+                                  fDataDetails.subelementsPerElement;
+
+        m_details.frameType.dataDetails.emplace_back(fDataDetails);
+    }
+
+    // We want computed frames (Depth & AB). Tell target to initialize depth compute
+    if (!m_pcmFrame && m_enableDepthCompute) {
+        if (!m_ini_depth.empty()) {
+            size_t dataSize = m_depthINIData.size;
+            unsigned char *pData = m_depthINIData.p_data;
+
+            if (m_depthINIDataMap.size() > 1) {
+                dataSize = m_depthINIDataMap[m_ini_depth].size;
+                pData = m_depthINIDataMap[m_ini_depth].p_data;
+            }
+
+            // Disable the generation of XYZ frames on target
+            std::string s(reinterpret_cast<const char *>(pData), dataSize);
+            std::string::size_type n;
+            n = s.find("xyzEnable=");
+            if (n == std::string::npos) {
+                DLOG(INFO) << "xyzEnable not found in .ini. Can't set it to 0.";
+            } else {
+                s[n + strlen("xyzEnable=")] = '0';
+            }
+
+            aditof::Status localStatus;
+            localStatus = m_depthSensor->initTargetDepthCompute(
+                (uint8_t *)s.c_str(), dataSize, (uint8_t *)m_xyz_dealias_data,
+                sizeof(TofiXYZDealiasData) * 10);
+            if (localStatus != aditof::Status::OK) {
+                LOG(ERROR) << "Failed to initialize depth compute on target!";
+                return localStatus;
+            }
+
+            std::string depthComputeStatus;
+            localStatus = m_depthSensor->getControl("depthComputeOpenSource",
+                                                    depthComputeStatus);
+            if (localStatus == aditof::Status::OK) {
+                if (depthComputeStatus == "0") {
+                    LOG(INFO) << "Using closed source depth compute library.";
+                } else {
+                    LOG(INFO) << "Using open source depth compute library.";
+                }
+            } else {
+                LOG(ERROR)
+                    << "Failed to get depth compute version from target!";
+            }
+        }
+    }
+
+    // If we compute XYZ then prepare the XYZ tables which depend on the mode
+    if (m_xyzEnabled && !m_pcmFrame && m_enableDepthCompute) {
+        uint8_t modeNumber = mode.modeNumber;
+
+        const int GEN_XYZ_ITERATIONS = 20;
+        TofiXYZDealiasData *pDealias = &m_xyz_dealias_data[modeNumber];
+
+        cleanupXYZtables();
+        int ret = Algorithms::GenerateXYZTables(
+            &m_xyzTable.p_x_table, &m_xyzTable.p_y_table, &m_xyzTable.p_z_table,
+            &(pDealias->camera_intrinsics), pDealias->n_sensor_rows,
+            pDealias->n_sensor_cols, mode.baseResolutionWidth,
+            mode.baseResolutionHeight, pDealias->n_offset_rows,
+            pDealias->n_offset_cols, pDealias->row_bin_factor,
+            pDealias->col_bin_factor, GEN_XYZ_ITERATIONS);
+        if (ret != 0 || !m_xyzTable.p_x_table || !m_xyzTable.p_y_table ||
+            !m_xyzTable.p_z_table) {
+            LOG(ERROR) << "Failed to generate the XYZ tables";
+            return Status::GENERIC_ERROR;
+        }
+    }
+
+    return status;
+}
+
 aditof::Status CameraItof::getIniParams(std::map<std::string, float> &params) {
     aditof::Status status;
     status = m_depthSensor->getIniParams(params);
@@ -617,24 +818,6 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
         return status;
     }
 
-    if (m_sensorConfigurationCache != "standard") {
-        return Status::OK;
-    }
-
-    // The incoming sensor frames are already processed. Need to just create XYZ data
-    if (m_xyzEnabled) {
-        uint16_t *depthFrame;
-        uint16_t *xyzFrame;
-
-        frame->getData("depth", &depthFrame);
-        frame->getData("xyz", &xyzFrame);
-
-        Algorithms::ComputeXYZ((const uint16_t *)depthFrame, &m_xyzTable,
-                               (int16_t *)xyzFrame,
-                               m_modeDetailsCache.baseResolutionHeight,
-                               m_modeDetailsCache.baseResolutionWidth);
-    }
-
     Metadata metadata;
     status = frame->getMetadataStruct(metadata);
     if (status != Status::OK) {
@@ -649,10 +832,13 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
         return status;
     }
 
-    if (m_enableMetaDatainAB || m_enableMetaDataInRaw) {
+    if (m_enableMetaDatainAB) {
         uint16_t *abFrame;
         frame->getData("ab", &abFrame);
         memcpy(reinterpret_cast<uint8_t *>(&metadata), abFrame,
+               sizeof(metadata));
+    } else if(m_enableMetaDataInRaw) {
+        memcpy(reinterpret_cast<uint8_t *>(&metadata), frameDataLocation,
                sizeof(metadata));
     } else {
         // If metadata from ADSD3500 is not available/disabled, generate one here
@@ -672,6 +858,8 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
 
     if (m_sensorConfigurationCache != "standard") {
         metadata.isRaw = true;
+    } else {
+        metadata.isRaw = false;
     }
 
     if (m_enableMetaDataInRaw) {
@@ -682,6 +870,20 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
     metadata.xyzEnabled = m_xyzEnabled;
     memcpy(reinterpret_cast<uint8_t *>(metadataLocation),
            reinterpret_cast<uint8_t *>(&metadata), sizeof(metadata));
+
+    // The incoming sensor frames are already processed. Need to just create XYZ data
+    if (m_xyzEnabled) {
+        uint16_t *depthFrame;
+        uint16_t *xyzFrame;
+
+        frame->getData("depth", &depthFrame);
+        frame->getData("xyz", &xyzFrame);
+
+        Algorithms::ComputeXYZ((const uint16_t *)depthFrame, &m_xyzTable,
+                               (int16_t *)xyzFrame,
+                               m_modeDetailsCache.baseResolutionHeight,
+                               m_modeDetailsCache.baseResolutionWidth);
+    }
 
     return Status::OK;
 }
