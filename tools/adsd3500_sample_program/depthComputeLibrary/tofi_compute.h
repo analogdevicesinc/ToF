@@ -28,10 +28,9 @@ extern "C" { // only need to export C interface if
 #define NO_OF_PHASES 3
 
 typedef struct {
-  float sensor_temp[NO_OF_PHASES];
-  float laser_temp[NO_OF_PHASES];
+    float sensor_temp[NO_OF_PHASES];
+    float laser_temp[NO_OF_PHASES];
 } TemperatureInfo;
-
 
 extern const char ver_info[];
 ///
@@ -40,15 +39,15 @@ extern const char ver_info[];
 TOFI_COMPUTE_API uint32_t GetVersion(char *depth_compute_version);
 
 typedef struct {
-  uint32_t n_rows;               ///< Number of rows
-  uint32_t n_cols;               ///< Number of columns
-  uint16_t *p_depth_frame;       ///< Pointer to the Depth Frame
-  uint16_t *p_ab_frame;          ///< Pointer to the AB Frame
-  float *p_conf_frame;           ///< Pointer to the Confidence Frame
-  //BufferType *p_xyz_frame;       ///< Pointer to the XYZ Frame
-  void *p_tofi_processor_config; ///< Pointer to the Processor Config
-  void *p_cal_config;            ///< Pointer to the Calibration config data
-  uint16_t *p_depth16_frame;     ///< Pointer to the Depth16 Frame
+    uint32_t n_rows;         ///< Number of rows
+    uint32_t n_cols;         ///< Number of columns
+    uint16_t *p_depth_frame; ///< Pointer to the Depth Frame
+    uint16_t *p_ab_frame;    ///< Pointer to the AB Frame
+    float *p_conf_frame;     ///< Pointer to the Confidence Frame
+    //BufferType *p_xyz_frame;       ///< Pointer to the XYZ Frame
+    void *p_tofi_processor_config; ///< Pointer to the Processor Config
+    void *p_cal_config;            ///< Pointer to the Calibration config data
+    uint16_t *p_depth16_frame;     ///< Pointer to the Depth16 Frame
 } TofiComputeContext;
 
 /// Function to Initialize the configuration for TOFI compute context

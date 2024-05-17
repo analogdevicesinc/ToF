@@ -178,8 +178,11 @@ uint8_t readModeMapFromAdsd3500_cmd[] = {0xAD, 0x00, 0xA8, 0x24, 0x00, 0x00,
                                          0x00, 0x00, 0xCC, 0x00, 0x00, 0x00,
                                          0x00, 0x00, 0x00, 0x00};
 
-uint8_t getFwVersion_cmd[] = {0xAD, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00,
-                              0x05, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00};
+// uint8_t getFwVersion_cmd[] = {0xAD, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00,
+//                               0x05, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00}; // Original
+
+uint8_t getFwVersion_cmd[] = {0xAD, 0x00, 0x2C, 0x05, 0x00, 0x00, 0x00, 0x00,
+                              0x31, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00};
 
 /*
 *********************************Public functions*********************************
@@ -1305,9 +1308,6 @@ int Adsd3500::adsd3500_get_ini_key_value_pairs_from_ini_file(
 }
 
 int Adsd3500::adsd3500_get_ini_key_value_pairs_from_ccb() {
-
-    // Add Logic here to extract INI parameters from ADSD3500.
-
     // Switch to Burst Mode.
     int32_t ret =
         adsd3500_switch_to_burst_mode(videoDevice.cameraSensorDeviceId);
@@ -1316,33 +1316,40 @@ int Adsd3500::adsd3500_get_ini_key_value_pairs_from_ccb() {
     }
 
     uint8_t *ini_table_buf = new uint8_t[40];
-    uint8_t *mode_map_buf = new uint8_t[168];
 
     // Set the Mode Number.
     readIniFromAdsd3500_cmd[12] = mode_num;
 
+    // Send the Burst Mode command to read the Ini Table values from the CCB.
     printf("Burst Mode Command to get Ini table entry values from CCB.\n");
     PrintByteArray(readIniFromAdsd3500_cmd, 16);
 
-    // TODO: The Read command does not read the correct values back. Need to fix this.
-    ret = read_cmd(videoDevice.cameraSensorDeviceId, readIniFromAdsd3500_cmd,
-                   ARRAY_SIZE(readIniFromAdsd3500_cmd), ini_table_buf,
-                   ARRAY_SIZE(ini_table_buf));
-    if (ret < 0) {
-        std::cout << "Unable to get INI table entry from ADSD3500."
-                  << std::endl;
+    uint8_t data[CTRL_SIZE] = {0};
+    int i = 0;
+    while(i < ARRAY_SIZE(readIniFromAdsd3500_cmd)) {
+        data[i + 3] = readIniFromAdsd3500_cmd[i];
+        i++;
     }
+    data[0] = 1;
+    data[1] = i >> 8;
+    data[2] = i & 0xFF;
 
-    std::cout << "INI Table Values read from CCB.." << std::endl;
-    PrintByteArray(ini_table_buf, 40);
+    v4l2_ctrl_set(videoDevice.cameraSensorDeviceId, 0x009819e1, data);
+    data[0] = 0;
+    data[1] = data[4];
+    data[2] = data[5];
+    v4l2_ctrl_set(videoDevice.cameraSensorDeviceId, 0x009819e1, data);
+    v4l2_ctrl_get(videoDevice.cameraSensorDeviceId, 0x009819e1, data);
+    int read_len = (data[1] << 8) | data[2];
+    memcpy(ini_table_buf, &data[3], read_len);
+    printf("Ini Table values read from the CCB.\n");
+    PrintByteArray(ini_table_buf,read_len);
 
-    // ret = read_cmd(videoDevice.cameraSensorDeviceId, readModeMapFromAdsd3500_cmd, ARRAY_SIZE(readModeMapFromAdsd3500_cmd), mode_map_buf, ARRAY_SIZE(mode_map_buf));
-    // if (ret < 0) {
-    //     std::cout << "Unable to get INI table entry from ADSD3500." << std::endl;
-    // }
-
-    // std::cout << "Mode Map Entry from ADSD3500.." << std::endl;
-    // PrintByteArray(ini_table_buf, 168);
+    // Switch to Standard Mode.
+    ret = adsd3500_switch_to_standard_mode(videoDevice.cameraSensorDeviceId);
+    if (ret < 0) {
+        std::cout << "Unable to switch to Standard Mode." << std::endl;
+    }
 
     adsd3500_update_ini_key_value_pairs(ini_table_buf, 40);
 
@@ -2148,6 +2155,8 @@ int32_t write_cmd(int fd, uint8_t *ptr, uint16_t len) {
     return ret;
 }
 
+/* NOTE: This API works well with Standard Mode commands,
+but returns wrong values with Burst Mode Commands. Need to fix this.*/
 int32_t read_cmd(int fd, uint8_t *ptr, uint16_t len, uint8_t *rcmd,
                  uint16_t rlen) {
     uint8_t cmd_data[CTRL_SIZE];

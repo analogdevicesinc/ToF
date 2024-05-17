@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     auto adsd3500 = Adsd3500();
 
     // Arguments from the user.
-    adsd3500.mode_num = 0;      // Image mode number.
+    adsd3500.mode_num = 2;      // Image mode number.
     int num_frames = 8;         // Number of frames
     adsd3500.ccb_as_master = 1; // Enables/Disbales CCB as master.
 
