@@ -495,10 +495,10 @@ class SDK_API Camera {
 
     /**
      * @brief Enable/disable ccb as master 
-     * @param[out] enable - 1 - disable, 0 - enable
+     * @param[in] disable - set to: 1 - disable, 0 - enable
      * @return Status
      */
-    virtual Status adsd3500disableCCBM(bool disable) = 0;
+    virtual Status adsd3500DisableCCBM(bool disable) = 0;
 
     /**
     * @brief Read serial number from camera and update cache
