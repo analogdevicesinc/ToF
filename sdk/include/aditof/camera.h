@@ -494,6 +494,13 @@ class SDK_API Camera {
     virtual Status adsd3500GetStatus(int &chipStatus, int &imagerStatus) = 0;
 
     /**
+     * @brief Enable/disable ccb as master 
+     * @param[out] enable - 1 - disable, 0 - enable
+     * @return Status
+     */
+    virtual Status adsd3500disableCCBM(bool disable) = 0;
+
+    /**
     * @brief Read serial number from camera and update cache
     * @param[out] serialNumber - Will contain serial number
     * @param[in] useCacheValue - If it is false it will
