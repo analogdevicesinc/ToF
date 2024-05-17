@@ -852,6 +852,11 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
         return Status::UNAVAILABLE;
     }
 
+    if (control == "disableCCBM") {
+        m_controls.at("disableCCBM") = value;
+        return Status::OK;
+    }
+
     std::vector<std::string> convertor = {"0",  "4",  "8", "10",
                                           "12", "14", "16"};
 
@@ -901,6 +906,11 @@ aditof::Status Adsd3500Sensor::getControl(const std::string &control,
 
         if (control == "inputFormat") {
             value = m_controls.at("inputFormat");
+            return Status::OK;
+        }
+
+        if (control == "disableCCBM") {
+            value = m_controls.at("disableCCBM");
             return Status::OK;
         }
 
