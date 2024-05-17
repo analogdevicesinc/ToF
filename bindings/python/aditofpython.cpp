@@ -562,6 +562,12 @@ PYBIND11_MODULE(aditofpython, m) {
                 return std::make_tuple(status, chipStatus, imagerStatus);
             },
             py::arg("chipStatus"), py::arg("imagerStatus"))
+        .def("adsd3500setEnableDynamicModeSwitching",
+             &aditof::Camera::adsd3500setEnableDynamicModeSwitching,
+             py::arg("enable"))
+        .def("adsds3500setDynamicModeSwitchingSequence",
+             &aditof::Camera::adsds3500setDynamicModeSwitchingSequence,
+             py::arg("sequence"))
         .def(
             "readSerialNumber",
             [](aditof::Camera &camera, std::string serialNumber,
