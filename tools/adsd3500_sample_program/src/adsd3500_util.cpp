@@ -16,40 +16,38 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.*/
 
-#include <stdio.h>
-#include <unistd.h>
+#include "../crc32/crc.h"
+#include <cstdint>
 #include <fcntl.h>
+#include <linux/i2c-dev.h>
+#include <linux/i2c.h>
+#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <linux/i2c.h>
-#include <linux/i2c-dev.h>
-#include "../crc32/crc.h"
-#include <sstream>
-#include <cstdint>
+#include <unistd.h>
 
+#include "../include/adsd3500_util.h"
+#include <cctype>
+#include <fstream>
 #include <iostream>
 #include <vector>
-#include <fstream>
-#include <cctype>
-#include "../include/adsd3500_util.h"
 
-const char ver_info[] =
-    "VERSIONINFO:"
-    "TOF_DepthComputeEngine_ARM64-Rel4.4.0";
+const char ver_info[] = "VERSIONINFO:"
+                        "TOF_DepthComputeEngine_ARM64-Rel4.4.0";
 
 #define ADSD3500_ADDR (0x70 >> 1)
-#define ADSD3500_INTRINSIC_SIZE		56
-#define ADSD3500_DEALIAS_SIZE		32
-#define ADI_STATUS_FIRMWARE_UPDATE      0x000E
+#define ADSD3500_INTRINSIC_SIZE 56
+#define ADSD3500_DEALIAS_SIZE 32
+#define ADI_STATUS_FIRMWARE_UPDATE 0x000E
 #define ADI_STATUS_NVM_WRITE_COMPLETE 0x000F
 #define BUF_SIZE (4000000)
 #define PAGE_SIZE 256u
 #define CTRL_SIZE 4099
 #define IOCTL_TRIES 3
 #define FULL_UPDATE_CMD 0x12
-#define MAX_BIN_SIZE	741376
+#define MAX_BIN_SIZE 741376
 
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -71,9 +69,9 @@ Adsd3500::~Adsd3500() {
     for (unsigned int i = 0; i < videoDevice.nVideoBuffers; i++) {
         if (munmap(videoDevice.videoBuffers[i].start,
                    videoDevice.videoBuffers[i].length) == -1) {
-            std::cout
-                << "munmap error "
-                << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+            std::cout << "munmap error "
+                      << "errno: " << errno << " error: " << strerror(errno)
+                      << std::endl;
         }
     }
 
@@ -81,13 +79,15 @@ Adsd3500::~Adsd3500() {
 
     if (videoDevice.videoCaptureDeviceId != -1) {
         if (close(videoDevice.videoCaptureDeviceId) == -1) {
-            std::cout << "Unable to close the video capture device." << std::endl;
+            std::cout << "Unable to close the video capture device."
+                      << std::endl;
         }
     }
 
     if (videoDevice.cameraSensorDeviceId != -1) {
         if (close(videoDevice.cameraSensorDeviceId) == -1) {
-            std::cout << "Unable to close the camera sensor device." << std::endl;
+            std::cout << "Unable to close the camera sensor device."
+                      << std::endl;
         }
     }
 }
@@ -100,15 +100,13 @@ std::map<int, std::string> IniFilePath::adsd3030ModeToConfigFileMap = {
     {0, "config/RawToDepthAdsd3030_sr-native.ini"},
     {1, "config/RawToDepthAdsd3030_lr-native.ini"},
     {2, "config/RawToDepthAdsd3030_sr-qnative.ini"},
-    {3, "config/RawToDepthAdsd3030_lr-qnative.ini"}
-};
+    {3, "config/RawToDepthAdsd3030_lr-qnative.ini"}};
 
 std::map<int, std::string> IniFilePath::adsd3100ModeToConfigFileMap = {
     {0, "config/RawToDepthAdsd3500_sr-native.ini"},
     {1, "config/RawToDepthAdsd3500_lr-native.ini"},
     {2, "config/RawToDepthAdsd3500_sr-qnative.ini"},
-    {3, "config/RawToDepthAdsd3500_lr-qnative.ini"}
-};
+    {3, "config/RawToDepthAdsd3500_lr-qnative.ini"}};
 
 /*
 *****************************ADSD3500 Control Commands****************************
@@ -122,7 +120,7 @@ uint8_t reset_cmd[] = {0x00, 0x24, 0x00, 0x00};
 Set the second byte of the 'setMode_cmd[]' with the desired Imaging Mode. (Available modes 0 to 4)
 For eg. to set Mode 1 as the imaging mode, the Mode byte value should be set like this 'setMode_cmd[1] = 0x01'. 
 */
-uint8_t setMode_cmd[] = {0xDA, 0x00, 0x28, 0x0F}; // Mode 3 lr-qnative 
+uint8_t setMode_cmd[] = {0xDA, 0x00, 0x28, 0x0F}; // Mode 3 lr-qnative
 
 // Get Image Mode.
 uint8_t getMode_cmd[] = {0x00, 0x12};
@@ -147,16 +145,19 @@ uint8_t getFps_cmd[] = {0x00, 0x23};
 uint8_t switchToBurstMode_cmd[] = {0x00, 0x19, 0x00, 0x00};
 
 // Switch to Standard Mode command.
-uint8_t switchToStandardMode_cmd[] = 
-    {0xAD, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00};
+uint8_t switchToStandardMode_cmd[] = {0xAD, 0x00, 0x00, 0x10, 0x00, 0x00,
+                                      0x00, 0x00, 0x10, 0x00, 0x00, 0x00,
+                                      0x01, 0x00, 0x00, 0x00};
 
 // Get Dealias Parameters command.
-uint8_t getDealiasParams_cmd[] = {0xAD, 0x00, 0x20, 0x02, 0x00, 0x00, 0x00, 0x00, \
-		0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+uint8_t getDealiasParams_cmd[] = {0xAD, 0x00, 0x20, 0x02, 0x00, 0x00,
+                                  0x00, 0x00, 0x22, 0x00, 0x00, 0x00,
+                                  0x00, 0x00, 0x00, 0x00};
 
 // Get Camera Intrinsics command.
-uint8_t getCameraIntrinsics_cmd[] = {0xAD, 0x00, 0x38, 0x01, 0x00, 0x00, 0x00, 0x00, \
-		0x39, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+uint8_t getCameraIntrinsics_cmd[] = {0xAD, 0x00, 0x38, 0x01, 0x00, 0x00,
+                                     0x00, 0x00, 0x39, 0x00, 0x00, 0x00,
+                                     0x00, 0x00, 0x00, 0x00};
 
 // Read Chip ID.
 uint8_t getChipId_cmd[] = {0x01, 0x12};
@@ -164,62 +165,67 @@ uint8_t getChipId_cmd[] = {0x01, 0x12};
 // Get Imager Type and CCB version.
 uint8_t getImagerTypeAndCCB_cmd[] = {0x00, 0x32};
 
-// Read Read IniTable from Pulsatrix for a particular mode. 
+// Read Read IniTable from Pulsatrix for a particular mode.
 /* The 13th Byte in this command represents the mode number. For eg, if this byte is set as '1',
 it would fetch the IniTable for the Image mode 1 from Adsd3500.
 */
-uint8_t readIniFromAdsd3500_cmd[] = 
-    {0xAD, 0x00, 0x28, 0x25, 0x00, 0x00, 0x00, 0x00, 0x4D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+uint8_t readIniFromAdsd3500_cmd[] = {0xAD, 0x00, 0x28, 0x25, 0x00, 0x00,
+                                     0x00, 0x00, 0x4D, 0x00, 0x00, 0x00,
+                                     0x00, 0x00, 0x00, 0x00};
 
 // Read Mode Map Table from Pulsatrix
-uint8_t readModeMapFromAdsd3500_cmd[] =
-    {0xAD, 0x00, 0xA8, 0x24, 0x00, 0x00, 0x00, 0x00, 0xCC, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+uint8_t readModeMapFromAdsd3500_cmd[] = {0xAD, 0x00, 0xA8, 0x24, 0x00, 0x00,
+                                         0x00, 0x00, 0xCC, 0x00, 0x00, 0x00,
+                                         0x00, 0x00, 0x00, 0x00};
 
-uint8_t getFwVersion_cmd[] = 
-    {0xAD, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00};
+uint8_t getFwVersion_cmd[] = {0xAD, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00,
+                              0x05, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00};
 
 /*
 *********************************Public functions*********************************
-*/ 
+*/
 
 // Resets ADSD3500 device.
 int Adsd3500::ResetAdsd3500() {
-	printf("Resetting ADSD3500 Device.\n");
+    printf("Resetting ADSD3500 Device.\n");
     system("echo 0 > /sys/class/gpio/gpio122/value");
     usleep(1000000);
     system("echo 1 > /sys/class/gpio/gpio122/value");
     usleep(7000000);
 
-	return 0;
+    return 0;
 }
 
 // Opens ADSD3500 device.
 int Adsd3500::OpenAdsd3500() {
-	// Open the ADI ToF Camera Sensor Device Driver.
-	videoDevice.cameraSensorDeviceId = tof_open(CAMERA_SENSOR_DRIVER);
+    // Open the ADI ToF Camera Sensor Device Driver.
+    videoDevice.cameraSensorDeviceId = tof_open(CAMERA_SENSOR_DRIVER);
     if (videoDevice.cameraSensorDeviceId < 0) {
-		std::cout << "Unable to open camera sensor device: " << CAMERA_SENSOR_DRIVER << std::endl;
-        return -1;
-	}
-    
-    // Open Host device's V4L2 Video Capture Device Driver.
-    videoDevice.videoCaptureDeviceId = tof_open(VIDEO_CAPTURE_DRIVER);
-    if (videoDevice.videoCaptureDeviceId < 0) {
-		std::cout << "Unable to open video capture device:  " << VIDEO_CAPTURE_DRIVER << std::endl;
+        std::cout << "Unable to open camera sensor device: "
+                  << CAMERA_SENSOR_DRIVER << std::endl;
         return -1;
     }
 
-	return 0;
+    // Open Host device's V4L2 Video Capture Device Driver.
+    videoDevice.videoCaptureDeviceId = tof_open(VIDEO_CAPTURE_DRIVER);
+    if (videoDevice.videoCaptureDeviceId < 0) {
+        std::cout << "Unable to open video capture device:  "
+                  << VIDEO_CAPTURE_DRIVER << std::endl;
+        return -1;
+    }
+
+    return 0;
 }
 
 // Sets Imaging mode.
 int Adsd3500::SetImageMode(uint8_t modeNumber) {
-	setMode_cmd[1] = modeNumber;
+    setMode_cmd[1] = modeNumber;
 
-	printf("Setting Imaging mode number as %d.\n", modeNumber);
+    printf("Setting Imaging mode number as %d.\n", modeNumber);
 
-	int32_t ret = write_cmd(videoDevice.cameraSensorDeviceId, setMode_cmd, ARRAY_SIZE(setMode_cmd));
-	std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
+    int32_t ret = write_cmd(videoDevice.cameraSensorDeviceId, setMode_cmd,
+                            ARRAY_SIZE(setMode_cmd));
+    std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
 
     static struct v4l2_control ctrl;
 
@@ -230,19 +236,21 @@ int Adsd3500::SetImageMode(uint8_t modeNumber) {
 
     if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_CTRL, &ctrl) == -1) {
         std::cout << "Setting Mode error "
-                     << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+                  << "errno: " << errno << " error: " << strerror(errno)
+                  << std::endl;
         return -1;
     }
 
-	return ret;
+    return ret;
 }
 
 // Gets Imaging mode.
-int Adsd3500::GetImageMode(uint8_t* result) {
+int Adsd3500::GetImageMode(uint8_t *result) {
 
-	int32_t ret = read_cmd(videoDevice.cameraSensorDeviceId, getMode_cmd, ARRAY_SIZE(getMode_cmd), result, ARRAY_SIZE(result));
+    int32_t ret = read_cmd(videoDevice.cameraSensorDeviceId, getMode_cmd,
+                           ARRAY_SIZE(getMode_cmd), result, ARRAY_SIZE(result));
     std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
-	return ret;
+    return ret;
 }
 
 // Starts the stream.
@@ -250,14 +258,17 @@ int Adsd3500::StartStream() {
     struct v4l2_buffer buf;
 
     // Set Toggle mode
-    int ret = adsd3500_write_cmd(0x0025, 1); /* Mode = 1 adsd3500 fsync automatically toggles at user specified framerate*/
+    int ret = adsd3500_write_cmd(
+        0x0025,
+        1); /* Mode = 1 adsd3500 fsync automatically toggles at user specified framerate*/
     if (ret < 0) {
         perror("Unable to set Toggle mode.");
         return -1;
     }
 
-	printf("Starting the stream.\n");
-    std::cout << "Number of video buffers: " << videoDevice.nVideoBuffers << std::endl;
+    printf("Starting the stream.\n");
+    std::cout << "Number of video buffers: " << videoDevice.nVideoBuffers
+              << std::endl;
 
     for (unsigned int i = 0; i < videoDevice.nVideoBuffers; i++) {
         CLEAR(buf);
@@ -268,35 +279,38 @@ int Adsd3500::StartStream() {
         buf.length = 1;
 
         if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_QBUF, &buf) == -1) {
-            std::cout
-                << "mmap error "
-                << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+            std::cout << "mmap error "
+                      << "errno: " << errno << " error: " << strerror(errno)
+                      << std::endl;
             return -1;
         }
     }
 
-    if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_STREAMON, &videoDevice.videoBuffersType) != 0) {
+    if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_STREAMON,
+               &videoDevice.videoBuffersType) != 0) {
         std::cout << "VIDIOC_STREAMON error "
-                         << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+                  << "errno: " << errno << " error: " << strerror(errno)
+                  << std::endl;
         return -1;
     }
 
     videoDevice.started = true;
 
-	return 0;
+    return 0;
 }
 
 // Stops the stream.
 int Adsd3500::StopStream() {
-	printf("Stopping the stream.\n");
-	int32_t ret = write_cmd(videoDevice.cameraSensorDeviceId, streamOff_cmd, ARRAY_SIZE(streamOff_cmd));
-	std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
+    printf("Stopping the stream.\n");
+    int32_t ret = write_cmd(videoDevice.cameraSensorDeviceId, streamOff_cmd,
+                            ARRAY_SIZE(streamOff_cmd));
+    std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
     videoDevice.started = false;
-	return ret;
+    return ret;
 }
 
 // Get Frames from the Imager.
-int Adsd3500::RequestFrame(uint16_t* buffer) {
+int Adsd3500::RequestFrame(uint16_t *buffer) {
     struct v4l2_buffer buf[MAX_SUBFRAMES_COUNT];
     unsigned int buf_data_len;
     uint8_t *pdata;
@@ -332,14 +346,14 @@ int Adsd3500::RequestFrame(uint16_t* buffer) {
 }
 
 // Reads the .ini file and stores them as key-value pairs.
-int Adsd3500::GetIniKeyValuePair(const char* iniFileName) {
+int Adsd3500::GetIniKeyValuePair(const char *iniFileName) {
 
     int ret = 0;
     ret = adsd3500_get_ini_key_value_pairs_from_ini_file(iniFileName);
     if (ret < 0) {
         perror("Unable to get Ini Key Value pairs from the .ini file");
     }
-    
+
     if (ccb_as_master) {
         adsd3500_get_ini_key_value_pairs_from_ccb();
     }
@@ -364,7 +378,7 @@ int Adsd3500::ConfigureAdsd3500WithIniParams() {
 
 // Configure Depth Compute Library with parameters from .ini file.
 int Adsd3500::ConfigureDepthComputeLibraryWithIniParams() {
-    
+
     uint32_t ret = 0;
     std::cout << "Initializing Depth Compute Library." << std::endl;
 
@@ -380,7 +394,7 @@ int Adsd3500::ConfigureDepthComputeLibraryWithIniParams() {
         return -1;
     }
 
-    tofi_compute_context = 
+    tofi_compute_context =
         InitTofiCompute(tofi_config->p_tofi_cal_config, &ret);
     if (tofi_compute_context == NULL) {
         perror("InitTofiCompute failed.\n");
@@ -391,10 +405,10 @@ int Adsd3500::ConfigureDepthComputeLibraryWithIniParams() {
 }
 
 // Configures V4L2 MIPI Capture Driver and Camera Sensor Driver.
-int Adsd3500::ConfigureDeviceDrivers() {  
-    int ret = 0;  
+int Adsd3500::ConfigureDeviceDrivers() {
+    int ret = 0;
     struct v4l2_capability cap;
-    const char* expectedCaptureDeviceName = CAPTURE_DEVICE_NAME;
+    const char *expectedCaptureDeviceName = CAPTURE_DEVICE_NAME;
 
     // Check if the video capture device is valid.
     if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_QUERYCAP, &cap) == -1) {
@@ -402,14 +416,14 @@ int Adsd3500::ConfigureDeviceDrivers() {
         return -1;
     }
 
-    if (strncmp((char *)cap.card, expectedCaptureDeviceName, strlen(expectedCaptureDeviceName))) {
+    if (strncmp((char *)cap.card, expectedCaptureDeviceName,
+                strlen(expectedCaptureDeviceName))) {
         perror("Invalid Capture Device name read.\n");
         return -1;
     }
 
     if (!(cap.capabilities &
-        (V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE))
-    ) {
+          (V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE))) {
         perror("The device is not a video capture device.\n");
         return -1;
     }
@@ -430,7 +444,7 @@ int Adsd3500::ConfigureDeviceDrivers() {
     // Check if the camera sensor driver is valid.
     uint8_t chip_id_value[2] = {0x00, 0x00};
     ret = Adsd3500::ReadChipId(chip_id_value);
-    if (ret < 0){
+    if (ret < 0) {
         perror("Unable to get the Chip ID.\n");
         return -1;
     } else {
@@ -461,15 +475,15 @@ int Adsd3500::GetIntrinsicsAndDealiasParams() {
     }
 
     memcpy(&xyzDealiasData, dealiasParams,
-            sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
+           sizeof(TofiXYZDealiasData) - sizeof(CameraIntrinsics));
     memcpy(&xyzDealiasData.camera_intrinsics, intrinsics,
-            sizeof(CameraIntrinsics));
+           sizeof(CameraIntrinsics));
 
     return 0;
 }
 
 // Parses Raw frame to get Depth, AB and Confidence frames using Depth-Compute Library.
-int Adsd3500::ParseRawDataWithDCL(uint16_t* buffer) {
+int Adsd3500::ParseRawDataWithDCL(uint16_t *buffer) {
 
     int enableXyz = 0;
     auto it = iniKeyValPairs.find("xyzEnable");
@@ -477,7 +491,7 @@ int Adsd3500::ParseRawDataWithDCL(uint16_t* buffer) {
         enableXyz = (std::stoi(it->second));
     }
 
-    if (tofi_compute_context == NULL) {  
+    if (tofi_compute_context == NULL) {
         return -1;
     }
 
@@ -486,15 +500,14 @@ int Adsd3500::ParseRawDataWithDCL(uint16_t* buffer) {
     //uint16_t *tempXyzFrame = (uint16_t *)tofi_compute_context->p_xyz_frame;
 
     // Allocate memory to store Depth and IR frames.
-    // Depth Frames. 
-    tofi_compute_context->p_depth_frame = 
-        new uint16_t[xyzDealiasData.n_rows*xyzDealiasData.n_cols];
+    // Depth Frames.
+    tofi_compute_context->p_depth_frame =
+        new uint16_t[xyzDealiasData.n_rows * xyzDealiasData.n_cols];
     // IR Frames.
-    tofi_compute_context->p_ab_frame = 
-        new uint16_t[xyzDealiasData.n_rows*xyzDealiasData.n_cols];
+    tofi_compute_context->p_ab_frame =
+        new uint16_t[xyzDealiasData.n_rows * xyzDealiasData.n_cols];
 
-    uint32_t ret =
-            TofiCompute(buffer, tofi_compute_context, NULL);
+    uint32_t ret = TofiCompute(buffer, tofi_compute_context, NULL);
     if (ret < 0) {
         perror("Failed to parse frames with Depth Compute Library.\n");
     }
@@ -513,25 +526,27 @@ int Adsd3500::ParseRawDataWithDCL(uint16_t* buffer) {
         perror("Error in retrieving Confidence frame.\n");
         return -1;
     }
-    
+
     return 0;
 }
 
 // Read ADSD3500 Status
-int Adsd3500::ReadChipId(uint8_t* result) {
+int Adsd3500::ReadChipId(uint8_t *result) {
     int32_t fd = 0;
 
     if (videoDevice.cameraSensorDeviceId == -1) {
         fd = tof_open(CAMERA_SENSOR_DRIVER);
         if (fd < 0) {
-		    std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER << std::endl;
+            std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER
+                      << std::endl;
             return fd;
-	    }
+        }
     } else {
         fd = videoDevice.cameraSensorDeviceId;
     }
 
-    int32_t ret = read_cmd(fd, getChipId_cmd, ARRAY_SIZE(getChipId_cmd), result, ARRAY_SIZE(result));
+    int32_t ret = read_cmd(fd, getChipId_cmd, ARRAY_SIZE(getChipId_cmd), result,
+                           ARRAY_SIZE(result));
     std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
 
     return ret;
@@ -541,21 +556,21 @@ int Adsd3500::ReadChipId(uint8_t* result) {
 int Adsd3500::SetFps(int fps) {
     int ret = 0;
 
-// #ifdef NVIDIA
-//     struct v4l2_ext_control extCtrl;
-//     struct v4l2_ext_controls extCtrls;
-//     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
-//     memset(&extCtrl, 0, sizeof(struct v4l2_ext_control));
-//     extCtrls.count = 1;
-//     extCtrls.controls = &extCtrl;
-//     extCtrl.id = CTRL_SET_FRAME_RATE;
-//     extCtrl.value = fps;
-//     if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
-//         std::cout << "Failed to set FPS.  "
-//                      << "errno: " << errno << " error: " << strerror(errno) << std::endl;
-//         return -1;
-//     }
-// #else // NXP
+    // #ifdef NVIDIA
+    //     struct v4l2_ext_control extCtrl;
+    //     struct v4l2_ext_controls extCtrls;
+    //     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
+    //     memset(&extCtrl, 0, sizeof(struct v4l2_ext_control));
+    //     extCtrls.count = 1;
+    //     extCtrls.controls = &extCtrl;
+    //     extCtrl.id = CTRL_SET_FRAME_RATE;
+    //     extCtrl.value = fps;
+    //     if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+    //         std::cout << "Failed to set FPS.  "
+    //                      << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+    //         return -1;
+    //     }
+    // #else // NXP
     struct v4l2_streamparm fpsControl;
     memset(&fpsControl, 0, sizeof(struct v4l2_streamparm));
 
@@ -563,17 +578,19 @@ int Adsd3500::SetFps(int fps) {
     fpsControl.parm.capture.timeperframe.numerator = 1;
     fpsControl.parm.capture.timeperframe.denominator = fps;
 
-    if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_S_PARM, &fpsControl) == -1) {
+    if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_S_PARM, &fpsControl) ==
+        -1) {
         std::cout << "Failed to set FPS."
-                     << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+                  << "errno: " << errno << " error: " << strerror(errno)
+                  << std::endl;
         return -1;
     }
-//#endif
+    //#endif
 
     ret = this->adsd3500_write_cmd(0x22, fps);
     if (ret < 0) {
-        std::cout << "Failed to set fps at: " << fps
-                   << "via host commands!" << std::endl;
+        std::cout << "Failed to set fps at: " << fps << "via host commands!"
+                  << std::endl;
         return -1;
     }
 
@@ -584,9 +601,9 @@ int Adsd3500::SetFps(int fps) {
     // if (videoDevice.cameraSensorDeviceId == -1) {
     //     int32_t fd = tof_open(CAMERA_SENSOR_DRIVER);
     //     if (fd < 0) {
-	// 	    std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER << std::endl;
+    // 	    std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER << std::endl;
     //         return fd;
-	//     }
+    //     }
     // } else {
     //     fd = videoDevice.cameraSensorDeviceId;
     // }
@@ -601,129 +618,135 @@ int Adsd3500::SetFps(int fps) {
 }
 
 // Get FPS value.
-int Adsd3500::GetFps(uint8_t* result) {
+int Adsd3500::GetFps(uint8_t *result) {
     int32_t fd = 0;
 
     if (videoDevice.cameraSensorDeviceId == -1) {
         int32_t fd = tof_open(CAMERA_SENSOR_DRIVER);
         if (fd < 0) {
-		    std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER << std::endl;
+            std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER
+                      << std::endl;
             return fd;
-	    }
+        }
     } else {
         fd = videoDevice.cameraSensorDeviceId;
     }
-    int32_t ret = read_cmd(fd, getFps_cmd, ARRAY_SIZE(getFps_cmd), result, ARRAY_SIZE(result));
+    int32_t ret = read_cmd(fd, getFps_cmd, ARRAY_SIZE(getFps_cmd), result,
+                           ARRAY_SIZE(result));
     std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
 
     return ret;
 }
 
 // Read CCB from ADSD3500.
-int Adsd3500::ReadCCB(const char* filename) {
+int Adsd3500::ReadCCB(const char *filename) {
 
     uint8_t data[CTRL_SIZE] = {0};
-	char binbuff[BUF_SIZE] = {0};
-	uint32_t chunkSize = 2048u;
-	uint32_t sizeOfBinary = 0u;
-	uint32_t checksum = 0u;
-	uint32_t packetsNeeded = 0u;
+    char binbuff[BUF_SIZE] = {0};
+    uint32_t chunkSize = 2048u;
+    uint32_t sizeOfBinary = 0u;
+    uint32_t checksum = 0u;
+    uint32_t packetsNeeded = 0u;
 
     int ret;
     // Open the ToF Camera device
-	int32_t fd = tof_open(CAMERA_SENSOR_DRIVER);
-	if (fd < 0) {
-		std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER << std::endl;
+    int32_t fd = tof_open(CAMERA_SENSOR_DRIVER);
+    if (fd < 0) {
+        std::cout << "Unable to find camera: " << CAMERA_SENSOR_DRIVER
+                  << std::endl;
         return fd;
-	}
+    }
 
     std::ofstream fp(filename, std::ofstream::binary);
-	if (!fp) {
-		std::cout<<"Cannot open file!"<<std::endl;
-		return 1;
-	}
-	
-	//Find the binary file size
-	fp.seekp(0, fp.beg);
+    if (!fp) {
+        std::cout << "Cannot open file!" << std::endl;
+        return 1;
+    }
+
+    //Find the binary file size
+    fp.seekp(0, fp.beg);
 
     // Switch to Burst Mode.
-    ret =  adsd3500_switch_to_burst_mode(fd);
+    ret = adsd3500_switch_to_burst_mode(fd);
     if (ret < 0) {
         printf("Unable to switch to Burst mode. Exiting..\n");
         return ret;
     }
 
     //Write header and readback response
-	memset(data, 0x00, 16);
-	data[0] = 1; //WRITE
-	data[2] = 16;
-	
-	data[3] = 0xAD;
-	data[6] = 0x13;
-	data[11] = 0x13;
-	data[15] = 1;
-	v4l2_ctrl_set(fd, 0x009819e1, data);
+    memset(data, 0x00, 16);
+    data[0] = 1; //WRITE
+    data[2] = 16;
 
-	usleep(1000 * 1);	
+    data[3] = 0xAD;
+    data[6] = 0x13;
+    data[11] = 0x13;
+    data[15] = 1;
+    v4l2_ctrl_set(fd, 0x009819e1, data);
 
-	data[0] = 0;
-	data[2] = 16;
-	v4l2_ctrl_set(fd, 0x009819e1, data);
+    usleep(1000 * 1);
 
-	v4l2_ctrl_get(fd, 0x009819e1, data);
-	
-	std::cout<<"Done reading response header "<<std::endl;
+    data[0] = 0;
+    data[2] = 16;
+    v4l2_ctrl_set(fd, 0x009819e1, data);
 
-	chunkSize = (data[5] << 8) | data[4];
-	sizeOfBinary = (data[10] << 24) | (data[9] << 16) | (data[8] << 8) | data[7];
+    v4l2_ctrl_get(fd, 0x009819e1, data);
 
-	for (uint32_t i=3; i<11; i++)
-		checksum += data[i];
+    std::cout << "Done reading response header " << std::endl;
 
-	packetsNeeded = sizeOfBinary / chunkSize;
-	std::cout<<"Size of Binary :: "<<sizeOfBinary<<std::endl;
-	std::cout<<"ChunkSize :: "<<chunkSize<<std::endl;
-	std::cout<<"Packets Needed: "<<packetsNeeded + 1<<std::endl;
+    chunkSize = (data[5] << 8) | data[4];
+    sizeOfBinary =
+        (data[10] << 24) | (data[9] << 16) | (data[8] << 8) | data[7];
 
-	for (uint8_t i=0; i<19; i++) {
-		printf("0x%.2X\n", data[i]);
-	}
+    for (uint32_t i = 3; i < 11; i++)
+        checksum += data[i];
 
-	for (uint32_t i=1; i<=packetsNeeded; i++) {
-		data[0] = 0;
-		data[1] = chunkSize >> 8;
-		data[2] = chunkSize & 0xFF;
-		
-		usleep(1000 * 30);
+    packetsNeeded = sizeOfBinary / chunkSize;
+    std::cout << "Size of Binary :: " << sizeOfBinary << std::endl;
+    std::cout << "ChunkSize :: " << chunkSize << std::endl;
+    std::cout << "Packets Needed: " << packetsNeeded + 1 << std::endl;
 
-		bool retval = v4l2_ctrl_set(fd, 0x009819e1, data);
-		v4l2_ctrl_get(fd, 0x009819e1, data);
-		if (retval == false) {
-			return -1;
-		}
-		memcpy(binbuff, &data[3], chunkSize);
-		fp.write(binbuff, chunkSize);
+    for (uint8_t i = 0; i < 19; i++) {
+        printf("0x%.2X\n", data[i]);
+    }
 
-		std::cout<<"Packet number : "<<i<<" / "<<packetsNeeded + 1<<std::endl;
-	}
+    for (uint32_t i = 1; i <= packetsNeeded; i++) {
+        data[0] = 0;
+        data[1] = chunkSize >> 8;
+        data[2] = chunkSize & 0xFF;
 
-	chunkSize = sizeOfBinary % chunkSize;
-	usleep(1000 * 30);
-	data[0] = 0;
-	data[1] = chunkSize >> 8;
-	data[2] = chunkSize & 0xFF;
-		
-	v4l2_ctrl_set(fd, 0x009819e1, data);
-	v4l2_ctrl_get(fd, 0x009819e1, data);
-	memcpy(binbuff, &data[3], chunkSize);
-	fp.write(binbuff, chunkSize - 4);
-	std::cout<<"Packet number : "<<packetsNeeded + 1<<" / "<<packetsNeeded + 1<<std::endl;
+        usleep(1000 * 30);
 
-	std::cout<<"Binary size : "<<sizeOfBinary<<std::endl;
-	std::cout<<std::endl;
+        bool retval = v4l2_ctrl_set(fd, 0x009819e1, data);
+        v4l2_ctrl_get(fd, 0x009819e1, data);
+        if (retval == false) {
+            return -1;
+        }
+        memcpy(binbuff, &data[3], chunkSize);
+        fp.write(binbuff, chunkSize);
+
+        std::cout << "Packet number : " << i << " / " << packetsNeeded + 1
+                  << std::endl;
+    }
+
+    chunkSize = sizeOfBinary % chunkSize;
+    usleep(1000 * 30);
+    data[0] = 0;
+    data[1] = chunkSize >> 8;
+    data[2] = chunkSize & 0xFF;
+
+    v4l2_ctrl_set(fd, 0x009819e1, data);
+    v4l2_ctrl_get(fd, 0x009819e1, data);
+    memcpy(binbuff, &data[3], chunkSize);
+    fp.write(binbuff, chunkSize - 4);
+    std::cout << "Packet number : " << packetsNeeded + 1 << " / "
+              << packetsNeeded + 1 << std::endl;
+
+    std::cout << "Binary size : " << sizeOfBinary << std::endl;
+    std::cout << std::endl;
 
     // Switch to Standard Mode.
-    ret =  adsd3500_switch_to_standard_mode(fd);
+    ret = adsd3500_switch_to_standard_mode(fd);
     if (ret < 0) {
         printf("Unable to switch to Standard mode. Exiting..\n");
         return ret;
@@ -739,7 +762,9 @@ int Adsd3500::GetImagerTypeAndCCB() {
 
     uint8_t result[2] = {0x00, 0x00};
 
-    int32_t ret = read_cmd(videoDevice.cameraSensorDeviceId, getImagerTypeAndCCB_cmd, ARRAY_SIZE(getImagerTypeAndCCB_cmd), result, ARRAY_SIZE(result));
+    int32_t ret = read_cmd(
+        videoDevice.cameraSensorDeviceId, getImagerTypeAndCCB_cmd,
+        ARRAY_SIZE(getImagerTypeAndCCB_cmd), result, ARRAY_SIZE(result));
     if (ret < 0) {
         return -1;
     }
@@ -747,38 +772,38 @@ int Adsd3500::GetImagerTypeAndCCB() {
     uint8_t imager_version = result[0];
     uint8_t ccb_version = result[1];
 
-    switch(imager_version){
-        case 1: {
-            imagerType = ImagerType::IMAGER_ADSD3100;
-            printf("Imager type is  IMAGER_ADSD3100.\n");
-            break;
-        }
-        case 2: {
-            imagerType = ImagerType::IMAGER_ADSD3030;
-            printf("Imager type is  IMAGER_ADSD3030.\n");
-            break;
-        }
-        default: {
-            imagerType = ImagerType::IMAGER_UNKNOWN;
-            std::cout << "Unsupported Imager found." << std::endl; 
-        }
+    switch (imager_version) {
+    case 1: {
+        imagerType = ImagerType::IMAGER_ADSD3100;
+        printf("Imager type is  IMAGER_ADSD3100.\n");
+        break;
+    }
+    case 2: {
+        imagerType = ImagerType::IMAGER_ADSD3030;
+        printf("Imager type is  IMAGER_ADSD3030.\n");
+        break;
+    }
+    default: {
+        imagerType = ImagerType::IMAGER_UNKNOWN;
+        std::cout << "Unsupported Imager found." << std::endl;
+    }
     }
 
-    switch(ccb_version){
-        case 1: {
-            ccbVersion = CCBVersion::CCB_VERSION0;
-            printf("CCB Version is  CCB_VERSION0.\n");
-            break;
-        }
-        case 2: {
-            ccbVersion = CCBVersion::CCB_VERSION1;
-            printf("CCB version is  CCB_VERSION1.\n");
-            break;
-        }
-        default: {
-            ccbVersion = CCBVersion::CCB_UNKNOWN;
-            std::cout << "Unsupported CCB version found." << std::endl; 
-        }
+    switch (ccb_version) {
+    case 1: {
+        ccbVersion = CCBVersion::CCB_VERSION0;
+        printf("CCB Version is  CCB_VERSION0.\n");
+        break;
+    }
+    case 2: {
+        ccbVersion = CCBVersion::CCB_VERSION1;
+        printf("CCB version is  CCB_VERSION1.\n");
+        break;
+    }
+    default: {
+        ccbVersion = CCBVersion::CCB_UNKNOWN;
+        std::cout << "Unsupported CCB version found." << std::endl;
+    }
     }
 
     return ret;
@@ -786,10 +811,10 @@ int Adsd3500::GetImagerTypeAndCCB() {
 
 /*
 ********************************Private functions*********************************
-*/ 
+*/
 
 int Adsd3500::adsd3500_read_cmd(uint16_t cmd, uint16_t *data,
-                                                 unsigned int usDelay) {
+                                unsigned int usDelay) {
 
     static struct v4l2_ext_control extCtrl;
     static struct v4l2_ext_controls extCtrls;
@@ -808,10 +833,11 @@ int Adsd3500::adsd3500_read_cmd(uint16_t cmd, uint16_t *data,
     buf[4] = uint8_t(cmd & 0xFF);
     extCtrl.p_u8 = buf;
 
-    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS,
+               &extCtrls) == -1) {
         std::cout << "Could not set control: 0x" << std::hex << extCtrl.id
-                     << " with command: 0x" << std::hex << cmd
-                     << ". Reason: " << strerror(errno) << "(" << errno << ")";
+                  << " with command: 0x" << std::hex << cmd
+                  << ". Reason: " << strerror(errno) << "(" << errno << ")";
         return -1;
     }
 
@@ -823,17 +849,21 @@ int Adsd3500::adsd3500_read_cmd(uint16_t cmd, uint16_t *data,
 
     usleep(usDelay);
 
-    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS,
+               &extCtrls) == -1) {
         std::cout << "Could not set control: 0x" << std::hex << extCtrl.id
-                     << " with command: 0x" << std::hex << cmd
-                     << ". Reason: " << strerror(errno) << "(" << errno << ")" << std::endl;
+                  << " with command: 0x" << std::hex << cmd
+                  << ". Reason: " << strerror(errno) << "(" << errno << ")"
+                  << std::endl;
         return -1;
     }
 
-    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1) {
+    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_G_EXT_CTRLS,
+               &extCtrls) == -1) {
         std::cout << "Could not get control: 0x" << std::hex << extCtrl.id
-                     << " with command: 0x" << std::hex << cmd
-                     << ". Reason: " << strerror(errno) << "(" << errno << ")" << std::endl;
+                  << " with command: 0x" << std::hex << cmd
+                  << ". Reason: " << strerror(errno) << "(" << errno << ")"
+                  << std::endl;
         return -1;
     }
 
@@ -863,17 +893,19 @@ int Adsd3500::adsd3500_write_cmd(uint16_t cmd, uint16_t data) {
     buf[6] = uint8_t(data & 0xFF);
     extCtrl.p_u8 = buf;
 
-    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS,
+               &extCtrls) == -1) {
         std::cout << "Could not set control: 0x" << std::hex << extCtrl.id
-                     << " with command: 0x" << std::hex << cmd
-                     << ". Reason: " << strerror(errno) << "(" << errno << ")" << std::endl;
+                  << " with command: 0x" << std::hex << cmd
+                  << ". Reason: " << strerror(errno) << "(" << errno << ")"
+                  << std::endl;
         return -1;
     }
     return 0;
 }
 
-
-int Adsd3500::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t *readback_data, uint16_t payload_len) {
+int Adsd3500::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t *readback_data,
+                                        uint16_t payload_len) {
 
     //switch to burst mode
     uint32_t switchCmd = 0x0019;
@@ -912,9 +944,11 @@ int Adsd3500::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t *readback_data, ui
     memcpy(buf + 15, readback_data, 1);
     extCtrl.p_u8 = buf;
 
-    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS,
+               &extCtrls) == -1) {
         std::cout << "Reading Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+                  << "errno: " << errno << " error: " << strerror(errno)
+                  << std::endl;
         return -1;
     }
 
@@ -932,13 +966,16 @@ int Adsd3500::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t *readback_data, ui
 
     extCtrl.p_u8 = buf;
 
-    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS,
+               &extCtrls) == -1) {
         std::cout << "Reading Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+                  << "errno: " << errno << " error: " << strerror(errno)
+                  << std::endl;
         return -1;
     }
 
-    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1) {
+    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_G_EXT_CTRLS,
+               &extCtrls) == -1) {
         std::cout << "Failed to get ctrl with id " << extCtrl.id << std::endl;
         return -1;
     }
@@ -961,9 +998,11 @@ int Adsd3500::adsd3500_read_payload_cmd(uint32_t cmd, uint8_t *readback_data, ui
 
     memcpy(extCtrl.p_u8, switchBuf, 19);
 
-    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS,
+               &extCtrls) == -1) {
         std::cout << "Switch Adsd3500 to standard mode error "
-                     << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+                  << "errno: " << errno << " error: " << strerror(errno)
+                  << std::endl;
         return -1;
     }
 
@@ -992,14 +1031,17 @@ int Adsd3500::adsd3500_read_payload(uint8_t *payload, uint16_t payload_len) {
 
     usleep(30000);
 
-    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS,
+               &extCtrls) == -1) {
         std::cout << "Reading Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+                  << "errno: " << errno << " error: " << strerror(errno)
+                  << std::endl;
         return -1;
     }
 
-    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_G_EXT_CTRLS, &extCtrls) == -1) {
-        std::cout << "Failed to get ctrl with id " << extCtrl.id  << std::endl;
+    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_G_EXT_CTRLS,
+               &extCtrls) == -1) {
+        std::cout << "Failed to get ctrl with id " << extCtrl.id << std::endl;
         return -1;
     }
 
@@ -1008,7 +1050,8 @@ int Adsd3500::adsd3500_read_payload(uint8_t *payload, uint16_t payload_len) {
     return 0;
 }
 
-int Adsd3500::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload, uint16_t payload_len) {
+int Adsd3500::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload,
+                                         uint16_t payload_len) {
 
     //switch to burst mode
     uint32_t switchCmd = 0x0019;
@@ -1048,9 +1091,11 @@ int Adsd3500::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload, uint16_
     memcpy(buf + 15, payload, payload_len);
     extCtrl.p_u8 = buf;
 
-    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS,
+               &extCtrls) == -1) {
         std::cout << "Writing Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+                  << "errno: " << errno << " error: " << strerror(errno)
+                  << std::endl;
         return -1;
     }
 
@@ -1065,9 +1110,11 @@ int Adsd3500::adsd3500_write_payload_cmd(uint32_t cmd, uint8_t *payload, uint16_
 
     memcpy(extCtrl.p_u8, switchBuf, 19);
 
-    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS,
+               &extCtrls) == -1) {
         std::cout << "Switch Adsd3500 to standard mode error "
-                     << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+                  << "errno: " << errno << " error: " << strerror(errno)
+                  << std::endl;
         return -1;
     }
 
@@ -1093,9 +1140,11 @@ int Adsd3500::adsd3500_write_payload(uint8_t *payload, uint16_t payload_len) {
     memcpy(buf + 3, payload, payload_len);
     extCtrl.p_u8 = buf;
 
-    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS, &extCtrls) == -1) {
+    if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_EXT_CTRLS,
+               &extCtrls) == -1) {
         std::cout << "Writing Adsd3500 error "
-                     << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+                  << "errno: " << errno << " error: " << strerror(errno)
+                  << std::endl;
         return -1;
     }
 
@@ -1105,22 +1154,22 @@ int Adsd3500::adsd3500_write_payload(uint8_t *payload, uint16_t payload_len) {
 }
 
 int Adsd3500::adsd3500_switch_to_burst_mode(int fd) {
-    
+
     printf("Switching to Burst mode.\n");
-    int32_t ret = write_cmd(fd, switchToBurstMode_cmd, ARRAY_SIZE(switchToBurstMode_cmd));
+    int32_t ret =
+        write_cmd(fd, switchToBurstMode_cmd, ARRAY_SIZE(switchToBurstMode_cmd));
     std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
     return ret;
-    
 }
 
 int Adsd3500::adsd3500_switch_to_standard_mode(int fd) {
-    
+
     printf("Switching to Standard mode.\n");
-    int32_t ret = write_cmd(fd, switchToStandardMode_cmd, ARRAY_SIZE(switchToStandardMode_cmd));
+    int32_t ret = write_cmd(fd, switchToStandardMode_cmd,
+                            ARRAY_SIZE(switchToStandardMode_cmd));
     std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
     return ret;
 }
-
 
 int Adsd3500::adsd3500_wait_for_buffer() {
     fd_set fds;
@@ -1137,7 +1186,8 @@ int Adsd3500::adsd3500_wait_for_buffer() {
 
     if (r == -1) {
         std::cout << "select error "
-                     << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+                  << "errno: " << errno << " error: " << strerror(errno)
+                  << std::endl;
         return -1;
     } else if (r == 0) {
         std::cout << "select timeout" << std::endl;
@@ -1156,7 +1206,8 @@ int Adsd3500::adsd3500_dequeue_internal_buffer(struct v4l2_buffer &buf) {
 
     if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_DQBUF, &buf) == -1) {
         std::cout << "VIDIOC_DQBUF error "
-                     << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+                  << "errno: " << errno << " error: " << strerror(errno)
+                  << std::endl;
         switch (errno) {
         case EAGAIN:
         case EIO:
@@ -1178,16 +1229,17 @@ int Adsd3500::adsd3500_enqueue_internal_buffer(struct v4l2_buffer &buf) {
 
     if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_QBUF, &buf) == -1) {
         std::cout << "VIDIOC_QBUF error "
-                     << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+                  << "errno: " << errno << " error: " << strerror(errno)
+                  << std::endl;
         return -1;
     }
 
     return 0;
 }
 
-int Adsd3500::adsd3500_get_internal_buffer(
-    uint8_t **buffer, uint32_t &buf_data_len, const struct v4l2_buffer &buf
-) {
+int Adsd3500::adsd3500_get_internal_buffer(uint8_t **buffer,
+                                           uint32_t &buf_data_len,
+                                           const struct v4l2_buffer &buf) {
 
     *buffer = static_cast<uint8_t *>(videoDevice.videoBuffers[buf.index].start);
     buf_data_len = buf.bytesused;
@@ -1195,7 +1247,8 @@ int Adsd3500::adsd3500_get_internal_buffer(
     return 0;
 }
 
-int Adsd3500::adsd3500_get_ini_key_value_pairs_from_ini_file(const std::string &iniFileName) {
+int Adsd3500::adsd3500_get_ini_key_value_pairs_from_ini_file(
+    const std::string &iniFileName) {
 
     std::ifstream iniStream(iniFileName);
     if (!iniStream.is_open()) {
@@ -1207,10 +1260,12 @@ int Adsd3500::adsd3500_get_ini_key_value_pairs_from_ini_file(const std::string &
     iniStream.seekg(0, std::ios::end);
     std::streampos fileSize = iniStream.tellg();
     iniStream.seekg(0, std::ios::beg);
-    
+
     // Check if the fileSize is representable as size_t
-    if (fileSize < 0 || static_cast<size_t>(fileSize) != static_cast<std::streampos>(fileSize)) {
-        std::cerr << "File size is too large to be represented as size_t." << std::endl;
+    if (fileSize < 0 || static_cast<size_t>(fileSize) !=
+                            static_cast<std::streampos>(fileSize)) {
+        std::cerr << "File size is too large to be represented as size_t."
+                  << std::endl;
         return -1;
     }
 
@@ -1220,7 +1275,7 @@ int Adsd3500::adsd3500_get_ini_key_value_pairs_from_ini_file(const std::string &
     iniFileData.p_data = new unsigned char[fileSize];
 
     // Read the contents of the file into the buffer
-    iniStream.read(reinterpret_cast<char*>(iniFileData.p_data), fileSize);
+    iniStream.read(reinterpret_cast<char *>(iniFileData.p_data), fileSize);
 
     // Going to the start of the file to read it's contents.
     iniStream.seekg(0, std::ios::beg);
@@ -1232,7 +1287,7 @@ int Adsd3500::adsd3500_get_ini_key_value_pairs_from_ini_file(const std::string &
         size_t equalPos = line.find('=');
         if (equalPos == std::string::npos) {
             std::cout << "Unexpected format on this line:\n"
-                         << line << "\nExpecting 'key=value' format";
+                      << line << "\nExpecting 'key=value' format";
             continue;
         }
         std::string key = line.substr(0, equalPos);
@@ -1254,13 +1309,14 @@ int Adsd3500::adsd3500_get_ini_key_value_pairs_from_ccb() {
     // Add Logic here to extract INI parameters from ADSD3500.
 
     // Switch to Burst Mode.
-    int32_t ret = adsd3500_switch_to_burst_mode(videoDevice.cameraSensorDeviceId);
+    int32_t ret =
+        adsd3500_switch_to_burst_mode(videoDevice.cameraSensorDeviceId);
     if (ret < 0) {
         std::cout << "Unable to switch to Burst Mode." << std::endl;
     }
 
-    uint8_t* ini_table_buf = new uint8_t[40];
-    uint8_t* mode_map_buf = new uint8_t[168];
+    uint8_t *ini_table_buf = new uint8_t[40];
+    uint8_t *mode_map_buf = new uint8_t[168];
 
     // Set the Mode Number.
     readIniFromAdsd3500_cmd[12] = mode_num;
@@ -1268,9 +1324,13 @@ int Adsd3500::adsd3500_get_ini_key_value_pairs_from_ccb() {
     printf("Burst Mode Command to get Ini table entry values from CCB.\n");
     PrintByteArray(readIniFromAdsd3500_cmd, 16);
 
-    ret = read_cmd(videoDevice.cameraSensorDeviceId, readIniFromAdsd3500_cmd, ARRAY_SIZE(readIniFromAdsd3500_cmd), ini_table_buf, ARRAY_SIZE(ini_table_buf));
+    // TODO: The Read command does not read the correct values back. Need to fix this.
+    ret = read_cmd(videoDevice.cameraSensorDeviceId, readIniFromAdsd3500_cmd,
+                   ARRAY_SIZE(readIniFromAdsd3500_cmd), ini_table_buf,
+                   ARRAY_SIZE(ini_table_buf));
     if (ret < 0) {
-        std::cout << "Unable to get INI table entry from ADSD3500." << std::endl;
+        std::cout << "Unable to get INI table entry from ADSD3500."
+                  << std::endl;
     }
 
     std::cout << "INI Table Values read from CCB.." << std::endl;
@@ -1283,17 +1343,18 @@ int Adsd3500::adsd3500_get_ini_key_value_pairs_from_ccb() {
 
     // std::cout << "Mode Map Entry from ADSD3500.." << std::endl;
     // PrintByteArray(ini_table_buf, 168);
-    
-    adsd3500_read_ini_values_from_ccb(ini_table_buf, 40);
+
+    adsd3500_update_ini_key_value_pairs(ini_table_buf, 40);
 
     return 0;
-
 }
 
-int Adsd3500::adsd3500_read_ini_values_from_ccb(uint8_t* ini_table_buf, size_t buffer_size) {
+int Adsd3500::adsd3500_update_ini_key_value_pairs(uint8_t *ini_table_buf,
+                                                  size_t buffer_size) {
 
     if (ini_table_buf == NULL) {
-        std::cout << "Buffer does not contain ini parameters from the CCB." << std::endl;
+        std::cout << "Buffer does not contain ini parameters from the CCB."
+                  << std::endl;
         return -1;
     }
 
@@ -1301,14 +1362,22 @@ int Adsd3500::adsd3500_read_ini_values_from_ccb(uint8_t* ini_table_buf, size_t b
     ccb_iniTableEntry.rsvd = ini_table_buf[1];
     ccb_iniTableEntry.abThreshMin = (ini_table_buf[3] << 8) | ini_table_buf[2];
     ccb_iniTableEntry.confThresh = (ini_table_buf[5] << 8) | ini_table_buf[4];
-    ccb_iniTableEntry.radialThreshMin = (ini_table_buf[7] << 8) | ini_table_buf[6];
-    ccb_iniTableEntry.radialThreshMax = (ini_table_buf[9] << 8) | ini_table_buf[8];
-    ccb_iniTableEntry.jblfApplyFlag = (ini_table_buf[11] << 8) | ini_table_buf[10];
-    ccb_iniTableEntry.jblfWindowSize = (ini_table_buf[13] << 8) | ini_table_buf[12];
-    ccb_iniTableEntry.jblfGaussianSigma = (ini_table_buf[15] << 8) | ini_table_buf[14];
-    ccb_iniTableEntry.jblfExponentialTerm = (ini_table_buf[17] << 8) | ini_table_buf[16];
-    ccb_iniTableEntry.jblfMaxEdge = (ini_table_buf[19] << 8) | ini_table_buf[18];
-    ccb_iniTableEntry.jblfABThreshold = (ini_table_buf[21] << 8) | ini_table_buf[20];
+    ccb_iniTableEntry.radialThreshMin =
+        (ini_table_buf[7] << 8) | ini_table_buf[6];
+    ccb_iniTableEntry.radialThreshMax =
+        (ini_table_buf[9] << 8) | ini_table_buf[8];
+    ccb_iniTableEntry.jblfApplyFlag =
+        (ini_table_buf[11] << 8) | ini_table_buf[10];
+    ccb_iniTableEntry.jblfWindowSize =
+        (ini_table_buf[13] << 8) | ini_table_buf[12];
+    ccb_iniTableEntry.jblfGaussianSigma =
+        (ini_table_buf[15] << 8) | ini_table_buf[14];
+    ccb_iniTableEntry.jblfExponentialTerm =
+        (ini_table_buf[17] << 8) | ini_table_buf[16];
+    ccb_iniTableEntry.jblfMaxEdge =
+        (ini_table_buf[19] << 8) | ini_table_buf[18];
+    ccb_iniTableEntry.jblfABThreshold =
+        (ini_table_buf[21] << 8) | ini_table_buf[20];
     ccb_iniTableEntry.spare0 = (ini_table_buf[23] << 8) | ini_table_buf[22];
     ccb_iniTableEntry.spare1 = (ini_table_buf[25] << 8) | ini_table_buf[24];
     ccb_iniTableEntry.spare2 = (ini_table_buf[27] << 8) | ini_table_buf[26];
@@ -1321,12 +1390,64 @@ int Adsd3500::adsd3500_read_ini_values_from_ccb(uint8_t* ini_table_buf, size_t b
 
     PrintIniTableEntryFromCCB(ccb_iniTableEntry);
 
-    // TODO: 
-    // 1. Update the values in the iniKeyValuePair dictionary.
-    // 2. Write the Modified iniKeyValuePair into a file, with Key and Value separated by a '='.
-    // 3. Update iniFileData struct with the contents from the modified file.
+    // Update the values in the iniKeyValuePair dictionary.
+    iniKeyValPairs["abThreshMin"] =
+        std::to_string(ccb_iniTableEntry.abThreshMin);
+    iniKeyValPairs["confThresh"] = std::to_string(ccb_iniTableEntry.confThresh);
+    iniKeyValPairs["radialThreshMin"] =
+        std::to_string(ccb_iniTableEntry.radialThreshMin);
+    iniKeyValPairs["radialThreshMax"] =
+        std::to_string(ccb_iniTableEntry.radialThreshMax);
+    iniKeyValPairs["jblfApplyFlag"] =
+        std::to_string(ccb_iniTableEntry.jblfApplyFlag);
+    iniKeyValPairs["jblfWindowSize"] =
+        std::to_string(ccb_iniTableEntry.jblfWindowSize);
+    iniKeyValPairs["jblfGaussianSigma"] =
+        std::to_string(ccb_iniTableEntry.jblfGaussianSigma);
+    iniKeyValPairs["jblfExponentialTerm"] =
+        std::to_string(ccb_iniTableEntry.jblfExponentialTerm);
+    iniKeyValPairs["jblfMaxEdge"] =
+        std::to_string(ccb_iniTableEntry.jblfMaxEdge);
+    iniKeyValPairs["jblfABThreshold"] =
+        std::to_string(ccb_iniTableEntry.jblfABThreshold);
 
-    
+    // Update the contents of iniFileData struct with the updated values.
+    size_t iniFileUpdatedSize = 0;
+    for (const auto &pair : iniKeyValPairs) {
+        // std::cout << pair.first.c_str() << "=" << pair.second.c_str() << std::endl;
+        iniFileUpdatedSize += pair.first.size() + pair.second.size() +
+                              2; // Size of Key, Value, '=' and '\n'.
+    }
+    std::cout << "Ini file size before modification: " << iniFileData.size
+              << std::endl;
+    iniFileData.size = iniFileUpdatedSize;
+    std::cout << "Ini file size after modification: " << iniFileData.size
+              << std::endl;
+
+    // Allocate memory to hold the updated ini Key value pair contents.
+    unsigned char *iniFileUpdatedData = new unsigned char[iniFileUpdatedSize];
+
+    // Copy Ini Key-Value pairs into the new buffer.
+    size_t offset = 0;
+    for (const auto &pair : iniKeyValPairs) {
+        // Copy key
+        memcpy(iniFileUpdatedData + offset, pair.first.c_str(),
+               pair.first.size());
+        offset += pair.first.size();
+
+        // Copy '=' separator
+        iniFileUpdatedData[offset++] = '=';
+
+        // Copy value
+        memcpy(iniFileUpdatedData + offset, pair.second.c_str(),
+               pair.second.size());
+        offset += pair.second.size();
+
+        iniFileUpdatedData[offset++] = '\n';
+    }
+
+    delete[] iniFileData.p_data; // Deallocate the previously allocated data.
+    iniFileData.p_data = iniFileUpdatedData;
 
     return 0;
 }
@@ -1357,120 +1478,121 @@ void PrintIniTableEntryFromCCB(struct INI_TABLE_ENTRY entry) {
 
 int Adsd3500::adsd3500_set_ini_params() {
 
-    if (ccb_as_master) {
-        // Sets CCB parameters from the Module's CCB on the ADSD3500.
-        adsd3500_write_cmd(0x0010, ccb_iniTableEntry.abThreshMin); 
-        adsd3500_write_cmd(0x0011, ccb_iniTableEntry.confThresh);
-        adsd3500_write_cmd(0x0027, ccb_iniTableEntry.radialThreshMin);
-        adsd3500_write_cmd(0x0029, ccb_iniTableEntry.radialThreshMax);
-        adsd3500_write_cmd(0x0013, ccb_iniTableEntry.jblfApplyFlag);
-        adsd3500_write_cmd(0x0014, ccb_iniTableEntry.jblfWindowSize);
-        adsd3500_write_cmd(0x006B, ccb_iniTableEntry.jblfGaussianSigma);
-        adsd3500_write_cmd(0x006C, ccb_iniTableEntry.jblfExponentialTerm);
-        adsd3500_write_cmd(0x0074, ccb_iniTableEntry.jblfMaxEdge);
-        adsd3500_write_cmd(0x0075, ccb_iniTableEntry.jblfABThreshold);
+    // Sets parameters from the .ini file on the ADSD3500.
+    auto it = iniKeyValPairs.find("abThreshMin");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500_write_cmd(0x0010, std::stoi(it->second));
     } else {
-        // Sets parameters from the .ini file on the ADSD3500.
-        auto it = iniKeyValPairs.find("abThreshMin");
-        if (it != iniKeyValPairs.end()) {
-            adsd3500_write_cmd(0x0010, std::stoi(it->second));
-        } else {
-            std::cout << "abThreshMin was not found in .ini file, not setting." << std::endl;
-        }
+        std::cout << "abThreshMin was not found in .ini file, not setting."
+                  << std::endl;
+    }
 
-        it = iniKeyValPairs.find("confThresh");
-        if (it != iniKeyValPairs.end()) {
-            adsd3500_write_cmd(0x0011, std::stoi(it->second));
-        } else {
-            std::cout << "confThresh was not found in .ini file, not setting." << std::endl;;
-        }
+    it = iniKeyValPairs.find("confThresh");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500_write_cmd(0x0011, std::stoi(it->second));
+    } else {
+        std::cout << "confThresh was not found in .ini file, not setting."
+                  << std::endl;
+        ;
+    }
 
-        it = iniKeyValPairs.find("radialThreshMin");
-        if (it != iniKeyValPairs.end()) {
-            adsd3500_write_cmd(0x0027, std::stoi(it->second));
-        } else {
-            std::cout << "radialThreshMin was not found in .ini file, not setting." << std::endl;
-        }
+    it = iniKeyValPairs.find("radialThreshMin");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500_write_cmd(0x0027, std::stoi(it->second));
+    } else {
+        std::cout << "radialThreshMin was not found in .ini file, not setting."
+                  << std::endl;
+    }
 
-        it = iniKeyValPairs.find("radialThreshMax");
-        if (it != iniKeyValPairs.end()) {
-            adsd3500_write_cmd(0x0029, std::stoi(it->second));
-        } else {
-            std::cout << "radialThreshMax was not found in .ini file, not setting." << std::endl;
-        }
+    it = iniKeyValPairs.find("radialThreshMax");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500_write_cmd(0x0029, std::stoi(it->second));
+    } else {
+        std::cout << "radialThreshMax was not found in .ini file, not setting."
+                  << std::endl;
+    }
 
-        it = iniKeyValPairs.find("jblfApplyFlag");
-        if (it != iniKeyValPairs.end()) {
-            bool en = !(it->second == "0");
-            adsd3500_write_cmd(0x0013, en ? 1 : 0);
-        } else {
-            std::cout << "jblfApplyFlag was not found in .ini file, not setting." << std::endl;
-        }
+    it = iniKeyValPairs.find("jblfApplyFlag");
+    if (it != iniKeyValPairs.end()) {
+        bool en = !(it->second == "0");
+        adsd3500_write_cmd(0x0013, en ? 1 : 0);
+    } else {
+        std::cout << "jblfApplyFlag was not found in .ini file, not setting."
+                  << std::endl;
+    }
 
-        it = iniKeyValPairs.find("jblfWindowSize");
-        if (it != iniKeyValPairs.end()) {
-            adsd3500_write_cmd(0x0014, std::stoi(it->second));
-        } else {
-            std::cout << "jblfWindowSize was not found in .ini file, not setting." << std::endl;
-        }
+    it = iniKeyValPairs.find("jblfWindowSize");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500_write_cmd(0x0014, std::stoi(it->second));
+    } else {
+        std::cout << "jblfWindowSize was not found in .ini file, not setting."
+                  << std::endl;
+    }
 
-        it = iniKeyValPairs.find("jblfGaussianSigma");
-        if (it != iniKeyValPairs.end()) {
-            adsd3500_write_cmd(0x006B, std::stoi(it->second));
-        } else {
-            std::cout << "jblfGaussianSigma was not found in .ini file, not setting." << std::endl;
-        }
+    it = iniKeyValPairs.find("jblfGaussianSigma");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500_write_cmd(0x006B, std::stoi(it->second));
+    } else {
+        std::cout
+            << "jblfGaussianSigma was not found in .ini file, not setting."
+            << std::endl;
+    }
 
-        it = iniKeyValPairs.find("jblfExponentialTerm");
-        if (it != iniKeyValPairs.end()) {
-            adsd3500_write_cmd(0x006C, std::stoi(it->second));
-        } else {
-            std::cout << "jblfExponentialTerm was not found in .ini file, not setting." << std::endl;
-        }
+    it = iniKeyValPairs.find("jblfExponentialTerm");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500_write_cmd(0x006C, std::stoi(it->second));
+    } else {
+        std::cout
+            << "jblfExponentialTerm was not found in .ini file, not setting."
+            << std::endl;
+    }
 
-        it = iniKeyValPairs.find("jblfMaxEdge");
-        if (it != iniKeyValPairs.end()) {
-            adsd3500_write_cmd(0x0074, std::stoi(it->second));
-        } else {
-            std::cout << "jblfMaxEdge was not found in .ini file, not setting." << std::endl;
-        }
+    it = iniKeyValPairs.find("jblfMaxEdge");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500_write_cmd(0x0074, std::stoi(it->second));
+    } else {
+        std::cout << "jblfMaxEdge was not found in .ini file, not setting."
+                  << std::endl;
+    }
 
-        it = iniKeyValPairs.find("jblfABThreshold");
-        if (it != iniKeyValPairs.end()) {
-            adsd3500_write_cmd(0x0075, std::stoi(it->second));
-        } else {
-            std::cout << "jblfABThreshold was not found in .ini file" << std::endl;
-        }
+    it = iniKeyValPairs.find("jblfABThreshold");
+    if (it != iniKeyValPairs.end()) {
+        adsd3500_write_cmd(0x0075, std::stoi(it->second));
+    } else {
+        std::cout << "jblfABThreshold was not found in .ini file" << std::endl;
     }
 
     /* NOTE: As of now, the below parameters are not supported with CCB as master feature. 
     So they are still read from the .ini file.*/
-    auto it = iniKeyValPairs.find("fps");
+    it = iniKeyValPairs.find("fps");
     if (it != iniKeyValPairs.end()) {
         SetFps(std::stoi(it->second));
     } else {
-        std::cout << "fps was not found in .ini file, not setting." << std::endl;
+        std::cout << "fps was not found in .ini file, not setting."
+                  << std::endl;
     }
 
     it = iniKeyValPairs.find("vcselDelay");
     if (it != iniKeyValPairs.end()) {
         adsd3500_write_cmd(0x0066, std::stoi(it->second));
     } else {
-        std::cout << "vcselDelay was not found in .ini file, not setting." << std::endl;
-    }   
+        std::cout << "vcselDelay was not found in .ini file, not setting."
+                  << std::endl;
+    }
 
     it = iniKeyValPairs.find("enablePhaseInvalidation");
     if (it != iniKeyValPairs.end()) {
         adsd3500_write_cmd(0x0072, std::stoi(it->second));
     } else {
         std::cout << "enablePhaseInvalidation was not found in .ini file, "
-                        "not setting." << std::endl;
+                     "not setting."
+                  << std::endl;
     }
 
     // Configures Dynamic Mode Switching.
     it = iniKeyValPairs.find("dynamicModeSwitchEnable");
     if (it != iniKeyValPairs.end()) {
-        dynamic_mode_switch = std::stoi(it->second);      
+        dynamic_mode_switch = std::stoi(it->second);
     }
     adsd3500_configure_dynamic_mode_switching();
 
@@ -1483,48 +1605,51 @@ int Adsd3500::SetFrameType() {
 
     if (videoDevice.started) {
         StopStream();
-    }    
+    }
 
     for (unsigned int i = 0; i < videoDevice.nVideoBuffers; i++) {
         if (munmap(videoDevice.videoBuffers[i].start,
                    videoDevice.videoBuffers[i].length) == -1) {
-            std::cout
-                << "munmap error "
-                << "errno: " << errno << " error: " << strerror(errno);
+            std::cout << "munmap error "
+                      << "errno: " << errno << " error: " << strerror(errno);
         }
     }
     free(videoDevice.videoBuffers);
 
     if (videoDevice.videoCaptureDeviceId != -1) {
         if (close(videoDevice.videoCaptureDeviceId) == -1) {
-            std::cout << "Unable to close V4L2 Capture Device driver" << std::endl;
+            std::cout << "Unable to close V4L2 Capture Device driver"
+                      << std::endl;
         }
     }
 
     if (videoDevice.cameraSensorDeviceId != -1) {
         if (close(videoDevice.cameraSensorDeviceId) == -1) {
-            std::cout << "Unable to close V4L2 Camera Sensor driver" << std::endl;
+            std::cout << "Unable to close V4L2 Camera Sensor driver"
+                      << std::endl;
         }
     }
 
     ret = OpenAdsd3500();
-    if (ret < 0) printf("Unable to Open Adsd3500.\n");
+    if (ret < 0)
+        printf("Unable to Open Adsd3500.\n");
 
     struct v4l2_requestbuffers req;
     struct v4l2_format fmt;
     struct v4l2_buffer buf;
 
     ret = SetImageMode(mode_num);
-    if (ret < 0)  printf("Unable to Set mode in Adsd3500.\n");
+    if (ret < 0)
+        printf("Unable to Set mode in Adsd3500.\n");
 
     CLEAR(req);
     req.count = 0;
     req.type = videoDevice.videoBuffersType;
     req.memory = V4L2_MEMORY_MMAP;
     if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_REQBUFS, &req) == -1) {
-        std::cout
-            << "VIDIOC_REQBUFS error "
-            << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+        std::cout << "VIDIOC_REQBUFS error "
+                  << "errno: " << errno << " error: " << strerror(errno)
+                  << std::endl;
         return -1;
     }
 
@@ -1553,19 +1678,19 @@ int Adsd3500::SetFrameType() {
         inputFormat = it->second;
         std::cout << "Input Pixel format: " << inputFormat << std::endl;
     }
- 
+
     adsd3500_configure_sensor_frame_types();
 
     // Pixel format is "raw8" for lr-qnative mode.
     int num_rows = xyzDealiasData.n_rows;
     int num_cols = xyzDealiasData.n_cols;
     uint16_t width, height;
-    __u32 pixelFormat; 
+    __u32 pixelFormat;
     float totalBits;
- 
+
     if (imagerType == ImagerType::IMAGER_ADSD3030) { // For ADSD3030
-        if (inputFormat == "raw8") { 
-            if (mode_num < 2) { 
+        if (inputFormat == "raw8") {
+            if (mode_num < 2) {
                 totalBits = depthBits + abBits + confBits;
                 frame.frameWidth = num_cols * totalBits / 8;
                 frame.frameHeight = num_rows;
@@ -1584,7 +1709,7 @@ int Adsd3500::SetFrameType() {
                 totalBits = depthBits + abBits + confBits;
                 frame.frameWidth = num_cols * totalBits / 8;
                 frame.frameHeight = num_rows;
-                frame.pixelFormat= V4L2_PIX_FMT_SBGGR8;
+                frame.pixelFormat = V4L2_PIX_FMT_SBGGR8;
             }
         } else if (inputFormat == "mipiRaw12_8") {
             if (depthBits == 12 && abBits == 16 && confBits == 0) {
@@ -1595,11 +1720,13 @@ int Adsd3500::SetFrameType() {
                     frame.frameWidth = 2048;
                     frame.frameHeight = 2560;
                 } else {
-                    std::cout << "Invalid pixel format configuration for given mode!" << std::endl;
+                    std::cout
+                        << "Invalid pixel format configuration for given mode!"
+                        << std::endl;
                     return -1;
                 }
                 frame.pixelFormat = V4L2_PIX_FMT_SBGGR8;
-            } 
+            }
         } else if (inputFormat == "raw16_bits12_shift4") {
             if (depthBits == 12 && abBits == 12 && confBits == 0) {
                 if (mode_num == 1) {
@@ -1611,7 +1738,9 @@ int Adsd3500::SetFrameType() {
                     frame.frameHeight = 3072;
                     frame.pixelFormat = V4L2_PIX_FMT_SBGGR12;
                 } else {
-                    std::cout << "Invalid pixel format configuration for given mode!" << std::endl;
+                    std::cout
+                        << "Invalid pixel format configuration for given mode!"
+                        << std::endl;
                     return -1;
                 }
             } else if (depthBits == 12 && !abBits && !confBits) {
@@ -1620,7 +1749,9 @@ int Adsd3500::SetFrameType() {
                     frame.frameHeight = 1024;
                     frame.pixelFormat = V4L2_PIX_FMT_SBGGR12;
                 } else {
-                    std::cout << "Invalid pixel format configuration for given mode!" << std::endl;
+                    std::cout
+                        << "Invalid pixel format configuration for given mode!"
+                        << std::endl;
                     return -1;
                 }
             }
@@ -1641,7 +1772,7 @@ int Adsd3500::SetFrameType() {
 
     if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_S_FMT, &fmt) == -1) {
         std::cout << "Setting Pixel Format error, errno: " << errno
-                << " error: " << strerror(errno) << std::endl;
+                  << " error: " << strerror(errno) << std::endl;
         return -1;
     }
 
@@ -1652,21 +1783,23 @@ int Adsd3500::SetFrameType() {
     req.memory = V4L2_MEMORY_MMAP;
 
     if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_REQBUFS, &req) == -1) {
-        std::cout
-        << "VIDIOC_REQBUFS error "
-        << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+        std::cout << "VIDIOC_REQBUFS error "
+                  << "errno: " << errno << " error: " << strerror(errno)
+                  << std::endl;
         return -1;
     }
 
-    videoDevice.videoBuffers = (buffer *)calloc(req.count, sizeof(*videoDevice.videoBuffers));
+    videoDevice.videoBuffers =
+        (buffer *)calloc(req.count, sizeof(*videoDevice.videoBuffers));
     if (!videoDevice.videoBuffers) {
-        std::cout << "Unable to allocate video buffers in the driver" << std::endl;
+        std::cout << "Unable to allocate video buffers in the driver"
+                  << std::endl;
         return -1;
     }
 
     int length, offset;
     for (videoDevice.nVideoBuffers = 0; videoDevice.nVideoBuffers < req.count;
-                 videoDevice.nVideoBuffers++) {
+         videoDevice.nVideoBuffers++) {
 
         CLEAR(buf);
         buf.type = videoDevice.videoBuffersType;
@@ -1675,10 +1808,11 @@ int Adsd3500::SetFrameType() {
         buf.m.planes = videoDevice.planes;
         buf.length = 1;
 
-        if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_QUERYBUF, &buf) == -1) {
-            std::cout
-            << "VIDIOC_QUERYBUF error "
-            << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+        if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_QUERYBUF, &buf) ==
+            -1) {
+            std::cout << "VIDIOC_QUERYBUF error "
+                      << "errno: " << errno << " error: " << strerror(errno)
+                      << std::endl;
             return -1;
         }
 
@@ -1690,13 +1824,15 @@ int Adsd3500::SetFrameType() {
             offset = buf.m.planes[0].m.mem_offset;
         }
 
-        videoDevice.videoBuffers[videoDevice.nVideoBuffers].start = 
-            mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_SHARED, videoDevice.videoCaptureDeviceId, offset);
+        videoDevice.videoBuffers[videoDevice.nVideoBuffers].start =
+            mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_SHARED,
+                 videoDevice.videoCaptureDeviceId, offset);
 
-        if (videoDevice.videoBuffers[videoDevice.nVideoBuffers].start == MAP_FAILED) {
-            std::cout
-                << "mmap error "
-                << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+        if (videoDevice.videoBuffers[videoDevice.nVideoBuffers].start ==
+            MAP_FAILED) {
+            std::cout << "mmap error "
+                      << "errno: " << errno << " error: " << strerror(errno)
+                      << std::endl;
             return -1;
         }
 
@@ -1718,14 +1854,17 @@ int Adsd3500::adsd3500_configure_dynamic_mode_switching() {
     std::cout << "Turning on Dynamic Mode Switching." << std::endl;
     int ret = adsd3500_write_cmd(0x0080, 0x0001);
     if (ret < 0) {
-        std::cout << "Unable to turn on Dynamic Mode Switching in ADSD3500." << std::endl;
+        std::cout << "Unable to turn on Dynamic Mode Switching in ADSD3500."
+                  << std::endl;
         return 0;
     }
 
     uint8_t mode_seq0[4]; // Represents the Mode Composition sequence 0.
     uint8_t mode_seq1[4]; // Represents the Mode Composition sequence 1.
-    uint8_t mode_repeat_count0[4]; // Represents the Mode Repeat count for Mode Composition sequence 0.
-    uint8_t mode_repeat_count1[4]; // Represents the Mode Repeat count for Mode Composition sequence 1.
+    uint8_t mode_repeat_count0
+        [4]; // Represents the Mode Repeat count for Mode Composition sequence 0.
+    uint8_t mode_repeat_count1
+        [4]; // Represents the Mode Repeat count for Mode Composition sequence 1.
     /*Note: 
     1. dynamicModeSeqComp0 and dynamicModeSeqComp1 represents the sequence of imaging modes to be used when multiple frames are requested from the Imager.
     For eg., if dynamicModeSeqComp0=0x1010, then the first image would be captured with mode 0 and the second image would be captured with mode 1 and so on.
@@ -1734,7 +1873,8 @@ int Adsd3500::adsd3500_configure_dynamic_mode_switching() {
     For eg., if dynamicModeSeqComp0=0x1010 and dynamicRptCntSeq0=0x2132, then first two frames captured be with mode 0,
     and the next three frames would be captured with mode 1 and so on. So the sequence would look like this.. 00111011.
     */
-    uint16_t mode_seq0_cmd, mode_seq1_cmd, mode_repeat_count0_cmd, mode_repeat_count1_cmd;
+    uint16_t mode_seq0_cmd, mode_seq1_cmd, mode_repeat_count0_cmd,
+        mode_repeat_count1_cmd;
     auto it = iniKeyValPairs.find("dynamicModeSeqComp0");
     if (it != iniKeyValPairs.end()) {
         std::istringstream iss(std::string(it->second));
@@ -1765,25 +1905,33 @@ int Adsd3500::adsd3500_configure_dynamic_mode_switching() {
     // Write Dynamic Mode Sequence Composition and Repeat Count to the Registers.
     ret = adsd3500_write_cmd(0x0081, mode_seq0_cmd);
     if (ret < 0) {
-        std::cout << "Unable to set Mode Sequence 0 for Dynamic Mode Switching in ADSD3500." << std::endl;
+        std::cout << "Unable to set Mode Sequence 0 for Dynamic Mode Switching "
+                     "in ADSD3500."
+                  << std::endl;
         return 0;
     }
 
     ret = adsd3500_write_cmd(0x0082, mode_seq1_cmd);
     if (ret < 0) {
-        std::cout << "Unable to set Mode Sequence 1 for Dynamic Mode Switching in ADSD3500." << std::endl;
+        std::cout << "Unable to set Mode Sequence 1 for Dynamic Mode Switching "
+                     "in ADSD3500."
+                  << std::endl;
         return 0;
     }
 
     ret = adsd3500_write_cmd(0x0083, mode_repeat_count0_cmd);
     if (ret < 0) {
-        std::cout << "Unable to set Mode Repeat Count 0 for Dynamic Mode Switching in ADSD3500." << std::endl;
+        std::cout << "Unable to set Mode Repeat Count 0 for Dynamic Mode "
+                     "Switching in ADSD3500."
+                  << std::endl;
         return 0;
     }
 
     ret = adsd3500_write_cmd(0x0084, mode_repeat_count1_cmd);
     if (ret < 0) {
-        std::cout << "Unable to set Mode Repeat Count 1 for Dynamic Mode Switching in ADSD3500." << std::endl;
+        std::cout << "Unable to set Mode Repeat Count 1 for Dynamic Mode "
+                     "Switching in ADSD3500."
+                  << std::endl;
         return 0;
     }
 
@@ -1793,16 +1941,17 @@ int Adsd3500::adsd3500_configure_dynamic_mode_switching() {
 int Adsd3500::adsd3500_turnoff_dynamic_mode_switch() {
     int ret = adsd3500_write_cmd(0x0080, 0x0000);
     if (ret < 0) {
-        std::cout << "Unable to turn off Dynamic Mode Switching in ADSD3500." << std::endl;
+        std::cout << "Unable to turn off Dynamic Mode Switching in ADSD3500."
+                  << std::endl;
     }
     return 0;
 }
 
-int Adsd3500::adsd3500_set_control(const std::string &control, const std::string &value) {
+int Adsd3500::adsd3500_set_control(const std::string &control,
+                                   const std::string &value) {
     // Set control commands to set value in the V4L2 Camera sensor driver.
     struct v4l2_control ctrl;
     memset(&ctrl, 0, sizeof(ctrl));
-
 
     if (control == "bitsInPhaseOrDepth") {
         ctrl.id = CTRL_PHASE_DEPTH_BITS;
@@ -1815,14 +1964,15 @@ int Adsd3500::adsd3500_set_control(const std::string &control, const std::string
     } else if (control == "abAveraging") {
         ctrl.id = CTRL_AB_AVG;
     } else {
-        std::cout << "Invalid Control Command passed: " << control <<  std::endl;
+        std::cout << "Invalid Control Command passed: " << control << std::endl;
     }
 
     ctrl.value = std::stoi(value);
 
     if (xioctl(videoDevice.cameraSensorDeviceId, VIDIOC_S_CTRL, &ctrl) == -1) {
         std::cout << "Failed to set control: " << control << " "
-                     << "errno: " << errno << " error: " << strerror(errno) << std::endl;
+                  << "errno: " << errno << " error: " << strerror(errno)
+                  << std::endl;
         return -1;
     }
 
@@ -1848,7 +1998,8 @@ int Adsd3500::adsd3500_configure_sensor_frame_types() {
             value = "2";
         adsd3500_set_control("bitsInPhaseOrDepth", value);
     } else {
-        std::cout <<  "bitsInPhaseOrDepth was not found in .ini file" << std::endl;
+        std::cout << "bitsInPhaseOrDepth was not found in .ini file"
+                  << std::endl;
     }
 
     // Configure Confidence bits.
@@ -1894,12 +2045,12 @@ int Adsd3500::adsd3500_configure_sensor_frame_types() {
         adsd3500_set_control("depthEnable", en);
         adsd3500_set_control("abAveraging", en);
     } else {
-        std::cout << "partialDepthEnable was not found in .ini file" << std::endl;
+        std::cout << "partialDepthEnable was not found in .ini file"
+                  << std::endl;
     }
 
     return 0;
 }
-
 
 /*
 *********************************Non-member functions*****************************
@@ -1912,8 +2063,9 @@ void print_planes(const struct v4l2_plane planes[], int num_planes) {
         std::cout << "  Bytesused: " << planes[i].bytesused << std::endl;
         std::cout << "  Length: " << planes[i].length << std::endl;
         std::cout << "  Data_offset: " << planes[i].data_offset << std::endl;
-        std::cout << "  Reserved: " << planes[i].reserved[0] << " " << planes[i].reserved[1] << " "
-                  << planes[i].reserved[2] << " " << planes[i].reserved[3] << std::endl;
+        std::cout << "  Reserved: " << planes[i].reserved[0] << " "
+                  << planes[i].reserved[1] << " " << planes[i].reserved[2]
+                  << " " << planes[i].reserved[3] << std::endl;
     }
 }
 
@@ -1921,10 +2073,10 @@ void print_planes(const struct v4l2_plane planes[], int num_planes) {
 void PrintByteArray(unsigned char *byteArray, int arraySize) {
 #ifdef DEBUG
     int i;
-	for(i=0;i < arraySize; i++) 	{
-		printf("0x%x ", byteArray[i]);
-	}
-	std::cout << std::endl;
+    for (i = 0; i < arraySize; i++) {
+        printf("0x%x ", byteArray[i]);
+    }
+    std::cout << std::endl;
 #endif
 }
 
@@ -1941,7 +2093,7 @@ int xioctl(int fd, int request, void *arg) {
 
 // V4L2 Set command
 bool v4l2_ctrl_set(int fd, uint32_t id, uint8_t *val) {
-	static struct v4l2_ext_control extCtrl;
+    static struct v4l2_ext_control extCtrl;
     static struct v4l2_ext_controls extCtrls;
 
     extCtrl.size = CTRL_SIZE * sizeof(char);
@@ -1960,7 +2112,7 @@ bool v4l2_ctrl_set(int fd, uint32_t id, uint8_t *val) {
 
 // V4L2 Get command
 bool v4l2_ctrl_get(int fd, uint32_t id, uint8_t *val) {
-	static struct v4l2_ext_control extCtrl;
+    static struct v4l2_ext_control extCtrl;
     static struct v4l2_ext_controls extCtrls;
 
     extCtrl.size = CTRL_SIZE * sizeof(char);
@@ -2038,4 +2190,3 @@ int32_t tof_open(const char *tof_device) {
     }
     return fd;
 }
-
