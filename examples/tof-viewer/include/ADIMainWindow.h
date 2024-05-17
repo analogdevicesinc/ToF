@@ -548,6 +548,8 @@ class ADIMainWindow {
     aditof::System m_system;
     std::vector<std::shared_ptr<aditof::Camera>> m_camerasList;
 
+    bool m_focusedOnce = false;
+
     bool m_skipNetworkCameras;
     std::string m_cameraIp;
     std::vector<std::pair<int, std::string>> m_configFiles;
