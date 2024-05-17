@@ -112,6 +112,11 @@ print("camera1.setMode(",mode,")", status)
 # currentIniParams["ab_thresh_min"] = 4
 # camera1.setIniParams(currentIniParams)
 
+# Example of configuring the Dynamic Mode Switching
+# The expected sequence of frame is: mode2, mode2, mode2, mode3, mode2, ...
+# camera1.adsd3500setEnableDynamicModeSwitching(True)
+# camera1.adsds3500setDynamicModeSwitchingSequence([(2, 3), (3, 1)])
+
 status = camera1.start()
 print("camera1.start()", status)
 
