@@ -1031,6 +1031,7 @@ void ADIMainWindow::PlayRecorded() {
 }
 
 void ADIMainWindow::stopPlayCCD() {
+    m_focusedOnce = false;
     captureSeparateEnabled = true;
     captureBlendedEnabled = true;
     setABWinPositionOnce = true;
@@ -1926,6 +1927,10 @@ void ADIMainWindow::displayDepthWindow(ImGuiWindowFlags overlayFlags) {
         "Depth"; //std::format("Depth: {} x {}", static_cast<uint32_t>(view->frameWidth), static_cast<uint32_t>(view->frameWidth));
     if (ImGui::Begin(title.c_str(), nullptr, overlayFlags)) {
 
+        if (!m_focusedOnce) {
+            ImGui::SetWindowFocus();
+            m_focusedOnce = true;
+        }
         CaptureDepthVideo();
 
         ImVec2 imageStartPos = ImGui::GetCursorScreenPos();
