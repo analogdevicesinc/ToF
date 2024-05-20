@@ -323,6 +323,11 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
     using namespace aditof;
     Status status = Status::OK;
 
+    if (m_sensorConfiguration != "standard") {
+        LOG(ERROR) << "Mode must be set using struct for this configuration!";
+        return Status::INVALID_ARGUMENT;
+    }
+
     auto modeIt = std::find_if(m_availableSensorModeDetails.begin(),
                                m_availableSensorModeDetails.end(),
                                [&mode](const DepthSensorModeDetails &d) {
@@ -346,16 +351,6 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
         }
     }
 
-    if (m_sensorConfigurationCache != m_sensorConfiguration) {
-        if (m_sensorConfiguration == "imagerRaw") {
-            //TO DO: Enable bypass function
-        } else {
-            //TO DO: Disable bypass function
-        }
-
-        m_sensorConfigurationCache = m_sensorConfiguration;
-    }
-
     UtilsIni::getKeyValuePairsFromIni(m_ini_depth, m_iniKeyValPairs);
     setAdsd3500WithIniParams(m_iniKeyValPairs);
     configureSensorModeDetails();
@@ -375,54 +370,33 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
 
     m_pcmFrame = m_modeDetailsCache.isPCM;
 
-    if (m_sensorConfigurationCache == "standard") {
-        if (m_enableMetaDatainAB > 0) {
-            if (!m_pcmFrame) {
-                status = adsd3500SetEnableMetadatainAB(m_enableMetaDatainAB);
-                if (status != Status::OK) {
-                    LOG(ERROR) << "Failed to set enableMetaDatainAB.";
-                    return status;
-                }
-                LOG(INFO)
-                    << "Metadata in AB is enabled and it is stored in the "
-                       "first 128 bytes.";
-
-            } else {
-                status = adsd3500SetEnableMetadatainAB(0);
-                if (status != Status::OK) {
-                    LOG(ERROR) << "Failed to disable enableMetaDatainAB.";
-                    return status;
-                }
-                LOG(INFO) << "Metadata in AB is disabled for this frame type.";
-            }
-
-        } else {
+    if (m_enableMetaDatainAB > 0) {
+        if (!m_pcmFrame) {
             status = adsd3500SetEnableMetadatainAB(m_enableMetaDatainAB);
             if (status != Status::OK) {
                 LOG(ERROR) << "Failed to set enableMetaDatainAB.";
                 return status;
             }
-
-            LOG(WARNING) << "Metadata in AB is disabled.";
-        }
-    } else {
-        if (m_enableMetaDataInRaw > 0) {
-            status = adsd3500SetEnableMetadataInRaw(m_enableMetaDataInRaw);
-            if (status != Status::OK) {
-                LOG(ERROR) << "Failed to set enableMetaDataInRaw.";
-                return status;
-            }
-            LOG(INFO) << "Metadata in Raw is enabled and it is stored in the "
+            LOG(INFO) << "Metadata in AB is enabled and it is stored in the "
                          "first 128 bytes.";
 
         } else {
-            status = adsd3500SetEnableMetadataInRaw(0);
+            status = adsd3500SetEnableMetadatainAB(0);
             if (status != Status::OK) {
-                LOG(ERROR) << "Failed to disable enableMetaDataInRaw.";
+                LOG(ERROR) << "Failed to disable enableMetaDatainAB.";
                 return status;
             }
-            LOG(INFO) << "Metadata in Raw is disabled.";
+            LOG(INFO) << "Metadata in AB is disabled for this frame type.";
         }
+
+    } else {
+        status = adsd3500SetEnableMetadatainAB(m_enableMetaDatainAB);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to set enableMetaDatainAB.";
+            return status;
+        }
+
+        LOG(WARNING) << "Metadata in AB is disabled.";
     }
 
     LOG(INFO) << "Using ini file: " << m_ini_depth;
@@ -555,9 +529,14 @@ aditof::Status CameraItof::setMode(const aditof::DepthSensorModeDetails &mode) {
 
     if (m_sensorConfigurationCache != m_sensorConfiguration) {
         if (m_sensorConfiguration == "imagerRaw") {
-            //TO DO: Enable bypass function
+            status = m_depthSensor->adsd3500_write_cmd(0x33, 0x01);
         } else {
-            //TO DO: Disable bypass function
+            status = m_depthSensor->adsd3500_write_cmd(0x33, 0x00);
+        }
+
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to enable/disable bypass mode!";
+            return status;
         }
 
         m_sensorConfigurationCache = m_sensorConfiguration;
@@ -837,7 +816,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame) {
         frame->getData("ab", &abFrame);
         memcpy(reinterpret_cast<uint8_t *>(&metadata), abFrame,
                sizeof(metadata));
-    } else if(m_enableMetaDataInRaw) {
+    } else if (m_enableMetaDataInRaw) {
         memcpy(reinterpret_cast<uint8_t *>(&metadata), frameDataLocation,
                sizeof(metadata));
     } else {

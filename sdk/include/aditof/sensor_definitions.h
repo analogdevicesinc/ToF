@@ -170,6 +170,11 @@ struct DepthSensorModeDetails {
     int isPCM;
 
     /**
+     * @brief set to true if the mode is raw
+    */
+    int isRaw;
+
+    /**
      * @brief Stores the content of a frame
     */
     DriverConfiguration driverConfiguration;
