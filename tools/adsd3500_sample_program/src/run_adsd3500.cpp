@@ -17,6 +17,8 @@
 * limitations under the License.*/
 
 #include "../include/adsd3500_util.h"
+#include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <math.h>
@@ -26,10 +28,23 @@ int main(int argc, char *argv[]) {
     int ret;
     auto adsd3500 = Adsd3500();
 
-    // Arguments from the user.
+    // Default Arguments.
     adsd3500.mode_num = 2;      // Image mode number.
-    int num_frames = 8;         // Number of frames
+    int num_frames = 1;         // Number of frames
     adsd3500.ccb_as_master = 1; // Enables/Disbales CCB as master.
+
+    // Parse Arguments from the Command line.
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], "-m") == 0 && i + 1 < argc) {
+            adsd3500.mode_num = std::atoi(argv[++i]);
+        } else if (std::strcmp(argv[i], "-n") == 0 && i + 1 < argc) {
+            num_frames = std::atoi(argv[++i]);
+        } else {
+            std::cerr << "Usage: " << argv[0]
+                      << " [-m mode_num] [-n num_frames]\n";
+            return -1;
+        }
+    }
 
     // Reset ADSD3500
     ret = adsd3500.ResetAdsd3500();
@@ -147,6 +162,8 @@ int main(int argc, char *argv[]) {
     std::ofstream ab("out_ab.bin", std::ios::binary);
     std::ofstream depth("out_depth.bin", std::ios::binary);
     std::ofstream conf("out_conf.bin", std::ios::binary);
+
+    std::cout << "Number of Frames requested: " << num_frames << std::endl;
 
     for (int i = 0; i < num_frames; i++) {
         // Receive Frames

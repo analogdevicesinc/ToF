@@ -34,26 +34,9 @@
 #include <iostream>
 #include <vector>
 
+// Depth Compute Library Version.
 const char ver_info[] = "VERSIONINFO:"
                         "TOF_DepthComputeEngine_ARM64-Rel4.4.0";
-
-#define ADSD3500_ADDR (0x70 >> 1)
-#define ADSD3500_INTRINSIC_SIZE 56
-#define ADSD3500_DEALIAS_SIZE 32
-#define ADI_STATUS_FIRMWARE_UPDATE 0x000E
-#define ADI_STATUS_NVM_WRITE_COMPLETE 0x000F
-#define BUF_SIZE (4000000)
-#define PAGE_SIZE 256u
-#define CTRL_SIZE 4099
-#define IOCTL_TRIES 3
-#define FULL_UPDATE_CMD 0x12
-#define MAX_BIN_SIZE 741376
-
-typedef unsigned char u8;
-typedef unsigned short u16;
-typedef unsigned int u32;
-#define ADSD3500_ADDR (0x70 >> 1)
-#define DEBUG 1
 
 Adsd3500::Adsd3500() {
     // Do Nothing.
@@ -177,9 +160,6 @@ uint8_t readIniFromAdsd3500_cmd[] = {0xAD, 0x00, 0x28, 0x25, 0x00, 0x00,
 uint8_t readModeMapFromAdsd3500_cmd[] = {0xAD, 0x00, 0xA8, 0x24, 0x00, 0x00,
                                          0x00, 0x00, 0xCC, 0x00, 0x00, 0x00,
                                          0x00, 0x00, 0x00, 0x00};
-
-// uint8_t getFwVersion_cmd[] = {0xAD, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00,
-//                               0x05, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00}; // Original
 
 uint8_t getFwVersion_cmd[] = {0xAD, 0x00, 0x2C, 0x05, 0x00, 0x00, 0x00, 0x00,
                               0x31, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00};
@@ -644,7 +624,7 @@ int Adsd3500::GetFps(uint8_t *result) {
 // Read CCB from ADSD3500.
 int Adsd3500::ReadCCB(const char *filename) {
 
-    uint8_t data[CTRL_SIZE] = {0};
+    uint8_t data[ADSD3500_CTRL_PACKET_SIZE] = {0};
     char binbuff[BUF_SIZE] = {0};
     uint32_t chunkSize = 2048u;
     uint32_t sizeOfBinary = 0u;
@@ -1324,9 +1304,9 @@ int Adsd3500::adsd3500_get_ini_key_value_pairs_from_ccb() {
     printf("Burst Mode Command to get Ini table entry values from CCB.\n");
     PrintByteArray(readIniFromAdsd3500_cmd, 16);
 
-    uint8_t data[CTRL_SIZE] = {0};
+    uint8_t data[ADSD3500_CTRL_PACKET_SIZE] = {0};
     int i = 0;
-    while(i < ARRAY_SIZE(readIniFromAdsd3500_cmd)) {
+    while (i < ARRAY_SIZE(readIniFromAdsd3500_cmd)) {
         data[i + 3] = readIniFromAdsd3500_cmd[i];
         i++;
     }
@@ -1343,7 +1323,7 @@ int Adsd3500::adsd3500_get_ini_key_value_pairs_from_ccb() {
     int read_len = (data[1] << 8) | data[2];
     memcpy(ini_table_buf, &data[3], read_len);
     printf("Ini Table values read from the CCB.\n");
-    PrintByteArray(ini_table_buf,read_len);
+    PrintByteArray(ini_table_buf, read_len);
 
     // Switch to Standard Mode.
     ret = adsd3500_switch_to_standard_mode(videoDevice.cameraSensorDeviceId);
@@ -2103,7 +2083,7 @@ bool v4l2_ctrl_set(int fd, uint32_t id, uint8_t *val) {
     static struct v4l2_ext_control extCtrl;
     static struct v4l2_ext_controls extCtrls;
 
-    extCtrl.size = CTRL_SIZE * sizeof(char);
+    extCtrl.size = ADSD3500_CTRL_PACKET_SIZE * sizeof(char);
     extCtrl.p_u8 = val;
     extCtrl.id = id;
     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
@@ -2122,7 +2102,7 @@ bool v4l2_ctrl_get(int fd, uint32_t id, uint8_t *val) {
     static struct v4l2_ext_control extCtrl;
     static struct v4l2_ext_controls extCtrls;
 
-    extCtrl.size = CTRL_SIZE * sizeof(char);
+    extCtrl.size = ADSD3500_CTRL_PACKET_SIZE * sizeof(char);
     extCtrl.p_u8 = val;
     extCtrl.id = id;
     memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
@@ -2138,7 +2118,7 @@ bool v4l2_ctrl_get(int fd, uint32_t id, uint8_t *val) {
 
 // Write Command
 int32_t write_cmd(int fd, uint8_t *ptr, uint16_t len) {
-    uint8_t cmd_data[CTRL_SIZE];
+    uint8_t cmd_data[ADSD3500_CTRL_PACKET_SIZE];
     if (ptr == nullptr) {
         return -1;
     }
@@ -2159,7 +2139,7 @@ int32_t write_cmd(int fd, uint8_t *ptr, uint16_t len) {
 but returns wrong values with Burst Mode Commands. Need to fix this.*/
 int32_t read_cmd(int fd, uint8_t *ptr, uint16_t len, uint8_t *rcmd,
                  uint16_t rlen) {
-    uint8_t cmd_data[CTRL_SIZE];
+    uint8_t cmd_data[ADSD3500_CTRL_PACKET_SIZE];
     if (ptr == nullptr) {
         return -1;
     }

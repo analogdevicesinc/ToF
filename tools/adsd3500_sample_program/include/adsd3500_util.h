@@ -51,9 +51,19 @@
 
 #define ADSD3500_INTRINSIC_SIZE 56
 #define ADSD3500_DEALIAS_SIZE 32
-#define NUM_BUFFERS 4
+#define ADSD3500_ADDR (0x70 >> 1)
+#define ADSD3500_ADDR (0x70 >> 1)
 #define ADSD3500_CTRL_PACKET_SIZE 4099
+#define NUM_BUFFERS 4
 #define MAX_N_FREQS 3
+#define DEBUG 1
+#define ADI_STATUS_FIRMWARE_UPDATE 0x000E
+#define ADI_STATUS_NVM_WRITE_COMPLETE 0x000F
+#define BUF_SIZE (4000000)
+#define PAGE_SIZE 256u
+#define IOCTL_TRIES 3
+#define FULL_UPDATE_CMD 0x12
+#define MAX_BIN_SIZE 741376
 
 // V4L2 Camera Sensor Driver Control Commands
 #define V4L2_CID_AD_DEV_CHIP_CONFIG (0x9819e1)
@@ -77,6 +87,7 @@ typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
 
+// Camera Sensor and Capture Driver Path.
 #define CAMERA_SENSOR_DRIVER "/dev/v4l-subdev1"
 #define VIDEO_CAPTURE_DRIVER "/dev/video0"
 #define CAPTURE_DEVICE_NAME "mxc-isi-cap"
@@ -100,7 +111,9 @@ struct VideoDev {
           videoBuffers(nullptr), nVideoBuffers(0), started(false) {}
 };
 
+// Imager Types
 enum class ImagerType { IMAGER_UNKNOWN, IMAGER_ADSD3100, IMAGER_ADSD3030 };
+// CCB Versions
 enum class CCBVersion { CCB_UNKNOWN, CCB_VERSION0, CCB_VERSION1 };
 
 class DealiasParams {
