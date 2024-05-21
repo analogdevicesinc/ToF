@@ -17,6 +17,15 @@ The example program performs the following functionalities.
 11. Closes the camera
 12. Exits
 
+## Install Depth Compute Library files.
+
+1. Navigate to the current project directory in the command line terminal.
+
+2. Copy the Depth Compute Library files to the path /usr/libs/
+
+    $ cd depthComputeLibrary/libs/
+    $ sudo cp libtofi_compute.so libtofi_config.so /usr/libs/
+
 ## Usage
 
 1. Navigate to the current project directory in the command line terminal.
@@ -27,7 +36,7 @@ The example program performs the following functionalities.
 
 3. Once the executable is generated, run the application by the following command.
 
-    $ ./run_adsd3500
+    $ sudo ./run_adsd3500 -m <mode number> -n <number of frames>
 
 
 

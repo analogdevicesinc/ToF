@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     // Default Arguments.
     adsd3500.mode_num = 2;      // Image mode number.
     int num_frames = 1;         // Number of frames
-    adsd3500.ccb_as_master = 1; // Enables/Disbales CCB as master.
+    adsd3500.ccb_as_master = 0; // Enables/Disbales CCB as master.
 
     // Parse Arguments from the Command line.
     for (int i = 1; i < argc; ++i) {
