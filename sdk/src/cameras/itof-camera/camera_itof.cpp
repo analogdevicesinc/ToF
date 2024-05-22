@@ -463,18 +463,21 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
                 return localStatus;
             }
 
-            std::string depthComputeStatus;
-            localStatus = m_depthSensor->getControl("depthComputeOpenSource",
-                                                    depthComputeStatus);
-            if (localStatus == aditof::Status::OK) {
-                if (depthComputeStatus == "0") {
-                    LOG(INFO) << "Using closed source depth compute library.";
+            if (!m_isOffline) {
+                std::string depthComputeStatus;
+                localStatus = m_depthSensor->getControl(
+                    "depthComputeOpenSource", depthComputeStatus);
+                if (localStatus == aditof::Status::OK) {
+                    if (depthComputeStatus == "0") {
+                        LOG(INFO)
+                            << "Using closed source depth compute library.";
+                    } else {
+                        LOG(INFO) << "Using open source depth compute library.";
+                    }
                 } else {
-                    LOG(INFO) << "Using open source depth compute library.";
+                    LOG(ERROR)
+                        << "Failed to get depth compute version from target!";
                 }
-            } else {
-                LOG(ERROR)
-                    << "Failed to get depth compute version from target!";
             }
         }
     }
