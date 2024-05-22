@@ -1986,8 +1986,10 @@ void ADIMainWindow::displayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
         pos.y += size.y + 10;
         ImGui::SetCursorScreenPos(pos);
 
+        ImGui::SameLine();
         ImGuiExtensions::ADISliderInt("", &pointSize, 1, 10,
                                       "Point Size: %d px");
+
         ImGui::SameLine();
         if (ImGuiExtensions::ADIButton("Reset", true)) {
             pointCloudReset();
