@@ -465,7 +465,7 @@ void ADIMainWindow::handleInterruptCallback() {
     }
     ret_status = camera->getSensor()->adsd3500_register_interrupt_callback(cb);
     if (ret_status != aditof::Status::OK) {
-        my_log.AddLog("Could not register interrupt callback");
+        LOG(ERROR) << "Could not register interrupt callback";
         return;
     }
 }
@@ -1324,7 +1324,6 @@ void ADIMainWindow::InitCamera() {
     }
 
     std::string version = aditof::getApiVersion();
-    //my_log.AddLog("Preparing camera. Please wait...\n");
     LOG(INFO) << "Preparing camera. Please wait...\n";
     view = std::make_shared<adiviewer::ADIView>(
         std::make_shared<adicontroller::ADIController>(m_camerasList),
@@ -1460,13 +1459,13 @@ void ADIMainWindow::prepareCamera(uint8_t mode) {
     std::vector<aditof::FrameDetails> frameTypes;
 
     if (mode < 0) {
-        my_log.AddLog("Error: Invalid camera mode!\n");
+        LOG(ERROR) << "Invalid camera mode!";
         return;
     }
 
     status = getActiveCamera()->setMode(mode);
     if (status != aditof::Status::OK) {
-        my_log.AddLog("Could not set camera mode!");
+        LOG(ERROR) << "Could not set camera mode!";
         return;
     }
 
@@ -1520,7 +1519,7 @@ void ADIMainWindow::prepareCamera(uint8_t mode) {
         return;
     }
 
-    my_log.AddLog("Camera ready.\n");
+    LOG(INFO) << "Camera ready.";
     cameraWorkerDone = true;
 }
 
