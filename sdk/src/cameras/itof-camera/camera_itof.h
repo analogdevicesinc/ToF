@@ -261,6 +261,7 @@ class CameraItof : public aditof::Camera {
     aditof::ImagerType m_imagerType;
     bool m_dropFirstFrame;
     bool m_dropFrameOnce;
+    std::vector<std::pair<uint8_t, uint8_t>> m_configDmsSequence;
 };
 
 #endif // CAMERA_ITOF_H
