@@ -206,17 +206,20 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
                    sizeof(CameraIntrinsics));
         }
 
-        std::string fwVersion;
-        std::string fwHash;
-        status = adsd3500GetFirmwareVersion(fwVersion, fwHash);
+        if (!m_isOffline) {
+            std::string fwVersion;
+            std::string fwHash;
 
-        if (status == Status::OK) {
-            LOG(INFO) << "Current adsd3500 firmware version is: "
-                      << m_adsd3500FwGitHash.first;
-            LOG(INFO) << "Current adsd3500 firmware git hash is: "
-                      << m_adsd3500FwGitHash.second;
-        } else
-            return status;
+            status = adsd3500GetFirmwareVersion(fwVersion, fwHash);
+
+            if (status == Status::OK) {
+                LOG(INFO) << "Current adsd3500 firmware version is: "
+                          << m_adsd3500FwGitHash.first;
+                LOG(INFO) << "Current adsd3500 firmware git hash is: "
+                          << m_adsd3500FwGitHash.second;
+            } else
+                return status;
+        }
     }
 
     //Populate the data from the json file provided
