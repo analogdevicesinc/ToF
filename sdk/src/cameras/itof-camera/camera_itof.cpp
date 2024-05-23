@@ -507,6 +507,24 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
         }
     }
 
+    // If a Dynamic Mode Switching sequences has been loaded from config file then configure ADSD3500
+    if (m_configDmsSequence.size() > 0) {
+        status = this->adsd3500setEnableDynamicModeSwitching(true);
+        if (status != Status::OK) {
+            LOG(WARNING) << "Could not enable 'Dynamic Mode Switching.";
+            return status;
+        }
+
+        status =
+            this->adsds3500setDynamicModeSwitchingSequence(m_configDmsSequence);
+        m_configDmsSequence.clear();
+        if (status != Status::OK) {
+            LOG(WARNING)
+                << "Could not set a sequence for the 'Dynamic Mode Switching'.";
+            return status;
+        }
+    }
+
     return status;
 }
 
@@ -1432,6 +1450,26 @@ CameraItof::loadDepthParamsFromJsonFile(const std::string &pathFile,
             double errata1val = 1;
             if (cJSON_IsNumber(errata1)) {
                 errata1val = errata1->valuedouble;
+            }
+
+            cJSON *dmsSequence = cJSON_GetObjectItemCaseSensitive(
+                depthParams, "dynamicModeSwitching");
+            if (cJSON_IsArray(dmsSequence)) {
+
+                m_configDmsSequence.clear();
+
+                cJSON *dmsPair;
+                cJSON_ArrayForEach(dmsPair, dmsSequence) {
+                    cJSON *dmsMode =
+                        cJSON_GetObjectItemCaseSensitive(dmsPair, "mode");
+                    cJSON *dmsRepeat =
+                        cJSON_GetObjectItemCaseSensitive(dmsPair, "repeat");
+
+                    if (cJSON_IsNumber(dmsMode) && cJSON_IsNumber(dmsRepeat)) {
+                        m_configDmsSequence.emplace_back(std::make_pair(
+                            dmsMode->valueint, dmsRepeat->valueint));
+                    }
+                }
             }
 
             cJSON *depthframeType = cJSON_GetObjectItemCaseSensitive(
