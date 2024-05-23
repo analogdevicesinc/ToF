@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 
     // Default Arguments.
     adsd3500.mode_num = 2;      // Image mode number.
-    int num_frames = 1;         // Number of frames
+    int num_frames = 1;         // Number of frames is set to 1 by default.
     adsd3500.ccb_as_master = 0; // Enables/Disbales CCB as master.
 
     // Parse Arguments from the Command line.
@@ -46,6 +46,22 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    if (adsd3500.mode_num < 0 || adsd3500.mode_num > 3) {
+        std::cout << "Mode Number not supported." << std::endl;
+        return -1;
+    }
+
+    if (num_frames <= 0) {
+        std::cout << "Invalid number of frames given." << std::endl;
+        return -1;
+    }
+
+    /* 
+    NOTE: The First frame collected from the NXP Eval kit (with Tembin and Crosby) would be 
+    corrupted with Noise. Hence, we discard this frame and collect the subsequent frames.
+    */
+    num_frames++;
+ 
     // Reset ADSD3500
     ret = adsd3500.ResetAdsd3500();
     if (ret < 0) {
@@ -124,9 +140,6 @@ int main(int argc, char *argv[]) {
     // Set up Interrupt Support.
     // TODO.
 
-    // Set the Imager Mode.
-    usleep(1000 * 5000); // Wait for a period for 5 seconds.
-
     ret = adsd3500.SetFrameType();
     if (ret < 0) {
         printf("Unable to set frame type Adsd3500.\n");
@@ -163,7 +176,7 @@ int main(int argc, char *argv[]) {
     std::ofstream depth("out_depth.bin", std::ios::binary);
     std::ofstream conf("out_conf.bin", std::ios::binary);
 
-    std::cout << "Number of Frames requested: " << num_frames << std::endl;
+    std::cout << "Number of Frames requested: " << num_frames - 1 << std::endl;
 
     for (int i = 0; i < num_frames; i++) {
         // Receive Frames
@@ -172,6 +185,11 @@ int main(int argc, char *argv[]) {
         if (ret < 0 || buffer == nullptr) {
             std::cout << "Unable to receive frames from Adsd3500" << std::endl;
         }
+        
+        // Discard the First Frame collected.
+        if (i == 0) {
+            continue;
+        }
 
         // Get Depth, AB, Confidence Data using Depth Compute Library and store them as .bin file.
         adsd3500.ParseRawDataWithDCL(buffer);
@@ -179,13 +197,13 @@ int main(int argc, char *argv[]) {
             std::cout << "Unable to parse raw frames." << std::endl;
         }
 
-        memcpy(ab_buffer + i * total_pixels,
+        memcpy(ab_buffer + (i - 1) * total_pixels,
                adsd3500.tofi_compute_context->p_ab_frame,
                total_pixels * sizeof(uint16_t));
-        memcpy(depth_buffer + i * total_pixels,
+        memcpy(depth_buffer + (i - 1) * total_pixels,
                adsd3500.tofi_compute_context->p_depth_frame,
                total_pixels * sizeof(uint16_t));
-        memcpy(conf_buffer + i * total_pixels,
+        memcpy(conf_buffer + (i - 1) * total_pixels,
                adsd3500.tofi_compute_context->p_conf_frame,
                total_pixels * sizeof(uint8_t));
     }
@@ -208,8 +226,19 @@ int main(int argc, char *argv[]) {
     delete[] depth_buffer;
     delete[] conf_buffer;
 
-    // Stop Stream and Close Camera
-    // Handled by the ADSD3500 class destructor.
+    // Stop the Stream.
+    ret = adsd3500.StopStream();
+    if (ret < 0) {
+        printf("Unable to start stream.\n");
+        return ret;
+    }
+
+    // Close the Camera.
+    ret = adsd3500.CloseAdsd3500();
+    if (ret < 0) {
+        printf("Unable to close Adsd3500.\n");
+        return ret;
+    }
 
     return 0;
 }

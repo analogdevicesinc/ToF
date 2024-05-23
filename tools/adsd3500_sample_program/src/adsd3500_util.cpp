@@ -43,36 +43,7 @@ Adsd3500::Adsd3500() {
 }
 
 Adsd3500::~Adsd3500() {
-    // Stop the Stream.
-    if (videoDevice.started) {
-        StopStream();
-    }
-
-    // Close the Camera.
-    for (unsigned int i = 0; i < videoDevice.nVideoBuffers; i++) {
-        if (munmap(videoDevice.videoBuffers[i].start,
-                   videoDevice.videoBuffers[i].length) == -1) {
-            std::cout << "munmap error "
-                      << "errno: " << errno << " error: " << strerror(errno)
-                      << std::endl;
-        }
-    }
-
-    free(videoDevice.videoBuffers);
-
-    if (videoDevice.videoCaptureDeviceId != -1) {
-        if (close(videoDevice.videoCaptureDeviceId) == -1) {
-            std::cout << "Unable to close the video capture device."
-                      << std::endl;
-        }
-    }
-
-    if (videoDevice.cameraSensorDeviceId != -1) {
-        if (close(videoDevice.cameraSensorDeviceId) == -1) {
-            std::cout << "Unable to close the camera sensor device."
-                      << std::endl;
-        }
-    }
+    // Do Nothing.
 }
 
 /*
@@ -200,6 +171,39 @@ int Adsd3500::OpenAdsd3500() {
     return 0;
 }
 
+// Close Adsd3500 device.
+int Adsd3500::CloseAdsd3500() {
+    for (unsigned int i = 0; i < videoDevice.nVideoBuffers; i++) {
+        if (munmap(videoDevice.videoBuffers[i].start,
+                   videoDevice.videoBuffers[i].length) == -1) {
+            std::cout << "munmap error "
+                      << "errno: " << errno << " error: " << strerror(errno)
+                      << std::endl;
+            return -1;
+        }
+    }
+
+    free(videoDevice.videoBuffers);
+
+    if (videoDevice.videoCaptureDeviceId != -1) {
+        if (close(videoDevice.videoCaptureDeviceId) == -1) {
+            std::cout << "Unable to close the video capture device."
+                      << std::endl;
+            return -1;
+        }
+        
+    }
+
+    if (videoDevice.cameraSensorDeviceId != -1) {
+        if (close(videoDevice.cameraSensorDeviceId) == -1) {
+            std::cout << "Unable to close the camera sensor device."
+                      << std::endl;
+            return -1;
+        }
+    }
+    return 0;
+}
+
 // Sets Imaging mode.
 int Adsd3500::SetImageMode(uint8_t modeNumber) {
     setMode_cmd[1] = modeNumber;
@@ -288,7 +292,9 @@ int Adsd3500::StopStream() {
     int32_t ret = write_cmd(videoDevice.cameraSensorDeviceId, streamOff_cmd,
                             ARRAY_SIZE(streamOff_cmd));
     std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
-    videoDevice.started = false;
+    if (ret >= 0) {
+        videoDevice.started = false;
+    }
     return ret;
 }
 
@@ -480,7 +486,6 @@ int Adsd3500::ParseRawDataWithDCL(uint16_t *buffer) {
 
     uint16_t *tempDepthFrame = tofi_compute_context->p_depth_frame;
     uint16_t *tempAbFrame = tofi_compute_context->p_ab_frame;
-    //uint16_t *tempXyzFrame = (uint16_t *)tofi_compute_context->p_xyz_frame;
 
     // Allocate memory to store Depth and IR frames.
     // Depth Frames.
