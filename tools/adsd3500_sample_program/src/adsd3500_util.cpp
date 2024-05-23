@@ -28,6 +28,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#include "../include/adsd3500_interrupt_notifier.h"
 #include "../include/adsd3500_util.h"
 #include <cctype>
 #include <fstream>
@@ -153,6 +154,7 @@ int Adsd3500::ResetAdsd3500() {
 // Opens ADSD3500 device.
 int Adsd3500::OpenAdsd3500() {
     // Open the ADI ToF Camera Sensor Device Driver.
+    printf("Opening Camera Device.\n");
     videoDevice.cameraSensorDeviceId = tof_open(CAMERA_SENSOR_DRIVER);
     if (videoDevice.cameraSensorDeviceId < 0) {
         std::cout << "Unable to open camera sensor device: "
@@ -191,7 +193,6 @@ int Adsd3500::CloseAdsd3500() {
                       << std::endl;
             return -1;
         }
-        
     }
 
     if (videoDevice.cameraSensorDeviceId != -1) {
@@ -795,6 +796,276 @@ int Adsd3500::GetImagerTypeAndCCB() {
     }
 
     return ret;
+}
+
+int Adsd3500::SetFrameType() {
+
+    int ret = 0;
+
+    if (videoDevice.started) {
+        StopStream();
+    }
+
+    for (unsigned int i = 0; i < videoDevice.nVideoBuffers; i++) {
+        if (munmap(videoDevice.videoBuffers[i].start,
+                   videoDevice.videoBuffers[i].length) == -1) {
+            std::cout << "munmap error "
+                      << "errno: " << errno << " error: " << strerror(errno);
+        }
+    }
+    free(videoDevice.videoBuffers);
+
+    if (videoDevice.videoCaptureDeviceId != -1) {
+        if (close(videoDevice.videoCaptureDeviceId) == -1) {
+            std::cout << "Unable to close V4L2 Capture Device driver"
+                      << std::endl;
+        }
+    }
+
+    if (videoDevice.cameraSensorDeviceId != -1) {
+        if (close(videoDevice.cameraSensorDeviceId) == -1) {
+            std::cout << "Unable to close V4L2 Camera Sensor driver"
+                      << std::endl;
+        }
+    }
+
+    ret = OpenAdsd3500();
+    if (ret < 0)
+        printf("Unable to Open Adsd3500.\n");
+
+    struct v4l2_requestbuffers req;
+    struct v4l2_format fmt;
+    struct v4l2_buffer buf;
+
+    ret = SetImageMode(mode_num);
+    if (ret < 0)
+        printf("Unable to Set mode in Adsd3500.\n");
+
+    // Set Enable Embedded Header Data in AB.
+    adsd3500_set_enable_embedded_header_in_AB();
+
+    CLEAR(req);
+    req.count = 0;
+    req.type = videoDevice.videoBuffersType;
+    req.memory = V4L2_MEMORY_MMAP;
+    if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_REQBUFS, &req) == -1) {
+        std::cout << "VIDIOC_REQBUFS error "
+                  << "errno: " << errno << " error: " << strerror(errno)
+                  << std::endl;
+        return -1;
+    }
+
+    std::cout << "Values from INI file" << std::endl;
+
+    auto it = iniKeyValPairs.find("bitsInPhaseOrDepth");
+    if (it != iniKeyValPairs.end()) {
+        depthBits = std::stoi(it->second);
+        std::cout << "Number of depth bits : " << depthBits << std::endl;
+    }
+
+    it = iniKeyValPairs.find("bitsInAB");
+    if (it != iniKeyValPairs.end()) {
+        abBits = std::stoi(it->second);
+        std::cout << "Number of AB bits : " << abBits << std::endl;
+    }
+
+    it = iniKeyValPairs.find("bitsInConf");
+    if (it != iniKeyValPairs.end()) {
+        confBits = std::stoi(it->second);
+        std::cout << "Number of Confidence bits: " << confBits << std::endl;
+    }
+
+    it = iniKeyValPairs.find("inputFormat");
+    if (it != iniKeyValPairs.end()) {
+        inputFormat = it->second;
+        std::cout << "Input Pixel format: " << inputFormat << std::endl;
+    }
+
+    adsd3500_configure_sensor_frame_types();
+
+    // Pixel format is "raw8" for lr-qnative mode.
+    int num_rows = xyzDealiasData.n_rows;
+    int num_cols = xyzDealiasData.n_cols;
+    uint16_t width, height;
+    __u32 pixelFormat;
+    float totalBits;
+
+    if (imagerType == ImagerType::IMAGER_ADSD3030) { // For ADSD3030
+        if (inputFormat == "raw8") {
+            if (mode_num < 2) {
+                totalBits = depthBits + abBits + confBits;
+                frame.frameWidth = num_cols * totalBits / 8;
+                frame.frameHeight = num_rows;
+                frame.pixelFormat = V4L2_PIX_FMT_SBGGR8;
+            } else {
+                frame.frameWidth = 1280;
+                frame.frameHeight = 320;
+                frame.pixelFormat = V4L2_PIX_FMT_SBGGR8;
+            }
+        } else {
+            std::cout << "Unsupported Input Pixel Format." << std::endl;
+        }
+    } else if (imagerType == ImagerType::IMAGER_ADSD3100) { // For ADSD3100
+        if (inputFormat == "raw8") {
+            if (mode_num > 1) {
+                totalBits = depthBits + abBits + confBits;
+                frame.frameWidth = num_cols * totalBits / 8;
+                frame.frameHeight = num_rows;
+                frame.pixelFormat = V4L2_PIX_FMT_SBGGR8;
+            }
+        } else if (inputFormat == "mipiRaw12_8") {
+            if (depthBits == 12 && abBits == 16 && confBits == 0) {
+                if (mode_num == 1) {
+                    frame.frameWidth = 2048;
+                    frame.frameHeight = 3328;
+                } else if (mode_num == 0) {
+                    frame.frameWidth = 2048;
+                    frame.frameHeight = 2560;
+                } else {
+                    std::cout
+                        << "Invalid pixel format configuration for given mode!"
+                        << std::endl;
+                    return -1;
+                }
+                frame.pixelFormat = V4L2_PIX_FMT_SBGGR8;
+            }
+        } else if (inputFormat == "raw16_bits12_shift4") {
+            if (depthBits == 12 && abBits == 12 && confBits == 0) {
+                if (mode_num == 1) {
+                    frame.frameWidth = 1024;
+                    frame.frameHeight = 4096;
+                    frame.pixelFormat = V4L2_PIX_FMT_SBGGR12;
+                } else if (mode_num == 0) {
+                    frame.frameWidth = 1024;
+                    frame.frameHeight = 3072;
+                    frame.pixelFormat = V4L2_PIX_FMT_SBGGR12;
+                } else {
+                    std::cout
+                        << "Invalid pixel format configuration for given mode!"
+                        << std::endl;
+                    return -1;
+                }
+            } else if (depthBits == 12 && !abBits && !confBits) {
+                if (mode_num == 1 || mode_num == 0) {
+                    frame.frameWidth = 1024;
+                    frame.frameHeight = 1024;
+                    frame.pixelFormat = V4L2_PIX_FMT_SBGGR12;
+                } else {
+                    std::cout
+                        << "Invalid pixel format configuration for given mode!"
+                        << std::endl;
+                    return -1;
+                }
+            }
+        } else {
+            std::cout << "Unsupported Input Pixel Format." << std::endl;
+        }
+    }
+
+    std::cout << "width: " << frame.frameWidth << std::endl;
+    std::cout << "height: " << frame.frameHeight << std::endl;
+
+    // Set the frame format in the driver.
+    CLEAR(fmt);
+    fmt.type = videoDevice.videoBuffersType;
+    fmt.fmt.pix.pixelformat = frame.pixelFormat;
+    fmt.fmt.pix.width = frame.frameWidth;
+    fmt.fmt.pix.height = frame.frameHeight;
+
+    if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_S_FMT, &fmt) == -1) {
+        std::cout << "Setting Pixel Format error, errno: " << errno
+                  << " error: " << strerror(errno) << std::endl;
+        return -1;
+    }
+
+    // Allocate the video buffers in the driver.
+    CLEAR(req);
+    req.count = 4; // (m_capturesPerFrame + EXTRA_BUFFERS_COUNT)
+    req.type = videoDevice.videoBuffersType;
+    req.memory = V4L2_MEMORY_MMAP;
+
+    if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_REQBUFS, &req) == -1) {
+        std::cout << "VIDIOC_REQBUFS error "
+                  << "errno: " << errno << " error: " << strerror(errno)
+                  << std::endl;
+        return -1;
+    }
+
+    videoDevice.videoBuffers =
+        (buffer *)calloc(req.count, sizeof(*videoDevice.videoBuffers));
+    if (!videoDevice.videoBuffers) {
+        std::cout << "Unable to allocate video buffers in the driver"
+                  << std::endl;
+        return -1;
+    }
+
+    int length, offset;
+    for (videoDevice.nVideoBuffers = 0; videoDevice.nVideoBuffers < req.count;
+         videoDevice.nVideoBuffers++) {
+
+        CLEAR(buf);
+        buf.type = videoDevice.videoBuffersType;
+        buf.memory = V4L2_MEMORY_MMAP;
+        buf.index = videoDevice.nVideoBuffers;
+        buf.m.planes = videoDevice.planes;
+        buf.length = 1;
+
+        if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_QUERYBUF, &buf) ==
+            -1) {
+            std::cout << "VIDIOC_QUERYBUF error "
+                      << "errno: " << errno << " error: " << strerror(errno)
+                      << std::endl;
+            return -1;
+        }
+
+        if (videoDevice.videoBuffersType == V4L2_BUF_TYPE_VIDEO_CAPTURE) {
+            length = buf.length;
+            offset = buf.m.offset;
+        } else {
+            length = buf.m.planes[0].length;
+            offset = buf.m.planes[0].m.mem_offset;
+        }
+
+        videoDevice.videoBuffers[videoDevice.nVideoBuffers].start =
+            mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_SHARED,
+                 videoDevice.videoCaptureDeviceId, offset);
+
+        if (videoDevice.videoBuffers[videoDevice.nVideoBuffers].start ==
+            MAP_FAILED) {
+            std::cout << "mmap error "
+                      << "errno: " << errno << " error: " << strerror(errno)
+                      << std::endl;
+            return -1;
+        }
+
+        videoDevice.videoBuffers[videoDevice.nVideoBuffers].length = length;
+    }
+
+    return 0;
+}
+
+int Adsd3500::HandleInterrupts(int signalValue) {
+    uint16_t statusRegister;
+
+    int ret = adsd3500_read_cmd(0x0020, &statusRegister, 0);
+    std::cout << "statusRegister: " << statusRegister << std::endl;
+
+    return ret;
+}
+
+// int Adsd3500::SubscribeSensorToNotifier() {
+//     auto& notifier = Adsd3500InterruptNotifier::getInstance();
+//     notifier.subscribeSensor(shared_from_this());
+// }
+
+// Setup Interrupt Support.
+int Adsd3500::SetupInterruptSupport() {
+
+    auto &interruptNotifier = Adsd3500InterruptNotifier::getInstance();
+    //interruptNotifier.subscribeSensor(shared_from_this());
+    interruptNotifier.enableInterrupts();
+
+    return 0;
 }
 
 /*
@@ -1591,249 +1862,6 @@ int Adsd3500::adsd3500_set_ini_params() {
     return 0;
 }
 
-int Adsd3500::SetFrameType() {
-
-    int ret = 0;
-
-    if (videoDevice.started) {
-        StopStream();
-    }
-
-    for (unsigned int i = 0; i < videoDevice.nVideoBuffers; i++) {
-        if (munmap(videoDevice.videoBuffers[i].start,
-                   videoDevice.videoBuffers[i].length) == -1) {
-            std::cout << "munmap error "
-                      << "errno: " << errno << " error: " << strerror(errno);
-        }
-    }
-    free(videoDevice.videoBuffers);
-
-    if (videoDevice.videoCaptureDeviceId != -1) {
-        if (close(videoDevice.videoCaptureDeviceId) == -1) {
-            std::cout << "Unable to close V4L2 Capture Device driver"
-                      << std::endl;
-        }
-    }
-
-    if (videoDevice.cameraSensorDeviceId != -1) {
-        if (close(videoDevice.cameraSensorDeviceId) == -1) {
-            std::cout << "Unable to close V4L2 Camera Sensor driver"
-                      << std::endl;
-        }
-    }
-
-    ret = OpenAdsd3500();
-    if (ret < 0)
-        printf("Unable to Open Adsd3500.\n");
-
-    struct v4l2_requestbuffers req;
-    struct v4l2_format fmt;
-    struct v4l2_buffer buf;
-
-    ret = SetImageMode(mode_num);
-    if (ret < 0)
-        printf("Unable to Set mode in Adsd3500.\n");
-
-    CLEAR(req);
-    req.count = 0;
-    req.type = videoDevice.videoBuffersType;
-    req.memory = V4L2_MEMORY_MMAP;
-    if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_REQBUFS, &req) == -1) {
-        std::cout << "VIDIOC_REQBUFS error "
-                  << "errno: " << errno << " error: " << strerror(errno)
-                  << std::endl;
-        return -1;
-    }
-
-    std::cout << "Values from INI file" << std::endl;
-
-    auto it = iniKeyValPairs.find("bitsInPhaseOrDepth");
-    if (it != iniKeyValPairs.end()) {
-        depthBits = std::stoi(it->second);
-        std::cout << "Number of depth bits : " << depthBits << std::endl;
-    }
-
-    it = iniKeyValPairs.find("bitsInAB");
-    if (it != iniKeyValPairs.end()) {
-        abBits = std::stoi(it->second);
-        std::cout << "Number of AB bits : " << abBits << std::endl;
-    }
-
-    it = iniKeyValPairs.find("bitsInConf");
-    if (it != iniKeyValPairs.end()) {
-        confBits = std::stoi(it->second);
-        std::cout << "Number of Confidence bits: " << confBits << std::endl;
-    }
-
-    it = iniKeyValPairs.find("inputFormat");
-    if (it != iniKeyValPairs.end()) {
-        inputFormat = it->second;
-        std::cout << "Input Pixel format: " << inputFormat << std::endl;
-    }
-
-    adsd3500_configure_sensor_frame_types();
-
-    // Pixel format is "raw8" for lr-qnative mode.
-    int num_rows = xyzDealiasData.n_rows;
-    int num_cols = xyzDealiasData.n_cols;
-    uint16_t width, height;
-    __u32 pixelFormat;
-    float totalBits;
-
-    if (imagerType == ImagerType::IMAGER_ADSD3030) { // For ADSD3030
-        if (inputFormat == "raw8") {
-            if (mode_num < 2) {
-                totalBits = depthBits + abBits + confBits;
-                frame.frameWidth = num_cols * totalBits / 8;
-                frame.frameHeight = num_rows;
-                frame.pixelFormat = V4L2_PIX_FMT_SBGGR8;
-            } else {
-                frame.frameWidth = 1280;
-                frame.frameHeight = 320;
-                frame.pixelFormat = V4L2_PIX_FMT_SBGGR8;
-            }
-        } else {
-            std::cout << "Unsupported Input Pixel Format." << std::endl;
-        }
-    } else if (imagerType == ImagerType::IMAGER_ADSD3100) { // For ADSD3100
-        if (inputFormat == "raw8") {
-            if (mode_num > 1) {
-                totalBits = depthBits + abBits + confBits;
-                frame.frameWidth = num_cols * totalBits / 8;
-                frame.frameHeight = num_rows;
-                frame.pixelFormat = V4L2_PIX_FMT_SBGGR8;
-            }
-        } else if (inputFormat == "mipiRaw12_8") {
-            if (depthBits == 12 && abBits == 16 && confBits == 0) {
-                if (mode_num == 1) {
-                    frame.frameWidth = 2048;
-                    frame.frameHeight = 3328;
-                } else if (mode_num == 0) {
-                    frame.frameWidth = 2048;
-                    frame.frameHeight = 2560;
-                } else {
-                    std::cout
-                        << "Invalid pixel format configuration for given mode!"
-                        << std::endl;
-                    return -1;
-                }
-                frame.pixelFormat = V4L2_PIX_FMT_SBGGR8;
-            }
-        } else if (inputFormat == "raw16_bits12_shift4") {
-            if (depthBits == 12 && abBits == 12 && confBits == 0) {
-                if (mode_num == 1) {
-                    frame.frameWidth = 1024;
-                    frame.frameHeight = 4096;
-                    frame.pixelFormat = V4L2_PIX_FMT_SBGGR12;
-                } else if (mode_num == 0) {
-                    frame.frameWidth = 1024;
-                    frame.frameHeight = 3072;
-                    frame.pixelFormat = V4L2_PIX_FMT_SBGGR12;
-                } else {
-                    std::cout
-                        << "Invalid pixel format configuration for given mode!"
-                        << std::endl;
-                    return -1;
-                }
-            } else if (depthBits == 12 && !abBits && !confBits) {
-                if (mode_num == 1 || mode_num == 0) {
-                    frame.frameWidth = 1024;
-                    frame.frameHeight = 1024;
-                    frame.pixelFormat = V4L2_PIX_FMT_SBGGR12;
-                } else {
-                    std::cout
-                        << "Invalid pixel format configuration for given mode!"
-                        << std::endl;
-                    return -1;
-                }
-            }
-        } else {
-            std::cout << "Unsupported Input Pixel Format." << std::endl;
-        }
-    }
-
-    std::cout << "width: " << frame.frameWidth << std::endl;
-    std::cout << "height: " << frame.frameHeight << std::endl;
-
-    // Set the frame format in the driver.
-    CLEAR(fmt);
-    fmt.type = videoDevice.videoBuffersType;
-    fmt.fmt.pix.pixelformat = frame.pixelFormat;
-    fmt.fmt.pix.width = frame.frameWidth;
-    fmt.fmt.pix.height = frame.frameHeight;
-
-    if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_S_FMT, &fmt) == -1) {
-        std::cout << "Setting Pixel Format error, errno: " << errno
-                  << " error: " << strerror(errno) << std::endl;
-        return -1;
-    }
-
-    // Allocate the video buffers in the driver.
-    CLEAR(req);
-    req.count = 4; // (m_capturesPerFrame + EXTRA_BUFFERS_COUNT)
-    req.type = videoDevice.videoBuffersType;
-    req.memory = V4L2_MEMORY_MMAP;
-
-    if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_REQBUFS, &req) == -1) {
-        std::cout << "VIDIOC_REQBUFS error "
-                  << "errno: " << errno << " error: " << strerror(errno)
-                  << std::endl;
-        return -1;
-    }
-
-    videoDevice.videoBuffers =
-        (buffer *)calloc(req.count, sizeof(*videoDevice.videoBuffers));
-    if (!videoDevice.videoBuffers) {
-        std::cout << "Unable to allocate video buffers in the driver"
-                  << std::endl;
-        return -1;
-    }
-
-    int length, offset;
-    for (videoDevice.nVideoBuffers = 0; videoDevice.nVideoBuffers < req.count;
-         videoDevice.nVideoBuffers++) {
-
-        CLEAR(buf);
-        buf.type = videoDevice.videoBuffersType;
-        buf.memory = V4L2_MEMORY_MMAP;
-        buf.index = videoDevice.nVideoBuffers;
-        buf.m.planes = videoDevice.planes;
-        buf.length = 1;
-
-        if (xioctl(videoDevice.videoCaptureDeviceId, VIDIOC_QUERYBUF, &buf) ==
-            -1) {
-            std::cout << "VIDIOC_QUERYBUF error "
-                      << "errno: " << errno << " error: " << strerror(errno)
-                      << std::endl;
-            return -1;
-        }
-
-        if (videoDevice.videoBuffersType == V4L2_BUF_TYPE_VIDEO_CAPTURE) {
-            length = buf.length;
-            offset = buf.m.offset;
-        } else {
-            length = buf.m.planes[0].length;
-            offset = buf.m.planes[0].m.mem_offset;
-        }
-
-        videoDevice.videoBuffers[videoDevice.nVideoBuffers].start =
-            mmap(NULL, length, PROT_READ | PROT_WRITE, MAP_SHARED,
-                 videoDevice.videoCaptureDeviceId, offset);
-
-        if (videoDevice.videoBuffers[videoDevice.nVideoBuffers].start ==
-            MAP_FAILED) {
-            std::cout << "mmap error "
-                      << "errno: " << errno << " error: " << strerror(errno)
-                      << std::endl;
-            return -1;
-        }
-
-        videoDevice.videoBuffers[videoDevice.nVideoBuffers].length = length;
-    }
-
-    return 0;
-}
-
 // Configure Dynamic Mode switching.
 int Adsd3500::adsd3500_configure_dynamic_mode_switching() {
 
@@ -1935,6 +1963,14 @@ int Adsd3500::adsd3500_turnoff_dynamic_mode_switch() {
     if (ret < 0) {
         std::cout << "Unable to turn off Dynamic Mode Switching in ADSD3500."
                   << std::endl;
+    }
+    return 0;
+}
+
+int Adsd3500::adsd3500_set_enable_embedded_header_in_AB() {
+    int ret = adsd3500_write_cmd(0x0036, enableMetaDatainAB);
+    if (ret < 0) {
+        std::cout << "Unable to set Enable Embedded header in AB." << std::endl;
     }
     return 0;
 }
@@ -2043,7 +2079,6 @@ int Adsd3500::adsd3500_configure_sensor_frame_types() {
 
     return 0;
 }
-
 /*
 *********************************Non-member functions*****************************
 */

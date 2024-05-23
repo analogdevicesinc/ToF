@@ -44,10 +44,13 @@
 #include <cstdint>
 #include <iostream>
 #include <memory>
+#include <signal.h>
 #include <string>
 
 #include "../depthComputeLibrary/tofi_compute.h"
 #include "../depthComputeLibrary/tofi_config.h"
+
+#include "adsd3500_interrupt_notifier.h"
 
 #define ADSD3500_INTRINSIC_SIZE 56
 #define ADSD3500_DEALIAS_SIZE 32
@@ -190,7 +193,9 @@ class IniFilePath {
     static std::map<int, std::string> adsd3100ModeToConfigFileMap;
 };
 
-class Adsd3500 {
+class Adsd3500InterruptNotifier;
+
+class Adsd3500 : public std::enable_shared_from_this<Adsd3500> {
   public:
     // Constructor
     Adsd3500();
@@ -211,6 +216,7 @@ class Adsd3500 {
     int ccb_as_master = 0;
     INI_TABLE_ENTRY ccb_iniTableEntry;
     Frame frame;
+    int enableMetaDatainAB = 0;
 
     int OpenAdsd3500();
     int CloseAdsd3500();
@@ -234,6 +240,9 @@ class Adsd3500 {
     int GetIniKeyValuePair(const char *iniFileName);
     int GetIntrinsicsAndDealiasParams();
     int ParseRawDataWithDCL(uint16_t *buffer);
+    int SetupInterruptSupport();
+    int HandleInterrupts(int signalValue);
+    int SubscribeSensorToNotifier();
 
   private:
     ConfigFileData iniFileData;
@@ -266,6 +275,9 @@ class Adsd3500 {
                              const std::string &value);
     int adsd3500_configure_dynamic_mode_switching();
     int adsd3500_turnoff_dynamic_mode_switch();
+    int adsd3500_set_enable_embedded_header_in_AB();
+
+    std::shared_ptr<Adsd3500InterruptNotifier> adsd3500_interrupt_notifier;
 };
 
 // Non-member functions

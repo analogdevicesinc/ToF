@@ -21,10 +21,10 @@ The example program performs the following functionalities.
 
 1. Navigate to the current project directory in the command line terminal.
 
-2. Copy the Depth Compute Library files to the path /usr/libs/
+2. Copy the Depth Compute Library files to the path /usr/lib/
 
     $ cd depthComputeLibrary/libs/
-    $ sudo cp libtofi_compute.so libtofi_config.so /usr/libs/
+    $ sudo cp libtofi_compute.so libtofi_config.so /usr/lib/
 
 ## Usage
 

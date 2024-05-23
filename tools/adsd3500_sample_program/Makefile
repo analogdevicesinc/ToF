@@ -11,7 +11,7 @@ LDFLAGS = $(addprefix -L,$(SO_DIR)) -ltofi_config -ltofi_compute
 
 all: clean run_adsd3500
 
-run_adsd3500: $(SRC_DIR)/run_adsd3500.cpp $(SRC_DIR)/adsd3500_util.cpp $(CRCS)
+run_adsd3500: $(SRC_DIR)/run_adsd3500.cpp $(SRC_DIR)/adsd3500_util.cpp $(SRC_DIR)/adsd3500_interrupt_notifier.cpp $(CRCS)
 	$(CXX) $^ -o $@ $(CXXCFLAGS) $(LDFLAGS) 
 
 clean:
