@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     adsd3500->mode_num = 2;      // Image mode number.
     int num_frames = 1;          // Number of frames is set to 1 by default.
     adsd3500->ccb_as_master = 0; // Enables/Disbales CCB as master.
-    adsd3500->enableMetaDatainAB = 0;
+    adsd3500->enableMetaDatainAB = 0; // Stores Meta data in the frame. (WIP)
 
     // Parse Arguments from the Command line.
     for (int i = 1; i < argc; ++i) {
@@ -79,8 +79,6 @@ int main(int argc, char *argv[]) {
         printf("Unable to open Adsd3500.\n");
         return ret;
     }
-
-    usleep(5000 * 1000);
 
     // Get the Imager Type and the CCB.
     ret = adsd3500->GetImagerTypeAndCCB();
