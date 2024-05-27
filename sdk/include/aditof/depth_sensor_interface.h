@@ -310,6 +310,15 @@ class DepthSensorInterface {
      */
     virtual aditof::Status
     setSensorConfiguration(const std::string &sensorConf) = 0;
+
+    /**
+     * @brief Get ini parameters for Depth Compute library as string
+     * @param[in] mode - desired mode
+     * @param[out] iniStr - a string that contain ini params
+     * @return Status
+    */
+    virtual aditof::Status getIniParamsArrayForMode(int mode,
+                                                    std::string &iniStr) = 0;
 };
 
 } // namespace aditof
