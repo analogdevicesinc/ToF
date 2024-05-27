@@ -8,6 +8,7 @@
 #include "aditof/frame_operations.h"
 #include "adsd3500_interrupt_notifier.h"
 #include "gpio.h"
+#include "sensor-tables/device_parameters.h"
 #include "utils.h"
 #include "utils_ini.h"
 
@@ -152,7 +153,7 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
 
     m_bufferProcessor = new BufferProcessor();
 
-    loadLocalIniFiles(m_iniFileStructList);
+    DeviceParameters::createIniParams(m_iniFileStructList);
 }
 
 Adsd3500Sensor::~Adsd3500Sensor() {
@@ -1800,6 +1801,7 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
             }
         }
     }
+    mergeIniParams(m_iniFileStructList);
 
     return status;
 }
@@ -1983,7 +1985,7 @@ aditof::Status Adsd3500Sensor::getDefaultIniParamsForMode(
 
     auto it = std::find_if(
         m_iniFileStructList.begin(), m_iniFileStructList.end(),
-        [&imager, &mode](const Adsd3500Sensor::iniFileStruct &iniF) {
+        [&imager, &mode](const iniFileStruct &iniF) {
             return (iniF.imagerName == imager && iniF.modeName == mode);
         });
 
@@ -2007,6 +2009,11 @@ aditof::Status Adsd3500Sensor::loadLocalIniFiles(
     vector<string> iniFileNames;
     string dirFileName;
     struct dirent *entry;
+
+    string filename = "Adsd3030";
+    if (m_implData->imagerType == SensorImagerType::IMAGER_ADSD3100) {
+        filename = "Adsd3100";
+    }
 
     // Identify all .ini files
     DIR *dir = opendir(iniFilesDirPath.c_str());
@@ -2050,6 +2057,11 @@ aditof::Status Adsd3500Sensor::loadLocalIniFiles(
         iniFileS.imagerName = file.substr(imagerNamePos + rawToDepth.length(),
                                           lastUnderscorePos - imagerNamePos -
                                               rawToDepth.length());
+
+        if (iniFileS.modeName == "4") {
+            iniFileS.imagerName = filename;
+        }
+
         std::transform(iniFileS.imagerName.begin(), iniFileS.imagerName.end(),
                        iniFileS.imagerName.begin(),
                        [](unsigned char c) { return std::tolower(c); });
@@ -2064,6 +2076,89 @@ aditof::Status Adsd3500Sensor::loadLocalIniFiles(
 
         iniFileStructList.emplace_back(iniFileS);
     }
+
+    return Status::OK;
+}
+
+aditof::Status
+Adsd3500Sensor::mergeIniParams(std::vector<iniFileStruct> &iniFileStructList) {
+
+    using namespace std;
+    using namespace aditof;
+
+    if (m_ccbmEnabled) {
+
+        for (auto &ccbmParams : m_ccbmINIContent) {
+
+            for (auto &iniList : iniFileStructList) {
+
+                if (iniList.modeName != "") {
+                    if (ccbmParams.modeNumber ==
+                        std::stoi(iniList.modeName.c_str())) {
+
+                        iniList.iniKeyValPairs["abThreshMin"] =
+                            std::to_string(ccbmParams.abThreshMin);
+                        iniList.iniKeyValPairs["confThresh"] =
+                            std::to_string(ccbmParams.confThresh);
+                        iniList.iniKeyValPairs["radialThreshMin"] =
+                            std::to_string(ccbmParams.radialThreshMin);
+                        iniList.iniKeyValPairs["radialThreshMax"] =
+                            std::to_string(ccbmParams.radialThreshMax);
+                        iniList.iniKeyValPairs["jblfApplyFlag"] =
+                            std::to_string(ccbmParams.jblfApplyFlag);
+                        iniList.iniKeyValPairs["jblfWindowSize"] =
+                            std::to_string(ccbmParams.jblfWindowSize);
+                        iniList.iniKeyValPairs["jblfGaussianSigma"] =
+                            std::to_string(ccbmParams.jblfGaussianSigma);
+                        iniList.iniKeyValPairs["jblfExponentialTerm"] =
+                            std::to_string(ccbmParams.jblfExponentialTerm);
+                        iniList.iniKeyValPairs["jblfMaxEdge"] =
+                            std::to_string(ccbmParams.jblfMaxEdge);
+                        iniList.iniKeyValPairs["jblfABThreshold"] =
+                            std::to_string(ccbmParams.jblfABThreshold);
+
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    return Status::OK;
+}
+
+aditof::Status Adsd3500Sensor::convertIniParams(iniFileStruct &iniStruct,
+                                                std::string &inistr) {
+
+    inistr = "";
+    for (auto iniPairs : iniStruct.iniKeyValPairs) {
+        inistr += iniPairs.first + "=" + iniPairs.second + "\n";
+    }
+
+    return Status::OK;
+}
+
+aditof::Status Adsd3500Sensor::getIniParamsArrayForMode(int mode,
+                                                        std::string &iniStr) {
+    std::string modestr = std::to_string(mode);
+    std::string imager = "adsd3030";
+    if (m_implData->imagerType == SensorImagerType::IMAGER_ADSD3100) {
+        imager = "adsd3100";
+    }
+
+    auto it = std::find_if(
+        m_iniFileStructList.begin(), m_iniFileStructList.end(),
+        [&imager, &modestr](const iniFileStruct &iniF) {
+            return (iniF.imagerName == imager && iniF.modeName == modestr);
+        });
+
+    if (it == m_iniFileStructList.end()) {
+        LOG(WARNING) << "Cannot find default parameters for imager: " << imager
+                     << " and mode: " << mode;
+        return aditof::Status::INVALID_ARGUMENT;
+    }
+
+    convertIniParams(*it, iniStr);
 
     return Status::OK;
 }

@@ -443,8 +443,8 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
             unsigned char *pData = m_depthINIData.p_data;
 
             if (m_depthINIDataMap.size() > 1) {
-                dataSize = m_depthINIDataMap[m_ini_depth].size;
-                pData = m_depthINIDataMap[m_ini_depth].p_data;
+                dataSize = m_depthINIDataMap[std::to_string(mode)].size;
+                pData = m_depthINIDataMap[std::to_string(mode)].p_data;
             }
 
             // Disable the generation of XYZ frames on target
@@ -789,18 +789,38 @@ aditof::Status CameraItof::getControl(const std::string &control,
 aditof::Status CameraItof::loadConfigData(void) {
 
     freeConfigData();
+    using namespace aditof;
 
-    if (m_ini_depth_map.size() > 0) {
-        for (auto it = m_ini_depth_map.begin(); it != m_ini_depth_map.end();
+    if (m_availableModes.size() > 0) {
+        for (auto it = m_availableModes.begin(); it != m_availableModes.end();
              ++it) {
-            m_depthINIDataMap.emplace(
-                it->second,
-                LoadFileContents(const_cast<char *>(it->second.c_str())));
+
+            std::string iniArray;
+            int mode = *it;
+            m_depthSensor->getIniParamsArrayForMode(mode, iniArray);
+
+            unsigned char *p = NULL;
+            p = (unsigned char *)malloc(iniArray.size());
+            memcpy(p, iniArray.c_str(), iniArray.size());
+
+            FileData fval = {(unsigned char *)p, iniArray.size()};
+
+            m_depthINIDataMap.emplace(std::to_string(mode), fval);
         }
     } else {
         if (!m_ini_depth.empty()) {
-            m_depthINIData =
-                LoadFileContents(const_cast<char *>(m_ini_depth.c_str()));
+
+            std::string iniArray;
+            int mode = 0;
+            m_depthSensor->getIniParamsArrayForMode(mode, iniArray);
+            if (iniArray.size()) {
+                FileData fval = {(unsigned char *)iniArray.c_str(),
+                                 iniArray.size()};
+                m_depthINIData = fval;
+            } else {
+                m_depthINIData =
+                    LoadFileContents(const_cast<char *>(m_ini_depth.c_str()));
+            }
         }
     }
 

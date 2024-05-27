@@ -102,6 +102,8 @@ class UsbDepthSensor : public aditof::DepthSensorInterface {
     setIniParams(const std::map<std::string, float> &params) override;
     virtual aditof::Status
     setSensorConfiguration(const std::string &sensorConf) override;
+    aditof::Status getIniParamsArrayForMode(int mode,
+                                            std::string &iniStr) override;
 
   private:
     struct ImplData;

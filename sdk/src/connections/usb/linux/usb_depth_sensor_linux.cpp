@@ -1039,3 +1039,9 @@ UsbDepthSensor::setSensorConfiguration(const std::string &sensorConf) {
     // TODO: select sensor table configuration
     return aditof::Status::OK;
 }
+
+aditof::Status UsbDepthSensor::getIniParamsArrayForMode(int mode,
+                                                        std::string &iniStr) {
+
+    return aditof::Status::OK;
+}
