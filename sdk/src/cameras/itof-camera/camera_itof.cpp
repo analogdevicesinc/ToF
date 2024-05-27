@@ -349,6 +349,22 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
     configureSensorModeDetails();
     m_details.mode = mode;
 
+    LOG(INFO) << "Using ini file: " << m_ini_depth;
+
+    status = m_depthSensor->getModeDetails(mode, m_modeDetailsCache);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to get frame type details!";
+        return status;
+    }
+
+    status = m_depthSensor->setMode(mode);
+    if (status != Status::OK) {
+        LOG(WARNING) << "Failed to set frame type";
+        return status;
+    }
+
+    m_pcmFrame = m_modeDetailsCache.isPCM;
+
     if (m_enableMetaDatainAB > 0) {
         if (!m_pcmFrame) {
             status = adsd3500SetEnableMetadatainAB(m_enableMetaDatainAB);
@@ -377,22 +393,6 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
 
         LOG(WARNING) << "Metadata in AB is disabled.";
     }
-
-    LOG(INFO) << "Using ini file: " << m_ini_depth;
-
-    status = m_depthSensor->getModeDetails(mode, m_modeDetailsCache);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Failed to get frame type details!";
-        return status;
-    }
-
-    status = m_depthSensor->setMode(mode);
-    if (status != Status::OK) {
-        LOG(WARNING) << "Failed to set frame type";
-        return status;
-    }
-
-    m_pcmFrame = m_modeDetailsCache.isPCM;
 
     // Store the frame details in camera details
     m_details.mode = mode;
