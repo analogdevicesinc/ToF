@@ -34,6 +34,7 @@
 #include "adsd3500_mode_selector.h"
 #include "buffer_processor.h"
 #include "connections/target/v4l_buffer_access_interface.h"
+#include "sensor-tables/ini_file_definitions.h"
 #include <memory>
 #include <unordered_map>
 
@@ -164,15 +165,8 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
     getIniParams(std::map<std::string, float> &params) override;
     virtual aditof::Status
     setIniParams(const std::map<std::string, float> &params) override;
-
-  private:
-    struct iniFileStruct {
-        std::string fileDirPath;
-        std::string fileName;
-        std::string imagerName;
-        std::string modeName;
-        std::map<std::string, std::string> iniKeyValPairs;
-    };
+    aditof::Status getIniParamsArrayForMode(int mode,
+                                            std::string &iniStr) override;
 
   private:
     aditof::Status writeConfigBlock(const uint32_t offset);
@@ -197,6 +191,13 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
                                std::map<std::string, std::string> &params);
     aditof::Status
     loadLocalIniFiles(std::vector<iniFileStruct> &iniFileStructList);
+
+    aditof::Status
+    mergeIniParams(std::vector<iniFileStruct> &iniFileStructList);
+    aditof::Status convertIniParams(iniFileStruct &iniStruct,
+                                    std::string &inistr);
+    aditof::Status
+    createIniParams(std::vector<iniFileStruct> &iniFileStructList);
 
   private:
     struct ImplData;

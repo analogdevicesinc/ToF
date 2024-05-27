@@ -101,6 +101,9 @@ class NetworkDepthSensor : public aditof::DepthSensorInterface {
     aditof::Status
     setSensorConfiguration(const std::string &sensorConf) override;
 
+    aditof::Status getIniParamsArrayForMode(int mode,
+                                            std::string &iniStr) override;
+
   private:
     void checkForServerUpdates();
 
