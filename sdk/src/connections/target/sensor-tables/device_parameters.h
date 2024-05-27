@@ -29,49 +29,18 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
-#include <libwebsockets.h>
 
-#define RX_BUFFER_BYTES (20996420)
+#ifndef DEVICE_PARAMETERS_H
+#define DEVICE_PARAMETERS_H
 
-enum api_Values {
-    API_NOT_DEFINED,
-    FIND_SENSORS,
-    OPEN,
-    START,
-    STOP,
-    GET_AVAILABLE_MODES,
-    GET_MODE_DETAILS,
-    SET_MODE,
-    SET_MODE_BY_INDEX,
-    GET_FRAME,
-    GET_AVAILABLE_CONTROLS,
-    SET_CONTROL,
-    GET_CONTROL,
-    INIT_TARGET_DEPTH_COMPUTE,
-    ADSD3500_READ_CMD,
-    ADSD3500_WRITE_CMD,
-    ADSD3500_READ_PAYLOAD_CMD,
-    ADSD3500_READ_PAYLOAD,
-    ADSD3500_WRITE_PAYLOAD_CMD,
-    ADSD3500_WRITE_PAYLOAD,
-    ADSD3500_GET_STATUS,
-    GET_INTERRUPTS,
-    HANG_UP,
-    GET_INI_PARAM,
-    SET_INI_PARAM,
-    SET_SENSOR_CONFIGURATION,
-    GET_INI_ARRAY
-};
+#include "ini_file_definitions.h"
+#include <aditof/status_definitions.h>
+#include <vector>
 
-enum protocols { PROTOCOL_EXAMPLE, PROTOCOL_COUNT };
-
-class Network {
+class DeviceParameters {
   public:
-    struct lws_context *context;
-    Network();
-    static int callback_function(struct lws *wsi,
-                                 enum lws_callback_reasons reason, void *user,
-                                 void *in, size_t len);
+    static aditof::Status
+    createIniParams(std::vector<iniFileStruct> &iniFileStructList);
 };
+
+#endif

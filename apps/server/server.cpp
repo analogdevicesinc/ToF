@@ -941,6 +941,20 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
+    case GET_INI_ARRAY: {
+        int mode = buff_recv.func_int32_param(0);
+        std::string iniStr;
+
+        aditof::Status status =
+            camDepthSensor->getIniParamsArrayForMode(mode, iniStr);
+
+        if (status == aditof::Status::OK) {
+            buff_send.add_strings_payload(iniStr);
+        }
+        buff_send.set_status(static_cast<::payload::Status>(status));
+        break;
+    }
+
     default: {
         std::string msgErr = "Function not found";
         std::cout << msgErr << "\n";
@@ -982,4 +996,5 @@ void Initialize() {
     s_map_api_Values["HangUp"] = HANG_UP;
     s_map_api_Values["GetIniParam"] = GET_INI_PARAM;
     s_map_api_Values["SetIniParam"] = SET_INI_PARAM;
+    s_map_api_Values["GetIniArray"] = GET_INI_ARRAY;
 }

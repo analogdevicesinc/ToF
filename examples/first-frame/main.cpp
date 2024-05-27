@@ -110,6 +110,7 @@ int main(int argc, char *argv[]) {
     google::InitGoogleLogging(argv[0]);
     FLAGS_alsologtostderr = 1;
 
+    // parse arguments
     command.parseArguments(argc, argv, command_map);
     int result = command.checkArgumentExist(command_map, arg_error);
     if (result != 0) {

@@ -73,6 +73,8 @@ class OfflineDepthSensor : public aditof::DepthSensorInterface {
 
     virtual aditof::Status
     setSensorConfiguration(const std::string &sensorConf) override;
+    aditof::Status getIniParamsArrayForMode(int mode,
+                                            std::string &iniStr) override;
 
   private:
     std::string m_connectionType;
