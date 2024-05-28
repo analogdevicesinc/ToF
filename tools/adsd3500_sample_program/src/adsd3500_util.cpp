@@ -1047,10 +1047,10 @@ int Adsd3500::SetFrameType() {
 int Adsd3500::HandleInterrupts(int signalValue) {
     uint16_t statusRegister;
 
-    int ret = adsd3500_read_cmd(0x0020, &statusRegister, 0);
-    std::cout << "statusRegister: " << statusRegister << std::endl;
+    //int ret = adsd3500_read_cmd(0x0020, &statusRegister, 0);
+    //std::cout << "statusRegister: " << statusRegister << std::endl;
 
-    return ret;
+    return 0;
 }
 
 // int Adsd3500::SubscribeSensorToNotifier() {
@@ -1062,7 +1062,7 @@ int Adsd3500::HandleInterrupts(int signalValue) {
 int Adsd3500::SetupInterruptSupport() {
 
     auto &interruptNotifier = Adsd3500InterruptNotifier::getInstance();
-    //interruptNotifier.subscribeSensor(shared_from_this());
+    interruptNotifier.subscribeSensor(shared_from_this());
     interruptNotifier.enableInterrupts();
 
     return 0;
