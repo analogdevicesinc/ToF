@@ -144,7 +144,7 @@ NetworkDepthSensor::~NetworkDepthSensor() {
 }
 
 aditof::Status
-NetworkDepthSensor::getIniParams(std::map<std::string, float> &params) {
+NetworkDepthSensor::getIniParams(std::map<std::string, std::string> &params) {
     using namespace aditof;
     Network *net = m_implData->handle.net;
     std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
@@ -176,37 +176,37 @@ NetworkDepthSensor::getIniParams(std::map<std::string, float> &params) {
     Status status = static_cast<Status>(net->recv_buff[m_sensorIndex].status());
 
     if (status == Status::OK) {
-        params["ab_thresh_min"] =
-            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(0));
-        params["ab_sum_thresh"] =
-            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(1));
-        params["conf_thresh"] =
-            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(2));
-        params["radial_thresh_min"] =
-            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(3));
-        params["radial_thresh_max"] =
-            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(4));
-        params["jblf_apply_flag"] =
-            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(5));
-        params["jblf_window_size"] =
-            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(6));
-        params["jblf_gaussian_sigma"] =
-            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(7));
-        params["jblf_exponential_term"] =
-            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(8));
-        params["jblf_max_edge"] =
-            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(9));
-        params["jblf_ab_threshold"] =
-            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(10));
+        params["abThreshMin"] =
+            (net->recv_buff[m_sensorIndex].strings_payload(0));
+        params["abSumThresh"] =
+            (net->recv_buff[m_sensorIndex].strings_payload(1));
+        params["confThresh"] =
+            (net->recv_buff[m_sensorIndex].strings_payload(2));
+        params["radialThreshMin"] =
+            (net->recv_buff[m_sensorIndex].strings_payload(3));
+        params["radialThreshMax"] =
+            (net->recv_buff[m_sensorIndex].strings_payload(4));
+        params["jblfApplyFlag"] =
+            (net->recv_buff[m_sensorIndex].strings_payload(5));
+        params["jblfWindowSize"] =
+            (net->recv_buff[m_sensorIndex].strings_payload(6));
+        params["jblfGaussianSigma"] =
+            (net->recv_buff[m_sensorIndex].strings_payload(7));
+        params["jblfExponentialTerm"] =
+            (net->recv_buff[m_sensorIndex].strings_payload(8));
+        params["jblfMaxEdge"] =
+            (net->recv_buff[m_sensorIndex].strings_payload(9));
+        params["jblfABThreshold"] =
+            (net->recv_buff[m_sensorIndex].strings_payload(10));
         params["headerSize"] =
-            static_cast<float>(net->recv_buff[m_sensorIndex].float_payload(11));
+            (net->recv_buff[m_sensorIndex].strings_payload(11));
     }
 
     return status;
 }
 
-aditof::Status
-NetworkDepthSensor::setIniParams(const std::map<std::string, float> &params) {
+aditof::Status NetworkDepthSensor::setIniParams(
+    const std::map<std::string, std::string> &params) {
     using namespace aditof;
     Network *net = m_implData->handle.net;
     std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
@@ -218,28 +218,28 @@ NetworkDepthSensor::setIniParams(const std::map<std::string, float> &params) {
 
     net->send_buff[m_sensorIndex].set_func_name("SetIniParam");
     net->send_buff[m_sensorIndex].set_expect_reply(true);
-    net->send_buff[m_sensorIndex].add_func_float_param(
-        params.at("ab_thresh_min"));
-    net->send_buff[m_sensorIndex].add_func_float_param(
-        params.at("ab_sum_thresh"));
-    net->send_buff[m_sensorIndex].add_func_float_param(
-        params.at("conf_thresh"));
-    net->send_buff[m_sensorIndex].add_func_float_param(
-        params.at("radial_thresh_min"));
-    net->send_buff[m_sensorIndex].add_func_float_param(
-        params.at("radial_thresh_max"));
-    net->send_buff[m_sensorIndex].add_func_float_param(
-        params.at("jblf_apply_flag"));
-    net->send_buff[m_sensorIndex].add_func_float_param(
-        params.at("jblf_window_size"));
-    net->send_buff[m_sensorIndex].add_func_float_param(
-        params.at("jblf_gaussian_sigma"));
-    net->send_buff[m_sensorIndex].add_func_float_param(
-        params.at("jblf_exponential_term"));
-    net->send_buff[m_sensorIndex].add_func_float_param(
-        params.at("jblf_max_edge"));
-    net->send_buff[m_sensorIndex].add_func_float_param(
-        params.at("jblf_ab_threshold"));
+    net->send_buff[m_sensorIndex].add_func_strings_param(
+        params.at("abThreshMin"));
+    net->send_buff[m_sensorIndex].add_func_strings_param(
+        params.at("abSumThresh"));
+    net->send_buff[m_sensorIndex].add_func_strings_param(
+        params.at("confThresh"));
+    net->send_buff[m_sensorIndex].add_func_strings_param(
+        params.at("radialThreshMin"));
+    net->send_buff[m_sensorIndex].add_func_strings_param(
+        params.at("radialThreshMax"));
+    net->send_buff[m_sensorIndex].add_func_strings_param(
+        params.at("jblfApplyFlag"));
+    net->send_buff[m_sensorIndex].add_func_strings_param(
+        params.at("jblfWindowSize"));
+    net->send_buff[m_sensorIndex].add_func_strings_param(
+        params.at("jblfGaussianSigma"));
+    net->send_buff[m_sensorIndex].add_func_strings_param(
+        params.at("jblfExponentialTerm"));
+    net->send_buff[m_sensorIndex].add_func_strings_param(
+        params.at("jblfMaxEdge"));
+    net->send_buff[m_sensorIndex].add_func_strings_param(
+        params.at("jblfABThreshold"));
 
     if (net->SendCommand() != 0) {
         LOG(WARNING) << "Send Command Failed";
