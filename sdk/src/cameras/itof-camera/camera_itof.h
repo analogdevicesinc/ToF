@@ -126,8 +126,6 @@ class CameraItof : public aditof::Camera {
     aditof::Status readSerialNumber(std::string &serialNumber,
                                     bool useCacheValue = false) override;
     aditof::Status getImagerType(aditof::ImagerType &imagerType) const override;
-    aditof::Status adsd3500SetIniParams(
-        const std::map<std::string, float> &iniKeyValPairs) override;
     aditof::Status adsd3500ResetIniParamsForMode(const uint16_t mode) override;
     aditof::Status
     saveDepthParamsToJsonFile(const std::string &savePathFile) override;
@@ -180,7 +178,7 @@ class CameraItof : public aditof::Camera {
      * Configure ADSD3500 with ini parameters
      * @param[in] iniKeyValPairs - ini parameteres to use
     */
-    void setAdsd3500WithIniParams(
+    aditof::Status setAdsd3500IniParams(
         const std::map<std::string, std::string> &iniKeyValPairs);
 
     /**
@@ -197,13 +195,13 @@ class CameraItof : public aditof::Camera {
      * @brief get ini params from depth sensor interface
     */
     virtual aditof::Status
-    getIniParams(std::map<std::string, float> &params) override;
+    getIniParams(std::map<std::string, std::string> &params) override;
 
     /**
      * @brief set ini params from depth sensor interface
     */
     virtual aditof::Status
-    setIniParams(std::map<std::string, float> &params) override;
+    setIniParams(std::map<std::string, std::string> &params) override;
 
   private:
     using noArgCallable = std::function<aditof::Status()>;

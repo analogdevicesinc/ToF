@@ -75,9 +75,9 @@ using namespace adiMainWindow;
 auto startTime = std::chrono::system_clock::now();
 static int numProcessors;
 static uint8_t last_mode = 0;
-std::map<std::string, float> ini_params;
-std::map<std::string, float> modified_ini_params;
-std::map<std::string, float> last_ini_params;
+std::map<std::string, std::string> ini_params;
+std::map<std::string, std::string> modified_ini_params;
+std::map<std::string, std::string> last_ini_params;
 bool use_modified_ini_params = false;
 uint16_t expectedFPS = 0;
 GLFWimage icons[1];
@@ -1099,25 +1099,26 @@ void ADIMainWindow::showIniWindow(bool *p_open) {
         if (status != aditof::Status::OK) {
             LOG(ERROR) << "Could not get ini params";
         } else {
-            abThreshMin = ini_params["ab_thresh_min"];
-            abSumThresh = ini_params["ab_sum_thresh"];
-            confThresh = ini_params["conf_thresh"];
-            radialThreshMin = ini_params["radial_thresh_min"];
-            radialThreshMax = ini_params["radial_thresh_max"];
-            if (static_cast<int>(std::round(ini_params["jblf_apply_flag"])) ==
-                1) {
+            abThreshMin = std::stof(ini_params["abThreshMin"]);
+            abSumThresh = std::stof(ini_params["abThreshMin"]);
+            confThresh = std::stof(ini_params["confThresh"]);
+            radialThreshMin = std::stof(ini_params["radialThreshMin"]);
+            radialThreshMax = std::stof(ini_params["radialThreshMax"]);
+            if (static_cast<int>(
+                    std::round(std::stof(ini_params["jblfApplyFlag"]))) == 1) {
                 jblfApplyFlag = true;
             } else {
                 jblfApplyFlag = false;
             }
 
-            jblfWindowSize =
-                static_cast<int>(std::round(ini_params["jblf_window_size"]));
-            jblfGaussianSigma = ini_params["jblf_gaussian_sigma"];
-            jblfExponentialTerm = ini_params["jblf_exponential_term"];
-            jblfMaxEdge = ini_params["jblf_max_edge"];
-            jblfABThreshold = ini_params["jblf_ab_threshold"];
-            headerSize = static_cast<int>(std::round(ini_params["headerSize"]));
+            jblfWindowSize = static_cast<int>(
+                std::round(std::stof(ini_params["jblfWindowSize"])));
+            jblfGaussianSigma = std::stof(ini_params["jblfGaussianSigma"]);
+            jblfExponentialTerm = std::stof(ini_params["jblfExponentialTerm"]);
+            jblfMaxEdge = std::stof(ini_params["jblfMaxEdge"]);
+            jblfABThreshold = std::stof(ini_params["jblfABThreshold"]);
+            headerSize = static_cast<int>(
+                std::round(std::stof(ini_params["headerSize"])));
             if (headerSize == 128) {
                 metadata = true;
             } else {
@@ -1133,38 +1134,42 @@ void ADIMainWindow::showIniWindow(bool *p_open) {
         ImGui::PushItemWidth(140 * dpiScaleFactor);
         ImGui::InputFloat("abThreshMin", &abThreshMin);
         if (abThreshMin < 0 || abThreshMin > 65535) {
-            if (last_ini_params["ab_thresh_min"] != abThreshMin) {
+            if (last_ini_params["abThreshMin"] != std::to_string(abThreshMin)) {
                 LOG(ERROR)
                     << "Invalid abThreshMin value. Valid values [0 - 65535]";
-                last_ini_params["ab_thresh_min"] = abThreshMin;
+                last_ini_params["abThreshMin"] = std::to_string(abThreshMin);
             }
             iniParamWarn("abThreshMin", "Valid value: [0 - 65535]");
         }
         ImGui::InputFloat("abSumThresh", &abSumThresh);
         ImGui::InputFloat("confThresh", &confThresh);
         if (confThresh < 0 || confThresh > 255) {
-            if (last_ini_params["conf_thresh"] != confThresh) {
+            if (last_ini_params["confThresh"] != std::to_string(confThresh)) {
                 LOG(ERROR)
                     << "Invalid confThresh value. Valid values [0 - 255]";
-                last_ini_params["conf_thresh"] = confThresh;
+                last_ini_params["confThresh"] = std::to_string(confThresh);
             }
 
             iniParamWarn("confThresh", "Valid value: [0 - 255]");
         }
         ImGui::InputFloat("radialThreshMin", &radialThreshMin);
         if (radialThreshMin < 0 || radialThreshMin > 65535) {
-            if (last_ini_params["radial_thresh_min"] != radialThreshMin) {
+            if (last_ini_params["radialThreshMin"] !=
+                std::to_string(radialThreshMin)) {
                 LOG(ERROR) << "Invalid radialThreshMin value. Valid values [0 "
                               "- 65535]";
-                last_ini_params["radial_thresh_min"] = radialThreshMin;
+                last_ini_params["radialThreshMin"] =
+                    std::to_string(radialThreshMin);
             }
             iniParamWarn("radialThreshMin", "Valid value:[0 - 65535]");
         }
         if (radialThreshMin >= radialThreshMax) {
-            if (last_ini_params["radial_thresh_min"] != radialThreshMin) {
+            if (last_ini_params["radialThreshMin"] !=
+                std::to_string(radialThreshMin)) {
                 LOG(ERROR)
                     << "radialThreshMin should be less than radialThreshMax";
-                last_ini_params["radial_thresh_min"] = radialThreshMin;
+                last_ini_params["radialThreshMin"] =
+                    std::to_string(radialThreshMin);
             }
             iniParamWarn(
                 "radialThreshMin",
@@ -1172,18 +1177,22 @@ void ADIMainWindow::showIniWindow(bool *p_open) {
         }
         ImGui::InputFloat("radialThreshMax", &radialThreshMax);
         if (radialThreshMax < 0 || radialThreshMax > 65535) {
-            if (last_ini_params["radial_thresh_max"] != radialThreshMax) {
+            if (last_ini_params["radialThreshMax"] !=
+                std::to_string(radialThreshMax)) {
                 LOG(ERROR) << "Invalid radialThreshMax value. Valid values [0 "
                               "- 65535]";
-                last_ini_params["radial_thresh_max"] = radialThreshMax;
+                last_ini_params["radialThreshMax"] =
+                    std::to_string(radialThreshMax);
             }
             iniParamWarn("radialThreshMax", "Valid values [0 - 65535]");
         }
         if (radialThreshMin >= radialThreshMax) {
-            if (last_ini_params["radial_thresh_max"] != radialThreshMax) {
+            if (last_ini_params["radialThreshMax"] !=
+                std::to_string(radialThreshMax)) {
                 LOG(ERROR)
                     << "radialThreshMax should be greater than radialThreshMin";
-                last_ini_params["radial_thresh_max"] = radialThreshMax;
+                last_ini_params["radialThreshMax"] =
+                    std::to_string(radialThreshMax);
             }
             iniParamWarn(
                 "radialThreshMax",
@@ -1192,81 +1201,95 @@ void ADIMainWindow::showIniWindow(bool *p_open) {
         ImGui::Checkbox("jblfApplyFlag", &jblfApplyFlag);
         ImGui::InputInt("jblfWindowSize", &jblfWindowSize);
         if (jblfWindowSize != 3 && jblfWindowSize != 5 && jblfWindowSize != 7) {
-            if (last_ini_params["jblf_window_size"] != jblfWindowSize) {
+            if (last_ini_params["jblfWindowSize"] !=
+                std::to_string(jblfWindowSize)) {
                 LOG(ERROR)
                     << "Invalid jblfWindowSize value. Valid values [3, 5, 7]";
-                last_ini_params["jblf_window_size"] = jblfWindowSize;
+                last_ini_params["jblfWindowSize"] =
+                    std::to_string(jblfWindowSize);
             }
 
             iniParamWarn("jblfWindowSize", "Valid value: [3, 5, 7]");
         }
         ImGui::InputFloat("jblfGaussianSigma", &jblfGaussianSigma);
         if (jblfGaussianSigma < 0 || jblfGaussianSigma > 65535) {
-            if (last_ini_params["jblf_gaussian_sigma"] != jblfGaussianSigma) {
+            if (last_ini_params["jblfGaussianSigma"] !=
+                std::to_string(jblfGaussianSigma)) {
                 LOG(ERROR) << "Invalid jblfGaussianSigma value. Valid values "
                               "[0 - 65535]";
-                last_ini_params["jblf_gaussian_sigma"] = jblfGaussianSigma;
+                last_ini_params["jblfGaussianSigma"] =
+                    std::to_string(jblfGaussianSigma);
             }
             iniParamWarn("jblfGaussianSigma", "Valid value: [0 - 65535]");
         }
         ImGui::InputFloat("jblfExponentialTerm", &jblfExponentialTerm);
         if (jblfExponentialTerm < 0 || jblfExponentialTerm > 255) {
-            if (last_ini_params["jblf_exponential_term"] !=
-                jblfExponentialTerm) {
+            if (last_ini_params["jblfExponentialTerm"] !=
+                std::to_string(jblfExponentialTerm)) {
                 LOG(ERROR)
                     << "Invalid jblfExponentialTerm value. Valid values [0 "
                        "- 255]";
-                last_ini_params["jblf_exponential_term"] = jblfExponentialTerm;
+                last_ini_params["jblfExponentialTerm"] =
+                    std::to_string(jblfExponentialTerm);
             }
             iniParamWarn("jblfExponentialTerm", "Valid value: [0 - 255]");
         }
         ImGui::InputFloat("jblfMaxEdge", &jblfMaxEdge);
         if (jblfMaxEdge < 0 || jblfMaxEdge > 63) {
-            if (last_ini_params["jblf_max_edge"] != jblfMaxEdge) {
+            if (last_ini_params["jblfMaxEdge"] != std::to_string(jblfMaxEdge)) {
                 LOG(ERROR) << "Invalid jblfMaxEdge value. Valid values [0 "
                               "- 63]";
-                last_ini_params["jblf_max_edge"] = jblfMaxEdge;
+                last_ini_params["jblfMaxEdge"] = std::to_string(jblfMaxEdge);
             }
             iniParamWarn("jblfMaxEdge", "Valid value: [0 - 63]");
         }
         ImGui::InputFloat("jblfABThreshold", &jblfABThreshold);
         if (jblfABThreshold < 0 || jblfABThreshold > 131071) {
-            if (last_ini_params["jblf_ab_threshold"] != jblfABThreshold) {
+            if (last_ini_params["jblfABThreshold"] !=
+                std::to_string(jblfABThreshold)) {
                 LOG(ERROR) << "Invalid jblfABThreshold value. Valid values [0 "
                               "- 131071]";
-                last_ini_params["jblf_ab_threshold"] = jblfABThreshold;
+                last_ini_params["jblfABThreshold"] =
+                    std::to_string(jblfABThreshold);
             }
             iniParamWarn("jblfABThreshold", "Valid value: [0 - 131071]");
         }
         ImGui::Checkbox("Metadata Over AB", &metadata);
 
         // modify ini params
-        modified_ini_params["ab_thresh_min"] = abThreshMin;
-        modified_ini_params["ab_sum_thresh"] = abSumThresh;
-        modified_ini_params["conf_thresh"] = confThresh;
-        modified_ini_params["radial_thresh_min"] = radialThreshMin;
-        modified_ini_params["radial_thresh_max"] = radialThreshMax;
+        modified_ini_params["abThreshMin"] = std::to_string(abThreshMin);
+        modified_ini_params["abSumThresh"] = std::to_string(abSumThresh);
+        modified_ini_params["confThresh"] = std::to_string(confThresh);
+        modified_ini_params["radialThreshMin"] =
+            std::to_string(radialThreshMin);
+        modified_ini_params["radialThreshMax"] =
+            std::to_string(radialThreshMax);
         if (jblfApplyFlag) {
-            modified_ini_params["jblf_apply_flag"] = 1;
+            modified_ini_params["jblfApplyFlag"] = std::to_string(1);
         } else {
-            modified_ini_params["jblf_apply_flag"] = 0;
+            modified_ini_params["jblfApplyFlag"] = std::to_string(0);
         }
-        modified_ini_params["jblf_window_size"] = jblfWindowSize;
-        modified_ini_params["jblf_gaussian_sigma"] = jblfGaussianSigma;
-        modified_ini_params["jblf_exponential_term"] = jblfExponentialTerm;
-        modified_ini_params["jblf_max_edge"] = jblfMaxEdge;
-        modified_ini_params["jblf_ab_threshold"] = jblfABThreshold;
+        modified_ini_params["jblfWindowSize"] = std::to_string(jblfWindowSize);
+        modified_ini_params["jblfGaussianSigma"] =
+            std::to_string(jblfGaussianSigma);
+        modified_ini_params["jblfExponentialTerm"] =
+            std::to_string(jblfExponentialTerm);
+        modified_ini_params["jblfMaxEdge"] = std::to_string(jblfMaxEdge);
+        modified_ini_params["jblfABThreshold"] =
+            std::to_string(jblfABThreshold);
 
         // keep ini param input from last time to skip repetitve error log messages
-        last_ini_params["ab_thresh_min"] = abThreshMin;
-        last_ini_params["conf_thresh"] = confThresh;
-        last_ini_params["radial_thresh_min"] = radialThreshMin;
-        last_ini_params["radial_thresh_max"] = radialThreshMax;
-        last_ini_params["jblf_window_size"] = jblfWindowSize;
-        last_ini_params["jblf_gaussian_sigma"] = jblfGaussianSigma;
-        last_ini_params["jblf_exponential_term"] = jblfExponentialTerm;
-        last_ini_params["jblf_max_edge"] = jblfMaxEdge;
-        last_ini_params["jblf_ab_threshold"] = jblfABThreshold;
+        last_ini_params["abThreshMin"] = std::to_string(abThreshMin);
+        last_ini_params["confThresh"] = std::to_string(confThresh);
+        last_ini_params["radialThreshMin"] = std::to_string(radialThreshMin);
+        last_ini_params["radialThreshMax"] = std::to_string(radialThreshMax);
+        last_ini_params["jblfWindowSize"] = std::to_string(jblfWindowSize);
+        last_ini_params["jblfGaussianSigma"] =
+            std::to_string(jblfGaussianSigma);
+        last_ini_params["jblfExponentialTerm"] =
+            std::to_string(jblfExponentialTerm);
+        last_ini_params["jblfMaxEdge"] = std::to_string(jblfMaxEdge);
+        last_ini_params["jblfABThreshold"] = std::to_string(jblfABThreshold);
 
         if (ImGui::Button("Modify")) {
             // stop streaming
@@ -1475,13 +1498,7 @@ void ADIMainWindow::prepareCamera(uint8_t mode) {
             if (use_modified_ini_params) {
                 status = getActiveCamera()->setIniParams(modified_ini_params);
                 if (status != aditof::Status::OK) {
-                    LOG(ERROR)
-                        << "Could not set ini params for Depth Compute Library";
-                }
-                status = getActiveCamera()->adsd3500SetIniParams(
-                    modified_ini_params);
-                if (status != aditof::Status::OK) {
-                    LOG(ERROR) << "Could not set ini params for Adsd3500";
+                    LOG(ERROR) << "Could not set ini params";
                 } else {
                     LOG(INFO) << "Using user defined ini parameters.";
                     use_modified_ini_params = false;
@@ -2756,28 +2773,28 @@ int ADIMainWindow::saveIniFile() {
     outputFile.open(filename);
 
     if (outputFile.is_open()) {
-        outputFile << "abThreshMin=" << modified_ini_params["ab_thresh_min"]
+        outputFile << "abThreshMin=" << modified_ini_params["abThreshMin"]
                    << "\n";
-        outputFile << "abSumThresh=" << modified_ini_params["ab_sum_thresh"]
+        outputFile << "abSumThresh=" << modified_ini_params["abThreshMin"]
                    << "\n";
-        outputFile << "confThresh=" << modified_ini_params["conf_thresh"]
+        outputFile << "confThresh=" << modified_ini_params["confThresh"]
                    << "\n";
         outputFile << "radialThreshMin="
-                   << modified_ini_params["radial_thresh_min"] << "\n";
+                   << modified_ini_params["radialThreshMin"] << "\n";
         outputFile << "radialThreshMax="
-                   << modified_ini_params["radial_thresh_max"] << "\n";
-        outputFile << "jblfApplyFlag=" << modified_ini_params["jblf_apply_flag"]
+                   << modified_ini_params["radialThreshMax"] << "\n";
+        outputFile << "jblfApplyFlag=" << modified_ini_params["jblfApplyFlag"]
                    << "\n";
-        outputFile << "jblfWindowSize="
-                   << modified_ini_params["jblf_window_size"] << "\n";
+        outputFile << "jblfWindowSize=" << modified_ini_params["jblfWindowSize"]
+                   << "\n";
         outputFile << "jblfGaussianSigma="
-                   << modified_ini_params["jblf_gaussian_sigma"] << "\n";
+                   << modified_ini_params["jblfGaussianSigma"] << "\n";
         outputFile << "jblfExponentialTerm="
-                   << modified_ini_params["jblf_exponential_term"] << "\n";
-        outputFile << "jblfMaxEdge=" << modified_ini_params["jblf_max_edge"]
+                   << modified_ini_params["jblfExponentialTerm"] << "\n";
+        outputFile << "jblfMaxEdge=" << modified_ini_params["jblfMaxEdge"]
                    << "\n";
         outputFile << "jblfABThreshold="
-                   << modified_ini_params["jblf_ab_threshold"];
+                   << modified_ini_params["jblfABThreshold"];
 
         outputFile.close();
         LOG(INFO) << "Modified parameters have been written to ini file: "
