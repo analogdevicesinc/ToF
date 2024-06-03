@@ -657,9 +657,14 @@ aditof::Status CameraItof::getIniParams(std::map<std::string, float> &params) {
 
 aditof::Status CameraItof::setIniParams(std::map<std::string, float> &params) {
     aditof::Status status;
+
+    status = adsd3500SetIniParams(params);
+    if (status != aditof::Status::OK) {
+        LOG(ERROR) << "set ini parameters failed in chip.";
+    }
     status = m_depthSensor->setIniParams(params);
     if (status != aditof::Status::OK) {
-        LOG(ERROR) << "set ini parameters failed.";
+        LOG(ERROR) << "set ini parameters failed in depth-compute.";
     }
     return status;
 }
