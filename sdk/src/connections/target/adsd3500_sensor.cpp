@@ -1680,21 +1680,6 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
         }
     }
 
-<<<<<<< HEAD
-=======
-    if (m_implData->imagerType == SensorImagerType::IMAGER_UNKNOWN) {
-        LOG(WARNING) << "Since the image type is unknown, fall back on compile "
-                        "flag to determine imager type";
-#ifdef ADSD3030 // TO DO: remove this fallback mechanism once we no longer support old firmwares that don't support command 0x32
-        m_implData->imagerType = SensorImagerType::IMAGER_ADSD3030;
-        m_modeSelector.setControl("imagerType", "adsd3030");
-#else
-        m_implData->imagerType = SensorImagerType::IMAGER_ADSD3100;
-        m_modeSelector.setControl("imagerType", "adsd3100");
-#endif
-    }
-
->>>>>>> 965b8918 (sdk/connections/target/adsd3500_sensor: initialize m_modeSelector object)
     if (m_implData->ccbVersion != CCBVersion::CCB_UNKNOWN) {
         if (m_implData->ccbVersion == CCBVersion::CCB_VERSION0) {
             LOG(ERROR) << "Old modes are no longer supported!";
