@@ -35,48 +35,39 @@ import logging
 import re
 
 @pytest.fixture()
-def uboot_ver():
-    return "imx_v2020.04_5.4.70_2.3.0" 
-
-@pytest.fixture()
-def kernel_ver():
-    return "lf-5.10.72-2.2.0" 
-@pytest.fixture()
-def sdcard_ver():
-    return "microsd-4.3.0-08d887e8.img" 
-
-@pytest.fixture()
 def sensor_name():
     return "adsd3500"     
+    
+@pytest.fixture()
+def imager_type():
+    return "ADSD3100"  
 
 Logger = logging.getLogger(__name__)
     
-def test_misc_APIs(ip_set, uboot_ver, kernel_ver, sdcard_ver, sensor_name):
+def test_depth_sensor(ip_set, sensor_name,imager_type):
     
-    exe_path = "../../build/examples/test_sensor_enum/Release/test_sensor_enum.exe"
-    process = subprocess.run([exe_path, ip_set], 
+    exe_path = "../../build/examples/test_depth_sensor/Release/test_depth_sensor.exe"
+    process = subprocess.run([exe_path, ip_set, sensor_name], 
         text=True,stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     print(process.stdout)
     assert process.returncode == 0 
     Logger.info(process.stdout)
     output = process.stdout
     
-    match = re.search("Uboot Version: *(.*)", output)
+    match = re.search("Sensor ID: *(.*)", output)
     assert match is not None    # Checks if the pattern is found
     value = match.groups()[0]
-    assert value == uboot_ver,"doesnt match with expectd uboot version"
+    assert value == ip_set,"doesnt match with expectd sensor id"
+    print("sensor id matched with the used ip")
     
-    match = re.search("KernelVersion: *(.*)", output)
+    match = re.search("Imager type: *(.*)", output)
     assert match is not None    # Checks if the pattern is found
     value = match.groups()[0]
-    assert value == kernel_ver,"doesnt match with expectd kernel version"
+    assert value == imager_type,"doesnt match with expectd sensor name"
+    print("imager type matched with the device")
     
-    match = re.search("sd card version: *(.*)", output)
+    match = re.search("Sensor Name: *(.*)", output)
     assert match is not None    # Checks if the pattern is found
     value = match.groups()[0]
-    assert value == sdcard_ver,"doesnt match with expectd sdcard version"
-    
-    match = re.search("sensorname: *(.*)", output)
-    assert match is not None    # Checks if the pattern is found
-    value = match.groups()[0]
-    assert value == sensor_name,"doesnt match with expectd sensor_name"
+    assert value == sensor_name,"doesnt match with expectd sensor name"
+    print("sensor name matched with the device")

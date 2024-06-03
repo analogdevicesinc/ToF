@@ -11,6 +11,14 @@ add_custom_command( TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../../sdk/src/cameras/itof-camera/config $<TARGET_FILE_DIR:${PROJECT_NAME}>/${CONFIG_DIR_NAME}/.
 )
 
+if(VERSION VERSION_GREATER_EQUAL "5.1.0")
+    add_definitions(-DVERSION_5_1_0_HIGHER)
+    message(STATUS "version higher than or equal to 5.1.0")
+else()
+    add_definitions(-DVERSION_5_1_0_LOWER)
+    message(STATUS "version lower than 5.1.0.")
+endif()
+
 if( WIN32 )
     add_custom_command( TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:aditof> $<TARGET_FILE_DIR:${PROJECT_NAME}>/.

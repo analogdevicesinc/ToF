@@ -53,17 +53,13 @@ int main(int argc, char *argv[]) {
     int modeNum;
     std::string ip;
     // check argument for modeName
-    if (argc > 3) {
+    if (argc > 1) {
         // convert the string argument to an integer
-        modeNum = std::stoi(argv[1]);
-        ip = argv[2];
-        configFile = argv[3];
+        ip = argv[1];
 
     } else {
         // set num to default: 0(sr-native)
-        modeNum = 0;
-        ip = "10.42.0.1";
-        configFile = "config/config_adsd3500_adsd3100.json";
+        ip = "10.43.0.1";
     }
 
     Status status = Status::OK;
@@ -136,28 +132,79 @@ int main(int argc, char *argv[]) {
         LOG(INFO) << "Imager type: " << imagerType;
     }
     
-    std::vector<aditof::DepthSensorFrameType> availableSensorFrameTypes;
-    status = depthSensor->getAvailableFrameTypes(availableSensorFrameTypes);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Failed to retrive frame types!";
-        return 1;
-    }
 
-    for (size_t index = 0; index < availableSensorFrameTypes.size(); ++index) {
-        LOG(INFO) << "++++++++++++++++++++++++++++++";
-        LOG(INFO) << "frame type: " << availableSensorFrameTypes[index].type;
-        LOG(INFO) << "frame width: " << availableSensorFrameTypes[index].height;
-        LOG(INFO) << "frame height: " << availableSensorFrameTypes[index].width;
-
-        for (size_t index1 = 0; index1 < availableSensorFrameTypes[index].content.size();
-             ++index1) {
-            LOG(INFO) << "frame content type: " << availableSensorFrameTypes[index].content[index1].type;
-            LOG(INFO) << availableSensorFrameTypes[index].content[index1].type <<
-                   " width: " << availableSensorFrameTypes[index].content[index1].height;
-            LOG(INFO) << availableSensorFrameTypes[index].content[index1].type <<
-                " height: " << availableSensorFrameTypes[index].content[index1].width;
+    #ifdef VERSION_5_1_0_HIGHER
+    aditof::DepthSensorModeDetails availableSensorMode;
+    for (uint8_t mode = 0; mode < 7; ++mode) {
+        status = depthSensor->getModeDetails(mode, availableSensorMode);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to retrive available mode details!";
+            return 1;
         }
+
+        LOG(INFO) << "mode Number: "
+                  << static_cast<int> (availableSensorMode.modeNumber);
+        LOG(INFO) << "number Of Phases: "
+                  << static_cast<int> (availableSensorMode.numberOfPhases);
+        LOG(INFO) << "pixel Format Index: "
+                  << static_cast<int> (availableSensorMode.pixelFormatIndex);
+        LOG(INFO) << "frame Width InBytes: "
+                  << static_cast<int> (availableSensorMode.frameWidthInBytes);
+        LOG(INFO) << "frameHeightInBytes: "
+                  << static_cast<int> (availableSensorMode.frameHeightInBytes);
+        LOG(INFO) << "base Resolution Width: "
+                  << static_cast<int> (availableSensorMode.baseResolutionWidth);
+        LOG(INFO) << "base Resolution Height: "
+                  << static_cast<int> (availableSensorMode.baseResolutionHeight);
+        LOG(INFO) << "metadata Size: " << static_cast<int> (availableSensorMode.metadataSize);
+        LOG(INFO) << "is PCM?: " << static_cast<int> (availableSensorMode.isPCM);
+        LOG(INFO) << "driver Configuration base Width: "
+                  << availableSensorMode.driverConfiguration.baseWidth;
+        LOG(INFO) << "driver Configuration base Heigth: "
+                  << availableSensorMode.driverConfiguration.baseHeigth;
+        LOG(INFO) << "driver Configuration no Of Phases: "
+                  << availableSensorMode.driverConfiguration.noOfPhases;
+        LOG(INFO) << "driver Configuration depth Bits: "
+                  << availableSensorMode.driverConfiguration.depthBits;
+        LOG(INFO) << "driver Configuration abBits: "
+                  << availableSensorMode.driverConfiguration.abBits;
+        LOG(INFO) << "driver Configuration confBits: "
+                  << availableSensorMode.driverConfiguration.confBits;
+        LOG(INFO) << "driver Configuration pixelFormat: "
+                  << availableSensorMode.driverConfiguration.pixelFormat;
+        LOG(INFO) << "driver Configuration driverHeigth: "
+                  << static_cast<int> (availableSensorMode.driverConfiguration.driverHeigth);
+        LOG(INFO) << "driver Configuration driver pixel Format Index: "
+                  << static_cast<int> (availableSensorMode.driverConfiguration.pixelFormatIndex);
     }
+    #elif VERSION_5_1_0_LOWER
+        std::vector<aditof::DepthSensorFrameType> availableSensorFrameTypes;
+        status = depthSensor->getAvailableFrameTypes(availableSensorFrameTypes);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Failed to retrive frame types!";
+            return 1;
+        }
+
+        for (size_t index = 0; index < availableSensorFrameTypes.size(); ++index) {
+            LOG(INFO) << "frame type: " << availableSensorFrameTypes[index].type;
+            LOG(INFO) << "frame width: " << availableSensorFrameTypes[index].height;
+            LOG(INFO) << "frame height: " << availableSensorFrameTypes[index].width;
+
+            for (size_t index1 = 0;
+                 index1 < availableSensorFrameTypes[index].content.size();
+                 ++index1) {
+                LOG(INFO) << "frame content type: "
+                          << availableSensorFrameTypes[index].content[index1].type;
+                LOG(INFO)
+                    << availableSensorFrameTypes[index].content[index1].type
+                    << " width: "
+                    << availableSensorFrameTypes[index].content[index1].height;
+                LOG(INFO) << availableSensorFrameTypes[index].content[index1].type
+                          << " height: "
+                          << availableSensorFrameTypes[index].content[index1].width;
+            }
+        }
+    #endif
 
     return 0;
 }
