@@ -48,6 +48,38 @@
 
 using namespace aditof;
 
+// Function to split a string by a delimiter
+std::vector<std::string> SplitString(const std::string &str, char delimiter) {
+    std::vector<std::string> tokens;
+    std::istringstream iss(str);
+    std::string token;
+    while (std::getline(iss, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
+// Function to compare version strings
+int CompareVersionStrings(const std::string &v1, const std::string &v2) {
+    std::vector<std::string> tokens1 = SplitString(v1, '.');
+    std::vector<std::string> tokens2 = SplitString(v2, '.');
+
+    // Compare each component
+    for (size_t i = 0; i < max(tokens1.size(), tokens2.size()); ++i) {
+        int num1 = (i < tokens1.size()) ? std::stoi(tokens1[i]) : 0;
+        int num2 = (i < tokens2.size()) ? std::stoi(tokens2[i]) : 0;
+
+        if (num1 < num2) {
+            return -1;
+        } else if (num1 > num2) {
+            return 1;
+        }
+    }
+
+    return 0; // Versions are equal
+}
+
+
 int main(int argc, char *argv[]) {
     std::string configFile;
     int modeNum;
@@ -62,7 +94,7 @@ int main(int argc, char *argv[]) {
     } else {
         // set num to default: 0(sr-native)
         modeNum = 0;
-        ip = "10.42.0.1";
+        ip = "10.43.0.1";
         configFile = "config/config_adsd3500_adsd3100.json";
     }
 
@@ -95,21 +127,36 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    std::vector<std::string> frameTypes;
-    camera->getAvailableFrameTypes(frameTypes);
-    if (frameTypes.empty()) {
-        std::cout << "no frame type avaialble!";
-        return 1;
-    }
+    #ifdef VERSION_5_1_0_HIGHER
+        std::vector<uint8_t> availableModes;
+        camera->getAvailableModes(availableModes);
+        if (availableModes.empty()) {
+            std::cout << "no mode available!";
+            return 1;
+        }
+        status = camera->setMode(modeNum);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Could not set camera mode!";
+            return 1;
+        }
+    #elif VERSION_5_1_0_LOWER
 
-    std::string modeName;
-    camera->getFrameTypeNameFromId(modeNum, modeName);
-    status = camera->setFrameType(modeName);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not set camera frame type!";
-        return 1;
-    }
-    LOG(INFO) << "mode name: " << modeName;
+        std::vector<std::string> frameTypes;
+        camera->getAvailableFrameTypes(frameTypes);
+        if (frameTypes.empty()) {
+            std::cout << "no frame type avaialble!";
+            return 1;
+        }
+
+        std::string modeName;
+        camera->getFrameTypeNameFromId(modeNum, modeName);
+        status = camera->setFrameType(modeName);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Could not set camera frame type!";
+            return 1;
+        }
+        LOG(INFO) << "mode name: " << modeName;
+    #endif
 
     //abThreshMin
     int abThreshMinValue;
@@ -222,7 +269,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     LOG(INFO) << "RadialThresholdMax value after: " << RadialThresholdMaxValue;
-    
+
     if (RadialThresholdMaxValue != test_RadialThresholdMaxValue) {
         LOG(ERROR) << "value set is not value get!";
         return 1;
@@ -256,7 +303,7 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "value set is not value get!";
         return 1;
     }
-    
+
     //jblfWindowSize
     int jblfWindowSizeValue;
     int test_jblfWindowSizeValue = 5;
@@ -323,8 +370,7 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "Cannnot retreive jblfExponentialTerm value!";
         return 1;
     }
-    LOG(INFO) << "jblfExponentialTerm: "
-              << jblfExponentialTermValue;
+    LOG(INFO) << "jblfExponentialTerm: " << jblfExponentialTermValue;
 
     status =
         camera->adsd3500SetJBLFExponentialTerm(test_jblfExponentialTermValue);
@@ -365,9 +411,13 @@ int main(int argc, char *argv[]) {
     }
     LOG(INFO) << "jblfABThreshold value set ";
 
- 
     //headerSize
+    #ifdef VERSION_5_1_0_HIGHER
+    if (modeNum = 4) {
+    #elif VERSION_5_1_0_LOWER
     if (modeName != "pcm-native") {
+    #endif
+
         uint16_t EnableMetadatainABValue;
         uint16_t test_EnableMetadatainAB = 0;
         status = camera->adsd3500GetEnableMetadatainAB(EnableMetadatainABValue);
@@ -376,9 +426,8 @@ int main(int argc, char *argv[]) {
             return 1;
         }
         LOG(INFO) << "EnableMetadatainABValue: " << EnableMetadatainABValue;
-        
-        status =
-            camera->adsd3500SetEnableMetadatainAB(test_EnableMetadatainAB);
+
+        status = camera->adsd3500SetEnableMetadatainAB(test_EnableMetadatainAB);
         if (status != Status::OK) {
             LOG(ERROR) << "Cannnot set EnableMetadata value!";
             return 1;
@@ -390,14 +439,15 @@ int main(int argc, char *argv[]) {
             LOG(ERROR) << "Cannnot set EnableMetadata value!";
             return 1;
         }
-        LOG(INFO) << "EnableMetadatainAB value after: " << EnableMetadatainABValue;
+        LOG(INFO) << "EnableMetadatainAB value after: "
+                  << EnableMetadatainABValue;
 
         if (EnableMetadatainABValue != test_EnableMetadatainAB) {
             LOG(ERROR) << "value set is not value get!";
             return 1;
         }
     }
-    
+
     std::shared_ptr<DepthSensorInterface> depthSensor = camera->getSensor();
     /*
     std::string inputFormatVal;
@@ -439,18 +489,20 @@ int main(int argc, char *argv[]) {
         (test_depthEnVal == "1" && test_abAveragingVal == "1") ? "0" : "1";
     status = depthSensor->getControl("depthEnable", depthEnVal);
     status = depthSensor->getControl("abAveraging", abAveragingVal);
-    LOG(INFO) << "depthEnVal: " << depthEnVal << " abAveragingVal: " << abAveragingVal;
+    LOG(INFO) << "depthEnVal: " << depthEnVal
+              << " abAveragingVal: " << abAveragingVal;
     partialDepthEnableVal =
         (depthEnVal == "1" && abAveragingVal == "1") ? "0" : "1";
     LOG(INFO) << "partialDepthEnable: " << partialDepthEnableVal;
-    
+
     depthSensor->setControl("depthEnable", test_depthEnVal);
     depthSensor->setControl("abAveraging", test_abAveragingVal);
     LOG(INFO) << "partialDepthEnable value set ";
-    
+
     status = depthSensor->getControl("depthEnable", depthEnVal);
     status = depthSensor->getControl("abAveraging", abAveragingVal);
-    LOG(INFO) << "depthEnVal: " << depthEnVal << " abAveragingVal: " << abAveragingVal;
+    LOG(INFO) << "depthEnVal: " << depthEnVal
+              << " abAveragingVal: " << abAveragingVal;
     partialDepthEnableVal =
         (depthEnVal == "1" && abAveragingVal == "1") ? "0" : "1";
     LOG(INFO) << "partialDepthEnable after: " << partialDepthEnableVal;
@@ -459,7 +511,7 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "value set is not value get!";
         return 1;
     }
-    
+
     //bitsInPhaseOrDepth
     std::string phaseDepthBitsVal;
     std::string test_phaseDepthBitsVal = "6";
@@ -469,26 +521,26 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     LOG(INFO) << "bitsInPhaseOrDepth: " << phaseDepthBitsVal;
-    
+
     status = depthSensor->setControl("phaseDepthBits", test_phaseDepthBitsVal);
     if (status != Status::OK) {
         LOG(ERROR) << "Cannnot set phaseDepthBits value!";
         return 1;
     }
     LOG(INFO) << "phaseDepthBits value set ";
-    
+
     status = depthSensor->getControl("phaseDepthBits", phaseDepthBitsVal);
     if (status != Status::OK) {
         LOG(ERROR) << "Cannnot retreive phaseDepthBits!";
         return 1;
     }
     LOG(INFO) << "bitsInPhaseOrDepth value after: " << phaseDepthBitsVal;
-    
+
     if (phaseDepthBitsVal != test_phaseDepthBitsVal) {
         LOG(ERROR) << "value set is not value get!";
         return 1;
     }
-    
+
     //bitsInConf
     std::string bitsInConfVal;
     std::string test_bitsInConfVal = "2";
@@ -498,14 +550,14 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     LOG(INFO) << "bitsInConf: " << bitsInConfVal;
-    
+
     status = depthSensor->setControl("confidenceBits", test_bitsInConfVal);
     if (status != Status::OK) {
         LOG(ERROR) << "Cannnot set confidenceBits value!";
         return 1;
     }
     LOG(INFO) << "bitsInConf value set ";
-    
+
     status = depthSensor->getControl("confidenceBits", bitsInConfVal);
     if (status != Status::OK) {
         LOG(ERROR) << "Cannnot retreive confidenceBits!";

@@ -35,19 +35,29 @@ import os.path
 import numpy as np
 import logging
 import os
-import time
 import re
 
 Logger = logging.getLogger(__name__)
 
-def test_access_ini_apis_program(available_modes_ini, ip_set,config_file):
-
-    mode_name = {0: "3500_sr-native", 1: "3500_lr-native", 2: "3500_sr-qnative", 3: "3500_lr-qnative",
-        4: "_pcm-native", 5: "3500_lr-mixed", 6: "3500_sr-mixed"}
-   
+def test_access_ini_apis_program(available_modes_ini, ip_set, config_file, sdk_version):
+    
     #parse the ini file
-    with open('./config/RawToDepthAdsd' + mode_name[available_modes_ini] + '.ini', mode='r') as file:
-        lines = file.readlines()
+    if sdk_version == "5.1.0":
+    
+        if available_modes_ini != 4:
+            file_prefix = './config/RawToDepthAdsd3500_'
+        else:
+            file_prefix = './config/RawToDepthAdsd_'
+        with open(file_prefix + str(available_modes_ini) + '.ini', mode='r') as file:
+            lines = file.readlines()
+
+    else:
+        mode_name = {0: "3500_sr-native", 1: "3500_lr-native", 2: "3500_sr-qnative", 3: "3500_lr-qnative",
+            4: "_pcm-native", 5: "3500_lr-mixed", 6: "3500_sr-mixed"}
+   
+        with open('./config/RawToDepthAdsd' + mode_name[available_modes_ini] + '.ini', mode='r') as file:
+            lines = file.readlines()
+    
     ini_data = {}
     for line in lines:
         variable, value = line.strip().split('=')
