@@ -80,8 +80,6 @@ int main(int argc, char *argv[]) {
         return ret;
     }
 
-    usleep(5000 * 1000);
-
     // Get the Imager Type and the CCB.
     ret = adsd3500->GetImagerTypeAndCCB();
     if (ret < 0) {
