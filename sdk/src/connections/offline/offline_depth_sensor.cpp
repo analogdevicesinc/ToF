@@ -1,7 +1,5 @@
 #include "offline_depth_sensor.h"
-#include "cameras/itof-camera/mode_info.h"
 #include "tofi/tofi_config.h"
-
 #include <cstring>
 #ifdef __linux__
 #include <dirent.h>
