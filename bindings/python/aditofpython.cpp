@@ -535,6 +535,13 @@ PYBIND11_MODULE(aditofpython, m) {
              &aditof::Camera::adsd3500SetEnableMetadatainAB, py::arg("value"))
         .def("adsd3500DisableCCBM", &aditof::Camera::adsd3500DisableCCBM,
              py::arg("value"))
+        .def("adsd3500IsCCBMsupported",
+             [](aditof::Camera &camera) {
+                 bool supported;
+                 aditof::Status status =
+                     camera.adsd3500IsCCBMsupported(supported);
+                 return std::make_pair(status, supported);
+             })
         .def("adsd3500ResetIniParamsForMode",
              &aditof::Camera::adsd3500ResetIniParamsForMode, py::arg("value"))
         .def("adsd3500GetEnableMetadatainAB",
