@@ -142,6 +142,7 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     m_controls.emplace("netlinktest", "0");
     m_controls.emplace("depthComputeOpenSource", "0");
     m_controls.emplace("disableCCBM", "0");
+    m_controls.emplace("availableCCBM", "0");
 
     // Define the commands that correspond to the sensor controls
     m_implData->controlsCommands["abAveraging"] = 0x9819e5;
@@ -852,6 +853,11 @@ aditof::Status Adsd3500Sensor::setControl(const std::string &control,
         return Status::UNAVAILABLE;
     }
 
+    if (control == "availableCCBM") {
+        LOG(WARNING) << "Control: " << control << " is read only!";
+        return Status::UNAVAILABLE;
+    }
+
     if (control == "disableCCBM") {
         m_controls.at("disableCCBM") = value;
         return Status::OK;
@@ -911,6 +917,11 @@ aditof::Status Adsd3500Sensor::getControl(const std::string &control,
 
         if (control == "disableCCBM") {
             value = m_controls.at("disableCCBM");
+            return Status::OK;
+        }
+
+        if (control == "availableCCBM") {
+            value = m_ccbmEnabled ? "1" : "0";
             return Status::OK;
         }
 
@@ -1699,6 +1710,7 @@ aditof::Status Adsd3500Sensor::queryAdsd3500() {
                          "from nvm.";
 
             m_ccbmEnabled = true;
+
             m_availableModes.clear();
             m_ccbmINIContent.clear();
 

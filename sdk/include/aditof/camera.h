@@ -501,6 +501,13 @@ class SDK_API Camera {
     virtual Status adsd3500DisableCCBM(bool disable) = 0;
 
     /**
+     * @brief Check whether CCB as master is supported or not.
+     * @param[out] supported - Will be set to true in case CCBM is supported
+     * @return Status
+     */
+    virtual Status adsd3500IsCCBMsupported(bool &supported) = 0;
+
+    /**
      * @brief Allows enabling or disabling the Dynamic Mode Switching.
      * NOTE: This must be enabled before configuring the sequence!
      * @param[in] enable - Set to true to enable and false to disable

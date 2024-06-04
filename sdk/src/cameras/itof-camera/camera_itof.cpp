@@ -1770,6 +1770,26 @@ aditof::Status CameraItof::adsd3500DisableCCBM(bool disable) {
     return m_depthSensor->setControl("disableCCBM", std::to_string(disable));
 }
 
+aditof::Status CameraItof::adsd3500IsCCBMsupported(bool &supported) {
+    aditof::Status status;
+    std::string availableCCMB;
+
+    status = m_depthSensor->getControl("availableCCBM", availableCCMB);
+    if (status == aditof::Status::OK) {
+        if (availableCCMB == "1") {
+            supported = true;
+        } else if (availableCCMB == "0") {
+            supported = false;
+        } else {
+            LOG(ERROR) << "Invalid value for control availableCCBM: "
+                       << availableCCMB;
+            return aditof::Status::INVALID_ARGUMENT;
+        }
+    }
+
+    return status;
+}
+
 aditof::Status CameraItof::adsd3500GetStatus(int &chipStatus,
                                              int &imagerStatus) {
     using namespace aditof;
