@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     adsd3500->mode_num = 2;      // Image mode number.
     int num_frames = 1;          // Number of frames is set to 1 by default.
     adsd3500->ccb_as_master = 0; // Enables/Disbales CCB as master.
-    adsd3500->enableMetaDatainAB = 0;
+    adsd3500->enableMetaDatainAB = 1;
 
     // Parse Arguments from the Command line.
     for (int i = 1; i < argc; ++i) {
@@ -79,8 +79,6 @@ int main(int argc, char *argv[]) {
         printf("Unable to open Adsd3500.\n");
         return ret;
     }
-
-    usleep(5000 * 1000);
 
     // Get the Imager Type and the CCB.
     ret = adsd3500->GetImagerTypeAndCCB();
@@ -174,13 +172,16 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    uint16_t *depth_buffer = new uint16_t[total_pixels * num_frames];
-    uint16_t *ab_buffer = new uint16_t[total_pixels * num_frames];
-    uint8_t *conf_buffer = new uint8_t[total_pixels * num_frames];
+    uint16_t *depth_buffer = new uint16_t[total_pixels * (num_frames - 1)];
+    uint16_t *ab_buffer = new uint16_t[total_pixels * (num_frames - 1)];
+    uint8_t *conf_buffer = new uint8_t[total_pixels * (num_frames - 1)];
+    uint8_t *header_buffer =
+        new uint8_t[EMBEDDED_HEADER_SIZE * (num_frames - 1)];
 
     std::ofstream ab("out_ab.bin", std::ios::binary);
     std::ofstream depth("out_depth.bin", std::ios::binary);
     std::ofstream conf("out_conf.bin", std::ios::binary);
+    std::ofstream header("out_header.bin", std::ios::binary);
 
     std::cout << "Number of Frames requested: " << num_frames - 1 << std::endl;
 
@@ -212,25 +213,36 @@ int main(int argc, char *argv[]) {
         memcpy(conf_buffer + (i - 1) * total_pixels,
                adsd3500->tofi_compute_context->p_conf_frame,
                total_pixels * sizeof(uint8_t));
+
+        memcpy(header_buffer + (i - 1) * EMBEDDED_HEADER_SIZE,
+               (uint8_t *)(adsd3500->tofi_compute_context->p_ab_frame +
+                           total_pixels),
+               EMBEDDED_HEADER_SIZE * sizeof(uint8_t));
     }
 
     // Store AB, Depth and Confidence frames on to a .bin files.
-    ab.write((char *)ab_buffer, total_pixels * num_frames * sizeof(uint16_t));
+    ab.write((char *)ab_buffer,
+             total_pixels * (num_frames - 1) * sizeof(uint16_t));
     ab.close();
 
     // Store Depth frame to a .bin file.
     depth.write((char *)depth_buffer,
-                total_pixels * num_frames * sizeof(uint16_t));
+                total_pixels * (num_frames - 1) * sizeof(uint16_t));
     depth.close();
 
     // Store Confidence frame to a .bin file.
     conf.write((char *)conf_buffer,
-               total_pixels * num_frames * sizeof(uint8_t));
+               total_pixels * (num_frames - 1) * sizeof(uint8_t));
     conf.close();
+
+    header.write((char *)header_buffer,
+                 EMBEDDED_HEADER_SIZE * (num_frames - 1) * sizeof(uint8_t));
+    header.close();
 
     delete[] ab_buffer;
     delete[] depth_buffer;
     delete[] conf_buffer;
+    delete[] header_buffer;
 
     // Stop the Stream.
     ret = adsd3500->StopStream();

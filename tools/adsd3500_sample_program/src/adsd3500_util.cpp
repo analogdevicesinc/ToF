@@ -841,9 +841,6 @@ int Adsd3500::SetFrameType() {
     if (ret < 0)
         printf("Unable to Set mode in Adsd3500.\n");
 
-    // Set Enable Embedded Header Data in AB.
-    adsd3500_set_enable_embedded_header_in_AB();
-
     CLEAR(req);
     req.count = 0;
     req.type = videoDevice.videoBuffersType;
@@ -1047,16 +1044,21 @@ int Adsd3500::SetFrameType() {
 int Adsd3500::HandleInterrupts(int signalValue) {
     uint16_t statusRegister;
 
-    //int ret = adsd3500_read_cmd(0x0020, &statusRegister, 0);
-    //std::cout << "statusRegister: " << statusRegister << std::endl;
+    if (videoDevice.cameraSensorDeviceId == -1) {
+        videoDevice.cameraSensorDeviceId = tof_open(CAMERA_SENSOR_DRIVER);
+        if (videoDevice.cameraSensorDeviceId < 0) {
+            std::cout << "Not able to able to open Adsd3500 Device. Unable to "
+                         "handle interrupt."
+                      << std::endl;
+            return -1;
+        }
+    }
+
+    int ret = adsd3500_read_cmd(0x0020, &statusRegister, 0);
+    std::cout << "statusRegister: " << statusRegister << std::endl;
 
     return 0;
 }
-
-// int Adsd3500::SubscribeSensorToNotifier() {
-//     auto& notifier = Adsd3500InterruptNotifier::getInstance();
-//     notifier.subscribeSensor(shared_from_this());
-// }
 
 // Setup Interrupt Support.
 int Adsd3500::SetupInterruptSupport() {
@@ -1096,7 +1098,8 @@ int Adsd3500::adsd3500_read_cmd(uint16_t cmd, uint16_t *data,
                &extCtrls) == -1) {
         std::cout << "Could not set control: 0x" << std::hex << extCtrl.id
                   << " with command: 0x" << std::hex << cmd
-                  << ". Reason: " << strerror(errno) << "(" << errno << ")";
+                  << ". Reason: " << strerror(errno) << "(" << errno << ")"
+                  << std::endl;
         return -1;
     }
 
@@ -1858,6 +1861,9 @@ int Adsd3500::adsd3500_set_ini_params() {
         dynamic_mode_switch = std::stoi(it->second);
     }
     adsd3500_configure_dynamic_mode_switching();
+
+    // Enable/Disbale Metadata in output AB Frame
+    adsd3500_set_enable_embedded_header_in_AB();
 
     return 0;
 }
