@@ -426,12 +426,12 @@ aditof::Status OfflineDepthSensor::initTargetDepthCompute(
     return aditof::Status::OK;
 }
 
-aditof::Status
-OfflineDepthSensor::getIniParams(std::map<std::string, std::string> &params) {
+aditof::Status OfflineDepthSensor::getDepthComputeParams(
+    std::map<std::string, std::string> &params) {
     return aditof::Status::OK;
 }
 
-aditof::Status OfflineDepthSensor::setIniParams(
+aditof::Status OfflineDepthSensor::setDepthComputeParams(
     const std::map<std::string, std::string> &params) {
     return aditof::Status::OK;
 }

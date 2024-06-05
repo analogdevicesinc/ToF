@@ -139,6 +139,11 @@ class CameraItof : public aditof::Camera {
 
     void dropFirstFrame(bool dropFrame) override;
 
+    aditof::Status
+    getFrameProcessParams(std::map<std::string, std::string> &params) override;
+    aditof::Status
+    setFrameProcessParams(std::map<std::string, std::string> &params) override;
+
   private:
     /**
      * @brief Opens the CCB file passed in as part of Json file using initialize(), and loads the calibration blocks into member variable
@@ -191,18 +196,6 @@ class CameraItof : public aditof::Camera {
      */
     bool isConvertibleToDouble(const std::string &str);
 
-    /**
-     * @brief get ini params from depth sensor interface
-    */
-    virtual aditof::Status
-    getIniParams(std::map<std::string, std::string> &params) override;
-
-    /**
-     * @brief set ini params from depth sensor interface
-    */
-    virtual aditof::Status
-    setIniParams(std::map<std::string, std::string> &params) override;
-
   private:
     using noArgCallable = std::function<aditof::Status()>;
 
@@ -213,6 +206,7 @@ class CameraItof : public aditof::Camera {
     aditof::ADSDErrors m_adsdErrors;
 
     bool m_devStarted;
+    bool m_devStreaming;
     bool m_tempSensorInitialized;
     bool m_adsd3500Enabled;
     bool m_adsd3500_master;

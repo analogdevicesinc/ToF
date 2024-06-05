@@ -1096,7 +1096,7 @@ void ADIMainWindow::showIniWindow(bool *p_open) {
     static bool metadata = false;
 
     if (isPlaying && ini_params.empty()) {
-        status = getActiveCamera()->getIniParams(ini_params);
+        status = getActiveCamera()->getFrameProcessParams(ini_params);
         if (status != aditof::Status::OK) {
             LOG(ERROR) << "Could not get ini params";
         } else {
@@ -1497,7 +1497,8 @@ void ADIMainWindow::prepareCamera(uint8_t mode) {
     if (mode == last_mode) {
         if (!modified_ini_params.empty()) {
             if (use_modified_ini_params) {
-                status = getActiveCamera()->setIniParams(modified_ini_params);
+                status = getActiveCamera()->setFrameProcessParams(
+                    modified_ini_params);
                 if (status != aditof::Status::OK) {
                     LOG(ERROR) << "Could not set ini params";
                 } else {

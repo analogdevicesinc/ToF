@@ -143,8 +143,8 @@ NetworkDepthSensor::~NetworkDepthSensor() {
     }
 }
 
-aditof::Status
-NetworkDepthSensor::getIniParams(std::map<std::string, std::string> &params) {
+aditof::Status NetworkDepthSensor::getDepthComputeParams(
+    std::map<std::string, std::string> &params) {
     using namespace aditof;
     Network *net = m_implData->handle.net;
     std::unique_lock<std::mutex> mutex_lock(m_implData->handle.net_mutex);
@@ -154,7 +154,7 @@ NetworkDepthSensor::getIniParams(std::map<std::string, std::string> &params) {
         return Status::UNREACHABLE;
     }
 
-    net->send_buff[m_sensorIndex].set_func_name("GetIniParam");
+    net->send_buff[m_sensorIndex].set_func_name("GetDepthComputeParam");
     net->send_buff[m_sensorIndex].set_expect_reply(true);
 
     if (net->SendCommand() != 0) {
@@ -205,7 +205,7 @@ NetworkDepthSensor::getIniParams(std::map<std::string, std::string> &params) {
     return status;
 }
 
-aditof::Status NetworkDepthSensor::setIniParams(
+aditof::Status NetworkDepthSensor::setDepthComputeParams(
     const std::map<std::string, std::string> &params) {
     using namespace aditof;
     Network *net = m_implData->handle.net;
@@ -216,7 +216,7 @@ aditof::Status NetworkDepthSensor::setIniParams(
         return Status::UNREACHABLE;
     }
 
-    net->send_buff[m_sensorIndex].set_func_name("SetIniParam");
+    net->send_buff[m_sensorIndex].set_func_name("SetDepthComputeParam");
     net->send_buff[m_sensorIndex].set_expect_reply(true);
     net->send_buff[m_sensorIndex].add_func_strings_param(
         params.at("abThreshMin"));
