@@ -1020,15 +1020,15 @@ aditof::Status UsbDepthSensor::initTargetDepthCompute(uint8_t *iniFile,
     return aditof::Status::OK;
 }
 
-aditof::Status
-UsbDepthSensor::getIniParams(std::map<std::string, std::string> &params) {
+aditof::Status UsbDepthSensor::getDepthComputeParams(
+    std::map<std::string, std::string> &params) {
     using namespace aditof;
     Status status = Status::UNAVAILABLE;
     return status;
 }
 
-aditof::Status
-UsbDepthSensor::setIniParams(const std::map<std::string, std::string> &params) {
+aditof::Status UsbDepthSensor::setDepthComputeParams(
+    const std::map<std::string, std::string> &params) {
     using namespace aditof;
     Status status = Status::UNAVAILABLE;
     return status;

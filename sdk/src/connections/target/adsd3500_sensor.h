@@ -162,9 +162,9 @@ class Adsd3500Sensor : public aditof::DepthSensorInterface,
   public:
     aditof::Status adsd3500InterruptHandler(int signalValue);
     virtual aditof::Status
-    getIniParams(std::map<std::string, std::string> &params) override;
-    virtual aditof::Status
-    setIniParams(const std::map<std::string, std::string> &params) override;
+    getDepthComputeParams(std::map<std::string, std::string> &params) override;
+    virtual aditof::Status setDepthComputeParams(
+        const std::map<std::string, std::string> &params) override;
     aditof::Status getIniParamsArrayForMode(int mode,
                                             std::string &iniStr) override;
 
