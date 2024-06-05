@@ -64,11 +64,11 @@ CameraItof::CameraItof(
     std::shared_ptr<aditof::DepthSensorInterface> depthSensor,
     const std::string &ubootVersion, const std::string &kernelVersion,
     const std::string &sdCardImageVersion, const std::string &netLinkTest)
-    : m_depthSensor(depthSensor), m_devStarted(false), m_adsd3500Enabled(false),
-      m_loadedConfigData(false), m_xyzEnabled(true), m_xyzSetViaApi(false),
-      m_cameraFps(0), m_fsyncMode(-1), m_mipiOutputSpeed(-1),
-      m_enableTempCompenstation(-1), m_enableMetaDatainAB(-1),
-      m_enableEdgeConfidence(-1), m_modesVersion(0),
+    : m_depthSensor(depthSensor), m_devStarted(false), m_devStreaming(false),
+      m_adsd3500Enabled(false), m_loadedConfigData(false), m_xyzEnabled(true),
+      m_xyzSetViaApi(false), m_cameraFps(0), m_fsyncMode(-1),
+      m_mipiOutputSpeed(-1), m_enableTempCompenstation(-1),
+      m_enableMetaDatainAB(-1), m_enableEdgeConfidence(-1), m_modesVersion(0),
       m_xyzTable({nullptr, nullptr, nullptr}),
       m_imagerType(aditof::ImagerType::UNSET), m_dropFirstFrame(true),
       m_dropFrameOnce(true) {
@@ -302,6 +302,7 @@ aditof::Status CameraItof::start() {
         LOG(ERROR) << "Error starting adsd3500.";
         return status;
     }
+    m_devStreaming = true;
 
     return aditof::Status::OK;
 }
@@ -313,6 +314,8 @@ aditof::Status CameraItof::stop() {
     if (status != aditof::Status::OK) {
         LOG(INFO) << "Failed to stop camera!";
     }
+
+    m_devStreaming = false;
 
     return status;
 }
@@ -349,7 +352,7 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
     configureSensorModeDetails();
     m_details.mode = mode;
 
-    LOG(INFO) << "Using ini file: " << m_ini_depth;
+    LOG(INFO) << "Using parameter list: " << m_ini_depth;
 
     status = m_depthSensor->getModeDetails(mode, m_modeDetailsCache);
     if (status != Status::OK) {
@@ -529,9 +532,9 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
 }
 
 aditof::Status
-CameraItof::getIniParams(std::map<std::string, std::string> &params) {
+CameraItof::getFrameProcessParams(std::map<std::string, std::string> &params) {
     aditof::Status status;
-    status = m_depthSensor->getIniParams(params);
+    status = m_depthSensor->getDepthComputeParams(params);
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "get ini parameters failed.";
     }
@@ -539,13 +542,16 @@ CameraItof::getIniParams(std::map<std::string, std::string> &params) {
 }
 
 aditof::Status
-CameraItof::setIniParams(std::map<std::string, std::string> &params) {
+CameraItof::setFrameProcessParams(std::map<std::string, std::string> &params) {
     aditof::Status status;
+    if (m_devStreaming)
+        LOG(WARNING) << "Setting camera parameters while streaming is one is "
+                        "not recommended";
     status = setAdsd3500IniParams(params);
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Failed to set ini parameters on ADSD3500";
     }
-    status = m_depthSensor->setIniParams(params);
+    status = m_depthSensor->setDepthComputeParams(params);
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "set ini parameters failed in depth-compute.";
     }
@@ -1189,7 +1195,7 @@ void CameraItof::configureSensorModeDetails() {
             value = "2";
         m_depthSensor->setControl("phaseDepthBits", value);
     } else {
-        LOG(WARNING) << "bitsInPhaseOrDepth was not found in .ini file";
+        LOG(WARNING) << "bitsInPhaseOrDepth was not found in parameter list";
     }
 
     it = m_iniKeyValPairs.find("bitsInConf");
@@ -1204,7 +1210,7 @@ void CameraItof::configureSensorModeDetails() {
             value = "0";
         m_depthSensor->setControl("confidenceBits", value);
     } else {
-        LOG(WARNING) << "bitsInConf was not found in .ini file";
+        LOG(WARNING) << "bitsInConf was not found in parameter list";
     }
 
     it = m_iniKeyValPairs.find("bitsInAB");
@@ -1228,7 +1234,7 @@ void CameraItof::configureSensorModeDetails() {
         }
         m_depthSensor->setControl("abBits", value);
     } else {
-        LOG(WARNING) << "bitsInAB was not found in .ini file";
+        LOG(WARNING) << "bitsInAB was not found in parameter list";
     }
 
     it = m_iniKeyValPairs.find("partialDepthEnable");
@@ -1237,7 +1243,7 @@ void CameraItof::configureSensorModeDetails() {
         m_depthSensor->setControl("depthEnable", en);
         m_depthSensor->setControl("abAveraging", en);
     } else {
-        LOG(WARNING) << "partialDepthEnable was not found in .ini file";
+        LOG(WARNING) << "partialDepthEnable was not found in parameter list";
     }
 
     it = m_iniKeyValPairs.find("inputFormat");
@@ -1245,20 +1251,20 @@ void CameraItof::configureSensorModeDetails() {
         value = it->second;
         m_depthSensor->setControl("inputFormat", value);
     } else {
-        LOG(WARNING) << "inputFormat was not found in .ini file";
+        LOG(WARNING) << "inputFormat was not found in parameter list";
     }
 
-    // XYZ set through camera control takes precedence over the setting from .ini file
+    // XYZ set through camera control takes precedence over the setting from parameter list
     if (!m_xyzSetViaApi) {
         it = m_iniKeyValPairs.find("xyzEnable");
         if (it != m_iniKeyValPairs.end()) {
             m_xyzEnabled = !(it->second == "0");
         } else {
-            LOG(WARNING) << "xyzEnable was not found in .ini file";
+            LOG(WARNING) << "xyzEnable was not found in parameter list";
         }
     }
 
-    //Embedded header is being set from the ini file
+    //Embedded header is being set from theparameter list
     it = m_iniKeyValPairs.find("headerSize");
     if (it != m_iniKeyValPairs.end()) {
         value = it->second;
@@ -1268,7 +1274,7 @@ void CameraItof::configureSensorModeDetails() {
             m_enableMetaDatainAB = 0;
         }
     } else {
-        LOG(WARNING) << "headerSize was not found in .ini file";
+        LOG(WARNING) << "headerSize was not found in parameter list";
     }
 }
 
@@ -1328,7 +1334,7 @@ aditof::Status CameraItof::parseJsonFileContent() {
             }
         }
 
-        // Get depth ini file location
+        // Get depthparameter list location
         const cJSON *json_depth_ini_file = nullptr;
         json_depth_ini_file =
             cJSON_GetObjectItemCaseSensitive(config_json, "depthIni");
@@ -1338,7 +1344,7 @@ aditof::Status CameraItof::parseJsonFileContent() {
         }
         if (cJSON_IsString(json_depth_ini_file) &&
             (json_depth_ini_file->valuestring != NULL)) {
-            // store depth ini file location
+            // store depthparameter list location
             std::string mode;
             std::vector<std::string> iniFiles;
 
@@ -1374,7 +1380,7 @@ aditof::Status CameraItof::parseJsonFileContent() {
                 m_ini_depth = std::string(json_depth_ini_file->valuestring);
             }
 
-            LOG(INFO) << "Current Depth ini file is: " << m_ini_depth;
+            LOG(INFO) << "Current Depth parameter list is: " << m_ini_depth;
         }
 
         m_fsyncMode = getValueFromJSON(config_json, "fsyncMode"); // New key
@@ -1746,7 +1752,7 @@ aditof::Status CameraItof::adsd3500SetFrameRate(uint16_t fps) {
         LOG(ERROR) << "Failed to set fps at: " << fps << "!";
     } else {
         m_cameraFps = fps;
-        LOG(INFO) << "Camera FPS set from Ini file at: " << m_cameraFps;
+        LOG(INFO) << "Camera FPS set fromparameter list at: " << m_cameraFps;
     }
     return status;
 }
@@ -1893,7 +1899,8 @@ aditof::Status CameraItof::setAdsd3500IniParams(
         if (status != aditof::Status::OK)
             LOG(WARNING) << "Could not set abThreshMin";
     } else {
-        LOG(WARNING) << "abThreshMin was not found in .ini file, not setting.";
+        LOG(WARNING)
+            << "abThreshMin was not found in parameter list, not setting.";
     }
 
     it = iniKeyValPairs.find("confThresh");
@@ -1902,7 +1909,8 @@ aditof::Status CameraItof::setAdsd3500IniParams(
         if (status != aditof::Status::OK)
             LOG(WARNING) << "Could not set confThresh";
     } else {
-        LOG(WARNING) << "confThresh was not found in .ini file, not setting.";
+        LOG(WARNING)
+            << "confThresh was not found in parameter list, not setting.";
     }
 
     it = iniKeyValPairs.find("radialThreshMin");
@@ -1912,7 +1920,7 @@ aditof::Status CameraItof::setAdsd3500IniParams(
             LOG(WARNING) << "Could not set radialThreshMin";
     } else {
         LOG(WARNING)
-            << "radialThreshMin was not found in .ini file, not setting.";
+            << "radialThreshMin was not found in parameter list, not setting.";
     }
 
     it = iniKeyValPairs.find("radialThreshMax");
@@ -1922,7 +1930,7 @@ aditof::Status CameraItof::setAdsd3500IniParams(
             LOG(WARNING) << "Could not set radialThreshMax";
     } else {
         LOG(WARNING)
-            << "radialThreshMax was not found in .ini file, not setting.";
+            << "radialThreshMax was not found in parameter list, not setting.";
     }
 
     it = iniKeyValPairs.find("jblfWindowSize");
@@ -1932,7 +1940,7 @@ aditof::Status CameraItof::setAdsd3500IniParams(
             LOG(WARNING) << "Could not set jblfWindowSize";
     } else {
         LOG(WARNING)
-            << "jblfWindowSize was not found in .ini file, not setting.";
+            << "jblfWindowSize was not found in parameter list, not setting.";
     }
 
     it = iniKeyValPairs.find("jblfApplyFlag");
@@ -1943,7 +1951,7 @@ aditof::Status CameraItof::setAdsd3500IniParams(
             LOG(WARNING) << "Could not set jblfApplyFlag";
     } else {
         LOG(WARNING)
-            << "jblfApplyFlag was not found in .ini file, not setting.";
+            << "jblfApplyFlag was not found in parameter list, not setting.";
     }
 
     it = iniKeyValPairs.find("fps");
@@ -1952,7 +1960,7 @@ aditof::Status CameraItof::setAdsd3500IniParams(
         if (status != aditof::Status::OK)
             LOG(WARNING) << "Could not set fps";
     } else {
-        LOG(WARNING) << "fps was not found in .ini file, not setting.";
+        LOG(WARNING) << "fps was not found in parameter list, not setting.";
     }
 
     it = iniKeyValPairs.find("vcselDelay");
@@ -1961,7 +1969,8 @@ aditof::Status CameraItof::setAdsd3500IniParams(
         if (status != aditof::Status::OK)
             LOG(WARNING) << "Could not set vcselDelay";
     } else {
-        LOG(WARNING) << "vcselDelay was not found in .ini file, not setting.";
+        LOG(WARNING)
+            << "vcselDelay was not found in parameter list, not setting.";
     }
 
     it = iniKeyValPairs.find("jblfMaxEdge");
@@ -1971,7 +1980,7 @@ aditof::Status CameraItof::setAdsd3500IniParams(
         if (status != aditof::Status::OK)
             LOG(WARNING) << "Could not set jblfMaxEdge";
     } else {
-        LOG(WARNING) << "jblfMaxEdge was not found in .ini file, "
+        LOG(WARNING) << "jblfMaxEdge was not found in parameter list, "
                         "not setting.";
     }
 
@@ -1981,7 +1990,7 @@ aditof::Status CameraItof::setAdsd3500IniParams(
         if (status != aditof::Status::OK)
             LOG(WARNING) << "Could not set jblfABThreshold";
     } else {
-        LOG(WARNING) << "jblfABThreshold was not found in .ini file";
+        LOG(WARNING) << "jblfABThreshold was not found in parameter list";
     }
 
     it = iniKeyValPairs.find("jblfGaussianSigma");
@@ -1991,8 +2000,8 @@ aditof::Status CameraItof::setAdsd3500IniParams(
         if (status != aditof::Status::OK)
             LOG(WARNING) << "Could not set jblfGaussianSigma";
     } else {
-        LOG(WARNING)
-            << "jblfGaussianSigma was not found in .ini file, not setting.";
+        LOG(WARNING) << "jblfGaussianSigma was not found in parameter list, "
+                        "not setting.";
     }
 
     it = iniKeyValPairs.find("jblfExponentialTerm");
@@ -2002,7 +2011,7 @@ aditof::Status CameraItof::setAdsd3500IniParams(
         if (status != aditof::Status::OK)
             LOG(WARNING) << "Could not set jblfExponentialTerm";
     } else {
-        LOG(WARNING) << "jblfExponentialTerm was not found in .ini file, "
+        LOG(WARNING) << "jblfExponentialTerm was not found in parameter list, "
                         "not setting.";
     }
 
@@ -2012,8 +2021,9 @@ aditof::Status CameraItof::setAdsd3500IniParams(
         if (status != aditof::Status::OK)
             LOG(WARNING) << "Could not set enablePhaseInvalidation";
     } else {
-        LOG(WARNING) << "enablePhaseInvalidation was not found in .ini file, "
-                        "not setting.";
+        LOG(WARNING)
+            << "enablePhaseInvalidation was not found in parameter list, "
+               "not setting.";
     }
     return aditof::Status::OK;
 }

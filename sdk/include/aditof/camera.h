@@ -92,14 +92,16 @@ class SDK_API Camera {
      * @param params - a dictionary of parameters
      * @return Status
     */
-    virtual Status getIniParams(std::map<std::string, std::string> &params) = 0;
+    virtual Status
+    getFrameProcessParams(std::map<std::string, std::string> &params) = 0;
 
     /**
      * @brief Set the Depth Compute Library ini parameters
      * @param params - a dictionary of parameters
      * @return Status
     */
-    virtual Status setIniParams(std::map<std::string, std::string> &params) = 0;
+    virtual Status
+    setFrameProcessParams(std::map<std::string, std::string> &params) = 0;
 
     /**
      * @brief Returns all the modes that are supported by the camera

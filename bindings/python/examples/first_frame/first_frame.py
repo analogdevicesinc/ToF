@@ -108,9 +108,9 @@ status = camera1.setMode(int(mode))
 print("camera1.setMode(",mode,")", status)
 
 # Example of getting/modifying/setting the current ADSD3500 parameters
-# status, currentIniParams = camera1.getIniParams()
-# currentIniParams["ab_thresh_min"] = 4
-# camera1.setIniParams(currentIniParams)
+# status, currentFrameProcessParams = camera1.getFrameProcessParams()
+# currentFrameProcessParams["ab_thresh_min"] = "4"
+# camera1.setFrameProcessParams(currentFrameProcessParams)
 
 # Example of configuring the Dynamic Mode Switching
 # The expected sequence of frame is: mode2, mode2, mode2, mode3, mode2, ...
