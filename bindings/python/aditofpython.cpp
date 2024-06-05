@@ -316,10 +316,11 @@ PYBIND11_MODULE(aditofpython, m) {
                 return status;
             },
             py::arg("availableModes"))
-        .def("getIniParams",
+        .def("getFrameProcessParams",
              [](aditof::Camera &camera) {
                  std::map<std::string, std::string> cppParams;
-                 aditof::Status status = camera.getIniParams(cppParams);
+                 aditof::Status status =
+                     camera.getFrameProcessParams(cppParams);
 
                  py::dict pyParams;
                  for (const auto &pair : cppParams) {
@@ -329,7 +330,7 @@ PYBIND11_MODULE(aditofpython, m) {
                  return std::make_pair(status, pyParams);
              })
         .def(
-            "setIniParams",
+            "setFrameProcessParams",
             [](aditof::Camera &camera, py::dict params) {
                 std::map<std::string, std::string> cppParams;
 
@@ -339,7 +340,7 @@ PYBIND11_MODULE(aditofpython, m) {
                     cppParams[key] = value;
                 }
 
-                return camera.setIniParams(cppParams);
+                return camera.setFrameProcessParams(cppParams);
             },
             py::arg("params"))
         .def("requestFrame", &aditof::Camera::requestFrame, py::arg("frame"))

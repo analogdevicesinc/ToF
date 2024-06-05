@@ -901,9 +901,10 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
-    case GET_INI_PARAM: {
+    case GET_DEPTH_COMPUTE_PARAM: {
         std::map<std::string, std::string> ini_params;
-        aditof::Status status = camDepthSensor->getIniParams(ini_params);
+        aditof::Status status =
+            camDepthSensor->getDepthComputeParams(ini_params);
         if (status == aditof::Status::OK) {
             buff_send.add_strings_payload(ini_params["abThreshMin"]);
             buff_send.add_strings_payload(ini_params["abSumThresh"]);
@@ -922,7 +923,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
-    case SET_INI_PARAM: {
+    case SET_DEPTH_COMPUTE_PARAM: {
         std::map<std::string, std::string> ini_params;
         ini_params["abThreshMin"] = buff_recv.func_strings_param(0);
         ini_params["abSumThresh"] = buff_recv.func_strings_param(1);
@@ -936,7 +937,8 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         ini_params["jblfMaxEdge"] = buff_recv.func_strings_param(9);
         ini_params["jblfABThreshold"] = buff_recv.func_strings_param(10);
 
-        aditof::Status status = camDepthSensor->setIniParams(ini_params);
+        aditof::Status status =
+            camDepthSensor->setDepthComputeParams(ini_params);
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
@@ -994,7 +996,7 @@ void Initialize() {
     s_map_api_Values["Adsd3500GetStatus"] = ADSD3500_GET_STATUS;
     s_map_api_Values["GetInterrupts"] = GET_INTERRUPTS;
     s_map_api_Values["HangUp"] = HANG_UP;
-    s_map_api_Values["GetIniParam"] = GET_INI_PARAM;
-    s_map_api_Values["SetIniParam"] = SET_INI_PARAM;
+    s_map_api_Values["GetDepthComputeParam"] = GET_DEPTH_COMPUTE_PARAM;
+    s_map_api_Values["SetDepthComputeParam"] = SET_DEPTH_COMPUTE_PARAM;
     s_map_api_Values["GetIniArray"] = GET_INI_ARRAY;
 }

@@ -292,7 +292,7 @@ class DepthSensorInterface {
      * @return Status
     */
     virtual aditof::Status
-    getIniParams(std::map<std::string, std::string> &params) = 0;
+    getDepthComputeParams(std::map<std::string, std::string> &params) = 0;
 
     /**
      * @brief Set ini parameters for Depth Compute library
@@ -300,7 +300,7 @@ class DepthSensorInterface {
      * @return Status
     */
     virtual aditof::Status
-    setIniParams(const std::map<std::string, std::string> &params) = 0;
+    setDepthComputeParams(const std::map<std::string, std::string> &params) = 0;
 
     /**
      * @brief Set sensor configutation table

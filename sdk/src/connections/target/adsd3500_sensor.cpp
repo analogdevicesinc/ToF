@@ -1416,8 +1416,8 @@ aditof::Status Adsd3500Sensor::initTargetDepthCompute(uint8_t *iniFile,
     return aditof::Status::OK;
 }
 
-aditof::Status
-Adsd3500Sensor::getIniParams(std::map<std::string, std::string> &params) {
+aditof::Status Adsd3500Sensor::getDepthComputeParams(
+    std::map<std::string, std::string> &params) {
     TofiConfig *config = m_bufferProcessor->getTofiCongfig();
     aditof::Status status;
 
@@ -1457,15 +1457,15 @@ Adsd3500Sensor::getIniParams(std::map<std::string, std::string> &params) {
     return status;
 }
 
-aditof::Status
-Adsd3500Sensor::setIniParams(const std::map<std::string, std::string> &params) {
+aditof::Status Adsd3500Sensor::setDepthComputeParams(
+    const std::map<std::string, std::string> &params) {
     TofiConfig *config = m_bufferProcessor->getTofiCongfig();
     aditof::Status status;
 
     ABThresholdsParams ab_params;
     int type = 3;
     ab_params.ab_thresh_min = std::stof(params.at("abThreshMin"));
-    ab_params.ab_thresh_min = std::stof(params.at("abSumThresh"));
+    ab_params.ab_sum_thresh = std::stof(params.at("abSumThresh"));
     status = setIniParamsImpl(&ab_params, type, config->p_tofi_cal_config);
 
     DepthRangeParams dr_params;

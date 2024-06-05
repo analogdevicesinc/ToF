@@ -34,6 +34,7 @@
 #include "usb_buffer.pb.h"
 #include "usb_windows_utils.h"
 
+#include <aditof/status_definitions.h>
 #include <atlstr.h>
 #ifdef USE_GLOG
 #include <glog/logging.h>
@@ -1270,18 +1271,15 @@ aditof::Status UsbDepthSensor::initTargetDepthCompute(uint8_t *iniFile,
     return Status::OK;
 }
 
-aditof::Status
-UsbDepthSensor::getIniParams(std::map<std::string, std::string> &params) {
-    using namespace aditof;
-    Status status = Status::UNAVAILABLE;
-    return status;
+aditof::Status UsbDepthSensor::getDepthComputeParams(
+    std::map<std::string, std::string> &params) {
+    return aditof::Status::UNAVAILABLE;
 }
 
-aditof::Status
-UsbDepthSensor::setIniParams(const std::map<std::string, std::string> &params) {
-    using namespace aditof;
-    Status status = Status::UNAVAILABLE;
-    return status;
+aditof::Status UsbDepthSensor::setDepthComputeParams(
+    const std::map<std::string, std::string> &params) {
+    return aditof::Status::UNAVAILABLE;
+    ;
 }
 
 aditof::Status
