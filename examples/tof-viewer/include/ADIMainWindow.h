@@ -617,6 +617,7 @@ class ADIMainWindow {
 		*/
     bool displayDataWindow(ImVec2 &displayUpdate, ImVec2 &size);
 
+    void showCCMBstatus(bool *p_open);
     float imagescale = 1.0f;
     const float imagesizemax = 516.0f;
     unsigned int ab_video_texture = 0;

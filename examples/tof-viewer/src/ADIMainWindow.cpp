@@ -87,6 +87,11 @@ uint32_t firstFrame = 0;
 uint32_t frameRecvd = 0;
 char saveConfigurationPath[512] = "currentconfiguration.json";
 
+std::string ccbSerial = "VT36G001026";
+std::string config_filename = "";
+bool m_ccbmEnabled = true;
+static bool show_ccbm_status = true;
+
 ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
 #if defined(Debug) && defined(_WIN32)
     static HANDLE self;
@@ -663,6 +668,39 @@ void ADIMainWindow::showSaveLoadAdsdParamsMenu() {
     }
 }
 
+void ADIMainWindow::showCCMBstatus(bool *p_open) {
+    setWindowPosition(0, 25);
+    setWindowSize(290, 120);
+
+    //TODO: get CCBM status and CCB serial number
+
+    if (m_ccbmEnabled) {
+        if (!ImGui::Begin("CCBM Info", p_open,
+                          ImGuiWindowFlags_NoResize |
+                              ImGuiWindowFlags_NoScrollbar)) {
+            ImGui::End();
+            return;
+        } else {
+            ImGui::Text("CCB Master is enabled.");
+            ImGui::Text("CCB serial number: %s", ccbSerial.c_str());
+            ImGui::Text("To select config file, close the window");
+            ImGui::Text("To use default config, click Next");
+            if (ImGuiExtensions::ADIButton("Next")) {
+                show_ccbm_status = false;
+                LOG(INFO) << "Using default config file";
+            }
+        }
+    } else {
+        if (!ImGui::Begin("CCBM Info", p_open, ImGuiWindowFlags_NoResize)) {
+            ImGui::End();
+            return;
+        } else {
+            ImGui::Text("CCB Master is disabled.");
+            ImGui::Text("Close the window to proceed.");
+        }
+    }
+}
+
 void ADIMainWindow::showDeviceMenu() {
     if (!isPlaying && !isPlayRecorded) {
         if (ImGui::BeginMenu("Device")) {
@@ -676,9 +714,20 @@ void ADIMainWindow::showDeviceMenu() {
             }
 
             if (!m_connectedDevices.empty()) {
-                ImGuiExtensions::ADIComboBox(
-                    "Config", "No Config Files", ImGuiSelectableFlags_None,
-                    m_configFiles, &configSelection, _isOpenDevice);
+                if (ImGuiExtensions::ADIButton("Browse Config File",
+                                               !isPlayRecorded && !isPlaying)) {
+                    int filterIndex = 0;
+                    std::string path =
+                        openADIFileName(customFilter.c_str(), NULL, filterIndex)
+                            .c_str();
+                    if (!path.empty()) {
+                        config_filename = path;
+                    } else {
+                        LOG(ERROR)
+                            << "Non-existing file or unsupported file format "
+                               "chosen for configuration";
+                    }
+                }
             }
 
             bool _noConnected = m_connectedDevices.empty();
@@ -1338,7 +1387,7 @@ void ADIMainWindow::InitCamera() {
         return;
     }
 
-    status = camera->initialize(m_configFiles[configSelection].second);
+    status = camera->initialize(config_filename);
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
         return;
@@ -1352,7 +1401,7 @@ void ADIMainWindow::InitCamera() {
     LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
 
     //Parse config.json
-    std::ifstream ifs(m_configFiles[configSelection].second);
+    std::ifstream ifs(config_filename);
     std::string content((std::istreambuf_iterator<char>(ifs)),
                         (std::istreambuf_iterator<char>()));
     std::vector<std::pair<std::string, int32_t>> device_settings;

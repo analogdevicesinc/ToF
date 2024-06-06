@@ -6,10 +6,12 @@
 /********************************************************************************/
 #include "ADIOpenFile.h"
 
-std::string customFilter = std::string("Bin Files (*.bin)\0*.bin*\0 All "
-                                       "Files (*.*)\0*.*\0",
-                                       72);
-std::vector<std::string> customFilters = {"bin"};
+std::string customFilter =
+    std::string("Bin Files (*.bin)\0*.bin*\0JSON Files (*.json)\0*.json*\0All "
+                "Files (*.*)\0*.*\0",
+                72);
+
+std::vector<std::string> customFilters = {"bin", "json"};
 
 #ifdef _WIN32
 
