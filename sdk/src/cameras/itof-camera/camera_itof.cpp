@@ -694,6 +694,9 @@ aditof::Status CameraItof::setFrameType(const std::string &frameType) {
                 (uint16_t *)&fDataDetails.height, &pixFmt);
             fDataDetails.subelementSize = 1;
             fDataDetails.subelementsPerElement = 1;
+        } else if (item.type == "conf") {
+            fDataDetails.subelementSize = sizeof(
+                uint16_t); // due to a bug in depth compute we're setting to uint16 instead of float
         }
 
         m_details.frameType.dataDetails.emplace_back(fDataDetails);
@@ -872,15 +875,14 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         uint16_t *tempAbFrame = m_tofi_compute_context->p_ab_frame;
         uint16_t *tempXyzFrame =
             (uint16_t *)m_tofi_compute_context->p_xyz_frame;
-        // uint16_t *tempConfFrame =
-        //     (uint16_t *)m_tofi_compute_context->p_conf_frame; // TO DO: Uncomment this and figure out why depth compute is crashing
+        float *tempConfFrame = m_tofi_compute_context->p_conf_frame;
 
         frame->getData("depth", &m_tofi_compute_context->p_depth_frame);
         frame->getData("ir", &m_tofi_compute_context->p_ab_frame);
 
-        // uint16_t *confFrame;
-        // frame->getData("conf", &confFrame);
-        // m_tofi_compute_context->p_conf_frame = (float *)confFrame; // TO DO: Uncomment this and figure out why depth compute is crashing
+        float *confFrame;
+        frame->getData("conf", reinterpret_cast<uint16_t **>(&confFrame));
+        m_tofi_compute_context->p_conf_frame = confFrame;
 
         if (m_xyzEnabled) {
             uint16_t *xyzFrame;
@@ -899,7 +901,7 @@ aditof::Status CameraItof::requestFrame(aditof::Frame *frame,
         m_tofi_compute_context->p_depth_frame = tempDepthFrame;
         m_tofi_compute_context->p_ab_frame = tempAbFrame;
         m_tofi_compute_context->p_xyz_frame = (int16_t *)tempXyzFrame;
-        // m_tofi_compute_context->p_conf_frame = (float *)tempConfFrame;
+        m_tofi_compute_context->p_conf_frame = tempConfFrame;
 
         if (m_adsd3500Enabled && m_abEnabled && (m_adsd3500ImagerType == 1) &&
                 (m_abBitsPerPixel < 16) &&
