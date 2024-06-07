@@ -1440,7 +1440,8 @@ void ADIMainWindow::InitCamera() {
         s = s + " (W: " + std::to_string(modeDetails.baseResolutionWidth) +
             " H: " + std::to_string(modeDetails.baseResolutionHeight) + ") ";
         if (!modeDetails.isPCM) {
-            s = s + "Phases: " + std::to_string(modeDetails.numberOfPhases);
+            s = s +
+                "Frequencies: " + std::to_string(modeDetails.numberOfPhases);
         } else {
             s = s + "PCM";
         }
