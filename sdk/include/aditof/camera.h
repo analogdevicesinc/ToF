@@ -559,13 +559,12 @@ class SDK_API Camera {
 
     /**
      * @brief Load adsd parameters from json file.
+     * Need setMode to apply
      * @param pathFile - Path to load from json file
-     * @param frameType - The frame type of the camera
      * @return Status
      */
     virtual aditof::Status
-    loadDepthParamsFromJsonFile(const std::string &pathFile,
-                                const std::string &frameType) = 0;
+    loadDepthParamsFromJsonFile(const std::string &pathFile) = 0;
 
     /**
      * @brief Reset the ini parameters from the chip and sets the ones stored in CCB

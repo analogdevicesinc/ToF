@@ -131,8 +131,7 @@ class CameraItof : public aditof::Camera {
     saveDepthParamsToJsonFile(const std::string &savePathFile) override;
 
     aditof::Status
-    loadDepthParamsFromJsonFile(const std::string &pathFile,
-                                const std::string &frameType) override;
+    loadDepthParamsFromJsonFile(const std::string &pathFile) override;
 
     aditof::Status
     setSensorConfiguration(const std::string &sensorConf) override;
@@ -175,9 +174,9 @@ class CameraItof : public aditof::Camera {
     void configureSensorModeDetails();
 
     /**
-     * Reads the content of json file and populates the parameters
+     * Reads the depth process parameters from camera
      */
-    aditof::Status parseJsonFileContent();
+    aditof::Status retrieveDepthProcessParams();
 
     /**
      * Configure ADSD3500 with ini parameters
@@ -224,6 +223,7 @@ class CameraItof : public aditof::Camera {
     std::string m_ccb_calibrationFile;
     std::string m_ini_depth;
     std::map<std::string, std::string> m_ini_depth_map;
+    std::map<int, std::map<std::string, std::string>> m_depth_params_map;
     bool m_abEnabled;
     uint8_t m_depthBitsPerPixel;
     uint8_t m_abBitsPerPixel;
