@@ -51,8 +51,10 @@
 #include <aditof/log.h>
 #endif
 #include <chrono>
+#include <iomanip>
 #include <iostream>
 #include <iterator>
+#include <list>
 #include <math.h>
 #include <string>
 #include <thread>
@@ -222,19 +224,18 @@ aditof::Status CameraItof::initialize(const std::string &configFilepath) {
         }
     }
 
-    //Populate the data from the json file provided
-    status = parseJsonFileContent();
-    if (status != Status::OK) {
-        LOG(ERROR) << "Failed to parse Json file!";
-        return status;
-    }
-
     aditof::Status configStatus = loadConfigData();
     if (configStatus == aditof::Status::OK) {
         m_loadedConfigData = true;
     } else {
         LOG(ERROR) << "loadConfigData failed";
         return Status::GENERIC_ERROR;
+    }
+
+    aditof::Status paramsStatus = retrieveDepthProcessParams();
+    if (paramsStatus != Status::OK) {
+        LOG(ERROR) << "Failed to load process parameters!";
+        return status;
     }
 
     if (m_fsyncMode >= 0) {
@@ -335,10 +336,6 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
         return Status::INVALID_ARGUMENT;
     }
 
-    if (m_ini_depth_map.size() > 1) {
-        m_ini_depth = m_ini_depth_map[std::to_string(mode)];
-    }
-
     if (m_details.connection == ConnectionType::USB) {
         status = m_depthSensor->adsd3500_reset();
         if (status != Status::OK) {
@@ -347,7 +344,7 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
         }
     }
 
-    UtilsIni::getKeyValuePairsFromIni(m_ini_depth, m_iniKeyValPairs);
+    m_iniKeyValPairs = m_depth_params_map[mode];
     setAdsd3500IniParams(m_iniKeyValPairs);
     configureSensorModeDetails();
     m_details.mode = mode;
@@ -441,49 +438,38 @@ aditof::Status CameraItof::setMode(const uint8_t &mode) {
 
     // We want computed frames (Depth & AB). Tell target to initialize depth compute
     if (!m_pcmFrame) {
-        if (!m_ini_depth.empty()) {
-            size_t dataSize = m_depthINIData.size;
-            unsigned char *pData = m_depthINIData.p_data;
+        size_t dataSize = 0;
+        unsigned char *pData = nullptr;
 
-            if (m_depthINIDataMap.size() > 1) {
-                dataSize = m_depthINIDataMap[std::to_string(mode)].size;
-                pData = m_depthINIDataMap[std::to_string(mode)].p_data;
-            }
+        if (m_depthINIDataMap.size() > 1) {
+            dataSize = m_depthINIDataMap[std::to_string(mode)].size;
+            pData = m_depthINIDataMap[std::to_string(mode)].p_data;
+        }
 
-            // Disable the generation of XYZ frames on target
-            std::string s(reinterpret_cast<const char *>(pData), dataSize);
-            std::string::size_type n;
-            n = s.find("xyzEnable=");
-            if (n == std::string::npos) {
-                DLOG(INFO) << "xyzEnable not found in .ini. Can't set it to 0.";
-            } else {
-                s[n + strlen("xyzEnable=")] = '0';
-            }
+        std::string s(reinterpret_cast<const char *>(pData), dataSize);
 
-            aditof::Status localStatus;
-            localStatus = m_depthSensor->initTargetDepthCompute(
-                (uint8_t *)s.c_str(), dataSize, (uint8_t *)m_xyz_dealias_data,
-                sizeof(TofiXYZDealiasData) * 10);
-            if (localStatus != aditof::Status::OK) {
-                LOG(ERROR) << "Failed to initialize depth compute on target!";
-                return localStatus;
-            }
+        aditof::Status localStatus;
+        localStatus = m_depthSensor->initTargetDepthCompute(
+            (uint8_t *)s.c_str(), dataSize, (uint8_t *)m_xyz_dealias_data,
+            sizeof(TofiXYZDealiasData) * 10);
+        if (localStatus != aditof::Status::OK) {
+            LOG(ERROR) << "Failed to initialize depth compute on target!";
+            return localStatus;
+        }
 
-            if (!m_isOffline) {
-                std::string depthComputeStatus;
-                localStatus = m_depthSensor->getControl(
-                    "depthComputeOpenSource", depthComputeStatus);
-                if (localStatus == aditof::Status::OK) {
-                    if (depthComputeStatus == "0") {
-                        LOG(INFO)
-                            << "Using closed source depth compute library.";
-                    } else {
-                        LOG(INFO) << "Using open source depth compute library.";
-                    }
+        if (!m_isOffline) {
+            std::string depthComputeStatus;
+            localStatus = m_depthSensor->getControl("depthComputeOpenSource",
+                                                    depthComputeStatus);
+            if (localStatus == aditof::Status::OK) {
+                if (depthComputeStatus == "0") {
+                    LOG(INFO) << "Using closed source depth compute library.";
                 } else {
-                    LOG(ERROR)
-                        << "Failed to get depth compute version from target!";
+                    LOG(INFO) << "Using open source depth compute library.";
                 }
+            } else {
+                LOG(ERROR)
+                    << "Failed to get depth compute version from target!";
             }
         }
     }
@@ -813,21 +799,6 @@ aditof::Status CameraItof::loadConfigData(void) {
             FileData fval = {(unsigned char *)p, iniArray.size()};
 
             m_depthINIDataMap.emplace(std::to_string(mode), fval);
-        }
-    } else {
-        if (!m_ini_depth.empty()) {
-
-            std::string iniArray;
-            int mode = 0;
-            m_depthSensor->getIniParamsArrayForMode(mode, iniArray);
-            if (iniArray.size()) {
-                FileData fval = {(unsigned char *)iniArray.c_str(),
-                                 iniArray.size()};
-                m_depthINIData = fval;
-            } else {
-                m_depthINIData =
-                    LoadFileContents(const_cast<char *>(m_ini_depth.c_str()));
-            }
         }
     }
 
@@ -1288,121 +1259,24 @@ static int16_t getValueFromJSON(cJSON *config_json, std::string key) {
     return value;
 }
 
-aditof::Status CameraItof::parseJsonFileContent() {
+aditof::Status CameraItof::retrieveDepthProcessParams() {
+
     using namespace aditof;
     Status status = Status::OK;
 
-    // Parse config.json
-    std::string config = m_initConfigFilePath;
-    std::ifstream ifs(config.c_str());
-    std::string content((std::istreambuf_iterator<char>(ifs)),
-                        (std::istreambuf_iterator<char>()));
+    if (m_initConfigFilePath == "") {
 
-    cJSON *config_json = cJSON_Parse(content.c_str());
-    if (config_json != NULL) {
-        // Get sensorfirmware file location
-        const cJSON *json_sensorFirmware_file =
-            cJSON_GetObjectItemCaseSensitive(config_json, "sensorFirmware");
-        if (cJSON_IsString(json_sensorFirmware_file) &&
-            (json_sensorFirmware_file->valuestring != NULL)) {
-            if (m_sensorFirmwareFile.empty()) {
-                // save firmware file location
-                m_sensorFirmwareFile =
-                    std::string(json_sensorFirmware_file->valuestring);
-                LOG(INFO) << "Current sensor firmware is: "
-                          << m_sensorFirmwareFile;
-            } else {
-                LOG(WARNING) << "Duplicate firmware file ignored: "
-                             << json_sensorFirmware_file->valuestring;
-            }
+        for (const auto &mode : m_availableModes) {
+
+            std::string iniArray;
+            m_depthSensor->getIniParamsArrayForMode(mode, iniArray);
+            std::map<std::string, std::string> paramsMap;
+            UtilsIni::getKeyValuePairsFromString(iniArray, paramsMap);
+            m_depth_params_map.emplace(mode, paramsMap);
         }
-
-        // Get calibration file location
-        const cJSON *json_ccb_calibration_file =
-            cJSON_GetObjectItemCaseSensitive(config_json, "CCB_Calibration");
-        if (cJSON_IsString(json_ccb_calibration_file) &&
-            (json_ccb_calibration_file->valuestring != NULL)) {
-            if (m_ccb_calibrationFile.empty()) {
-                // save calibration file location
-                m_ccb_calibrationFile =
-                    std::string(json_ccb_calibration_file->valuestring);
-                LOG(INFO) << "Current calibration file is: "
-                          << m_ccb_calibrationFile;
-            } else {
-                LOG(WARNING) << "Duplicate calibration file ignored: "
-                             << json_ccb_calibration_file->valuestring;
-            }
-        }
-
-        // Get depthparameter list location
-        const cJSON *json_depth_ini_file = nullptr;
-        json_depth_ini_file =
-            cJSON_GetObjectItemCaseSensitive(config_json, "depthIni");
-        if (cJSON_IsString(json_depth_ini_file) == false) { // Check for old key
-            json_depth_ini_file =
-                cJSON_GetObjectItemCaseSensitive(config_json, "DEPTH_INI");
-        }
-        if (cJSON_IsString(json_depth_ini_file) &&
-            (json_depth_ini_file->valuestring != NULL)) {
-            // store depthparameter list location
-            std::string mode;
-            std::vector<std::string> iniFiles;
-
-            if (m_ini_depth.empty()) {
-                Utils::splitIntoTokens(
-                    std::string(json_depth_ini_file->valuestring), ';',
-                    iniFiles);
-                if (iniFiles.size() > 1) {
-                    for (const std::string &file : iniFiles) {
-                        //extract last string that is after last underscore (e.g. 'mp' will be extracted from ini_file_mp)
-                        size_t lastUnderscorePos = file.find_last_of("_");
-                        if (lastUnderscorePos == std::string::npos) {
-                            LOG(WARNING) << "File: " << file
-                                         << " has no suffix that can be used "
-                                            "to identify the mode";
-                            continue;
-                        }
-
-                        size_t dotPos = file.find_last_of(".");
-                        mode = file.substr(lastUnderscorePos + 1,
-                                           dotPos - lastUnderscorePos - 1);
-                        // TO DO: check is mode is supported by the camera
-
-                        LOG(INFO) << "Found Depth parameter list: " << file;
-                        // Create map with mode name as key and path as value
-                        m_ini_depth_map.emplace(mode, file);
-                    }
-                    saveDepthParamsToJsonFile(
-                        "./config/user_config.json"); // TODO: for testing only, remove before 5.1.0 release
-                    // Set m_ini_depth to first map element
-                    auto it = m_ini_depth_map.begin();
-                    m_ini_depth = it->second;
-                } else {
-                    m_ini_depth = std::string(json_depth_ini_file->valuestring);
-                }
-
-                LOG(INFO) << "Current Depthparameter list is: " << m_ini_depth;
-            }
-        }
-
-        m_fsyncMode = getValueFromJSON(config_json, "fsyncMode"); // New key
-        if (m_fsyncMode < 0) { // Check for old key
-            m_fsyncMode = getValueFromJSON(config_json, "FSYNC_MODE");
-        }
-        m_mipiOutputSpeed = getValueFromJSON(config_json, "mipiSpeed");
-        m_enableTempCompenstation =
-            getValueFromJSON(config_json, "enableTempCompenstation");
-        m_enableEdgeConfidence =
-            getValueFromJSON(config_json, "enableEdgeConfidence");
-
-        // Delete memory allocated for JSON
-        cJSON_Delete(config_json);
-
-    } else if (!config.empty()) {
-        LOG(ERROR) << "Couldn't parse config file: " << config.c_str();
-        return Status::GENERIC_ERROR;
+    } else {
+        loadDepthParamsFromJsonFile(m_initConfigFilePath);
     }
-
     return status;
 }
 
@@ -1412,32 +1286,71 @@ CameraItof::saveDepthParamsToJsonFile(const std::string &savePathFile) {
     Status status = Status::OK;
 
     cJSON *rootjson = cJSON_CreateObject();
-    cJSON *depthParamjson = cJSON_CreateObject();
-    cJSON_AddItemToObject(rootjson, "depthParams", depthParamjson);
 
-    cJSON_AddNumberToObject(depthParamjson, "errata1",
-                            m_dropFirstFrame ? 1 : 0);
+    cJSON_AddNumberToObject(rootjson, "errata1", m_dropFirstFrame ? 1 : 0);
 
-    for (auto pfile = m_ini_depth_map.begin(); pfile != m_ini_depth_map.end();
-         pfile++) {
+    cJSON_AddNumberToObject(rootjson, "fsyncMode", m_fsyncMode);
+    cJSON_AddNumberToObject(rootjson, "mipiOutputSpeed", m_mipiOutputSpeed);
+    cJSON_AddNumberToObject(rootjson, "enableTempCompensation",
+                            m_enableTempCompenstation);
+    cJSON_AddNumberToObject(rootjson, "enableEdgeConfidence",
+                            m_enableEdgeConfidence);
 
-        std::map<std::string, std::string> iniKeyValPairs;
-        status =
-            UtilsIni::getKeyValuePairsFromIni(pfile->second, iniKeyValPairs);
+    std::list<std::string> depth_compute_keys_list = {
+        "abThreshMin",         "radialThreshMax",
+        "radialThreshMin",     "depthComputeIspEnable",
+        "partialDepthEnable",  "interleavingEnable",
+        "bitsInPhaseOrDepth",  "bitsInAB",
+        "bitsInConf",          "confThresh",
+        "phaseInvalid",        "inputFormat",
+        "jblfABThreshold",     "jblfApplyFlag",
+        "jblfExponentialTerm", "jblfGaussianSigma",
+        "jblfMaxEdge",         "jblfWindowSize"};
+
+    for (auto pfile = m_depth_params_map.begin();
+         pfile != m_depth_params_map.end(); pfile++) {
+
+        std::map<std::string, std::string> iniKeyValPairs = pfile->second;
 
         if (status == Status::OK) {
             cJSON *json = cJSON_CreateObject();
+            cJSON *dept_compute_group_keys = cJSON_CreateObject();
+            cJSON *configuration_param_keys = cJSON_CreateObject();
+
             for (auto item = iniKeyValPairs.begin();
                  item != iniKeyValPairs.end(); item++) {
                 double valued = strtod(item->second.c_str(), NULL);
-                if (isConvertibleToDouble(item->second)) {
-                    cJSON_AddNumberToObject(json, item->first.c_str(), valued);
+
+                auto it = std::find_if(
+                    std::begin(depth_compute_keys_list),
+                    std::end(depth_compute_keys_list),
+                    [&](const std::string key) { return item->first == key; });
+                if (depth_compute_keys_list.end() != it) {
+                    if (isConvertibleToDouble(item->second)) {
+                        cJSON_AddNumberToObject(dept_compute_group_keys,
+                                                item->first.c_str(), valued);
+                    } else {
+                        cJSON_AddStringToObject(dept_compute_group_keys,
+                                                item->first.c_str(),
+                                                item->second.c_str());
+                    }
                 } else {
-                    cJSON_AddStringToObject(json, item->first.c_str(),
-                                            item->second.c_str());
+                    if (isConvertibleToDouble(item->second)) {
+                        cJSON_AddNumberToObject(configuration_param_keys,
+                                                item->first.c_str(), valued);
+                    } else {
+                        cJSON_AddStringToObject(configuration_param_keys,
+                                                item->first.c_str(),
+                                                item->second.c_str());
+                    }
                 }
             }
-            cJSON_AddItemToObject(depthParamjson, pfile->first.c_str(), json);
+            cJSON_AddItemToObject(json, "depth-compute",
+                                  dept_compute_group_keys);
+            cJSON_AddItemToObject(json, "configuration-parameters",
+                                  configuration_param_keys);
+            cJSON_AddItemToObject(rootjson,
+                                  std::to_string(pfile->first).c_str(), json);
         }
     }
 
@@ -1458,11 +1371,11 @@ CameraItof::saveDepthParamsToJsonFile(const std::string &savePathFile) {
 }
 
 aditof::Status
-CameraItof::loadDepthParamsFromJsonFile(const std::string &pathFile,
-                                        const std::string &frameType) {
+CameraItof::loadDepthParamsFromJsonFile(const std::string &pathFile) {
 
     using namespace aditof;
     Status status = Status::OK;
+    m_depth_params_map.clear();
 
     // Parse json
     std::ifstream ifs(pathFile.c_str());
@@ -1472,68 +1385,131 @@ CameraItof::loadDepthParamsFromJsonFile(const std::string &pathFile,
     cJSON *config_json = cJSON_Parse(content.c_str());
     if (config_json != NULL) {
 
-        const cJSON *depthParams =
-            cJSON_GetObjectItemCaseSensitive(config_json, "depthParams");
+        cJSON *errata1 =
+            cJSON_GetObjectItemCaseSensitive(config_json, "errata1");
+        double errata1val = 1;
+        if (cJSON_IsNumber(errata1)) {
+            errata1val = errata1->valuedouble;
+        }
+        if (errata1val == 1) {
+            m_dropFirstFrame = true;
+        } else {
+            m_dropFirstFrame = false;
+        }
 
-        if (depthParams) {
+        cJSON *fsyncMode =
+            cJSON_GetObjectItemCaseSensitive(config_json, "fsyncMode");
+        if (cJSON_IsNumber(fsyncMode)) {
+            m_fsyncMode = fsyncMode->valueint;
+        }
 
-            cJSON *errata1 =
-                cJSON_GetObjectItemCaseSensitive(depthParams, "errata1");
-            double errata1val = 1;
-            if (cJSON_IsNumber(errata1)) {
-                errata1val = errata1->valuedouble;
-            }
+        cJSON *mipiOutputSpeed =
+            cJSON_GetObjectItemCaseSensitive(config_json, "mipiOutputSpeed");
+        if (cJSON_IsNumber(mipiOutputSpeed)) {
+            m_mipiOutputSpeed = mipiOutputSpeed->valueint;
+        }
 
-            cJSON *dmsSequence = cJSON_GetObjectItemCaseSensitive(
-                depthParams, "dynamicModeSwitching");
-            if (cJSON_IsArray(dmsSequence)) {
+        cJSON *enableTempCompensation = cJSON_GetObjectItemCaseSensitive(
+            config_json, "enableTempCompensation");
+        if (cJSON_IsNumber(enableTempCompensation)) {
+            m_enableTempCompenstation = enableTempCompensation->valueint;
+        }
 
-                m_configDmsSequence.clear();
+        cJSON *enableEdgeConfidence = cJSON_GetObjectItemCaseSensitive(
+            config_json, "enableEdgeConfidence");
+        if (cJSON_IsNumber(enableEdgeConfidence)) {
+            m_enableEdgeConfidence = enableEdgeConfidence->valueint;
+        }
 
-                cJSON *dmsPair;
-                cJSON_ArrayForEach(dmsPair, dmsSequence) {
-                    cJSON *dmsMode =
-                        cJSON_GetObjectItemCaseSensitive(dmsPair, "mode");
-                    cJSON *dmsRepeat =
-                        cJSON_GetObjectItemCaseSensitive(dmsPair, "repeat");
+        cJSON *dmsSequence = cJSON_GetObjectItemCaseSensitive(
+            config_json, "dynamicModeSwitching");
+        if (cJSON_IsArray(dmsSequence)) {
 
-                    if (cJSON_IsNumber(dmsMode) && cJSON_IsNumber(dmsRepeat)) {
-                        m_configDmsSequence.emplace_back(std::make_pair(
-                            dmsMode->valueint, dmsRepeat->valueint));
-                    }
+            m_configDmsSequence.clear();
+
+            cJSON *dmsPair;
+            cJSON_ArrayForEach(dmsPair, dmsSequence) {
+                cJSON *dmsMode =
+                    cJSON_GetObjectItemCaseSensitive(dmsPair, "mode");
+                cJSON *dmsRepeat =
+                    cJSON_GetObjectItemCaseSensitive(dmsPair, "repeat");
+
+                if (cJSON_IsNumber(dmsMode) && cJSON_IsNumber(dmsRepeat)) {
+                    m_configDmsSequence.emplace_back(
+                        std::make_pair(dmsMode->valueint, dmsRepeat->valueint));
                 }
             }
+        }
 
-            cJSON *depthframeType = cJSON_GetObjectItemCaseSensitive(
-                depthParams, frameType.c_str());
+        for (const auto &mode : m_availableModes) {
 
-            if (depthframeType) {
+            std::string modeStr = std::to_string(mode);
 
-                std::map<std::string, std::string> iniKeyValPairs;
+            cJSON *depthframeType =
+                cJSON_GetObjectItemCaseSensitive(config_json, modeStr.c_str());
 
-                iniKeyValPairs.emplace("errata1", std::to_string(errata1val));
-                if (errata1val == 1) {
-                    m_dropFirstFrame = true;
-                } else {
-                    m_dropFirstFrame = false;
-                }
+            cJSON *dept_compute_group_keys = cJSON_GetObjectItemCaseSensitive(
+                depthframeType, "depth-compute");
+
+            std::map<std::string, std::string> iniKeyValPairs;
+
+            if (dept_compute_group_keys) {
 
                 cJSON *elem;
-                cJSON_ArrayForEach(elem, depthframeType) {
+                cJSON_ArrayForEach(elem, dept_compute_group_keys) {
 
                     std::string value = "";
+
                     if (elem->valuestring != nullptr) {
                         value = std::string(elem->valuestring);
                     } else {
-                        value = std::to_string(elem->valuedouble);
+                        std::ostringstream stream;
+                        stream << std::fixed << std::setprecision(1)
+                               << elem->valuedouble;
+                        value = stream.str();
+                        std::size_t found = value.find(".0");
+                        if (found != std::string::npos) {
+                            value = std::to_string(elem->valueint);
+                        }
                     }
                     iniKeyValPairs.emplace(std::string(elem->string), value);
                     LOG(INFO)
                         << "Found key value: " << std::string(elem->string)
                         << " - " << value;
                 }
-                setAdsd3500IniParams(iniKeyValPairs);
             }
+
+            cJSON *configuration_param_keys = cJSON_GetObjectItemCaseSensitive(
+                depthframeType, "configuration-parameters");
+
+            if (configuration_param_keys) {
+
+                std::map<std::string, std::string> iniKeyValPairs;
+
+                cJSON *elem;
+                cJSON_ArrayForEach(elem, configuration_param_keys) {
+
+                    std::string value = "";
+
+                    if (elem->valuestring != nullptr) {
+                        value = std::string(elem->valuestring);
+                    } else {
+                        std::ostringstream stream;
+                        stream << std::fixed << std::setprecision(1)
+                               << elem->valuedouble;
+                        value = stream.str();
+                        std::size_t found = value.find(".0");
+                        if (found != std::string::npos) {
+                            value = std::to_string(elem->valueint);
+                        }
+                    }
+                    iniKeyValPairs.emplace(std::string(elem->string), value);
+                    LOG(INFO)
+                        << "Found key value: " << std::string(elem->string)
+                        << " - " << value;
+                }
+            }
+            m_depth_params_map.emplace(mode, iniKeyValPairs);
         }
     }
     return status;
@@ -1754,7 +1730,7 @@ aditof::Status CameraItof::adsd3500SetFrameRate(uint16_t fps) {
         LOG(ERROR) << "Failed to set fps at: " << fps << "!";
     } else {
         m_cameraFps = fps;
-        LOG(INFO) << "Camera FPS set fromparameter list at: " << m_cameraFps;
+        LOG(INFO) << "Camera FPS set from parameter list at: " << m_cameraFps;
     }
     return status;
 }

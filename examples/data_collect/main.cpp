@@ -286,15 +286,7 @@ int main(int argc, char *argv[]) {
             saveconfigurationFileValue += ".json";
         }
         saveconfigurationFile = true;
-    }
-
-    bool loadconfigurationFile = false;
-    std::string loadconfigurationFileValue = command_map["-lcf"].value;
-    if (!loadconfigurationFileValue.empty()) {
-        if (loadconfigurationFileValue.find(".json") == std::string::npos) {
-            loadconfigurationFileValue += ".json";
-        }
-        loadconfigurationFile = true;
+        strcpy(json_file_path, "");
     }
 
     LOG(INFO) << "Output folder: " << folder_path;
@@ -391,18 +383,6 @@ int main(int argc, char *argv[]) {
     if (status != Status::OK || availableModes.empty()) {
         LOG(ERROR) << "Could not aquire modes";
         return 0;
-    }
-
-    if (loadconfigurationFile) {
-        status = camera->loadDepthParamsFromJsonFile(loadconfigurationFileValue,
-                                                     std::to_string(mode));
-        if (status != Status::OK) {
-            LOG(INFO) << "Could not load current configuration info to "
-                      << loadconfigurationFileValue;
-        } else {
-            LOG(INFO) << "Current configuration info from file "
-                      << loadconfigurationFileValue;
-        }
     }
 
     std::shared_ptr<DepthSensorInterface> depthSensor = camera->getSensor();

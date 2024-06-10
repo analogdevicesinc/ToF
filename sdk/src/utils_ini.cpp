@@ -39,6 +39,7 @@
 #include <unistd.h>
 #endif
 #include <fstream>
+#include <string>
 
 using namespace std;
 using namespace aditof;
@@ -73,5 +74,30 @@ Status UtilsIni::getKeyValuePairsFromIni(const string &iniFileName,
 
     iniStream.close();
 
+    return Status::OK;
+}
+
+Status UtilsIni::getKeyValuePairsFromString(
+    const std::string &iniStr,
+    std::map<std::string, std::string> &iniKeyValPairs) {
+    iniKeyValPairs.clear();
+    stringstream ss(iniStr);
+    string line;
+    char delimiter = '\n';
+    while (getline(ss, line, delimiter)) {
+        size_t equalPos = line.find('=');
+        if (equalPos == string::npos) {
+            LOG(WARNING) << "Unexpected format on this line:\n"
+                         << line << "\nExpecting 'key=value' format";
+            continue;
+        }
+        string key = line.substr(0, equalPos);
+        string value = line.substr(equalPos + 1);
+        if (!value.empty()) {
+            iniKeyValPairs.emplace(key, value);
+        } else {
+            LOG(WARNING) << "No value found for parameter: " << key;
+        }
+    }
     return Status::OK;
 }

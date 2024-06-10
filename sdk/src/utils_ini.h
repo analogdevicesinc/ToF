@@ -51,6 +51,17 @@ class UtilsIni {
     static Status
     getKeyValuePairsFromIni(const std::string &iniFileName,
                             std::map<std::string, std::string> &iniKeyValPairs);
+
+    /**
+     * Get key-value pairs from a string
+     * @param[in] iniStr - the string with key-value pairs
+     * @param[out] iniKeyValPairs - map with parameter names and their values extracted from string
+     * @return Status
+     * @see Status
+    */
+    static Status getKeyValuePairsFromString(
+        const std::string &iniStr,
+        std::map<std::string, std::string> &iniKeyValPairs);
 };
 } // namespace aditof
 
