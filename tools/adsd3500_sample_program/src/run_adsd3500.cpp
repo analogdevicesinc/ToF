@@ -23,6 +23,27 @@
 #include <iostream>
 #include <math.h>
 
+void printMetadata(const Metadata& metadata) {
+    std::cout << "Width: " << metadata.width << std::endl;
+    std::cout << "Height: " << metadata.height << std::endl;
+    std::cout << "Output Configuration: " << static_cast<int>(metadata.outputConfiguration) << std::endl;
+    std::cout << "Bits in Depth: " << static_cast<int>(metadata.bitsInDepth) << std::endl;
+    std::cout << "Bits in AB: " << static_cast<int>(metadata.bitsInAb) << std::endl;
+    std::cout << "Bits in Confidence: " << static_cast<int>(metadata.bitsInConfidence) << std::endl;
+    std::cout << "Invalid Phase Value: " << metadata.invalidPhaseValue << std::endl;
+    std::cout << "Frequency Index: " << static_cast<int>(metadata.frequencyIndex) << std::endl;
+    std::cout << "AB Frequency Index: " << static_cast<int>(metadata.abFrequencyIndex) << std::endl;
+    std::cout << "Frame Number: " << metadata.frameNumber << std::endl;
+    std::cout << "Imager Mode: " << static_cast<int>(metadata.imagerMode) << std::endl;
+    std::cout << "Number of Phases: " << static_cast<int>(metadata.numberOfPhases) << std::endl;
+    std::cout << "Number of Frequencies: " << static_cast<int>(metadata.numberOfFrequencies) << std::endl;
+    std::cout << "XYZ Enabled: " << static_cast<int>(metadata.xyzEnabled) << std::endl;
+    std::cout << "Elapsed Time Fractional Value: " << metadata.elapsedTimeFractionalValue << std::endl;
+    std::cout << "Elapsed Time Seconds Value: " << metadata.elapsedTimeSecondsValue << std::endl;
+    std::cout << "Sensor Temperature: " << metadata.sensorTemperature << " °C" << std::endl;
+    std::cout << "Laser Temperature: " << metadata.laserTemperature << " °C" << std::endl;
+}
+
 int main(int argc, char *argv[]) {
 
     int ret;
@@ -57,26 +78,20 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    /* 
-    NOTE: The First frame collected from the NXP Eval kit (with Tembin and Crosby) would be 
-    corrupted with Noise. Hence, we discard this frame and collect the subsequent frames.
-    */
-    num_frames++;
-
     // Set up Interrupt Support.
     adsd3500->SetupInterruptSupport();
 
-    // Reset ADSD3500
-    ret = adsd3500->ResetAdsd3500();
-    if (ret < 0) {
-        printf("Unable to reset Adsd3500.\n");
-        return ret;
-    }
-
-    // Configure the ADSD3500 and depth compute library with the ini file.
+    // Open Adsd3500 device.
     ret = adsd3500->OpenAdsd3500();
     if (ret < 0) {
         printf("Unable to open Adsd3500.\n");
+        return ret;
+    }
+
+    // Reset ADSD3500 device.
+    ret = adsd3500->ResetAdsd3500();
+    if (ret < 0) {
+        printf("Unable to reset Adsd3500.\n");
         return ret;
     }
 
@@ -122,7 +137,7 @@ int main(int argc, char *argv[]) {
         return ret;
     }
 
-    // Configure Adsd3500 with .ini file
+    // Configure Adsd3500 with the .ini file
     ret = adsd3500->ConfigureAdsd3500WithIniParams();
     if (ret < 0) {
         printf("Unable to configure Adsd3500 with ini file.\n");
@@ -143,19 +158,21 @@ int main(int argc, char *argv[]) {
         return ret;
     }
 
+    // Configure Frame type.
     ret = adsd3500->SetFrameType();
     if (ret < 0) {
         printf("Unable to set frame type Adsd3500.\n");
         return ret;
     }
 
-    // Set the Stream on
+    // Set the Stream on.
     ret = adsd3500->StartStream();
     if (ret < 0) {
         printf("Unable to start stream.\n");
         return ret;
     }
 
+    // Configure the Buffer size to hold the frame size.
     int buffer_height, buffer_width, total_pixels, buffer_size;
     buffer_height = adsd3500->xyzDealiasData.n_rows;
     buffer_width = adsd3500->xyzDealiasData.n_cols;
@@ -172,18 +189,31 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    uint16_t *depth_buffer = new uint16_t[total_pixels * (num_frames - 1)];
-    uint16_t *ab_buffer = new uint16_t[total_pixels * (num_frames - 1)];
-    uint8_t *conf_buffer = new uint8_t[total_pixels * (num_frames - 1)];
+    uint16_t *depth_buffer = new uint16_t[total_pixels * num_frames];
+    uint16_t *ab_buffer = new uint16_t[total_pixels * num_frames];
+    uint8_t *conf_buffer = new uint8_t[total_pixels * num_frames];
     uint8_t *header_buffer =
-        new uint8_t[EMBEDDED_HEADER_SIZE * (num_frames - 1)];
+        new uint8_t[EMBEDDED_HEADER_SIZE * num_frames];
 
     std::ofstream ab("out_ab.bin", std::ios::binary);
     std::ofstream depth("out_depth.bin", std::ios::binary);
     std::ofstream conf("out_conf.bin", std::ios::binary);
     std::ofstream header("out_header.bin", std::ios::binary);
 
-    std::cout << "Number of Frames requested: " << num_frames - 1 << std::endl;
+    std::cout << "Number of Frames requested: " << num_frames << std::endl;
+
+    /* 
+    NOTE: The First frame collected from the NXP Eval kit (with Tembin and Crosby) would be 
+    corrupted with Noise. Hence, we discard this frame and collect the subsequent frames.
+    */
+    uint16_t *firstFrameBuffer = new uint16_t[buffer_size];
+    ret = adsd3500->RequestFrame(firstFrameBuffer);
+    if (ret < 0 || firstFrameBuffer == nullptr) {
+        std::cout << "Unable to receive frames from Adsd3500" << std::endl;
+        return 0;
+    }
+    delete[] firstFrameBuffer;
+    
 
     for (int i = 0; i < num_frames; i++) {
         // Receive Frames
@@ -193,51 +223,56 @@ int main(int argc, char *argv[]) {
             std::cout << "Unable to receive frames from Adsd3500" << std::endl;
         }
 
-        // Discard the First Frame collected.
-        if (i == 0) {
-            continue;
-        }
-
         // Get Depth, AB, Confidence Data using Depth Compute Library and store them as .bin file.
         adsd3500->ParseRawDataWithDCL(buffer);
         if (ret < 0) {
             std::cout << "Unable to parse raw frames." << std::endl;
         }
 
-        memcpy(ab_buffer + (i - 1) * total_pixels,
+        if (adsd3500->enableMetaDatainAB) {
+            memcpy(ab_buffer + i * total_pixels,
+               adsd3500->tofi_compute_context->p_ab_frame + EMBEDDED_HEADER_SIZE,
+               total_pixels * sizeof(uint16_t));
+            memcpy(header_buffer + i * EMBEDDED_HEADER_SIZE,
+               (uint8_t *)(adsd3500->tofi_compute_context->p_ab_frame),
+               EMBEDDED_HEADER_SIZE * sizeof(uint8_t));
+        } else {
+            memcpy(ab_buffer + i * total_pixels,
                adsd3500->tofi_compute_context->p_ab_frame,
                total_pixels * sizeof(uint16_t));
-        memcpy(depth_buffer + (i - 1) * total_pixels,
+        }
+
+        memcpy(depth_buffer + i * total_pixels,
                adsd3500->tofi_compute_context->p_depth_frame,
                total_pixels * sizeof(uint16_t));
-        memcpy(conf_buffer + (i - 1) * total_pixels,
+        memcpy(conf_buffer + i * total_pixels,
                adsd3500->tofi_compute_context->p_conf_frame,
-               total_pixels * sizeof(uint8_t));
-
-        memcpy(header_buffer + (i - 1) * EMBEDDED_HEADER_SIZE,
-               (uint8_t *)(adsd3500->tofi_compute_context->p_ab_frame +
-                           total_pixels),
-               EMBEDDED_HEADER_SIZE * sizeof(uint8_t));
+               total_pixels * sizeof(uint8_t));        
     }
 
     // Store AB, Depth and Confidence frames on to a .bin files.
     ab.write((char *)ab_buffer,
-             total_pixels * (num_frames - 1) * sizeof(uint16_t));
+             total_pixels * num_frames * sizeof(uint16_t));
     ab.close();
 
     // Store Depth frame to a .bin file.
     depth.write((char *)depth_buffer,
-                total_pixels * (num_frames - 1) * sizeof(uint16_t));
+                total_pixels * num_frames  * sizeof(uint16_t));
     depth.close();
 
     // Store Confidence frame to a .bin file.
     conf.write((char *)conf_buffer,
-               total_pixels * (num_frames - 1) * sizeof(uint8_t));
+               total_pixels * num_frames * sizeof(uint8_t));
     conf.close();
 
     header.write((char *)header_buffer,
-                 EMBEDDED_HEADER_SIZE * (num_frames - 1) * sizeof(uint8_t));
+                 EMBEDDED_HEADER_SIZE * num_frames * sizeof(uint8_t));
     header.close();
+
+    Metadata metadata;
+    memcpy(&metadata, header_buffer, sizeof(Metadata));
+
+    printMetadata(metadata);
 
     delete[] ab_buffer;
     delete[] depth_buffer;
@@ -260,3 +295,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+
