@@ -647,8 +647,9 @@ void ADIMainWindow::showSaveLoadAdsdParamsMenu() {
                             view->m_ctrl->getCameraInUse())];
 
                     aditof::Status status = camera->loadDepthParamsFromJsonFile(
-                        loadconfigurationFileValue,
-                        std::to_string(m_cameraModes[modeSelection].second));
+                        loadconfigurationFileValue);
+                    getActiveCamera()->setMode(
+                        m_cameraModes[modeSelection].second);
                     if (status != aditof::Status::OK) {
                         LOG(INFO) << "Could not load current configuration "
                                      "info to "
