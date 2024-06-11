@@ -43,7 +43,7 @@ def ip_invalid_string():
     
 @pytest.fixture()
 def ip_no_camera():
-    return "10.43.0.1"
+    return "10.42.0.1"
     
 Logger = logging.getLogger(__name__)
 

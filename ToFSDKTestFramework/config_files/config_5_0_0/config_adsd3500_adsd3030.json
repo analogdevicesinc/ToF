@@ -1,0 +1,4 @@
+{
+    "depthIni": "./config/RawToDepthAdsd3030_sr-native.ini;./config/RawToDepthAdsd3030_lr-native.ini;./config/RawToDepthAdsd3030_sr-qnative.ini;./config/RawToDepthAdsd3030_lr-qnative.ini;./config/RawToDepthAdsd3030_sr-mixed.ini;./config/RawToDepthAdsd3030_lr-mixed.ini;./config/RawToDepthAdsd_pcm-native.ini",
+    "fsyncMode": "1"
+}

@@ -49,7 +49,7 @@ DataTypeSize = {"ab":2 , "depth":2 , "conf":4 , "metadata":128}
 FrameSize = {0:1024, 1: 1024, 2: 512, 3:512,
     4: 1024, 5: 512, 6: 512}
     
-def test_capture_frames(available_modes_ini, ip_set, config_file):
+def test_capture_frames(available_modes_ini, ip_set, config_file, sdk_version):
     # Run the 'dir ..' command and capture the output
     exe_path = "../../build/examples/test_frame_capture/release/test_frame_capture.exe"
     process = subprocess.run([exe_path, str(available_modes_ini), ip_set, config_file], 
@@ -59,17 +59,23 @@ def test_capture_frames(available_modes_ini, ip_set, config_file):
     Logger.info(process.stdout)
     assert os.path.isdir(frame_dir),"folder does not exist"
     
-    #for modeName in modeName:
     for frameType in frame_types:
-        assert os.path.exists(frame_dir + 'out_' + frameType + "_" + 
-            mode_name[available_modes_ini] + ".bin" ),"binary file, not saved"
+        if sdk_version == "5.1.0":
+            assert os.path.exists(frame_dir + 'out_' + frameType + "_" + 
+                str(available_modes_ini) + ".bin" ),"binary file, not saved"
+            
+            file_size = os.path.getsize (frame_dir + 'out_' + frameType + "_" + str(available_modes_ini) + ".bin")
+            
+        else:
+            assert os.path.exists(frame_dir + 'out_' + frameType + "_" + 
+                mode_name[available_modes_ini] + ".bin" ),"binary file, not saved"
+                
+            file_size = os.path.getsize (frame_dir + 'out_' + frameType + "_" + mode_name[available_modes_ini] + ".bin")
         
         if frameType == "metadata":
             data_size = metadataLength
         else:
             data_size = (FrameSize[available_modes_ini]**2)*DataTypeSize[frameType]
-     
-        file_size = os.path.getsize (frame_dir + 'out_' + frameType + "_" + mode_name[available_modes_ini] + ".bin")
         
         assert data_size == file_size,"not compatible with data size"
      

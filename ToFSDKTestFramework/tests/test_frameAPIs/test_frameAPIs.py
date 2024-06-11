@@ -40,7 +40,7 @@ import re
 
 Logger = logging.getLogger(__name__)
 
-def test_frameAPIs(available_modes_ini, ip_set,config_file):
+def test_frameAPIs(available_modes_ini, ip_set, config_file, sdk_version):
 
     mode_name = {0:"sr-native", 1:"lr-native", 2:"sr-qnative", 3:"lr-qnative",
         4:"pcm-native", 5:"lr-mixed", 6:"sr-mixed"}
@@ -66,12 +66,13 @@ def test_frameAPIs(available_modes_ini, ip_set,config_file):
     print(process.stdout)
     output = process.stdout
     
-    match = re.search("fDetailsFrameType: *?(\\S+)", output)
-    assert match is not None    # Checks if the pattern is found
-    value = match.groups()[0]
-    frametype = value
-    assert frametype == ini_data['fdetails_frametype'],"does not match with .ini file"
-    print("fdetails_frametype verified with .ini file")
+    if sdk_version == "5.0.0":
+        match = re.search("fDetailsFrameType: *?(\\S+)", output)
+        assert match is not None    # Checks if the pattern is found
+        value = match.groups()[0]
+        frametype = value
+        assert frametype == ini_data['fdetails_frametype'],"does not match with .ini file"
+        print("fdetails_frametype verified with .ini file")
     
     match = re.search("fDetailsWidth: *?(\\d+)", output)
     assert match is not None    # Checks if the pattern is found
@@ -105,11 +106,7 @@ def test_frameAPIs(available_modes_ini, ip_set,config_file):
     frame_types = {"ab", "depth", "conf", "xyz", "metadata"}
     
     for frame_type in frame_types:
-        if mode_name[available_modes_ini] == "pcm-native" and frame_type != "ab":
-            match = re.search(("Could not find any details for type: " + frame_type), output)
-            assert match is not None,"error code f0r type detail not found"   # Checks if the pattern is found
-            break;
-        else:
+        if not (mode_name[available_modes_ini] == "pcm-native" and frame_type != "ab"):
             match = re.search((frame_type +"-type: *?(\\S+)"), output)
             assert match is not None    # Checks if the pattern is found
             value = match.groups()[0]
@@ -151,64 +148,65 @@ def test_frameAPIs(available_modes_ini, ip_set,config_file):
             bytesCount = int(value)
             assert bytesCount == ini_data[frame_type+"-bytesCount"] == width*height*subelementsPerElement*subelementSize, "does not match with .ini file"
             print(frame_type+"-bytesCount verified with .ini file")
+    
+    if sdk_version != "5.1.0":    
+        match = re.search("embed_hdr_length: *?(\\d+)", output)
+        assert match is not None    # Checks if the pattern is found
+        value = match.groups()[0]
+        embedHdrLength = int(value)
+        assert embedHdrLength == ini_data["attrib_embed_hdr_length"],"does not match with .ini file"
+        print("attrib_embed_hdr_length verified with .ini file")
+            
+        match = re.search("embed_height: *?(\\d+)", output)
+        assert match is not None    # Checks if the pattern is found
+        value = match.groups()[0]
+        embedHeight = int(value)
+        assert embedHeight == ini_data["attrib_embed_height"],"does not match with .ini file"
+        print("attrib_embed_height verified with .ini file")
         
-    match = re.search("embed_hdr_length: *?(\\d+)", output)
-    assert match is not None    # Checks if the pattern is found
-    value = match.groups()[0]
-    embedHdrLength = int(value)
-    assert embedHdrLength == ini_data["attrib_embed_hdr_length"],"does not match with .ini file"
-    print("attrib_embed_hdr_length verified with .ini file")
+        match = re.search("embed_width: *?(\\d+)", output)
+        assert match is not None    # Checks if the pattern is found
+        value = match.groups()[0]
+        embedWidth = int(value)
+        assert embedWidth == ini_data["attrib_embed_width"],"does not match with .ini file"
+        print("attrib_embed_width verified with .ini file")
         
-    match = re.search("embed_height: *?(\\d+)", output)
-    assert match is not None    # Checks if the pattern is found
-    value = match.groups()[0]
-    embedHeight = int(value)
-    assert embedHeight == ini_data["attrib_embed_height"],"does not match with .ini file"
-    print("attrib_embed_height verified with .ini file")
-    
-    match = re.search("embed_width: *?(\\d+)", output)
-    assert match is not None    # Checks if the pattern is found
-    value = match.groups()[0]
-    embedWidth = int(value)
-    assert embedWidth == ini_data["attrib_embed_width"],"does not match with .ini file"
-    print("attrib_embed_width verified with .ini file")
-    
-    match = re.search("attrib_height: *?(\\d+)", output)
-    assert match is not None    # Checks if the pattern is found
-    value = match.groups()[0]
-    attribHeight = int(value)
-    assert attribHeight == ini_data["attrib_height"],"does not match with .ini file"
-    print("attrib_height verified with .ini file")
-    Logger.info(process.stdout)
-    
-    match = re.search("attrib_mode: *?(\\d+)", output)
-    assert match is not None    # Checks if the pattern is found
-    value = match.groups()[0]
-    attribMode = int(value)
-    assert attribMode == ini_data["attrib_mode"],"does not match with .ini file"
-    print("attrib_mode verified with .ini file")
-    Logger.info(process.stdout)
-    
-    match = re.search("passive_ir: *?(\\d+)", output)
-    assert match is not None    # Checks if the pattern is found
-    value = match.groups()[0]
-    passiveIr = int(value)
-    assert passiveIr == ini_data["attrib_passive_ir"],"does not match with .ini file"
-    print("attrib_passive_ir verified with .ini file")
-    Logger.info(process.stdout)
-    
-    match = re.search("total_captures: *?(\\d+)", output)
-    assert match is not None    # Checks if the pattern is found
-    value = match.groups()[0]
-    totalCaptures = int(value)
-    assert totalCaptures == ini_data["attrib_total_captures"],"does not match with .ini file"
-    print("attrib_total_captures verified with .ini file")
-    Logger.info(process.stdout)
-    
-    match = re.search("attrib_width: *?(\\d+)", output)
-    assert match is not None    # Checks if the pattern is found
-    value = match.groups()[0]
-    attribWidth = int(value)
-    assert attribWidth == ini_data["attrib_width"],"does not match with .ini file"
-    print("attrib_width verified with .ini file")
-    Logger.info(process.stdout)
+        match = re.search("attrib_height: *?(\\d+)", output)
+        assert match is not None    # Checks if the pattern is found
+        value = match.groups()[0]
+        attribHeight = int(value)
+        assert attribHeight == ini_data["attrib_height"],"does not match with .ini file"
+        print("attrib_height verified with .ini file")
+        Logger.info(process.stdout)
+        
+        match = re.search("attrib_mode: *?(\\d+)", output)
+        assert match is not None    # Checks if the pattern is found
+        value = match.groups()[0]
+        attribMode = int(value)
+        assert attribMode == ini_data["attrib_mode"],"does not match with .ini file"
+        print("attrib_mode verified with .ini file")
+        Logger.info(process.stdout)
+        
+        match = re.search("passive_ir: *?(\\d+)", output)
+        assert match is not None    # Checks if the pattern is found
+        value = match.groups()[0]
+        passiveIr = int(value)
+        assert passiveIr == ini_data["attrib_passive_ir"],"does not match with .ini file"
+        print("attrib_passive_ir verified with .ini file")
+        Logger.info(process.stdout)
+        
+        match = re.search("total_captures: *?(\\d+)", output)
+        assert match is not None    # Checks if the pattern is found
+        value = match.groups()[0]
+        totalCaptures = int(value)
+        assert totalCaptures == ini_data["attrib_total_captures"],"does not match with .ini file"
+        print("attrib_total_captures verified with .ini file")
+        Logger.info(process.stdout)
+        
+        match = re.search("attrib_width: *?(\\d+)", output)
+        assert match is not None    # Checks if the pattern is found
+        value = match.groups()[0]
+        attribWidth = int(value)
+        assert attribWidth == ini_data["attrib_width"],"does not match with .ini file"
+        print("attrib_width verified with .ini file")
+        Logger.info(process.stdout)

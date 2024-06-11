@@ -125,7 +125,7 @@ def test_access_ini_apis_program(available_modes_ini, ip_set, config_file, sdk_v
     print("JBLFGaussianSigma verified with .ini file")
     
     match = re.search("jblfExponentialTerm: *?(\\d+)", output)
-    assert match is not None    # Checks if the pattern is found
+    assert match is not None, "jblfExponentialTerm not found in stdout"# Checks if the pattern is found
     value = match.groups()[0]
     jblfExponentialTermVal = int(value)
     assert jblfExponentialTermVal == ini_data['jblfExponentialTerm'],"does not match with .ini file"

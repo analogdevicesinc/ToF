@@ -48,91 +48,98 @@ modemap = {
 5: {"width":512, "height":512},
 6: {"width":512, "height":512}
 }
-def test_getMetadataStruct(available_modes_ini, ip_set,config_file):
+def test_getMetadataStruct(available_modes_ini, ip_set, config_file, sdk_version):
+    if  available_modes_ini == 4:
+        pytest.skip("Not available in pcm-native")
+    #parse the ini file
+    
+    if sdk_version == "5.1.0":
+        with open('./config/RawToDepthAdsd3500_' + str(available_modes_ini) + '.ini', mode='r') as file:
+            lines = file.readlines()
 
-    mode_name = {0: "3500_sr-native", 1: "3500_lr-native", 2: "3500_sr-qnative", 3: "3500_lr-qnative",
-        4: "_pcm-native", 5: "3500_lr-mixed", 6: "3500_sr-mixed"}
-        
-    if(available_modes_ini != 4):
-        #parse the ini file
+    else:
+        mode_name = {0: "3500_sr-native", 1: "3500_lr-native", 2: "3500_sr-qnative", 3: "3500_lr-qnative",
+            4: "_pcm-native", 5: "3500_lr-mixed", 6: "3500_sr-mixed"}
+   
         with open('./config/RawToDepthAdsd' + mode_name[available_modes_ini] + '.ini', mode='r') as file:
             lines = file.readlines()
-        ini_data = {}
-        for line in lines:
-            variable, value = line.strip().split('=')
-            try:
-                ini_data[variable] = float(value)
-            except ValueError:
-                ini_data[variable] = str(value)  
-        
-        #Run the exe file
-        exe_path = "../../build/examples/test_getMetadata/release/test_getMetadata.exe"
-        process = subprocess.run([exe_path, str(available_modes_ini), ip_set, config_file],text=True,
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        
-        assert process.returncode == 0
-        print(process.stdout)
-        output = process.stdout
-        
-        match = re.search("width: *?(\\d+)", output)
-        assert match is not None    # Checks if the pattern is found
-        value = match.groups()[0]
-        widthVal = int(value)
-        assert widthVal == modemap[available_modes_ini]["width"],"does not match mode width"
-        print("verified dimension")
-        
-        match = re.search("height: *?(\\d+)", output)
-        assert match is not None    # Checks if the pattern is found
-        value = match.groups()[0]
-        heightVal = int(value)
-        assert heightVal == modemap[available_modes_ini]["height"],"does not match mode height"
-        print("verified dimension")
-        
-        match = re.search("bitsInConfidence: *?(\\d+)", output)
-        assert match is not None    # Checks if the pattern is found
-        value = match.groups()[0]
-        bitsInConfVal = int(value)
-        assert bitsInConfVal == ini_data['bitsInConf'], "does not match with .ini file"  
-        print("bitsInConf verified with .ini file")
-        
-        match = re.search("bitsInDepth: *?(\\d+)", output)
-        assert match is not None    # Checks if the pattern is found
-        value = match.groups()[0]
-        bitsInPhaseOrDepthVal = int(value)     
-        assert bitsInPhaseOrDepthVal == ini_data['bitsInPhaseOrDepth'], "does not match with .ini file"  
-        print("bitsInPhaseOrDepth verified with .ini file")
-        
-        match = re.search("bitsInAB: *?(\\d+)", output)
-        assert match is not None    # Checks if the pattern is found
-        value = match.groups()[0]
-        bitsInABVal = int(value)  
-        assert bitsInABVal == ini_data['bitsInAB'], "does not match with .ini file"  
-        print("bitsInAB verified with .ini file")
-        
-        match = re.search("outputConfiguration: *?(\\d+)", output)
-        assert match is not None    # Checks if the pattern is found
-        value = match.groups()[0]
-        outputConfigurationVal = int(value)
-        if ini_data['bitsInAB'] == 0 and ini_data['bitsInConf'] == 0 and ini_data['bitsInPhaseOrDepth'] == 12:
-            outputConfigOnIni = 0
-        elif ini_data['bitsInAB'] == 0 and ini_data['bitsInConf'] == 0 and ini_data['bitsInPhaseOrDepth'] == 8:
-            outputConfigOnIni = 1
-        elif ini_data['bitsInAB'] != 0 and ini_data['bitsInConf'] == 0 and ini_data['bitsInPhaseOrDepth'] == 0:
-            outputConfigOnIni = 2    
-        elif ini_data['bitsInAB'] == 0 and ini_data['bitsInConf'] != 0 and ini_data['bitsInPhaseOrDepth'] == 0:
-            outputConfigOnIni = 3
-        elif ini_data['bitsInAB'] != 0 and ini_data['bitsInConf'] == 0 and ini_data['bitsInPhaseOrDepth'] == 8:
-            outputConfigOnIni = 4
-        elif ini_data['bitsInAB'] == 16 and ini_data['bitsInConf'] == 0 and ini_data['bitsInPhaseOrDepth'] == 12:
-            outputConfigOnIni = 5
-        elif ini_data['bitsInAB'] == 16 and ini_data['bitsInConf'] == 4 and ini_data['bitsInPhaseOrDepth'] != 0:
-            outputConfigOnIni = 6
-        elif ini_data['bitsInAB'] == 16 and ini_data['bitsInConf'] == 8 and ini_data['bitsInPhaseOrDepth'] == 16:
-            outputConfigOnIni = 7
-        
-        print("outputConfigurationVal: ",outputConfigurationVal )
-        print("outputConfigOnIni: ",outputConfigOnIni )
-        assert outputConfigurationVal == outputConfigOnIni, "does not match with .ini file"  
-        print("outputConfiguration verified")
-        
-        Logger.info(process.stdout)
+    
+    ini_data = {}
+    for line in lines:
+        variable, value = line.strip().split('=')
+        try:
+            ini_data[variable] = float(value)
+        except ValueError:
+            ini_data[variable] = str(value)  
+    
+    #Run the exe file
+    exe_path = "../../build/examples/test_getMetadata/release/test_getMetadata.exe"
+    process = subprocess.run([exe_path, str(available_modes_ini), ip_set, config_file],text=True,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    
+    assert process.returncode == 0
+    print(process.stdout)
+    output = process.stdout
+    
+    match = re.search("width: *?(\\d+)", output)
+    assert match is not None    # Checks if the pattern is found
+    value = match.groups()[0]
+    widthVal = int(value)
+    assert widthVal == modemap[available_modes_ini]["width"],"does not match mode width"
+    print("verified dimension")
+    
+    match = re.search("height: *?(\\d+)", output)
+    assert match is not None    # Checks if the pattern is found
+    value = match.groups()[0]
+    heightVal = int(value)
+    assert heightVal == modemap[available_modes_ini]["height"],"does not match mode height"
+    print("verified dimension")
+    
+    match = re.search("bitsInConfidence: *?(\\d+)", output)
+    assert match is not None    # Checks if the pattern is found
+    value = match.groups()[0]
+    bitsInConfVal = int(value)
+    assert bitsInConfVal == ini_data['bitsInConf'], "does not match with .ini file"  
+    print("bitsInConf verified with .ini file")
+    
+    match = re.search("bitsInDepth: *?(\\d+)", output)
+    assert match is not None    # Checks if the pattern is found
+    value = match.groups()[0]
+    bitsInPhaseOrDepthVal = int(value)     
+    assert bitsInPhaseOrDepthVal == ini_data['bitsInPhaseOrDepth'], "does not match with .ini file"  
+    print("bitsInPhaseOrDepth verified with .ini file")
+    
+    match = re.search("bitsInAB: *?(\\d+)", output)
+    assert match is not None    # Checks if the pattern is found
+    value = match.groups()[0]
+    bitsInABVal = int(value)  
+    assert bitsInABVal == ini_data['bitsInAB'], "does not match with .ini file"  
+    print("bitsInAB verified with .ini file")
+    
+    match = re.search("outputConfiguration: *?(\\d+)", output)
+    assert match is not None    # Checks if the pattern is found
+    value = match.groups()[0]
+    outputConfigurationVal = int(value)
+    if ini_data['bitsInAB'] == 0 and ini_data['bitsInConf'] == 0 and ini_data['bitsInPhaseOrDepth'] == 12:
+        outputConfigOnIni = 0
+    elif ini_data['bitsInAB'] == 0 and ini_data['bitsInConf'] == 0 and ini_data['bitsInPhaseOrDepth'] == 8:
+        outputConfigOnIni = 1
+    elif ini_data['bitsInAB'] != 0 and ini_data['bitsInConf'] == 0 and ini_data['bitsInPhaseOrDepth'] == 0:
+        outputConfigOnIni = 2    
+    elif ini_data['bitsInAB'] == 0 and ini_data['bitsInConf'] != 0 and ini_data['bitsInPhaseOrDepth'] == 0:
+        outputConfigOnIni = 3
+    elif ini_data['bitsInAB'] != 0 and ini_data['bitsInConf'] == 0 and ini_data['bitsInPhaseOrDepth'] == 8:
+        outputConfigOnIni = 4
+    elif ini_data['bitsInAB'] == 16 and ini_data['bitsInConf'] == 0 and ini_data['bitsInPhaseOrDepth'] == 12:
+        outputConfigOnIni = 5
+    elif ini_data['bitsInAB'] == 16 and ini_data['bitsInConf'] == 4 and ini_data['bitsInPhaseOrDepth'] != 0:
+        outputConfigOnIni = 6
+    elif ini_data['bitsInAB'] == 16 and ini_data['bitsInConf'] == 8 and ini_data['bitsInPhaseOrDepth'] == 16:
+        outputConfigOnIni = 7
+    
+    print("outputConfigurationVal: ",outputConfigurationVal )
+    print("outputConfigOnIni: ",outputConfigOnIni )
+    assert outputConfigurationVal == outputConfigOnIni, "does not match with .ini file"  
+    print("outputConfiguration verified")
+    
+    Logger.info(process.stdout)

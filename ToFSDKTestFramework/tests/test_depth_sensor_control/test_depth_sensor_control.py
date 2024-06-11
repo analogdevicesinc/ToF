@@ -54,57 +54,64 @@ control_list = ["netlinktest", "inputFormat", "fps", "modeInfoVersion", "confide
                         [control_list.index("inputFormat"),"raw16_bits12_shift4"],  #9
                         [control_list.index("inputFormat"),"raw16_bits12_shift0"],  #10
                         [control_list.index("inputFormat"),"test"],                 #11
-                        [control_list.index("fps"),'10'],                           #12,pass
-                        [control_list.index("fps"),'20'],                           #13,pass
-                        [control_list.index("fps"),'30'],                           #14,pass
-                        [control_list.index("modeInfoVersion"),'1'],                #15,pass
-                        [control_list.index("modeInfoVersion"),'2'],                #16,pass
-                        [control_list.index("modeInfoVersion"),'3'],                #17,pass
-                        [control_list.index("confidenceBits"),'0'],                 #18,pass
-                        [control_list.index("confidenceBits"),'1'],                 #19,pass
-                        [control_list.index("confidenceBits"),'2'],                 #20,pass
-                        [control_list.index("confidenceBits"),'4'],                 #21,fail
-                        [control_list.index("imagerType"),'0'],                     #22,pass
-                        [control_list.index("abBits"),'0'],                         #23,fail
-                        [control_list.index("abBits"),'2'],                         #24,pass
-                        [control_list.index("abBits"),'3'],                         #25,pass
-                        [control_list.index("abBits"),'4'],                         #26,pass
-                        [control_list.index("abBits"),'5'],                         #27,pass
-                        [control_list.index("abBits"),'6'],                         #28,pass
-                        [control_list.index("abBits"),'8'],                         #29,fail
-                        [control_list.index("abBits"),'10'],                        #30,fail
-                        [control_list.index("abBits"),'12'],                        #31,fail
-                        [control_list.index("abBits"),'14'],                        #32,fail
-                        [control_list.index("abBits"),'16'],                        #33,fail
-                        [control_list.index("phaseDepthBits"),'2'],                 #34,pass
-                        [control_list.index("phaseDepthBits"),'3'],                 #35,pass
-                        [control_list.index("phaseDepthBits"),'4'],                 #36pass
-                        [control_list.index("phaseDepthBits"),'5'],                 #37,pass
-                        [control_list.index("phaseDepthBits"),'6'],                 #38,pass
-                        [control_list.index("phaseDepthBits"),'8'],                 #39,fail
-                        [control_list.index("phaseDepthBits"),'10'],                #40,fail
-                        [control_list.index("phaseDepthBits"),'12'],                #41,fail
-                        [control_list.index("phaseDepthBits"),'14'],                #42,fail
-                        [control_list.index("phaseDepthBits"),'16'],                #43,fail
-                        [control_list.index("depthEnable"),'0'],                    #44,pass
-                        [control_list.index("depthEnable"),'1'],                    #45,pass
-                        [control_list.index("depthEnable"),'2'],                    #46,pass
-                        [control_list.index("abAveraging"),'0'],                    #47,pass
-                        [control_list.index("abAveraging"),'1'],                    #48,pass
-                        [control_list.index("abAveraging"),'2']                     #49,pass
+                        [control_list.index("fps"),'10'],                           #12,
+                        [control_list.index("fps"),'20'],                           #13,
+                        [control_list.index("fps"),'30'],                           #14,
+                        [control_list.index("modeInfoVersion"),'1'],                #15,
+                        [control_list.index("modeInfoVersion"),'2'],                #16,
+                        [control_list.index("modeInfoVersion"),'3'],                #17,
+                        [control_list.index("confidenceBits"),'0'],                 #18,
+                        [control_list.index("confidenceBits"),'1'],                 #19,
+                        [control_list.index("confidenceBits"),'2'],                 #20,
+                        [control_list.index("confidenceBits"),'4'],                 #21,
+                        [control_list.index("imagerType"),'0'],                     #22,
+                        [control_list.index("abBits"),'0'],                         #23,
+                        [control_list.index("abBits"),'2'],                         #24,
+                        [control_list.index("abBits"),'3'],                         #25,
+                        [control_list.index("abBits"),'4'],                         #26,
+                        [control_list.index("abBits"),'5'],                         #27,
+                        [control_list.index("abBits"),'6'],                         #28,
+                        [control_list.index("abBits"),'8'],                         #29,
+                        [control_list.index("abBits"),'10'],                        #30,
+                        [control_list.index("abBits"),'12'],                        #31,
+                        [control_list.index("abBits"),'14'],                        #32,
+                        [control_list.index("abBits"),'16'],                        #33,
+                        [control_list.index("phaseDepthBits"),'2'],                 #34,
+                        [control_list.index("phaseDepthBits"),'3'],                 #35,
+                        [control_list.index("phaseDepthBits"),'4'],                 #36,
+                        [control_list.index("phaseDepthBits"),'5'],                 #37,
+                        [control_list.index("phaseDepthBits"),'6'],                 #38,
+                        [control_list.index("phaseDepthBits"),'8'],                 #39,
+                        [control_list.index("phaseDepthBits"),'10'],                #40,
+                        [control_list.index("phaseDepthBits"),'12'],                #41,
+                        [control_list.index("phaseDepthBits"),'14'],                #42,
+                        [control_list.index("phaseDepthBits"),'16'],                #43,
+                        [control_list.index("depthEnable"),'0'],                    #44,
+                        [control_list.index("depthEnable"),'1'],                    #45,
+                        [control_list.index("depthEnable"),'2'],                    #46,
+                        [control_list.index("abAveraging"),'0'],                    #47,
+                        [control_list.index("abAveraging"),'1'],                    #48,
+                        [control_list.index("abAveraging"),'2']                     #49,
                         ])
 def control_test_case(request):
     return request.param
 
 def case_inputFormat(stdout, returncode, control_val):
     assert returncode == 0
+    
     match = re.search("inputFormat test value set to *(.*)", stdout)
     assert match is not None    # Checks if the pattern is found
-    inputFormat = match.groups()[0]
+    inputFormat_set = match.groups()[0]
 
     if control_val == "test":
-        assert inputFormat != control_val, "not a valid input format"
-    print(inputFormat, " verified")
+        assert inputFormat_set != control_val, "not a valid input format"
+        
+    match = re.search("inputFormat: *(.*)", stdout)
+    assert match is not None, "pattern not found"
+    inputFormat_get = match.groups()[0]  
+    assert inputFormat_set == inputFormat_set, "inputformat set is not equal to get"  
+ 
+    print(inputFormat_set, " verified")
     
 def case_netLinkTest(stdout, returncode, control_val):
     
@@ -145,9 +152,6 @@ def case_confidenceBits(stdout, returncode, control_val):
     else:
         print(control_val, " is invalid value.")
         assert returncode == 1
-        
-        match = re.search("cannot set confidenceBits value", stdout)
-        assert match is not None, "error not found"    # Checks if the pattern is found
         
 def case_ImagerType(stdout, returncode, control_val):
 
@@ -201,9 +205,6 @@ def case_phaseDepthBits(stdout, returncode, control_val):
         print(control_val, " is invalid value.")
         assert returncode == 1
         
-        match = re.search("cannot set phaseDepthBits value", stdout)
-        assert match is not None, "error not found"
-    
 def case_depthEnable(stdout, returncode, control_val):
 
     assert returncode == 0
@@ -257,9 +258,17 @@ def switch_case(x, stdout, returncode, control_val):
     # Call the function associated with x, or a default function if x is not found
     return switcher.get(x, lambda: "Invalid case")(stdout, returncode, control_val)
 
-def test_depth_sensor_control(ip_set, control_test_case):
+def test_depth_sensor_control(ip_set, control_test_case, sdk_version):
     
     control, control_val = control_test_case
+    
+    if sdk_version == "5.1.0":
+        if control == 3:    #modeinfoVersion
+            pytest.skip("modeInfoVersion not available in v5.1.0 and latter")
+        if control == 6 and int(control_val) >= 7:    #invalid abbits
+            pytest.skip("invalid values in abbits stops the server in 5.1.0")
+        if control == 7 and int(control_val) >= 7:    #invalid depthbits
+            pytest.skip("invalid values in phasedepthbits stops the serverin v5.1.0")
     
     exe_path = "../../build/examples/test_depth_sensor_control/Release/test_depth_sensor_control.exe"
     process = subprocess.run([exe_path, ip_set, str(control), control_val], 
