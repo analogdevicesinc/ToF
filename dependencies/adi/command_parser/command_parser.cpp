@@ -42,7 +42,7 @@ void CommandParser::parseArguments(
         }
     }
 
-    for (int i = 1; i < argc; i++) {
+    for (int i = 1; i < argc - 1; i++) {
         bool mandatory = false;
         int contains_equal = std::string(argv[i]).find("=");
         int is_argument;
@@ -111,7 +111,7 @@ void CommandParser::parseArguments(
                 arg_number++;
             }
         } else {
-            m_command_vector.push_back({argv[i], "true"});
+            m_command_vector.push_back({argv[i], argv[i + 1]});
             arg_number++;
         }
     }
