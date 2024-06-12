@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
         {"-ic", {"--ic", false, "", "", false}},
         {"-scf", {"--scf", false, "", "", false}},
         {"-lcf", {"--lcf", false, "", "", false}},
-        {"-config", {"-CONFIG", true, "last", "", true}}};
+        {"-config", {"-CONFIG", false, "", "", false}}};
 
     CommandParser command;
     std::string arg_error;
