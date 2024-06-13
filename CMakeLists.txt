@@ -157,7 +157,7 @@ add_definitions(-DRESOURCES="${RESOURCES_DIR}")
 
 add_subdirectory(dependencies)
 add_subdirectory(apps)
-add_subdirectory(sdk)
+add_subdirectory(libaditof/sdk)
 
 if (WITH_EXAMPLES)
         add_subdirectory(examples)
@@ -183,6 +183,3 @@ endif()
 
 ############################### Installer #######################################
 configure_file(cmake/aditof-setup.iss.cmakein ${CMAKE_CURRENT_BINARY_DIR}/aditof-setup.iss @ONLY)
-
-############################### Version #######################################
-configure_file(cmake/version.h.cmakein ${CMAKE_SOURCE_DIR}/sdk/include/aditof/version.h @ONLY)
