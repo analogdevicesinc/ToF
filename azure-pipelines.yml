@@ -67,6 +67,7 @@ jobs:
   steps:
   - checkout: self
     fetchDepth: 1
+    submodules: true
     clean: true
     persistCredentials: true
 
@@ -118,6 +119,7 @@ jobs:
   steps:
   - checkout: self
     fetchDepth: 1
+    submodules: true
     clean: true
   - task: UsePythonVersion@0
     inputs:
