@@ -1,4 +1,0 @@
-{
-    "depthIni": "./config/RawToDepthAdsd3500_2.ini;./config/RawToDepthAdsd3500_1.ini;./config/RawToDepthAdsd3500_3.ini;./config/RawToDepthAdsd3500_0.ini;./config/RawToDepthAdsd3500_6.ini;./config/RawToDepthAdsd3500_5.ini;./config/RawToDepthAdsd_4.ini",
-    "fsyncMode": "1"
-}
