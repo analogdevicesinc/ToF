@@ -224,7 +224,7 @@ int main(int argc, char *argv[]) {
         }
 
         // Get Depth, AB, Confidence Data using Depth Compute Library and store them as .bin file.
-        adsd3500->ParseRawDataWithDCL(buffer);
+        ret = adsd3500->ParseRawDataWithDCL(buffer);
         if (ret < 0) {
             std::cout << "Unable to parse raw frames." << std::endl;
         }
