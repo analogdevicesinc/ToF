@@ -6,7 +6,7 @@ add_executable(${PROJECT_NAME} software_check.cpp ${SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 
 set(DEPENDENCIES_DIR ../../dependencies/third-party/)
-set(SDK_DIR ../../sdk/include)
+set(SDK_DIR ../../libaditof/sdk/include)
 
 include_directories(
     ${DEPENDENCIES_DIR}
@@ -15,7 +15,7 @@ include_directories(
 
 if (WIN32)
     add_custom_command( TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/sdk/$<CONFIGURATION>" $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/libaditof/sdk/$<CONFIGURATION>" $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/sw_versions.info" $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
     )
     if (WITH_NETWORK)
@@ -30,7 +30,7 @@ if (WIN32)
     endif()
 else()
     add_custom_command( TARGET ${PROJECT_NAME} POST_BUILD COMMAND 
-        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/sdk/" $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
+        COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/libaditof/sdk/" $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/sw_versions.info" $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
     )
 endif()
