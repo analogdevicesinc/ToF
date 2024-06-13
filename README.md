@@ -30,23 +30,13 @@ Other
 
 ## Supported Embedded Platforms
 
-For more details on building the SDK on an embedded platform please check the **User Guide** specified below:
-### ITOF camera
-| Operating system | Evaluation boards | Documentation | GitHub main status |
-| --------- | ----------- | ----------- | ----------- |
-| NXP | [EVAL-ADTF3175D-NXZ](https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175d-nxz) | [Build instructions](doc/itof/nxp_build_instructions.md) | [![Build status](https://dev.azure.com/AnalogDevices/3DToF-rework/_apis/build/status/analogdevicesinc.ToF?branchName=main)](https://dev.azure.com/AnalogDevices/3DToF-rework/_build?view=runs&branchFilter=3310) |
-
-[How to write the SD card image onto the SD card?](doc/sdcard_burn.md)
+For more details on building the SDK on an embedded platform please check this [link.](https://github.com/analogdevicesinc/libaditof?tab=readme-ov-file#supported-embedded-platforms)
 
 ## SDK Documentation
 
 From an architectural point of view, the SDK consists of two layers. One layer is the high level API that allows clients to easily grab a camera object, configure it and request frames. The other layer is the low level API which exposes the interface through which low level operations can be made to the camera hardware.
 
 For more details about the SDK check the links below:
-
-[Software stack documentation](sdk/readme.md)
-
-[API Doxygen documentation](https://analogdevicesinc.github.io/ToF/)
 
 [Building and installing the SDK](cmake/)
 
@@ -78,7 +68,7 @@ For more details about the SDK check the links below:
 | examples | Example code for the supported programming languages |
 | scripts | Useful development scripts |
 | sdcard-images-utils | Things required to build a SD card image for targets |
-| sdk | SDK source code |
+| libaditof | Submodule with SDK source code |
 | tools | Standalone applications |
 
 ---
