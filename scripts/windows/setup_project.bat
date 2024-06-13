@@ -16,6 +16,7 @@ set build_dire=""
 set deps_dir=""
 set deps_install_dir=""
 set generator=""
+set tof_dire = %CD%../../
 
 set config_type=""
 set generator=""
@@ -213,6 +214,11 @@ popd
 CALL :install_glog %config_type% %generator%
 CALL :install_protobuf %config_type% %generator%
 CALL :install_websockets %config_type% %generator%
+
+::init and update of libaditof submodule
+pushd %tof_dire%
+git submodule update --init
+popd
 
 ::build the project with the selected options
 pushd %build_dire%
