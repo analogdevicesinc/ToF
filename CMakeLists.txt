@@ -145,7 +145,7 @@ endif()
 
 if(${ON_TARGET})
         if(USE_DEPTH_COMPUTE_OPENSOURCE)
-	        set(LIBTOFI_LIBDIR_PATH "${CMAKE_BINARY_DIR}/sdk/common/adi/depth-compute-opensource")
+	        set(LIBTOFI_LIBDIR_PATH "${CMAKE_BINARY_DIR}/libaditof/sdk/common/adi/depth-compute-opensource")
         else()
                 set(LIBTOFI_LIBDIR_PATH "${CMAKE_SOURCE_DIR}/../libs")
         endif()
