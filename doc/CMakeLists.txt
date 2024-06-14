@@ -7,7 +7,7 @@ if (NOT DOXYGEN_PATH)
 endif()
 
 ######################### This script variables ###############################
-set(SOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../sdk/include/aditof)
+set(SOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../libaditof/sdk/include/aditof)
 set(DOXY_WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}/doxygen_doc)
 
 ############################# Doc variables ###################################
