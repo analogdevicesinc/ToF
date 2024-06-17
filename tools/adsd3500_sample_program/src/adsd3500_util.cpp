@@ -372,7 +372,7 @@ int Adsd3500::ConfigureDepthComputeLibraryWithIniParams() {
     uint32_t ret = 0;
     std::cout << "Initializing Depth Compute Library." << std::endl;
 
-    std::cout << "Ini File Size: " << iniFileData.size << std::endl;
+    std::cout << "Ini File Size: " << std::dec << iniFileData.size << std::endl;
     if (iniFileData.p_data == nullptr) {
         perror("iniFileData is NULL.\n");
         return -1;
@@ -857,19 +857,21 @@ int Adsd3500::SetFrameType() {
     auto it = iniKeyValPairs.find("bitsInPhaseOrDepth");
     if (it != iniKeyValPairs.end()) {
         depthBits = std::stoi(it->second);
-        std::cout << "Number of depth bits : " << depthBits << std::endl;
+        std::cout << "Number of depth bits : " << std::dec << depthBits
+                  << std::endl;
     }
 
     it = iniKeyValPairs.find("bitsInAB");
     if (it != iniKeyValPairs.end()) {
         abBits = std::stoi(it->second);
-        std::cout << "Number of AB bits : " << abBits << std::endl;
+        std::cout << "Number of AB bits : " << std::dec << abBits << std::endl;
     }
 
     it = iniKeyValPairs.find("bitsInConf");
     if (it != iniKeyValPairs.end()) {
         confBits = std::stoi(it->second);
-        std::cout << "Number of Confidence bits: " << confBits << std::endl;
+        std::cout << "Number of Confidence bits: " << std::dec << confBits
+                  << std::endl;
     }
 
     it = iniKeyValPairs.find("inputFormat");
@@ -1066,6 +1068,38 @@ int Adsd3500::SetupInterruptSupport() {
     auto &interruptNotifier = Adsd3500InterruptNotifier::getInstance();
     interruptNotifier.subscribeSensor(shared_from_this());
     interruptNotifier.enableInterrupts();
+
+    return 0;
+}
+
+int Adsd3500::StoreFrameMetaData(uint8_t *header_buffer, int num_frames) {
+
+    std::string filename = "metadata.txt";
+    std::ofstream header(filename);
+
+    Metadata metadata;
+    if (header) {
+        for (int i = 0; i < num_frames; i++) {
+            memcpy(&metadata, header_buffer + i * EMBEDDED_HEADER_SIZE,
+                   sizeof(Metadata));
+            try {
+                writeMetadataToFile(metadata, header);
+            } catch (const std::exception &e) {
+                std::cerr << "Exception: " << e.what() << std::endl;
+                header.close();
+                return -1;
+            }
+        }
+
+        header.close();
+        std::cout << "Metadata of the frames written to " << filename
+                  << std::endl;
+    } else {
+        std::cout << "Failed to open header file for writing metadata. "
+                     "Metadata wont be stored."
+                  << std::endl;
+        return -1;
+    }
 
     return 0;
 }
@@ -1684,11 +1718,11 @@ int Adsd3500::adsd3500_update_ini_key_value_pairs(uint8_t *ini_table_buf,
         iniFileUpdatedSize += pair.first.size() + pair.second.size() +
                               2; // Size of Key, Value, '=' and '\n'.
     }
-    std::cout << "Ini file size before modification: " << iniFileData.size
-              << std::endl;
+    std::cout << "Ini file size before modification: " << std::dec
+              << iniFileData.size << std::endl;
     iniFileData.size = iniFileUpdatedSize;
-    std::cout << "Ini file size after modification: " << iniFileData.size
-              << std::endl;
+    std::cout << "Ini file size after modification: " << std::dec
+              << iniFileData.size << std::endl;
 
     // Allocate memory to hold the updated ini Key value pair contents.
     unsigned char *iniFileUpdatedData = new unsigned char[iniFileUpdatedSize];
@@ -1855,15 +1889,15 @@ int Adsd3500::adsd3500_set_ini_params() {
                   << std::endl;
     }
 
+    // Enable/Disbale Metadata in output AB Frame
+    adsd3500_set_enable_embedded_header_in_AB();
+
     // Configures Dynamic Mode Switching.
     it = iniKeyValPairs.find("dynamicModeSwitchEnable");
     if (it != iniKeyValPairs.end()) {
         dynamic_mode_switch = std::stoi(it->second);
     }
     adsd3500_configure_dynamic_mode_switching();
-
-    // Enable/Disbale Metadata in output AB Frame
-    adsd3500_set_enable_embedded_header_in_AB();
 
     return 0;
 }
@@ -1976,7 +2010,10 @@ int Adsd3500::adsd3500_turnoff_dynamic_mode_switch() {
 int Adsd3500::adsd3500_set_enable_embedded_header_in_AB() {
     int ret = adsd3500_write_cmd(0x0036, enableMetaDatainAB);
     if (ret < 0) {
-        std::cout << "Unable to set Enable Embedded header in AB." << std::endl;
+        std::cout << "Unable to set Enable Embedded header in AB. Metadata "
+                     "wont be stored."
+                  << std::endl;
+        enableMetaDatainAB = 0;
     }
     return 0;
 }
@@ -2088,6 +2125,48 @@ int Adsd3500::adsd3500_configure_sensor_frame_types() {
 /*
 *********************************Non-member functions*****************************
 */
+
+void writeMetadataToFile(const Metadata &metadata, std::ofstream &outFile) {
+    if (!outFile) {
+        throw std::runtime_error("File stream is not open for writing.");
+    }
+
+    outFile << "Frame Number: " << std::dec << metadata.frameNumber
+            << std::endl;
+    outFile << "Width: " << std::dec << metadata.width << std::endl;
+    outFile << "Height: " << std::dec << metadata.height << std::endl;
+    outFile << "Output Configuration: " << std::dec
+            << static_cast<int>(metadata.outputConfiguration) << std::endl;
+    outFile << "Bits in Depth: " << std::dec
+            << static_cast<int>(metadata.bitsInDepth) << std::endl;
+    outFile << "Bits in AB: " << std::dec << static_cast<int>(metadata.bitsInAb)
+            << std::endl;
+    outFile << "Bits in Confidence: " << std::dec
+            << static_cast<int>(metadata.bitsInConfidence) << std::endl;
+    outFile << "Invalid Phase Value: " << std::dec << metadata.invalidPhaseValue
+            << std::endl;
+    outFile << "Frequency Index: " << std::dec
+            << static_cast<int>(metadata.frequencyIndex) << std::endl;
+    outFile << "AB Frequency Index: " << std::dec
+            << static_cast<int>(metadata.abFrequencyIndex) << std::endl;
+    outFile << "Imager Mode: " << std::dec
+            << static_cast<int>(metadata.imagerMode) << std::endl;
+    outFile << "Number of Phases: " << std::dec
+            << static_cast<int>(metadata.numberOfPhases) << std::endl;
+    outFile << "Number of Frequencies: " << std::dec
+            << static_cast<int>(metadata.numberOfFrequencies) << std::endl;
+    outFile << "XYZ Enabled: " << std::dec
+            << static_cast<int>(metadata.xyzEnabled) << std::endl;
+    outFile << "Elapsed Time Fractional Value: "
+            << metadata.elapsedTimeFractionalValue << std::endl;
+    outFile << "Elapsed Time Seconds Value: "
+            << metadata.elapsedTimeSecondsValue << std::endl;
+    outFile << "Sensor Temperature: " << metadata.sensorTemperature << " °C"
+            << std::endl;
+    outFile << "Laser Temperature: " << metadata.laserTemperature << " °C"
+            << std::endl;
+    outFile << "-------------------------" << std::endl;
+}
 
 // Print v4l2 buffer plane.
 void print_planes(const struct v4l2_plane planes[], int num_planes) {

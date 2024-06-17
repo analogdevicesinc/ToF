@@ -23,27 +23,6 @@
 #include <iostream>
 #include <math.h>
 
-void printMetadata(const Metadata& metadata) {
-    std::cout << "Width: " << metadata.width << std::endl;
-    std::cout << "Height: " << metadata.height << std::endl;
-    std::cout << "Output Configuration: " << static_cast<int>(metadata.outputConfiguration) << std::endl;
-    std::cout << "Bits in Depth: " << static_cast<int>(metadata.bitsInDepth) << std::endl;
-    std::cout << "Bits in AB: " << static_cast<int>(metadata.bitsInAb) << std::endl;
-    std::cout << "Bits in Confidence: " << static_cast<int>(metadata.bitsInConfidence) << std::endl;
-    std::cout << "Invalid Phase Value: " << metadata.invalidPhaseValue << std::endl;
-    std::cout << "Frequency Index: " << static_cast<int>(metadata.frequencyIndex) << std::endl;
-    std::cout << "AB Frequency Index: " << static_cast<int>(metadata.abFrequencyIndex) << std::endl;
-    std::cout << "Frame Number: " << metadata.frameNumber << std::endl;
-    std::cout << "Imager Mode: " << static_cast<int>(metadata.imagerMode) << std::endl;
-    std::cout << "Number of Phases: " << static_cast<int>(metadata.numberOfPhases) << std::endl;
-    std::cout << "Number of Frequencies: " << static_cast<int>(metadata.numberOfFrequencies) << std::endl;
-    std::cout << "XYZ Enabled: " << static_cast<int>(metadata.xyzEnabled) << std::endl;
-    std::cout << "Elapsed Time Fractional Value: " << metadata.elapsedTimeFractionalValue << std::endl;
-    std::cout << "Elapsed Time Seconds Value: " << metadata.elapsedTimeSecondsValue << std::endl;
-    std::cout << "Sensor Temperature: " << metadata.sensorTemperature << " °C" << std::endl;
-    std::cout << "Laser Temperature: " << metadata.laserTemperature << " °C" << std::endl;
-}
-
 int main(int argc, char *argv[]) {
 
     int ret;
@@ -192,13 +171,14 @@ int main(int argc, char *argv[]) {
     uint16_t *depth_buffer = new uint16_t[total_pixels * num_frames];
     uint16_t *ab_buffer = new uint16_t[total_pixels * num_frames];
     uint8_t *conf_buffer = new uint8_t[total_pixels * num_frames];
-    uint8_t *header_buffer =
-        new uint8_t[EMBEDDED_HEADER_SIZE * num_frames];
+    uint8_t *header_buffer;
+    if (adsd3500->enableMetaDatainAB) {
+        header_buffer = new uint8_t[EMBEDDED_HEADER_SIZE * num_frames];
+    }
 
     std::ofstream ab("out_ab.bin", std::ios::binary);
     std::ofstream depth("out_depth.bin", std::ios::binary);
     std::ofstream conf("out_conf.bin", std::ios::binary);
-    std::ofstream header("out_header.bin", std::ios::binary);
 
     std::cout << "Number of Frames requested: " << num_frames << std::endl;
 
@@ -213,7 +193,6 @@ int main(int argc, char *argv[]) {
         return 0;
     }
     delete[] firstFrameBuffer;
-    
 
     for (int i = 0; i < num_frames; i++) {
         // Receive Frames
@@ -231,15 +210,16 @@ int main(int argc, char *argv[]) {
 
         if (adsd3500->enableMetaDatainAB) {
             memcpy(ab_buffer + i * total_pixels,
-               adsd3500->tofi_compute_context->p_ab_frame + EMBEDDED_HEADER_SIZE,
-               total_pixels * sizeof(uint16_t));
+                   adsd3500->tofi_compute_context->p_ab_frame +
+                       EMBEDDED_HEADER_SIZE,
+                   total_pixels * sizeof(uint16_t));
             memcpy(header_buffer + i * EMBEDDED_HEADER_SIZE,
-               (uint8_t *)(adsd3500->tofi_compute_context->p_ab_frame),
-               EMBEDDED_HEADER_SIZE * sizeof(uint8_t));
+                   (uint8_t *)(adsd3500->tofi_compute_context->p_ab_frame),
+                   EMBEDDED_HEADER_SIZE * sizeof(uint8_t));
         } else {
             memcpy(ab_buffer + i * total_pixels,
-               adsd3500->tofi_compute_context->p_ab_frame,
-               total_pixels * sizeof(uint16_t));
+                   adsd3500->tofi_compute_context->p_ab_frame,
+                   total_pixels * sizeof(uint16_t));
         }
 
         memcpy(depth_buffer + i * total_pixels,
@@ -247,17 +227,16 @@ int main(int argc, char *argv[]) {
                total_pixels * sizeof(uint16_t));
         memcpy(conf_buffer + i * total_pixels,
                adsd3500->tofi_compute_context->p_conf_frame,
-               total_pixels * sizeof(uint8_t));        
+               total_pixels * sizeof(uint8_t));
     }
 
     // Store AB, Depth and Confidence frames on to a .bin files.
-    ab.write((char *)ab_buffer,
-             total_pixels * num_frames * sizeof(uint16_t));
+    ab.write((char *)ab_buffer, total_pixels * num_frames * sizeof(uint16_t));
     ab.close();
 
     // Store Depth frame to a .bin file.
     depth.write((char *)depth_buffer,
-                total_pixels * num_frames  * sizeof(uint16_t));
+                total_pixels * num_frames * sizeof(uint16_t));
     depth.close();
 
     // Store Confidence frame to a .bin file.
@@ -265,19 +244,20 @@ int main(int argc, char *argv[]) {
                total_pixels * num_frames * sizeof(uint8_t));
     conf.close();
 
-    header.write((char *)header_buffer,
-                 EMBEDDED_HEADER_SIZE * num_frames * sizeof(uint8_t));
-    header.close();
-
-    Metadata metadata;
-    memcpy(&metadata, header_buffer, sizeof(Metadata));
-
-    printMetadata(metadata);
+    // Write the Metadata of the frames to a text file.
+    if (adsd3500->enableMetaDatainAB) {
+        ret = adsd3500->StoreFrameMetaData(header_buffer, num_frames);
+        if (ret < 0) {
+            std::cout
+                << "Unable to write Metadata of the frames to a text file."
+                << std::endl;
+        }
+        delete[] header_buffer;
+    }
 
     delete[] ab_buffer;
     delete[] depth_buffer;
     delete[] conf_buffer;
-    delete[] header_buffer;
 
     // Stop the Stream.
     ret = adsd3500->StopStream();
@@ -295,4 +275,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-

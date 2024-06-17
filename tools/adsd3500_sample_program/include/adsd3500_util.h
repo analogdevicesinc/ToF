@@ -359,6 +359,7 @@ class Adsd3500 : public std::enable_shared_from_this<Adsd3500> {
     int SetupInterruptSupport();
     int HandleInterrupts(int signalValue);
     int SubscribeSensorToNotifier();
+    int StoreFrameMetaData(uint8_t *header_buffer, int num_frames);
 
   private:
     ConfigFileData iniFileData;
@@ -397,6 +398,7 @@ class Adsd3500 : public std::enable_shared_from_this<Adsd3500> {
 };
 
 // Non-member functions
+void writeMetadataToFile(const Metadata &metadata, std::ofstream &outFile);
 void print_planes(const struct v4l2_plane planes[], int num_planes);
 void PrintByteArray(unsigned char *byteArray, int arraySize);
 int xioctl(int fd, int request, void *arg);
