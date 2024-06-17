@@ -16,7 +16,6 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.*/
 
-#include "../crc32/crc.h"
 #include <cstdint>
 #include <fcntl.h>
 #include <linux/i2c-dev.h>
