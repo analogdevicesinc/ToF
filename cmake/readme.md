@@ -6,6 +6,8 @@ This folder contains helper cmake.in files for the project and also config files
 #### Using the CMake build system
 In order to build the SDK with cmake, we first need to have all the dependencies installed: glog, protobuf, libwebsockets ( [Check instructions for your system](../doc) ).
 
+Next step is to initialize and update submodules `git submodule update --init`.
+
 After creating a build folder and moving into it `mkdir -p build && cd build`, we can run cmake.
 
 `cmake -D<option> <path_to_ToF>`
@@ -61,6 +63,7 @@ Where `<config>` is the build type: `Debug, Release ...` and target is one of th
 Example: Consider a user that has the dependencies for the project installed in specific folders in `/opt`: `/opt/glog`, `/opt/protobuf`, `/opt/websockets`, and that wants to install the SDK in `/opt/aditof`, with examples on and all the possible bindings enabled. The following set of commands will do:
 ```
 cd ToF
+git submodule update --init
 mkdir build && cd build
 cmake -DWITH_PYTHON=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" -DCMAKE_INSTALL_PREFIX="/opt/aditof" ..
 sudo cmake --build . --target install
