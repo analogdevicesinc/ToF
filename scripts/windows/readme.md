@@ -5,7 +5,6 @@
 **setup_project.bat** is a script that downloads and installs the dependencies and builds the sdk.
 By default the sdk will be built in folder: **current_script_path\build** using the **Visual Studio 16 2019** generator and the **Release** configuration.
 The dependencies (glog, protobuf and websockets) will be downloaded and installed in **current_script_path\deps\installed**.
-Submodule libaditof will be initialized and updated.
 Please use option -h or --help for further reference on how to change the defaults.
 
 ## Pre-requisites
