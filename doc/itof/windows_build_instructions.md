@@ -51,7 +51,6 @@ cmake --build . --target install --config Release
 ```console
 git clone --branch v5.0.0 https://github.com/analogdevicesinc/ToF
 cd ToF
-git submodule update --init
 mkdir build
 cd build
 cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_6_0\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=off ..
@@ -73,7 +72,6 @@ See [here](../../cmake/readme.md) for details on the cmake options.
 ```console
 git clone --branch v5.0.0 https://github.com/analogdevicesinc/ToF
 cd ToF
-git submodule update --init
 mkdir build
 cd build
 cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_6_0\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=on ..
