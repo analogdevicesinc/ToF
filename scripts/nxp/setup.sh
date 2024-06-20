@@ -137,11 +137,6 @@ setup() {
 
         PREFIX_PATH="${deps_install_dir}/glog;${deps_install_dir}/protobuf;${deps_install_dir}/websockets;"
 
-        tof_dir = $(pwd)../../
-        pushd "${tof_dir}"
-        git submodule update --init
-        popd
-        
         pushd "${build_dir}"
         cmake "${source_dir}" ${CMAKE_OPTIONS} -DCMAKE_PREFIX_PATH="${PREFIX_PATH}"
         make -j ${NUM_JOBS}
