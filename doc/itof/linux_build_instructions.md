@@ -68,6 +68,7 @@ Please note, ensure you are using the intended branch.
 ```console
 git clone --branch v5.0.0 --depth 1 https://github.com/analogdevicesinc/ToF
 cd ToF
+git submodule update --init
 mkdir build && cd build
 cmake -DWITH_EXAMPLES=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" -DCMAKE_BUILD_TYPE=Release ..
 make -j4
@@ -100,6 +101,7 @@ Please note, ensure you are using the intended branch.
 ```console
 git clone --branch v5.0.0 --depth 1 https://github.com/analogdevicesinc/ToF
 cd ToF
+git submodule update --init
 mkdir build && cd build
 cmake -DWITH_EXAMPLES=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" -DCMAKE_BUILD_TYPE=Release ..
 make -j4
