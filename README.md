@@ -44,10 +44,6 @@ From an architectural point of view, the SDK consists of two layers. One layer i
 
 For more details about the SDK check the links below:
 
-[Software stack documentation](sdk/readme.md)
-
-[API Doxygen documentation](https://analogdevicesinc.github.io/ToF/)
-
 [Building and installing the SDK](cmake/)
 
 ## SDK Examples
@@ -78,7 +74,7 @@ For more details about the SDK check the links below:
 | examples | Example code for the supported programming languages |
 | scripts | Useful development scripts |
 | sdcard-images-utils | Things required to build a SD card image for targets |
-| sdk | SDK source code |
+| libaditof | Submodule with SDK source code |
 | tools | Standalone applications |
 
 ---
