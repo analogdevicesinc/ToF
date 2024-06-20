@@ -42,12 +42,14 @@ void CommandParser::parseArguments(
         }
     }
 
-    for (int i = 1; i < argc - 1; i++) {
+    for (int i = 1; i < argc; i++) {
         bool mandatory = false;
         int contains_equal = std::string(argv[i]).find("=");
-        int is_argument;
-        if (i < argc - 1)
-            is_argument = std::string(argv[i + 1]).find("-");
+        int next_is_argument = -1;
+        if (i < argc - 1) {
+            next_is_argument = std::string(argv[i + 1]).find("-");
+        }
+        // Save manadtory arguments
         for (int j = 0; j < arg_position.size(); j++) {
             if (arg_number == arg_position[j].second &&
                 (std::string(argv[i]).find("-h") == -1 &&
@@ -71,18 +73,23 @@ void CommandParser::parseArguments(
         }
         if (mandatory) {
             continue;
-        } else if (contains_equal != -1) { // Solves -arg/--arg=value
+
+            // Solves -arg/--arg=value
+        } else if (contains_equal != -1) {
             m_command_vector.push_back(
                 {std::string(argv[i]).substr(0, contains_equal),
                  std::string(argv[i]).substr(contains_equal + 1)});
             arg_number++;
-        } else if (i != argc - 1 && is_argument != 0 &&
-                   i + 1 != argc - 1) { // Solves -arg/--arg value
+
+            // Solves -arg/--arg value
+        } else if (i != argc && next_is_argument != 0 && i + 1 != argc) {
             m_command_vector.push_back({argv[i], argv[i + 1]});
             i++;
             arg_number += 2;
-        } else if (i != argc - 1 &&
-                   is_argument == 0) { // Solves -arg/--arg -arg value
+
+            // Solves -arg/--arg -arg value
+        } else if (i != argc &&
+                   (next_is_argument == 0 || next_is_argument == -1)) {
             int is_long_arg = std::string(argv[i]).find("--");
             if (is_long_arg != -1) {
                 bool argument_found = false;
