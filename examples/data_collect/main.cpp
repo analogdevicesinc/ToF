@@ -50,12 +50,9 @@ int main(int argc, char *argv[]);
 static const char kUsagePublic[] =
     R"(Data Collect.
     Usage:
-      data_collect CONFIG
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [-s | --split] [-t | --netlinktest] [--ic <imager-configuration>] [-scf <save-configuration-file>] [-lcf <load-configuration-file>] CONFIG
+      data_collect 
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [-s | --split] [-t | --netlinktest] [--ic <imager-configuration>] [-scf <save-configuration-file>] [-lcf <load-configuration-file>]
       data_collect (-h | --help)
-
-    Arguments:
-      CONFIG            Name of a configuration file (with .json extension)
 
     Options:
       -h --help          Show this screen.
@@ -74,7 +71,7 @@ static const char kUsagePublic[] =
       --scf <save-configuration-file>    Save current configuration to json file
       --lcf <load-configuration-file>    Load configuration from json file
 
-    Note: --m argument supports both index and string (0/sr-native) 
+    Note: --m argument supports index (0, 1, etc.) 
 
     Valid mode (--m) options are:
         0: short-range native
@@ -95,15 +92,13 @@ int main(int argc, char *argv[]) {
         {"-wt", {"--wt", false, "", "0", true}},
         {"-ip", {"--ip", false, "", "", true}},
         {"-fw", {"--fw", false, "", "", true}},
-        {"-fps", {"--fps", false, "", "", true}},
         {"-ccb", {"--ccb", false, "", "", true}},
         {"-s", {"--split", false, "", "", false}},
         {"-t", {"--netlinktest", false, "", "", false}},
         {"-st", {"--singlethread", false, "", "", false}},
         {"-ic", {"--ic", false, "", "", false}},
         {"-scf", {"--scf", false, "", "", false}},
-        {"-lcf", {"--lcf", false, "", "", false}},
-        {"-config", {"-CONFIG", false, "", "", false}}};
+        {"-lcf", {"--lcf", false, "", "", false}}};
 
     CommandParser command;
     std::string arg_error;
@@ -136,22 +131,14 @@ int main(int argc, char *argv[]) {
 
     result = command.checkMandatoryArguments(command_map, arg_error);
     if (result != 0) {
-        std::string argName = (arg_error == "-config")
-                                  ? "CONFIG"
-                                  : command_map[arg_error].long_option;
-
-        LOG(ERROR) << "Mandatory argument: " << argName << " missing";
+        LOG(ERROR) << "Mandatory argument: " << arg_error << " missing";
         LOG(INFO) << kUsagePublic;
         return -1;
     }
 
     result = command.checkMandatoryPosition(command_map, arg_error);
     if (result != 0) {
-        std::string argName = (arg_error == "-config")
-                                  ? "CONFIG"
-                                  : command_map[arg_error].long_option;
-
-        LOG(ERROR) << "Mandatory argument " << argName
+        LOG(ERROR) << "Mandatory argument " << arg_error
                    << " is not on its correct position ("
                    << command_map[arg_error].position << ").";
         LOG(INFO) << kUsagePublic;
@@ -180,7 +167,7 @@ int main(int argc, char *argv[]) {
     Status status = Status::OK;
     // Parsing the arguments from command line
     err = snprintf(json_file_path, sizeof(json_file_path), "%s",
-                   command_map["-config"].value.c_str());
+                   command_map["-lcf"].value.c_str());
     if (err < 0) {
         LOG(ERROR) << "Error copying the json file path!";
         return 0;
