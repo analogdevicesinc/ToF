@@ -32,8 +32,8 @@ int main(int argc, char *argv[]) {
     adsd3500->mode_num = 2;      // Image mode number.
     int num_frames = 1;          // Number of frames is set to 1 by default.
     adsd3500->ccb_as_master = 0; // Enables/Disbales CCB as master.
-    adsd3500->enableMetaDatainAB = 1;
-
+    adsd3500->enableMetaDatainAB = 1; // When enabled stores Metadata in the AB frame.
+    
     // Parse Arguments from the Command line.
     for (int i = 1; i < argc; ++i) {
         if (std::strcmp(argv[i], "-m") == 0 && i + 1 < argc) {
@@ -208,10 +208,10 @@ int main(int argc, char *argv[]) {
             std::cout << "Unable to parse raw frames." << std::endl;
         }
 
+	
         if (adsd3500->enableMetaDatainAB) {
             memcpy(ab_buffer + i * total_pixels,
-                   adsd3500->tofi_compute_context->p_ab_frame +
-                       EMBEDDED_HEADER_SIZE,
+                   adsd3500->tofi_compute_context->p_ab_frame + buffer_width,
                    total_pixels * sizeof(uint16_t));
             memcpy(header_buffer + i * EMBEDDED_HEADER_SIZE,
                    (uint8_t *)(adsd3500->tofi_compute_context->p_ab_frame),

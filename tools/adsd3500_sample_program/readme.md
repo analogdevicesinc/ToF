@@ -36,7 +36,7 @@ The example program performs the following functionalities.
 
 3. Once the executable is generated, run the application by the following command.
 
-    $ sudo ./run_adsd3500 -m <mode number> -n <number of frames>
+    $ sudo ./run_adsd3500 -m "mode number" -n "number of frames" 
 
 
 
