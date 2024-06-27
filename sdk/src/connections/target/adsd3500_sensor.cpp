@@ -132,7 +132,8 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
                                const std::string &captureDev)
     : m_driverPath(driverPath), m_driverSubPath(driverSubPath),
       m_captureDev(captureDev), m_implData(new Adsd3500Sensor::ImplData),
-      m_firstRun(true), m_adsd3500Queried(false) {
+      m_firstRun(true), m_adsd3500Queried(false),
+      m_hostConnectionType(aditof::ConnectionType::ON_TARGET) {
     m_sensorName = "adsd3500";
 
     // Define the controls that this sensor has available
