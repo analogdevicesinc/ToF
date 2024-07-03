@@ -16,8 +16,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.*/
 
-#include "../include/adsd3500_interrupt_notifier.h"
-#include "../include/adsd3500_util.h"
+#include <adsd3500_interrupt_notifier.h>
+#include <adsd3500_util.h>
 
 #include <algorithm>
 #include <fcntl.h>

@@ -47,8 +47,8 @@
 #include <signal.h>
 #include <string>
 
-#include "../depthComputeLibrary/tofi_compute.h"
-#include "../depthComputeLibrary/tofi_config.h"
+#include <tofi_compute.h>
+#include <tofi_config.h>
 
 #include "adsd3500_interrupt_notifier.h"
 

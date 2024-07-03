@@ -27,14 +27,14 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-#include "../include/adsd3500_interrupt_notifier.h"
-#include "../include/adsd3500_util.h"
+#include <adsd3500_interrupt_notifier.h>
+#include <adsd3500_util.h>
 #include <cctype>
 #include <fstream>
 #include <iostream>
 #include <vector>
 
-// Depth Compute Library Version.
+// Closed-Source Depth Compute Library Version.
 const char ver_info[] = "VERSIONINFO:"
                         "TOF_DepthComputeEngine_ARM64-Rel4.4.0";
 
@@ -484,9 +484,6 @@ int Adsd3500::ParseRawDataWithDCL(uint16_t *buffer) {
         return -1;
     }
 
-    uint16_t *tempDepthFrame = tofi_compute_context->p_depth_frame;
-    uint16_t *tempAbFrame = tofi_compute_context->p_ab_frame;
-
     // Allocate memory to store Depth and IR frames.
     // Depth Frames.
     tofi_compute_context->p_depth_frame =
@@ -494,6 +491,16 @@ int Adsd3500::ParseRawDataWithDCL(uint16_t *buffer) {
     // IR Frames.
     tofi_compute_context->p_ab_frame =
         new uint16_t[xyzDealiasData.n_rows * xyzDealiasData.n_cols];
+
+    // Confidence Frames.
+    tofi_compute_context->p_conf_frame =
+        new float[xyzDealiasData.n_rows * xyzDealiasData.n_cols];
+
+    // XYZ Frames.
+    if (enableXyz) {
+        tofi_compute_context->p_xyz_frame =
+            new int16_t[xyzDealiasData.n_rows * xyzDealiasData.n_cols * 3];
+    }
 
     uint32_t ret = TofiCompute(buffer, tofi_compute_context, NULL);
     if (ret < 0) {
@@ -514,6 +521,8 @@ int Adsd3500::ParseRawDataWithDCL(uint16_t *buffer) {
         perror("Error in retrieving Confidence frame.\n");
         return -1;
     }
+
+    printf("Completed ParseRawDataWithDCL.\n");
 
     return 0;
 }
