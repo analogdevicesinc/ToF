@@ -141,7 +141,7 @@ uint8_t getFwVersion_cmd[] = {0xAD, 0x00, 0x2C, 0x05, 0x00, 0x00, 0x00, 0x00,
 
 // Resets ADSD3500 device.
 int Adsd3500::ResetAdsd3500() {
-    printf("Resetting ADSD3500 Device.\n");
+    printf("INFO: Resetting ADSD3500 Device.\n");
     system("echo 0 > /sys/class/gpio/gpio122/value");
     usleep(1000000);
     system("echo 1 > /sys/class/gpio/gpio122/value");
@@ -153,7 +153,7 @@ int Adsd3500::ResetAdsd3500() {
 // Opens ADSD3500 device.
 int Adsd3500::OpenAdsd3500() {
     // Open the ADI ToF Camera Sensor Device Driver.
-    printf("Opening Camera Device.\n");
+    printf("INFO: Opening Camera Device.\n");
     videoDevice.cameraSensorDeviceId = tof_open(CAMERA_SENSOR_DRIVER);
     if (videoDevice.cameraSensorDeviceId < 0) {
         std::cout << "Unable to open camera sensor device: "
@@ -208,7 +208,7 @@ int Adsd3500::CloseAdsd3500() {
 int Adsd3500::SetImageMode(uint8_t modeNumber) {
     setMode_cmd[1] = modeNumber;
 
-    printf("Setting Imaging mode number as %d.\n", modeNumber);
+    printf("INFO: Setting Imaging mode number as %d.\n", modeNumber);
 
     int32_t ret = write_cmd(videoDevice.cameraSensorDeviceId, setMode_cmd,
                             ARRAY_SIZE(setMode_cmd));
@@ -253,8 +253,8 @@ int Adsd3500::StartStream() {
         return -1;
     }
 
-    printf("Starting the stream.\n");
-    std::cout << "Number of video buffers: " << videoDevice.nVideoBuffers
+    printf("INFO: Starting the stream.\n");
+    std::cout << "INFO: Number of video buffers: " << videoDevice.nVideoBuffers
               << std::endl;
 
     for (unsigned int i = 0; i < videoDevice.nVideoBuffers; i++) {
@@ -288,7 +288,7 @@ int Adsd3500::StartStream() {
 
 // Stops the stream.
 int Adsd3500::StopStream() {
-    printf("Stopping the stream.\n");
+    printf("INFO: Stopping the stream.\n");
     int32_t ret = write_cmd(videoDevice.cameraSensorDeviceId, streamOff_cmd,
                             ARRAY_SIZE(streamOff_cmd));
     std::cout << ((ret >= 0) ? "SUCCESS" : "FAIL") << std::endl;
@@ -369,9 +369,10 @@ int Adsd3500::ConfigureAdsd3500WithIniParams() {
 int Adsd3500::ConfigureDepthComputeLibraryWithIniParams() {
 
     uint32_t ret = 0;
-    std::cout << "Initializing Depth Compute Library." << std::endl;
+    std::cout << "INFO: Initializing Depth Compute Library." << std::endl;
 
-    std::cout << "Ini File Size: " << std::dec << iniFileData.size << std::endl;
+    std::cout << "INFO: Ini File Size: " << std::dec << iniFileData.size
+              << std::endl;
     if (iniFileData.p_data == nullptr) {
         perror("iniFileData is NULL.\n");
         return -1;
@@ -407,26 +408,27 @@ int Adsd3500::ConfigureDeviceDrivers() {
 
     if (strncmp((char *)cap.card, expectedCaptureDeviceName,
                 strlen(expectedCaptureDeviceName))) {
-        perror("Invalid Capture Device name read.\n");
+        perror("ERROR: Invalid Capture Device name read.\n");
         return -1;
     }
 
     if (!(cap.capabilities &
           (V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE))) {
-        perror("The device is not a video capture device.\n");
+        perror("ERROR: The device is not a video capture device.\n");
         return -1;
     }
 
     if (cap.capabilities & V4L2_CAP_VIDEO_CAPTURE_MPLANE) {
         videoDevice.videoBuffersType = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
-        printf("Video buffers type: V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE.\n");
+        printf(
+            "INFO: Video buffers type: V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE.\n");
     } else {
         videoDevice.videoBuffersType = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        printf("Video buffers type: V4L2_BUF_TYPE_VIDEO_CAPTURE.\n");
+        printf("INFO: Video buffers type: V4L2_BUF_TYPE_VIDEO_CAPTURE.\n");
     }
 
     if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
-        perror("The device does not support streaming.\n");
+        perror("ERROR: The device does not support streaming.\n");
         return -1;
     }
 
@@ -521,8 +523,6 @@ int Adsd3500::ParseRawDataWithDCL(uint16_t *buffer) {
         perror("Error in retrieving Confidence frame.\n");
         return -1;
     }
-
-    printf("Completed ParseRawDataWithDCL.\n");
 
     return 0;
 }
@@ -772,12 +772,12 @@ int Adsd3500::GetImagerTypeAndCCB() {
     switch (imager_version) {
     case 1: {
         imagerType = ImagerType::IMAGER_ADSD3100;
-        printf("Imager type is  IMAGER_ADSD3100.\n");
+        printf("INFO: Imager type is  IMAGER_ADSD3100.\n");
         break;
     }
     case 2: {
         imagerType = ImagerType::IMAGER_ADSD3030;
-        printf("Imager type is  IMAGER_ADSD3030.\n");
+        printf("INFO: Imager type is  IMAGER_ADSD3030.\n");
         break;
     }
     default: {
@@ -789,12 +789,12 @@ int Adsd3500::GetImagerTypeAndCCB() {
     switch (ccb_version) {
     case 1: {
         ccbVersion = CCBVersion::CCB_VERSION0;
-        printf("CCB Version is  CCB_VERSION0.\n");
+        printf("INFO: CCB Version is  CCB_VERSION0.\n");
         break;
     }
     case 2: {
         ccbVersion = CCBVersion::CCB_VERSION1;
-        printf("CCB version is  CCB_VERSION1.\n");
+        printf("INFO: CCB version is  CCB_VERSION1.\n");
         break;
     }
     default: {
@@ -860,7 +860,7 @@ int Adsd3500::SetFrameType() {
         return -1;
     }
 
-    std::cout << "Values from INI file" << std::endl;
+    std::cout << "INFO: Values from INI file" << std::endl;
 
     auto it = iniKeyValPairs.find("bitsInPhaseOrDepth");
     if (it != iniKeyValPairs.end()) {
@@ -1065,7 +1065,7 @@ int Adsd3500::HandleInterrupts(int signalValue) {
     }
 
     int ret = adsd3500_read_cmd(0x0020, &statusRegister, 0);
-    std::cout << "statusRegister: " << statusRegister << std::endl;
+    std::cout << "INFO: statusRegister: " << statusRegister << std::endl;
 
     return 0;
 }
@@ -1100,7 +1100,7 @@ int Adsd3500::StoreFrameMetaData(uint8_t *header_buffer, int num_frames) {
         }
 
         header.close();
-        std::cout << "Metadata of the frames written to " << filename
+        std::cout << "INFO: Metadata of the frames written to " << filename
                   << std::endl;
     } else {
         std::cout << "Failed to open header file for writing metadata. "
@@ -1919,7 +1919,7 @@ int Adsd3500::adsd3500_configure_dynamic_mode_switching() {
     }
 
     // Turn on Dynamic Mode Switching.
-    std::cout << "Turning on Dynamic Mode Switching." << std::endl;
+    std::cout << "INFO: Turning on Dynamic Mode Switching." << std::endl;
     int ret = adsd3500_write_cmd(0x0080, 0x0001);
     if (ret < 0) {
         std::cout << "Unable to turn on Dynamic Mode Switching in ADSD3500."

@@ -8,10 +8,12 @@ DCL_HEADER_DIR = $(DEPTH_COMPUTE_DIR)/include
 SRCS = $(SRC_DIR)/run_adsd3500.cpp $(SRC_DIR)/adsd3500_util.cpp $(SRC_DIR)/adsd3500_interrupt_notifier.cpp
 CXXFLAGS += -I$(INCLUDE_DIR) -I$(DCL_HEADER_DIR) -std=c++11
 
-ifeq ($(USE_OPEN_SOURCE), 1)
+ifeq ($(OPEN_SOURCE_MODE), 1)
     SRCS += $(wildcard $(OPEN_SOURCE_DIR)/*.cpp)
+	CXXFLAGS += -DOPEN_SOURCE_MODE=1
 else
     LDFLAGS = -L$(CLOSED_SOURCE_DIR) -ltofi_config -ltofi_compute
+	CXXFLAGS += -DOPEN_SOURCE_MODE=0
 endif
 
 all: clean prebuild run_adsd3500

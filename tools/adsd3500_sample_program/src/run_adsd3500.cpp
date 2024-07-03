@@ -49,12 +49,11 @@ int main(int argc, char *argv[]) {
     }
 
     if (adsd3500->mode_num < 0 || adsd3500->mode_num > 3) {
-        std::cout << "Mode Number not supported." << std::endl;
+        std::cout << "ERROR: Mode Number not supported." << std::endl;
         return -1;
     }
-
     if (num_frames <= 0) {
-        std::cout << "Invalid number of frames given." << std::endl;
+        std::cout << "ERROR: Invalid number of frames given." << std::endl;
         return -1;
     }
 
@@ -64,21 +63,22 @@ int main(int argc, char *argv[]) {
     // Open Adsd3500 device.
     ret = adsd3500->OpenAdsd3500();
     if (ret < 0) {
-        printf("Unable to open Adsd3500.\n");
+        printf("ERROR: Unable to open Adsd3500.\n");
         return ret;
     }
 
     // Reset ADSD3500 device.
     ret = adsd3500->ResetAdsd3500();
     if (ret < 0) {
-        printf("Unable to reset Adsd3500.\n");
+        printf("ERROR: Unable to reset Adsd3500.\n");
         return ret;
     }
 
     // Get the Imager Type and the CCB.
     ret = adsd3500->GetImagerTypeAndCCB();
     if (ret < 0) {
-        std::cout << "Unable to get the Imager type and CCB." << std::endl;
+        std::cout << "ERROR: Unable to get the Imager type and CCB."
+                  << std::endl;
         return ret;
     }
 
@@ -93,62 +93,84 @@ int main(int argc, char *argv[]) {
             IniFilePath::adsd3100ModeToConfigFileMap[adsd3500->mode_num]
                 .c_str();
     } else {
-        std::cout << "Unsupported Imager.. Exiting!" << std::endl;
+        std::cout << "ERROR: Unsupported Imager.. Exiting!" << std::endl;
         return 0;
     }
 
-    // Get Ini Key value pairs.
-    if (iniFileName == nullptr) {
-        std::cout << "Ini File not found.. Exiting!" << std::endl;
+#if OPEN_SOURCE_MODE == 1
+    printf("INFO: Executable built with Open-Source Depth Compute Library "
+           "files.\n");
+    if (adsd3500->imagerType == ImagerType::IMAGER_ADSD3100 &&
+        (adsd3500->mode_num == 0 || adsd3500->mode_num == 1)) {
+        printf("***************************************************************"
+               "*********\n");
+        printf("ERROR: The Open-source Depth Compute Library files does not "
+               "support MP modes 0 and 1.\n");
+        printf(
+            "ERROR: Please build the executable with the Closed-Source Depth "
+            "Compute Library to compute the MP Frames, as shown below.\n\n");
+        printf("make OPEN_SOURCE_MODE=0\n");
+        printf("***************************************************************"
+               "*********\n");
         return 0;
     }
-    std::cout << "Ini File Path: " << iniFileName << std::endl;
+#else
+    printf(
+        "INFO: Executable built with Closed-Source Depth Compute Libraries.\n");
+#endif
+
+    // Get Ini Key value pairs.
+    if (iniFileName == nullptr) {
+        std::cout << "ERROR: Ini File not found.. Exiting!" << std::endl;
+        return 0;
+    }
+    std::cout << "INFO: Ini File Path: " << iniFileName << std::endl;
     ret = adsd3500->GetIniKeyValuePair(iniFileName);
     if (ret < 0) {
-        printf("Unable to read ini parameters from the Config file.\n");
+        printf("ERROR: Unable to read ini parameters from the Config file.\n");
         return ret;
     }
 
     // Read Camera Intrinsic and Dealias Parameters from Adsd3500.
     ret = adsd3500->GetIntrinsicsAndDealiasParams();
     if (ret < 0) {
-        printf(
-            "Unable to get Intrinsic and Dealias parameters from Adsd3500.\n");
+        printf("ERROR: Unable to get Intrinsic and Dealias parameters from "
+               "Adsd3500.\n");
         return ret;
     }
 
     // Configure Adsd3500 with the .ini file
     ret = adsd3500->ConfigureAdsd3500WithIniParams();
     if (ret < 0) {
-        printf("Unable to configure Adsd3500 with ini file.\n");
+        printf("ERROR: Unable to configure Adsd3500 with ini file.\n");
         return ret;
     }
 
     // Configure Depth Compute library with Ini Params
     ret = adsd3500->ConfigureDepthComputeLibraryWithIniParams();
     if (ret < 0) {
-        printf("Unable to configure Depth Compute Library.\n");
+        printf("ERROR: Unable to configure Depth Compute Library.\n");
         return ret;
     }
 
     // Configure V4L2 MIPI Capture Driver and V4L2 Capture Sensor Driver.
     ret = adsd3500->ConfigureDeviceDrivers();
     if (ret < 0) {
-        printf("Unable to open Adsd3500.\n");
+        printf("ERROR: Unable to open Adsd3500.\n");
         return ret;
     }
 
     // Configure Frame type.
     ret = adsd3500->SetFrameType();
     if (ret < 0) {
-        printf("Unable to set frame type Adsd3500.\n");
+        printf("ERROR: Unable to set frame type Adsd3500.\n");
         return ret;
     }
 
     // Set the Stream on.
     ret = adsd3500->StartStream();
     if (ret < 0) {
-        printf("Unable to start stream.\n");
+        printf("ERROR: Unable to start stream.\n");
         return ret;
     }
 
@@ -181,7 +203,8 @@ int main(int argc, char *argv[]) {
     std::ofstream depth("out_depth.bin", std::ios::binary);
     std::ofstream conf("out_conf.bin", std::ios::binary);
 
-    std::cout << "Number of Frames requested: " << num_frames << std::endl;
+    std::cout << "INFO: Number of Frames requested: " << num_frames
+              << std::endl;
 
     /* 
     NOTE: The First frame collected from the NXP Eval kit (with Tembin and Crosby) would be 
@@ -190,7 +213,8 @@ int main(int argc, char *argv[]) {
     uint16_t *firstFrameBuffer = new uint16_t[buffer_size];
     ret = adsd3500->RequestFrame(firstFrameBuffer);
     if (ret < 0 || firstFrameBuffer == nullptr) {
-        std::cout << "Unable to receive frames from Adsd3500" << std::endl;
+        std::cout << "ERROR: Unable to receive frames from Adsd3500"
+                  << std::endl;
         return 0;
     }
     delete[] firstFrameBuffer;
@@ -200,13 +224,14 @@ int main(int argc, char *argv[]) {
         uint16_t *buffer = new uint16_t[buffer_size];
         ret = adsd3500->RequestFrame(buffer);
         if (ret < 0 || buffer == nullptr) {
-            std::cout << "Unable to receive frames from Adsd3500" << std::endl;
+            std::cout << "ERROR: Unable to receive frames from Adsd3500"
+                      << std::endl;
         }
 
         // Get Depth, AB, Confidence Data using Depth Compute Library and store them as .bin file.
         ret = adsd3500->ParseRawDataWithDCL(buffer);
         if (ret < 0) {
-            std::cout << "Unable to parse raw frames." << std::endl;
+            std::cout << "ERROR: Unable to parse raw frames." << std::endl;
         }
 
         if (adsd3500->enableMetaDatainAB) {
@@ -248,9 +273,9 @@ int main(int argc, char *argv[]) {
     if (adsd3500->enableMetaDatainAB) {
         ret = adsd3500->StoreFrameMetaData(header_buffer, num_frames);
         if (ret < 0) {
-            std::cout
-                << "Unable to write Metadata of the frames to a text file."
-                << std::endl;
+            std::cout << "ERROR: Unable to write Metadata of the frames to a "
+                         "text file."
+                      << std::endl;
         }
         delete[] header_buffer;
     }
@@ -262,14 +287,14 @@ int main(int argc, char *argv[]) {
     // Stop the Stream.
     ret = adsd3500->StopStream();
     if (ret < 0) {
-        printf("Unable to start stream.\n");
+        printf("ERROR: Unable to stop stream.\n");
         return ret;
     }
 
     // Close the Camera.
     ret = adsd3500->CloseAdsd3500();
     if (ret < 0) {
-        printf("Unable to close Adsd3500.\n");
+        printf("ERROR: Unable to close Adsd3500.\n");
         return ret;
     }
 
