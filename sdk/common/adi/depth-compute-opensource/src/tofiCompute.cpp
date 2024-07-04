@@ -126,12 +126,15 @@ int TofiCompute(const uint16_t *const input_frame,
         (uint16_t *)p_tofi_compute_context->p_conf_frame,
         p_tofi_compute_context->p_ab_frame);
 
-    // Compute Point cloud
-    Algorithms::ComputeXYZ(p_tofi_compute_context->p_depth_frame, &p->xyz_table,
-                           p_tofi_compute_context->p_xyz_frame, n_rows, n_cols);
+    // Compute Point cloud if needed
+    if (p_tofi_compute_context->p_xyz_frame) {
+        Algorithms::ComputeXYZ(
+            p_tofi_compute_context->p_depth_frame, &p->xyz_table,
+            p_tofi_compute_context->p_xyz_frame, n_rows, n_cols);
 
-    if (status != 0) {
-        std::cout << "Unable to compute XYZ !" << std::endl;
+        if (status != 0) {
+            std::cout << "Unable to compute XYZ !" << std::endl;
+        }
     }
 
     return 0;
