@@ -23,6 +23,12 @@ extern "C" { // only need to export C interface if
 
 #include "tofi_error.h"
 
+#ifdef FLOAT_LIBS
+typedef float conf_type;
+#else
+typedef uint16_t conf_type;
+#endif
+
 // TODO: Confirm if its fine to hardcode
 // number of phases as 3, else make it a pointer
 #define NO_OF_PHASES 3
@@ -37,7 +43,7 @@ typedef struct {
     uint32_t n_cols;               ///< Number of columns
     uint16_t *p_depth_frame;       ///< Pointer to the Depth Frame
     uint16_t *p_ab_frame;          ///< Pointer to the AB Frame
-    float *p_conf_frame;           ///< Pointer to the Confidence Frame
+    conf_type *p_conf_frame;       ///< Pointer to the Confidence Frame
     int16_t *p_xyz_frame;          ///< Pointer to the XYZ Frame
     void *p_tofi_processor_config; ///< Pointer to the Processor Config
     void *p_cal_config;            ///< Pointer to the Calibration config data

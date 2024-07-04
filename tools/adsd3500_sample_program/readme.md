@@ -1,6 +1,6 @@
-# Linux Example program
+# NXP Eval Kit Example program to Capture Frames from the Imager.
 
-This is a Linux example program that shows the usage of ADSD3500, device driver and Depth-Compute Library.
+This is an Example program that shows the usage of ADSD3500, device driver and Depth-Compute Library.
 
 The example program performs the following functionalities.
 
@@ -12,31 +12,57 @@ The example program performs the following functionalities.
 6. Starts streaming.
 7. Receives frames.
 8. Passes the received frames to the depth compute library.
-9. Saves the AB, Depth, confidence and metadata to the file system.
+9. Saves the AB, Depth, confidence, XYZ and metadata to the file system.
 10. Stops streaming.
 11. Closes the camera
 12. Exits
 
-## Install Depth Compute Library files.
+# Build Instructions
 
-1. Navigate to the current project directory in the command line terminal.
+The Example program can be built with two options, one is by using the Open-source Depth-Compute files and the other is
+by using Closed-Source Depth Compute shared object library files. 
 
-2. Copy the Depth Compute Library files to the path /usr/lib/
+## Build using Open-Source Depth Compute Files
 
-    $ cd depthComputeLibrary/libs/
-    $ sudo cp libtofi_compute.so libtofi_config.so /usr/lib/
+To build the program with Open-source Depth Compute Files, run the following command. 
+
+    $ make OPEN_SOURCE_MODE=1  
+
+## Build using Closed-Source Depth Compute Library
+
+To build the program with Close-source Depth Compute Libraries, follow the instructions below. 
+
+1. Copy the .so files to the /usr/lib/ location.
+
+    To use the Fixed Point Depth Compute Library:  
+    $ sudo cp depthComputeLibrary/closedSourceLibs/fixedPoint/* /usr/lib/ 
+
+    To use the Fixed Point Depth Compute Library:  
+    $ sudo cp depthComputeLibrary/closedSourceLibs/fixedPoint/* /usr/lib/ If Floating Point Depth Compute Library to be used. 
+
+2. Build the program.  
+
+    $ make FLOAT_LIBS=0 (for fixed point library case)
+
+    $ make FLOAT_LIBS=1 (for floating point library case)
 
 ## Usage
 
-1. Navigate to the current project directory in the command line terminal.
-
-2. Run the following command to generate executable for the example program.
-
-    $ make 
-
-3. Once the executable is generated, run the application by the following command.
+1. Once the executable is generated, run the application by the following command.
 
     $ sudo ./run_adsd3500 -m "mode number" -n "number of frames" 
+
+2. The program stores the AB, Depth, Confidence, XYZ frames and metadata in the same location.
+
+## Visualization
+
+1. To visualize the frames generated, transfer the .bin files to a Host PC via SCP connection.
+
+2. Use the python scripts in the visualize folder to visualize the AB, Depth, Confidence and the Point cloud from the XYZ frames as shown below.
+
+    $ python visualize "width" "height" "num_frames" 
+
+    $ python visualize_pointcloud "width" "height" "num_frames" "xyz_frame_path" 
 
 
 

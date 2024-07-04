@@ -9,20 +9,29 @@ SRCS = $(SRC_DIR)/run_adsd3500.cpp $(SRC_DIR)/adsd3500_util.cpp $(SRC_DIR)/adsd3
 CXXFLAGS += -I$(INCLUDE_DIR) -I$(DCL_HEADER_DIR) -std=c++11
 
 ifeq ($(OPEN_SOURCE_MODE), 1)
+	CXXFLAGS += -DOPEN_SOURCE_MODE
     SRCS += $(wildcard $(OPEN_SOURCE_DIR)/*.cpp)
-	CXXFLAGS += -DOPEN_SOURCE_MODE=1
 else
-    LDFLAGS = -L$(CLOSED_SOURCE_DIR) -ltofi_config -ltofi_compute
-	CXXFLAGS += -DOPEN_SOURCE_MODE=0
+	LDFLAGS = -L$(CLOSED_SOURCE_DIR) -ltofi_config -ltofi_compute
+	ifeq ($(FLOAT_LIBS), 1)
+		CXXFLAGS += -DFLOAT_LIBS
+	endif
 endif
 
 all: clean prebuild run_adsd3500
 
 prebuild:
-ifeq ($(USE_OPEN_SOURCE), 1)
-	@echo "*** Building with Open-source Depth Compute files. ***"
+ifeq ($(OPEN_SOURCE_MODE), 1)
+	@echo "*** Using Open-source Depth Compute files. ***"
 else
-	@echo "*** Building with Closed-source Depth Compute libraries. ***"
+	@echo "*** Using Closed-source Depth Compute libraries. ***"
+ifeq ($(FLOAT_LIBS), 1)
+	@echo "*** Floating Point Depth Compute Libraries will be used to run the target. ***"
+	@echo "*** Pleas copy the .so files from 'depthComputeLibrary/closedSourceLibs/floatingPoint/' to '/usr/lib/' location.***\n" 
+else 
+	@echo "*** Fixed Point Depth Compute Libraries will be used to run the target. ***\n"
+	@echo "*** Pleas copy the .so files from 'depthComputeLibrary/closedSourceLibs/fixedPoint/' to '/usr/lib/' location. ***\n" 
+endif
 endif
 
 run_adsd3500: $(SRCS)

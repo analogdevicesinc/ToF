@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-#if OPEN_SOURCE_MODE == 1
+#ifdef OPEN_SOURCE_MODE
     printf("INFO: Executable built with Open-Source Depth Compute Library "
            "files.\n");
     if (adsd3500->imagerType == ImagerType::IMAGER_ADSD3100 &&
@@ -115,8 +115,12 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 #else
-    printf(
-        "INFO: Executable built with Closed-Source Depth Compute Libraries.\n");
+    #ifdef FLOAT_LIBS
+        printf(
+            "INFO: Executable built for Closed-Source Floating Point Depth Compute Libraries.\n");
+    #else
+        printf("INFO: Executable built for Closed-Source Fixed Point Depth Compute Libraries.\n");
+    #endif
 #endif
 
     // Get Ini Key value pairs.
@@ -193,15 +197,17 @@ int main(int argc, char *argv[]) {
 
     uint16_t *depth_buffer = new uint16_t[total_pixels * num_frames];
     uint16_t *ab_buffer = new uint16_t[total_pixels * num_frames];
-    uint8_t *conf_buffer = new uint8_t[total_pixels * num_frames];
+    conf_type *conf_buffer = new conf_type[total_pixels * num_frames];
     uint8_t *header_buffer;
     if (adsd3500->enableMetaDatainAB) {
         header_buffer = new uint8_t[EMBEDDED_HEADER_SIZE * num_frames];
     }
+    int16_t* xyz_buffer = new int16_t[total_pixels * num_frames * 3];
 
     std::ofstream ab("out_ab.bin", std::ios::binary);
     std::ofstream depth("out_depth.bin", std::ios::binary);
     std::ofstream conf("out_conf.bin", std::ios::binary);
+    std::ofstream xyz("out_xyz.bin", std::ios::binary);
 
     std::cout << "INFO: Number of Frames requested: " << num_frames
               << std::endl;
@@ -252,7 +258,10 @@ int main(int argc, char *argv[]) {
                total_pixels * sizeof(uint16_t));
         memcpy(conf_buffer + i * total_pixels,
                adsd3500->tofi_compute_context->p_conf_frame,
-               total_pixels * sizeof(uint8_t));
+               total_pixels * sizeof(conf_type));
+        memcpy(xyz_buffer + i * total_pixels * 3,
+                adsd3500->tofi_compute_context->p_xyz_frame,
+                total_pixels * sizeof(int16_t) * 3);
     }
 
     // Store AB, Depth and Confidence frames on to a .bin files.
@@ -265,9 +274,14 @@ int main(int argc, char *argv[]) {
     depth.close();
 
     // Store Confidence frame to a .bin file.
-    conf.write((char *)conf_buffer,
-               total_pixels * num_frames * sizeof(uint8_t));
+    conf.write(reinterpret_cast<const char*>(conf_buffer),
+               total_pixels * num_frames * sizeof(conf_type));
     conf.close();
+
+    // Store XYZ frame to a .bin file.
+    xyz.write((char *)xyz_buffer,
+               total_pixels * num_frames * sizeof(int16_t) * 3);
+    xyz.close();
 
     // Write the Metadata of the frames to a text file.
     if (adsd3500->enableMetaDatainAB) {
@@ -283,6 +297,7 @@ int main(int argc, char *argv[]) {
     delete[] ab_buffer;
     delete[] depth_buffer;
     delete[] conf_buffer;
+    delete[] xyz_buffer;
 
     // Stop the Stream.
     ret = adsd3500->StopStream();

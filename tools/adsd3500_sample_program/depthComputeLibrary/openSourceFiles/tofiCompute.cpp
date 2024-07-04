@@ -66,7 +66,7 @@ static uint32_t
 DeInterleaveDepth(uint8_t *p_frame_data, uint32_t n_bits_in_depth,
                   uint32_t n_bits_in_conf, uint32_t n_bits_in_ab,
                   uint32_t n_bytes, uint32_t width, uint32_t height,
-                  uint16_t *p_depth, uint16_t *p_conf, uint16_t *p_ab) {
+                  uint16_t *p_depth, conf_type *p_conf, uint16_t *p_ab) {
     uint8_t *input_buffer = p_frame_data;
 
     uint16_t *out_depth = p_depth;
@@ -123,7 +123,7 @@ int TofiCompute(const uint16_t *const input_frame,
     int status = DeInterleaveDepth(
         (uint8_t *)input_frame, n_depth, n_conf, n_ab, n_bytes, n_cols, n_rows,
         p_tofi_compute_context->p_depth_frame,
-        (uint16_t *)p_tofi_compute_context->p_conf_frame,
+        (conf_type *)p_tofi_compute_context->p_conf_frame,
         p_tofi_compute_context->p_ab_frame);
 
     // Compute Point cloud

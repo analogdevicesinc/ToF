@@ -490,39 +490,48 @@ int Adsd3500::ParseRawDataWithDCL(uint16_t *buffer) {
     // Depth Frames.
     tofi_compute_context->p_depth_frame =
         new uint16_t[xyzDealiasData.n_rows * xyzDealiasData.n_cols];
+    if (tofi_compute_context->p_depth_frame == NULL) {
+        perror("ERROR: Unable to allocate buffer for Depth.\n");
+        return -1;
+    }
+
     // IR Frames.
     tofi_compute_context->p_ab_frame =
         new uint16_t[xyzDealiasData.n_rows * xyzDealiasData.n_cols];
 
+    if (tofi_compute_context->p_ab_frame == NULL) {
+        perror("ERROR: Unable to allocate buffer for AB.\n");
+        return -1;
+    }
+
     // Confidence Frames.
     tofi_compute_context->p_conf_frame =
-        new float[xyzDealiasData.n_rows * xyzDealiasData.n_cols];
+        new conf_type[xyzDealiasData.n_rows * xyzDealiasData.n_cols];
+
+    if (tofi_compute_context->p_conf_frame == NULL) {
+        perror("ERROR: Unable to allocate buffer for Confidence.\n");
+        return -1;
+    }
 
     // XYZ Frames.
     if (enableXyz) {
         tofi_compute_context->p_xyz_frame =
             new int16_t[xyzDealiasData.n_rows * xyzDealiasData.n_cols * 3];
-    }
+        
+        if (tofi_compute_context->p_xyz_frame == NULL) {
+            perror("ERROR: Unable to allocate buffer for XYZ.\n");
+        return -1;
+        }
+    } 
+
+    printf("sasasa\n");   
 
     uint32_t ret = TofiCompute(buffer, tofi_compute_context, NULL);
     if (ret < 0) {
-        perror("Failed to parse frames with Depth Compute Library.\n");
-    }
+        perror("ERROR: Failed to parse frames with Depth Compute Library.\n");
+    } 
 
-    if (tofi_compute_context->p_ab_frame == NULL) {
-        perror("Error in retrieving AB frame.\n");
-        return -1;
-    }
-
-    if (tofi_compute_context->p_depth_frame == NULL) {
-        perror("Error in retrieving Depth frame.\n");
-        return -1;
-    }
-
-    if (tofi_compute_context->p_conf_frame == NULL) {
-        perror("Error in retrieving Confidence frame.\n");
-        return -1;
-    }
+    printf("dajsdnsaks\n");
 
     return 0;
 }
