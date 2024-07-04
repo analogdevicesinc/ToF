@@ -831,6 +831,35 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
+    case GET_COMMANDS: {
+        aditof::Status status = aditof::Status::OK;
+        uint16_t requestNumber = static_cast<uint16_t>(buff_recv.func_int32_param(0));
+        uint16_t requestLen = static_cast<uint16_t>(buff_recv.func_int32_param(1));
+        uint8_t buffer = 123; // TODO: call the right function to get gpio
+        if (status == aditof::Status::OK) {
+            buff_send.add_int32_payload(static_cast<::google::int32>(buffer));
+            buff_send.set_message("GPIO data sent to host");
+        }
+
+        buff_send.set_status(static_cast<::payload::Status>(status));
+        break;
+    }
+
+    case SET_COMMANDS: {
+        aditof::Status status = aditof::Status::OK;
+        uint16_t requestNumber = static_cast<uint16_t>(buff_recv.func_int32_param(0));
+        uint16_t requestLen = static_cast<uint16_t>(buff_recv.func_int32_param(1));
+        const uint8_t *data = reinterpret_cast<const uint8_t *>(
+            buff_recv.func_bytes_param(0).c_str());
+        LOG(INFO) << "data: " << buff_recv.func_bytes_param(0); // TODO: call the right function to set gpio
+        if (status == aditof::Status::OK) {
+            buff_send.set_message("GPIO value set");
+        }
+
+        buff_send.set_status(static_cast<::payload::Status>(status));
+        break;
+    }
+
     default: {
         std::string msgErr = "Function not found";
         std::cout << msgErr << "\n";
@@ -872,4 +901,6 @@ void Initialize() {
     s_map_api_Values["TemperatureSensorRead"] = TEMPERATURE_SENSOR_READ;
     s_map_api_Values["TemperatureSensorClose"] = TEMPERATURE_SENSOR_CLOSE;
     s_map_api_Values["HangUp"] = HANG_UP;
+    s_map_api_Values["GetCommands"] = GET_COMMANDS;
+    s_map_api_Values["SetCommands"] = SET_COMMANDS;
 }
