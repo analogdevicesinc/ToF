@@ -60,11 +60,4 @@ for i in range(num_frames):
     plt.colorbar(label='Pixel Intensity')
     plt.axis('off')
 
-for i in range(num_frames):
-    plt.figure(figsize=(8, 8))
-    plt.imshow(conf_array[:, :, i], cmap='gray')
-    plt.title('Conf Image')
-    plt.colorbar(label='Pixel Intensity')
-    plt.axis('off')
-
 plt.show()
