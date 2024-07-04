@@ -522,16 +522,12 @@ int Adsd3500::ParseRawDataWithDCL(uint16_t *buffer) {
             perror("ERROR: Unable to allocate buffer for XYZ.\n");
         return -1;
         }
-    } 
-
-    printf("sasasa\n");   
+    }  
 
     uint32_t ret = TofiCompute(buffer, tofi_compute_context, NULL);
     if (ret < 0) {
         perror("ERROR: Failed to parse frames with Depth Compute Library.\n");
     } 
-
-    printf("dajsdnsaks\n");
 
     return 0;
 }
