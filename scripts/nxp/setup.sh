@@ -130,7 +130,7 @@ setup() {
         build_and_install_websockets ${deps_dir}/libwebsockets ${deps_install_dir}/websockets
 
         if [ -d ../../../libs ]; then
-                CMAKE_OPTIONS="-DNXP=1 -DWITH_PYTHON=1"
+                CMAKE_OPTIONS="-DNXP=1 -DWITH_PYTHON=1 -DCMAKE_BUILD_TYPE=Release .."
         else
                 CMAKE_OPTIONS="-DNXP=1 -DUSE_DEPTH_COMPUTE_OPENSOURCE=ON -DWITH_PYTHON=1"
         fi
