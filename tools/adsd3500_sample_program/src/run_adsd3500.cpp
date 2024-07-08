@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     int num_frames = 1;          // Number of frames is set to 1 by default.
     adsd3500->ccb_as_master = 0; // Enables/Disbales CCB as master.
     adsd3500->enableMetaDatainAB =
-        1; // When enabled stores Metadata in the AB frame.
+        0; // When enabled stores Metadata in the AB frame.
 
     // Parse Arguments from the Command line.
     for (int i = 1; i < argc; ++i) {
@@ -115,12 +115,13 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 #else
-    #ifdef FLOAT_LIBS
-        printf(
-            "INFO: Executable built for Closed-Source Floating Point Depth Compute Libraries.\n");
-    #else
-        printf("INFO: Executable built for Closed-Source Fixed Point Depth Compute Libraries.\n");
-    #endif
+#ifdef FLOAT_LIBS
+    printf("INFO: Executable built for Closed-Source Floating Point Depth "
+           "Compute Libraries.\n");
+#else
+    printf("INFO: Executable built for Closed-Source Fixed Point Depth Compute "
+           "Libraries.\n");
+#endif
 #endif
 
     // Get Ini Key value pairs.
@@ -202,7 +203,7 @@ int main(int argc, char *argv[]) {
     if (adsd3500->enableMetaDatainAB) {
         header_buffer = new uint8_t[EMBEDDED_HEADER_SIZE * num_frames];
     }
-    int16_t* xyz_buffer = new int16_t[total_pixels * num_frames * 3];
+    int16_t *xyz_buffer = new int16_t[total_pixels * num_frames * 3];
 
     std::ofstream ab("out_ab.bin", std::ios::binary);
     std::ofstream depth("out_depth.bin", std::ios::binary);
@@ -260,8 +261,8 @@ int main(int argc, char *argv[]) {
                adsd3500->tofi_compute_context->p_conf_frame,
                total_pixels * sizeof(conf_type));
         memcpy(xyz_buffer + i * total_pixels * 3,
-                adsd3500->tofi_compute_context->p_xyz_frame,
-                total_pixels * sizeof(int16_t) * 3);
+               adsd3500->tofi_compute_context->p_xyz_frame,
+               total_pixels * sizeof(int16_t) * 3);
     }
 
     // Store AB, Depth and Confidence frames on to a .bin files.
@@ -274,13 +275,13 @@ int main(int argc, char *argv[]) {
     depth.close();
 
     // Store Confidence frame to a .bin file.
-    conf.write(reinterpret_cast<const char*>(conf_buffer),
+    conf.write(reinterpret_cast<const char *>(conf_buffer),
                total_pixels * num_frames * sizeof(conf_type));
     conf.close();
 
     // Store XYZ frame to a .bin file.
     xyz.write((char *)xyz_buffer,
-               total_pixels * num_frames * sizeof(int16_t) * 3);
+              total_pixels * num_frames * sizeof(int16_t) * 3);
     xyz.close();
 
     // Write the Metadata of the frames to a text file.

@@ -517,17 +517,17 @@ int Adsd3500::ParseRawDataWithDCL(uint16_t *buffer) {
     if (enableXyz) {
         tofi_compute_context->p_xyz_frame =
             new int16_t[xyzDealiasData.n_rows * xyzDealiasData.n_cols * 3];
-        
+
         if (tofi_compute_context->p_xyz_frame == NULL) {
             perror("ERROR: Unable to allocate buffer for XYZ.\n");
-        return -1;
+            return -1;
         }
-    }  
+    }
 
     uint32_t ret = TofiCompute(buffer, tofi_compute_context, NULL);
     if (ret < 0) {
         perror("ERROR: Failed to parse frames with Depth Compute Library.\n");
-    } 
+    }
 
     return 0;
 }
