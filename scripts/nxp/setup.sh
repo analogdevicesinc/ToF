@@ -130,9 +130,9 @@ setup() {
         build_and_install_websockets ${deps_dir}/libwebsockets ${deps_install_dir}/websockets
 
         if [[ -f ../../../libs/libtofi_compute.so && -f ../../../libs/libtofi_config.so ]]; then
-                CMAKE_OPTIONS="-DNXP=1 -DWITH_PYTHON=1"
+                CMAKE_OPTIONS="-DNXP=1 -DWITH_PYTHON=1 -DCMAKE_BUILD_TYPE=Release"
         else
-                CMAKE_OPTIONS="-DNXP=1 -DUSE_DEPTH_COMPUTE_OPENSOURCE=ON -DWITH_PYTHON=1"
+                CMAKE_OPTIONS="-DNXP=1 -DUSE_DEPTH_COMPUTE_OPENSOURCE=ON -DWITH_PYTHON=1 -DCMAKE_BUILD_TYPE=Release"
         fi
 
         PREFIX_PATH="${deps_install_dir}/glog;${deps_install_dir}/protobuf;${deps_install_dir}/websockets;"
