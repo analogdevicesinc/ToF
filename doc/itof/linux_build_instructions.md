@@ -69,7 +69,7 @@ Please note, ensure you are using the intended branch.
 git clone --branch v5.0.0 --depth 1 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
-cmake -DWITH_EXAMPLES=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
+cmake -DWITH_EXAMPLES=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" -DCMAKE_BUILD_TYPE=Release ..
 make -j4
 ```
 
@@ -101,7 +101,7 @@ Please note, ensure you are using the intended branch.
 git clone --branch v5.0.0 --depth 1 https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
-cmake -DWITH_EXAMPLES=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
+cmake -DWITH_EXAMPLES=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" -DCMAKE_BUILD_TYPE=Release ..
 make -j4
 ```
 
@@ -121,7 +121,7 @@ sudo apt-get install doxygen graphviz
 
 In order to generate the doxygen documentation you must compile the sdk in the following way:
 ```console
-cmake -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets;/opt/opencv" -DWITH_DOC=on ..
+cmake -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets;/opt/opencv" -DWITH_DOC=on -DCMAKE_BUILD_TYPE=Release ..
 make -j4 doc
 ```
 After compilation, the documentation can be found at this path:
