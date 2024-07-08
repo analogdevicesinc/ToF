@@ -131,6 +131,7 @@ setup() {
 
         if [ -d ../../../libs ]; then
                 CMAKE_OPTIONS="-DNXP=1 -DWITH_PYTHON=1 -DCMAKE_BUILD_TYPE=Release"
+
         else
                 CMAKE_OPTIONS="-DNXP=1 -DUSE_DEPTH_COMPUTE_OPENSOURCE=ON -DWITH_PYTHON=1 -DCMAKE_BUILD_TYPE=Release"
         fi
