@@ -88,7 +88,7 @@ Please note, ensure you are using the intended branch.
 git clone --branch v5.0.0  https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
-cmake -DNXP=1 -DWITH_EXAMPLES=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
+cmake -DNXP=1 -DWITH_EXAMPLES=off -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" -DCMAKE_BUILD_TYPE=Release ..
 make -j4
 ```
 
@@ -100,7 +100,7 @@ Please note, ensure you are using the intended branch.
 git clone --branch v5.0.0  https://github.com/analogdevicesinc/ToF
 cd ToF
 mkdir build && cd build
-cmake -DNXP=1 -DWITH_EXAMPLES=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..
+cmake -DNXP=1 -DWITH_EXAMPLES=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" -DCMAKE_BUILD_TYPE=Release ..
 make -j4
 ```
 
