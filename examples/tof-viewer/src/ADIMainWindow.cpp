@@ -531,7 +531,8 @@ void ADIMainWindow::showRecordMenu() {
 #endif
                 strftime(time_buffer, sizeof(time_buffer), "%Y%m%d%H%M",
                          &timeinfo);
-                tempPath += "\\frames" + std::string(time_buffer);
+                tempPath += "\\mode_" + std::to_string(modeSelection) +
+                            "_frames" + std::string(time_buffer);
 
                 int filterIndex = 0;
                 char tempbuff[MAX_PATH];
