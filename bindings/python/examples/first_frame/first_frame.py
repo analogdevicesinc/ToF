@@ -120,7 +120,7 @@ print("camera1 details:", "id:", camDetails.cameraId, "connection:", camDetails.
 
 status = camera1.setFrameType(mode)
 print("camera1.setFrameType()", status)
-print('Choosen mode: %s' %mode)
+print('Chosen mode: %s' %mode)
 
 # Example of getting/modifying/setting the current ADSD3500 parameters
 # status, currentIniParams = camera1.getIniParams()
