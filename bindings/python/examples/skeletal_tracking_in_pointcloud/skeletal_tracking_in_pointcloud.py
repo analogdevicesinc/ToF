@@ -117,22 +117,10 @@ if __name__ == "__main__":
         print("system.getCameraList(): ", status)
 
     camera1 = cameras[0]
-       
-    status = camera1.setControl("initialization_config", config)
-    print("camera1.setControl()", status)
 
-    status = camera1.initialize()
+    status = camera1.initialize(config)
     if not status:
         print("camera1.initialize() failed with status: ", status)
-
-    modes = []
-    status = camera1.getAvailableModes(modes)
-    if not status:
-        print("system.getAvailableModes() failed with status: ", status)
-
-    status = camera1.setMode(modes[ModesEnum.MODE_NEAR.value])
-    if not status:
-        print("camera1.setMode() failed with status: ", status)
 
     types = []
     status = camera1.getAvailableFrameTypes(types)
@@ -154,7 +142,6 @@ if __name__ == "__main__":
 
     # Enable noise reduction for better results
     smallSignalThreshold = 100
-    camera1.setControl("noise_reduction_threshold", str(smallSignalThreshold))
 
     camera_range = 5000
     bitCount = 9
