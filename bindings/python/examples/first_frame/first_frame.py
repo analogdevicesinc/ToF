@@ -38,8 +38,10 @@ import os
 modemapping = {
 "lr-native": {"width":1024, "height":1024},
 "lr-qnative": {"width":512, "height":512},
+"lr-mixed": {"width":512, "height":512},
 "sr-native": {"width":1024, "height":1024},
-"sr-qnative": {"width":512, "height":512}
+"sr-qnative": {"width":512, "height":512},
+"sr-mixed": {"width":512, "height":512}
 }
 
 mode = "lr-qnative"
@@ -118,7 +120,7 @@ print("camera1 details:", "id:", camDetails.cameraId, "connection:", camDetails.
 
 status = camera1.setFrameType(mode)
 print("camera1.setFrameType()", status)
-print("lrqmp")
+print('Choosen mode: %s' %mode)
 
 # Example of getting/modifying/setting the current ADSD3500 parameters
 # status, currentIniParams = camera1.getIniParams()
@@ -143,6 +145,8 @@ print("camera1.stop()", status)
 
 image = np.array(frame.getData("depth"), copy=False)
 
+
+
 metadata = tof.Metadata
 status, metadata = frame.getMetadataStruct()
 
@@ -155,7 +159,7 @@ print("Mode from metadata: ", metadata.imagerMode)
 status = sensor.adsd3500_unregister_interrupt_callback(callbackFunction)
 
 plt.figure()
-plt.imshow(image)
+plt.imshow(image, cmap = 'jet')
 plt.colorbar()
 plt.show()
 

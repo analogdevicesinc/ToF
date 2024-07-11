@@ -34,7 +34,7 @@ import sys
 import time
 import os
 
-ccb_dir = '\\ccb_directory\\'
+ccb_dir = 'ccb_directory'
 ccb_prefix = 'ccb_'
 
 if __name__ == "__main__":
@@ -59,7 +59,7 @@ if __name__ == "__main__":
         print("Too many arguments provided!")
         exit(1)
 
-    dir_path = os.path.dirname( os.path.abspath(__file__)) + ccb_dir
+    dir_path = os.path.join(os.path.dirname( os.path.abspath(__file__)), ccb_dir)
     if os.path.exists(dir_path):
         print(f"The directory {dir_path} already exists.")
     else:
@@ -78,6 +78,11 @@ if __name__ == "__main__":
 
     status = camera1.initialize(config)
     print(f"camera1.initialize({config})", status)
+    serial_no=''
+    status = camera1.readSerialNumber(serial_no, False)
+    serial_no = status[1].rstrip('\x00')
+    print('Module serial number is: %s' %(serial_no))
+    ccb_prefix = ccb_prefix+serial_no+'_'
 
     camDetails = tof.CameraDetails()
     status = camera1.getDetails(camDetails)
@@ -107,10 +112,11 @@ if __name__ == "__main__":
     print("p1: ",intrinsicParameters.p1)
 
     ccb_filename = ccb_prefix + time.strftime('%y%m%d%H%M') + '.ccb'
-    status = camera1.saveModuleCCB(dir_path + ccb_filename)
+    
+    status = camera1.saveModuleCCB(os.path.join(dir_path,ccb_filename))
     print("camera1.saveModuleCCB()", status)
 
-    file_exists = os.path.isfile(dir_path + ccb_filename)
+    file_exists = os.path.isfile(os.path.join(dir_path, ccb_filename))
     if (file_exists):
         print(f"{ccb_filename} saved in {dir_path}")
     else:
