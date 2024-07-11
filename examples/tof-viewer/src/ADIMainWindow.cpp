@@ -677,12 +677,6 @@ void ADIMainWindow::showDeviceMenu() {
                 _isOpenDevice = true;
             }
 
-            if (!m_connectedDevices.empty()) {
-                ImGuiExtensions::ADIComboBox(
-                    "Config", "No Config Files", ImGuiSelectableFlags_None,
-                    m_configFiles, &configSelection, _isOpenDevice);
-            }
-
             bool _noConnected = m_connectedDevices.empty();
             if (ImGuiExtensions::ADIButton("Refresh", _noConnected)) {
                 _isOpenDevice = false;
@@ -1363,7 +1357,7 @@ void ADIMainWindow::InitCamera() {
         return;
     }
 
-    status = camera->initialize(m_configFiles[configSelection].second);
+    status = camera->initialize("");
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
         return;
@@ -1376,83 +1370,7 @@ void ADIMainWindow::InitCamera() {
     LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
     LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
 
-    //Parse config.json
-    std::ifstream ifs(m_configFiles[configSelection].second);
-    std::string content((std::istreambuf_iterator<char>(ifs)),
-                        (std::istreambuf_iterator<char>()));
-    std::vector<std::pair<std::string, int32_t>> device_settings;
-    cJSON *config_json = cJSON_Parse(content.c_str());
-
-    if (config_json != NULL) {
-        // Get GUI MAX_RANGE file location
-        const cJSON *json_min_max_range =
-            cJSON_GetObjectItemCaseSensitive(config_json, "MAX_RANGE");
-        if (cJSON_IsString(json_min_max_range) &&
-            (json_min_max_range->valuestring != NULL)) {
-            // Set Max range
-            view->maxRange = std::stoi(json_min_max_range->valuestring);
-        }
-        //Get GUI MIN_RANGE file location
-        json_min_max_range =
-            cJSON_GetObjectItemCaseSensitive(config_json, "MIN_RANGE");
-        if (cJSON_IsString(json_min_max_range) &&
-            (json_min_max_range->valuestring != NULL)) {
-            // Set Min range
-            view->minRange = std::stoi(json_min_max_range->valuestring);
-        }
-        //Get GUI AB_MAX_RANGE and AB_MIN_RANGE file location
-        json_min_max_range =
-            cJSON_GetObjectItemCaseSensitive(config_json, "AB_MAX_RANGE");
-        if (cJSON_IsString(json_min_max_range) &&
-            (json_min_max_range->valuestring != NULL)) {
-            uint32_t value =
-                (uint32_t)std::stoi(json_min_max_range->valuestring);
-            view->setABMaxRange(value);
-            view->setUserABMaxState(true);
-        } else {
-            view->setUserABMaxState(false);
-        }
-        json_min_max_range =
-            cJSON_GetObjectItemCaseSensitive(config_json, "AB_MIN_RANGE");
-        if (cJSON_IsString(json_min_max_range) &&
-            (json_min_max_range->valuestring != NULL)) {
-            uint32_t value =
-                (uint32_t)std::stoi(json_min_max_range->valuestring);
-            view->setABMinRange(value);
-            view->setUserABMinState(true);
-        } else {
-            view->setUserABMinState(false);
-        }
-        //Get available modes
-        json_min_max_range =
-            cJSON_GetObjectItemCaseSensitive(config_json, "modes");
-        if (cJSON_IsString(json_min_max_range) &&
-            (json_min_max_range->valuestring != NULL)) {
-            // Add to _cameraModes the available modes
-            std::string cameraElements =
-                static_cast<std::string>(json_min_max_range->valuestring);
-            std::string delimiter = ",";
-            size_t position = 0;
-            std::string token = "";
-            cameraElements.erase(
-                std::remove(cameraElements.begin(), cameraElements.end(), ' '),
-                cameraElements
-                    .end()); //Cleanup the string to eliminate blank spaces.
-
-            _usesExternalModeDefinition = true;
-
-        } else {
-            _usesExternalModeDefinition = false;
-        }
-
-        cJSON_Delete(config_json);
-    }
-    if (!ifs.fail()) {
-        ifs.close();
-    }
-
-    if (!_usesExternalModeDefinition)
-        camera->getAvailableModes(_cameraModes);
+    camera->getAvailableModes(_cameraModes);
     sort(_cameraModes.begin(), _cameraModes.end());
 
     for (int i = 0; i < _cameraModes.size(); ++i) {
