@@ -22,81 +22,81 @@ variables:
   
 
 jobs:
-- job: LinuxBuilds
-  strategy:
-    matrix:
+# - job: LinuxBuilds
+#   strategy:
+#     matrix:
       
-      #PC
-      ubuntu_20_04_x86_64:
-        imageName: 'ubuntu-20.04'
+#       #PC
+#       ubuntu_20_04_x86_64:
+#         imageName: 'ubuntu-20.04'
 
-      ubuntu_22_04_x86_64:
-        imageName: 'ubuntu-22.04'
+#       ubuntu_22_04_x86_64:
+#         imageName: 'ubuntu-22.04'
 
-      ubuntu_22_04_x86_64_offline:
-        imageName: 'ubuntu-22.04'
-        EXTRA_CMAKE_FLAGS: "-DWITH_OFFLINE=on"
+#       ubuntu_22_04_x86_64_offline:
+#         imageName: 'ubuntu-22.04'
+#         EXTRA_CMAKE_FLAGS: "-DWITH_OFFLINE=on"
 
-      #IMX
-      ubuntu_20_04_imx:
-        imageName: 'ubuntu-20.04'
-        DOCKER: "septimiuvana/tof-imx8-docker"
-        EXTRA_CMAKE_FLAGS: "-DNXP=1"
+#       #IMX
+#       ubuntu_20_04_imx:
+#         imageName: 'ubuntu-20.04'
+#         DOCKER: "septimiuvana/tof-imx8-docker"
+#         EXTRA_CMAKE_FLAGS: "-DNXP=1"
 
-      #NVIDIA
-      ubuntu_20_04_nvidia:
-        imageName: 'ubuntu-20.04'
-        DOCKER: "adismartcamtest/tof_nvidia:4.0"
-        EXTRA_CMAKE_FLAGS: "-DNVIDIA=1"
+#       #NVIDIA
+#       ubuntu_20_04_nvidia:
+#         imageName: 'ubuntu-20.04'
+#         DOCKER: "adismartcamtest/tof_nvidia:4.0"
+#         EXTRA_CMAKE_FLAGS: "-DNVIDIA=1"
       
-      #code quality, TO DO: once entire code is formatted enable clang-format
-      clang_format:
-        imageName: 'ubuntu-22.04'
-        BUILD_TYPE: "clang_format"
+#       #code quality, TO DO: once entire code is formatted enable clang-format
+#       clang_format:
+#         imageName: 'ubuntu-22.04'
+#         BUILD_TYPE: "clang_format"
 
-      cppcheck:
-        imageName: 'ubuntu-20.04'
-        BUILD_TYPE: "cppcheck"
+#       cppcheck:
+#         imageName: 'ubuntu-20.04'
+#         BUILD_TYPE: "cppcheck"
 
-      deploy_doxygen:
-        imageName: 'ubuntu-20.04'
-        BUILD_TYPE: "deploy_doxygen"
+#       deploy_doxygen:
+#         imageName: 'ubuntu-20.04'
+#         BUILD_TYPE: "deploy_doxygen"
 
-  pool:
-    vmImage: $(imageName)
-  steps:
-  - checkout: self
-    fetchDepth: 1
-    submodules: true
-    clean: true
-    persistCredentials: true
+#   pool:
+#     vmImage: $(imageName)
+#   steps:
+#   - checkout: self
+#     fetchDepth: 1
+#     submodules: true
+#     clean: true
+#     persistCredentials: true
 
-  - task: Cache@2
-    condition: and(
-      eq(variables['DOCKER'], ''),
-      ne(variables['BUILD_TYPE'], 'clang_format'),
-      ne(variables['BUILD_TYPE'], 'cppcheck'),
-      ne(variables['BUILD_TYPE'], 'deploy_doxygen')
-      )
+#   - task: Cache@2
+#     condition: and(
+#       eq(variables['DOCKER'], ''),
+#       ne(variables['BUILD_TYPE'], 'clang_format'),
+#       ne(variables['BUILD_TYPE'], 'cppcheck'),
+#       ne(variables['BUILD_TYPE'], 'deploy_doxygen')
+#       )
 
-    inputs:
-      key: mykeyx | "$(imageName)" 
-      restoreKeys: mykeyx | "$(imageName)"
-      path: $(DEPS_DIR)
-      cacheHitVar: CACHE_RESTORED
+#     inputs:
+#       key: mykeyx | "$(imageName)" 
+#       restoreKeys: mykeyx | "$(imageName)"
+#       path: $(DEPS_DIR)
+#       cacheHitVar: CACHE_RESTORED
     
-  - script: ./ci/azure/deps.sh
-    condition: or(
-      eq(variables.CACHE_RESTORED, 'false'), 
-      eq(variables['BUILD_TYPE'], 'clang_format'),
-      eq(variables['BUILD_TYPE'], 'cppcheck'),
-      eq(variables['BUILD_TYPE'], 'deploy_doxygen')
-      )
+#   - script: ./ci/azure/deps.sh
+#     condition: or(
+#       eq(variables.CACHE_RESTORED, 'false'), 
+#       eq(variables['BUILD_TYPE'], 'clang_format'),
+#       eq(variables['BUILD_TYPE'], 'cppcheck'),
+#       eq(variables['BUILD_TYPE'], 'deploy_doxygen')
+#       )
       
-    displayName: "Install Dependencies"
+#     displayName: "Install Dependencies"
 
-  - script: ./ci/azure/run_build.sh
-    displayName: "Build"
+#   - script: ./ci/azure/run_build.sh
+#     displayName: "Build"
 
 - job: WindowsBuild
   strategy:
@@ -121,6 +121,13 @@ jobs:
     fetchDepth: 1
     submodules: true
     clean: true
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        ls
+        cd libaditof
+        ls
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '3.9'
