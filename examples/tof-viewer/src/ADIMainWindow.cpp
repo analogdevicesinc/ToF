@@ -1522,6 +1522,11 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
 
     if (ImGui::Begin("Information Window", nullptr,
                      overlayFlags | ImGuiWindowFlags_NoTitleBar)) {
+
+        if (!m_focusedOnce) {
+            ImGui::SetWindowFocus();
+            m_focusedOnce = true;
+        }
         char formattedIP[20];
         for (int i = 0; i < m_cameraIp.length(); i++)
             formattedIP[i] = toupper(m_cameraIp[i]);
@@ -1812,10 +1817,6 @@ void ADIMainWindow::displayDepthWindow(ImGuiWindowFlags overlayFlags) {
     std::string title =
         "Depth"; //std::format("Depth: {} x {}", static_cast<uint32_t>(view->frameWidth), static_cast<uint32_t>(view->frameWidth));
     if (ImGui::Begin(title.c_str(), nullptr, overlayFlags)) {
-        if (!m_focusedOnce) {
-            ImGui::SetWindowFocus();
-            m_focusedOnce = true;
-        }
         ImVec2 hoveredImagePixel = InvalidHoveredPixel;
         GetHoveredImagePix(hoveredImagePixel, ImGui::GetCursorScreenPos(),
                            ImGui::GetIO().MousePos, displayDepthDimensions);
