@@ -1,0 +1,60 @@
+From df1d142ee9e2961f8d9e3ed018178dca81a62433 Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Mon, 10 Jun 2024 17:42:47 +0530
+Subject: [PATCH 2/4] overlay: t23x: adsd3500: added gpio port expanders i2c
+ device nodes
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ .../tegra234-p3767-camera-p3768-adsd3500.dts  | 21 ++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
+
+diff --git a/overlay/tegra234-p3767-camera-p3768-adsd3500.dts b/overlay/tegra234-p3767-camera-p3768-adsd3500.dts
+index 76218f8..69fdc86 100644
+--- a/overlay/tegra234-p3767-camera-p3768-adsd3500.dts
++++ b/overlay/tegra234-p3767-camera-p3768-adsd3500.dts
+@@ -4,6 +4,7 @@
+ /dts-v1/;
+ /plugin/;
+ 
++#include <dt-bindings/pinctrl/pinctrl-tegra.h>
+ #include <dt-bindings/tegra234-p3767-0000-common.h>
+ 
+ / {
+@@ -30,7 +31,7 @@
+ 					};
+ 				};
+ 			};
+-            tegra-camera-platform {
++			tegra-camera-platform {
+ 				compatible = "nvidia, tegra-camera-platform";
+ 				/**
+ 				* Physical settings to calculate max ISO BW
+@@ -495,6 +496,24 @@
+ 							};
+ 						};
+ 					};
++				gpio_exp_1: gpio@58 {
++						compatible = "maxim,max7320";
++						status = "okay";
++						reg = <0x58>;
++						gpio-controller;
++						#gpio-cells = <2>;
++						gpio-line-names = "M0", "M1", "SI0", "U0",
++								"IDSEL", "DS2", "EN_1P8", "EN_0P8";
++				};
++				gpio_exp_2: gpio@68 {
++						compatible = "maxim,max7321";
++						status = "okay";
++						reg = <0x68>;
++						gpio-controller;
++						#gpio-cells = <2>;
++						gpio-line-names = "OC0", "OC1", "OC2", "OC3",
++								"OC4", "OC5", "OC6", "FLASH_WP";
++					};
+ 				};
+ 			};
+ 		};
+-- 
+2.34.1
+

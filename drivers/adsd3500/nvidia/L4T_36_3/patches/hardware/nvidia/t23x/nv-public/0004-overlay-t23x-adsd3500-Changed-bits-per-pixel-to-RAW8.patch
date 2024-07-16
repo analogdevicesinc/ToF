@@ -1,0 +1,37 @@
+From a7acc4550b78eb41705c2539351e57029bde060e Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Tue, 16 Jul 2024 11:03:10 +0530
+Subject: [PATCH 4/4] overlay: t23x: adsd3500: Changed bits per pixel to RAW8
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ overlay/tegra234-p3767-camera-p3768-adsd3500.dts | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/overlay/tegra234-p3767-camera-p3768-adsd3500.dts b/overlay/tegra234-p3767-camera-p3768-adsd3500.dts
+index fec6696..57d92d4 100644
+--- a/overlay/tegra234-p3767-camera-p3768-adsd3500.dts
++++ b/overlay/tegra234-p3767-camera-p3768-adsd3500.dts
+@@ -301,8 +301,8 @@
+ 							discontinuous_clk = "yes";
+ 							dpcm_enable = "false";
+ 							cil_settletime = "0";
+-							dynamic_pixel_bit_depth = "12";
+-							csi_pixel_bit_depth = "12";
++							dynamic_pixel_bit_depth = "8";
++							csi_pixel_bit_depth = "8";
+ 							mode_type = "bayer";
+ 							pixel_phase = "bggr";
+ 
+@@ -312,7 +312,7 @@
+ 							line_length = "512";
+ 							inherent_gain = "1";
+ 							mclk_multiplier = "4";
+-							pix_clk_hz = "208333333";
++							pix_clk_hz = "312500000";
+ 
+ 							min_gain_val = "0";
+ 							max_gain_val = "48";
+-- 
+2.34.1
+
