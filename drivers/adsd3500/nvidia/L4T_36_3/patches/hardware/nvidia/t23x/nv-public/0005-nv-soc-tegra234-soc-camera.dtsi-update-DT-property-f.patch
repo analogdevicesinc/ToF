@@ -1,0 +1,54 @@
+From 51b383acf37573cbb0309bec18573f007451699d Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Tue, 23 Jul 2024 16:42:44 +0530
+Subject: [PATCH] nv-soc: tegra234-soc-camera.dtsi: update DT property for VI
+ HW
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ nv-soc/tegra234-soc-camera.dtsi | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/nv-soc/tegra234-soc-camera.dtsi b/nv-soc/tegra234-soc-camera.dtsi
+index 52cbe51..d5ee47c 100644
+--- a/nv-soc/tegra234-soc-camera.dtsi
++++ b/nv-soc/tegra234-soc-camera.dtsi
+@@ -28,7 +28,7 @@
+ 				iommus = <&smmu_iso TEGRA234_SID_ISO_VI>;
+ 				interconnects = <&mc TEGRA234_MEMORY_CLIENT_VIW &emc>;
+ 				interconnect-names = "write";
+-				non-coherent;
++				dma-noncoherent;
+ 				status = "okay";
+ 			};
+ 
+@@ -36,6 +36,8 @@
+ 				compatible = "nvidia,tegra234-vi-thi";
+ 				resets = <&bpmp TEGRA234_RESET_VI>;
+ 				reset-names = "vi0_thi";
++				iommus = <&smmu_iso TEGRA234_SID_ISO_VI>;
++				dma-noncoherent;
+ 				interconnects = <&mc TEGRA234_MEMORY_CLIENT_VI2FALR &emc>,
+ 						<&mc TEGRA234_MEMORY_CLIENT_VI2FALW &emc>;
+ 				interconnect-names = "dma-mem", "write";
+@@ -52,7 +54,7 @@
+ 				iommus = <&smmu_iso TEGRA234_SID_ISO_VI2>;
+ 				interconnects = <&mc TEGRA234_MEMORY_CLIENT_VI2W &emc>;
+ 				interconnect-names = "write";
+-				non-coherent;
++				dma-noncoherent;
+ 				status = "okay";
+ 			};
+ 
+@@ -60,6 +62,8 @@
+ 				compatible = "nvidia,tegra234-vi-thi";
+ 				resets = <&bpmp TEGRA234_RESET_VI2>;
+ 				reset-names = "vi1_thi";
++				iommus = <&smmu_iso TEGRA234_SID_ISO_VI2>;
++				dma-noncoherent;
+ 				interconnects = <&mc TEGRA234_MEMORY_CLIENT_VIFALR &emc>,
+ 						<&mc TEGRA234_MEMORY_CLIENT_VIFALW &emc>;
+ 				interconnect-names = "dma-mem", "write";
+-- 
+2.34.1
+
