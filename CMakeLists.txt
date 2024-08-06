@@ -155,9 +155,8 @@ set(CONFIG_DIR_NAME "config")
 add_definitions(-DCONFIG_DIR_NAME="${CONFIG_DIR_NAME}")
 add_definitions(-DRESOURCES="${RESOURCES_DIR}")
 
-add_subdirectory(dependencies)
 add_subdirectory(apps)
-add_subdirectory(libaditof/sdk)
+add_subdirectory(libaditof)
 
 if (WITH_EXAMPLES)
         add_subdirectory(examples)
