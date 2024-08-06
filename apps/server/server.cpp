@@ -548,7 +548,9 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             int height_tmp = aditofModeDetail.baseResolutionHeight;
 
             if (aditofModeDetail.isPCM) {
-                processedFrameSize = width_tmp * height_tmp;
+                processedFrameSize =
+                    width_tmp * height_tmp * aditofModeDetail.numberOfPhases;
+
             } else {
                 processedFrameSize = width_tmp * height_tmp * 4;
             }
@@ -607,7 +609,8 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             int height_tmp = aditofModeDetail.baseResolutionHeight;
 
             if (aditofModeDetail.isPCM) {
-                processedFrameSize = width_tmp * height_tmp;
+                processedFrameSize =
+                    width_tmp * height_tmp * aditofModeDetail.numberOfPhases;
             } else {
                 processedFrameSize = width_tmp * height_tmp * 4;
             }
