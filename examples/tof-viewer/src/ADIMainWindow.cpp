@@ -74,7 +74,7 @@ using namespace adiMainWindow;
 
 auto startTime = std::chrono::system_clock::now();
 static int numProcessors;
-static uint8_t last_mode = 0;
+static uint8_t last_mode = -1;
 std::map<std::string, std::string> ini_params;
 std::map<std::string, std::string> modified_ini_params;
 std::map<std::string, std::string> last_ini_params;
@@ -534,7 +534,6 @@ void ADIMainWindow::showRecordMenu() {
                          &timeinfo);
                 tempPath += "\\mode_" + std::to_string(modeSelection) +
                             "_frames" + std::string(time_buffer);
-
                 int filterIndex = 0;
                 char tempbuff[MAX_PATH];
                 tempPath.copy(tempbuff, tempPath.length(), 0);
@@ -1480,7 +1479,7 @@ void ADIMainWindow::PlayCCD(int modeSelect, int viewSelect) {
                 view->m_ctrl->StopCapture();
             }
 
-            prepareCamera(m_cameraModes[modeSelection].second);
+            prepareCamera(modeSelect);
             openGLCleanUp();
             initOpenGLABTexture();
             initOpenGLDepthTexture();
