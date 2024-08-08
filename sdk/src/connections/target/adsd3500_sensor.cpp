@@ -48,7 +48,16 @@
 #define CTRL_PHASE_DEPTH_BITS (0x9819e2)
 #define CTRL_AB_BITS (0x9819e3)
 #define CTRL_CONFIDENCE_BITS (0x9819e4)
+
 #ifdef NVIDIA
+#define V4L2_CID_AD_DEV_CHIP_CONFIG (0x9819d1)
+#define CTRL_PACKET_SIZE 65537
+#define CTRL_SET_MODE (0x9819d0)
+#define CTRL_AB_AVG (0x9819d5)
+#define CTRL_DEPTH_EN (0x9819d6)
+#define CTRL_PHASE_DEPTH_BITS (0x9819d2)
+#define CTRL_AB_BITS (0x9819d3)
+#define CTRL_CONFIDENCE_BITS (0x9819d4)
 #define CTRL_SET_FRAME_RATE (0x9a200b)
 #endif
 #define ADSD3500_CTRL_PACKET_SIZE 4099
@@ -139,11 +148,22 @@ Adsd3500Sensor::Adsd3500Sensor(const std::string &driverPath,
     m_controls.emplace("netlinktest", "0");
 
     // Define the commands that correspond to the sensor controls
+#ifdef NXP
     m_implData->controlsCommands["abAveraging"] = 0x9819e5;
     m_implData->controlsCommands["depthEnable"] = 0x9819e6;
     m_implData->controlsCommands["phaseDepthBits"] = 0x9819e2;
     m_implData->controlsCommands["abBits"] = 0x9819e3;
     m_implData->controlsCommands["confidenceBits"] = 0x9819e4;
+#endif
+
+#ifdef NVIDIA
+     m_implData->controlsCommands["abAveraging"] = 0x9819d5;
+    m_implData->controlsCommands["depthEnable"] = 0x9819d6;
+    m_implData->controlsCommands["phaseDepthBits"] = 0x9819d2;
+    m_implData->controlsCommands["abBits"] = 0x9819d3;
+    m_implData->controlsCommands["confidenceBits"] = 0x9819d4;
+#endif
+
 
     m_bufferProcessor = new BufferProcessor();
 }
