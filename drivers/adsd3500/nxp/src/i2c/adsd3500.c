@@ -10,14 +10,22 @@
 #include <linux/gpio/consumer.h>
 #include <linux/pinctrl/consumer.h>
 #include <linux/pwm.h>
+#include <linux/firmware.h>
+#include <linux/delay.h>
 #include <linux/i2c.h>
 #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/pm_runtime.h>
 #include <linux/regmap.h>
+#include <linux/debugfs.h>
+#include <linux/sched/signal.h>
 #include <media/v4l2-ctrls.h>
 #include <media/v4l2-fwnode.h>
 #include <media/v4l2-subdev.h>
+
+static bool fw_load = false;
+module_param(fw_load, bool, 0644);
+MODULE_PARM_DESC(fw_load, "Boolean enabling/disbaling firmware loading by driver");
 
 struct adsd3500_mode_info {
 	uint32_t width;
@@ -61,7 +69,13 @@ struct adsd3500 {
 	struct mutex lock;
 	bool streaming;
 
+	const struct firmware  *main_fw;
 	struct gpio_desc *rst_gpio;
+	struct gpio_desc *irq_gpio;
+	int    irq;
+	struct dentry *debugfs;
+	struct task_struct *task;
+	int signalnum;
 };
 
 static inline struct adsd3500 *to_adsd3500(struct v4l2_subdev *sd)
@@ -87,24 +101,121 @@ static const struct reg_sequence adsd3500_standby_setting[] = {
 };
 
 static const s64 link_freq_tbl[] = {
-	732000000,
-	732000000,
-	732000000,
-	732000000,
-	732000000,
-	732000000,
-	732000000,
-	732000000,
-	732000000,
+	732000000
 };
 
+static int debug_open(struct inode *inode, struct file *file)
+{
+	struct adsd3500 *adsd3500;
+
+	if (inode->i_private)
+		file->private_data = inode->i_private;
+
+	adsd3500 = (struct adsd3500 *) file->private_data;
+
+	dev_dbg(adsd3500->dev, "Entered debugfs file open\n");
+
+	return 0;
+}
+
+static int debug_release(struct inode *inode, struct file *file)
+{
+	struct adsd3500 *adsd3500;
+	struct task_struct *release_task = get_current();
+
+	if (inode->i_private)
+		file->private_data = inode->i_private;
+
+	adsd3500 = (struct adsd3500 *) file->private_data;
+
+	dev_dbg(adsd3500->dev, "Entered debugfs file close\n");
+	if(release_task == adsd3500->task) {
+		adsd3500->task = NULL;
+	}
+
+	return 0;
+}
+
+ssize_t debug_read(struct file *file, char __user *buff, size_t count, loff_t *offset){
+
+	struct adsd3500 *adsd3500 = file->private_data;
+	unsigned int read_val;
+	unsigned int len;
+	int ret;
+	char data[16];
+
+	dev_dbg(adsd3500->dev, "Entered debugfs file read\n");
+	ret = regmap_read(adsd3500->regmap, GET_IMAGER_STATUS_CMD, &read_val);
+	if (ret < 0) {
+		dev_err(adsd3500->dev, "Read of get status cmd failed.\n");
+		len = snprintf(data, sizeof(data), "Read failed\n");
+	}
+	else{
+		dev_dbg(adsd3500->dev, "Read the error status: %.4X\n", read_val);
+		len = snprintf(data, sizeof(data), "0x%.4X\n",read_val);
+	}
+	return simple_read_from_buffer(buff, count, offset, data, len);
+
+}
+
+ssize_t debug_write(struct file *file, const char __user *buff, size_t count, loff_t *offset){
+
+	struct adsd3500 *adsd3500 = file->private_data;
+
+	dev_dbg(adsd3500->dev, "Entered debugfs file write\n");
+
+	return count;
+}
+
+static long debug_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+	struct adsd3500 *adsd3500;
+
+	adsd3500 = (struct adsd3500 *) file->private_data;
+
+	dev_dbg(adsd3500->dev, "Entered debugfs ioctl\n");
+	if (cmd == USER_TASK) {
+		dev_dbg(adsd3500->dev, "Registered user task\n");
+		adsd3500->task = get_current();
+		adsd3500->signalnum = SIGETX;
+	}
+
+	return 0;
+}
+
+static const struct file_operations adsd3500_debug_fops = {
+	.owner 	= THIS_MODULE,
+	.open   = debug_open,
+	.read 	= debug_read,
+	.write  = debug_write,
+	.unlocked_ioctl = debug_ioctl,
+	.release= debug_release,
+};
+
+static irqreturn_t adsd3500_irq_handler(int irq,void *priv)
+{
+
+	struct adsd3500 *adsd3500 = (struct adsd3500 *) priv;
+
+	dev_dbg(adsd3500-> dev, "Entered ADSD3500 IRQ handler\n");
+
+	if (adsd3500->task != NULL) {
+		dev_dbg(adsd3500->dev, "Sending signal to app\n");
+		if(send_sig_info(SIGETX, SEND_SIG_PRIV, adsd3500->task) < 0) {
+			dev_err(adsd3500->dev, "Unable to send signal\n");
+		}
+	}
+
+	return IRQ_HANDLED;
+
+}
 /* Elements of the structure must be ordered ascending by width & height */
 static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
-	{ //RAW12 12BPP
+	{ //RAW8 8BPP
 		.width = 512,
 		.height = 512,
 		.pixel_rate = 488000000,
-		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
 	},
 	{ //RAW8 16BPP
@@ -112,57 +223,352 @@ static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
 		.height = 512,
 		.pixel_rate = 488000000,
 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
-		.link_freq_idx = 1 /* an index in link_freq_tbl[] */
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
 	},
 	{ //RAW8 20BPP
 		.width = 1280,
 		.height = 512,
 		.pixel_rate = 488000000,
 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
-		.link_freq_idx = 2 /* an index in link_freq_tbl[] */
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
 	},
 	{ //RAW8 24BPP
 		.width = 1536,
 		.height = 512,
 		.pixel_rate = 488000000,
 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
-		.link_freq_idx = 3 /* an index in link_freq_tbl[] */
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
 	},
 	{ //RAW8 28BPP
 		.width = 1792,
 		.height = 512,
 		.pixel_rate = 488000000,
 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
-		.link_freq_idx = 4 /* an index in link_freq_tbl[] */
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
 	},
 	{ //RAW8 32BPP
 		.width = 2048,
 		.height = 512,
 		.pixel_rate = 488000000,
 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
-		.link_freq_idx = 5 /* an index in link_freq_tbl[] */
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
 	},
 	{ //RAW8 36BPP
 		.width = 2304,
 		.height = 512,
 		.pixel_rate = 488000000,
 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
-		.link_freq_idx = 6 /* an index in link_freq_tbl[] */
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
 	},
 	{ //RAW8 40BPP
 		.width = 2560,
 		.height = 512,
 		.pixel_rate = 488000000,
 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
-		.link_freq_idx = 7 /* an index in link_freq_tbl[] */
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
 	},
-	{ //RAW12 12BPP * 3 phase
-		.width = 3072,
+	{ //RAW12 12BPP Depth only
+		.width = 512,
+		.height = 512,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW12 12BPP AB test
+		.width = 2048,
+		.height = 512,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW12 12BPP ADSD3030
+		.width = 512,
+		.height = 640,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 16BPP ADSD3030
+		.width = 1024,
+		.height = 640,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 24BPP ADSD3030
+		.width = 1536,
+		.height = 640,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 32BPP ADSD3030
+		.width = 2048,
+		.height = 640,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 40BPP ADSD3030
+		.width = 2560,
+		.height = 640,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW12 1 Phase / Frame
+		.width = 1024,
 		.height = 1024,
 		.pixel_rate = 488000000,
 		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
-		.link_freq_idx = 8 /* an index in link_freq_tbl[] */
-	}
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW12 12BPP ADSD3030
+		.width = 512,
+		.height = 640,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_Y12_1X12,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW12 12BPP * 6 subframes ADSD3030 256x320x6
+		.width = 1024,
+		.height = 480,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_Y12_1X12,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW12 12BPP * 9 subframes ADSD3030 256x320x9
+		.width = 1024,
+		.height = 720,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_Y12_1X12,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW12 12BPP * 3 subframes ADSD3030 512x640x3
+		.width = 1024,
+		.height = 960,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_Y12_1X12,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW12 12BPP * 6 subframes ADSD3030 512x640x6
+		.width = 1024,
+		.height = 1920,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_Y12_1X12,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW12 12BPP * 9 subframes ADSD3030 512x640x9
+		.width = 1024,
+		.height = 2880,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_Y12_1X12,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW12 12BPP * 3 phase
+		.width = 1024,
+		.height = 3072,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW12 12BPP * 3 phase
+		.width = 1024,
+		.height = 4096,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW12 12BPP * 3 phase + 12BPP * 3 AB
+		.width = 2048,
+		.height = 5376,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW12 12BPP * 2 phase + 12BPP * 2 AB
+		.width = 2048,
+		.height = 3584,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW12 12BPP * 9 subframes ADSD3100 512x512x9
+		.width = 1024,
+		.height = 2304,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 SR MP 2 phase + 1 AB
+		.width = 2048,
+		.height = 2560,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 LR MP 3 phase + 1 AB
+		.width = 2048,
+		.height = 3328,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 ADSD3030
+		.width = 1280,
+		.height = 320,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 ADSD3030
+		.width =  256,
+		.height = 320,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 ADSD3030
+		.width =  512,
+		.height = 320,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 ADSD3030
+		.width =  768,
+		.height = 320,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8  ADSD3030
+		.width = 1024,
+		.height = 320,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8  ADSD3030
+		.width = 1280,
+		.height = 320,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 MP 16BPP * 3 phase + 16BPP * 1 AB
+		.width = 2048,
+		.height = 4096,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 MP 16BPP * 3 phase
+		.width = 2048,
+		.height = 3072,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 MP 16BPP * 3 phase + 16BPP * 3 AB
+		.width = 2048,
+		.height = 6144,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 QMP 16BPP * 3 phase + 16BPP * 1 AB
+		.width = 1024,
+		.height = 2048,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 QMP 16BPP * 3 phase + 16BPP * 3 AB
+		.width = 3072,
+		.height = 3072,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 QMP 16BPP * 3 phase
+		.width = 1024,
+		.height = 1536,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 VGA 16BPP * 3 phase + 16BPP * 1 AB
+		.width = 1024,
+		.height = 2560,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 VGA 16BPP * 3 phase + 16BPP * 3 AB
+		.width = 3072,
+		.height = 3840,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 VGA 16BPP * 3 phase
+		.width = 1024,
+		.height = 1920,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 QVGA 16BPP * 3 phase + 16BPP * 1 AB
+		.width = 512,
+		.height = 1920,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 QVGA 16BPP * 3 phase + 16BPP * 3 AB
+		.width = 1536,
+		.height = 1920,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 QVGA 16BPP * 3 phase
+		.width = 512,
+		.height = 1280,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 ADSD3030 * 3 phase
+		.width = 1024,
+		.height = 2080,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 ADSD3030 16BPP
+		.width = 512,
+		.height = 1040,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 ADSD3030 16BPP
+		.width = 1024,
+		.height = 1664,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+	{ //RAW8 ADSD3030 16BPP
+		.width = 1024,
+		.height = 1280,
+		.pixel_rate = 488000000,
+		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+	},
+
 };
 
 static bool adsd3500_regmap_accessible_reg(struct device *dev, unsigned int reg)
@@ -174,6 +580,8 @@ static bool adsd3500_regmap_accessible_reg(struct device *dev, unsigned int reg)
 		case GET_IMAGER_CONFIDENCE_TRSHLD:
 		case GET_IMAGER_JBLF_STATE:
 		case GET_IMAGER_JBLF_FILT_SIZE:
+		case GET_FRAMERATE_CMD:
+		case GET_IMAGER_STATUS_CMD:
 			return 1;
 		default:
 			return 0;
@@ -214,8 +622,8 @@ static int adsd3500_power_on(struct device *dev)
 
 	write_cmd = SET_IMAGER_MODE_CMD | SET_IMAGER_MODE(operating_mode->val);
 
-	write_val |= SET_IMAGER_MODE_DEPTH_EN(depth_en->val);
-	write_val |= SET_IMAGER_MODE_DEPTH_BITS(config.nr_depth_bits ? 6 - config.nr_depth_bits: 0);
+	write_val |= SET_IMAGER_MODE_DEPTH_EN(config.nr_depth_bits ? depth_en->val : 0);
+	write_val |= SET_IMAGER_MODE_DEPTH_BITS(config.nr_depth_bits ? 6 - config.nr_depth_bits : 7);
 	
 	write_val |= SET_IMAGER_MODE_AB_EN(config.nr_ab_bits ? 1 : 0);
 	write_val |= SET_IMAGER_MODE_AB_BITS(config.nr_ab_bits ? 6 - config.nr_ab_bits : 0);
@@ -397,10 +805,10 @@ static const struct v4l2_ctrl_config adsd3500_ctrl_depth_bits = {
 	.id			= V4L2_CID_ADSD3500_DEPTH_BITS,
 	.name		= "Phase / Depth Bits",
 	.type		= V4L2_CTRL_TYPE_INTEGER_MENU,
-	.def		= 2,
-	.min		= 2,
+	.def		= 0,
+	.min		= 0,
 	.max		= 6,
-	.menu_skip_mask = 0x03,
+	.menu_skip_mask = 0x02,
 	.qmenu_int	= nr_bits_qmenu,
 };
 
@@ -462,6 +870,9 @@ static int adsd3500_enum_mbus_code(struct v4l2_subdev *sd,
 		break;
 	case 1:
 		code->code = MEDIA_BUS_FMT_SBGGR12_1X12;
+		break;
+	case 2:
+		code->code = MEDIA_BUS_FMT_SBGGR16_1X16;
 		break;
 	default:
 		return -EINVAL;
@@ -707,16 +1118,39 @@ err_unlock:
 static int adsd3500_g_frame_interval(struct v4l2_subdev *subdev,
 				     struct v4l2_subdev_frame_interval *fi)
 {
-	fi->interval.numerator = 1;
-	fi->interval.denominator = 30;
+	struct adsd3500 *adsd3500 = to_adsd3500(subdev);
+	uint32_t val;
+	int ret;
 
-	return 0;
+	fi->interval.numerator = 1;
+	fi->interval.denominator = 10;
+
+	ret = regmap_read(adsd3500->regmap, GET_FRAMERATE_CMD, &val);
+	if (ret < 0)
+		dev_err(adsd3500->dev, "Get FRAMERATE COMMAND failed.\n");
+	else
+		fi->interval.denominator = val;
+
+	return ret;
 }
 
 static int adsd3500_s_frame_interval(struct v4l2_subdev *subdev,
 				     struct v4l2_subdev_frame_interval *fi)
 {
-	return 0;
+	struct adsd3500 *adsd3500 = to_adsd3500(subdev);
+	uint32_t val;
+	int ret;
+
+	val = DIV_ROUND_UP(fi->interval.denominator,  fi->interval.numerator);
+
+	ret = regmap_write(adsd3500->regmap, SET_FRAMERATE_CMD, val);
+	if (ret < 0)
+		dev_err(adsd3500->dev, "Set FRAMERATE COMMAND failed.\n");
+
+	dev_dbg(adsd3500->dev, "Set frame interval to %u / %u\n",
+		fi->interval.numerator, fi->interval.denominator);
+
+	return ret;
 }
 
 static int adsd3500_link_setup(struct media_entity *entity,
@@ -823,6 +1257,17 @@ static int adsd3500_init_ctrls(struct adsd3500 *priv){
 	return 0;
 }
 
+static int adsd3500_debugfs_init(struct adsd3500 *priv){
+
+	priv->debugfs = debugfs_create_dir("adsd3500", NULL);
+	if(!priv->debugfs)
+		return -ENOMEM;
+
+	debugfs_create_file("value", 0660, priv->debugfs, priv, &adsd3500_debug_fops);
+
+	return 0;
+}
+
 static int adsd3500_parse_dt(struct adsd3500 *priv){
 	struct v4l2_fwnode_endpoint bus_cfg = {.bus_type = V4L2_MBUS_CSI2_DPHY};
 	struct fwnode_handle *endpoint;
@@ -850,9 +1295,196 @@ static int adsd3500_parse_dt(struct adsd3500 *priv){
 		return PTR_ERR(priv->rst_gpio);
 	}
 
+	priv->irq_gpio = gpiod_get_optional(dev, "interrupt", GPIOD_IN);
+	if (IS_ERR(priv->irq_gpio)) {
+		dev_err(dev, "Unable to get \"interrupt\" gpio\n");
+		return PTR_ERR(priv->irq_gpio);
+	}
+
+	priv->irq = gpiod_to_irq(priv->irq_gpio);
+	if(priv->irq < 0){
+		dev_err(dev, "Unable to find the valid irq\n");
+	}
+
 	priv->current_config.use_vc = of_property_read_bool(dev->of_node, "adi,use-vc");
 
 	return 0;
+}
+
+static int adsd3500_read_ack(struct v4l2_subdev *sd){
+
+	struct adsd3500 *adsd3500 = to_adsd3500(sd);
+	struct device *dev = adsd3500->dev;
+	struct i2c_client *client = to_i2c_client(dev);
+	uint8_t read_val[4];
+	int ret;
+
+	ret = i2c_master_recv(client, read_val, sizeof(read_val));
+	if (ret < 0) {
+		dev_err(adsd3500->dev, "Read ACK cmd failed.\n");
+		return -EIO;
+	}
+	else{
+		// Verify the acknowledgement success command op-code from the received response
+		if (read_val[0] != 0x0B) {
+			dev_err(adsd3500->dev, "ACK ERROR response d0: %02X  d1: %02X d2: %02X d3: %02X\n", read_val[0], read_val[1], read_val[2], read_val[3]);
+			return -ENXIO;
+		}
+		dev_dbg(adsd3500->dev, "ACK Received\n");
+	}
+
+	return 0;
+}
+
+static int adsd3500_send_host_boot_data(struct v4l2_subdev *sd, uint8_t* data, int size)
+{
+	struct adsd3500 *adsd3500 = to_adsd3500(sd);
+	struct device *dev = adsd3500->dev;
+	struct i2c_client *client = to_i2c_client(dev);
+	int n_segments = 0, prev_seg_end = 0, curr_segment= 0;
+	int position = 0, location = 0;
+	int segment_start[100], segment_end[100], segment_size[100];
+	int header_start[100], header_end[100];
+	uint8_t header_packet[16];
+	uint8_t* data_packet = NULL;
+	int ret;
+
+	dev_dbg(adsd3500->dev, "Entered: %s\n",__func__);
+
+	data_packet = (uint8_t *)kvzalloc(PAYLOAD_MAX_CHUNK_SIZE * sizeof(uint8_t),GFP_KERNEL);
+
+	while (1) {
+		segment_size[n_segments] = (data[prev_seg_end+2]<<8)|data[prev_seg_end+1];
+		segment_start[n_segments] = prev_seg_end + HEADER_SIZE_IN_BYTES;
+		segment_end[n_segments] = segment_start[n_segments] + segment_size[n_segments];
+		header_start[n_segments] = segment_start[n_segments] - HEADER_SIZE_IN_BYTES;
+		header_end[n_segments] = segment_start[n_segments] - 1;
+		prev_seg_end = segment_end[n_segments];
+		n_segments++;
+		if (prev_seg_end >= size) {
+			break;
+		}
+	}
+
+	dev_info(adsd3500->dev, "No of headers =%02d\n", n_segments);
+
+	while (curr_segment < n_segments){
+		location = header_start[curr_segment];
+		memcpy(header_packet, &data[location], HEADER_SIZE_IN_BYTES);
+		dev_dbg(adsd3500->dev,"Current Segment = %d header_start = %d\n Size= %04X", curr_segment + 1, header_start[curr_segment], segment_size[curr_segment]);
+		dev_dbg(adsd3500->dev, "Send Header data\n");
+		ret = i2c_master_send(client, header_packet, HEADER_SIZE_IN_BYTES);
+		if (ret < 0) {
+			dev_err(adsd3500->dev, "Failed to write the header packet of segment %d\n", curr_segment + 1);
+			return -EIO;
+		}
+		// Check for the RESET command op-code and skip the read acknowledgement
+		if (header_packet[03] == 0x55) {
+			dev_info(adsd3500->dev, "Firmware transfer Compelete\n");
+			break;
+		}
+		ret = adsd3500_read_ack(sd);
+		if(ret < 0) {
+			dev_err(adsd3500->dev, "Failed to read the acknowledgement header packet segment: %d\n", curr_segment + 1);
+			return -ENXIO;
+		}
+		msleep(5);
+
+		if(segment_size[curr_segment] != 0){
+			location = segment_start[curr_segment];
+			memcpy(data_packet, &data[location], segment_size[curr_segment]);
+			dev_dbg(adsd3500->dev, "Send Payload data\n");
+			ret = i2c_master_send(client, data_packet, segment_size[curr_segment]);
+			if (ret < 0) {
+				dev_err(adsd3500->dev, "Failed to write the payload data of segment %d\n",curr_segment + 1);
+				return -EIO;
+			}
+			msleep(5);
+			ret = adsd3500_read_ack(sd);
+			if(ret < 0) {
+				dev_err(adsd3500->dev, "Failed to read the acknowledgement payload data segment: %d\n", curr_segment + 1);
+				return -ENXIO;
+			}
+		}
+		msleep(1);
+
+		memset(header_packet, 0, sizeof(header_packet));
+		memset(data_packet, 0, PAYLOAD_MAX_CHUNK_SIZE * sizeof(uint8_t));
+		position=0;
+		curr_segment++;
+	}
+
+	kfree(data_packet);
+
+	return 0;
+}
+
+static int adsd3500_parse_fw(struct v4l2_subdev *sd)
+{
+
+	struct adsd3500 *adsd3500 = to_adsd3500(sd);
+	const struct firmware *fw = adsd3500->main_fw;
+	uint8_t* data_fw_3500 = NULL;
+	size_t data_fw_3500_size = 0;
+	int ret;
+
+	dev_dbg(adsd3500->dev, "Entered: %s\n",__func__);
+
+	data_fw_3500_size = fw->size;
+	dev_info(adsd3500->dev, "Firmware size = %ld\n",data_fw_3500_size);
+	data_fw_3500 = (uint8_t *)kvzalloc(data_fw_3500_size * sizeof(uint8_t),GFP_KERNEL);
+	if(!data_fw_3500){
+		dev_err(adsd3500->dev, "Failed to allocate memory for FW data\n");
+		return -ENOMEM;
+	}
+
+	memcpy(data_fw_3500, fw->data, data_fw_3500_size);
+	dev_dbg(adsd3500->dev, "FW data 1:%02X  2:%02X  3:%02X  4:%02X\n",data_fw_3500[0], data_fw_3500[1], data_fw_3500[2], data_fw_3500[3]);
+	ret = adsd3500_send_host_boot_data(sd, data_fw_3500, data_fw_3500_size);
+	if(ret != 0){
+		dev_err(adsd3500->dev, "Failed to send the host boot firmware\n");
+		kfree(data_fw_3500);
+		return ret;
+	};
+
+	kfree(data_fw_3500);
+
+	return 0;
+}
+
+
+static int adsd3500_load_firmware(struct v4l2_subdev *sd)
+{
+	struct adsd3500 *adsd3500 = to_adsd3500(sd);
+	int ret;
+
+	dev_dbg(adsd3500->dev, "Entered: %s\n",__func__);
+
+	if(fw_load){
+		dev_dbg(adsd3500->dev, "Request ADSD3500 firmware file\n");
+		ret = request_firmware(&adsd3500->main_fw, ADSD3500_FIRMWARE, adsd3500->dev);
+		if(ret < 0) {
+			dev_err(adsd3500->dev, "Failed to read firmware\n");
+			goto release_firmware;
+		}
+		else {
+			ret = adsd3500_parse_fw(sd);
+			if(ret < 0){
+				dev_err(adsd3500->dev, "Failed to parse the firmware\n");
+				goto release_firmware;
+				return ret;
+			}
+		}
+	}
+
+	release_firmware(adsd3500->main_fw);
+
+	return 0;
+
+release_firmware:
+	release_firmware(adsd3500->main_fw);
+	return ret;
+
 }
 
 static int adsd3500_probe(struct i2c_client *client)
@@ -882,6 +1514,15 @@ static int adsd3500_probe(struct i2c_client *client)
 	if(adsd3500->rst_gpio)
 		gpiod_set_value(adsd3500->rst_gpio, 1);
 
+	ret = devm_request_irq(dev, adsd3500->irq, adsd3500_irq_handler,
+			       IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
+			       client->name, adsd3500);
+	if(ret < 0){
+		dev_err(dev, "Failed to request IRQ %d\n",adsd3500->irq);
+	}
+
+	ret= adsd3500_debugfs_init(adsd3500);
+
 	ret = adsd3500_init_ctrls(adsd3500);
 	if (ret < 0)
 		goto release_gpio;
@@ -897,6 +1538,15 @@ static int adsd3500_probe(struct i2c_client *client)
 	if (ret < 0) {
 		dev_err(dev, "Could not register media entity\n");
 		goto free_ctrl;
+	}
+
+	if(fw_load){
+		ret = adsd3500_load_firmware(&adsd3500->sd);
+		if(ret < 0){
+			dev_err(dev, "Failed load to the adsd3500 firmware\n");
+			goto release_gpio;
+			return ret;
+		}
 	}
 
 	ret = adsd3500_entity_init_cfg(&adsd3500->sd, NULL);
@@ -924,6 +1574,8 @@ free_ctrl:
 	mutex_destroy(&adsd3500->lock);
 release_gpio:
 	gpiod_put(adsd3500->rst_gpio);
+	gpiod_put(adsd3500->irq_gpio);
+	debugfs_remove(adsd3500->debugfs);
 
 	return ret;
 }
@@ -935,7 +1587,10 @@ static int adsd3500_remove(struct i2c_client *client)
 
 	v4l2_async_unregister_subdev(&adsd3500->sd);
 	media_entity_cleanup(&adsd3500->sd.entity);
+	devm_free_irq(adsd3500->dev, adsd3500->irq, adsd3500);
 	gpiod_put(adsd3500->rst_gpio);
+	gpiod_put(adsd3500->irq_gpio);
+	debugfs_remove(adsd3500->debugfs);
 	v4l2_ctrl_handler_free(&adsd3500->ctrls);
 	mutex_destroy(&adsd3500->lock);
 
