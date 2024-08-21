@@ -56,14 +56,14 @@ if (GIT_FOUND)
 		execute_process(
 			COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
 			WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-			OUTPUT_VARIABLE ADITOFSDK_GIT_BRANCH
+			OUTPUT_VARIABLE TOFSDK_GIT_BRANCH
 			OUTPUT_STRIP_TRAILING_WHITESPACE
 		)
 	endif()
 endif()
 
-add_definitions(-DADITOFSDK_GIT_COMMIT="${ADITOFSDK_GIT_COMMIT}")
-add_definitions(-DADITOFSDK_GIT_BRANCH="${ADITOFSDK_GIT_BRANCH}")
+add_definitions(-DTOFSDK_GIT_COMMIT="${TOFSDK_GIT_COMMIT}")
+add_definitions(-DTOFSDK_GIT_BRANCH="${TOFSDK_GIT_BRANCH}")
 
 ############################## Rest of cmake ##################################
 
