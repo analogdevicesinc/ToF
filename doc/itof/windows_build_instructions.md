@@ -1,62 +1,16 @@
 # Windows Build Instructions
 
-
 ## Building the SDK only
 
 ### Pre-requisites
 * Install MS Visual Studio 16 2019
 * Install MS .NET Framework 4.5
 * CMake
-* Glog v0.6.0
-* Libwebsockets v3.1
-* Protocol Buffers v3.9.0
 
 ### Installing the dependencies
 * CMake
 
 Windows installer can be downloaded from: https://cmake.org/download/
-
-* Glog:
-```console
-git clone --branch v0.6.0 --depth 1 https://github.com/google/glog
-cd glog
-mkdir build_0_6_0 && cd build_0_6_0
-cmake -DWITH_GFLAGS=off -DCMAKE_INSTALL_PREFIX=./local_path/glog -G "Visual Studio 16 2019" ..
-cmake --build . --target install --config Debug
-cmake --build . --target install --config Release
-```
-
-* Libwebsockets:
-```console
-git clone --branch v3.1-stable --depth 1 https://github.com/warmcat/libwebsockets
-cd libwebsockets
-mkdir build_3_1 && cd build_3_1
-cmake -DLWS_WITH_SSL=OFF -DCMAKE_INSTALL_PREFIX=./local_path/websockets -G "Visual Studio 16 2019" ..
-cmake --build . --target install --config Debug
-cmake --build . --target install --config Release
-```
-
-* Protobuf:
-```console
-git clone --branch v3.9.0 --depth 1 https://github.com/protocolbuffers/protobuf
-cd protobuf
-mkdir build_3_9_0 && cd build_3_9_0
-cmake -Dprotobuf_BUILD_TESTS=OFF -Dprotobuf_MSVC_STATIC_RUNTIME=OFF -DCMAKE_INSTALL_PREFIX=./local_path/protobuf -G "Visual Studio 16 2019" ../cmake
-cmake --build . --target install --config Debug
-cmake --build . --target install --config Release
-```
-
-### Download and build SDK only
-* Follow below steps to download the SDK, generate MS Visual Studio project and build it directly from command line
-```console
-git clone --branch v5.0.0 https://github.com/analogdevicesinc/ToF
-cd ToF
-git submodule update --init
-mkdir build
-cd build
-cmake -DCMAKE_PREFIX_PATH="C:\projects\ToF\deps\glog\build_0_6_0\local_path\glog;C:\projects\ToF\deps\protobuf\build_3_9_0\local_path\protobuf;C:\projects\ToF\deps\libwebsockets\build_3_1\local_path\websockets" -G "Visual Studio 16 2019" -DWITH_EXAMPLES=off ..
-cmake --build . --config Release
-```
 
 ## Building the SDK with examples
 
