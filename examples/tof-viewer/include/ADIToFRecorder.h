@@ -9,8 +9,6 @@
 
 #include "safequeue.h"
 #include <aditof/frame.h>
-#include <aditof/frame_definitions.h>
-#include <aditof/frame_handler.h>
 #include <atomic>
 #include <fstream>
 #include <functional>
@@ -132,7 +130,7 @@ class ADIToFRecorder {
     /**
 	* @brief Record ADI's Raw Data
 	*/
-    void recordThread(const std::string fileName);
+    void recordThread();
 
     /**
 	* @brief ADIs RAW Playback Thread
@@ -159,15 +157,15 @@ class ADIToFRecorder {
     /**
      * @brief                   Create binary directory
      * @param  fileDirectory    String with full path for saved raw file
-     *
+     * 
      */
     void createBinaryDirectory(std::string fileName);
 
   public:
     uint16_t *frameDataLocationDEPTH = nullptr;
-    uint16_t *frameDataLocationAB = nullptr;
-    uint16_t *frameDataLocationCONF = nullptr;
     uint16_t *frameDataLocationXYZ = nullptr;
+    uint16_t *frameDataLocationAB = nullptr;
+    uint16_t* frameDataLocationCONF = nullptr;
     uint16_t *frameDataLocationHeader = nullptr;
     aditof::FrameDetails m_frameDetails;
     bool m_saveBinaryFormat = false;
@@ -187,6 +185,7 @@ class ADIToFRecorder {
     std::condition_variable m_playbackCv;
     std::thread m_playbackThread;
     std::ifstream m_playbackFile;
+    std::ofstream m_recordFile;
     std::string m_fileNameRaw;
     std::thread m_recordThread;
     std::mutex m_playbackMutex;

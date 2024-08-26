@@ -72,12 +72,14 @@ void ADIToFRecorder::startRecordingRaw(const std::string &fileName,
     framesToRecord = fps;
     m_frameDetails.height = height;
     m_frameDetails.width = width;
+    if (!m_recordFile.is_open())
+        m_recordFile.open(fileName, std::ios::binary);
 
     LOG(INFO) << "Recording...";
     m_finishRecording = false;
     m_recordTreadStop = false;
     m_recordThread =
-        std::thread(std::bind(&ADIToFRecorder::recordThread, this, fileName));
+        std::thread(std::bind(&ADIToFRecorder::recordThread, this));
 }
 
 void ADIToFRecorder::startRecording(const std::string &fileName,
@@ -112,10 +114,10 @@ void ADIToFRecorder::stopRecording() {
 }
 
 int ADIToFRecorder::startPlaybackRaw(const std::string &fileName, int &fps) {
-    unsigned int height = 0;
+   unsigned int height = 0;
     unsigned int width = 0;
     totalBits = 0;
-    m_sizeOfHeader = METADATA_SIZE;
+    m_sizeOfHeader = EMBED_HDR_LENGTH;
 
     m_playbackFile.open(fileName, std::ios::binary);
 
@@ -155,7 +157,7 @@ int ADIToFRecorder::startPlaybackRaw(const std::string &fileName, int &fps) {
         LOG(WARNING) << "first frame metadata not valid, first frame "
                         "skipped...";
         m_playbackFile.seekg(0, std::ios_base::beg);
-        m_playbackFile.seekg(sizeof(uint16_t) * width * width * totalBits + 128,
+        m_playbackFile.seekg(sizeof(uint16_t) * width * width * totalBits + EMBED_HDR_LENGTH,
                              std::ios_base::cur);
         m_playbackFile.read(reinterpret_cast<char *>(&m_metadataStruct),
                             sizeof(aditof::Metadata));
@@ -231,10 +233,8 @@ void ADIToFRecorder::setPlaybackPaused(bool paused) { isPaused = paused; }
 
 int ADIToFRecorder::getNumberOfFrames() const { return m_numberOfFrames; }
 
-void ADIToFRecorder::recordThread(const std::string fileName) {
+void ADIToFRecorder::recordThread() {
     clock_t recording_start = clock();
-    aditof::FrameHandler frameSaver;
-    frameSaver.setOutputFilePath(std::string(""));
     while (!m_recordTreadStop) {
         int checkTime = (clock() - recording_start) / CLOCKS_PER_SEC;
 
@@ -245,39 +245,57 @@ void ADIToFRecorder::recordThread(const std::string fileName) {
             LOG(INFO) << frameCtr << " frames recorded.";
             frameCtr = 0; //reset.
             m_finishRecording = true;
+            m_recordFile.close();
             break;
         }
 
         auto frame = m_recordQueue.dequeue();
 
-        uint16_t *header;
-        frame->getData("metadata", &header);
+        uint16_t *metaData;
+        uint16_t *depthData;
+        uint16_t *abData;
+        uint16_t *confData;
+        uint16_t *xyzData;
 
         int width = m_frameDetails.width;
         int height = m_frameDetails.height;
         int captures = m_frameDetails.totalCaptures;
         int size = static_cast<int>(sizeof(uint16_t) * width * height);
 
-        frameSaver.saveFrameToFile(*frame, fileName);
+        frame->getMetadataStruct(m_metadataStruct);
+        frame->getData("metadata", &metaData);
+        
+        m_recordFile.write(reinterpret_cast<char *>(metaData), EMBED_HDR_LENGTH);
 
-        // Create a new .bin file for each frame with raw sensor data
-        // TODO: need to be implemented and exposed to UI
-        // if (m_saveBinaryFormat) {
-        //     std::string fileNameRawFrame = m_fileNameRaw;
-        //     fileNameRawFrame.replace(fileNameRawFrame.find_last_of("#"), 1,
-        //                              std::to_string(frameCtr));
+        if (m_metadataStruct.bitsInDepth) {
+            frame->getData("depth", &depthData);
+            m_recordFile.write(reinterpret_cast<char *>(depthData),
+                        size);
+        }
 
-        //     std::ofstream recordFileRaw;
-        //     recordFileRaw.open(fileNameRawFrame,
-        //                        std::ios::binary | std::ofstream::trunc);
-        //     recordFileRaw.close();
-        // }
+        if (m_metadataStruct.bitsInAb) {
+            frame->getData("ab", &abData);
+            m_recordFile.write(reinterpret_cast<char *>(abData),
+                        size);
+        }
+
+        if (m_metadataStruct.bitsInConfidence) {
+            frame->getData("conf", &confData);
+            m_recordFile.write(reinterpret_cast<char *>(confData),
+                       size * 2);
+        }
+
+        if (m_metadataStruct.xyzEnabled) {
+            frame->getData("xyz", &xyzData);
+            m_recordFile.write(reinterpret_cast<char *>(xyzData),
+                        size * 3);
+        }
         frameCtr++;
     }
 }
 
 void ADIToFRecorder::playbackThread() {
-    int sizeOfFrame = 0;
+      int sizeOfFrame = 0;
     while (!m_playbackThreadStop) {
 
         if (!m_playbackFile.is_open()) {
@@ -379,7 +397,6 @@ void ADIToFRecorder::clearVariables() {
     frameDataLocationAB = nullptr;
     frameDataLocationDEPTH = nullptr;
     frameDataLocationXYZ = nullptr;
-    frameDataLocationCONF = nullptr;
     m_frameDetails.height = 0;
     m_frameDetails.passiveIRCaptured = false;
     m_frameDetails.cameraMode = "";

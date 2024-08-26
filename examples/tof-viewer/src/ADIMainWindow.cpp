@@ -962,7 +962,23 @@ void ADIMainWindow::showPlaybackMenu() {
             }
         }
 
-        //Playback
+        // if (0) {
+        // int filterIndex = 0;
+        // //USE ONLY IN DEBUG MODE: Highly Experimental. May use in the future
+        // ImGui::NewLine();
+        // if (ImGuiExtensions::ADIButton("Open *.bin Recording",
+        //                                !isPlayRecorded && !isPlaying)) {
+        //     std::string path = openADIFileName(customFilter.c_str(), NULL, filterIndex).c_str();
+        //     if (!path.empty()) {
+        //         if (path.find(".bin") !=
+        //             std::string::npos) { //If bin File was found
+        //             int frames = 1;
+        //             int width = 1024;
+        //             int height = 1024;
+        //         }
+        //     }
+        // }
+        // } //Playback
         ImGui::EndMenu();
     }
 }
