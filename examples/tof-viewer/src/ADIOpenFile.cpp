@@ -256,6 +256,7 @@ void getFilesList(std::string filePath, std::string extension,
 */
 std::string getADIFileName(void *hwndOwner, char *filename, int &FilterIndex) {
 
+    FilterIndex = 0;
     std::vector<std::string> filters;
     std::copy(std::begin(customFilters), std::end(customFilters),
               std::back_inserter(filters));
@@ -280,12 +281,13 @@ std::string getADIFileName(void *hwndOwner, char *filename, int &FilterIndex) {
             break;
         }
     }
-    FilterIndex = 0;
 
     return (ret == 0) ? std::string(filename) : "";
 }
 
 std::string openADIFileName(const char *filter, void *owner, int &FilterIndex) {
+
+    FilterIndex = 0;
     std::vector<std::string> filters;
     std::copy(std::begin(customFilters), std::end(customFilters),
               std::back_inserter(filters));
@@ -311,7 +313,6 @@ std::string openADIFileName(const char *filter, void *owner, int &FilterIndex) {
             break;
         }
     }
-    FilterIndex = 0;
 
     return (ret == 0) ? std::string(filename) : "";
 }
