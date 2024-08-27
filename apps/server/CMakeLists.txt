@@ -9,6 +9,7 @@ protobuf_generate_cpp(PROTO_SRCS PROTO_HRDS buffer.proto)
 get_filename_component(GENERATED_PROTO_FILES_DIR ${PROTO_HRDS} DIRECTORY)
 
 add_executable(${PROJECT_NAME} server.cpp ${PROTO_SRCS} ${PROTO_HDRS})
+# add_dependencies(${PROJECT_NAME} libaditof_project)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE aditof ${Protobuf_LIBRARIES} ${LIBWEBSOCKETS_LIBRARIES})
 
