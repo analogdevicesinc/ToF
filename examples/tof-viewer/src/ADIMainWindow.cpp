@@ -542,7 +542,7 @@ void ADIMainWindow::showRecordMenu() {
                     getADIFileName(NULL, tempbuff, filterIndex);
                 //Check if filename exists and format is corrct
                 if (!saveFile.empty() && filterIndex) {
-                    if (!isPlaying && filterIndex) {
+                    if (!isPlaying) {
                         //"Press" the play button, in case it is not pressed.
                         PlayCCD(
                             modeSelection,
