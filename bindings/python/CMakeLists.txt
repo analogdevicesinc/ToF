@@ -21,19 +21,25 @@ function(PopulateforPython targetdir)
         )
     endif()
     if (WIN32)
-        if (EXISTS "${GLOG_BIN_DIR}")
+        if (EXISTS "${glog_BINARY_DIR}/$<CONFIG>")
             if (WITH_GLOG_DEPENDENCY)
                 add_custom_command( TARGET aditofpython POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${GLOG_BIN_DIR} "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>")
+                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${glog_BINARY_DIR}/$<CONFIG> "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>")
             endif()
         endif()
 
-        if (EXISTS "${LWS_CMAKE_DIR}/../bin")
+        if (EXISTS "${libwebsockets_BINARY_DIR}/bin/$<CONFIG>")
             if (WITH_NETWORK)
-                add_custom_command(TARGET aditofpython POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${LWS_CMAKE_DIR}/../bin "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>")
+                add_custom_command(TARGET aditofpython POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${libwebsockets_BINARY_DIR}/bin/$<CONFIG> "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>")
             endif()
         endif()
-    
+        if (EXISTS "${protobuf_BINARY_DIR}/$<CONFIG>")
+            if (WITH_PROTOBUF_DEPENDENCY)
+                add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_directory ${protobuf_BINARY_DIR}/$<CONFIG> ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>
+                )
+            endif()
+        endif()
     endif()
 
 endfunction()

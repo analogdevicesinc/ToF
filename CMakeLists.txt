@@ -152,11 +152,13 @@ if(${ON_TARGET})
 endif()
 
 set(CONFIG_DIR_NAME "config")
+
 add_definitions(-DCONFIG_DIR_NAME="${CONFIG_DIR_NAME}")
 add_definitions(-DRESOURCES="${RESOURCES_DIR}")
 
-add_subdirectory(apps)
 add_subdirectory(libaditof)
+add_subdirectory(apps)
+
 
 if (WITH_EXAMPLES)
         add_subdirectory(examples)
