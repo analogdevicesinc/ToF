@@ -67,7 +67,10 @@ add_definitions(-DTOFSDK_GIT_BRANCH="${TOFSDK_GIT_BRANCH}")
 
 ############################## Rest of cmake ##################################
 
-# Check whether we configure things for remote or we're on target
+# Set general path for libaditof submodule
+set(LIBADITOF_SUBMODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libaditof)
+
+# Check whether we configure thgs for remote or we're on target
 set(SELECTED_PLATFORMS 0)
 set(ALL_PLATFORMS NXP;NVIDIA)
 foreach(platform IN LISTS ALL_PLATFORMS)
