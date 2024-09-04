@@ -1,10 +1,11 @@
 #!/bin/bash
 
-# This script downloads and installs the dependencies (glog, protobuf and websockets) and builds the sdk.
+# The dependencies (glog, protobuf and websockets) are built based on the CMake options. 
+# Default they will be cloned and build in <ToFrootdir>/libaditof 
 
 source_dir=$(cd "$(dirname "$0")/../.."; pwd)
 
-source ./utils.sh
+
 
 print_help() {
         echo "./setup [OPTIONS]"
@@ -15,10 +16,6 @@ print_help() {
         echo "        Automatic yes to prompts."
         echo "-b|--buildir"
         echo "        Specify the build directory of the SDK."
-        echo "-d|--depsdir"
-        echo "        Specify the directory where the dependencies will be downloaded."
-        echo "-i|--depsinstalldir"
-        echo "        Specify the directory where the dependencies will be installed."
         echo "-j|--jobs"
         echo "        Specify the number of jobs to run in parallel when building dependencies and the SDK"
         echo ""
@@ -61,16 +58,6 @@ setup() {
                 shift # past argument
                 shift # past value
                 ;;
-                -d|--depsdir)
-                deps_dir=$2
-                shift # past argument
-                shift # past value
-                ;;
-                -i|--depsinstalldir)
-                deps_install_dir=$2
-                shift # past argument
-                shift # past value
-                ;;
                 -j|--jobs)
                 NUM_JOBS=$2
                 shift # next argument
@@ -99,35 +86,12 @@ setup() {
 
         echo "The sdk will be built in: ${build_dir}"
 
-        if [[ -z "${deps_dir}" ]]; then
-                deps_dir=$(pwd)/deps
-        fi
-
-        echo "The deps will be downloaded in: ${deps_dir}"
-
-        if [[ -z "${deps_install_dir}" ]]; then
-                deps_install_dir=${deps_dir}/installed
-        fi
-
-        echo "The deps will be installed in: ${deps_install_dir}"
-
         if [[ -z "${answer_yes}" ]]; then
              yes_or_exit "Do you want to continue?"
         fi
 
         mkdir -p "${build_dir}"
-        mkdir -p "${deps_dir}"
-        mkdir -p "${deps_install_dir}"
-
-        pushd "${deps_install_dir}"
-        deps_install_dir=$(pwd)
-        popd
-
-        get_deps_source_code ${deps_dir}
-
-        build_and_install_glog ${deps_dir}/glog ${deps_install_dir}/glog
-        build_and_install_protobuf ${deps_dir}/protobuf ${deps_install_dir}/protobuf
-        build_and_install_websockets ${deps_dir}/libwebsockets ${deps_install_dir}/websockets
+        
 
         if [[ -f ../../../libs/libtofi_compute.so && -f ../../../libs/libtofi_config.so ]]; then
                 CMAKE_OPTIONS="-DNXP=1 -DWITH_PYTHON=1 -DCMAKE_BUILD_TYPE=Release"
@@ -135,15 +99,14 @@ setup() {
                 CMAKE_OPTIONS="-DNXP=1 -DUSE_DEPTH_COMPUTE_OPENSOURCE=ON -DWITH_PYTHON=1 -DCMAKE_BUILD_TYPE=Release"
         fi
 
-        PREFIX_PATH="${deps_install_dir}/glog;${deps_install_dir}/protobuf;${deps_install_dir}/websockets;"
-
-        tof_dir = $(pwd)../../
+        tof_dir=$(pwd)/../../
         pushd "${tof_dir}"
         git submodule update --init
+        
         popd
         
         pushd "${build_dir}"
-        cmake "${source_dir}" ${CMAKE_OPTIONS} -DCMAKE_PREFIX_PATH="${PREFIX_PATH}"
+        cmake "${source_dir}" ${CMAKE_OPTIONS} 
         make -j ${NUM_JOBS}
 }
 
