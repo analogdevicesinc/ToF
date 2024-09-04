@@ -260,7 +260,7 @@ if [ -n ${BRANCH} ]; then
 fi
 pushd ToF/scripts/nxp/
 chmod +x setup.sh
-./setup.sh -y -b ../../build -d ../../deps -i /opt -j4
+./setup.sh -y -b ../../build -j4
 popd
 #cp ToF/build/apps/uvc-app/uvc-app /usr/share/systemd/
 cp ToF/build/apps/server/aditof-server /usr/share/systemd/
