@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
         {"-h", {"--help", false, "", "", false}},
         {"-ip", {"--ip", false, "", "", true}},
         {"-m", {"--m", false, "", "0", true}},
-        {"config", {"CONFIG", true, "last", "", true}}};
+        {"config", {"CONFIG", false, "last", "", false}}};
 
     CommandParser command;
     std::string arg_error;
@@ -140,24 +140,7 @@ int main(int argc, char *argv[]) {
 
     result = command.checkMandatoryArguments(command_map, arg_error);
     if (result != 0) {
-        std::string argName = (arg_error == "-config")
-                                  ? "CONFIG"
-                                  : command_map[arg_error].long_option;
-
-        LOG(ERROR) << "Mandatory argument: " << argName << " missing";
-        std::cout << Help_Menu;
-        return -1;
-    }
-
-    result = command.checkMandatoryPosition(command_map, arg_error);
-    if (result != 0) {
-        std::string argName = (arg_error == "-config")
-                                  ? "CONFIG"
-                                  : command_map[arg_error].long_option;
-
-        LOG(ERROR) << "Mandatory argument " << argName
-                   << " is not on its correct position ("
-                   << command_map[arg_error].position << ").";
+        LOG(ERROR) << "Mandatory argument missing";
         std::cout << Help_Menu;
         return -1;
     }
