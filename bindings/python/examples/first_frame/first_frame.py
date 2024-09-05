@@ -37,14 +37,14 @@ import os
 
 def help():
     print(f"{sys.argv[0]} usage:")
-    print(f"USB: {sys.argv[0]} <mode number> <config>")
-    print(f"Network connection: {sys.argv[0]} <mode number> <ip> <config>")
+    print(f"USB: {sys.argv[0]} <mode number>")
+    print(f"Network connection: {sys.argv[0]} <mode number> <ip>")
     print()
     print("For example:")
-    print(f"python {sys.argv[0]} 0 10.43.0.1 config\config_adsd3500_adsd3100.json")
+    print(f"python {sys.argv[0]} 0 10.43.0.1")
     exit(1)
 
-if len(sys.argv) < 3 or len(sys.argv) > 4 or sys.argv[1] == "--help" or sys.argv[1] == "-h" :
+if len(sys.argv) < 2 or len(sys.argv) > 3 or sys.argv[1] == "--help" or sys.argv[1] == "-h" :
     help()
     exit(-1)
 
@@ -55,25 +55,17 @@ print("SDK version: ", tof.getApiVersion(), " | branch: ", tof.getBranchVersion(
 mode = 0
 cameras = []
 ip = ""
-if len(sys.argv) == 4:
+if len(sys.argv) == 3:
     mode = sys.argv[1]
     ip = sys.argv[2]
-    config = sys.argv[3]
-    print (f"Looking for camera on network @ {ip}. Will use {config}.")
+    print (f"Looking for camera on network @ {ip}.")
     ip = "ip:" + ip
-elif len(sys.argv) == 3:
+elif len(sys.argv) == 2:
     mode = sys.argv[1]
-    config = sys.argv[2]
-    print (f"Looking for camera on UVC. Will use {config}.")
+    print (f"Looking for camera on UVC.")
 else :
     print("Too many arguments provided!")
     exit(-2)
-
-#Checks on input
-if os.path.exists(config) == False:
-    print(f"Error: Config file cannot be found - {config}")
-    help()
-    exit(-4)
 
 status = system.getCameraList(cameras, ip)
 print("system.getCameraList()", status)
@@ -87,7 +79,7 @@ def callbackFunction(callbackStatus):
 sensor = camera1.getSensor()
 status = sensor.adsd3500_register_interrupt_callback(callbackFunction)
 
-status = camera1.initialize(config)
+status = camera1.initialize()
 print("camera1.initialize()", status)
 
 modes = []
