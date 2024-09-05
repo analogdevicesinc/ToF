@@ -35,6 +35,9 @@ option(NVIDIA "Set to ON when building on NVIDIA" OFF)
 option(WITH_PROTOBUF_DEPENDENCY "Build with PROTOBUF dependency?" ON)
 option(USE_DEPTH_COMPUTE_OPENSOURCE "Use an open source implementation?" OFF)
 
+##################### Development/Testing Options #############################
+option(TIME_PROFILING "Set to ON for displaying time execution for various core features" OFF)
+
 ################################## Git ########################################
 include(FindGit OPTIONAL)
 if (GIT_FOUND)
@@ -94,6 +97,12 @@ endif()
 
 if (WITH_NETWORK)
         add_definitions(-DHAS_NETWORK)
+endif()
+
+if (TIME_PROFILING)
+    add_definitions(-DTIME_PROFILING)
+else()
+    remove_definitions(-DTIME_PROFILING)
 endif()
 
 set(RESOURCES_DIR "${CMAKE_BINARY_DIR}/resources")
