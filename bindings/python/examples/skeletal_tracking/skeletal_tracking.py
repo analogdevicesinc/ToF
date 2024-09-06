@@ -38,7 +38,6 @@ import sys
 import mediapipe as mp
 
 ip = "10.43.0.1" # Set to "10.43.0.1" if networking is used.
-config = "config/config_adsd3500_adsd3100.json"
 mode = 3
 
 inWidth = 300
@@ -69,7 +68,7 @@ if __name__ == "__main__":
 
     camera1 = cameras[0]
 
-    status = camera1.initialize(config)
+    status = camera1.initialize()
     if not status:
         print("camera1.initialize() failed with status: ", status)
 

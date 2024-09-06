@@ -39,22 +39,20 @@ ccb_prefix = 'ccb_'
 
 if __name__ == "__main__":
 
-    if len(sys.argv) < 2  or sys.argv[1] == "--help" or sys.argv[1] == "-h" :
+    if len(sys.argv) < 1  or sys.argv[1] == "--help" or sys.argv[1] == "-h" :
         print("save_ccb.py usage:")
-        print("USB / Local connection: save_ccb.py <config>")
-        print("Network connection: save_ccb.py <ip> <config>")
+        print("USB / Local connection: save_ccb.py")
+        print("Network connection: save_ccb.py <ip>")
         exit(1)
 
     cameras = []
     ip = ""
-    if len(sys.argv) == 3 :
+    if len(sys.argv) == 2 :
         ip = sys.argv[1]
-        config = sys.argv[2]
-        print (f"Looking for camera on network @ {ip}. Will use {config}.")
+        print (f"Looking for camera on network @ {ip}.")
         ip = "ip:" + ip
-    elif len(sys.argv) == 2 :
-        config = sys.argv[1]
-        print (f"Looking for camera on UVC. Will use {config}.")
+    elif len(sys.argv) == 1 :
+        print (f"Looking for camera on UVC.")
     else :
         print("Too many arguments provided!")
         exit(1)
@@ -76,8 +74,8 @@ if __name__ == "__main__":
 
     camera1 = cameras[0]
 
-    status = camera1.initialize(config)
-    print(f"camera1.initialize({config})", status)
+    status = camera1.initialize()
+    print(f"camera1.initialize()", status)
     serial_no=''
     status = camera1.readSerialNumber(serial_no, False)
     serial_no = status[1].rstrip('\x00')

@@ -50,7 +50,6 @@ if __name__ == "__main__":
         description='Script to run PointCloud')
     parser.add_argument('-ip', '--ip', help='Ip address of the ToF device')
     parser.add_argument('-f', '--frame', help='Name of an acquired frame to be used')
-    parser.add_argument('config', help='Config file of the ToF device used')
     args = parser.parse_args()
     system = tof.System()
 
@@ -59,7 +58,6 @@ if __name__ == "__main__":
     cameras = []
     ip = ''
     fileName = args.frame
-    config = args.config
     if args.ip is not None:
         ip = 'ip:' + args.ip
 
@@ -69,7 +67,7 @@ if __name__ == "__main__":
 
         camera1 = cameras[0]
 
-        status = cameras[0].initialize(config)
+        status = cameras[0].initialize()
         if not status:
             print("cameras[0].initialize() failed with status: ", status)
 
