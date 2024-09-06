@@ -7,11 +7,6 @@ from process import ProcessTab
 
 SMALL_SIGNAL_THRESHOLD = 100
 
-CONFIG_OPTIONS = [
-    "config/config_adsd3500_adsd3100.json",
-    "config/config_adsd3500_adsd3030.json"
-]
-
 MODE_OPTIONS = [
     "0",
     "1",
@@ -20,19 +15,12 @@ MODE_OPTIONS = [
 ]
 
 # Global variables for the program
-CONFIG_OPTIONS_CHOSEN = CONFIG_OPTIONS[0]
 MODE_OPTIONS_CHOSEN = MODE_OPTIONS[0]
 IS_STREAM_ON = False
 IS_INITIALIZED = False
 VAR_IP = "10.43.0.1"
 
 DEPTH_THD = 1100  # 1000 mm
-
-
-def config_callback(selection):
-    global CONFIG_OPTIONS_CHOSEN
-    CONFIG_OPTIONS_CHOSEN = selection
-
 
 def mode_callback(selection):
     global MODE_OPTIONS_CHOSEN
@@ -80,14 +68,6 @@ class GestureDemo(Frame):
         lbl = Label(frame, justify=LEFT, anchor=N,
                     text=''.join(msg))
         lbl_frame = LabelFrame(frame, bg='red')
-
-        CONFIG_OPTIONS_initial = StringVar()
-        CONFIG_OPTIONS_initial.set(CONFIG_OPTIONS_CHOSEN)
-        drop = OptionMenu(
-            frame,
-            CONFIG_OPTIONS_initial,
-            *CONFIG_OPTIONS,
-            command=config_callback)
 
         MODE_OPTIONS_initial = StringVar()
         MODE_OPTIONS_initial.set(MODE_OPTIONS_CHOSEN)
@@ -142,7 +122,6 @@ class GestureDemo(Frame):
         nb.add(frame, text='Video', padding=2)
 
     def _init_dev(self, ip):
-        global CONFIG_OPTIONS_CHOSEN
         global MODE_OPTIONS_CHOSEN
         global IS_INITIALIZED
 
@@ -165,7 +144,7 @@ class GestureDemo(Frame):
             return
         print("system.getCameraList()", status)
 
-        status = self.cameras[0].initialize(CONFIG_OPTIONS_CHOSEN)
+        status = self.cameras[0].initialize()
         if not status:
             return
         print("camera1.initialize()", status)
