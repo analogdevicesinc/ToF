@@ -936,7 +936,8 @@ void ADIMainWindow::showPlaybackMenu() {
                     if (view == NULL) {
                         view = std::make_shared<adiviewer::ADIView>(
                             std::make_shared<adicontroller::ADIController>(
-                                std::vector<std::shared_ptr<aditof::Camera>>()),
+                                std::vector<std::shared_ptr<aditof::Camera>>(
+                                    m_camerasList)),
                             "Record Viewer");
                     }
 
