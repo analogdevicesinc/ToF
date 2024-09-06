@@ -53,8 +53,6 @@ imager_configurations = ["standard", "standard-raw", "custom", "custom-raw"]
 if __name__ == '__main__':
     parser = argparse.ArgumentParser( formatter_class=argparse.RawTextHelpFormatter,
         description='Script to run data collect python script')
-    parser.add_argument(
-        'config', help='path to the configuration file (with .json extension)')
     parser.add_argument('-f', dest='folder', default='./',
                         help='output folder [default: ./]', metavar = '<folder>')
     parser.add_argument('-n', dest='ncapture', type=int, default=1,
@@ -107,7 +105,6 @@ if __name__ == '__main__':
     print ("Output folder: ", args.folder)
     print ("Mode: ", args.mode )
     print ("Number of frames: ", args.ncapture)
-    print ("Json file: ", args.config)
     print ("Warm Up time is: ", args.warmup_time, "seconds")
     print ("Configuration is: ", args.ic)
     
@@ -141,7 +138,7 @@ if __name__ == '__main__':
     
     camera1 = cameras[0]
 
-    status = camera1.initialize(args.config)
+    status = camera1.initialize()
     print('camera1.initialize()', status)
     if status != tof.Status.Ok:
         sys.exit("Could not initialize camera!")
