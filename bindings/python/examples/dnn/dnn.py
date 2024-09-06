@@ -38,7 +38,6 @@ import sys
 import keyboard
 
 ip = "10.43.0.1" # Set to "10.43.0.1" if networking is used.
-config = "config/config_adsd3500_adsd3100.json"
 mode = 3
 
 inWidth = 300
@@ -62,7 +61,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Script to run MobileNet-SSD object detection network ')
     parser.add_argument("--ip", default=ip, help="IP address of ToF Device")
-    parser.add_argument("--config", default=config, help="IP address of ToF Device")
     parser.add_argument("--prototxt", default="MobileNetSSD_deploy.prototxt",
                         help='Path to text network file: '
                              'MobileNetSSD_deploy.prototxt')
@@ -95,7 +93,7 @@ if __name__ == "__main__":
 
     camera1 = cameras[0]
 
-    status = camera1.initialize(args.config)
+    status = camera1.initialize()
     if not status:
         print("camera1.initialize() failed with status: ", status)
 
