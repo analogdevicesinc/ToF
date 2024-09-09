@@ -8,45 +8,40 @@ function(PopulateforPython targetdir)
     if(WIN32)
         add_custom_command( TARGET aditofpython POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/libaditof/sdk/$<CONFIG>" "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>"
-            COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../../libaditof/sdk/src/cameras/itof-camera/config "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>/config"
             COMMAND ${CMAKE_COMMAND} -E copy ${PythonSources} "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>"
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${TARGET_OUTPUT_NAME}" "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>"
         )
     elseif(UNIX)
         add_custom_command( TARGET aditofpython POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/libaditof/sdk/" "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/"
-            COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../../libaditof/sdk/src/cameras/itof-camera/config "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/config"
             COMMAND ${CMAKE_COMMAND} -E copy ${PythonSources} "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/"
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_OUTPUT_NAME}" "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/"
         )
     endif()
-    if (WIN32)
-        if (EXISTS "${glog_BINARY_DIR}/$<CONFIG>")
-            if (WITH_GLOG_DEPENDENCY)
-                add_custom_command( TARGET aditofpython POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${glog_BINARY_DIR}/$<CONFIG> "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>")
-            endif()
+    if( WIN32 )
+        if (WITH_NETWORK)
+            add_custom_command(TARGET aditofpython POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory ${libwebsockets_BINARY_DIR}/bin/$<CONFIG> ${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>
+            )
         endif()
-
-        if (EXISTS "${libwebsockets_BINARY_DIR}/bin/$<CONFIG>")
-            if (WITH_NETWORK)
-                add_custom_command(TARGET aditofpython POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory ${libwebsockets_BINARY_DIR}/bin/$<CONFIG> "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>")
-            endif()
+        if (WITH_GLOG_DEPENDENCY)
+            add_custom_command(TARGET aditofpython POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory ${glog_BINARY_DIR}/$<CONFIG> ${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>
+            )
         endif()
-        if (EXISTS "${protobuf_BINARY_DIR}/$<CONFIG>")
-            if (WITH_PROTOBUF_DEPENDENCY)
-                add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_directory ${protobuf_BINARY_DIR}/$<CONFIG> ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>
-                )
-            endif()
+        if (WITH_PROTOBUF_DEPENDENCY)
+            add_custom_command(TARGET aditofpython POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory ${protobuf_BINARY_DIR}/$<CONFIG> ${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>
+            )
         endif()
     endif()
+
 
 endfunction()
 
 find_package(pybind11 REQUIRED PATHS ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-include_directories(../../libaditof/sdk/includes)
+include_directories(${LIBADITOF_SUBMODULE_PATH}/sdk/includes)
 
 pybind11_add_module(aditofpython aditofpython.cpp)
 
