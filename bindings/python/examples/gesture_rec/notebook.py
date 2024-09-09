@@ -117,7 +117,7 @@ class GestureDemo(Frame):
         txt_box = Text(frame, width=30, height=1)
         txt_box.insert(1.0, VAR_IP)
         txt_box.grid(row=1, column=1)
-        drop.grid(row=2, column=0)
+        drop2.grid(row=2, column=0)
         drop2.grid(row=2, column=1)
 
         lbl_frame.grid(row=0, column=1, columnspan=4)
