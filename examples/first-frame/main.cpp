@@ -49,12 +49,12 @@ using namespace aditof;
 
 static const char Help_Menu[] =
     R"(First-frame usage:
-    first-frame CONFIG
+    first-frame
     first-frame (-h | --help)
-    first-frame [-ip | --ip <ip>] [-m | --m <mode>] CONFIG
+    first-frame [-ip | --ip <ip>] [-m | --m <mode>] [-config | --config <config_file.json>]
 
     Arguments:
-      CONFIG            Input config_default.json file (which has *.ccb and *.cfg)
+      config_file.json   Input config_default.json file (which has *.ccb and *.cfg)
 
     Options:
       -h --help          Show this screen.
@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
         {"-h", {"--help", false, "", "", false}},
         {"-ip", {"--ip", false, "", "", true}},
         {"-m", {"--m", false, "", "0", true}},
-        {"config", {"CONFIG", false, "last", "", false}}};
+        {"-config", {"--config", false, "last", "", false}}};
 
     CommandParser command;
     std::string arg_error;
@@ -158,7 +158,9 @@ int main(int argc, char *argv[]) {
         mode = std::stoi(command_map["-m"].value);
     }
 
-    configFile = command_map["config"].value;
+    if (!command_map["-config"].value.empty()) {
+        configFile = command_map["-config"].value;
+    }
 
     if (!command_map["-ip"].value.empty()) {
         ip = "ip:" + command_map["-ip"].value;
@@ -193,7 +195,12 @@ int main(int argc, char *argv[]) {
         LOG(WARNING) << "Could not register callback";
     }
 
-    status = camera->initialize(configFile);
+    if (!configFile.empty()) {
+        status = camera->initialize(configFile);
+    } else {
+        status = camera->initialize();
+    }
+
     if (status != Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
         return 0;
