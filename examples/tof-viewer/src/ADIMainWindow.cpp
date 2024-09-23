@@ -1348,6 +1348,8 @@ void ADIMainWindow::InitCamera() {
         std::make_shared<adicontroller::ADIController>(m_camerasList),
         "ToFViewer " + version);
     m_camerasList.clear();
+    _cameraModes.clear();
+    m_cameraModesDropDown.clear();
 
     aditof::Status status = aditof::Status::OK;
     auto camera = getActiveCamera(); //already initialized on constructor
