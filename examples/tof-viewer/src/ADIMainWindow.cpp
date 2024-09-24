@@ -1618,15 +1618,17 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                 frameRecvd++;
             }
 
+            CameraDetails cameraDetails;
+            camera->getDetails(cameraDetails);
+            uint8_t camera_mode = cameraDetails.mode;
+
+            ImGui::Text(" Camera Mode: %d", camera_mode);
             ImGui::Text(" Current FPS: %i", fps);
             if (expectedFPS) {
                 ImGui::SameLine();
                 ImGui::Text(" | Expected FPS: %i", expectedFPS);
             }
 
-            CameraDetails cameraDetails;
-            camera->getDetails(cameraDetails);
-            uint8_t camera_mode = cameraDetails.mode;
             if (camera_mode != 4) { // 4 - pcm-native
                 Metadata metadata;
                 Status status = frame->getMetadataStruct(metadata);
