@@ -256,6 +256,10 @@ if [ -n ${BRANCH} ]; then
 	echo "Checkout to Branch: ${BRANCH}"
 	pushd ToF
 	git checkout ${BRANCH}
+  git submodule update --init --recursive
+  pushd libaditof
+  git checkout ${BRANCH}
+  popd
 	popd
 fi
 pushd ToF/scripts/nxp/
