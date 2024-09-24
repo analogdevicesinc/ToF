@@ -441,6 +441,13 @@ int main(int argc, char *argv[]) {
     frameSaver.storeFramesToSingleFile(saveToSingleFile);
     frameSaver.setOutputFilePath(folder_path);
 
+    //drop first frame
+    status = camera->requestFrame(&frame);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not request frame!";
+        return 0;
+    }
+
     LOG(INFO) << "Requesting " << n_frames << " frames!";
     auto start_time = std::chrono::high_resolution_clock::now();
     // Request the frames for the respective mode
