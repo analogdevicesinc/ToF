@@ -258,7 +258,7 @@ if [ -n ${BRANCH} ]; then
 	git checkout ${BRANCH}
   git submodule update --init --recursive
   pushd libaditof
-  git checkout ${BRANCH}
+  git checkout dev-5.1.0
   popd
 	popd
 fi
