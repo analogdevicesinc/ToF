@@ -691,10 +691,7 @@ void ADIMainWindow::showDeviceMenu() {
                 { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
                     ImGuiExtensions::ButtonColorChanger colorChanger(
                         ImGuiExtensions::ButtonColor::Green, openAvailable);
-                    if (ImGuiExtensions::ADIButton(
-                            "Open",
-                            /*openAvailable*/ _isOpenDevice &&
-                                m_configFiles.size() > 0) &&
+                    if (ImGuiExtensions::ADIButton("Open", _isOpenDevice) &&
                         0 <= m_selectedDevice) {
                         if (isPlayRecorded) {
                             stopPlayback();
