@@ -1,0 +1,25 @@
+From a7365d72dd32b26a8e8be0bd1a55142f3c0d13d4 Mon Sep 17 00:00:00 2001
+From: Sriram Chappidi <Sriram.Chappidi@analog.com>
+Date: Tue, 1 Oct 2024 16:52:49 +0530
+Subject: [PATCH 09/17] drivers: mtd: spi-nor: MX25U1632F support
+
+Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
+---
+ drivers/mtd/spi-nor/macronix.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/mtd/spi-nor/macronix.c b/drivers/mtd/spi-nor/macronix.c
+index 2c6ed978c69b..b11d2ad4aa03 100644
+--- a/drivers/mtd/spi-nor/macronix.c
++++ b/drivers/mtd/spi-nor/macronix.c
+@@ -142,6 +142,7 @@ static const struct flash_info macronix_parts[] = {
+ 	{ "mx25l3255e",  INFO(0xc29e16, 0, 64 * 1024,  64, SECT_4K) },
+ 	{ "mx25l6405d",  INFO(0xc22017, 0, 64 * 1024, 128, SECT_4K) },
+ 	{ "mx25u2033e",  INFO(0xc22532, 0, 64 * 1024,   4, SECT_4K) },
++	{ "mx25u1632f",  INFO(0xc22535, 0, 64 * 1024,  32, SECT_4K) },
+ 	{ "mx25u3235f",	 INFO(0xc22536, 0, 64 * 1024,  64,
+ 			      SECT_4K | SPI_NOR_DUAL_READ |
+ 			      SPI_NOR_QUAD_READ) },
+-- 
+2.28.0
+

@@ -1,0 +1,41 @@
+From 83de225b5aa3fc57135b682bc103d8d810c7cd37 Mon Sep 17 00:00:00 2001
+From: Sriram Chappidi <Sriram.Chappidi@analog.com>
+Date: Tue, 1 Oct 2024 17:21:08 +0530
+Subject: [PATCH 11/17] Added IMX8 ISI Capture driver to defconfig
+
+Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
+---
+ arch/arm64/configs/adi_defconfig | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm64/configs/adi_defconfig b/arch/arm64/configs/adi_defconfig
+index f5a142db04d3..0e6e8d756874 100644
+--- a/arch/arm64/configs/adi_defconfig
++++ b/arch/arm64/configs/adi_defconfig
+@@ -539,6 +539,7 @@ CONFIG_VIDEO_OV5640=y
+ CONFIG_VIDEO_OV5645=m
+ CONFIG_VIDEO_ADSD3500=m
+ CONFIG_VIDEO_ADSD3100=m
++CONFIG_VIDEO_V4L2_LOOPBACK=m
+ CONFIG_FB=y
+ CONFIG_FB_ARMCLCD=y
+ CONFIG_FB_EFI=y
+@@ -675,12 +676,12 @@ CONFIG_XEN_GRANT_DEV_ALLOC=y
+ CONFIG_STAGING=y
+ CONFIG_STAGING_MEDIA=y
+ CONFIG_VIDEO_IMX_CAPTURE=y
+-CONFIG_IMX8_MIPI_CSI2=m
+-CONFIG_IMX8_MIPI_CSI2_SAM=m
+-CONFIG_IMX8_ISI_HW=m
+ # CONFIG_IMX8_ISI_M2M is not set
+ # CONFIG_GMSL_MAX9286 is not set
+ CONFIG_IMX8_MEDIA_DEVICE=m
++CONFIG_IMX8_ISI_CAPTURE=y
++CONFIG_IMX8_ISI_M2M=y
++CONFIG_IMX8_ISI_CORE=y
+ # CONFIG_IMX8_PARALLEL_CSI is not set
+ # CONFIG_DWC_MIPI_CSI2_HOST is not set
+ CONFIG_FSL_PPFE=y
+-- 
+2.28.0
+
