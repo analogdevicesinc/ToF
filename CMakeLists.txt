@@ -10,9 +10,9 @@ if( ${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR} )
 endif()
 
 ############################### Version #######################################
-set(ADITOF_VERSION_MAJOR 5)
+set(ADITOF_VERSION_MAJOR 6)
 set(ADITOF_VERSION_MINOR 0)
-set(ADITOF_VERSION_PATCH 0)
+set(ADITOF_VERSION_PATCH 0-ALPHA)
 
 set(VERSION "${ADITOF_VERSION_MAJOR}.${ADITOF_VERSION_MINOR}.${ADITOF_VERSION_PATCH}")
 
