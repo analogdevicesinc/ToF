@@ -5,17 +5,23 @@ set -e
 
 SDK_VERSION=$1
 BRANCH=$2
+LIBADITOF_BRANCH=$3
 
 echo ${SDK_VERSION}
 echo ${BRANCH}
 
 if [ -z ${SDK_VERSION} ]; then
-	echo 'usage: ./runme.sh <sdk_version> <ToF_Branch>'
+	echo 'usage: ./runme.sh <sdk_version> <ToF_Branch> <libaditof_branch>'
 	exit 1
 fi
 
 if [ -z ${BRANCH} ]; then
-	echo 'usage: ./runme.sh <sdk_version> <ToF_Branch>'
+	echo 'usage: ./runme.sh <sdk_version> <ToF_Branch> <libaditof_branch>'
+	exit 1
+fi
+
+if [ -z ${LIBADITOF_BRANCH} ]; then
+	echo 'usage: ./runme.sh <sdk_version> <ToF_Branch> <libaditof_branch>'
 	exit 1
 fi
 
@@ -104,7 +110,7 @@ elif [[ $BUILD_TYPE == "ubuntu" ]]; then
 	#Build ubuntu rootfs
 	echo "*** Building ubuntu rootFS"
 	mkdir -p $ROOTDIR/build/ubuntu
-	bash $ROOTDIR/deboot.sh $BRANCH
+	bash $ROOTDIR/deboot.sh $BRANCH $LIBADITOF_BRANCH
 	ROOTFS_IMAGE=$ROOTDIR/build/ubuntu/rootfs.ext4
 fi
 
