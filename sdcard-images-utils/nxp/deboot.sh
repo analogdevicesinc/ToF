@@ -253,15 +253,15 @@ fi
 TOF_GIT_LOCATION=${TOF_GIT_LOCATION:=https://github.com/analogdevicesinc/ToF.git}
 echo "Clone ToF source code from: $TOF_GIT_LOCATION"
 git clone ${TOF_GIT_LOCATION}
-pushd ToF
-git submodule update --init
-popd
 if [ -n ${BRANCH} ]; then
 	echo "Checkout to Branch: ${BRANCH}"
 	pushd ToF
 	git checkout ${BRANCH}
 	popd
 fi
+pushd ToF
+git submodule update --init
+popd
 if [ -n ${LIBADITOF_BRANCH} ]; then
 	echo "Checkout to Branch: ${LIBADITOF_BRANCH}"
 	pushd ToF
