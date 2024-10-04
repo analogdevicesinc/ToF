@@ -1,0 +1,31 @@
+From 40d06e53877bb061d71104027ad37546698c3f39 Mon Sep 17 00:00:00 2001
+From: Sriram Chappidi <Sriram.Chappidi@analog.com>
+Date: Tue, 1 Oct 2024 16:42:25 +0530
+Subject: [PATCH 06/17] Enable I2C in PMIC
+
+Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
+---
+ drivers/regulator/pca9450-regulator.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/regulator/pca9450-regulator.c b/drivers/regulator/pca9450-regulator.c
+index e7408598cd79..dcd28daf9dba 100644
+--- a/drivers/regulator/pca9450-regulator.c
++++ b/drivers/regulator/pca9450-regulator.c
+@@ -978,6 +978,13 @@ static int pca9450_i2c_probe(struct i2c_client *i2c,
+ 		return -EINVAL;
+ 	}
+ 
++	ret = regmap_write(pca9450->regmap, PCA9450_REG_CONFIG2, 11);
++	if (ret < 0) {
++                dev_err(pca9450->dev, "%s(): write PCA9450_REG_CONFIG2 failed!\n",
++                        __func__);
++                return ret;
++        }
++
+ 	for (i = 0; i < pca9450->rcnt; i++) {
+ 		const struct regulator_desc *desc;
+ 		struct regulator_dev *rdev;
+-- 
+2.28.0
+

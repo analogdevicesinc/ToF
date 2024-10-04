@@ -1,0 +1,31 @@
+From 0d22963bd3f71b586d6f12caf680855c92dc890f Mon Sep 17 00:00:00 2001
+From: Sriram Chappidi <Sriram.Chappidi@analog.com>
+Date: Tue, 1 Oct 2024 16:53:46 +0530
+Subject: [PATCH 10/17] usb: gadget: Set lowest allowed speed to SS
+
+Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
+---
+ drivers/usb/gadget/composite.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/usb/gadget/composite.c b/drivers/usb/gadget/composite.c
+index 553382ce3837..754581b3329a 100644
+--- a/drivers/usb/gadget/composite.c
++++ b/drivers/usb/gadget/composite.c
+@@ -723,11 +723,9 @@ static int bos_desc(struct usb_composite_dev *cdev)
+ 		ss_cap->bDescriptorType = USB_DT_DEVICE_CAPABILITY;
+ 		ss_cap->bDevCapabilityType = USB_SS_CAP_TYPE;
+ 		ss_cap->bmAttributes = 0; /* LTM is not supported yet */
+-		ss_cap->wSpeedSupported = cpu_to_le16(USB_LOW_SPEED_OPERATION |
+-						      USB_FULL_SPEED_OPERATION |
+-						      USB_HIGH_SPEED_OPERATION |
++		ss_cap->wSpeedSupported = cpu_to_le16(USB_HIGH_SPEED_OPERATION |
+ 						      USB_5GBPS_OPERATION);
+-		ss_cap->bFunctionalitySupport = USB_LOW_SPEED_OPERATION;
++		ss_cap->bFunctionalitySupport = 3; /* USB_SS_OPERATION */
+ 		ss_cap->bU1devExitLat = dcd_config_params.bU1devExitLat;
+ 		ss_cap->bU2DevExitLat = dcd_config_params.bU2DevExitLat;
+ 	}
+-- 
+2.28.0
+

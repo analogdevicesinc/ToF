@@ -1,0 +1,65 @@
+From 8c39b38830fbe13ea02de22274177ff9ead73997 Mon Sep 17 00:00:00 2001
+From: Sriram Chappidi <Sriram.Chappidi@analog.com>
+Date: Tue, 1 Oct 2024 17:30:06 +0530
+Subject: [PATCH 14/17] Add CMA support configuration to defconfing
+
+Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
+---
+ .../boot/dts/freescale/imx8mp-adi-tof-crr-rev1.dtsi      | 9 ---------
+ arch/arm64/configs/adi_defconfig                         | 6 ++++++
+ 2 files changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-crr-rev1.dtsi b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-crr-rev1.dtsi
+index 809892238a0c..91b1f2af5040 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-crr-rev1.dtsi
++++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-crr-rev1.dtsi
+@@ -164,15 +164,6 @@ usb3_data_ss: endpoint {
+ 	};
+ };
+ 
+-&resmem {
+-	linux,cma {
+-			compatible = "shared-dma-pool";
+-			reusable;
+-			size = <0 0x20000000>;
+-			alloc-ranges = <0 0x40000000 0 0xC0000000>;
+-			linux,cma-default;
+-		};
+-};
+ 
+ &A53_0 {
+ 	cpu-supply = <&buck2>;
+diff --git a/arch/arm64/configs/adi_defconfig b/arch/arm64/configs/adi_defconfig
+index 0e6e8d756874..17b5efe1c0be 100644
+--- a/arch/arm64/configs/adi_defconfig
++++ b/arch/arm64/configs/adi_defconfig
+@@ -661,6 +661,7 @@ CONFIG_DMATEST=y
+ CONFIG_SYNC_FILE=y
+ CONFIG_DMABUF_HEAPS=y
+ CONFIG_DMABUF_HEAPS_SYSTEM=y
++CONFIG_DMABUF_HEAPS_CMA=y
+ CONFIG_DMABUF_HEAPS_DSP=y
+ CONFIG_UIO=y
+ CONFIG_UIO_PCI_GENERIC=y
+@@ -684,6 +685,9 @@ CONFIG_IMX8_ISI_M2M=y
+ CONFIG_IMX8_ISI_CORE=y
+ # CONFIG_IMX8_PARALLEL_CSI is not set
+ # CONFIG_DWC_MIPI_CSI2_HOST is not set
++CONFIG_ION=y
++CONFIG_ION_SYSTEM_HEAP=y
++CONFIG_ION_CMA_HEAP=y
+ CONFIG_FSL_PPFE=y
+ CONFIG_FSL_PPFE_UTIL_DISABLED=y
+ CONFIG_CHROME_PLATFORMS=y
+@@ -868,6 +872,8 @@ CONFIG_CORDIC=m
+ CONFIG_INDIRECT_PIO=y
+ CONFIG_CRC_CCITT=m
+ CONFIG_CRC8=y
++CONFIG_DMA_CMA=y
++CONFIG_CMA_SIZE_MBYTES=32
+ CONFIG_PRINTK_TIME=y
+ CONFIG_DYNAMIC_DEBUG=y
+ CONFIG_DEBUG_KERNEL=y
+-- 
+2.28.0
+

@@ -1,0 +1,181 @@
+From f0b7338769810b390bac196e18805b14dfbb21d2 Mon Sep 17 00:00:00 2001
+From: Sriram Chappidi <Sriram.Chappidi@analog.com>
+Date: Tue, 1 Oct 2024 17:24:51 +0530
+Subject: [PATCH 12/17] Add supported ADSD3500 pixel format
+
+Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
+---
+ drivers/staging/media/imx/imx8-isi-fmt.c      | 79 ++++++++++---------
+ .../staging/media/imx/imx8-mipi-csi2-sam.c    |  9 ++-
+ 2 files changed, 47 insertions(+), 41 deletions(-)
+
+diff --git a/drivers/staging/media/imx/imx8-isi-fmt.c b/drivers/staging/media/imx/imx8-isi-fmt.c
+index db11c809a3d3..09adba67af53 100644
+--- a/drivers/staging/media/imx/imx8-isi-fmt.c
++++ b/drivers/staging/media/imx/imx8-isi-fmt.c
+@@ -15,7 +15,7 @@ struct mxc_isi_fmt mxc_isi_out_formats[] = {
+ 		.memplanes	= 1,
+ 		.colplanes	= 1,
+ 		.align		= 3,
+-		.mbus_code  = MEDIA_BUS_FMT_RGB565_1X16,
++		.mbus_code      = MEDIA_BUS_FMT_RGB565_1X16,
+ 	}, {
+ 		.name		= "RGB24",
+ 		.fourcc		= V4L2_PIX_FMT_RGB24,
+@@ -24,7 +24,7 @@ struct mxc_isi_fmt mxc_isi_out_formats[] = {
+ 		.memplanes	= 1,
+ 		.colplanes	= 1,
+ 		.align		= 2,
+-		.mbus_code  = MEDIA_BUS_FMT_RGB888_1X24,
++		.mbus_code      = MEDIA_BUS_FMT_RGB888_1X24,
+ 	}, {
+ 		.name		= "BGR24",
+ 		.fourcc		= V4L2_PIX_FMT_BGR24,
+@@ -33,16 +33,7 @@ struct mxc_isi_fmt mxc_isi_out_formats[] = {
+ 		.memplanes	= 1,
+ 		.colplanes	= 1,
+ 		.align		= 2,
+-		.mbus_code  = MEDIA_BUS_FMT_BGR888_1X24,
+-	}, {
+-		.name		= "YUYV-16",
+-		.fourcc		= V4L2_PIX_FMT_YUYV,
+-		.depth		= { 16 },
+-		.color		= MXC_ISI_OUT_FMT_YUV422_1P8P,
+-		.memplanes	= 1,
+-		.colplanes	= 1,
+-		.align		= 3,
+-		.mbus_code	= MEDIA_BUS_FMT_YUYV8_1X16,
++		.mbus_code      = MEDIA_BUS_FMT_BGR888_1X24,
+ 	}, {
+ 		.name		= "YUV32 (X-Y-U-V)",
+ 		.fourcc		= V4L2_PIX_FMT_YUV32,
+@@ -52,33 +43,6 @@ struct mxc_isi_fmt mxc_isi_out_formats[] = {
+ 		.colplanes	= 1,
+ 		.align		= 2,
+ 		.mbus_code	= MEDIA_BUS_FMT_AYUV8_1X32,
+-	}, {
+-		.name		= "NV12 (YUYV)",
+-		.fourcc		= V4L2_PIX_FMT_NV12,
+-		.depth		= { 8, 8 },
+-		.color		= MXC_ISI_OUT_FMT_YUV420_2P8P,
+-		.memplanes	= 1,
+-		.colplanes	= 2,
+-		.align		= 4,
+-		.mbus_code	= MEDIA_BUS_FMT_YUYV8_1X16,
+-	}, {
+-		.name		= "NV12M (YUYV)",
+-		.fourcc		= V4L2_PIX_FMT_NV12M,
+-		.depth		= { 8, 8 },
+-		.color		= MXC_ISI_OUT_FMT_YUV420_2P8P,
+-		.memplanes	= 2,
+-		.colplanes	= 2,
+-		.align		= 4,
+-		.mbus_code	= MEDIA_BUS_FMT_YUYV8_1X16,
+-	}, {
+-		.name		= "YUV444M (Y-U-V)",
+-		.fourcc		= V4L2_PIX_FMT_YUV444M,
+-		.depth		= { 8, 8, 8 },
+-		.color		= MXC_ISI_OUT_FMT_YUV444_3P8P,
+-		.memplanes	= 3,
+-		.colplanes	= 3,
+-		.align		= 4,
+-		.mbus_code	= MEDIA_BUS_FMT_YUV8_1X24,
+ 	}, {
+ 		.name		= "xBGR32",
+ 		.fourcc		= V4L2_PIX_FMT_XBGR32,
+@@ -97,7 +61,44 @@ struct mxc_isi_fmt mxc_isi_out_formats[] = {
+ 		.colplanes	= 1,
+ 		.align		= 2,
+ 		.mbus_code	= MEDIA_BUS_FMT_RGB888_1X24,
++	}, {
++		.name           = "YUYV-16",
++		.fourcc         = V4L2_PIX_FMT_YUYV,
++		.depth          = { 16 },
++		.color          = MXC_ISI_OUT_FMT_RAW12,
++		.memplanes      = 1,
++		.colplanes      = 1,
++		.align		= 2,
++		.mbus_code      = MEDIA_BUS_FMT_Y12_1X12,
++	}, {
++		.name           = "ADI_RAW16 (CUSTOM)",
++		.fourcc         = V4L2_PIX_FMT_SBGGR16,
++		.depth          = { 16 },
++		.color          = MXC_ISI_OUT_FMT_RAW16,
++		.memplanes      = 1,
++		.colplanes      = 1,
++		.align		= 2,
++		.mbus_code      = MEDIA_BUS_FMT_SBGGR16_1X16,
++	}, {
++		.name           = "ADI_RAW12 (CUSTOM)",
++		.fourcc         = V4L2_PIX_FMT_SBGGR12,
++		.depth          = { 16 },
++		.color          = MXC_ISI_OUT_FMT_RAW12,
++		.memplanes      = 1,
++		.colplanes      = 1,
++		.align		= 2,
++		.mbus_code      = MEDIA_BUS_FMT_SBGGR12_1X12,
++	}, {
++		.name           = "ADI_RAW8 (CUSTOM)",
++		.fourcc         = V4L2_PIX_FMT_SBGGR8,
++		.depth          = { 8 },
++		.color          = MXC_ISI_OUT_FMT_RAW8,
++		.memplanes      = 1,
++		.colplanes      = 1,
++		.align		= 2,
++		.mbus_code      = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 	}
++
+ };
+ 
+ size_t mxc_isi_out_formats_size = ARRAY_SIZE(mxc_isi_out_formats);
+diff --git a/drivers/staging/media/imx/imx8-mipi-csi2-sam.c b/drivers/staging/media/imx/imx8-mipi-csi2-sam.c
+index 1d12365520a6..a1f5d205e692 100644
+--- a/drivers/staging/media/imx/imx8-mipi-csi2-sam.c
++++ b/drivers/staging/media/imx/imx8-mipi-csi2-sam.c
+@@ -492,7 +492,7 @@ static const struct csis_pix_format mipi_csis_formats[] = {
+ 		.fmt_reg = MIPI_CSIS_ISPCFG_FMT_RAW12,
+ 		.data_alignment = 16,
+ 	}, {
+-		.code = MEDIA_BUS_FMT_SGBRG12_1X12,
++		.code = MEDIA_BUS_FMT_Y12_1X12,
+ 		.fmt_reg = MIPI_CSIS_ISPCFG_FMT_RAW12,
+ 		.data_alignment = 16,
+ 	}, {
+@@ -968,6 +968,7 @@ static void disp_mix_gasket_config(struct csi_state *state)
+ 		fmt_val = GASKET_0_CTRL_DATA_TYPE_RAW10;
+ 		break;
+ 	case MEDIA_BUS_FMT_SBGGR12_1X12:
++	case MEDIA_BUS_FMT_Y12_1X12:
+ 		fmt_val = GASKET_0_CTRL_DATA_TYPE_RAW12;
+ 		break;
+ 	case MEDIA_BUS_FMT_SGBRG12_1X12:
+@@ -1137,7 +1138,7 @@ static int mipi_csis_set_fmt(struct v4l2_subdev *mipi_sd,
+ 	}
+ 
+ 	format->pad = source_pad->index;
+-	mf->code = MEDIA_BUS_FMT_UYVY8_2X8;
++	mf->code = format->format.code;
+ 	ret = v4l2_subdev_call(sen_sd, pad, set_fmt, NULL, format);
+ 	if (ret < 0) {
+ 		v4l2_err(&state->sd, "%s, set sensor format fail\n", __func__);
+@@ -1148,6 +1149,7 @@ static int mipi_csis_set_fmt(struct v4l2_subdev *mipi_sd,
+ 	if (!csis_fmt) {
+ 		csis_fmt = &mipi_csis_formats[0];
+ 		mf->code = csis_fmt->code;
++		return 0;
+ 	}
+ 
+ 	state->csis_fmt = csis_fmt;
+@@ -1293,6 +1295,9 @@ static int csis_s_fmt(struct v4l2_subdev *sd, struct csi_sam_format *fmt)
+ 	struct csi_state *state = container_of(sd, struct csi_state, sd);
+ 
+ 	switch (fmt->format) {
++	case V4L2_PIX_FMT_SBGGR8:
++	    code = MEDIA_BUS_FMT_SBGGR8_1X8;
++	    break;
+ 	case V4L2_PIX_FMT_SBGGR10:
+ 	    code = MEDIA_BUS_FMT_SBGGR10_1X10;
+ 	    break;
+-- 
+2.28.0
+

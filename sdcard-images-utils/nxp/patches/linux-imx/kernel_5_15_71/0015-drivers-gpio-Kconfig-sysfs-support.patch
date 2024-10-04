@@ -1,0 +1,28 @@
+From 51ce5e15ed5d2e2f80e4aad567c074b96e89e570 Mon Sep 17 00:00:00 2001
+From: Sriram Chappidi <Sriram.Chappidi@analog.com>
+Date: Tue, 1 Oct 2024 17:31:48 +0530
+Subject: [PATCH 15/17] drivers: gpio: Kconfig: sysfs support
+
+Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
+---
+ drivers/gpio/Kconfig | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/gpio/Kconfig b/drivers/gpio/Kconfig
+index 52b717954173..e6a339a741ef 100644
+--- a/drivers/gpio/Kconfig
++++ b/drivers/gpio/Kconfig
+@@ -59,9 +59,8 @@ config DEBUG_GPIO
+ 	  that are most common when setting up new platforms or boards.
+ 
+ config GPIO_SYSFS
+-	bool "/sys/class/gpio/... (sysfs interface)" if EXPERT
++	bool "/sys/class/gpio/... (sysfs interface)"
+ 	depends on SYSFS
+-	select GPIO_CDEV # We need to encourage the new ABI
+ 	help
+ 	  Say Y here to add the legacy sysfs interface for GPIOs.
+ 
+-- 
+2.28.0
+

@@ -1,0 +1,165 @@
+From 67c277de49619a0cc53fc16ac9ea2a15c42fe9fa Mon Sep 17 00:00:00 2001
+From: Sriram Chappidi <Sriram.Chappidi@analog.com>
+Date: Tue, 1 Oct 2024 16:49:37 +0530
+Subject: [PATCH 08/17] usb: typec: tcpm: Remove tcpm port reset
+
+Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
+---
+ drivers/usb/typec/tcpm/tcpci.c | 19 +++++++++++--------
+ drivers/usb/typec/tcpm/tcpm.c  | 31 ++++++++++++-------------------
+ 2 files changed, 23 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/usb/typec/tcpm/tcpci.c b/drivers/usb/typec/tcpm/tcpci.c
+index 8c3848bb540c..82fc0518f50d 100644
+--- a/drivers/usb/typec/tcpm/tcpci.c
++++ b/drivers/usb/typec/tcpm/tcpci.c
+@@ -179,13 +179,15 @@ static int tcpci_start_toggling(struct tcpc_dev *tcpc,
+ {
+ 	int ret;
+ 	struct tcpci *tcpci = tcpc_to_tcpci(tcpc);
+-	unsigned int reg = TCPC_ROLE_CTRL_DRP;
+-
+-	/* Handle vendor drp toggling */
+-	if (tcpci->data->start_drp_toggling) {
+-		ret = tcpci->data->start_drp_toggling(tcpci, tcpci->data, cc);
+-		if (ret < 0)
+-			return ret;
++	unsigned int reg = 0;
++	if (port_type == TYPEC_PORT_DRP) {
++		/* Handle vendor drp toggling */
++		if (tcpci->data->start_drp_toggling) {
++			ret = tcpci->data->start_drp_toggling(tcpci, tcpci->data, cc);
++			if (ret < 0)
++				return ret;
++		}
++		reg = TCPC_ROLE_CTRL_DRP;
+ 	}
+ 
+ 	switch (cc) {
+@@ -523,6 +525,7 @@ static int tcpci_set_vbus(struct tcpc_dev *tcpc, bool source, bool sink)
+ 	struct tcpci *tcpci = tcpc_to_tcpci(tcpc);
+ 	int ret;
+ 
++#if 0
+ 	if (tcpci->data->set_vbus) {
+ 		ret = tcpci->data->set_vbus(tcpci, tcpci->data, source, sink);
+ 		/* Bypass when ret > 0 */
+@@ -562,7 +565,7 @@ static int tcpci_set_vbus(struct tcpc_dev *tcpc, bool source, bool sink)
+ 		if (ret < 0)
+ 			return ret;
+ 	}
+-
++#endif
+ 	return 0;
+ }
+ 
+diff --git a/drivers/usb/typec/tcpm/tcpm.c b/drivers/usb/typec/tcpm/tcpm.c
+index 468b60f0cd72..60ab16b8d121 100644
+--- a/drivers/usb/typec/tcpm/tcpm.c
++++ b/drivers/usb/typec/tcpm/tcpm.c
+@@ -556,7 +556,7 @@ static enum tcpm_state tcpm_default_state(struct tcpm_port *port)
+ 			return SRC_UNATTACHED;
+ 		/* Fall through to return SRC_UNATTACHED */
+ 	} else if (port->port_type == TYPEC_PORT_SNK) {
+-		return SNK_UNATTACHED;
++		return SNK_ATTACHED;
+ 	}
+ 	return SRC_UNATTACHED;
+ }
+@@ -995,7 +995,7 @@ static u32 tcpm_get_current_limit(struct tcpm_port *port)
+ 		if (port->tcpc->get_current_limit)
+ 			limit = port->tcpc->get_current_limit(port->tcpc);
+ 		else
+-			limit = 0;
++			limit = 3000;
+ 		break;
+ 	}
+ 
+@@ -3515,9 +3515,9 @@ static int tcpm_init_vbus(struct tcpm_port *port)
+ {
+ 	int ret;
+ 
+-	ret = port->tcpc->set_vbus(port->tcpc, false, false);
++	ret = port->tcpc->set_vbus(port->tcpc, false, true);
+ 	port->vbus_source = false;
+-	port->vbus_charge = false;
++	port->vbus_charge = true;
+ 	return ret;
+ }
+ 
+@@ -3525,7 +3525,7 @@ static int tcpm_init_vconn(struct tcpm_port *port)
+ {
+ 	int ret;
+ 
+-	ret = port->tcpc->set_vconn(port->tcpc, false);
++	ret = port->tcpc->set_vconn(port->tcpc, true);
+ 	port->vconn_role = TYPEC_SINK;
+ 	return ret;
+ }
+@@ -3840,7 +3840,7 @@ static void run_state_machine(struct tcpm_port *port)
+ 	case SRC_UNATTACHED:
+ 		if (!port->non_pd_role_swap)
+ 			tcpm_swap_complete(port, -ENOTCONN);
+-		tcpm_src_detach(port);
++		//tcpm_src_detach(port);
+ 		if (tcpm_start_toggling(port, tcpm_rp_cc(port))) {
+ 			tcpm_set_state(port, TOGGLING, 0);
+ 			break;
+@@ -4218,7 +4218,7 @@ static void run_state_machine(struct tcpm_port *port)
+ 	case SNK_WAIT_CAPABILITIES:
+ 		ret = port->tcpc->set_pd_rx(port->tcpc, true);
+ 		if (ret < 0) {
+-			tcpm_set_state(port, SNK_READY, 0);
++			tcpm_set_state(port, SNK_READY, PD_T_SINK_WAIT_CAP);
+ 			break;
+ 		}
+ 		/*
+@@ -4227,14 +4227,7 @@ static void run_state_machine(struct tcpm_port *port)
+ 		 * were already in a stable contract before this boot.
+ 		 * Do this only once.
+ 		 */
+-		if (port->vbus_never_low) {
+-			port->vbus_never_low = false;
+-			tcpm_set_state(port, SNK_SOFT_RESET,
+-				       PD_T_SINK_WAIT_CAP);
+-		} else {
+-			tcpm_set_state(port, hard_reset_state(port),
+-				       PD_T_SINK_WAIT_CAP);
+-		}
++		tcpm_set_state(port, SNK_READY, 0);
+ 		break;
+ 	case SNK_NEGOTIATE_CAPABILITIES:
+ 		port->pd_capable = true;
+@@ -4426,9 +4419,9 @@ static void run_state_machine(struct tcpm_port *port)
+ 		/* Do not discharge/disconnect during hard reseet */
+ 		tcpm_set_auto_vbus_discharge_threshold(port, TYPEC_PWR_MODE_USB, false, 0);
+ 		memset(&port->pps_data, 0, sizeof(port->pps_data));
+-		tcpm_set_vconn(port, false);
++		//tcpm_set_vconn(port, false);
+ 		if (port->pd_capable)
+-			tcpm_set_charge(port, false);
++			//tcpm_set_charge(port, false);
+ 		tcpm_set_roles(port, port->self_powered, TYPEC_SINK,
+ 			       tcpm_data_role_for_sink(port));
+ 		/*
+@@ -5838,7 +5831,7 @@ static void tcpm_init(struct tcpm_port *port)
+ 
+ 	port->tcpc->init(port->tcpc);
+ 
+-	tcpm_reset_port(port);
++	//tcpm_reset_port(port);
+ 
+ 	/*
+ 	 * XXX
+@@ -5876,7 +5869,7 @@ static void tcpm_init(struct tcpm_port *port)
+ 	 * Some adapters need a clean slate at startup, and won't recover
+ 	 * otherwise. So do not try to be fancy and force a clean disconnect.
+ 	 */
+-	tcpm_set_state(port, PORT_RESET, 0);
++	//tcpm_set_state(port, PORT_RESET, 0);
+ }
+ 
+ static int tcpm_port_type_set(struct typec_port *p, enum typec_port_type type)
+-- 
+2.28.0
+
