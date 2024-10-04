@@ -56,6 +56,7 @@ export LANGUAGE=C
 export LANG=C
 
 BRANCH=$1
+LIBADITOF_BRANCH=$2
 
 function setup_config() {
 
@@ -252,11 +253,22 @@ fi
 TOF_GIT_LOCATION=${TOF_GIT_LOCATION:=https://github.com/analogdevicesinc/ToF.git}
 echo "Clone ToF source code from: $TOF_GIT_LOCATION"
 git clone ${TOF_GIT_LOCATION}
+pushd ToF
+git submodule update --init
+popd
 if [ -n ${BRANCH} ]; then
 	echo "Checkout to Branch: ${BRANCH}"
 	pushd ToF
 	git checkout ${BRANCH}
 	popd
+fi
+if [ -n ${LIBADITOF_BRANCH} ]; then
+	echo "Checkout to Branch: ${LIBADITOF_BRANCH}"
+	pushd ToF
+  pushd libaditof
+	git checkout ${LIBADITOF_BRANCH}
+	popd
+  popd
 fi
 pushd ToF/scripts/nxp/
 chmod +x setup.sh
