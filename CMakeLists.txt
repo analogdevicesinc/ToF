@@ -19,7 +19,7 @@ set(VERSION "${ADITOF_VERSION_MAJOR}.${ADITOF_VERSION_MINOR}.${ADITOF_VERSION_PA
 ############################### Options #######################################
 option(WITH_EXAMPLES "Build examples?" ON)
 option(WITH_DOC "Build documentation?" OFF)
-option(WITH_PYTHON "Build python bindings?" OFF)
+option(WITH_PYTHON "Build python bindings?" ON)
 option(WITH_OPENCV "Build opencv bindings?" OFF)
 option(WITH_OPEN3D "Build open3d bindings?" OFF)
 option(WITH_ROS2 "Build ros2 bindings?" OFF)
@@ -28,6 +28,7 @@ option(WITH_OFFLINE "Build offline interface?" OFF)
 option(WITH_GLOG_DEPENDENCY "Build with GLOG dependency to be used for logging?" ON)
 option(WITH_COMMAND_LINE_TOOLS "Build with command line tools?" ON)
 option(CI_BUILD "Build for CI" OFF)
+option(WITH_SUBMODULES "Use submodules to build the library" ON)
 
 ######################### Target based Options ################################
 option(NXP "Set to ON when building on NXP" OFF)
