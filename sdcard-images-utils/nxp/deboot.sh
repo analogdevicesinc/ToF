@@ -282,7 +282,6 @@ chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace
 
 #copy executables to bin folder
 mkdir /home/${USERNAME}/Workspace/bin
-cp -r /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/config/ /home/${USERNAME}/Workspace/bin
 cp /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/data_collect /home/${USERNAME}/Workspace/bin
 cp /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/*.so* /home/${USERNAME}/Workspace/bin
 cp /home/${USERNAME}/Workspace/ToF/build/examples/first-frame/first-frame /home/${USERNAME}/Workspace/bin
