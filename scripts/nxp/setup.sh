@@ -100,10 +100,7 @@ setup() {
         fi
 
         tof_dir=$(pwd)/../../
-        pushd "${tof_dir}"
-        git submodule update --init
         
-        popd
         
         pushd "${build_dir}"
         cmake "${source_dir}" ${CMAKE_OPTIONS} 
