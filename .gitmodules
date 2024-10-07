@@ -1,4 +1,3 @@
 [submodule "libaditof"]
 	path = libaditof
 	url = https://github.com/analogdevicesinc/libaditof.git
-        branch = dev-5.1.0
