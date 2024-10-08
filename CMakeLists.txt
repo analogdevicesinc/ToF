@@ -61,6 +61,17 @@ if (GIT_FOUND)
 			OUTPUT_STRIP_TRAILING_WHITESPACE
 		)
 	endif()
+        if (WITH_SUBMODULES)
+                add_definitions(-DWITH_SUBMODULES)
+                message("Updating submodules")
+                execute_process(COMMAND ${GITEXECUTABLE} submodule update --init
+                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                        RESULT_VARIABLE WITH_SUBMODULES_RESULT)
+
+                if(NOT WITH_SUBMODULES_RESULT EQUAL "0")
+                        message(ERROR "Git submodules failed to initialize, check submodules")
+                endif()
+        endif()
 endif()
 
 add_definitions(-DTOFSDK_GIT_COMMIT="${TOFSDK_GIT_COMMIT}")
