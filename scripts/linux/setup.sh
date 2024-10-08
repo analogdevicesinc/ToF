@@ -91,14 +91,7 @@ setup() {
         fi
 
         mkdir -p "${build_dir}"
-        
-
-        if [[ -f ../../../libs/libtofi_compute.so && -f ../../../libs/libtofi_config.so ]]; then
-                CMAKE_OPTIONS="-DWITH_PYTHON=1 -DCMAKE_BUILD_TYPE=Release"
-        else
-                CMAKE_OPTIONS="-DUSE_DEPTH_COMPUTE_OPENSOURCE=ON -DWITH_PYTHON=1 -DCMAKE_BUILD_TYPE=Release"
-        fi
-
+        CMAKE_OPTIONS="-DWITH_PYTHON=1 -DCMAKE_BUILD_TYPE=Release"
         tof_dir=$(pwd)/../../
         
         
