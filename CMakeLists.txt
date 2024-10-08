@@ -64,11 +64,11 @@ if (GIT_FOUND)
         if (WITH_SUBMODULES)
                 add_definitions(-DWITH_SUBMODULES)
                 message("Updating submodules")
-                execute_process(COMMAND ${GITEXECUTABLE} submodule update --init
+                execute_process(COMMAND ${GITEXECUTABLE} submodule update --init --rebase --remote
                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                         RESULT_VARIABLE WITH_SUBMODULES_RESULT)
 
-                if(NOT WITH_SUBMODULES_RESULT EQUAL "0")
+                if(NOT WITH_SUBMODULES_RESULT EQUAL 0)
                         message(ERROR "Git submodules failed to initialize, check submodules")
                 endif()
         endif()
