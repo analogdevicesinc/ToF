@@ -1,7 +1,7 @@
-From 1857545630c501f161da2c6356ee1937efc8d404 Mon Sep 17 00:00:00 2001
+From 060c250a3df8d6a3915b11bb21955a089166fb6b Mon Sep 17 00:00:00 2001
 From: Sriram Chappidi <Sriram.Chappidi@analog.com>
-Date: Thu, 3 Oct 2024 12:30:51 +0530
-Subject: [PATCH 01/17] arch: arm64: boot: dts: freescale: Add ADI TOF
+Date: Mon, 7 Oct 2024 17:13:20 +0530
+Subject: [PATCH 01/13] arch: arm64: boot: dts: freescale: Add ADI TOF
  devicetrees
 
 Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
@@ -11,9 +11,9 @@ Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
  .../dts/freescale/imx8mp-adi-tof-adsd3030.dts | 1168 ++++++++++++++++
  .../freescale/imx8mp-adi-tof-adsd3500-spi.dts | 1225 ++++++++++++++++
  .../dts/freescale/imx8mp-adi-tof-adsd3500.dts | 1194 ++++++++++++++++
- .../freescale/imx8mp-adi-tof-crr-rev1.dtsi    |  884 ++++++++++++
+ .../freescale/imx8mp-adi-tof-crr-rev1.dtsi    |  875 ++++++++++++
  .../dts/freescale/imx8mp-adi-tof-noreg.dts    | 1244 +++++++++++++++++
- 7 files changed, 6914 insertions(+)
+ 7 files changed, 6905 insertions(+)
  create mode 100644 arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030-spi.dts
  create mode 100644 arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030.dts
  create mode 100644 arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500-spi.dts
@@ -4844,10 +4844,10 @@ index 000000000000..833f1106ec82
 +};
 diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-crr-rev1.dtsi b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-crr-rev1.dtsi
 new file mode 100644
-index 000000000000..809892238a0c
+index 000000000000..91b1f2af5040
 --- /dev/null
 +++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-crr-rev1.dtsi
-@@ -0,0 +1,884 @@
+@@ -0,0 +1,875 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright 2023 Analog Devices
@@ -5014,15 +5014,6 @@ index 000000000000..809892238a0c
 +	};
 +};
 +
-+&resmem {
-+	linux,cma {
-+			compatible = "shared-dma-pool";
-+			reusable;
-+			size = <0 0x20000000>;
-+			alloc-ranges = <0 0x40000000 0 0xC0000000>;
-+			linux,cma-default;
-+		};
-+};
 +
 +&A53_0 {
 +	cpu-supply = <&buck2>;

@@ -1,7 +1,7 @@
-From 67c277de49619a0cc53fc16ac9ea2a15c42fe9fa Mon Sep 17 00:00:00 2001
+From 5969d1df3bc9663d68361fad58c51b728cc2a36d Mon Sep 17 00:00:00 2001
 From: Sriram Chappidi <Sriram.Chappidi@analog.com>
-Date: Tue, 1 Oct 2024 16:49:37 +0530
-Subject: [PATCH 08/17] usb: typec: tcpm: Remove tcpm port reset
+Date: Tue, 8 Oct 2024 11:15:05 +0530
+Subject: [PATCH 08/13] usb: typec: tcpm: Remove tcpm port reset
 
 Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
 ---

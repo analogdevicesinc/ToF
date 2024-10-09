@@ -1,7 +1,7 @@
-From 10d7bf0e352483c49ee662a1c3c50f56cd097218 Mon Sep 17 00:00:00 2001
+From 5d634fee41f1098fab82aeafbbf271dcc8f74681 Mon Sep 17 00:00:00 2001
 From: Sriram Chappidi <Sriram.Chappidi@analog.com>
-Date: Tue, 1 Oct 2024 16:40:24 +0530
-Subject: [PATCH 05/17] pwm: gpio: Add a generic gpio based PWM driver
+Date: Tue, 8 Oct 2024 11:10:37 +0530
+Subject: [PATCH 05/13] pwm: gpio: Add a generic gpio based PWM driver
 
 Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
 ---
@@ -9,8 +9,8 @@ Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
  MAINTAINERS                                   |   5 +
  drivers/pwm/Kconfig                           |  15 ++
  drivers/pwm/Makefile                          |   1 +
- drivers/pwm/pwm-gpio.c                        | 239 ++++++++++++++++++
- 5 files changed, 278 insertions(+)
+ drivers/pwm/pwm-gpio.c                        | 240 ++++++++++++++++++
+ 5 files changed, 279 insertions(+)
  create mode 100644 Documentation/devicetree/bindings/pwm/pwm-gpio.txt
  create mode 100644 drivers/pwm/pwm-gpio.c
 
@@ -94,10 +94,10 @@ index 3a4f28c6d464..e54e5d871cf3 100644
  obj-$(CONFIG_PWM_IMX1)		+= pwm-imx1.o
 diff --git a/drivers/pwm/pwm-gpio.c b/drivers/pwm/pwm-gpio.c
 new file mode 100644
-index 000000000000..7e9ffcc1c547
+index 000000000000..619df4a6c1eb
 --- /dev/null
 +++ b/drivers/pwm/pwm-gpio.c
-@@ -0,0 +1,239 @@
+@@ -0,0 +1,240 @@
 +/*
 + * Copyright (c) 2015 Olliver Schinagl <oliver@schinagl.nl>
 + *
@@ -309,13 +309,14 @@ index 000000000000..7e9ffcc1c547
 +{
 +	struct gpio_pwm_chip *gpio_chip;
 +	struct gpio_pwm_data *gpio_data;
++	int ret = 0;
 +
 +	gpio_chip = platform_get_drvdata(pdev);
 +	gpio_data = pwm_get_chip_data(&gpio_chip->chip.pwms[0]);
 +
 +	hrtimer_cancel(&gpio_data->timer);
-+
-+	return pwmchip_remove(&gpio_chip->chip);
++	pwmchip_remove(&gpio_chip->chip);
++	return ret;
 +}
 +
 +static const struct of_device_id gpio_pwm_of_match[] = {
