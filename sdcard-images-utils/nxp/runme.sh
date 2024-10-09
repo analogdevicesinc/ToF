@@ -1,28 +1,46 @@
 #!/bin/bash
-set -e
+set -ex
 
 ### Command Line args
 
 SDK_VERSION=$1
 BRANCH=$2
+KERNEL_VERSION=$3
 
 echo ${SDK_VERSION}
 echo ${BRANCH}
+echo ${KERNEL_VERSION}
 
 if [ -z ${SDK_VERSION} ]; then
-	echo 'usage: ./runme.sh <sdk_version> <ToF_Branch>'
+	echo 'usage: ./runme.sh <sdk_version> <ToF_Branch> <kernel_version>'
 	exit 1
 fi
 
 if [ -z ${BRANCH} ]; then
-	echo 'usage: ./runme.sh <sdk_version> <ToF_Branch>'
+	echo 'usage: ./runme.sh <sdk_version> <ToF_Branch> <kernel_version>'
 	exit 1
 fi
 
+if [ -z ${KERNEL_VERSION} ]; then
+        echo 'usage: ./runme.sh <sdk_version> <ToF_Branch> <kernel_version>'
+	echo 'Available Kernel Versions are 5.10.72 and 5.15.71'
+        exit 1
+fi
 
 ### General setup
 NXP_REL=rel_imx_5.4.70_2.3.0
-KERNEL_NXP_REL=lf-5.10.72-2.2.0
+
+if [ "${KERNEL_VERSION}" == "5.10.72" ]; then
+	KERNEL_NXP_REL=lf-5.10.72-2.2.0
+	KERNEL_ID=kernel_5_10_72
+elif [ "${KERNEL_VERSION}" == "5.15.71" ]; then
+	KERNEL_NXP_REL=lf-5.15.71-2.2.2
+	KERNEL_ID=kernel_5_15_71
+else
+	KERNEL_NXP_REL=lf-5.10.72-2.2.0
+	KERNEL_ID=kernel_5_10_72
+fi
+
 #rel_imx_5.4.70_2.3.0
 UBOOT_NXP_REL=imx_v2020.04_5.4.70_2.3.0
 #rel_imx_5.4.24_2.1.0
@@ -55,7 +73,9 @@ for i in $COMPONENTS; do
 		fi
 		git clone ${SHALLOW_FLAG} ${NXP_GIT_LOCATION}/$i -b $CHECKOUT
 		cd $i
-		if [[ -d $ROOTDIR/patches/$i/ ]]; then
+		if [[ -d $ROOTDIR/patches/$i/ && "x$i" == "xlinux-imx" ]]; then
+                        git am $ROOTDIR/patches/$i/${KERNEL_ID}/*.patch
+		elif [[ -d $ROOTDIR/patches/$i/ ]]; then
 			git am $ROOTDIR/patches/$i/*.patch
 		fi
 	fi
