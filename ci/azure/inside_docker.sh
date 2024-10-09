@@ -1,5 +1,10 @@
 #!/bin/bash
 
+git config --global --add safe.directory /ToF/libaditof
+git config --global --add safe.directory /ToF/libaditof/glog
+git config --global --add safe.directory /ToF/libaditof/libwebsockets
+git config --global --add safe.directory /ToF/libaditof/protobuf
+
 project_dir=$1
 pushd ${project_dir}
 
