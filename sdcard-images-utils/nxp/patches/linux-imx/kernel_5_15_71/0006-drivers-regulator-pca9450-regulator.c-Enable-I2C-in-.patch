@@ -1,7 +1,8 @@
-From 40d06e53877bb061d71104027ad37546698c3f39 Mon Sep 17 00:00:00 2001
+From adeed42ec156056867de2cd99ea6076eedd419ea Mon Sep 17 00:00:00 2001
 From: Sriram Chappidi <Sriram.Chappidi@analog.com>
-Date: Tue, 1 Oct 2024 16:42:25 +0530
-Subject: [PATCH 06/17] Enable I2C in PMIC
+Date: Tue, 8 Oct 2024 11:12:03 +0530
+Subject: [PATCH 06/13] drivers: regulator: pca9450-regulator.c: Enable I2C in
+ PMIC
 
 Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
 ---

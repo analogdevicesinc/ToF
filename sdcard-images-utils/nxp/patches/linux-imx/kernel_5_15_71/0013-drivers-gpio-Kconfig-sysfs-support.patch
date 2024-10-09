@@ -1,7 +1,7 @@
-From 51ce5e15ed5d2e2f80e4aad567c074b96e89e570 Mon Sep 17 00:00:00 2001
+From 847fb2f6167deb35fa09dc78e75dd08f8d57985e Mon Sep 17 00:00:00 2001
 From: Sriram Chappidi <Sriram.Chappidi@analog.com>
-Date: Tue, 1 Oct 2024 17:31:48 +0530
-Subject: [PATCH 15/17] drivers: gpio: Kconfig: sysfs support
+Date: Tue, 8 Oct 2024 11:19:58 +0530
+Subject: [PATCH 13/13] drivers: gpio: Kconfig: sysfs support
 
 Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
 ---

@@ -1,7 +1,7 @@
-From f8008841a634ff9718cf8eba6da836bfbd5d4fc5 Mon Sep 17 00:00:00 2001
+From 4637fc57bafc9c988a946e8773b3d30c3fcac21a Mon Sep 17 00:00:00 2001
 From: Sriram Chappidi <Sriram.Chappidi@analog.com>
-Date: Tue, 1 Oct 2024 16:39:23 +0530
-Subject: [PATCH 04/17] drivers: media: common: v4l2-loopback: Add
+Date: Tue, 8 Oct 2024 11:08:54 +0530
+Subject: [PATCH 04/13] drivers: media: common: v4l2-loopback: Add
  v4l2-loopback driver
 
 Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>

@@ -1,7 +1,8 @@
-From f0b7338769810b390bac196e18805b14dfbb21d2 Mon Sep 17 00:00:00 2001
+From a444e8aa59db9ab790eaa49a056e35def2cbf02c Mon Sep 17 00:00:00 2001
 From: Sriram Chappidi <Sriram.Chappidi@analog.com>
-Date: Tue, 1 Oct 2024 17:24:51 +0530
-Subject: [PATCH 12/17] Add supported ADSD3500 pixel format
+Date: Tue, 8 Oct 2024 11:18:15 +0530
+Subject: [PATCH 11/13] drivers: staging: media: imx: Add supported ADSD3500
+ pixel format
 
 Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
 ---

@@ -1,7 +1,7 @@
-From d826b767d3132cc7160cc71c5c1d0e3ff79f0e8e Mon Sep 17 00:00:00 2001
+From 44fad645c97bb2088bc50e361768fec27f1e91bd Mon Sep 17 00:00:00 2001
 From: Sriram Chappidi <Sriram.Chappidi@analog.com>
-Date: Tue, 1 Oct 2024 16:43:14 +0530
-Subject: [PATCH 07/17] drivers: usb: gadget: Add XU control descriptor
+Date: Tue, 8 Oct 2024 11:14:02 +0530
+Subject: [PATCH 07/13] drivers: usb: gadget: Add XU control descriptor
 
 Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
 ---

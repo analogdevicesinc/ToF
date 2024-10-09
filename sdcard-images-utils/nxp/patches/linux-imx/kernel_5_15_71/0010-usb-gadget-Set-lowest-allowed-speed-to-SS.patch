@@ -1,7 +1,7 @@
-From 0d22963bd3f71b586d6f12caf680855c92dc890f Mon Sep 17 00:00:00 2001
+From 4fcb5a5a282c46936ce156012aee512ced9d8968 Mon Sep 17 00:00:00 2001
 From: Sriram Chappidi <Sriram.Chappidi@analog.com>
-Date: Tue, 1 Oct 2024 16:53:46 +0530
-Subject: [PATCH 10/17] usb: gadget: Set lowest allowed speed to SS
+Date: Tue, 8 Oct 2024 11:16:32 +0530
+Subject: [PATCH 10/13] usb: gadget: Set lowest allowed speed to SS
 
 Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
 ---

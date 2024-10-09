@@ -1,7 +1,7 @@
-From 1170a6b731847156c289c983f4a81479e3fb8fd4 Mon Sep 17 00:00:00 2001
+From 9768071d5ce04bceb5998a2df3aad2c02aedc3fb Mon Sep 17 00:00:00 2001
 From: Sriram Chappidi <Sriram.Chappidi@analog.com>
-Date: Tue, 1 Oct 2024 17:28:25 +0530
-Subject: [PATCH 13/17] drivers: staging: media: imx8: Convert to single planar
+Date: Tue, 8 Oct 2024 11:19:19 +0530
+Subject: [PATCH 12/13] drivers: staging: media: imx8: Convert to single planar
 
 Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
 ---

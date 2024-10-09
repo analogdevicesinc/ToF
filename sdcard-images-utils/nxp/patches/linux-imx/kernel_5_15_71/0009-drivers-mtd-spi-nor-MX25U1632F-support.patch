@@ -1,7 +1,7 @@
-From a7365d72dd32b26a8e8be0bd1a55142f3c0d13d4 Mon Sep 17 00:00:00 2001
+From 2f48835664f9f0b1867cabe9b7da40d9187c2688 Mon Sep 17 00:00:00 2001
 From: Sriram Chappidi <Sriram.Chappidi@analog.com>
-Date: Tue, 1 Oct 2024 16:52:49 +0530
-Subject: [PATCH 09/17] drivers: mtd: spi-nor: MX25U1632F support
+Date: Tue, 8 Oct 2024 11:16:09 +0530
+Subject: [PATCH 09/13] drivers: mtd: spi-nor: MX25U1632F support
 
 Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
 ---
