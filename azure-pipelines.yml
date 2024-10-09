@@ -23,6 +23,7 @@ variables:
 
 jobs:
 - job: LinuxBuilds
+  timeoutInMinutes: 200
   strategy:
     matrix:
       
