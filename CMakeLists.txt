@@ -64,7 +64,7 @@ if (GIT_FOUND)
         if (WITH_SUBMODULES)
                 add_definitions(-DWITH_SUBMODULES)
                 message("Updating submodules")
-                execute_process(COMMAND ${GITEXECUTABLE} submodule update --init --rebase --remote
+                execute_process(COMMAND ${GITEXECUTABLE} submodule update --init
                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                         RESULT_VARIABLE WITH_SUBMODULES_RESULT)
 
