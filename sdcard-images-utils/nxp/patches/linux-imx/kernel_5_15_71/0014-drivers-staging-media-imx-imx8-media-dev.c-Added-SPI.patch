@@ -1,0 +1,43 @@
+From 4b9fd85d21c5d812b50160474591b9ae3ca9ed4f Mon Sep 17 00:00:00 2001
+From: Sriram Chappidi <Sriram.Chappidi@analog.com>
+Date: Fri, 11 Oct 2024 19:13:35 +0530
+Subject: [PATCH 14/14] drivers: staging: media: imx: imx8-media-dev.c: Added
+ SPI support
+
+Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
+---
+ drivers/staging/media/imx/imx8-media-dev.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/media/imx/imx8-media-dev.c b/drivers/staging/media/imx/imx8-media-dev.c
+index 0d0355844eab..76eafc3544c2 100644
+--- a/drivers/staging/media/imx/imx8-media-dev.c
++++ b/drivers/staging/media/imx/imx8-media-dev.c
+@@ -960,7 +960,8 @@ static int register_sensor_entities(struct mxc_md *mxc_md)
+ 	struct device_node *parent = mxc_md->pdev->dev.of_node;
+ 	struct device_node *node, *ep, *rem;
+ 	struct v4l2_fwnode_endpoint endpoint;
+-	struct i2c_client *client;
++	struct spi_device *client_spi;
++	struct i2c_client *client_i2c;
+ 	struct v4l2_async_subdev *asd;
+ 	int index = 0;
+ 	int ret;
+@@ -1025,10 +1026,11 @@ static int register_sensor_entities(struct mxc_md *mxc_md)
+ 		/*
+ 		 * Need to wait sensor driver probed for the first time
+ 		 */
+-		client = of_find_i2c_device_by_node(rem);
+-		if (!client) {
++		client_spi = of_find_spi_device_by_node(rem);
++		client_i2c = of_find_i2c_device_by_node(rem);
++		if ((client_spi == NULL) && (client_i2c == NULL)) {
+ 			v4l2_info(&mxc_md->v4l2_dev,
+-				  "Can't find i2c client device for %s\n",
++				  "Can't find spi client device for %s\n",
+ 				  of_node_full_name(rem));
+ 			return -EPROBE_DEFER;
+ 		}
+-- 
+2.28.0
+
