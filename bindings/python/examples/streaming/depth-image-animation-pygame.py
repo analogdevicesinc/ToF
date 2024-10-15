@@ -72,11 +72,6 @@ else :
     print("Too many arguments provided!")
     exit(-2)
 
-#Checks on input
-if os.path.exists() == False:
-    help()
-    exit(-4)
-
 status = system.getCameraList(cameras, ip)
 print("system.getCameraList()", status)
 
@@ -108,7 +103,7 @@ print("camera1.start()", status)
 
 sensor = camera1.getSensor()
 modeDetails = tof.DepthSensorModeDetails()
-status = sensor.getModeDetails(modeDetails)
+status = sensor.getModeDetails(int(mode),modeDetails)
     
 def normalize(image_scalar, width, height):
     image_scalar_norm = image_scalar / image_scalar.max()
