@@ -40,11 +40,12 @@ import open3d as o3d
 import struct
 
 MegaPixel = 1024
-qMegaPixel = 512
+qMegaPixel = [512, 640, 256, 320]
 confBytesPerPx = 4 
 abBytesPerPx = 2
 xyzBytesPerPx = 6
 depthPerPx = 2
+#BIT_MAP = {'confBytesPerPx': 4,'abBytesPerPx': 2, 'depthPerPx': 2,'xyzBytesPerPx':6}
 
 startOfFrame = 0
 metadataLength = 128
@@ -75,7 +76,7 @@ def parse_metadata(filename, directory, index):
         ('laserTemp',              'L'),
         ('paddingBytes',         '92x'),
     ]
-    format_string = "".join(fmt for name, fmt in elemsList)
+    format_string ='=' +"".join(fmt for name, fmt in elemsList)
     #with open ('%s' % filename) as file:
     with open(filename, "rb") as file:
         file.seek(0)
@@ -84,6 +85,9 @@ def parse_metadata(filename, directory, index):
         
         # Create a list of elements with names and values
         elements = [(name, value) for (name, fmt), value in zip(elemsList, values)]
+        # depthbitsPerPx, abbitsPerPx, confbitsPerPx = elements[3:6]
+                
+        # print('Bits in depth: %s, AB: %s and Conf: %s' %(depthPerPx, abBytesPerPx, confBytesPerPx))
         
         # Save the elements list
         with open(directory + 'metadata_' + base_filename + '_' + index +'.txt', 'w') as outfile:
@@ -156,7 +160,7 @@ def visualize_pcloud(filename, directory, index):
     xyz_frame = np.zeros([height*width,3])
     with open ('%s' % filename) as file:
         
-        if width == qMegaPixel and height == qMegaPixel:
+        if width in qMegaPixel and height in qMegaPixel:
             byte_array = np.fromfile(file, dtype=np.int16, offset = (confBytesPerPx + depthPerPx + 
                 abBytesPerPx)*height*width+metadataLength, count = height*width*3)
         elif width == MegaPixel and height == MegaPixel:
@@ -178,16 +182,16 @@ def visualize_pcloud(filename, directory, index):
         
 def generate_vid(mainDir,numberOfFrames,width,height):
     #create video directory
-    vidDir = mainDir + '\\vid_' + base_filename
+    vidDir = mainDir + '/vid_' + base_filename
     if not os.path.exists(vidDir):
         os.makedirs(vidDir)
         
     #Create a video writer object
-    video = cv.VideoWriter(vidDir + '\\vid_' + base_filename + '.mp4', cv.VideoWriter_fourcc(*"mp4v"), 10, (width*2, height))
+    video = cv.VideoWriter(vidDir + '/vid_' + base_filename + '.mp4', cv.VideoWriter_fourcc(*"mp4v"), 10, (width*2, height))
     
     #Loop over the AB and depth images and and write them to video
     for i in range(0,numberOfFrames):
-        binDir = mainDir +  '\\' + base_filename + '_' + str(i) +'\\' 
+        binDir = mainDir +  '/' + base_filename + '_' + str(i) +'/' 
         depth_img = cv.imread(binDir + 'depth_' + base_filename + '_' + str(i) + pngFileType)
         ab_img = cv.imread(binDir + 'ab_' + base_filename + '_' + str(i) + pngFileType)
 
@@ -201,11 +205,18 @@ def generate_vid(mainDir,numberOfFrames,width,height):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Script to parse a raw file and extract different frame data ')
-    parser.add_argument("--filename",  help="filename to parse")
-    if len(sys.argv) == 1:
-        parser.print_help(sys.stderr)
-        sys.exit(1)
+    parser.add_argument("filename", type=str ,help="bin filename to parse")
+    parser.add_argument("--no_xyz", dest='no_xyz', action='store_true', help="Provide false if input file don't have XYZ. Default assuming false")
+
+   
     args = parser.parse_args()
+    #print(args)
+    #set to identify  for rendering xyz at first frame
+    first_time_render_pc = 1
+    if args.no_xyz:
+        xyzBytesPerPx = 0
+        first_time_render_pc = 0
+    
     
     #check if file exist
     if not os.path.exists(args.filename):
@@ -226,17 +237,37 @@ if __name__ == "__main__":
 
     #identify width, height and number of frames from raw file
     with open(args.filename , 'rb') as f:
-        data = f.read(4)
+        data = f.read(5)
         width = int.from_bytes(data[:2], 'little')
         height = int.from_bytes(data[2:4], 'little')
         print(f"width: {width} height: {height}")
+
+        
+
+        #bitsperpixcel
+        f.seek(0)
+        bitsperpixcel = f.read(8)
+        print(bitsperpixcel) 
+        
+        if not (bitsperpixcel[5]):            
+            depthPerPx=0
+           
+        if not (bitsperpixcel[6]):
+            abBytesPerPx=0
+            
+        if not (bitsperpixcel[7]):
+            confBytesPerPx=0
+        
+          
+        print('Bits in depth: %s, AB: %s and Conf: %s' %(depthPerPx, abBytesPerPx, confBytesPerPx))
+
         
         #show frame details
         file_size = os.path.getsize(args.filename)
         print("file size: " + str(file_size))
 
         #identify the image size
-        if width == qMegaPixel and height == qMegaPixel:
+        if width in qMegaPixel and height in qMegaPixel:
             bytePerPx = abBytesPerPx + depthPerPx + confBytesPerPx + xyzBytesPerPx
         elif width == MegaPixel and height == MegaPixel:
             bytePerPx = abBytesPerPx + depthPerPx + xyzBytesPerPx
@@ -252,13 +283,12 @@ if __name__ == "__main__":
         data = f.read(file_size)
         m_frameData = np.frombuffer(data, dtype=np.uint8)
       
-    #set to identify  for rendering xyz at first frame
-    first_time_render_pc = 1
+    
     
     for i in range(0, m_numberOfFrames):
         # Create frame folders
         base_filename, _ = os.path.splitext(os.path.basename(args.filename))
-        frameDir = dir_path + '\\' + base_filename + '_' + str(i) +'\\'
+        frameDir = dir_path + '/' + base_filename + '_' + str(i) +'/'
         if not os.path.exists(frameDir):
             os.makedirs(frameDir)
         binFileName = frameDir + base_filename + '_' + str(i) + ".bin"
@@ -269,12 +299,14 @@ if __name__ == "__main__":
             endOfFrame = startOfFrame + sizeOfFrame
             f.write(m_frameData[startOfFrame : endOfFrame])
             startOfFrame = endOfFrame
-        parse_metadata(binFileName,frameDir,str(i))    
-        visualize_depth(binFileName,frameDir,str(i))  
-        visualize_ab(binFileName,frameDir,str(i))
+        parse_metadata(binFileName,frameDir,str(i))   
+        if depthPerPx: 
+            visualize_depth(binFileName,frameDir,str(i))
+        if abBytesPerPx:
+            visualize_ab(binFileName,frameDir,str(i))
         
         #check if confidence data is included
-        if width == qMegaPixel and height == qMegaPixel:
+        if (width in qMegaPixel and height in qMegaPixel) and confBytesPerPx:
             visualize_confidence(binFileName,frameDir,str(i))
 
         #render and visualize point cloud at first frame only
