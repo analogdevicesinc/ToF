@@ -50,6 +50,8 @@ if __name__ == "__main__":
         description='Script to run PointCloud')
     parser.add_argument('-ip', '--ip', help='Ip address of the ToF device')
     parser.add_argument('-f', '--frame', help='Name of an acquired frame to be used')
+    parser.add_argument('-m', '--mode', help='Camera mode')
+
     args = parser.parse_args()
     system = tof.System()
 
@@ -58,6 +60,11 @@ if __name__ == "__main__":
     cameras = []
     ip = ''
     fileName = args.frame
+    mode = 0
+
+    if args.mode is not None:
+        mode = int(args.mode)
+
     if args.ip is not None:
         ip = 'ip:' + args.ip
 
@@ -76,7 +83,12 @@ if __name__ == "__main__":
         if not status:
             print("system.getAvailableModes() failed with status: ", status)
 
-        status = cameras[0].setMode(3)
+        if int(mode) not in modes:
+            print(f"Error: Unknown mode - {mode}")
+            print("Available modes: ", modes)
+            exit(-3)
+
+        status = cameras[0].setMode(mode)
         if not status:
             print("cameras[0].setMode() failed with status:", status)
 
