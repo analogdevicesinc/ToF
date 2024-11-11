@@ -61,6 +61,7 @@ if (WITH_EXAMPLES)
     PopulateforPython("examples/saveCCBToFile")
     PopulateforPython("examples/data_collect")
     PopulateforPython("examples/showPointCloud")
+    PopulateforPython("examples/dual_cameras")
 
 endif()
 
