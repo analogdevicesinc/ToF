@@ -20,3 +20,4 @@ rsz() {
 		echo 'Usage: rsz'
 	fi
 }
+rsz
