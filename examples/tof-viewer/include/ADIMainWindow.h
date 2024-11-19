@@ -281,6 +281,7 @@ class ADIMainWindow {
     unsigned int framebuffer;
     bool mouseDown = false;
     bool m_saveBinaryFormatTmp = false;
+    float tofImagePosY;
 
     /**
 		* @brief Virtual Sphere
