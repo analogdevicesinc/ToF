@@ -1877,10 +1877,9 @@ void ADIMainWindow::displayDepthWindow(ImGuiWindowFlags overlayFlags) {
         ImVec2 hoveredImagePixel = InvalidHoveredPixel;
         GetHoveredImagePix(hoveredImagePixel, ImGui::GetCursorScreenPos(),
                            ImGui::GetIO().MousePos, displayDepthDimensions);
-        RenderInfoPane(hoveredImagePixel, view->depth_video_data, view->frameWidth, 
-                       ImGui::IsWindowHovered(),
+        RenderInfoPane(hoveredImagePixel, view->depth_video_data,
+                       view->frameWidth, ImGui::IsWindowHovered(),
                        ADI_Image_Format_t::ADI_IMAGE_FORMAT_DEPTH16, "mm");
-
     }
 
     ImGui::End();
@@ -2186,11 +2185,11 @@ void ADIMainWindow::GetHoveredImagePix(ImVec2 &hoveredImagePixel,
     if (rotationangledegrees == 90 || rotationangledegrees == 270) {
         std::swap(_sourceDepthImageDimensions.x, _sourceDepthImageDimensions.y);
     }
-           
+
     // Do not show out values when cursor is not over image - ie out of bounds.
     if (hoveredUIPixel.x > _displayDepthDimensions.x ||
-        hoveredUIPixel.y > _displayDepthDimensions.y || 
-        hoveredUIPixel.x < 0 || hoveredUIPixel.y < 0) {
+        hoveredUIPixel.y > _displayDepthDimensions.y || hoveredUIPixel.x < 0 ||
+        hoveredUIPixel.y < 0) {
         hoveredImagePixel.x = -1;
         hoveredImagePixel.y = -1;
         return;
@@ -2369,11 +2368,10 @@ void ADIMainWindow::CaptureABVideo() {
             std::swap(_displayABDimensions.x, _displayABDimensions.y);
         }
 
-        ImageRotated(
-            (ImTextureID)ab_video_texture,
-            ImVec2(dictWinPosition["ab"][2], dictWinPosition["ab"][3]),
-            ImVec2(_displayABDimensions.x, _displayABDimensions.y),
-            rotationangleradians);
+        ImageRotated((ImTextureID)ab_video_texture,
+                     ImVec2(dictWinPosition["ab"][2], dictWinPosition["ab"][3]),
+                     ImVec2(_displayABDimensions.x, _displayABDimensions.y),
+                     rotationangleradians);
     }
 }
 
