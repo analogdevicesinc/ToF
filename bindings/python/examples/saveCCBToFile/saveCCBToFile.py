@@ -39,11 +39,12 @@ ccb_prefix = 'ccb_'
 
 if __name__ == "__main__":
 
-    if len(sys.argv) < 1  or sys.argv[1] == "--help" or sys.argv[1] == "-h" :
-        print("save_ccb.py usage:")
-        print("USB / Local connection: save_ccb.py")
-        print("Network connection: save_ccb.py <ip>")
-        exit(1)
+    if len(sys.argv) > 1 :
+        if sys.argv[1] in ["--help", "-h"]: 
+            print("save_ccb.py usage:")
+            print("USB / Local connection: save_ccb.py")
+            print("Network connection: save_ccb.py <ip>")
+            exit(1)
 
     cameras = []
     ip = ""
