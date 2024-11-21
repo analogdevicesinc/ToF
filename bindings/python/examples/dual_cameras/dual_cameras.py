@@ -42,9 +42,16 @@ print("SDK version: ", tof.getApiVersion(), " | branch: ", tof.getBranchVersion(
 modeCamera1 = 0
 modeCamera2 = 0
 
-ipCamera1 = "ip:10.43.0.1"
-ipCamera2 = "ip:10.44.0.1"
+ipCamera1 = "ip:"
+ipCamera2 = "ip:"
 
+if len(sys.argv) != 3:
+    print("3 arguments are required")
+    print("Usage: python dual_camera.py 'ip of 1st camera' 'ip of second camera'")
+    sys.exit(-1)
+
+ipCamera1 = ipCamera1 + str(sys.argv[1])
+ipCamera2 = ipCamera2 + str(sys.argv[2])
 cameras1 = []
 cameras2 = []
 
