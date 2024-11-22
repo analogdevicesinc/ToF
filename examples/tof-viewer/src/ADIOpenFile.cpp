@@ -29,36 +29,38 @@ using namespace std;
 * @param owner	NULL
 * @return		Selected file name with its extension
 */
-string openADIFileName(const char *filter, void *owner, int &FilterIndex) {
+#include <iostream>
+#include <string>
+#include <vector>
+#include <windows.h>
 
-    std::vector<std::string> filters;
-    std::copy(std::begin(customFilters), std::end(customFilters),
-              std::back_inserter(filters));
-
-    OPENFILENAME file;
+std::string openADIFileName(const char *filter, void *owner, int &FilterIndex) {
+    // Initialize variables
+    OPENFILENAME ofn = {0};
     char fileName[MAX_PATH] = "";
-    ZeroMemory(&file, sizeof(file));
-    file.lStructSize = sizeof(OPENFILENAME);
-    file.hwndOwner = reinterpret_cast<HWND>(owner);
-    file.lpstrFilter = filter;
-    file.lpstrFile = fileName;
-    file.nMaxFile = MAX_PATH;
-    file.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-    file.lpstrDefExt = '\0';
-    string fileNameStr;
-    if (GetOpenFileName(&file)) {
-        fileNameStr = std::string(fileName);
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = reinterpret_cast<HWND>(owner);
+    ofn.lpstrFilter = filter; // Filter string
+    ofn.lpstrFile = fileName; // File name buffer
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+    ofn.lpstrDefExt = "json"; // Default extension
+
+    // Display the dialog and get the result
+    if (GetOpenFileName(&ofn)) {
+        FilterIndex = ofn.nFilterIndex; // Get the selected filter index
+        return std::string(fileName);   // Return the selected file path
     }
 
-    for (int ix = 0; ix < filters.size(); ix++) {
-        if (fileNameStr.find(filters[ix].insert(0, 1, '.')) !=
-            std::string::npos) {
-            FilterIndex = ix + 1;
-            return fileNameStr;
-        }
+    // If the user cancels or an error occurs
+    DWORD error = CommDlgExtendedError();
+    if (error != 0) {
+        std::cerr << "GetOpenFileName failed with error: " << error
+                  << std::endl;
     }
-    FilterIndex = 0;
-    return fileNameStr;
+
+    FilterIndex = 0; // Reset filter index
+    return "";       // Return empty string if canceled or failed
 }
 
 /**
@@ -69,35 +71,39 @@ string openADIFileName(const char *filter, void *owner, int &FilterIndex) {
 * @return				Saved name if successful,
 *						empty string otherwise
 */
-string getADIFileName(void *hwndOwner, char *filename, int &FilterIndex) {
-
-    std::vector<std::string> filters;
-    std::copy(std::begin(customFilters), std::end(customFilters),
-              std::back_inserter(filters));
-
+std::string getADIFileName(void *hwndOwner, const char *customFilter,
+                           char *filename, int &FilterIndex) {
+    // Initialize the OPENFILENAME structure
     OPENFILENAME ofn = {0};
     ofn.lStructSize = sizeof(ofn);
-    ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST;
-    ofn.hInstance = GetModuleHandle(0);
     ofn.hwndOwner = reinterpret_cast<HWND>(hwndOwner);
+    ofn.hInstance = GetModuleHandle(0);
     ofn.nMaxFile = MAX_PATH;
     ofn.lpstrFile = filename;
-    ofn.nFilterIndex = 1;
-    ofn.lpstrFilter = customFilter.c_str();
-    ofn.lpstrDefExt = '\0';
+    ofn.lpstrFile[0] = '\0';        // Ensure the filename buffer is empty
+    ofn.lpstrFilter = customFilter; // Use the passed filter
+    ofn.lpstrDefExt = "json"; // Default file extension if none is provided
+    ofn.Flags = OFN_EXPLORER | OFN_OVERWRITEPROMPT;
+    ofn.nFilterIndex = 1; // Default to the first filter
 
+    // Show the Save File dialog
     if (GetSaveFileName(&ofn)) {
-        FilterIndex = (int)((DWORD)ofn.nFilterIndex);
-        filters[FilterIndex - 1].insert(0, 1, '.');
-        //chack if path has extension, in case no add one
-        if (std::string(filename).find(filters[FilterIndex - 1]) !=
-            std::string::npos)
-            return std::string(filename);
-        else
-            return std::string(filename).append(filters[FilterIndex - 1]);
+        // Get the selected filter index
+        FilterIndex = static_cast<int>(ofn.nFilterIndex);
+
+        // Return the selected file path
+        return std::string(filename);
     }
+
+    // If the user cancels or an error occurs
+    DWORD error = CommDlgExtendedError();
+    if (error != 0) {
+        std::cerr << "GetSaveFileName failed with error: " << error
+                  << std::endl;
+    }
+
     FilterIndex = 0;
-    return ""; //Something wen't wrong, so it did not save anything
+    return ""; // Return an empty string to indicate failure
 }
 
 /**

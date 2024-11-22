@@ -366,7 +366,8 @@ class ADIMainWindow {
 
     void showRecordMenu();
 
-    void showSaveLoadAdsdParamsMenu();
+    void showLoadAdsdParamsMenu();
+    void showSaveAdsdParamsMenu();
 
     /**
 		* @brief	Open Device menu will give you the information of
