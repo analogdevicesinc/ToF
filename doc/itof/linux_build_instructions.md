@@ -1,4 +1,4 @@
-# Linux Build Instructions
+# Linux Host Build Instructions
 
 **Please note, use the applicable tag, when cloning, and release version when getting the latest depth compute library files for the embedded system. As of writing, version 6.0.0 of the release is available as well as tag v6.0.0.**
 
