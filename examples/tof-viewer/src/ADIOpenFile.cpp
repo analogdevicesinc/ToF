@@ -166,7 +166,8 @@ saveFileDialog(char const *const aTitle, char const *const aDefaultPathAndFile,
 * @return				Saved name if successful,
 *						empty string otherwise
 */
-std::string getADIFileName(void *hwndOwner, char *filename, int &FilterIndex) {
+std::string getADIFileName(void *hwndOwner, const char *customFilter,
+                           char *filename, int &FilterIndex) {
     std::vector<std::string> filters;
     std::copy(std::begin(customFilters), std::end(customFilters),
               std::back_inserter(filters));
@@ -260,7 +261,8 @@ void getFilesList(std::string filePath, std::string extension,
 * @return				Saved name if successful,
 *						empty string otherwise
 */
-std::string getADIFileName(void *hwndOwner, char *filename, int &FilterIndex) {
+std::string getADIFileName(void *hwndOwner, const char *customFilter,
+                           char *filename, int &FilterIndex) {
 
     FilterIndex = 0;
     std::vector<std::string> filters;
