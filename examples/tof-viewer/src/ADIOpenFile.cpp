@@ -49,14 +49,7 @@ std::string openADIFileName(const char *filter, void *owner, int &FilterIndex) {
     // Display the dialog and get the result
     if (GetOpenFileName(&ofn)) {
         FilterIndex = ofn.nFilterIndex; // Get the selected filter index
-
-        // Convert to full path
-        char fullPath[MAX_PATH];
-        if (GetFullPathName(fileName, MAX_PATH, fullPath, nullptr)) {
-            return std::string(fullPath); // Return the full file path
-        } else {
-            return std::string(fileName); // Return the selected file path
-        }
+        return std::string(fileName);   // Return the selected file path
     }
 
     // If the user cancels or an error occurs
@@ -259,17 +252,21 @@ void getFilesList(std::string filePath, std::string extension,
 
 #include "ADIOpenFile.h"
 #include <algorithm>
+#include <cerrno>
 #include <cstdio>
 #include <cstring>
-#include <cerrno>
-#include <dirent.h>  // For directory traversal
+#include <dirent.h> // For directory traversal
+#include <iostream>
+#include <sstream>
 #include <sys/stat.h> // For checking file status
+#include <vector>
 
 // Assuming customFilters and customFilter are defined somewhere else in your project.
 extern std::string customFilter;
 extern std::vector<std::string> customFilters;
 
-std::string runZenityCommand(const std::string& command) {
+// Function to run the Zenity command
+std::string runZenityCommand(const std::string &command) {
     FILE *f = popen(command.c_str(), "r");
     if (!f) {
         perror("popen failed");
@@ -294,27 +291,90 @@ std::string runZenityCommand(const std::string& command) {
     return (ret == 0) ? result : "";
 }
 
-std::string getADIFileName(void *hwndOwner, const char *customFilter, char *filename, int &FilterIndex) {
+// Function to get the filename using Zenity with a custom extension filter
+std::string getADIFileName(void *hwndOwner, const char *customFilter,
+                           char *filename, int &FilterIndex) {
     FilterIndex = 0;
     const char zenityP[] = "/usr/bin/zenity";
-    std::string command = std::string(zenityP) + " --file-selection --save --modal --title=\"Select filename\"";
 
+    // Calculate the total length of customFilter manually by finding the end of the sequence
+    size_t filterLength = 0;
+    while (customFilter[filterLength] != '\0' ||
+           customFilter[filterLength + 1] != '\0') {
+        filterLength++;
+    }
+    filterLength++; // Account for the last null terminator
+
+    // Convert customFilter to std::string including null terminators
+    std::string customFilterStr(customFilter, filterLength);
+
+    // Parse customFilter to extract the descriptions and extensions
+    std::vector<std::string> filters;
+    size_t start = 0;
+    while (start < customFilterStr.size()) {
+        size_t end = customFilterStr.find('\0', start);
+        if (end == std::string::npos) {
+            break; // End of string reached
+        }
+
+        std::string token = customFilterStr.substr(start, end - start);
+        if (!token.empty()) {
+            filters.push_back(token);
+            //std::cout << "Parsed Token: " << token << std::endl;  // Debug output
+        }
+        start = end + 1; // Move to the next segment after the null character
+    }
+
+    // Construct the Zenity command
+    std::string command =
+        std::string(zenityP) +
+        " --file-selection --save --modal --title=\"Select filename\"";
+
+    // Add the file filters to the command
+    for (size_t i = 0; i < filters.size(); i += 2) {
+        if (i + 1 < filters.size()) {
+            // Add filter with the description and extension pattern
+            command += " --file-filter=\"" + filters[i] + " | " +
+                       filters[i + 1] + "\"";
+        }
+    }
+
+    // Print the command for debugging purposes
+    std::cout << "Zenity Command: " << command << std::endl;
+
+    // Run the Zenity command
     std::string result = runZenityCommand(command);
     if (result.empty()) {
         filename[0] = '\0'; // Clear filename on cancellation
         return "";
     }
 
+    // Check if the file has an extension, and if not, add a default one
+    size_t extensionPos = result.find_last_of('.');
+    if (extensionPos == std::string::npos ||
+        extensionPos == result.size() - 1) {
+        // No extension found, add the default extension
+        if (!filters.empty() && filters.size() >= 2) {
+            std::string defaultExtension = filters[1];
+            size_t wildcardPos = defaultExtension.find('*');
+            if (wildcardPos != std::string::npos) {
+                defaultExtension = defaultExtension.substr(
+                    wildcardPos + 1); // Extract the extension (e.g., ".bin")
+                result += defaultExtension;
+            }
+        }
+    }
+
     // Copy the selected filename to the provided buffer
     strncpy(filename, result.c_str(), FILENAME_MAX - 1);
-    filename[FILENAME_MAX - 1] = '\0';  // Ensure null-termination
+    filename[FILENAME_MAX - 1] = '\0'; // Ensure null-termination
 
-    // Custom filter logic based on customFilters
-    std::vector<std::string> filters(customFilters);
-    for (size_t ix = 0; ix < filters.size(); ++ix) {
-        std::string filterWithDot = "." + filters[ix];
-        if (result.find(filterWithDot) != std::string::npos) {
-            FilterIndex = static_cast<int>(ix + 1);
+    // Update FilterIndex to reflect which filter was used
+    for (size_t ix = 0; ix < filters.size(); ix += 2) {
+        std::string filterExt =
+            filters[ix + 1].substr(filters[ix + 1].find('.') + 1);
+        if (result.find(filterExt) != std::string::npos) {
+            FilterIndex = static_cast<int>(ix / 2) + 1;
             break;
         }
     }
@@ -325,7 +385,9 @@ std::string getADIFileName(void *hwndOwner, const char *customFilter, char *file
 std::string openADIFileName(const char *filter, void *owner, int &FilterIndex) {
     FilterIndex = 0;
     const char zenityP[] = "/usr/bin/zenity";
-    std::string command = std::string(zenityP) + " --file-selection --modal --title=\"Select filename\"";
+    std::string command =
+        std::string(zenityP) +
+        " --file-selection --modal --title=\"Select filename\"";
 
     std::string filename = runZenityCommand(command);
     if (filename.empty()) {
@@ -346,7 +408,9 @@ std::string openADIFileName(const char *filter, void *owner, int &FilterIndex) {
     return filename;
 }
 
-void getFilesList(std::string filePath, std::string extension, std::vector<std::string> &returnFileName, bool returnFullPath) {
+void getFilesList(std::string filePath, std::string extension,
+                  std::vector<std::string> &returnFileName,
+                  bool returnFullPath) {
     returnFileName.clear();
 
     DIR *dir = opendir(filePath.c_str());
