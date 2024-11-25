@@ -41,7 +41,7 @@ cd ToF
 git submodule update --init --recursive
 mkdir build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
-make -jci 
+make -j
 ```
 
 Note, the documentation can be found at this path:
