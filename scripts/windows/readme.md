@@ -20,6 +20,7 @@ Choose the branch as needed. In our example below we are using the branch/tag v6
 ```console
 git clone --branch v6.0.0 https://github.com/analogdevicesinc/ToF
 cd ToF
+git submodule update --init --recursive
 ```
 
 ## Usage
