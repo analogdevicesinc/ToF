@@ -1,0 +1,693 @@
+From a2650181249ab520a96246f30f2f655425caa0a3 Mon Sep 17 00:00:00 2001
+From: Sriram Chappidi <Sriram.Chappidi@analog.com>
+Date: Mon, 25 Nov 2024 17:22:26 +0530
+Subject: [PATCH 2/2] drivers: media: spi: adsd3500-spi.c: Added new RAW8 and
+ RAW12 resolutions
+
+Signed-off-by: Sriram Chappidi <Sriram.Chappidi@analog.com>
+---
+ drivers/media/spi/adsd3500-spi.c | 442 ++++++++++++++++++++++---------
+ 1 file changed, 311 insertions(+), 131 deletions(-)
+
+diff --git a/drivers/media/spi/adsd3500-spi.c b/drivers/media/spi/adsd3500-spi.c
+index c64e6abf7d70..3020bbe8c116 100644
+--- a/drivers/media/spi/adsd3500-spi.c
++++ b/drivers/media/spi/adsd3500-spi.c
+@@ -219,363 +219,543 @@ static irqreturn_t adsd3500_irq_handler(int irq,void *priv)
+ 	return IRQ_HANDLED;
+ 
+ }
++
+ /* Elements of the structure must be ordered ascending by width & height */
+ static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
+-	{ //RAW8 8BPP
++
++	/* --- RAW 8 MEDIA_BUS_FMT_SBGGR8_1X8 --- */
++
++	{	/* RAW8 8BPP ADSD3100 QMP RESOLUTION */
+ 		.width = 512,
+ 		.height = 512,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 16BPP
++	{	/* RAW8 16BPP ADSD3100 QMP RESOLUTION */
+ 		.width = 1024,
+ 		.height = 512,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 20BPP
++	{	/* RAW8 20BPP ADSD3100 QMP RESOLUTION */
+ 		.width = 1280,
+ 		.height = 512,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 24BPP
++	{	/* RAW8 24BPP ADSD3100 QMP RESOLUTION */
+ 		.width = 1536,
+ 		.height = 512,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 28BPP
++	{	/* RAW8 28BPP ADSD3100 QMP RESOLUTION */
+ 		.width = 1792,
+ 		.height = 512,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 32BPP
++	{	/* RAW8 32BPP ADSD3100 QMP RESOLUTION */
+ 		.width = 2048,
+ 		.height = 512,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 36BPP
++	{	/* RAW8 36BPP ADSD3100 QMP RESOLUTION */
+ 		.width = 2304,
+ 		.height = 512,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 40BPP
++	{	/* RAW8 40BPP ADSD3100 QMP RESOLUTION */
+ 		.width = 2560,
+ 		.height = 512,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW12 12BPP Depth only
+-		.width = 512,
+-		.height = 512,
+-		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+-		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+-	},
+-	{ //RAW12 12BPP AB test
+-		.width = 2048,
+-		.height = 512,
+-		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+-		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+-	},
+-	{ //RAW12 12BPP ADSD3030
++
++	{   /* RAW8 8BPP ADSD3030 VGA RESOLUTION */
+ 		.width = 512,
+ 		.height = 640,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 16BPP ADSD3030
++	{   /* RAW8 16BPP ADSD3030 VGA RESOLUTION */
+ 		.width = 1024,
+ 		.height = 640,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 24BPP ADSD3030
++	{   /* RAW8 24BPP ADSD3030 VGA RESOLUTION */
+ 		.width = 1536,
+ 		.height = 640,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 32BPP ADSD3030
++	{   /* RAW8 32BPP ADSD3030 VGA RESOLUTION */
+ 		.width = 2048,
+ 		.height = 640,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 40BPP ADSD3030
++	{   /* RAW8 40BPP ADSD3030 VGA RESOLUTION */
+ 		.width = 2560,
+ 		.height = 640,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW12 1 Phase / Frame
+-		.width = 1024,
+-		.height = 1024,
++
++	{   /* RAW8 8BPP ADSD3030 QVGA RESOLUTION */
++		.width =  256,
++		.height = 320,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW12 12BPP ADSD3030
+-		.width = 512,
+-		.height = 640,
++	{   /* RAW8 16BPP ADSD3030 QVGA RESOLUTION */
++		.width =  512,
++		.height = 320,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_Y12_1X12,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW12 12BPP * 6 subframes ADSD3030 256x320x6
+-		.width = 1024,
+-		.height = 480,
++	{   /* RAW8 24BPP ADSD3030 QVGA RESOLUTION */
++		.width =  768,
++		.height = 320,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_Y12_1X12,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW12 12BPP * 9 subframes ADSD3030 256x320x9
++	{   /* RAW8 32BPP ADSD3030 QVGA RESOLUTION */
+ 		.width = 1024,
+-		.height = 720,
++		.height = 320,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_Y12_1X12,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW12 12BPP * 3 subframes ADSD3030 512x640x3
+-		.width = 1024,
+-		.height = 960,
++	{   /* RAW8 40BPP ADSD3030 QVGA RESOLUTION */
++		.width = 1280,
++		.height = 320,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_Y12_1X12,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW12 12BPP * 6 subframes ADSD3030 512x640x6
+-		.width = 1024,
+-		.height = 1920,
++
++	{	/* RAW8 ADSD3100 MP 12BPP * 3 phase + 16BPP * 1 AB SuperFrame (1024x2 1024x3.25)*/
++		.width = 2048,
++		.height = 3328,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_Y12_1X12,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW12 12BPP * 9 subframes ADSD3030 512x640x9
++	{	/* RAW8 ADSD3100 QMP 12BPP * 3 phase + 16BPP * 1 AB Superframe (512x2 512x3.25) */
+ 		.width = 1024,
+-		.height = 2880,
++		.height = 1664,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_Y12_1X12,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW12 12BPP * 3 phase
++	{ 	/* RAW8 ADSD3030 VGA 12BPP * 3 phase + 16BPP * 1 AB  SuperFrame (512x2 640x3.25)*/
+ 		.width = 1024,
+-		.height = 3072,
++		.height = 2080,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW12 12BPP * 3 phase
+-		.width = 1024,
+-		.height = 4096,
++	{	/* RAW8 ADSD3030 QVGA 12BPP * 3 phase + 16BPP * 1 AB  SuperFrame (256x2 320x3.25)*/
++		.width = 512,
++		.height = 1040,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW12 12BPP * 3 phase + 12BPP * 3 AB
++
++	{	/* RAW8 ADSD3100 MP 12BPP * 2 phase + 16BPP * 1 AB SuperFrame (1024x2 1024x2.5)*/
+ 		.width = 2048,
+-		.height = 5376,
++		.height = 2560,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW12 12BPP * 2 phase + 12BPP * 2 AB
+-		.width = 2048,
+-		.height = 3584,
++	{ 	/* RAW8 ADSD3100 QMP 12BPP * 2 phase + 16BPP * 1 AB SuperFrame (512x2 512x2.5)*/
++		.width = 1024,
++		.height = 1280,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW12 12BPP * 9 subframes ADSD3100 512x512x9
++	{	/* RAW8 ADSD3030 VGA 12BPP * 2 phase + 16BPP * 1 AB SuperFrame (512x2 640x2.5)*/
+ 		.width = 1024,
+-		.height = 2304,
++		.height = 1600,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 SR MP 2 phase + 1 AB
+-		.width = 2048,
+-		.height = 2560,
++	{	/* RAW8 ADSD3030 QVGA 12BPP * 2 phase + 16BPP * 1 AB SuperFrame (256x2 320x2.5)*/
++		.width = 512,
++		.height = 800,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 LR MP 3 phase + 1 AB
++
++	{	/* RAW8 ADSD3100 MP 16BPP * 3 phase + 16BPP * 1 AB SuperFrame (1024x2 1024x4)*/
+ 		.width = 2048,
+-		.height = 3328,
++		.height = 4096,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 ADSD3030
+-		.width = 1280,
+-		.height = 320,
++	{	/* RAW8 ADSD3100 QMP 16BPP * 3 phase + 16BPP * 1 AB SuperFrame (512x2 512x4)*/
++		.width = 1024,
++		.height = 2048,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 ADSD3030
+-		.width =  256,
+-		.height = 320,
++	{	/* RAW8 ADSD3030 VGA 16BPP * 3 phase + 16BPP * 1 AB SuperFrame (512x2 640x4)*/
++		.width = 1024,
++		.height = 2560,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 ADSD3030
+-		.width =  512,
+-		.height = 320,
++	{	/* RAW8 ADSD3030 QVGA 16BPP * 3 phase + 16BPP * 1 AB SuperFrame (256x2 320x4)*/
++		.width = 512,
++		.height = 1280,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 ADSD3030
+-		.width =  768,
+-		.height = 320,
++
++	{	/* RAW8 ADSD3100 MP 16BPP * 2 phase + 16BPP * 1 AB SuperFrame (1024x2 1024x3)*/
++		.width = 2048,
++		.height = 3072,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8  ADSD3030
++	{	/* RAW8 ADSD3100 QMP 16BPP * 2 phase + 16BPP * 1 AB SuperFrame (512x2 512x3)*/
+ 		.width = 1024,
+-		.height = 320,
++		.height = 1536,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8  ADSD3030
+-		.width = 1280,
+-		.height = 320,
++	{	/* RAW8 ADSD3030 VGA 16BPP * 2 phase + 16BPP * 1 AB SuperFrame (512x2 640x3)*/
++		.width = 1024,
++		.height = 1920,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 MP 16BPP * 3 phase + 16BPP * 1 AB
+-		.width = 2048,
+-		.height = 4096,
++	{	/* RAW8 ADSD3030 QVGA 16BPP * 2 phase + 16BPP * 1 AB SuperFrame (256x2 320x3)*/
++		.width = 512,
++		.height = 960,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 MP 16BPP * 3 phase
+-		.width = 2048,
++
++	{	/* RAW8 ADSD3100 MP 12BPP * 3 phase + 16BPP * 3 AB Interleaved (1024x3.5 1024x3) */
++		.width = 3584,
+ 		.height = 3072,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 MP 16BPP * 3 phase + 16BPP * 3 AB
+-		.width = 2048,
+-		.height = 6144,
++	{	/* RAW8 ADSD3100 QMP 12BPP * 3 phase + 16BPP * 3 AB Interleaved (512x3.5 512x3) */
++		.width = 1792,
++		.height = 1536,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 QMP 16BPP * 3 phase + 16BPP * 1 AB
+-		.width = 1024,
++	{	/* RAW8 ADSD3030 VGA 12BPP * 3 phase + 16BPP * 3 AB Interleaved (512x3.5 640x3) */
++		.width = 1792,
++		.height = 1920,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{	/* RAW8 ADSD3030 QVGA 12BPP * 3 phase + 16BPP * 3 AB Interleaved (256x3.5 320x3) */
++		.width = 896,
++		.height = 960,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++
++	{	/* RAW8 ADSD3100 MP 12BPP * 2 phase + 16BPP * 2 AB Interleaved (1024x3.5 1024x2) */
++		.width = 3584,
+ 		.height = 2048,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 QMP 16BPP * 3 phase + 16BPP * 3 AB
+-		.width = 3072,
++	{	/* RAW8 ADSD3100 QMP 12BPP * 2 phase + 16BPP * 2 AB Interleaved (512x3.5 512x2) */
++		.width = 1792,
++		.height = 1024,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{	/* RAW8 ADSD3030 VGA 12BPP * 2 phase + 16BPP * 2 AB Interleaved (512x3.5 640x2) */
++		.width = 1792,
++		.height = 1280,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{	/* RAW8 ADSD3030 QVGA 12BPP * 2 phase + 16BPP * 2 AB Interleaved (256x3.5 320x2) */
++		.width = 896,
++		.height = 640,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++
++	{	/* RAW8 ADSD3100 MP 16BPP * 3 phase + 16BPP * 3 AB Interleaved (1024x4 1024x3) */
++		.width = 4096,
+ 		.height = 3072,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 QMP 16BPP * 3 phase
+-		.width = 1024,
++	{	/* RAW8 ADSD3100 QMP 16BPP * 3 phase + 16BPP * 3 AB Interleaved (512x4 512x3) */
++		.width = 2048,
+ 		.height = 1536,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 VGA 16BPP * 3 phase + 16BPP * 1 AB
++	{	/* RAW8 ADSD3030 VGA 16BPP * 3 phase + 16BPP * 3 AB Interleaved (512x4 640x3) */
++		.width = 2048,
++		.height = 1920,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{	/* RAW8 ADSD3030 QVGA 16BPP * 3 phase + 16BPP * 3 AB Interleaved (256x4 320x3) */
+ 		.width = 1024,
+-		.height = 2560,
++		.height = 960,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++
++	/* --- RAW 8 MEDIA_BUS_FMT_SBGGR8_1X8  Miscellaneous --- */
++
++	{ 	//RAW8 MP 16BPP * 3 phase + 16BPP * 3 AB
++		.width = 2048,
++		.height = 6144,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 VGA 16BPP * 3 phase + 16BPP * 3 AB
++	{ 	//RAW8 QMP 16BPP * 3 phase + 16BPP * 3 AB
+ 		.width = 3072,
+-		.height = 3840,
++		.height = 3072,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 VGA 16BPP * 3 phase
+-		.width = 1024,
+-		.height = 1920,
++	{ 	//RAW8 VGA 16BPP * 3 phase + 16BPP * 3 AB
++		.width = 3072,
++		.height = 3840,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 QVGA 16BPP * 3 phase + 16BPP * 1 AB
++	{ 	//RAW8 QVGA 16BPP * 3 phase + 16BPP * 1 AB
+ 		.width = 512,
+ 		.height = 1920,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 QVGA 16BPP * 3 phase + 16BPP * 3 AB
++	{ 	//RAW8 QVGA 16BPP * 3 phase + 16BPP * 3 AB
+ 		.width = 1536,
+ 		.height = 1920,
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 QVGA 16BPP * 3 phase
++
++	/* --- RAW 12 MEDIA_BUS_FMT_SBGGR12_1X12 --- */
++
++	{   /* RAW12 12BPP ADSD3100 MP - 9 subframes - (1024x2 1024x4.5) */
++		.width = 2048,
++		.height = 4608,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{   /* RAW12 12BPP ADSD3100 QMP - 9 subframes - (512x2 512x4.5) */
++		.width = 1024,
++		.height = 2304,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{   /* RAW12 12BPP ADSD3030 VGA - 9 subframes - (512x2 640x4.5) */
++		.width = 1024,
++		.height = 2880,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{   /* RAW12 12BPP ADSD3030 QVGA - 9 subframes - (256x2 320x4.5) */
+ 		.width = 512,
+-		.height = 1280,
++		.height = 1440,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 ADSD3030 * 3 phase
++
++	{   /* RAW12 12BPP ADSD3100 MP - 6 subframes - (1024x2 1024x3) */
++		.width = 2048,
++		.height = 3072,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{   /* RAW12 12BPP ADSD3100 QMP - 6 subframes - (512x2 512x3) */
+ 		.width = 1024,
+-		.height = 2080,
++		.height = 1536,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{   /* RAW12 12BPP ADSD3030 VGA - 6 subframes - (512x2 640x3) */
++		.width = 1024,
++		.height = 1920,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 ADSD3030 16BPP
++	{   /* RAW12 12BPP ADSD3030 QVGA - 6 subframes - (256x2 320x3) */
+ 		.width = 512,
+-		.height = 1040,
++		.height = 960,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++
++	/* --- RAW 12 MEDIA_BUS_FMT_SBGGR12_1X12  Miscellaneous --- */
++
++	{ 	//RAW12 ADSD3100 QMP 12BPP Depth only/ AB Only
++		.width = 512,
++		.height = 512,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 ADSD3030 16BPP
++	{ 	//RAW12 ADSD3030 VGA 12BPP Depth Only/ AB Only
++		.width = 512,
++		.height = 640,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{ 	//RAW12 12BPP AB test
++		.width = 2048,
++		.height = 512,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{	//RAW12 1 Phase / Frame
+ 		.width = 1024,
+-		.height = 1664,
++		.height = 1024,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW8 ADSD3030 16BPP
++	{	//RAW12 12BPP * 3 phase
+ 		.width = 1024,
+-		.height = 1280,
++		.height = 3072,
+ 		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{ 	//RAW12 12BPP * 3 phase
++		.width = 1024,
++		.height = 4096,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{ 	//RAW12 12BPP * 3 phase + 12BPP * 3 AB
++		.width = 2048,
++		.height = 5376,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{ 	//RAW12 12BPP * 2 phase + 12BPP * 2 AB
++		.width = 2048,
++		.height = 3584,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++
++	/* --- RAW 12 MEDIA_BUS_FMT_Y12_1X12 --- */
++
++	{   /* RAW12 12BPP ADSD3030 VGA ---- */
++		.width = 512,
++		.height = 640,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_Y12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{   /* RAW12 12BPP ADSD3030 256x320x6 - 6 subframes - (256x4 320x1.5) */
++		.width = 1024,
++		.height = 480,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_Y12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{   /* RAW12 12BPP ADSD3030 256x320x9 - 9 subframes - (256x4 320x2.25) */
++		.width = 1024,
++		.height = 720,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_Y12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{   /* RAW12 12BPP ADSD3030 512x640x3 - 3 subframes - (512x2 640x1.5) */
++		.width = 1024,
++		.height = 960,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_Y12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{   /* RAW12 12BPP ADSD3030 512x640x6 - 6 subframes - (512x2 640x3) */
++		.width = 1024,
++		.height = 1920,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_Y12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{   /* RAW12 12BPP ADSD3030 512x640x9 - 9 subframes - (512x2 640x4.5) */
++		.width = 1024,
++		.height = 2880,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_Y12_1X12,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 
+-- 
+2.28.0
+
