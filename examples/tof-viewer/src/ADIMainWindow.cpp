@@ -240,6 +240,14 @@ double ADIMainWindow::getCurrentValue() {
     return percent * 100;
 }
 
+void ADIMainWindow::CustomizeMenus() {
+    ImGuiStyle &style = ImGui::GetStyle();
+
+    // Set the color of the border
+    style.Colors[ImGuiCol_Border] =
+        ImVec4(0.7f, 0.7f, 0.7f, 1.0f); // (R, G, B, A);
+}
+
 static void glfw_error_callback(int error, const char *description) {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
@@ -311,6 +319,7 @@ bool ADIMainWindow::startImGUI(const ADIViewerArgs &args) {
         fprintf(stderr, "Failed to initialize OpenGL loader!\n");
         return false;
     }
+
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -333,9 +342,11 @@ bool ADIMainWindow::startImGUI(const ADIViewerArgs &args) {
     setDpi();
 
     // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsDark();
     //OR
-    // ImGui::StyleColorsClassic();
+    ImGui::StyleColorsClassic();
+    CustomizeMenus();
+
 
     // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -594,19 +605,17 @@ void ADIMainWindow::showRecordMenu() {
 
 void ADIMainWindow::showLoadAdsdParamsMenu() {
 
-    char *pathname = saveConfigurationPath;
-
     int FilterIndex = 0;
     std::string fs =
         openADIFileName("ADI ToF Config Files\0*.json\0", nullptr, FilterIndex);
-    LOG(INFO) << "Save File selected: " << fs;
+    LOG(INFO) << "Load File selected: " << fs;
 
     if (fs.empty()) {
         return;
     }
 
     bool loadconfigurationFile = false;
-    std::string loadconfigurationFileValue = std::string(pathname);
+    std::string loadconfigurationFileValue = std::string(fs);
     if (!loadconfigurationFileValue.empty()) {
         if (loadconfigurationFileValue.find(".json") == std::string::npos) {
             loadconfigurationFileValue += ".json";
@@ -618,21 +627,13 @@ void ADIMainWindow::showLoadAdsdParamsMenu() {
             view->m_ctrl->getCameraInUse())];
 
         // Stop streaming and recording
-        isPlaying = false;
-        isPlayRecorded = false;
-        frameRecvd = 0;
-        firstFrame = 0;
         stopPlayCCD();
-        if (isRecording) {
-            view->m_ctrl->stopRecording();
-            isRecording = false;
-        }
 
-        aditof::Status status =
-            camera->loadDepthParamsFromJsonFile(loadconfigurationFileValue);
+        aditof::Status status = camera->loadDepthParamsFromJsonFile(
+            loadconfigurationFileValue, modeSelection);
         getActiveCamera()->setMode(m_cameraModes[modeSelection].second);
 
-        // Restart streaming
+        // Restart streaming by unblocking streaming.
         viewSelectionChanged = viewSelection;
         isPlaying = true;
 
@@ -650,7 +651,7 @@ void ADIMainWindow::showLoadAdsdParamsMenu() {
 void ADIMainWindow::showSaveAdsdParamsMenu() {
 
     char *pathname = saveConfigurationPath;
-
+        
     ImGuiExtensions::ButtonColorChanger colorChangerStartRec(customColorPlay,
                                                              isPlaying);
 
@@ -674,23 +675,8 @@ void ADIMainWindow::showSaveAdsdParamsMenu() {
         auto camera = view->m_ctrl->m_cameras[static_cast<unsigned int>(
             view->m_ctrl->getCameraInUse())];
 
-        // Stop streaming and recording
-        isPlaying = false;
-        isPlayRecorded = false;
-        frameRecvd = 0;
-        firstFrame = 0;
-        stopPlayCCD();
-        if (isRecording) {
-            view->m_ctrl->stopRecording();
-            isRecording = false;
-        }
-
         aditof::Status status =
             camera->saveDepthParamsToJsonFile(saveconfigurationFileValue);
-
-        // Restart streaming
-        viewSelectionChanged = viewSelection;
-        isPlaying = true;
 
         if (status != aditof::Status::OK) {
             saveconfigurationFile = false;
@@ -1082,10 +1068,15 @@ void ADIMainWindow::stopPlayCCD() {
         view->depth_video_data = nullptr;
         view->pointCloud_video_data = nullptr;
     }
+    if (isRecording) {
+        view->m_ctrl->stopRecording();
+        isRecording = false;
+    }
     openGLCleanUp();
     isPlaying = false;
     isPlayRecorded = false;
     firstFrame = 0;
+    frameRecvd = 0;
 }
 
 void ADIMainWindow::openGLCleanUp() {

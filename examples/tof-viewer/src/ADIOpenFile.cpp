@@ -49,7 +49,14 @@ std::string openADIFileName(const char *filter, void *owner, int &FilterIndex) {
     // Display the dialog and get the result
     if (GetOpenFileName(&ofn)) {
         FilterIndex = ofn.nFilterIndex; // Get the selected filter index
-        return std::string(fileName);   // Return the selected file path
+
+        // Convert to full path
+        char fullPath[MAX_PATH];
+        if (GetFullPathName(fileName, MAX_PATH, fullPath, nullptr)) {
+            return std::string(fullPath); // Return the full file path
+        } else {
+            return std::string(fileName); // Return the selected file path
+        }
     }
 
     // If the user cancels or an error occurs
@@ -166,7 +173,8 @@ saveFileDialog(char const *const aTitle, char const *const aDefaultPathAndFile,
 * @return				Saved name if successful,
 *						empty string otherwise
 */
-std::string getADIFileName(void *hwndOwner, char *filename, int &FilterIndex) {
+std::string getADIFileName(void *hwndOwner, const char *customFilter,
+                           char *filename, int &FilterIndex) {
     std::vector<std::string> filters;
     std::copy(std::begin(customFilters), std::end(customFilters),
               std::back_inserter(filters));
@@ -249,110 +257,135 @@ void getFilesList(std::string filePath, std::string extension,
 
 #elif defined(linux) || defined(__linux) || defined(__linux__)
 
+#include "ADIOpenFile.h"
+#include <algorithm>
 #include <cstdio>
-#include <dirent.h>
+#include <cstring>
+#include <cerrno>
+#include <dirent.h>  // For directory traversal
+#include <sys/stat.h> // For checking file status
 
-/**
-* @brief Opens a dialog box to save a file
-* @param hwndOwner		urrent handle
-* @param filename		Saved name from user
-* @param FilterIndex	Index of chosen filter
-* @return				Saved name if successful,
-*						empty string otherwise
-*/
-std::string getADIFileName(void *hwndOwner, char *filename, int &FilterIndex) {
+// Assuming customFilters and customFilter are defined somewhere else in your project.
+extern std::string customFilter;
+extern std::vector<std::string> customFilters;
 
-    FilterIndex = 0;
-    std::vector<std::string> filters;
-    std::copy(std::begin(customFilters), std::end(customFilters),
-              std::back_inserter(filters));
-    const char zenityP[] = "/usr/bin/zenity";
-    char Call[2048];
-
-    int ret =
-        sprintf(Call, "%s  --file-selection --save --modal --title=\"%s\" ",
-                zenityP, "Select filename");
-
-    FILE *f = popen(Call, "r");
-    std::fgets(filename, FILENAME_MAX, f);
-    ret = pclose(f);
-    if (ret < 0) {
-        perror("file_name_dialog()");
+std::string runZenityCommand(const std::string& command) {
+    FILE *f = popen(command.c_str(), "r");
+    if (!f) {
+        perror("popen failed");
+        return "";
     }
-    std::string fileNameTmp(filename);
-    for (int ix = 0; ix < filters.size(); ix++) {
-        if (fileNameTmp.find(filters[ix].insert(0, 1, '.')) !=
-            std::string::npos) {
-            FilterIndex = ix + 1;
+
+    char filename[FILENAME_MAX];
+    if (!std::fgets(filename, FILENAME_MAX, f)) {
+        pclose(f);
+        perror("fgets failed");
+        return "";
+    }
+
+    int ret = pclose(f);
+    if (ret < 0) {
+        perror("pclose failed");
+    }
+
+    // Remove newline character added by fgets
+    std::string result(filename);
+    result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
+    return (ret == 0) ? result : "";
+}
+
+std::string getADIFileName(void *hwndOwner, const char *customFilter, char *filename, int &FilterIndex) {
+    FilterIndex = 0;
+    const char zenityP[] = "/usr/bin/zenity";
+    std::string command = std::string(zenityP) + " --file-selection --save --modal --title=\"Select filename\"";
+
+    std::string result = runZenityCommand(command);
+    if (result.empty()) {
+        filename[0] = '\0'; // Clear filename on cancellation
+        return "";
+    }
+
+    // Copy the selected filename to the provided buffer
+    strncpy(filename, result.c_str(), FILENAME_MAX - 1);
+    filename[FILENAME_MAX - 1] = '\0';  // Ensure null-termination
+
+    // Custom filter logic based on customFilters
+    std::vector<std::string> filters(customFilters);
+    for (size_t ix = 0; ix < filters.size(); ++ix) {
+        std::string filterWithDot = "." + filters[ix];
+        if (result.find(filterWithDot) != std::string::npos) {
+            FilterIndex = static_cast<int>(ix + 1);
             break;
         }
     }
 
-    return (ret == 0) ? std::string(filename) : "";
+    return result;
 }
 
 std::string openADIFileName(const char *filter, void *owner, int &FilterIndex) {
-
     FilterIndex = 0;
-    std::vector<std::string> filters;
-    std::copy(std::begin(customFilters), std::end(customFilters),
-              std::back_inserter(filters));
     const char zenityP[] = "/usr/bin/zenity";
-    char Call[2048];
-    char filename[FILENAME_MAX];
+    std::string command = std::string(zenityP) + " --file-selection --modal --title=\"Select filename\"";
 
-    int ret = sprintf(Call, "%s  --file-selection --modal --title=\"%s\" ",
-                      zenityP, "Select filename");
-
-    FILE *f = popen(Call, "r");
-    std::fgets(filename, FILENAME_MAX, f);
-
-    ret = pclose(f);
-    if (ret < 0) {
-        perror("file_name_dialog()");
+    std::string filename = runZenityCommand(command);
+    if (filename.empty()) {
+        return "";
     }
-    std::string fileNameTmp(filename);
-    for (int ix = 0; ix < filters.size(); ix++) {
-        if (fileNameTmp.find(filters[ix].insert(0, 1, '.')) !=
-            std::string::npos) {
-            FilterIndex = ix + 1;
+
+    // Assuming custom filter handling if necessary
+    std::vector<std::string> filters(customFilters);
+    filters.push_back(filter);
+    for (size_t ix = 0; ix < filters.size(); ++ix) {
+        std::string filterWithDot = "." + filters[ix];
+        if (filename.find(filterWithDot) != std::string::npos) {
+            FilterIndex = static_cast<int>(ix + 1);
             break;
         }
     }
 
-    return (ret == 0) ? std::string(filename) : "";
+    return filename;
 }
 
-void getFilesList(std::string filePath, std::string extension,
-                  std::vector<std::string> &returnFileName,
-                  bool returnFullPath) {
-
+void getFilesList(std::string filePath, std::string extension, std::vector<std::string> &returnFileName, bool returnFullPath) {
     returnFileName.clear();
 
     DIR *dir = opendir(filePath.c_str());
-    if (NULL == dir) {
+    if (!dir) {
+        std::cerr << "Failed to open directory: " << filePath << std::endl;
         return;
     }
 
-    //strip off '*' used in WIN32 APIs
-    extension = extension.substr(1);
+    // Remove '*' from extension, if present
+    if (!extension.empty() && extension[0] == '*') {
+        extension = extension.substr(1);
+    }
 
-    struct dirent *entry = readdir(dir);
-    while (NULL != entry) {
-
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != nullptr) {
         std::string file(entry->d_name);
-        std::size_t pos = file.find_last_of('.');
-        if (pos != std::string::npos && extension == file.substr(pos)) {
-            if (returnFullPath) {
-                returnFileName.push_back(filePath + "/" + file);
-            } else {
-                returnFileName.push_back(file);
-            }
+
+        // Skip "." and ".." entries
+        if (file == "." || file == "..") {
+            continue;
         }
 
-        entry = readdir(dir);
+        // Get file extension
+        size_t pos = file.find_last_of('.');
+        if (pos != std::string::npos) {
+            std::string fileExtension = file.substr(pos);
+
+            // Check if the extension matches
+            if (fileExtension == extension) {
+                if (returnFullPath) {
+                    returnFileName.push_back(filePath + "/" + file);
+                } else {
+                    returnFileName.push_back(file);
+                }
+            }
+        }
     }
 
     closedir(dir);
 }
+
 #endif

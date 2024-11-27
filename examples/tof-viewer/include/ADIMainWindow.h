@@ -542,6 +542,8 @@ class ADIMainWindow {
     */
     void iniParamWarn(std::string variable, std::string validVal);
 
+    void CustomizeMenus();
+
     /**
      * @brief Return the current selected camera object
     */
