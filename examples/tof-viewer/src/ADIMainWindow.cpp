@@ -506,12 +506,15 @@ void ADIMainWindow::showMainMenu() {
             showPlaybackMenu();
             ImGui::Separator();
             ImGui::MenuItem("Debug Log", nullptr, &show_app_log);
-            ImGui::MenuItem("Ini Params", nullptr, &show_ini_window);
+            ImGui::MenuItem("Ini Params", nullptr, &show_ini_window,
+                            cameraWorkerDone && isPlaying);
             ImGui::Separator();
-            if (ImGui::MenuItem("Load Configuration")) {
+            if (ImGui::MenuItem("Load Configuration", nullptr, false,
+                                cameraWorkerDone && !isPlaying)) {
                 showLoadAdsdParamsMenu();
             }
-            if (ImGui::MenuItem("Save Configuration")) {
+            if (ImGui::MenuItem("Save Configuration", nullptr, false,
+                                cameraWorkerDone && isPlaying)) {
                 showSaveAdsdParamsMenu();
             }
             ImGui::EndMenu();
@@ -591,14 +594,6 @@ void ADIMainWindow::showRecordMenu() {
                 isPlaying = false;
             }
         }
-
-        /* AS 2023-6-6: Temporarily disable.
-                ImGui::NewLine();
-                ImGui::Checkbox("Save Binary records", &m_saveBinaryFormatTmp);
-                if (view != NULL) {
-                    view->setSaveBinaryFormat(m_saveBinaryFormatTmp);
-                }
-                */
         ImGui::EndMenu();
     }
 }
@@ -626,16 +621,7 @@ void ADIMainWindow::showLoadAdsdParamsMenu() {
         auto camera = view->m_ctrl->m_cameras[static_cast<unsigned int>(
             view->m_ctrl->getCameraInUse())];
 
-        // Stop streaming and recording
-        stopPlayCCD();
-
-        aditof::Status status = camera->loadDepthParamsFromJsonFile(
-            loadconfigurationFileValue, modeSelection);
-        getActiveCamera()->setMode(m_cameraModes[modeSelection].second);
-
-        // Restart streaming by unblocking streaming.
-        viewSelectionChanged = viewSelection;
-        isPlaying = true;
+        aditof::Status status = camera->loadDepthParamsFromJsonFile(loadconfigurationFileValue);
 
         if (status != aditof::Status::OK) {
             LOG(INFO) << "Could not load current configuration "
@@ -649,8 +635,6 @@ void ADIMainWindow::showLoadAdsdParamsMenu() {
 }
 
 void ADIMainWindow::showSaveAdsdParamsMenu() {
-
-    char *pathname = saveConfigurationPath;
         
     ImGuiExtensions::ButtonColorChanger colorChangerStartRec(customColorPlay,
                                                              isPlaying);
@@ -1435,11 +1419,6 @@ void ADIMainWindow::prepareCamera(uint8_t mode) {
     aditof::Status status = aditof::Status::OK;
     std::vector<aditof::FrameDetails> frameTypes;
 
-    if (mode < 0) {
-        LOG(ERROR) << "Invalid camera mode!";
-        return;
-    }
-
     status = getActiveCamera()->setMode(mode);
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Could not set camera mode!";
@@ -1472,10 +1451,8 @@ void ADIMainWindow::prepareCamera(uint8_t mode) {
     status = getActiveCamera()->getDetails(camDetails);
     int totalCaptures = camDetails.frameType.totalCaptures;
 
-    if (mode == last_mode) {
-        status = getActiveCamera()->adsd3500GetFrameRate(expectedFPS);
-    }
-
+    status = getActiveCamera()->adsd3500GetFrameRate(expectedFPS);
+    
     view->m_ctrl->m_recorder->m_frameDetails.totalCaptures = totalCaptures;
 
     if (!view->getUserABMaxState()) {
