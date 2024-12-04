@@ -560,8 +560,9 @@ void ADIMainWindow::showRecordMenu() {
                 char tempbuff[MAX_PATH];
                 tempPath.copy(tempbuff, tempPath.length(), 0);
                 tempbuff[tempPath.length()] = '\0';
-                std::string saveFile =
-                    getADIFileName(NULL, "", tempbuff, filterIndex);
+                std::string saveFile = getADIFileName(
+                    nullptr, "ADI ToF Recording Files\0*.bin\0All Files\0*.*\0",
+                    tempbuff, filterIndex);
                 //Check if filename exists and format is corrct
                 if (!saveFile.empty() && filterIndex) {
                     if (!isPlaying) {
