@@ -252,17 +252,17 @@ void getFilesList(std::string filePath, std::string extension,
 
 #include "ADIOpenFile.h"
 #include <algorithm>
+#include <cerrno>
 #include <cstdio>
 #include <cstring>
-#include <cerrno>
-#include <dirent.h>  // For directory traversal
+#include <dirent.h>   // For directory traversal
 #include <sys/stat.h> // For checking file status
 
 // Assuming customFilters and customFilter are defined somewhere else in your project.
 extern std::string customFilter;
 extern std::vector<std::string> customFilters;
 
-std::string runZenityCommand(const std::string& command) {
+std::string runZenityCommand(const std::string &command) {
     FILE *f = popen(command.c_str(), "r");
     if (!f) {
         perror("popen failed");
@@ -287,10 +287,13 @@ std::string runZenityCommand(const std::string& command) {
     return (ret == 0) ? result : "";
 }
 
-std::string getADIFileName(void *hwndOwner, const char *customFilter, char *filename, int &FilterIndex) {
+std::string getADIFileName(void *hwndOwner, const char *customFilter,
+                           char *filename, int &FilterIndex) {
     FilterIndex = 0;
     const char zenityP[] = "/usr/bin/zenity";
-    std::string command = std::string(zenityP) + " --file-selection --save --modal --title=\"Select filename\"";
+    std::string command =
+        std::string(zenityP) +
+        " --file-selection --save --modal --title=\"Select filename\"";
 
     std::string result = runZenityCommand(command);
     if (result.empty()) {
@@ -300,7 +303,7 @@ std::string getADIFileName(void *hwndOwner, const char *customFilter, char *file
 
     // Copy the selected filename to the provided buffer
     strncpy(filename, result.c_str(), FILENAME_MAX - 1);
-    filename[FILENAME_MAX - 1] = '\0';  // Ensure null-termination
+    filename[FILENAME_MAX - 1] = '\0'; // Ensure null-termination
 
     // Custom filter logic based on customFilters
     std::vector<std::string> filters(customFilters);
@@ -318,7 +321,9 @@ std::string getADIFileName(void *hwndOwner, const char *customFilter, char *file
 std::string openADIFileName(const char *filter, void *owner, int &FilterIndex) {
     FilterIndex = 0;
     const char zenityP[] = "/usr/bin/zenity";
-    std::string command = std::string(zenityP) + " --file-selection --modal --title=\"Select filename\"";
+    std::string command =
+        std::string(zenityP) +
+        " --file-selection --modal --title=\"Select filename\"";
 
     std::string filename = runZenityCommand(command);
     if (filename.empty()) {
@@ -339,7 +344,9 @@ std::string openADIFileName(const char *filter, void *owner, int &FilterIndex) {
     return filename;
 }
 
-void getFilesList(std::string filePath, std::string extension, std::vector<std::string> &returnFileName, bool returnFullPath) {
+void getFilesList(std::string filePath, std::string extension,
+                  std::vector<std::string> &returnFileName,
+                  bool returnFullPath) {
     returnFileName.clear();
 
     DIR *dir = opendir(filePath.c_str());

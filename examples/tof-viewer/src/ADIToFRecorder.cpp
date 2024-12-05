@@ -19,8 +19,6 @@
 #include <sys/stat.h>
 #endif
 
-#define EMBED_HDR_LENGTH 128
-
 ADIToFRecorder::ADIToFRecorder()
     : m_frameDetails{"", {}, "", 0, 0, 0, false}, m_recordTreadStop(true),
       m_playbackThreadStop(true), m_shouldReadNewFrame(true),
@@ -114,8 +112,6 @@ void ADIToFRecorder::stopRecording() {
 int ADIToFRecorder::startPlaybackRaw(const std::string &fileName, int &fps) {
     unsigned int height = 0;
     unsigned int width = 0;
-    totalBits = 0;
-    m_sizeOfHeader = METADATA_SIZE;
 
     m_playbackFile.open(fileName, std::ios::binary);
 
@@ -125,7 +121,7 @@ int ADIToFRecorder::startPlaybackRaw(const std::string &fileName, int &fps) {
     }
 
     m_playbackFile.seekg(0, std::ios_base::end);
-    fileSize = m_playbackFile.tellg();
+    m_fileSize = m_playbackFile.tellg();
     m_playbackFile.seekg(0, std::ios_base::beg);
 
     if (m_playbackFile.eof()) {
@@ -139,34 +135,45 @@ int ADIToFRecorder::startPlaybackRaw(const std::string &fileName, int &fps) {
 
     height = m_metadataStruct.height;
     width = m_metadataStruct.width;
-    m_frameDetails.width = width;
 
-    if (m_metadataStruct.bitsInDepth)
-        totalBits += 2;
-    if (m_metadataStruct.bitsInAb)
-        totalBits += 2;
-    if (m_metadataStruct.bitsInConfidence)
-        totalBits += 4;
-    if (m_metadataStruct.xyzEnabled == 1)
-        totalBits += 6;
+    // TODO: The sizes must be based on the settings from the metadata
+    uint32_t depth_bytes = (16 / 8);
+    uint32_t ab_bytes = (16 / 8);
+    uint32_t conf_bytes = (32 / 8);
+    uint32_t xyz_bytes = (48 / 8);
+
+    m_bytesPerPixel = 0;
+    m_bytesPerPixel += (m_metadataStruct.bitsInDepth) ? depth_bytes : 0;
+    m_bytesPerPixel += (m_metadataStruct.bitsInAb) ? ab_bytes : 0;
+    m_bytesPerPixel += (m_metadataStruct.bitsInConfidence) ? conf_bytes : 0;
+    m_bytesPerPixel += (m_metadataStruct.xyzEnabled == 1) ? xyz_bytes : 0;
 
     // when the first frame is not carrying the correct metadata, skip it
-    if (height == 0) {
+    // Comment: If the first frame is corrupted, m_bytesPerPixel will be unknown or incorrect.
+    //          In which case this will fail. To handle this return an error to the user
+    //          by indicating 0 frames available.
+    if (height == 0 || width == 0) {
+
+        return 0;
+#if 0  // See comment above.
         LOG(WARNING) << "first frame metadata not valid, first frame "
                         "skipped...";
         m_playbackFile.seekg(0, std::ios_base::beg);
-        m_playbackFile.seekg(sizeof(uint16_t) * width * width * totalBits + 128,
+        m_playbackFile.seekg(sizeof(uint16_t) * width * width *
+                                     m_bytesPerPixel +
+                                 EMBED_HDR_LENGTH,
                              std::ios_base::cur);
         m_playbackFile.read(reinterpret_cast<char *>(&m_metadataStruct),
                             sizeof(aditof::Metadata));
 
         height = m_metadataStruct.height;
         width = m_metadataStruct.width;
+#endif // 0
     }
 
-    size_t sizeOfFrame = height * width * totalBits;
-    currentPBPos = m_sizeOfHeader;
-    m_numberOfFrames = fileSize / (m_sizeOfHeader + sizeOfFrame);
+    m_currentPBPos = m_sizeOfHeader;
+    m_numberOfFrames =
+        m_fileSize / (m_sizeOfHeader + height * width * m_bytesPerPixel);
 
     m_frameDetails.height = height;
     m_frameDetails.width = width;
@@ -225,12 +232,6 @@ bool ADIToFRecorder::isPlaybackFinished() const { return m_playBackEofReached; }
 
 bool ADIToFRecorder::isRecordingFinished() const { return m_finishRecording; }
 
-bool ADIToFRecorder::isPlaybackPaused() { return isPaused; }
-
-void ADIToFRecorder::setPlaybackPaused(bool paused) { isPaused = paused; }
-
-int ADIToFRecorder::getNumberOfFrames() const { return m_numberOfFrames; }
-
 void ADIToFRecorder::recordThread(const std::string fileName) {
     clock_t recording_start = clock();
     aditof::FrameHandler frameSaver;
@@ -250,34 +251,13 @@ void ADIToFRecorder::recordThread(const std::string fileName) {
 
         auto frame = m_recordQueue.dequeue();
 
-        uint16_t *header;
-        frame->getData("metadata", &header);
-
-        int width = m_frameDetails.width;
-        int height = m_frameDetails.height;
-        int captures = m_frameDetails.totalCaptures;
-        int size = static_cast<int>(sizeof(uint16_t) * width * height);
-
         frameSaver.saveFrameToFile(*frame, fileName);
 
-        // Create a new .bin file for each frame with raw sensor data
-        // TODO: need to be implemented and exposed to UI
-        // if (m_saveBinaryFormat) {
-        //     std::string fileNameRawFrame = m_fileNameRaw;
-        //     fileNameRawFrame.replace(fileNameRawFrame.find_last_of("#"), 1,
-        //                              std::to_string(frameCtr));
-
-        //     std::ofstream recordFileRaw;
-        //     recordFileRaw.open(fileNameRawFrame,
-        //                        std::ios::binary | std::ofstream::trunc);
-        //     recordFileRaw.close();
-        // }
         frameCtr++;
     }
 }
 
 void ADIToFRecorder::playbackThread() {
-    int sizeOfFrame = 0;
     while (!m_playbackThreadStop) {
 
         if (!m_playbackFile.is_open()) {
@@ -292,6 +272,7 @@ void ADIToFRecorder::playbackThread() {
         aditof::FrameDataDetails dataDetails;
 
         m_playbackCv.wait(lock, [&]() { return m_shouldReadNewFrame; });
+        const size_t _currentPBPos = m_currentPBPos;
         m_shouldReadNewFrame = false;
         m_frameDetails.dataDetails.clear();
 
@@ -323,55 +304,62 @@ void ADIToFRecorder::playbackThread() {
         frame->getData("conf", &frameDataLocationCONF);
         frame->getData("xyz", &frameDataLocationXYZ);
 
-        unsigned int width = m_frameDetails.width;
-        unsigned int height = m_frameDetails.height;
+        uint32_t pixelArea = m_frameDetails.width * m_frameDetails.height;
+        uint32_t sizeOfFrame = m_bytesPerPixel * pixelArea;
 
-        sizeOfFrame = totalBits * height * width;
-        int size = static_cast<int>(sizeof(uint16_t) * width * height);
+        if (m_playbackFile.eof() && _currentPBPos >= m_fileSize) {
 
-        if (m_playbackFile.eof() && currentPBPos >= fileSize) {
             LOG(WARNING) << "eof";
-            memset(frameDataLocationAB, 0, sizeof(uint16_t) * width * height);
+            memset(frameDataLocationAB, 0, sizeof(uint16_t) * pixelArea);
             m_playBackEofReached = true;
+
         } else {
-            if (!isPaused && (currentPBPos < (fileSize - sizeOfFrame))) {
-                m_playbackFile.seekg(currentPBPos, std::ios_base::beg);
-                if (m_metadataStruct.bitsInDepth)
-                    m_playbackFile.read(
-                        reinterpret_cast<char *>(frameDataLocationDEPTH), size);
-                if (m_metadataStruct.bitsInAb)
-                    m_playbackFile.read(
-                        reinterpret_cast<char *>(frameDataLocationAB), size);
-                if (m_metadataStruct.bitsInConfidence)
-                    m_playbackFile.read(
-                        reinterpret_cast<char *>(frameDataLocationCONF),
-                        size * 2);
-                if (m_metadataStruct.xyzEnabled)
-                    m_playbackFile.read(
-                        reinterpret_cast<char *>(frameDataLocationXYZ),
-                        size * 3);
-                currentPBPos += (sizeOfFrame + EMBED_HDR_LENGTH);
-            } else {
-                m_playbackFile.seekg(currentPBPos, std::ios_base::beg);
-                if (m_metadataStruct.bitsInDepth)
-                    m_playbackFile.read(
-                        reinterpret_cast<char *>(frameDataLocationDEPTH), size);
-                if (m_metadataStruct.bitsInAb)
-                    m_playbackFile.read(
-                        reinterpret_cast<char *>(frameDataLocationAB), size);
-                if (m_metadataStruct.bitsInConfidence)
-                    m_playbackFile.read(
-                        reinterpret_cast<char *>(frameDataLocationCONF),
-                        size * 2);
-                if (m_metadataStruct.xyzEnabled)
-                    m_playbackFile.read(
-                        reinterpret_cast<char *>(frameDataLocationXYZ),
-                        size * 3);
+
+            m_playbackFile.seekg(_currentPBPos, std::ios_base::beg);
+
+            if (m_metadataStruct.bitsInDepth)
+                m_playbackFile.read(
+                    reinterpret_cast<char *>(frameDataLocationDEPTH),
+                    pixelArea * 2);
+            if (m_metadataStruct.bitsInAb)
+                m_playbackFile.read(
+                    reinterpret_cast<char *>(frameDataLocationAB),
+                    pixelArea * 2);
+            if (m_metadataStruct.bitsInConfidence)
+                m_playbackFile.read(
+                    reinterpret_cast<char *>(frameDataLocationCONF),
+                    pixelArea * 4);
+            if (m_metadataStruct.xyzEnabled)
+                m_playbackFile.read(
+                    reinterpret_cast<char *>(frameDataLocationXYZ),
+                    pixelArea * 6);
+
+            // FIX: there is no link to the frame rate, making this play as fast as possible, which is not desired.
+            /*
+            if (!isPaused && (m_currentPBPos < (m_fileSize - sizeOfFrame))) { // Unpaused
+                //Advance to the next frame
+                m_currentPBPos += (sizeOfFrame + getSizeOfHeader());
             }
+            */
         }
 
         m_playbackQueue.enqueue(frame);
     }
+}
+
+const uint32_t ADIToFRecorder::getFrameSize() {
+    return (getFrameDetails().height * getFrameDetails().width *
+                getBytesPerPixel() +
+            getSizeOfHeader());
+}
+
+void ADIToFRecorder::setPlaybackFrameNumber(const uint32_t frameNumber) {
+    m_currentPBPos =
+        static_cast<size_t>(frameNumber * getFrameSize() + getSizeOfHeader());
+}
+
+uint32_t ADIToFRecorder::getPlaybackFrameNumber() {
+    return getCurrentPBPos() / getFrameSize();
 }
 
 void ADIToFRecorder::clearVariables() {

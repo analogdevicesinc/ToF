@@ -96,7 +96,7 @@ std::pair<float, float> ADIController::getTemperature() {
 void ADIController::startRecording(const std::string &fileName,
                                    unsigned int height, unsigned int width,
                                    unsigned int fps) {
-    m_recorder->m_saveBinaryFormat = this->m_saveBinaryFormat;
+    m_recorder->setSaveBinaryFormat(this->m_saveBinaryFormat);
     m_recorder->startRecording(fileName, height, width, fps);
 }
 
@@ -117,7 +117,7 @@ bool ADIController::recordingFinished() const {
 }
 
 bool ADIController::playbackPaused() const {
-    return m_recorder->isPlaybackPaused();
+    return m_recorder->getPlaybackPaused();
 }
 
 void ADIController::pausePlayback(bool paused) const {
