@@ -113,20 +113,6 @@ class ADIToFRecorder {
 	*/
     bool isRecordingFinished() const;
 
-    /**
-	* @brief Gets playback paused flag
-	*/
-    bool isPlaybackPaused();
-
-    /**
-	* @brief Sets playback paused flag
-	*/
-    void setPlaybackPaused(bool paused = true);
-
-    /**
-	* @brief Gets number of frames
-	*/
-    int getNumberOfFrames() const;
     std::shared_ptr<aditof::Frame> playbackFrame;
 
     /**
@@ -149,6 +135,43 @@ class ADIToFRecorder {
 	*/
     void processXYZData();
 
+    void setPlaybackFrameNumber(const uint32_t frameNumber);
+    uint32_t getPlaybackFrameNumber();
+
+    size_t getCurrentPBPos() { return m_currentPBPos; }
+    void setCurrentPBPos(size_t pos) { m_currentPBPos = pos; }
+
+    bool getFinishRecording() { return m_finishRecording; }
+    void setFinishRecording(bool finish) { m_finishRecording = finish; }
+
+    aditof::FrameDetails getFrameDetails() { return m_frameDetails; }
+    void setFrameDetails(aditof::FrameDetails frameDetails) {
+        m_frameDetails = frameDetails;
+    }
+
+    bool getSaveBinaryFormat() { return m_saveBinaryFormat; }
+    void setSaveBinaryFormat(bool saveBinary) {
+        m_saveBinaryFormat = saveBinary;
+    }
+
+    uint32_t getBytesPerPixel() { return m_bytesPerPixel; }
+    void setBytesPerPixel(uint32_t totalBytes) { m_bytesPerPixel = totalBytes; }
+
+    uint32_t getNumberOfFrames() { return m_numberOfFrames; }
+    void setNumberOfFrames(uint32_t numberOfFrames) {
+        m_numberOfFrames = numberOfFrames;
+    }
+
+    bool getStopPlayback() { return m_stopPlayback; }
+    void setStopPlayback(bool stopPlayback) { m_stopPlayback = stopPlayback; }
+
+    uint16_t getSizeOfHeader() { return m_sizeOfHeader; }
+
+    bool getPlaybackPaused() { return isPaused; }
+    void setPlaybackPaused(bool paused = true) { isPaused = paused; }
+
+    const uint32_t getFrameSize();
+
   private:
     /**
 	* @brief Analyzes the given number and returns its number
@@ -164,6 +187,9 @@ class ADIToFRecorder {
     void createBinaryDirectory(std::string fileName);
 
   public:
+    const uint16_t EMBED_HDR_LENGTH = 128; // Size in Bytes
+
+  private:
     uint16_t *frameDataLocationDEPTH = nullptr;
     uint16_t *frameDataLocationAB = nullptr;
     uint16_t *frameDataLocationCONF = nullptr;
@@ -172,14 +198,11 @@ class ADIToFRecorder {
     aditof::FrameDetails m_frameDetails;
     bool m_saveBinaryFormat = false;
     bool m_finishRecording = true;
-    bool _stopPlayback = false;
-    size_t currentPBPos = 0;
-    int totalBits = 0;
-    int m_numberOfFrames;
-    size_t fileSize = 0;
-    uint16_t m_sizeOfHeader;
-
-  private:
+    bool m_stopPlayback = false;
+    uint32_t m_bytesPerPixel = 0;
+    uint32_t m_numberOfFrames;
+    size_t m_fileSize = 0;
+    const uint16_t m_sizeOfHeader = EMBED_HDR_LENGTH;
     SafeQueue<std::shared_ptr<aditof::Frame>> m_playbackQueue;
     SafeQueue<std::shared_ptr<aditof::Frame>> m_recordQueue;
     std::atomic<bool> m_playbackThreadStop;
@@ -198,6 +221,7 @@ class ADIToFRecorder {
     const int _ab = 1;
     size_t frameCtr = 0;
     aditof::Metadata m_metadataStruct;
+    size_t m_currentPBPos = 0;
 };
 
 #endif // ADITOFRECORDER_H
