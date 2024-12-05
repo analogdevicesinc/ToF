@@ -252,7 +252,6 @@ void getFilesList(std::string filePath, std::string extension,
 
 #include "ADIOpenFile.h"
 #include <algorithm>
-#include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <dirent.h> // For directory traversal
@@ -385,9 +384,7 @@ std::string getADIFileName(void *hwndOwner, const char *customFilter,
 std::string openADIFileName(const char *filter, void *owner, int &FilterIndex) {
     FilterIndex = 0;
     const char zenityP[] = "/usr/bin/zenity";
-    std::string command =
-        std::string(zenityP) +
-        " --file-selection --modal --title=\"Select filename\"";
+    std::string command = std::string(zenityP) + " --file-selection --modal --title=\"Select filename\"";
 
     std::string filename = runZenityCommand(command);
     if (filename.empty()) {
@@ -408,9 +405,7 @@ std::string openADIFileName(const char *filter, void *owner, int &FilterIndex) {
     return filename;
 }
 
-void getFilesList(std::string filePath, std::string extension,
-                  std::vector<std::string> &returnFileName,
-                  bool returnFullPath) {
+void getFilesList(std::string filePath, std::string extension, std::vector<std::string> &returnFileName, bool returnFullPath) {
     returnFileName.clear();
 
     DIR *dir = opendir(filePath.c_str());

@@ -25,7 +25,6 @@
 
 #include <aditof/system.h>
 #include <cJSON.h>
-#define EMBED_HDR_LENGTH 128
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -193,10 +192,10 @@ ADIMainWindow::~ADIMainWindow() {
     }
 
     //Recording flags
-    if (view != nullptr && !view->m_ctrl->m_recorder->m_finishRecording) {
+    if (view != nullptr && !view->m_ctrl->m_recorder->getFinishRecording()) {
         view->m_ctrl->m_recorder->stopRecording();
     }
-    if (view != nullptr && !view->m_ctrl->m_recorder->_stopPlayback) {
+    if (view != nullptr && !view->m_ctrl->m_recorder->getStopPlayback()) {
         view->m_ctrl->m_recorder->stopPlayback();
         stopPlayCCD();
     }
@@ -346,7 +345,6 @@ bool ADIMainWindow::startImGUI(const ADIViewerArgs &args) {
     //OR
     ImGui::StyleColorsClassic();
     CustomizeMenus();
-
 
     // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -622,7 +620,8 @@ void ADIMainWindow::showLoadAdsdParamsMenu() {
         auto camera = view->m_ctrl->m_cameras[static_cast<unsigned int>(
             view->m_ctrl->getCameraInUse())];
 
-        aditof::Status status = camera->loadDepthParamsFromJsonFile(loadconfigurationFileValue);
+        aditof::Status status =
+            camera->loadDepthParamsFromJsonFile(loadconfigurationFileValue);
 
         if (status != aditof::Status::OK) {
             LOG(INFO) << "Could not load current configuration "
@@ -636,7 +635,7 @@ void ADIMainWindow::showLoadAdsdParamsMenu() {
 }
 
 void ADIMainWindow::showSaveAdsdParamsMenu() {
-        
+
     ImGuiExtensions::ButtonColorChanger colorChangerStartRec(customColorPlay,
                                                              isPlaying);
 
@@ -1453,8 +1452,10 @@ void ADIMainWindow::prepareCamera(uint8_t mode) {
     int totalCaptures = camDetails.frameType.totalCaptures;
 
     status = getActiveCamera()->adsd3500GetFrameRate(expectedFPS);
-    
-    view->m_ctrl->m_recorder->m_frameDetails.totalCaptures = totalCaptures;
+
+    aditof::FrameDetails tmp = view->m_ctrl->m_recorder->getFrameDetails();
+    tmp.totalCaptures = totalCaptures;
+    view->m_ctrl->m_recorder->setFrameDetails(tmp);
 
     if (!view->getUserABMaxState()) {
         std::string value;
@@ -1707,6 +1708,7 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
             }
         }
         if (isPlayRecorded) {
+#if 0  // TODO: Fix. Temporarily disabled
             std::string playbackButtonText =
                 isPlayRecordPaused ? "Paused" : "Pause";
             float recordPlaybackColor = customColorPause;
@@ -1731,7 +1733,7 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                         LOG(INFO) << "Stream has been paused...";
                     } else {
                         if (isPlayRecordDone) {
-                            view->m_ctrl->m_recorder->currentPBPos = 0;
+                            view->m_ctrl->m_recorder->setCurrentPBPos(0);
                             isPlayRecordDone = false;
                         }
                         view->m_ctrl->pausePlayback(false);
@@ -1740,10 +1742,12 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                     view->m_ctrl->playbackPaused();
                 }
             }
+#endif //0
             ImGui::SameLine();
-            if (view != nullptr && view->m_ctrl->m_recorder->_stopPlayback) {
+            if (view != nullptr &&
+                view->m_ctrl->m_recorder->getStopPlayback()) {
                 stopPlayback();
-                view->m_ctrl->m_recorder->_stopPlayback = false;
+                view->m_ctrl->m_recorder->setStopPlayback(false);
             }
 
             { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
@@ -1754,23 +1758,16 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                     stopPlayback();
                 }
             }
-            rawSeeker =
-                (view->m_ctrl->m_recorder->currentPBPos) /
-                (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
-                     ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
-                     (view->m_ctrl->m_recorder->totalBits) +
-                 EMBED_HDR_LENGTH);
 
-            ImGuiExtensions::ADISliderInt(
-                "Progress", &rawSeeker, 0,
-                (view->m_ctrl->m_recorder->m_numberOfFrames) - 1, "%d", true);
-            view->m_ctrl->m_recorder->currentPBPos =
-                size_t(rawSeeker) *
-                    (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
-                         ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
-                         (view->m_ctrl->m_recorder->totalBits) +
-                     EMBED_HDR_LENGTH) +
-                view->m_ctrl->m_recorder->m_sizeOfHeader;
+            uint32_t totalFrames =
+                view->m_ctrl->m_recorder->getNumberOfFrames();
+
+            rawSeeker = view->m_ctrl->m_recorder->getPlaybackFrameNumber();
+
+            ImGuiExtensions::ADISliderInt("Frame #", &rawSeeker, 0,
+                                          totalFrames - 1, "%d", true);
+
+            view->m_ctrl->m_recorder->setPlaybackFrameNumber(rawSeeker);
         }
     }
     ImGui::End();
@@ -1869,7 +1866,7 @@ void ADIMainWindow::displayDepthWindow(ImGuiWindowFlags overlayFlags) {
     setWindowPosition(dictWinPosition["depth"][0] + 40,
                       dictWinPosition["depth"][1]);
     setWindowSize(dictWinPosition["depth"][2] + 40,
-                  dictWinPosition["depth"][3] + 140);
+                  dictWinPosition["depth"][3] + 130);
 
     std::string title = "Depth Window";
     if (ImGui::Begin(title.c_str(), nullptr, overlayFlags)) {
