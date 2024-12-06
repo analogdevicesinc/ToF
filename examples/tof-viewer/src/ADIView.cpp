@@ -289,9 +289,6 @@ void ADIView::_displayAbImage() {
         auto camera = m_ctrl->m_cameras[static_cast<unsigned int>(
             m_ctrl->getCameraInUse())];
 
-        camera->normalizeABdata(m_capturedFrame.get(), getAutoScale(),
-                                getLogImage());
-
         m_capturedFrame->getData("ab", &ab_video_data);
 
         aditof::FrameDataDetails frameAbDetails;
@@ -302,12 +299,24 @@ void ADIView::_displayAbImage() {
         frameHeight = static_cast<int>(frameAbDetails.height);
         frameWidth = static_cast<int>(frameAbDetails.width);
 
+        // Update a copy of the AB frame buffer since the origina may be used by the recorder.
+        uint16_t *_ab_video_data = new uint16_t[frameHeight * frameWidth];
+
+        if (_ab_video_data == nullptr) {
+            return;
+        }
+
+        memcpy(_ab_video_data, ab_video_data, frameHeight * frameWidth * sizeof(uint16_t));
+
+        camera->normalizeABBuffer(_ab_video_data, frameWidth, frameHeight,
+            getAutoScale(), getLogImage());
+
         size_t imageSize = frameHeight * frameWidth;
         size_t bgrSize = 0;
         ab_video_data_8bit = new uint8_t[frameHeight * frameWidth * 3];
 
         for (size_t dummyCtr = 0; dummyCtr < imageSize; dummyCtr++) {
-            uint16_t pix = ab_video_data[dummyCtr];
+            uint16_t pix = _ab_video_data[dummyCtr];
             ab_video_data_8bit[bgrSize++] = (uint8_t)(pix);
             ab_video_data_8bit[bgrSize++] = (uint8_t)(pix);
             ab_video_data_8bit[bgrSize++] = (uint8_t)(pix);
@@ -324,6 +333,8 @@ void ADIView::_displayAbImage() {
             imshow_lock.unlock();
             m_barrierCv.notify_one();
         }
+
+        delete []_ab_video_data;
     }
 }
 static std::chrono::duration<double, std::milli> millisecondsPast;
