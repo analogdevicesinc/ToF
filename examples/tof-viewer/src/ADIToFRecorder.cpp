@@ -89,17 +89,6 @@ void ADIToFRecorder::startRecording(const std::string &fileName,
     }
 }
 
-int ADIToFRecorder::findDigits(int number) {
-    int numOfDigits = 0;
-
-    do {
-        numOfDigits++;
-        number /= 10;
-    } while (number);
-
-    return numOfDigits;
-}
-
 void ADIToFRecorder::stopRecording() {
     m_recordTreadStop = true;
     if (m_recordThread.joinable()) {
@@ -171,12 +160,14 @@ int ADIToFRecorder::startPlaybackRaw(const std::string &fileName, int &fps) {
 #endif // 0
     }
 
-    m_currentPBPos = m_sizeOfHeader;
-    m_numberOfFrames =
-        m_fileSize / (m_sizeOfHeader + height * width * m_bytesPerPixel);
-
     m_frameDetails.height = height;
     m_frameDetails.width = width;
+
+    m_playbackFile.seekg(0, std::ios_base::beg);
+    m_currentPBPos = 0;
+
+    m_numberOfFrames =
+        m_fileSize / (m_sizeOfHeader + height * width * m_bytesPerPixel);
 
     m_playbackThreadStop = false;
     m_playBackEofReached = false;
@@ -272,7 +263,6 @@ void ADIToFRecorder::playbackThread() {
         aditof::FrameDataDetails dataDetails;
 
         m_playbackCv.wait(lock, [&]() { return m_shouldReadNewFrame; });
-        const size_t _currentPBPos = m_currentPBPos;
         m_shouldReadNewFrame = false;
         m_frameDetails.dataDetails.clear();
 
@@ -305,9 +295,8 @@ void ADIToFRecorder::playbackThread() {
         frame->getData("xyz", &frameDataLocationXYZ);
 
         uint32_t pixelArea = m_frameDetails.width * m_frameDetails.height;
-        uint32_t sizeOfFrame = m_bytesPerPixel * pixelArea;
 
-        if (m_playbackFile.eof() && _currentPBPos >= m_fileSize) {
+        if (m_playbackFile.eof() && m_currentPBPos >= m_fileSize) {
 
             LOG(WARNING) << "eof";
             memset(frameDataLocationAB, 0, sizeof(uint16_t) * pixelArea);
@@ -315,6 +304,7 @@ void ADIToFRecorder::playbackThread() {
 
         } else {
 
+            size_t _currentPBPos = m_currentPBPos + static_cast<size_t>(getSizeOfHeader()); // Skip Header
             m_playbackFile.seekg(_currentPBPos, std::ios_base::beg);
 
             if (m_metadataStruct.bitsInDepth)
@@ -336,6 +326,7 @@ void ADIToFRecorder::playbackThread() {
 
             // FIX: there is no link to the frame rate, making this play as fast as possible, which is not desired.
             /*
+            uint32_t sizeOfFrame = m_bytesPerPixel * pixelArea;
             if (!isPaused && (m_currentPBPos < (m_fileSize - sizeOfFrame))) { // Unpaused
                 //Advance to the next frame
                 m_currentPBPos += (sizeOfFrame + getSizeOfHeader());
@@ -354,8 +345,7 @@ const uint32_t ADIToFRecorder::getFrameSize() {
 }
 
 void ADIToFRecorder::setPlaybackFrameNumber(const uint32_t frameNumber) {
-    m_currentPBPos =
-        static_cast<size_t>(frameNumber * getFrameSize() + getSizeOfHeader());
+    m_currentPBPos = static_cast<size_t>(frameNumber * getFrameSize());
 }
 
 uint32_t ADIToFRecorder::getPlaybackFrameNumber() {
