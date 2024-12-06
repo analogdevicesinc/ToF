@@ -485,7 +485,9 @@ void ADIMainWindow::showMainMenu() {
 
     if (show_app_log) {
         showLogWindow(&show_app_log);
-    } else if (show_ini_window && isPlaying) {
+    }
+ 
+    if (show_ini_window && isPlaying) {
         showIniWindow(&show_ini_window);
     }
 
