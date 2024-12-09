@@ -306,10 +306,11 @@ void ADIView::_displayAbImage() {
             return;
         }
 
-        memcpy(_ab_video_data, ab_video_data, frameHeight * frameWidth * sizeof(uint16_t));
+        memcpy(_ab_video_data, ab_video_data,
+               frameHeight * frameWidth * sizeof(uint16_t));
 
         camera->normalizeABBuffer(_ab_video_data, frameWidth, frameHeight,
-            getAutoScale(), getLogImage());
+                                  getAutoScale(), getLogImage());
 
         size_t imageSize = frameHeight * frameWidth;
         size_t bgrSize = 0;
@@ -334,7 +335,7 @@ void ADIView::_displayAbImage() {
             m_barrierCv.notify_one();
         }
 
-        delete []_ab_video_data;
+        delete[] _ab_video_data;
     }
 }
 static std::chrono::duration<double, std::milli> millisecondsPast;

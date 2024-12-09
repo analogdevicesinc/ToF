@@ -304,7 +304,9 @@ void ADIToFRecorder::playbackThread() {
 
         } else {
 
-            size_t _currentPBPos = m_currentPBPos + static_cast<size_t>(getSizeOfHeader()); // Skip Header
+            size_t _currentPBPos =
+                m_currentPBPos +
+                static_cast<size_t>(getSizeOfHeader()); // Skip Header
             m_playbackFile.seekg(_currentPBPos, std::ios_base::beg);
 
             if (m_metadataStruct.bitsInDepth)
