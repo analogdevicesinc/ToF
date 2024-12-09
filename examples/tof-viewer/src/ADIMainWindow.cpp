@@ -486,7 +486,7 @@ void ADIMainWindow::showMainMenu() {
     if (show_app_log) {
         showLogWindow(&show_app_log);
     }
- 
+
     if (show_ini_window && isPlaying) {
         showIniWindow(&show_ini_window);
     }
@@ -565,20 +565,24 @@ void ADIMainWindow::showRecordMenu() {
                     tempbuff, filterIndex);
                 //Check if filename exists and format is corrct
                 if (!saveFile.empty() && filterIndex) {
-                    if (!isPlaying) {
-                        //"Press" the play button, in case it is not pressed.
-                        PlayCCD(
-                            modeSelection,
-                            viewSelection); //Which ever is currently selected
-                        isPlaying = true;
+                    if (std::remove(saveFile.c_str()) != 0) {
+                        LOG(INFO) << "Unable to remove: " << saveFile;
+                    } else {
+                        if (!isPlaying) {
+                            //"Press" the play button, in case it is not pressed.
+                            PlayCCD(
+                                modeSelection,
+                                viewSelection); //Which ever is currently selected
+                            isPlaying = true;
+                        }
+                        //setting binary save option
+                        view->m_ctrl->m_saveBinaryFormat =
+                            view->getSaveBinaryFormat();
+                        view->m_ctrl->startRecording(
+                            saveFile, view->frameHeight, view->frameWidth,
+                            recordingSeconds);
+                        isRecording = true;
                     }
-                    //setting binary save option
-                    view->m_ctrl->m_saveBinaryFormat =
-                        view->getSaveBinaryFormat();
-                    view->m_ctrl->startRecording(saveFile, view->frameHeight,
-                                                 view->frameWidth,
-                                                 recordingSeconds);
-                    isRecording = true;
                 }
             }
         }
