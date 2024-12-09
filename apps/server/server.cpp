@@ -803,7 +803,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     case ADSD3500_WRITE_CMD: {
         uint16_t cmd = static_cast<uint16_t>(buff_recv.func_int32_param(0));
         uint16_t data = static_cast<uint16_t>(buff_recv.func_int32_param(1));
-        uint32_t usDelay = static_cast<uint16_t>(buff_recv.func_int32_param(2));
+        uint32_t usDelay = static_cast<uint32_t>(buff_recv.func_int32_param(2));
 
         aditof::Status status =
             camDepthSensor->adsd3500_write_cmd(cmd, data, usDelay);
