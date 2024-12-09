@@ -31,7 +31,8 @@ std::string openADIFileName(const char *filter, void *owner, int &FilterIndex);
 * @param FilterIndex   Index of chosen filter
 * @return              Saved name if successful, empty string otherwise
 */
-std::string getADIFileName(void *hwndOwner, char *filename, int &FilterIndex);
+std::string getADIFileName(void *hwndOwner, const char *customFilter,
+                           char *filename, int &FilterIndex);
 
 /**
 * @brief Finds a set of files with specified file extension

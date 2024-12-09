@@ -35,7 +35,6 @@ add_executable(ADIToFGUI
 			   ${ADIToF_SOURCE_DIR}/ADIToFRecorder.cpp
 			   ${ADIToF_SOURCE_DIR}/ADIToF.cpp
 			   ${ADIToF_SOURCE_DIR}/ADIMainWindow.cpp
-			   ${ADIToF_SOURCE_DIR}/ADIInformationPane.cpp
 			   ${ADIToF_SOURCE_DIR}/ADIImGUIExtensions.cpp
 			   ${ADIToF_SOURCE_DIR}/ADIController.cpp
                ${ADIToF_SOURCE_DIR}/ADIOpenFile.cpp			   
