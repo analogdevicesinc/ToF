@@ -29,7 +29,6 @@ option(WITH_GLOG_DEPENDENCY "Build with GLOG dependency to be used for logging?"
 option(WITH_COMMAND_LINE_TOOLS "Build with command line tools?" ON)
 option(CI_BUILD "Build for CI" OFF)
 option(WITH_SUBMODULES "Use submodules to build the library" ON)
-option(ENABLE_PCM "Enable the streaming of PCM frames" OFF)
 
 ######################### Target based Options ################################
 option(NXP "Set to ON when building on NXP" OFF)
