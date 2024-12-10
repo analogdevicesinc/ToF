@@ -29,6 +29,7 @@ using namespace std;
 * @param owner	NULL
 * @return		Selected file name with its extension
 */
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -91,8 +92,18 @@ std::string getADIFileName(void *hwndOwner, const char *customFilter,
         // Get the selected filter index
         FilterIndex = static_cast<int>(ofn.nFilterIndex);
 
-        // Return the selected file path
-        return std::string(filename);
+        bool fileExists = false;
+        std::ifstream tmpFile(filename);
+        fileExists = tmpFile.good();
+        tmpFile.close();
+
+        if (fileExists) {
+            if (deleteFile(std::string(filename))) {
+                return std::string(filename);
+            }
+        } else {
+            return std::string(filename);
+        }
     }
 
     // If the user cancels or an error occurs
@@ -138,6 +149,15 @@ void getFilesList(string filePath, string extension,
             }
         }
     }
+}
+
+bool deleteFile(const std::string &path) {
+    if (SetFileAttributes(path.c_str(), FILE_ATTRIBUTE_NORMAL)) {
+        if (DeleteFile(path.c_str())) {
+            return true;
+        }
+    }
+    return false;
 }
 
 #elif defined(__APPLE__) && defined(__MACH__)
@@ -450,6 +470,16 @@ void getFilesList(std::string filePath, std::string extension,
     }
 
     closedir(dir);
+}
+
+bool deleteFile(const std::string &path) {
+    if (unlink(path.c_str()) == 0) {
+        return true; // File successfully deleted
+    } else {
+        std::cerr << "Error deleting file on Linux/Unix: " << strerror(errno)
+                  << "\n";
+        return false;
+    }
 }
 
 #endif

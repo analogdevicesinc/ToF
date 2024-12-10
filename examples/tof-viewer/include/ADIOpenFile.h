@@ -46,4 +46,6 @@ void getFilesList(std::string filePath, std::string extension,
                   std::vector<std::string> &returnFileName,
                   bool returnFullPath);
 
+bool deleteFile(const std::string &path);
+
 #endif //ADI_OPEN_FILE
