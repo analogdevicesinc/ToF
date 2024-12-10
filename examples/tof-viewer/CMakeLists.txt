@@ -8,10 +8,6 @@ project(ADIToFGUI)
 
 option(ENBABLE_PASSIVE_IR "Allow passive IR (PCM) mode" OFF)
 
-# specify the C++ standard
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-
 configure_file(ADIToFConfig.h.in ADIToFConfig.h)
 
 # adding submodules and subdirectories
