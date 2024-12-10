@@ -280,6 +280,8 @@ void getFilesList(std::string filePath, std::string extension,
 #include <sstream>
 #include <sys/stat.h> // For checking file status
 #include <vector>
+#include <unistd.h>  // For unlink
+#include <fstream>
 
 // Assuming customFilters and customFilter are defined somewhere else in your project.
 extern std::string customFilter;
@@ -397,6 +399,19 @@ std::string getADIFileName(void *hwndOwner, const char *customFilter,
             FilterIndex = static_cast<int>(ix / 2) + 1;
             break;
         }
+    }
+
+    bool fileExists = false;
+    std::ifstream tmpFile(filename);
+    fileExists = tmpFile.good();
+    tmpFile.close();
+
+    if (fileExists) {
+        if (deleteFile(std::string(filename))) {
+            return std::string(filename);
+        }
+    } else {
+        return std::string(filename);
     }
 
     return result;
