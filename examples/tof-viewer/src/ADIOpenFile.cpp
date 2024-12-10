@@ -276,12 +276,12 @@ void getFilesList(std::string filePath, std::string extension,
 #include <cstdio>
 #include <cstring>
 #include <dirent.h> // For directory traversal
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <sys/stat.h> // For checking file status
+#include <unistd.h>   // For unlink
 #include <vector>
-#include <unistd.h>  // For unlink
-#include <fstream>
 
 // Assuming customFilters and customFilter are defined somewhere else in your project.
 extern std::string customFilter;
