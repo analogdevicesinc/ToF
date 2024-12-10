@@ -11,14 +11,15 @@
 #include <aditof/log.h>
 #endif
 #include <iostream>
+#include <memory>
 
 using namespace adicontroller;
 
 ADIController::ADIController(
     std::vector<std::shared_ptr<aditof::Camera>> camerasList)
-    : m_cameraInUse(-1), m_frameRequested(false),
-      m_recorder(new ADIToFRecorder()) {
+    : m_cameraInUse(-1), m_frameRequested(false) {
 
+    m_recorder = std::make_unique<ADIToFRecorder>();
     m_cameras = camerasList;
     if (m_cameras.size()) {
         // Use the first camera that is found
@@ -96,6 +97,10 @@ std::pair<float, float> ADIController::getTemperature() {
 void ADIController::startRecording(const std::string &fileName,
                                    unsigned int height, unsigned int width,
                                    unsigned int fps) {
+
+    if (m_recorder != nullptr) {
+        m_recorder = std::make_unique<ADIToFRecorder>();
+    }
     m_recorder->setSaveBinaryFormat(this->m_saveBinaryFormat);
     m_recorder->startRecording(fileName, height, width, fps);
 }
