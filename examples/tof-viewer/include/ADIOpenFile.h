@@ -31,7 +31,8 @@ std::string openADIFileName(const char *filter, void *owner, int &FilterIndex);
 * @param FilterIndex   Index of chosen filter
 * @return              Saved name if successful, empty string otherwise
 */
-std::string getADIFileName(void *hwndOwner, char *filename, int &FilterIndex);
+std::string getADIFileName(void *hwndOwner, const char *customFilter,
+                           char *filename, int &FilterIndex);
 
 /**
 * @brief Finds a set of files with specified file extension
@@ -44,5 +45,12 @@ std::string getADIFileName(void *hwndOwner, char *filename, int &FilterIndex);
 void getFilesList(std::string filePath, std::string extension,
                   std::vector<std::string> &returnFileName,
                   bool returnFullPath);
+
+/**
+* @brief Finds a set of files with specified file extension
+* @param path           Path to file to delete
+* @return               True if the file is deleted
+*/
+bool deleteFile(const std::string &path);
 
 #endif //ADI_OPEN_FILE

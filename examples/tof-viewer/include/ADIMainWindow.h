@@ -366,7 +366,8 @@ class ADIMainWindow {
 
     void showRecordMenu();
 
-    void showSaveLoadAdsdParamsMenu();
+    void showLoadAdsdParamsMenu();
+    void showSaveAdsdParamsMenu();
 
     /**
 		* @brief	Open Device menu will give you the information of
@@ -540,6 +541,8 @@ class ADIMainWindow {
      * @brief print out warning message in popup window if ini param is out of valid range
     */
     void iniParamWarn(std::string variable, std::string validVal);
+
+    void CustomizeMenus();
 
     /**
      * @brief Return the current selected camera object

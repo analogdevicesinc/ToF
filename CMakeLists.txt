@@ -79,6 +79,9 @@ add_definitions(-DTOFSDK_GIT_BRANCH="${TOFSDK_GIT_BRANCH}")
 
 ############################## Rest of cmake ##################################
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 # Set general path for libaditof submodule
 set(LIBADITOF_SUBMODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libaditof)
 

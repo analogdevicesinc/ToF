@@ -25,7 +25,6 @@
 
 #include <aditof/system.h>
 #include <cJSON.h>
-#define EMBED_HDR_LENGTH 128
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -193,10 +192,10 @@ ADIMainWindow::~ADIMainWindow() {
     }
 
     //Recording flags
-    if (view != nullptr && !view->m_ctrl->m_recorder->m_finishRecording) {
+    if (view != nullptr && !view->m_ctrl->m_recorder->getFinishRecording()) {
         view->m_ctrl->m_recorder->stopRecording();
     }
-    if (view != nullptr && !view->m_ctrl->m_recorder->_stopPlayback) {
+    if (view != nullptr && !view->m_ctrl->m_recorder->getStopPlayback()) {
         view->m_ctrl->m_recorder->stopPlayback();
         stopPlayCCD();
     }
@@ -238,6 +237,14 @@ double ADIMainWindow::getCurrentValue() {
 
 #endif
     return percent * 100;
+}
+
+void ADIMainWindow::CustomizeMenus() {
+    ImGuiStyle &style = ImGui::GetStyle();
+
+    // Set the color of the border
+    style.Colors[ImGuiCol_Border] =
+        ImVec4(0.7f, 0.7f, 0.7f, 1.0f); // (R, G, B, A);
 }
 
 static void glfw_error_callback(int error, const char *description) {
@@ -311,6 +318,7 @@ bool ADIMainWindow::startImGUI(const ADIViewerArgs &args) {
         fprintf(stderr, "Failed to initialize OpenGL loader!\n");
         return false;
     }
+
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -333,9 +341,10 @@ bool ADIMainWindow::startImGUI(const ADIViewerArgs &args) {
     setDpi();
 
     // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsDark();
     //OR
-    // ImGui::StyleColorsClassic();
+    ImGui::StyleColorsClassic();
+    CustomizeMenus();
 
     // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -474,10 +483,13 @@ void ADIMainWindow::showMainMenu() {
     static bool show_app_log = true;
     static bool show_ini_window = false;
 
-    if (show_app_log)
+    if (show_app_log) {
         showLogWindow(&show_app_log);
-    if (show_ini_window && isPlaying)
+    }
+
+    if (show_ini_window && isPlaying) {
         showIniWindow(&show_ini_window);
+    }
 
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("Open")) {
@@ -489,12 +501,22 @@ void ADIMainWindow::showMainMenu() {
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Tools")) {
+
             showRecordMenu();
             showPlaybackMenu();
             ImGui::Separator();
-            ImGui::MenuItem("Debug Log", NULL, &show_app_log);
-            ImGui::MenuItem("Ini Params", NULL, &show_ini_window);
-            showSaveLoadAdsdParamsMenu();
+            ImGui::MenuItem("Debug Log", nullptr, &show_app_log);
+            ImGui::MenuItem("Ini Params", nullptr, &show_ini_window,
+                            cameraWorkerDone && isPlaying);
+            ImGui::Separator();
+            if (ImGui::MenuItem("Load Configuration", nullptr, false,
+                                cameraWorkerDone && !isPlaying)) {
+                showLoadAdsdParamsMenu();
+            }
+            if (ImGui::MenuItem("Save Configuration", nullptr, false,
+                                cameraWorkerDone && isPlaying)) {
+                showSaveAdsdParamsMenu();
+            }
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
@@ -538,8 +560,9 @@ void ADIMainWindow::showRecordMenu() {
                 char tempbuff[MAX_PATH];
                 tempPath.copy(tempbuff, tempPath.length(), 0);
                 tempbuff[tempPath.length()] = '\0';
-                std::string saveFile =
-                    getADIFileName(NULL, tempbuff, filterIndex);
+                std::string saveFile = getADIFileName(
+                    nullptr, "ADI ToF Recording Files\0*.bin\0All Files\0*.*\0",
+                    tempbuff, filterIndex);
                 //Check if filename exists and format is corrct
                 if (!saveFile.empty() && filterIndex) {
                     if (!isPlaying) {
@@ -572,95 +595,85 @@ void ADIMainWindow::showRecordMenu() {
                 isPlaying = false;
             }
         }
-
-        /* AS 2023-6-6: Temporarily disable.
-                ImGui::NewLine();
-                ImGui::Checkbox("Save Binary records", &m_saveBinaryFormatTmp);
-                if (view != NULL) {
-                    view->setSaveBinaryFormat(m_saveBinaryFormatTmp);
-                }
-                */
         ImGui::EndMenu();
     }
 }
 
-void ADIMainWindow::showSaveLoadAdsdParamsMenu() {
+void ADIMainWindow::showLoadAdsdParamsMenu() {
 
-    char *pathname = saveConfigurationPath;
+    int FilterIndex = 0;
+    std::string fs =
+        openADIFileName("ADI ToF Config Files\0*.json\0", nullptr, FilterIndex);
+    LOG(INFO) << "Load File selected: " << fs;
 
-    if (ImGui::BeginMenu("Save-Load Configuration", view != nullptr)) {
+    if (fs.empty()) {
+        return;
+    }
 
-        ImGui::Text("File name:");
-        ImGui::InputText("", pathname, 300);
-        ImGui::NewLine();
-
-        { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
-            ImGuiExtensions::ButtonColorChanger colorChangerStartRec(
-                customColorPlay, isPlaying);
-            if (ImGuiExtensions::ADIButton("Save", true)) {
-
-                bool saveconfigurationFile = false;
-                std::string saveconfigurationFileValue = std::string(pathname);
-                if (!saveconfigurationFileValue.empty()) {
-                    if (saveconfigurationFileValue.find(".json") ==
-                        std::string::npos) {
-                        saveconfigurationFileValue += ".json";
-                    }
-                    saveconfigurationFile = true;
-                }
-                if (saveconfigurationFile && view) {
-                    auto camera =
-                        view->m_ctrl->m_cameras[static_cast<unsigned int>(
-                            view->m_ctrl->getCameraInUse())];
-
-                    aditof::Status status = camera->saveDepthParamsToJsonFile(
-                        saveconfigurationFileValue);
-                    if (status != aditof::Status::OK) {
-                        LOG(INFO)
-                            << "Could not save current configuration info to "
-                            << saveconfigurationFileValue << std::endl;
-                    } else {
-                        LOG(INFO) << "Current configuration info saved to file "
-                                  << saveconfigurationFileValue << std::endl;
-                        std::strcpy(saveConfigurationPath,
-                                    saveconfigurationFileValue.c_str());
-                    }
-                }
-            }
-            ImGui::SameLine();
-
-            if (ImGuiExtensions::ADIButton("Load", true)) {
-
-                bool loadconfigurationFile = false;
-                std::string loadconfigurationFileValue = std::string(pathname);
-                if (!loadconfigurationFileValue.empty()) {
-                    if (loadconfigurationFileValue.find(".json") ==
-                        std::string::npos) {
-                        loadconfigurationFileValue += ".json";
-                    }
-                    loadconfigurationFile = true;
-                }
-                if (loadconfigurationFile && view) {
-                    auto camera =
-                        view->m_ctrl->m_cameras[static_cast<unsigned int>(
-                            view->m_ctrl->getCameraInUse())];
-
-                    aditof::Status status = camera->loadDepthParamsFromJsonFile(
-                        loadconfigurationFileValue);
-                    getActiveCamera()->setMode(
-                        m_cameraModes[modeSelection].second);
-                    if (status != aditof::Status::OK) {
-                        LOG(INFO) << "Could not load current configuration "
-                                     "info to "
-                                  << loadconfigurationFileValue;
-                    } else {
-                        LOG(INFO) << "Current configuration info from file "
-                                  << loadconfigurationFileValue;
-                    }
-                }
-            }
+    bool loadconfigurationFile = false;
+    std::string loadconfigurationFileValue = std::string(fs);
+    if (!loadconfigurationFileValue.empty()) {
+        if (loadconfigurationFileValue.find(".json") == std::string::npos) {
+            loadconfigurationFileValue += ".json";
         }
-        ImGui::EndMenu();
+        loadconfigurationFile = true;
+    }
+    if (loadconfigurationFile && view) {
+        auto camera = view->m_ctrl->m_cameras[static_cast<unsigned int>(
+            view->m_ctrl->getCameraInUse())];
+
+        aditof::Status status =
+            camera->loadDepthParamsFromJsonFile(loadconfigurationFileValue);
+
+        if (status != aditof::Status::OK) {
+            LOG(INFO) << "Could not load current configuration "
+                         "info to "
+                      << loadconfigurationFileValue;
+        } else {
+            LOG(INFO) << "Current configuration info from file "
+                      << loadconfigurationFileValue;
+        }
+    }
+}
+
+void ADIMainWindow::showSaveAdsdParamsMenu() {
+
+    ImGuiExtensions::ButtonColorChanger colorChangerStartRec(customColorPlay,
+                                                             isPlaying);
+
+    char filename[MAX_PATH] = "";
+    int FilterIndex;
+    std::string fs = getADIFileName(
+        nullptr, "ADI ToF Config Files\0*.json\0All Files\0*.*\0", filename,
+        FilterIndex);
+    LOG(INFO) << "Selecting to save configuration the file: " << fs;
+
+    bool saveconfigurationFile = false;
+    std::string saveconfigurationFileValue = fs;
+
+    if (!saveconfigurationFileValue.empty()) {
+        if (saveconfigurationFileValue.find(".json") == std::string::npos) {
+            saveconfigurationFileValue += ".json";
+        }
+        saveconfigurationFile = true;
+    }
+    if (saveconfigurationFile && view) {
+        auto camera = view->m_ctrl->m_cameras[static_cast<unsigned int>(
+            view->m_ctrl->getCameraInUse())];
+
+        aditof::Status status =
+            camera->saveDepthParamsToJsonFile(saveconfigurationFileValue);
+
+        if (status != aditof::Status::OK) {
+            saveconfigurationFile = false;
+            LOG(INFO) << "Could not save current configuration info to "
+                      << saveconfigurationFileValue << std::endl;
+        } else {
+            LOG(INFO) << "Current configuration info saved to file "
+                      << saveconfigurationFileValue << std::endl;
+            std::strcpy(saveConfigurationPath,
+                        saveconfigurationFileValue.c_str());
+        }
     }
 }
 
@@ -1041,10 +1054,15 @@ void ADIMainWindow::stopPlayCCD() {
         view->depth_video_data = nullptr;
         view->pointCloud_video_data = nullptr;
     }
+    if (isRecording) {
+        view->m_ctrl->stopRecording();
+        isRecording = false;
+    }
     openGLCleanUp();
     isPlaying = false;
     isPlayRecorded = false;
     firstFrame = 0;
+    frameRecvd = 0;
 }
 
 void ADIMainWindow::openGLCleanUp() {
@@ -1289,6 +1307,7 @@ void ADIMainWindow::showIniWindow(bool *p_open) {
             {
                 isPlaying = false;
                 isPlayRecorded = false;
+                firstFrame = 0;
                 frameRecvd = 0;
                 stopPlayCCD();
                 if (isRecording) {
@@ -1312,6 +1331,7 @@ void ADIMainWindow::showIniWindow(bool *p_open) {
             {
                 isPlaying = false;
                 isPlayRecorded = false;
+                firstFrame = 0;
                 frameRecvd = 0;
                 stopPlayCCD();
                 if (isRecording) {
@@ -1401,11 +1421,6 @@ void ADIMainWindow::prepareCamera(uint8_t mode) {
     aditof::Status status = aditof::Status::OK;
     std::vector<aditof::FrameDetails> frameTypes;
 
-    if (mode < 0) {
-        LOG(ERROR) << "Invalid camera mode!";
-        return;
-    }
-
     status = getActiveCamera()->setMode(mode);
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Could not set camera mode!";
@@ -1438,11 +1453,11 @@ void ADIMainWindow::prepareCamera(uint8_t mode) {
     status = getActiveCamera()->getDetails(camDetails);
     int totalCaptures = camDetails.frameType.totalCaptures;
 
-    if (mode == last_mode) {
-        status = getActiveCamera()->adsd3500GetFrameRate(expectedFPS);
-    }
+    status = getActiveCamera()->adsd3500GetFrameRate(expectedFPS);
 
-    view->m_ctrl->m_recorder->m_frameDetails.totalCaptures = totalCaptures;
+    aditof::FrameDetails tmp = view->m_ctrl->m_recorder->getFrameDetails();
+    tmp.totalCaptures = totalCaptures;
+    view->m_ctrl->m_recorder->setFrameDetails(tmp);
 
     if (!view->getUserABMaxState()) {
         std::string value;
@@ -1695,6 +1710,7 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
             }
         }
         if (isPlayRecorded) {
+#if 0  // TODO: Fix. Temporarily disabled
             std::string playbackButtonText =
                 isPlayRecordPaused ? "Paused" : "Pause";
             float recordPlaybackColor = customColorPause;
@@ -1719,7 +1735,7 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                         LOG(INFO) << "Stream has been paused...";
                     } else {
                         if (isPlayRecordDone) {
-                            view->m_ctrl->m_recorder->currentPBPos = 0;
+                            view->m_ctrl->m_recorder->setCurrentPBPos(0);
                             isPlayRecordDone = false;
                         }
                         view->m_ctrl->pausePlayback(false);
@@ -1728,10 +1744,12 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                     view->m_ctrl->playbackPaused();
                 }
             }
+#endif //0
             ImGui::SameLine();
-            if (view != nullptr && view->m_ctrl->m_recorder->_stopPlayback) {
+            if (view != nullptr &&
+                view->m_ctrl->m_recorder->getStopPlayback()) {
                 stopPlayback();
-                view->m_ctrl->m_recorder->_stopPlayback = false;
+                view->m_ctrl->m_recorder->setStopPlayback(false);
             }
 
             { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
@@ -1742,23 +1760,16 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                     stopPlayback();
                 }
             }
-            rawSeeker =
-                (view->m_ctrl->m_recorder->currentPBPos) /
-                (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
-                     ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
-                     (view->m_ctrl->m_recorder->totalBits) +
-                 EMBED_HDR_LENGTH);
 
-            ImGuiExtensions::ADISliderInt(
-                "Progress", &rawSeeker, 0,
-                (view->m_ctrl->m_recorder->m_numberOfFrames) - 1, "%d", true);
-            view->m_ctrl->m_recorder->currentPBPos =
-                size_t(rawSeeker) *
-                    (((int)view->m_ctrl->m_recorder->m_frameDetails.height) *
-                         ((int)view->m_ctrl->m_recorder->m_frameDetails.width) *
-                         (view->m_ctrl->m_recorder->totalBits) +
-                     EMBED_HDR_LENGTH) +
-                view->m_ctrl->m_recorder->m_sizeOfHeader;
+            uint32_t totalFrames =
+                view->m_ctrl->m_recorder->getNumberOfFrames();
+
+            rawSeeker = view->m_ctrl->m_recorder->getPlaybackFrameNumber();
+
+            ImGuiExtensions::ADISliderInt("Frame #", &rawSeeker, 0,
+                                          totalFrames - 1, "%d", true);
+
+            view->m_ctrl->m_recorder->setPlaybackFrameNumber(rawSeeker);
         }
     }
     ImGui::End();
@@ -1857,7 +1868,7 @@ void ADIMainWindow::displayDepthWindow(ImGuiWindowFlags overlayFlags) {
     setWindowPosition(dictWinPosition["depth"][0] + 40,
                       dictWinPosition["depth"][1]);
     setWindowSize(dictWinPosition["depth"][2] + 40,
-                  dictWinPosition["depth"][3] + 140);
+                  dictWinPosition["depth"][3] + 130);
 
     std::string title = "Depth Window";
     if (ImGui::Begin(title.c_str(), nullptr, overlayFlags)) {
