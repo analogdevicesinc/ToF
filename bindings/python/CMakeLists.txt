@@ -39,7 +39,7 @@ function(PopulateforPython targetdir)
 
 endfunction()
 
-find_package(pybind11 REQUIRED PATHS ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+add_subdirectory(pybind11)
 
 include_directories(${LIBADITOF_SUBMODULE_PATH}/sdk/includes)
 
