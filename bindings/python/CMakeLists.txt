@@ -50,6 +50,7 @@ target_link_libraries(aditofpython PRIVATE aditof)
 get_target_property(target_prefix aditofpython PREFIX)
 get_target_property(target_suffix aditofpython SUFFIX)
 set(TARGET_OUTPUT_NAME "${target_prefix}aditofpython${target_suffix}")
+message(target_suffix="${target_suffix}")
 
 if (WITH_EXAMPLES)
     PopulateforPython("examples/dnn")
