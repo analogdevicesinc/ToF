@@ -46,6 +46,11 @@ void getFilesList(std::string filePath, std::string extension,
                   std::vector<std::string> &returnFileName,
                   bool returnFullPath);
 
+/**
+* @brief Finds a set of files with specified file extension
+* @param path           Path to file to delete
+* @return               True if the file is deleted
+*/
 bool deleteFile(const std::string &path);
 
 #endif //ADI_OPEN_FILE
