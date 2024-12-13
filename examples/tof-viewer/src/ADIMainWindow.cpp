@@ -1082,6 +1082,10 @@ void ADIMainWindow::showLogWindow(bool *p_open) {
         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
     my_log.Draw("Camera: Log", p_open, windowFlags);
 
+#ifdef __linux__
+    fseek(input, ftell(input), SEEK_SET);
+#endif
+
     while (fgets(buffer, 512, input)) {
         if (buffer != INIT_LOG_WARNING)
             my_log.AddLog(buffer, nullptr);
