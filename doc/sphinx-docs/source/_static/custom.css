@@ -1,0 +1,50 @@
+div.admonition.attention {
+    background-color: #001f3f; /* Light yellow */
+    border-left: 4px solid #f9d71c; /* Yellow border */
+    padding: 10px;
+    border-radius: 8px; /* Rounded corners */
+    display: flex; /* Flexbox layout */
+    flex-direction: row; /* Arrange icon and content in a row */
+    align-items: flex-start; /* Align content to the top */
+    gap: 10px; /* Add space between icon and text */
+    filter: none !important; /* Remove any blur filters */
+    opacity: 1 !important; /* Ensure full visibility */
+    text-shadow: none !important; /* Remove text shadows */
+    color: #000000 !important; /* Set text color to black */
+}
+
+div.admonition.attention:before {
+    content: '';
+    background-image: url('attention-icon.png'); /* Icon */
+    background-size: 24px 24px; /* Adjust icon size */
+    background-repeat: no-repeat;
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    margin-right: 10px; /* Space between icon and text */
+    flex-shrink: 0; /* Prevent icon from resizing */
+}
+
+div.admonition.attention p {
+    margin: 0; /* Ensure no extra margin for the paragraph */
+    text-align: left; /* Ensure text aligns to the left */
+
+    filter: none !important; /* Remove blur on paragraph text */
+    opacity: 1 !important; /* Full visibility for paragraph text */
+    color: #ffffff !important; /* Set paragraph text color to black */
+}
+
+div.admonition.attention .admonition-title {
+    display: none; /* Hide the title */
+}
+
+table {
+    margin-left: 0;
+    margin-right: auto; /* Prevent horizontal centering */
+}
+
+body {
+    max-width: 1200px; /* Set the maximum width for the page */
+    margin: 0 auto; /* Center the page horizontally */
+    padding: 0 20px; /* Add some padding for better appearance */
+}
