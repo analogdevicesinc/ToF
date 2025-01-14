@@ -16,27 +16,39 @@ endif()
 if(NOT WITH_SUBMODULES AND NOT EXISTS "${LIBADITOF_SUBMODULE_PATH}/protobuf/.git")
     find_package(Protobuf 3.9.0 REQUIRED)
 else()
-target_link_libraries(${PROJECT_NAME} PUBLIC libprotobuf)
+    target_link_libraries(${PROJECT_NAME} PUBLIC libprotobuf)
 endif()
 
 # Websockets
 if(NOT WITH_SUBMODULES AND NOT EXISTS "${LIBADITOF_SUBMODULE_PATH}/libwebsockets/.git")
-        find_package(Libwebsockets REQUIRED)
+    find_package(Libwebsockets REQUIRED)
 else()
     target_link_libraries(${PROJECT_NAME} PUBLIC websockets_shared)
 endif()
 
+# ZeroMQ
+set(ZeroMQ_INCLUDE_DIR "/usr/include/")
+set(ZeroMQ_LIBRARY "/usr/lib/aarch64-linux-gnu/libzmq.so")
+
+if(EXISTS ${ZeroMQ_LIBRARY})
+    target_include_directories(${PROJECT_NAME} PRIVATE ${ZeroMQ_INCLUDE_DIR})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${ZeroMQ_LIBRARY})
+else()
+    message(FATAL_ERROR "ZeroMQ library not found at ${ZeroMQ_LIBRARY}")
+endif()
+
 # Generating protobuf files
 set(NET_PROTO_HRDS "${CMAKE_BINARY_DIR}/buffer.pb.h")
-    set(NET_PROTO_SRCS "${CMAKE_BINARY_DIR}/buffer.pb.cc")
-    add_custom_command(OUTPUT ${NET_PROTO_HRDS} ${NET_PROTO_SRCS}
-                        COMMAND protoc buffer.proto -I ${LIBADITOF_SUBMODULE_PATH}/sdk/src/connections/network --cpp_out=.
-                        WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-    target_sources(${PROJECT_NAME} PRIVATE ${NET_PROTO_HRDS} ${NET_PROTO_SRCS})
-    target_include_directories(${PROJECT_NAME} PRIVATE
-            ${CMAKE_BINARY_DIR}
-    )
+set(NET_PROTO_SRCS "${CMAKE_BINARY_DIR}/buffer.pb.cc")
+add_custom_command(OUTPUT ${NET_PROTO_HRDS} ${NET_PROTO_SRCS}
+    COMMAND protoc buffer.proto -I ${LIBADITOF_SUBMODULE_PATH}/sdk/src/connections/network --cpp_out=.
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+target_sources(${PROJECT_NAME} PRIVATE ${NET_PROTO_HRDS} ${NET_PROTO_SRCS})
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${CMAKE_BINARY_DIR}
+)
 target_link_libraries(${PROJECT_NAME} PRIVATE aditof)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/libaditof/libwebsockets/include)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11)
+# Set C++ standard
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 14)

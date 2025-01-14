@@ -34,6 +34,13 @@
 #include "aditof/sensor_enumerator_factory.h"
 #include "aditof/sensor_enumerator_interface.h"
 #include "buffer.pb.h"
+#define ZMQ
+#ifdef ZMQ
+#include <zmq.hpp>
+#include <thread>
+#include <condition_variable>
+#include <atomic>
+#endif //ZMQ
 
 #include "../../sdk/src/connections/target/v4l_buffer_access_interface.h"
 
@@ -91,6 +98,7 @@ static std::queue<aditof::Adsd3500Status> adsd3500InterruptsQueue;
 // from v4l2 interface, passing the frame through depth compute and any deep copying.
 static bool sameFrameEndlessRepeat = false;
 
+#ifndef ZMQ
 // Variables for synchronizing the main thread and the thread responsible for capturing frames from hardware
 std::mutex
     frameMutex; // used for making sure operations on queue are not done simultaneously by the 2 threads
@@ -104,11 +112,21 @@ std::thread
     frameCaptureThread; // The thread instance for the capturing frame thread
 bool keepCaptureThreadAlive =
     false; // Flag used by frame capturing thread to know whether to continue or finish
+#endif //ZMQ
 
 struct clientData {
     bool hasFragments;
     std::vector<char> data;
 };
+
+#ifdef ZMQ
+std::unique_ptr<zmq::socket_t> server_socket;
+std::atomic<bool> running(true);      // Controls the thread's lifetime
+std::atomic<bool> paused(true);     // Controls the pause state
+std::mutex mtx;                      // Mutex for condition variable
+std::condition_variable cv;          // Condition variable to manage pausing
+int32_t max_send_frames = 10;
+#endif //ZMQ
 
 static struct lws_protocols protocols[] = {
     {
@@ -125,6 +143,7 @@ aditof::SensorInterruptCallback callback = [](aditof::Adsd3500Status status) {
     DLOG(INFO) << "ADSD3500 interrupt occured: status = " << status;
 };
 
+#ifndef ZMQ
 // Function executed in the capturing frame thread
 static void captureFrameFromHardware() {
     while (keepCaptureThreadAlive) {
@@ -157,8 +176,12 @@ static void captureFrameFromHardware() {
 
     return;
 }
+#endif //ZMQ
 
 static void cleanup_sensors() {
+#ifdef ZMQ
+    // TODO: Stop Thread
+#else
     // Stop the frame capturing thread
     if (frameCaptureThread.joinable()) {
         keepCaptureThreadAlive = false;
@@ -166,6 +189,7 @@ static void cleanup_sensors() {
         cvGetFrame.notify_one();
         frameCaptureThread.join();
     }
+#endif //ZMQ
 
     camDepthSensor->adsd3500_unregister_interrupt_callback(callback);
     sensorV4lBufAccess.reset();
@@ -324,7 +348,9 @@ int Network::callback_function(struct lws *wsi,
 }
 
 void sigint_handler(int) { interrupted = 1; }
-
+#ifdef ZMQ
+void threadFunction();
+#endif
 int main(int argc, char *argv[]) {
 
     signal(SIGINT, sigint_handler);
@@ -365,6 +391,11 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
+#ifdef ZMQ
+    std::thread t(threadFunction);
+    t.detach();
+#endif
+
     while (!interrupted) {
         lws_service(network->context, msTimeout /* timeout_ms */);
     }
@@ -377,6 +408,51 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+
+#ifdef ZMQ
+void threadFunction() {
+
+    bool firstFrame = false;
+
+    zmq::context_t zmq_context(1);
+    server_socket = std::make_unique<zmq::socket_t>(zmq_context, zmq::socket_type::push);
+    // Todo: set max_send_frames based on frame size to ensure it does not go over a given amount of memory.
+    server_socket->setsockopt(ZMQ_SNDHWM, (int *)&max_send_frames, sizeof(max_send_frames));
+    server_socket->bind("tcp://*:5555");
+    while (running) {
+        {
+            std::unique_lock<std::mutex> lock(mtx);
+            // Wait while the thread is paused
+            cv.wait(lock, [] { return !paused || !running; });
+        }
+        if (!running) {
+            std::cout << "Thread exit" << std::endl;
+            break; // Exit the thread if stopped
+        }
+
+        if (buff_frame_to_be_captured != nullptr) {
+            // Simulate work
+            if (firstFrame == false) {
+                aditof::Status status = camDepthSensor->getFrame((uint16_t *)(buff_frame_to_be_captured));
+                if (status != aditof::Status::OK) {
+                    LOG(ERROR) << "Failed to get frame!";
+                } else {
+                    zmq::message_t message(buff_frame_to_be_captured, processedFrameSize * sizeof(uint16_t));
+                    server_socket->send(message, zmq::send_flags::none);
+                    firstFrame = true;
+                    std::cout << processedFrameSize << std::endl;
+                }
+            } else {
+                zmq::message_t message(buff_frame_to_be_captured, processedFrameSize * sizeof(uint16_t));
+                server_socket->send(message, zmq::send_flags::none);
+                std::this_thread::sleep_for(std::chrono::milliseconds(20));
+            }
+        }
+    }
+
+    std::cout << "Thread is exiting...\n";
+}
+#endif
 
 void invoke_sdk_api(payload::ClientRequest buff_recv) {
     buff_send.Clear();
@@ -454,10 +530,11 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         aditof::Status status = camDepthSensor->open();
         buff_send.set_status(static_cast<::payload::Status>(status));
         clientEngagedWithSensors = true;
-
+#ifndef ZMQ
         // At this stage, start the capturing frames thread
         keepCaptureThreadAlive = true;
         frameCaptureThread = std::thread(captureFrameFromHardware);
+#endif //ZMQ
 
         break;
     }
@@ -465,6 +542,12 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     case START: {
         aditof::Status status = camDepthSensor->start();
 
+#ifdef ZMQ
+        std::lock_guard<std::mutex> lock(mtx);
+        paused = false;
+        //cv.notify_one();
+        cv.notify_all();
+#else
         // When in test mode, capture 2 frames. 1st might be corrupt after a ADSD3500 reset.
         // 2nd frame will be the one sent over and over again by server in test mode.
         if (sameFrameEndlessRepeat) {
@@ -484,14 +567,18 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             }
             cvGetFrame.notify_one();
         }
-
+#endif
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
 
     case STOP: {
+#ifdef ZMQ
+        paused = true;
+        cv.notify_all();
+#endif
         aditof::Status status = camDepthSensor->stop();
-        buff_send.set_status(static_cast<::payload::Status>(status));
+        buff_send.set_status(static_cast<::payload::Status>(status)); 
 
         break;
     }
@@ -641,6 +728,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
 
     case GET_FRAME: {
+#ifndef ZMQ
         aditof::Status status = aditof::Status::OK;
 
         if (sameFrameEndlessRepeat) {
@@ -726,7 +814,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             buff_send.set_status(static_cast<::payload::Status>(status));
             break;
         }
-
+#endif //ZMQ
         buff_send.set_status(payload::Status::OK);
         break;
     }
