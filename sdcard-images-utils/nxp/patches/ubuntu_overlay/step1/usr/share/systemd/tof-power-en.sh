@@ -347,6 +347,78 @@ if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier ADSD3500-SPI + ADSD3030" ]]; the
 	modprobe adsd3500-spi
 fi
 
+
+if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier ADSD3500-DUAL + ADSD3100" ]]; then
+
+	#FSYNC_VEC1
+	echo 71 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio71/direction
+	echo 1 > /sys/class/gpio/gpio71/value
+
+	#FSYNC_VEC0
+	echo 72 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio72/direction
+	echo 1 > /sys/class/gpio/gpio72/value
+
+	#EN_PWR
+	echo 128 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio128/direction
+	echo 1 > /sys/class/gpio/gpio128/value
+
+	#EN_PWR2
+	echo 129 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio129/direction
+	echo 1 > /sys/class/gpio/gpio129/value
+
+	#sleep 0.1
+
+
+	#Enable MAX77857
+	i2cset -y 1 0x66 0x14 0x20
+	sleep 0.1
+
+	#Enable MAX77542
+	i2cset -y 1 0x63 0x10 0xF
+
+	sleep 2
+
+	#ADSD3500 Reset Pin
+	echo 64 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio64/direction
+	echo 0 > /sys/class/gpio/gpio64/value
+
+	#BS0 Set 0 - Self boot and 1 - Host boot
+	echo 139 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio139/direction
+	echo 0 > /sys/class/gpio/gpio139/value
+
+	#BS1 GPIO21
+	echo 141 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio141/direction
+	echo 0 > /sys/class/gpio/gpio141/value
+
+	#BS4
+	echo 140 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio140/direction
+	echo 0 > /sys/class/gpio/gpio140/value
+
+	#BS5
+	echo 138 > /sys/class/gpio/export
+	echo out > /sys/class/gpio/gpio138/direction
+	echo 0 > /sys/class/gpio/gpio138/value
+
+	sleep 1
+
+	# Pull reset high
+	echo 1 > /sys/class/gpio/gpio64/value
+
+	# Probe ADSD3500-Dual I2C driver
+	echo "probe adsd3500-dual i2c driver"
+	modprobe adsd3500-dual
+	modprobe imx8_media_dev
+        exit 0
+fi
+
 # Deassert ADC reset - will pop on /dev/i2c1 address 0x10
 echo 132 > /sys/class/gpio/export
 echo out > /sys/class/gpio/gpio132/direction
