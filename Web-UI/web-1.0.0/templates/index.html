@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analog Devices Time of Flight</title>
+    <link rel="stylesheet" href="../static/styles.css">
+</head>
+<body onload="runScript();">
+
+
+    <header class="navigation_header">
+        <!-- logo -->
+        <div class="logo_container">
+            <div class="logo_image">
+                <a href="{{ url_for('index') }}" target="_blank"><img src="{{ url_for('static', filename='logos/ADI_logo.png') }}" alt="logos"></a>
+            </div>
+        
+            <div class="verticle_line"></div>
+        
+            <h2 class="logo_title">Analog Devices Time of Flight</h2>
+        </div>
+        <!-- navigation -->
+        <nav>
+            <ul class="nav_container">
+                <li class="nav_link {% if active_page == 'home' %}active{% endif %}" ><a href="{{ url_for('index') }}">Home</a></li>
+                <li class="nav_link {% if active_page == 'ADSD3500' %}active{% endif %}" ><a href="{{ url_for('ADSD3500') }}" >Update</a></li>
+                <li class="nav_link {% if active_page == 'system' %}active{% endif %}" ><a href="{{ url_for('system') }}" >System</a></li>
+                <li class="nav_link {% if active_page == 'document' %}active{% endif %}" ><a href="{{ url_for('document') }}" >Document</a></li>
+            </ul>
+        </nav>
+    </header>
+
+
+
+    <!-- Overlay for blocking interactions -->
+    <div id="overlay" class="overlay" style="display: none;">
+        <div class="overlay-content">
+            <div class="spinner"></div>
+            <p id="overlay-text">Processing, please wait...</p>
+        </div>
+    </div>
+
+
+  
+
+    <!-- Tab Content -->
+
+    <section id="update"  class="Workspace_section active">
+        <!-- <div class="Workspace_container">
+            <h2>Workspace</h2>
+            <div class="workspace_btn_section">
+                <button onclick="runScript()">Refresh</button>
+                <button onclick="switchWorkspace()">Switch Workspace</button>
+            </div> -->
+
+            <!-- Display currently selected workspace -->
+            <!-- <div id="currentWorkspaceDisplay" class="workspace_selection"> 
+                <label for="workspace">Current Workspace: Not Selected</label>
+            </div>
+            <select id="output" type="radio" size="1""></select>
+            <div id="output" class="radio-group"></div> -->
+
+            <!-- show the latest release -->
+            <div class="git_version">
+            <div class="release-update">
+                <div id="latest-version">
+                    Fetching latest release...
+                </div>
+                <div id="release-date"></div>
+            </div>
+            
+                <a id="download-link" class="download_btn" href="#" download></a>
+          
+            </div>
+        </div>
+     </section>
+
+    <footer>
+        <p class="copyright">
+          &copy;
+         2025 Analog Devices, Inc. All rights reserved. Trademarks and registered trademarks are the property of their respective owners.
+        </p>
+    </footer>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="{{url_for('static',filename='marked.min.js')}}"></script>
+    <script src="{{url_for('static',filename='scripts.js')}}"></script>
+</body>
+
+
+</html>
+

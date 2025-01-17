@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analog Devices Time of Flight</title>
+    <link rel="stylesheet" href="../static/styles.css">
+    <link rel="stylesheet" href="../static/terminal.css" />
+</head>
+<body onload="runScript();">
+    
+    <header class="navigation_header">
+        <!-- logo -->
+        <div class="logo_container">
+            <div class="logo_image">
+                    <a href="{{ url_for('index') }}" target="_blank"><img src="{{ url_for('static', filename='logos/ADI_logo.png') }}" alt="logos"></a>
+            </div>
+        
+            <div class="verticle_line"></div>
+        
+            <h2 class="logo_title">Analog Devices Time of Flight</h2>
+        </div>
+        <!-- navigation -->
+        <nav>
+            <ul class="nav_container">
+                <li class="nav_link {% if active_page == 'home' %}active{% endif %}" ><a href="{{ url_for('index') }}">Home</a></li>
+                <li class="nav_link {% if active_page == 'ADSD3500' %}active{% endif %}" ><a href="{{ url_for('ADSD3500') }}" >Update</a></li>
+                <li class="nav_link {% if active_page == 'system' %}active{% endif %}" ><a href="{{ url_for('system') }}" >System</a></li>
+                <li class="nav_link {% if active_page == 'document' %}active{% endif %}" ><a href="{{ url_for('document') }}" >Document</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Overlay for blocking interactions -->
+    <div id="overlay" class="overlay" style="display: none;">
+        <div class="overlay-content">
+            <div class="spinner"></div>
+            <p id="overlay-text">Processing, please wait...</p>
+        </div>
+    </div>
+
+    <section class="adsd3500_section">
+    <div class="version_info">
+
+        <h3>Current Version Information</h3>
+        <table>
+            <tbody>
+              <tr>
+                <td>SDK version:</td>
+                <td id="current_workspace"></td>
+              </tr>
+              <tr>
+                <td>Operation Mode:</td>
+                <td id="op_mode"></td>
+              </tr>
+              <tr>
+                <td>ADSD3500 Firmware version:</td>
+              <div class="version_container">
+                <td id="firm_version"></td>
+                <div id="firm_version_warning"></div>
+              </div>
+              </tr>
+            </tbody>
+          </table>
+        <div class="version_btn">
+          <button onclick="runScript()">Refresh</button>
+        </div>
+    </div>
+    
+    <div class="ToF_configuration">
+    <h3>Configure</h3>
+    <table>
+        <tbody>
+          <tr>
+            <td>Select Version:</td>
+            <td><select id="output" size="1"></select></td>
+          </tr>
+          <tr>
+            <td>Operation Mode:</td>
+            <td><select id="ros_mode" size="1"></select></td>
+          </tr>
+          <tr>
+            <td>ADSD3500 Firmware version:</td>
+            <td><select id="firmware_version" size="1"></select></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="config_btn">
+      <button id="apply">Apply</button>
+      </div>
+
+        <div id="terminal_modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <pre id="terminal_output"></pre>
+            </div>
+        </div>
+    </div>
+
+
+      <!-- Upload Section -->
+        <div class="upload_section">
+            <input type="file" id="fileInput">
+            <button onclick="uploadFileInChunks()">Upload</button>
+            
+            <progress id="progressBar" value="0" max="100"></progress>
+            <span id="progressPercentage">0%</span>
+        
+            <!-- Timer Display -->
+            <div id="timerDisplay">Time elapsed: 0s</div>
+        
+            <!-- Status Message -->
+            <div id="statusMessage"></div>
+        </div>
+        
+
+    </section>
+
+    
+
+
+    <footer>
+        <p class="copyright">
+          &copy;
+         2025 Analog Devices, Inc. All rights reserved. Trademarks and registered trademarks are the property of their respective owners.
+        </p>
+    </footer>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="{{url_for('static',filename='marked.min.js')}}"></script>
+    <script src="{{url_for('static',filename='scripts.js')}}"></script>
+
+</body>
+</html>

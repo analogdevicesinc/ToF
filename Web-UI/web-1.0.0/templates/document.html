@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analog Devices Time of Flight</title>
+    <link rel="stylesheet" href="../static/doc.css" />
+    <link rel="stylesheet" href="../static/styles.css" />
+    <link rel="stylesheet" href="../static/github-markdown.css" />
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="{{url_for('static',filename='marked.min.js')}}"></script>
+    <script src="{{url_for('static',filename='scripts.js')}}"></script>
+  </head>
+  <body
+    onload="runScript();">
+  <header class="navigation_header">
+    <!-- logo -->
+    <div class="logo_container">
+        <div class="logo_image">
+          <a href="{{ url_for('index') }}" target="_blank"><img src="{{ url_for('static', filename='logos/ADI_logo.png') }}" alt="logos"></a>
+        </div>
+    
+        <div class="verticle_line"></div>
+    
+        <h2 class="logo_title">Analog Devices Time of Flight</h2>
+    </div>
+    <!-- navigation -->
+    <nav>
+        <ul class="nav_container">
+          <li class="nav_link {% if active_page == 'home' %}active{% endif %}" ><a href="{{ url_for('index') }}">Home</a></li>
+          <li class="nav_link {% if active_page == 'ADSD3500' %}active{% endif %}" ><a href="{{ url_for('ADSD3500') }}" >Update</a></li>
+          <li class="nav_link {% if active_page == 'system' %}active{% endif %}" ><a href="{{ url_for('system') }}" >System</a></li>
+          <li class="nav_link {% if active_page == 'document' %}active{% endif %}" ><a href="{{ url_for('document') }}" >Document</a></li>
+        </ul>
+    </nav>
+</header>
+
+    <!-- Overlay for blocking interactions -->
+    <div id="overlay" class="overlay" style="display: none">
+      <div class="overlay-content">
+        <div class="spinner"></div>
+        <p id="overlay-text">Processing, please wait...</p>
+      </div>
+    </div>
+
+    <main class="main">
+
+      <!-- a sidebar consists of table of contents -->
+       <div class="sidebar">
+       <aside class="table_of_content">
+          
+        <!-- main-menu -->
+          <ul class="main_menu">
+            <li class="menu_sub_heading"> <a href="#FAQ">FAQ</a></li>
+            <li class="menu_sub_heading"> <a href="#evalkit-readme-content">Eval Kit</a></li>
+            <li class="menu_sub_heading"> <a href="#webinterface">Web Interface</a></li>
+          </ul>
+       </aside>
+
+       <aside class="ref_links">
+        <h3 class="link_heading"> Important Links</h3>
+          
+          <ul class="link_menu">
+            <li class="link_bar"> <a href="https://github.com/analogdevicesinc/ToF" target="_blank"> <img src="{{ url_for('static', filename='logos/github.png') }}" alt="github page"><span>ToF Eval Kit</span> </a></li>
+            <li class="link_bar"> <a href="https://github.com/analogdevicesinc/libaditof/tree/main" target="_blank"> <img src="{{ url_for('static', filename='logos/github.png') }}" alt="github page"><span>libaditof</span></a></li>
+            <li class="link_bar"> <a href="https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175d-nxz" target="_blank"> <img src="{{ url_for('static', filename='logos/analog-devices-logo.png') }}" alt="Analog devices logo"><span>Analog Devices WiKi</span></a></li>
+          </ul>
+       </aside>
+      </div>
+
+       <!-- main content of the documentation page -->
+    <section id="FAQ" class="markdown-body active">
+        <h2>FAQ</h2>
+        <p>Q1. Ask some sample query</p>
+        <p>Ans. here is the answer</p>
+        <p>Q2. Ask some sample query</p>
+        <p>Ans. here is the answer</p>
+        <p>Q3. Ask some sample query</p>
+        <p>Ans. here is the answer</p>
+        <p>Q4. Ask some sample query</p>
+        <p>Ans. here is the answer</p>
+        <p>Q1. Ask some sample query</p>
+        <p>Ans. here is the answer</p>
+        <p>Q2. Ask some sample query</p>
+        <p>Ans. here is the answer</p>
+        <p>Q3. Ask some sample query</p>
+        <p>Ans. here is the answer</p>
+        <p>Q4. Ask some sample query</p>
+        <p>Ans. here is the answer</p>
+        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Rerum ipsum, dolores, assumenda dignissimos eveniet maxime non repellat et nobis amet id voluptatem. Provident, ipsa temporibus. Consequatur facere ab modi cum! Lorem ipsum dolor sit amet, consectetur adipisicing elit. Pariatur laudantium, dolorum saepe qui at excepturi repudiandae aliquid reiciendis, cum, iure veniam delectus recusandae consectetur tempore nesciunt dolorem ex distinctio vel.</p>
+    </section>
+
+    <section id="evalkit-readme-content" class="markdown-body hidden"></section>
+
+    <section id="webinterface" class="markdown-body hidden">
+        <h2>Web Interface</h2>
+        <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit.</p>
+        <!-- Add more content as needed -->
+      </section>
+
+    </main>
+
+    <footer>
+      <p class="copyright">
+        &copy; 2025 Analog Devices, Inc. All rights reserved. Trademarks and
+        registered trademarks are the property of their respective owners.
+      </p>
+    </footer>
+  </body>
+</html>

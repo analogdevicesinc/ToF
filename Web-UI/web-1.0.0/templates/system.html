@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analog Devices Time of Flight</title>
+    <link rel="stylesheet" href="../static/styles.css" />
+    <link rel="stylesheet" href="../static/terminal.css" />
+  </head>
+  <body
+    onload="runScript();"
+  >
+    <header class="navigation_header">
+      <!-- logo -->
+      <div class="logo_container">
+        <div class="logo_image">
+          <a href="{{ url_for('index') }}" target="_blank"><img src="{{ url_for('static', filename='logos/ADI_logo.png') }}" alt="logos"></a>
+        </div>
+
+        <div class="verticle_line"></div>
+
+        <h2 class="logo_title">Analog Devices Time of Flight</h2>
+      </div>
+      <!-- navigation -->
+      <nav>
+        <ul class="nav_container">
+          <li class="nav_link {% if active_page == 'home' %}active{% endif %}" ><a href="{{ url_for('index') }}">Home</a></li>
+          <li class="nav_link {% if active_page == 'ADSD3500' %}active{% endif %}" ><a href="{{ url_for('ADSD3500') }}" >Update</a></li>
+          <li class="nav_link {% if active_page == 'system' %}active{% endif %}" ><a href="{{ url_for('system') }}" >System</a></li>
+          <li class="nav_link {% if active_page == 'document' %}active{% endif %}" ><a href="{{ url_for('document') }}" >Document</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <!-- Overlay for blocking interactions -->
+    <div id="overlay" class="overlay" style="display: none">
+      <div class="overlay-content">
+        <div class="spinner"></div>
+        <p id="overlay-text">Processing, please wait...</p>
+      </div>
+    </div>
+
+    <section id="system" class="system_section">
+      <!-- Device Control Section -->
+      <div class="device_control">
+        <h2>Device Control</h2>
+        <div class="device_control_btn">
+        <button onclick="startRebootCountdown()">Restart</button>
+        <button onclick="startPowerDownCountdown()">Power Off</button>
+        <button onclick="modifyPermission()">Modify Permission</button>
+        <button onclick="showPermissionOverlay()">Check Permission</button>
+        <div id="permission-overlay" class="permission-overlay">
+          <div class="permission-overlay-content" id="permission-overlay-content">
+              <!-- Content will be loaded here -->
+          </div>
+       
+      </div>  
+      </div>
+      <div class="read_tools_btn">
+        <button onclick="NVMRead()">NVM Read</button>
+        <button onclick="CCBRead()">CCB Read</button>
+
+        <div class="read_tools_overlay" id="read_tools_overlay_nvm">
+          <div class="read_tools_popup">
+              <label for="NVM_file-name">File Name:</label>
+              <input type="text" id="NVM_file-name">
+              <span class="suggestion">e.g., backup_nvm.bin</span><br><br>
+              <button onclick="runNVMScript()">Run</button>
+              <button onclick="closePopup('read_tools_overlay_nvm')">Close</button>
+          </div>
+        </div>
+
+        <div id="terminal_modal" class="modal">
+          <div class="modal-content">
+              <span class="close">&times;</span>
+              <pre id="terminal_output"></pre>
+          </div>
+        </div>
+        
+        <div class="read_tools_overlay" id="read_tools_overlay_ccb">
+          <div class="read_tools_popup">
+              <label for="CCB_file-name">File Name:</label>
+              <input type="text" id="CCB_file-name">
+              <span class="suggestion">e.g., configuration.ccb</span><br><br>
+              <button onclick="runCCBScript()">Run</button>
+              <button onclick="closePopup('read_tools_overlay_ccb')">Close</button>
+          </div>
+        </div>
+
+      </div>
+
+      </div>
+      
+
+
+
+      <!-- Date and Time Section -->
+      <div class="date_n_time">
+        <h2>Date and Time</h2>
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>Date</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Eval kit</td>
+              <td id="evalDate"></td>
+              <td id="evalTime"></td>
+            </tr>
+            <tr>
+              <td>Browser</td>
+              <td id="browserDate"></td>
+              <td id="browserTime"></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="date_n_time_btn">
+        <button onclick="updateDisplayedTimes()">Refresh</button>
+        <button onclick="setServerTime()">Sync</button>
+        </div>
+      </div>
+
+      <!-- Wifi Setup -->
+    <div class="Network">
+      <h2>Network</h2>
+      <div class="Network_content">
+        <p>USB IP:  10.43.0.1</p>
+        <p>WiFi IP:  Not set</p>
+        <p>LAN IP:  Not set</p>
+        <p>Current User:  <span id="wifi_username"></span></p>
+        <p>Status: <span id="network_status"></span></p>
+      </div>
+      <div class="setupwifi_btn">
+        <button onclick="WifiRefresh()">Refresh</button>
+        <button onclick="showWifiSetupForm()">Setup WiFi</button>
+      </div>
+      <div id="wifisetup_section">
+        <span id="Wifi_close" onclick="closeWifi()">&times;</span>
+        <h3>WiFi Credentials</h3>
+          <label for="username">Username:</label>
+          <input type="text" id="username" name="username"><br>
+          <label for="password">Password:</label>
+          <input type="password" id="password" name="password"><br>
+          <button onclick="setupWifi()">Submit</button>
+      </div>
+    </div>
+    <div id="wifiStatus"></div>
+
+
+    </section>
+
+    <footer>
+      <p class="copyright">
+        &copy; 2025 Analog Devices, Inc. All rights reserved. Trademarks and
+        registered trademarks are the property of their respective owners.
+      </p>
+    </footer>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="{{url_for('static',filename='marked.min.js')}}"></script>
+    <script src="{{url_for('static',filename='scripts.js')}}"></script>
+  </body>
+</html>
