@@ -34,13 +34,23 @@
 #include "aditof/sensor_enumerator_factory.h"
 #include "aditof/sensor_enumerator_interface.h"
 #include "buffer.pb.h"
-#define ZMQ
+#include <iostream>   // for std::cout, std::endl
+#include <iomanip>    // for std::setw, std::setfill, std::hex
+#include <cstdint>    // for uint8_t
+#include <cstddef>    // for size_t
+
 #ifdef ZMQ
 #include <zmq.hpp>
 #include <thread>
 #include <condition_variable>
 #include <atomic>
 #endif //ZMQ
+
+
+#ifdef ASIO
+#include <boost/asio.hpp>
+using boost::asio::ip::tcp;
+#endif //ASIO
 
 #include "../../sdk/src/connections/target/v4l_buffer_access_interface.h"
 
@@ -98,7 +108,7 @@ static std::queue<aditof::Adsd3500Status> adsd3500InterruptsQueue;
 // from v4l2 interface, passing the frame through depth compute and any deep copying.
 static bool sameFrameEndlessRepeat = false;
 
-#ifndef ZMQ
+#ifdef ORIGINAL
 // Variables for synchronizing the main thread and the thread responsible for capturing frames from hardware
 std::mutex
     frameMutex; // used for making sure operations on queue are not done simultaneously by the 2 threads
@@ -112,7 +122,7 @@ std::thread
     frameCaptureThread; // The thread instance for the capturing frame thread
 bool keepCaptureThreadAlive =
     false; // Flag used by frame capturing thread to know whether to continue or finish
-#endif //ZMQ
+#endif //ORIGINAL
 
 struct clientData {
     bool hasFragments;
@@ -121,12 +131,16 @@ struct clientData {
 
 #ifdef ZMQ
 std::unique_ptr<zmq::socket_t> server_socket;
+int32_t max_send_frames = 10;
+#endif //ZMQ
+
+#if defined(ZMQ) || defined(ASIO)
 std::atomic<bool> running(true);      // Controls the thread's lifetime
 std::atomic<bool> paused(true);     // Controls the pause state
 std::mutex mtx;                      // Mutex for condition variable
 std::condition_variable cv;          // Condition variable to manage pausing
-int32_t max_send_frames = 10;
-#endif //ZMQ
+void threadFunction();
+#endif //ZMQ || ASIO
 
 static struct lws_protocols protocols[] = {
     {
@@ -143,7 +157,7 @@ aditof::SensorInterruptCallback callback = [](aditof::Adsd3500Status status) {
     DLOG(INFO) << "ADSD3500 interrupt occured: status = " << status;
 };
 
-#ifndef ZMQ
+#ifdef ORIGINAL
 // Function executed in the capturing frame thread
 static void captureFrameFromHardware() {
     while (keepCaptureThreadAlive) {
@@ -176,10 +190,10 @@ static void captureFrameFromHardware() {
 
     return;
 }
-#endif //ZMQ
+#endif //ORIGINAL
 
 static void cleanup_sensors() {
-#ifdef ZMQ
+#if defined(ZMQ) || defined(ASIO)
     // TODO: Stop Thread
 #else
     // Stop the frame capturing thread
@@ -348,9 +362,6 @@ int Network::callback_function(struct lws *wsi,
 }
 
 void sigint_handler(int) { interrupted = 1; }
-#ifdef ZMQ
-void threadFunction();
-#endif
 int main(int argc, char *argv[]) {
 
     signal(SIGINT, sigint_handler);
@@ -394,7 +405,7 @@ int main(int argc, char *argv[]) {
 #ifdef ZMQ
     std::thread t(threadFunction);
     t.detach();
-#endif
+#endif //ZMQ
 
     while (!interrupted) {
         lws_service(network->context, msTimeout /* timeout_ms */);
@@ -452,7 +463,172 @@ void threadFunction() {
 
     std::cout << "Thread is exiting...\n";
 }
+#endif // ZMQ
+
+static void printBytes(const uint8_t *data, size_t length) {
+
+    if (data == nullptr) {
+        return;
+    }
+
+    const size_t bytes_per_line = 16;
+
+    for (size_t i = 0; i < length; i += bytes_per_line) {
+        // Print address
+        std::cout << std::setw(8) << std::setfill('0') << std::hex << i << ": ";
+
+        // Print data
+        for (size_t j = 0; j < bytes_per_line; ++j) {
+            if (i + j < length) {
+                std::cout << std::setw(2) << std::setfill('0') << std::hex
+                          << static_cast<int>(data[i + j]) << " ";
+            } else {
+                std::cout << "   ";
+            }
+        }
+
+        std::cout << std::endl;
+    }
+
+    uint64_t checksum64 = 0;
+    for (size_t i = 0; i < length; ++i) {
+        checksum64 += data[i];
+    }
+    std::cout << "Buffer Checksum: " << checksum64 << std::endl;
+}
+
+#ifdef ASIO
+//-----------------------------------------
+// Initiates one asynchronous send with a fresh uint16_t buffer.
+// After it completes, handle_write() will be called.
+//-----------------------------------------
+#define ASYNC
+//#define SINGLE
+#define FPS 40
+//#define TEST (uint32_t)((8*1000/FPS)/100)
+static uint32_t cnt = 0;
+void async_send_data(tcp::socket& socket, boost::asio::io_context& io_context)
+{
+    // If we're told to stop entirely, do nothing
+    while (true) {
+        if (!running.load())
+        {
+            std::cout << "[Server] Stopping send (running == false).\n";
+            return;
+        }
+        aditof::Status status = aditof::Status::OK;
+#ifndef TEST
+        status = camDepthSensor->getFrame((uint16_t *)(buff_frame_to_be_captured));
+#else
+        std::this_thread::sleep_for(std::chrono::milliseconds(TEST));
+#endif 
+        if (status != aditof::Status::OK) {
+            LOG(ERROR) << "Failed to get frame!";
+        } else {
+
+        const size_t words_in_frame = processedFrameSize;
+        const size_t bytes_in_frame = words_in_frame * sizeof(uint16_t);
+        const uint64_t bytes_in_frame_swapped = htonl(bytes_in_frame);
+        const uint64_t buflen_bytes = sizeof(bytes_in_frame_swapped) + bytes_in_frame;
+
+#ifndef ASYNC
+
+#ifndef SINGLE
+            auto buffer = std::shared_ptr<uint8_t[]>(
+                new uint8_t[bytes_in_frame],
+                std::default_delete<uint8_t[]>()
+            );
+
+
+            uint8_t *buf = (uint8_t *)&bytes_in_frame_swapped;
+            //printBytes(buf, sizeof(bytes_in_frame_swapped));
+            boost::asio::write(socket, boost::asio::buffer(&bytes_in_frame_swapped, sizeof(bytes_in_frame_swapped)));
+
+            std::copy(buff_frame_to_be_captured, buff_frame_to_be_captured + bytes_in_frame, buffer.get());
+            boost::asio::write(socket, boost::asio::buffer(buffer.get(), bytes_in_frame));
+#else
+            
+            auto buffer = std::shared_ptr<uint8_t[]>(
+                new uint8_t[buflen_bytes],
+                std::default_delete<uint8_t[]>()
+            );
+
+            memcpy(buffer.get(), 
+                    &bytes_in_frame_swapped, 
+                    sizeof(bytes_in_frame_swapped));
+
+            std::copy(buff_frame_to_be_captured, 
+                        buff_frame_to_be_captured + words_in_frame, 
+                        buffer.get() + sizeof(bytes_in_frame_swapped));
+
+            boost::asio::write(socket, boost::asio::buffer(buffer.get(), buflen_bytes));
+#endif //SINGLE
+
+#else
+            
+            auto buffer = std::shared_ptr<uint8_t[]>(
+                new uint8_t[buflen_bytes],
+                std::default_delete<uint8_t[]>()
+            );
+
+            memcpy(buffer.get(), 
+                    &bytes_in_frame_swapped, 
+                    sizeof(bytes_in_frame_swapped));
+
+            std::copy(buff_frame_to_be_captured, 
+                        buff_frame_to_be_captured + processedFrameSize, 
+                        buffer.get() + sizeof(bytes_in_frame_swapped));
+
+            boost::asio::async_write(
+                socket,
+                boost::asio::buffer(buffer.get(), buflen_bytes),
+                [buffer, &socket, &io_context](const boost::system::error_code& ec, std::size_t bytes_transferred)
+                {
+                    async_send_data(socket, io_context);
+                }
+            );
+            return;
 #endif
+        }
+    }
+}
+
+//-----------------------------------------
+// The function that accepts a single client and starts sending.
+// Runs in a detached thread.
+//-----------------------------------------
+void threadFunction()
+{
+    try
+    {
+        std::cout << "In ASIO threadFunctuion." << std::endl;
+        boost::asio::io_context io_context;
+
+        // Listen on port 12345
+        tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), 12345));
+        std::cout << "[Server] Listening on port 12345...\n";
+
+        // Accept a single client (blocking)
+        tcp::socket socket(io_context);
+        acceptor.accept(socket);
+        std::cout << "[Server] Client connected.\n";
+
+        // Start sending data indefinitely
+        async_send_data(socket, io_context);
+
+        // Run the io_context so async ops can occur
+#ifdef ASYNC
+        std::cout << "Starting Async." << std::endl;
+        io_context.run();
+        std::cout << "[Server] io_context.run() returned.\n";
+#endif
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "[Server] Exception: " << e.what() << std::endl;
+    }
+}
+#endif // ASIO
 
 void invoke_sdk_api(payload::ClientRequest buff_recv) {
     buff_send.Clear();
@@ -530,11 +706,11 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         aditof::Status status = camDepthSensor->open();
         buff_send.set_status(static_cast<::payload::Status>(status));
         clientEngagedWithSensors = true;
-#ifndef ZMQ
+#ifdef ORIGINAL
         // At this stage, start the capturing frames thread
         keepCaptureThreadAlive = true;
         frameCaptureThread = std::thread(captureFrameFromHardware);
-#endif //ZMQ
+#endif //ORIGINAL
 
         break;
     }
@@ -542,11 +718,19 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     case START: {
         aditof::Status status = camDepthSensor->start();
 
-#ifdef ZMQ
+#if defined(ZMQ)
         std::lock_guard<std::mutex> lock(mtx);
-        paused = false;
+        paused.store(false);
+        //paused = false;
         //cv.notify_one();
         cv.notify_all();
+#elif defined(ASIO)
+    std::lock_guard<std::mutex> lock(mtx);
+    running.store(true);
+    paused.store(false);
+    std::thread t(threadFunction);
+    t.detach();
+    cv.notify_all();
 #else
         // When in test mode, capture 2 frames. 1st might be corrupt after a ADSD3500 reset.
         // 2nd frame will be the one sent over and over again by server in test mode.
@@ -567,16 +751,21 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             }
             cvGetFrame.notify_one();
         }
-#endif
+#endif //ZMQ || ASIO
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
 
     case STOP: {
-#ifdef ZMQ
-        paused = true;
+#if defined(ZMQ)
+        paused.store(true);
+        //paused = true;
         cv.notify_all();
-#endif
+#elif defined(ASIO)
+        running.store(false);
+        paused.store(true);
+        cv.notify_all();
+#endif //ZMQ || ASIO
         aditof::Status status = camDepthSensor->stop();
         buff_send.set_status(static_cast<::payload::Status>(status)); 
 
@@ -728,7 +917,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
 
     case GET_FRAME: {
-#ifndef ZMQ
+#ifdef ORIGINAL
         aditof::Status status = aditof::Status::OK;
 
         if (sameFrameEndlessRepeat) {
@@ -814,7 +1003,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             buff_send.set_status(static_cast<::payload::Status>(status));
             break;
         }
-#endif //ZMQ
+#endif //ORIGINAL
         buff_send.set_status(payload::Status::OK);
         break;
     }
