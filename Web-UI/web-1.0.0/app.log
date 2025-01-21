@@ -7071,3 +7071,128 @@ werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'ADSD35
 2025-01-17 04:44:33,723 - app - INFO - Server time: 2025-01-17 09:44:33
 2025-01-17 04:44:38,090 - app - INFO - Server time: 2025-01-17 09:44:38
 2025-01-17 04:50:54,340 - app - INFO - Server time: 2025-01-17 09:50:54
+2025-01-17 05:03:41,662 - app - INFO - Server time: 2025-01-17 10:03:41
+2025-01-17 05:03:44,913 - app - INFO - Server time: 2025-01-17 10:03:44
+2025-01-17 05:03:46,343 - app - INFO - Server time: 2025-01-17 10:03:46
+2025-01-17 05:04:09,317 - app - INFO - Server time: 2025-01-17 10:04:09
+2025-01-17 05:04:12,140 - app - INFO - Server time: 2025-01-17 10:04:12
+2025-01-17 05:04:13,236 - app - INFO - Server time: 2025-01-17 10:04:13
+2025-01-17 05:04:14,662 - app - INFO - Server time: 2025-01-17 10:04:14
+2025-01-17 05:04:44,626 - app - INFO - Server time: 2025-01-17 10:04:44
+2025-01-17 05:04:53,753 - app - INFO - Server time: 2025-01-17 10:04:53
+2025-01-17 05:04:55,637 - app - INFO - Received browser time: 1/17/2025, 3:34:54 PM (Timezone: Asia/Calcutta)
+2025-01-17 05:04:55,640 - app - INFO - Parsed browser time: 2025-01-17 15:34:54
+2025-01-17 05:04:55,640 - app - INFO - Local time: 2025-01-17 15:34:54
+2025-01-17 05:04:55,703 - app - INFO - Formatted server time for `date` command: 2025-01-17 03:34:54 PM IST
+2025-01-17 05:04:55,393 - app - INFO - Server time: 2025-01-17 10:04:55
+2024-06-17 16:32:45,589 - app - INFO - Server time: 2024-06-17 20:32:45
+2024-06-17 16:32:47,849 - app - INFO - Server time: 2024-06-17 20:32:47
+2024-06-17 16:32:58,241 - app - INFO - Server time: 2024-06-17 20:32:58
+2024-06-17 16:33:53,740 - app - INFO - Server time: 2024-06-17 20:33:53
+2024-06-17 16:34:05,826 - app - INFO - Server time: 2024-06-17 20:34:05
+2024-06-17 16:34:07,326 - app - INFO - Server time: 2024-06-17 20:34:07
+2024-06-17 16:44:00,383 - app - INFO - Server time: 2024-06-17 20:44:00
+2024-06-17 16:44:04,965 - app - INFO - Requested
+2024-06-17 16:44:04,966 - app - INFO - Requested Markdown file path: /home/analog/web-1.0.0/static/docs/webinterface.md
+2024-06-18 02:14:06,980 - app - INFO - Server time: 2024-06-17 20:44:06
+2024-06-18 02:14:10,626 - app - INFO - Server time: 2024-06-17 20:44:10
+2024-06-18 02:14:16,176 - app - INFO - Server time: 2024-06-17 20:44:16
+2024-06-18 02:14:54,273 - app - INFO - Server time: 2024-06-17 20:44:54
+2024-06-18 02:15:00,598 - app - INFO - Server time: 2024-06-17 20:45:00
+2024-06-18 02:15:01,309 - app - INFO - Server time: 2024-06-17 20:45:01
+2024-06-18 02:15:42,557 - app - INFO - Server time: 2024-06-17 20:45:42
+2024-06-18 02:15:44,081 - app - INFO - Received browser time: 1/17/2025, 3:51:39 PM (Timezone: Asia/Calcutta)
+2024-06-18 02:15:44,083 - app - INFO - Parsed browser time: 2025-01-17 15:51:39
+2024-06-18 02:15:44,084 - app - INFO - Local time: 2025-01-17 15:51:39
+2024-06-18 02:15:44,147 - app - INFO - Formatted server time for `date` command: 2025-01-17 03:51:39 PM IST
+2025-01-17 15:51:39,993 - app - INFO - Server time: 2025-01-17 10:21:39
+2025-01-17 15:51:55,267 - app - INFO - Server time: 2025-01-17 10:21:55
+2025-01-17 15:51:58,787 - app - INFO - Server time: 2025-01-17 10:21:58
+2025-01-17 15:52:00,571 - app - INFO - Server time: 2025-01-17 10:22:00
+2025-01-17 15:52:14,527 - app - INFO - Server time: 2025-01-17 10:22:14
+2024-06-18 02:03:56,533 - app - INFO - Server time: 2024-06-17 20:33:56
+2024-06-18 02:04:01,751 - app - INFO - Server time: 2024-06-17 20:34:01
+2024-06-18 02:04:02,801 - app - INFO - Server time: 2024-06-17 20:34:02
+2024-06-18 02:04:07,192 - app - INFO - Server time: 2024-06-17 20:34:07
+2024-06-18 02:04:12,994 - app - INFO - Server time: 2024-06-17 20:34:12
+2024-06-18 02:04:14,441 - app - INFO - Received browser time: 1/17/2025, 3:57:07 PM (Timezone: Asia/Calcutta)
+2024-06-18 02:04:14,446 - app - INFO - Parsed browser time: 2025-01-17 15:57:07
+2024-06-18 02:04:14,447 - app - INFO - Local time: 2025-01-17 15:57:07
+2024-06-18 02:04:14,531 - app - INFO - Formatted server time for `date` command: 2025-01-17 03:57:07 PM IST
+2025-01-17 15:57:07,964 - app - INFO - Server time: 2025-01-17 10:27:07
+2025-01-17 15:57:58,350 - app - INFO - Server time: 2025-01-17 10:27:58
+2025-01-17 15:57:59,963 - app - INFO - Server time: 2025-01-17 10:27:59
+2025-01-17 15:58:00,547 - app - INFO - Server time: 2025-01-17 10:28:00
+2025-01-17 15:58:01,995 - app - INFO - Server time: 2025-01-17 10:28:01
+2025-01-17 16:01:05,598 - app - INFO - Server time: 2025-01-17 10:31:05
+2025-01-17 16:01:07,179 - app - INFO - Server time: 2025-01-17 10:31:07
+2025-01-17 16:02:35,283 - app - INFO - Server time: 2025-01-17 10:32:35
+2025-01-17 16:03:01,370 - app - INFO - Server time: 2025-01-17 10:33:01
+2025-01-17 16:03:04,418 - app - INFO - Server time: 2025-01-17 10:33:04
+2025-01-17 16:03:30,923 - app - INFO - Chunk 1/3 received successfully
+2025-01-17 16:03:31,250 - app - INFO - Chunk 2/3 received successfully
+2025-01-17 16:03:31,554 - app - INFO - Chunk 3/3 received successfully
+2025-01-17 16:03:36,954 - app - INFO - Server time: 2025-01-17 10:33:36
+2025-01-17 16:04:06,971 - app - INFO - Server time: 2025-01-17 10:34:06
+2025-01-17 16:08:45,491 - app - INFO - Server time: 2025-01-17 10:38:45
+2025-01-17 16:14:03,536 - app - INFO - Server time: 2025-01-17 10:44:03
+2025-01-17 16:14:20,586 - app - INFO - Server time: 2025-01-17 10:44:20
+2025-01-17 16:17:41,255 - app - INFO - Server time: 2025-01-17 10:47:41
+2025-01-17 16:17:43,419 - app - INFO - Server time: 2025-01-17 10:47:43
+2025-01-17 16:17:45,675 - app - INFO - Server time: 2025-01-17 10:47:45
+2025-01-17 16:17:46,579 - app - INFO - Server time: 2025-01-17 10:47:46
+2025-01-20 00:50:15,903 - app - INFO - Server time: 2025-01-20 05:50:15
+2025-01-20 00:50:56,728 - app - INFO - Server time: 2025-01-20 05:50:56
+2025-01-20 00:50:59,563 - app - INFO - Server time: 2025-01-20 05:50:59
+2025-01-20 00:51:00,910 - app - INFO - Server time: 2025-01-20 05:51:00
+2025-01-20 00:51:03,821 - app - INFO - Server time: 2025-01-20 05:51:03
+2025-01-20 01:41:34,774 - app - INFO - Server time: 2025-01-20 06:41:34
+2025-01-20 01:42:12,995 - app - INFO - Server time: 2025-01-20 06:42:12
+2025-01-20 01:44:25,995 - app - INFO - Server time: 2025-01-20 06:44:25
+2025-01-20 01:45:36,441 - app - INFO - Server time: 2025-01-20 06:45:36
+2025-01-20 01:47:59,940 - app - INFO - Server time: 2025-01-20 06:47:59
+2025-01-20 01:48:05,657 - app - INFO - Received browser time: 1/20/2025, 12:18:01 PM (Timezone: Asia/Calcutta)
+2025-01-20 01:48:05,659 - app - INFO - Parsed browser time: 2025-01-20 12:18:01
+2025-01-20 01:48:05,660 - app - INFO - Local time: 2025-01-20 12:18:01
+2025-01-20 01:48:05,723 - app - INFO - Formatted server time for `date` command: 2025-01-20 12:18:01 PM IST
+2025-01-20 01:48:06,073 - app - INFO - Server time: 2025-01-20 06:48:06
+2025-01-20 01:48:18,167 - app - INFO - Server time: 2025-01-20 06:48:18
+2025-01-20 01:48:20,879 - app - INFO - Requested
+2025-01-20 01:48:20,880 - app - INFO - Requested Markdown file path: /home/analog/web-1.0.0/static/docs/evalkit_readme.md
+2025-01-20 01:48:23,769 - app - INFO - Requested
+2025-01-20 01:48:23,770 - app - INFO - Requested Markdown file path: /home/analog/web-1.0.0/static/docs/webinterface.md
+2025-01-20 01:48:33,702 - app - INFO - Server time: 2025-01-20 06:48:33
+2025-01-20 01:49:16,110 - app - INFO - Server time: 2025-01-20 06:49:16
+2025-01-20 01:49:21,451 - app - INFO - Server time: 2025-01-20 06:49:21
+2025-01-20 01:49:23,166 - app - INFO - Requested
+2025-01-20 01:49:23,167 - app - INFO - Requested Markdown file path: /home/analog/web-1.0.0/static/docs/webinterface.md
+2025-01-20 01:51:16,319 - app - INFO - Server time: 2025-01-20 06:51:16
+2025-01-20 01:51:19,295 - app - INFO - Server time: 2025-01-20 06:51:19
+2025-01-20 01:51:20,626 - app - INFO - Server time: 2025-01-20 06:51:20
+2025-01-20 01:51:27,212 - app - INFO - Chunk 1/3 received successfully
+2025-01-20 01:51:27,517 - app - INFO - Chunk 2/3 received successfully
+2025-01-20 01:51:27,756 - app - INFO - Chunk 3/3 received successfully
+2025-01-20 01:53:17,469 - app - INFO - Server time: 2025-01-20 06:53:17
+2025-01-20 01:53:18,882 - app - INFO - Requested
+2025-01-20 01:53:18,883 - app - INFO - Requested Markdown file path: /home/analog/web-1.0.0/static/docs/webinterface.md
+2025-01-20 12:23:20,556 - app - INFO - Server time: 2025-01-20 06:53:20
+2025-01-20 12:23:36,995 - app - INFO - Server time: 2025-01-20 06:53:36
+2025-01-20 12:23:38,319 - app - INFO - Server time: 2025-01-20 06:53:38
+2024-06-17 16:30:42,856 - app - INFO - Server time: 2024-06-17 20:30:42
+2024-06-17 16:30:46,396 - app - INFO - Server time: 2024-06-17 20:30:46
+2024-06-17 16:30:47,520 - app - INFO - Server time: 2024-06-17 20:30:47
+2024-06-17 16:30:49,578 - app - INFO - Server time: 2024-06-17 20:30:49
+2024-06-17 16:30:55,882 - app - INFO - Received browser time: 1/20/2025, 12:30:49 PM (Timezone: Asia/Calcutta)
+2024-06-17 16:30:55,884 - app - INFO - Parsed browser time: 2025-01-20 12:30:49
+2024-06-17 16:30:55,885 - app - INFO - Local time: 2025-01-20 12:30:49
+2024-06-17 16:30:55,970 - app - INFO - Formatted server time for `date` command: 2025-01-20 12:30:49 PM IST
+2025-01-20 02:00:50,572 - app - INFO - Server time: 2025-01-20 07:00:50
+2025-01-20 03:45:02,634 - app - INFO - Server time: 2025-01-20 08:45:02
+2025-01-20 04:05:50,802 - app - INFO - Server time: 2025-01-20 09:05:50
+2025-01-20 04:07:35,227 - app - INFO - Server time: 2025-01-20 09:07:35
+2025-01-21 02:20:07,116 - app - INFO - Server time: 2025-01-21 07:20:07
+2025-01-21 02:20:10,889 - app - INFO - Server time: 2025-01-21 07:20:10
+2025-01-21 02:20:12,532 - app - INFO - Server time: 2025-01-21 07:20:12
+2025-01-21 02:20:14,504 - app - INFO - Server time: 2025-01-21 07:20:14
+2025-01-21 02:20:38,651 - app - INFO - Server time: 2025-01-21 07:20:38
+2025-01-21 02:21:34,516 - app - INFO - Server time: 2025-01-21 07:21:34
