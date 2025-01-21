@@ -70,7 +70,7 @@ function setup_config() {
   TZ_CITY=UTC
   LOCALE_LANG=en_US.UTF-8
   ADD_LIST='git build-essential gcc autoconf nano vim parted flex bison'
-  ADD_LIST_ST_3='i2c-tools v4l-utils rfkill wpasupplicant libtool libconfig-dev avahi-daemon htpdate openssh-server iperf3 bc python3-dev python3-pip python3-matplotlib'
+  ADD_LIST_ST_3='i2c-tools v4l-utils rfkill wpasupplicant libtool libconfig-dev avahi-daemon htpdate openssh-server iperf3 bc python3-dev python3-pip python3-matplotlib gunicorn python3-gevent python3-flask'
 
   # output example of the config file
 #  cat <<EOF>config-example
@@ -236,6 +236,7 @@ systemctl enable usb-gadget.service
 systemctl enable network-gadget.path
 systemctl enable uvc-gadget.path
 systemctl enable adi-backup.service
+systemctl enable gunicorn.service
 
 #set default python3
 update-alternatives --install /usr/bin/python python /usr/bin/python3 1
@@ -270,6 +271,15 @@ if [ -n ${LIBADITOF_BRANCH} ]; then
 	popd
   popd
 fi
+
+# Create Web-UI setup
+mv Web-UI/web-1.0.0/ /home/analog/
+mv Workspace/  Workspace-6.0.0 
+ln -s ~/Workspace-6.0.0/ ~/Workspace
+ln -s ~/web-1.0.0/ ~/web
+mkdir ADSD3500-firmware-0.0.0
+ln -s ~/ADSD3500-firmware-0.0.0/ ~/ADSD3500-firmware
+
 pushd ToF/scripts/nxp/
 chmod +x setup.sh
 ./setup.sh -y -b ../../build -j4
