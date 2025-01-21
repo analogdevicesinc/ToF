@@ -15,67 +15,41 @@ check_host_boot_pin_state() {
 	fi
 }
 
-detect_i2c_devices(){
+adsd3500_dual_power_sequence(){
 
-	counter=0
+	#Disable supply voltage
+	echo 0 > /sys/class/gpio/gpio128/value
+	echo 0 > /sys/class/gpio/gpio129/value
 
-	echo "Detect I2C device"
-	while [[ $(i2cdetect -y 1 | grep 38) == "" ]]
-	do
-		sleep 1
-		((counter++))
-		if [ $counter -gt 30 ]; then
-			echo "Device not found and host boot failed"
-			exit 1
-		fi
-	done
-}
-
-remove_adsd3500_i2c_driver() {
-
-	sudo rmmod imx8_media_dev
-	sudo rmmod adsd3500
-}
-
-probe_adsd3500_i2c_driver() {
-
-	echo "Started ADSD3500 I2C host boot"
-	sudo modprobe adsd3500 fw_load=1
-	sudo modprobe imx8_media_dev
 	sleep 1
-	echo "Completed"
-}
 
-remove_adsd3500_spi_driver() {
+	#EN_PWR
+	echo 1 > /sys/class/gpio/gpio128/value
 
-	sudo rmmod imx8_media_dev
-	sudo rmmod adsd3500-spi
-}
+	#EN_PWR2
+	echo 1 > /sys/class/gpio/gpio129/value
 
-probe_adsd3500_spi_driver() {
+	#Enable MAX77857
+	sudo i2cset -y 1 0x66 0x14 0x20
+	sleep 0.1
 
-	echo "Started ADSD3500 SPI host boot"
-	sudo modprobe adsd3500-spi fw_load=1
-	sudo modprobe imx8_media_dev
+	#Enable MAX77542
+	sudo i2cset -y 1 0x63 0x10 0xF
+
 	sleep 1
-	echo "Completed"
-}
 
-remove_adsd3500_dual_i2c_driver() {
+	#ADSD3500 Reset Pin
+	echo 0 > /sys/class/gpio/gpio64/value
 
-	sudo rmmod imx8_media_dev
-	sudo rmmod adsd3500_dual
-}
+	#BS0 Set 0 - Self boot and 1 - Host boot
+	echo 0 > /sys/class/gpio/gpio139/value
 
-probe_adsd3500_dual_i2c_driver() {
-
-	echo "Started ADSD3500 I2C host boot"
-	sudo modprobe adsd3500_dual fw_load=1 dyndbg==pmf
-	sudo modprobe imx8_media_dev
 	sleep 1
-	echo "Completed"
-}
 
+	# Pull reset high
+	echo 1 > /sys/class/gpio/gpio64/value
+
+}
 
 adsd3100_power_sequence(){
 
@@ -91,7 +65,7 @@ adsd3100_power_sequence(){
 	echo 0 > /sys/class/gpio/gpio511/value
 
 	#BS0 Set 0 - self boot and 1 - host boot
-	echo 1 > /sys/class/gpio/gpio139/value
+	echo 0 > /sys/class/gpio/gpio139/value
 
 	#EN_1P8
 	echo 1 > /sys/class/gpio/gpio510/value
@@ -129,7 +103,7 @@ adsd3030_power_sequence(){
 	echo 0 > /sys/class/gpio/gpio509/value
 
 	#BS0 Set 0 - self boot and 1 - host boot
-	echo 1 > /sys/class/gpio/gpio139/value
+	echo 0 > /sys/class/gpio/gpio139/value
 
 	#U5	#EN_3V3
 	echo 1 > /sys/class/gpio/gpio504/value
@@ -145,7 +119,7 @@ adsd3030_power_sequence(){
 	#U5	#EN_VLDD
 	echo 1 > /sys/class/gpio/gpio507/value
 
-	#U5	#EN_0V8
+	#U5	#EN_0V8																
 	echo 1 > /sys/class/gpio/gpio509/value
 
 	# Pull reset high
@@ -153,83 +127,40 @@ adsd3030_power_sequence(){
 
 }
 
-adsd3500_dual_power_sequence(){
-
-	#Disable supply voltage
-	echo 0 > /sys/class/gpio/gpio128/value
-	echo 0 > /sys/class/gpio/gpio129/value
-
-	sleep 1
-
-	#EN_PWR
-	echo 1 > /sys/class/gpio/gpio128/value
-
-	#EN_PWR2
-	echo 1 > /sys/class/gpio/gpio129/value
-
-	#Enable MAX77857
-	sudo i2cset -y 1 0x66 0x14 0x20
-	sleep 0.1
-
-	#Enable MAX77542
-	sudo i2cset -y 1 0x63 0x10 0xF
-
-	sleep 1
-
-	#ADSD3500 Reset Pin
-	echo 0 > /sys/class/gpio/gpio64/value
-
-	#BS0 Set 0 - Self boot and 1 - Host boot
-	echo 1 > /sys/class/gpio/gpio139/value
-
-	sleep 1
-
-	# Pull reset high
-	echo 1 > /sys/class/gpio/gpio64/value
-
-}
-
-enable_host_boot(){
+enable_self_boot(){
 
 	case $BOARD in
 		"NXP i.MX8MPlus ADI TOF carrier + ADSD3500")
 			echo "Running on ADSD3500 + ADSD3100"
 			check_host_boot_pin_state
-			remove_adsd3500_i2c_driver
+			echo "Enable self-boot and reset ADSD3500"
 			adsd3100_power_sequence
-			detect_i2c_devices
-			probe_adsd3500_i2c_driver
 			;;
 		"NXP i.MX8MPlus ADI TOF carrier + ADSD3030")
 			echo "Running on ADSD3500 + ADSD3030"
 			check_host_boot_pin_state
-			remove_adsd3500_i2c_driver
+			echo "Enable self-boot and reset ADSD3500" 
 			adsd3030_power_sequence
-			detect_i2c_devices
-			probe_adsd3500_i2c_driver
 			;;
 		"NXP i.MX8MPlus ADI TOF carrier ADSD3500-SPI + ADSD3100")
 			echo "Running on ADSD3500-SPI + ADSD3100"
 			check_host_boot_pin_state
-			remove_adsd3500_spi_driver
+			echo "Enable self-boot and reset ADSD3500"
 			adsd3100_power_sequence
-			probe_adsd3500_spi_driver
 			;;
 		"NXP i.MX8MPlus ADI TOF carrier ADSD3500-SPI + ADSD3030")
 			echo "Running on ADSD3500-SPI + ADSD3030"
 			check_host_boot_pin_state
-			remove_adsd3500_spi_driver
+			echo "Enable self-boot and reset ADSD3500"
 			adsd3030_power_sequence
-			probe_adsd3500_spi_driver
 			;;
-		"NXP i.MX8MPlus ADI TOF carrier ADSD3500-DUAL + ADSD3100")
+		 "NXP i.MX8MPlus ADI TOF carrier ADSD3500-DUAL + ADSD3100")
 			echo "Running on ADSD3500-DUAL + ADSD3100"
 			check_host_boot_pin_state
-			remove_adsd3500_dual_i2c_driver
+			echo "Enable self-boot and reset ADSD3500-DUAL"
 			adsd3500_dual_power_sequence
-			detect_i2c_devices
-			probe_adsd3500_dual_i2c_driver
 			;;
+
 		*)
 			echo "Board model not valid"
 			exit 1
@@ -239,13 +170,13 @@ enable_host_boot(){
 
 main(){
 
-	enable_host_boot
+	enable_self_boot
 }
 
 if [[ $EUID > 0 ]]; then
                 echo "This script must be run as root user"
-		echo "Usage: sudo ./host_boot.sh"
-		exit
+		echo "Usage: sudo ./self_boot.sh"
+                        exit
 fi
 
 main
