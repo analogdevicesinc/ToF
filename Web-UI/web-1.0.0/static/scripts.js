@@ -589,7 +589,7 @@ async function getWifiUsername() {
 
         getUsername.innerHTML = result.username;
         getUsername.style.display = 'block-inline';
-        getUsername.style.fontWeight = '200';
+        getUsername.style.fontWeight = '600';
 
     } catch (error) {
         console.error('Error fetching username:', error);
