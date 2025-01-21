@@ -456,7 +456,7 @@ void threadFunction() {
             } else {
                 zmq::message_t message(buff_frame_to_be_captured, processedFrameSize * sizeof(uint16_t));
                 server_socket->send(message, zmq::send_flags::none);
-                std::this_thread::sleep_for(std::chrono::milliseconds(20));
+                std::this_thread::sleep_for(std::chrono::milliseconds(5));
             }
         }
     }
@@ -507,6 +507,7 @@ static void printBytes(const uint8_t *data, size_t length) {
 #define FPS 40
 //#define TEST (uint32_t)((8*1000/FPS)/100)
 static uint32_t cnt = 0;
+static bool first_frame = false;
 void async_send_data(tcp::socket& socket, boost::asio::io_context& io_context)
 {
     // If we're told to stop entirely, do nothing
@@ -518,7 +519,12 @@ void async_send_data(tcp::socket& socket, boost::asio::io_context& io_context)
         }
         aditof::Status status = aditof::Status::OK;
 #ifndef TEST
-        status = camDepthSensor->getFrame((uint16_t *)(buff_frame_to_be_captured));
+        if (first_frame == false) {
+            status = camDepthSensor->getFrame((uint16_t *)(buff_frame_to_be_captured));
+            first_frame = true;
+        } else {
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        }
 #else
         std::this_thread::sleep_for(std::chrono::milliseconds(TEST));
 #endif 
