@@ -34,6 +34,9 @@ jobs:
       ubuntu_22_04_x86_64:
         imageName: 'ubuntu-22.04'
 
+      ubuntu_24_04_x86_64:
+        imageName: 'ubuntu-24.04'
+
       ubuntu_22_04_x86_64_offline:
         imageName: 'ubuntu-22.04'
         EXTRA_CMAKE_FLAGS: "-DWITH_OFFLINE=on"
