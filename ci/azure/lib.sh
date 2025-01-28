@@ -279,17 +279,17 @@ get_deps_source_code() {
         export OPENCV="3.4.1"
     fi
 
-    [ -d "glog" ] || {
-        git clone --branch v0.6.0 --depth 1 https://github.com/google/glog
-    }
+    # [ -d "glog" ] || {
+    #     git clone --branch v0.6.0 --depth 1 https://github.com/google/glog
+    # }
 
-    [ -d "protobuf" ] || {
-        git clone --branch v3.9.0 --depth 1 https://github.com/protocolbuffers/protobuf
-    }
+    # [ -d "protobuf" ] || {
+    #     git clone --branch v3.9.0 --depth 1 https://github.com/protocolbuffers/protobuf
+    # }
 
-    [ -d "libwebsockets" ] || {
-        git clone --branch v3.1-stable --depth 1 https://github.com/warmcat/libwebsockets
-    }
+    # [ -d "libwebsockets" ] || {
+    #     git clone --branch v3.1-stable --depth 1 https://github.com/warmcat/libwebsockets
+    # }
 
     [ -d "opencv-${OPENCV}" ] || {
         curl -sL https://github.com/Itseez/opencv/archive/${OPENCV}.zip > opencv.zip

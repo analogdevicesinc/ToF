@@ -128,18 +128,18 @@ jobs:
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '3.9'
-  - task: Cache@2
-    inputs:
-      key: deps_windows | "$(imageName)" 
-      restoreKeys: deps_windows | "$(imageName)"
-      path: $(Agent.BuildDirectory)/s/deps_installed
-      cacheHitVar: CACHE_RESTORED
-  - task: PowerShell@2
-    inputs:
-      targetType: 'filePath'
-      filePath: ./ci/azure/windows-build/install_deps.ps1
-    condition: eq(variables.CACHE_RESTORED, 'false')
-    displayName: "Install Dependencies"
+  # - task: Cache@2
+  #   inputs:
+  #     key: deps_windows | "$(imageName)" 
+  #     restoreKeys: deps_windows | "$(imageName)"
+  #     path: $(Agent.BuildDirectory)/s/deps_installed
+  #     cacheHitVar: CACHE_RESTORED
+  # - task: PowerShell@2
+  #   inputs:
+  #     targetType: 'filePath'
+  #     filePath: ./ci/azure/windows-build/install_deps.ps1
+  #   condition: eq(variables.CACHE_RESTORED, 'false')
+  #   displayName: "Install Dependencies"
   - task: PowerShell@2
     inputs:
       targetType: 'filePath'
