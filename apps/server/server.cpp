@@ -361,7 +361,15 @@ int Network::callback_function(struct lws *wsi,
     return 0;
 }
 
-void sigint_handler(int) { interrupted = 1; }
+void sigint_handler(int) { 
+    interrupted = 1; 
+#ifdef ZMQ
+    std::lock_guard<std::mutex> lock(mtx);
+    running.store(false);
+    cv.notify_all();
+#endif
+}
+
 int main(int argc, char *argv[]) {
 
     signal(SIGINT, sigint_handler);
@@ -443,7 +451,7 @@ void threadFunction() {
 
         if (buff_frame_to_be_captured != nullptr) {
             // Simulate work
-            if (firstFrame == false) {
+            if (firstFrame == false || true) {
                 aditof::Status status = camDepthSensor->getFrame((uint16_t *)(buff_frame_to_be_captured));
                 if (status != aditof::Status::OK) {
                     LOG(ERROR) << "Failed to get frame!";
@@ -451,7 +459,6 @@ void threadFunction() {
                     zmq::message_t message(buff_frame_to_be_captured, processedFrameSize * sizeof(uint16_t));
                     server_socket->send(message, zmq::send_flags::none);
                     firstFrame = true;
-                    std::cout << processedFrameSize << std::endl;
                 }
             } else {
                 zmq::message_t message(buff_frame_to_be_captured, processedFrameSize * sizeof(uint16_t));
