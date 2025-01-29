@@ -70,7 +70,7 @@ function setup_config() {
   TZ_CITY=UTC
   LOCALE_LANG=en_US.UTF-8
   ADD_LIST='git build-essential gcc autoconf nano vim parted flex bison'
-  ADD_LIST_ST_3='i2c-tools v4l-utils rfkill wpasupplicant libtool libconfig-dev avahi-daemon htpdate openssh-server iperf3 bc python3-dev python3-pip python3-matplotlib gunicorn python3-gevent python3-flask'
+  ADD_LIST_ST_3='i2c-tools v4l-utils rfkill wpasupplicant libtool libconfig-dev avahi-daemon htpdate openssh-server iperf3 bc python3-dev python3-pip python3-matplotlib gunicorn python3-gevent python3-flask python3-tz unzip'
 
   # output example of the config file
 #  cat <<EOF>config-example
@@ -272,14 +272,6 @@ if [ -n ${LIBADITOF_BRANCH} ]; then
   popd
 fi
 
-# Create Web-UI setup
-mv Web-UI/web-1.0.0/ /home/analog/
-mv Workspace/  Workspace-6.0.0 
-ln -s ~/Workspace-6.0.0/ ~/Workspace
-ln -s ~/web-1.0.0/ ~/web
-mkdir ADSD3500-firmware-0.0.0
-ln -s ~/ADSD3500-firmware-0.0.0/ ~/ADSD3500-firmware
-
 pushd ToF/scripts/nxp/
 chmod +x setup.sh
 ./setup.sh -y -b ../../build -j4
@@ -328,8 +320,32 @@ EOF
 
   # Apply step3 overlay (configs)
   sudo cp -R ${SCRIPT_DIR}/patches/ubuntu_overlay/step3/* ${ROOTFS_TMP}/
-  
-  
+
+}
+
+function create_ui_setup(){
+	cat<<EOF>web_ui_setup.sh
+#!/bin/bash
+
+pushd /home/${USERNAME}
+
+
+sudo mv Workspace/ToF/Web-UI/web-1.0.0/ /home/${USERNAME}/
+sudo  ln -s  /home/${USERNAME}/web-1.0.0 web
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/web
+sudo mkdir ADSD3500-firmware-0.0.0
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/ADSD3500-firmware-0.0.0
+sudo ln -s /home/${USERNAME}/ADSD3500-firmware-0.0.0 ADSD3500-firmware
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/ADSD3500-firmware
+sudo mv Workspace/  Workspace-6.0.0
+sudo ln -s /home/${USERNAME}/Workspace-6.0.0 Workspace
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace
+
+EOF
+     sudo mv web_ui_setup.sh ${ROOTFS_TMP}/tmp
+     sudo chmod +x ${ROOTFS_TMP}/tmp/web_ui_setup.sh
+     sudo chroot ${ROOTFS_TMP} /tmp/web_ui_setup.sh
+     sudo rm -f ${ROOTFS_TMP}/tmp/web_ui_setup.sh
 }
 
 function main() {
@@ -354,6 +370,9 @@ function main() {
   sudo chroot ${ROOTFS_TMP} /debootstrap/debootstrap --second-stage
 
   run_3rd_stage_script
+
+  # for web-ui
+  create_ui_setup
 
   uninstall_qemu
   
