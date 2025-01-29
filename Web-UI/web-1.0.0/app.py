@@ -22,7 +22,6 @@ UNZIP_DIR = '/tmp/unzipped_files'
 TASK_STATUS_FILE = '/tmp/unzip_status.json'
 DESTINATION_DIR_RO = '/oldroot/home/analog'
 DESTINATION_DIR_RW = '/home/analog'
-ro_access = False
 
 # Set up basic logging
 logging.basicConfig(level=logging.INFO)
@@ -58,6 +57,7 @@ def calculate_combined_md5(version_file_path, specified_file_path):
 
 def validate_and_process_unzipped_files(unzip_dir):
     """Validate the contents of the unzipped directory, move it if necessary, and run the post-process script."""
+    access = app.config.get('RO_ACCESS', 'unknown')
     try:
         json_file_path = os.path.join(unzip_dir, "info.json")
         if not os.path.exists(json_file_path):
@@ -76,7 +76,7 @@ def validate_and_process_unzipped_files(unzip_dir):
         firmware_extract_dir = os.path.join(unzip_dir, os.path.splitext(firmware_file)[0])
         subprocess.run(['unzip', '-o', firmware_file_path, '-d', firmware_extract_dir], check=True)
 
-        if (ro_access == False):
+        if (access['message'] == False):
             target_dir = os.path.join(DESTINATION_DIR_RW, os.path.basename(firmware_extract_dir))
             if os.path.exists(target_dir):
                 return False, f"Error: Directory {os.path.basename(firmware_extract_dir)} already exists in {DESTINATION_DIR_RW}."
@@ -98,7 +98,7 @@ def validate_and_process_unzipped_files(unzip_dir):
         SDK_extract_dir = os.path.join(unzip_dir, os.path.splitext(SDK_file)[0])
         subprocess.run(['unzip', '-o', SDK_file_path, '-d', SDK_extract_dir], check=True)
 
-        if (ro_access == False):
+        if (access['message'] == False):
             target_dir = os.path.join(DESTINATION_DIR_RW, os.path.basename(SDK_extract_dir))
             if os.path.exists(target_dir):
                 return False, f"Error: Directory {os.path.basename(SDK_extract_dir)} already exists in {DESTINATION_DIR_RW}."
@@ -219,7 +219,8 @@ def ADSD3500():
 
 @app.route('/upload-chunk', methods=['POST'])
 def upload_chunk():
-    
+
+    r_access = None    
     # First check the file Read/Write access 
     command = ['sudo', '-S', './change-permission.sh','view']
 
@@ -231,7 +232,7 @@ def upload_chunk():
 
     if 'RO' in stdout:
 
-        ro_access = True
+        r_access = True
         command = ['sudo', 'mount', '-o', 'remount,rw', '/dev/root', '/oldroot']
 
         # Create the subprocess and pass the password to stdin
@@ -247,6 +248,8 @@ def upload_chunk():
         else:
             print("Command failed with return code", process.returncode)
             print("Error:", stderr)
+    else:
+        r_access = False
 
 
 
@@ -263,7 +266,7 @@ def upload_chunk():
         f.write(file.read())
 
     app.logger.info(f"Chunk {chunk_index + 1}/{total_chunks} received successfully")
-    return jsonify({'message': f'Chunk {chunk_index + 1}/{total_chunks} received successfully'})
+    return jsonify({'message': r_access})
 
 @app.route('/complete-upload', methods=['POST'])
 def complete_upload():
@@ -302,6 +305,13 @@ def unzip_status():
             return jsonify({"status": "error", "error": "Invalid status file format."}), 500
 
     return jsonify(status)
+
+@app.route('/ro-access',methods=['POST'])
+def ro_access():
+    data = request.get_json()
+    value = data.get('value')
+    app.config['RO_ACCESS'] = value  
+    return '', 204
 
 @app.route('/switch-workspace', methods=['POST'])
 def switch_workspace():
