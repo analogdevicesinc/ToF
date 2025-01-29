@@ -19,44 +19,44 @@ else()
     target_link_libraries(${PROJECT_NAME} PUBLIC libprotobuf)
 endif()
 
-# Websockets
-if(NOT WITH_SUBMODULES AND NOT EXISTS "${LIBADITOF_SUBMODULE_PATH}/libwebsockets/.git")
-    find_package(Libwebsockets REQUIRED)
-else()
-    target_link_libraries(${PROJECT_NAME} PUBLIC websockets_shared)
-endif()
-
-# ZeroMQ
-if(WITH_ZMQ)
-    add_definitions(-DZMQ)
-    set(ZeroMQ_INCLUDE_DIR "/usr/include/")
-    set(ZeroMQ_LIBRARY "/usr/lib/aarch64-linux-gnu/libzmq.so")
-
-    if(EXISTS ${ZeroMQ_LIBRARY})
-        target_include_directories(${PROJECT_NAME} PRIVATE ${ZeroMQ_INCLUDE_DIR})
-        target_link_libraries(${PROJECT_NAME} PRIVATE ${ZeroMQ_LIBRARY})
+if(WITH_NETWORK)
+    # Websockets
+    if(NOT WITH_SUBMODULES AND NOT EXISTS "${LIBADITOF_SUBMODULE_PATH}/libwebsockets/.git")
+        find_package(Libwebsockets REQUIRED)
     else()
-        message(FATAL_ERROR "ZeroMQ library not found at ${ZeroMQ_LIBRARY}")
+        target_link_libraries(${PROJECT_NAME} PUBLIC websockets_shared)
     endif()
-endif()
 
-#ASIO
-if(WITH_ASIO)
-    add_definitions(-DASIO)
-    set(ASIO_INCLUDE_DIR "/usr/include/")
-    set(ASIO_LIBRARY "/usr/lib/aarch64-linux-gnu/libboost_system.so")
-
-    if(EXISTS ${ASIO_LIBRARY})
-        target_include_directories(${PROJECT_NAME} PRIVATE ${ASIO_INCLUDE_DIR})
-        target_link_libraries(${PROJECT_NAME} PRIVATE ${ASIO_LIBRARY})
-    else()
-        message(FATAL_ERROR "ASIO library not found at ${ASIO_LIBRARY}")
+    # ZeroMQ
+    if(WITH_ZEROMQ)
+        add_definitions(-DZMQ)
+        set(ZeroMQ_INCLUDE_DIR "/usr/include/")
+        set(ZeroMQ_LIBRARY "/usr/lib/aarch64-linux-gnu/libzmq.so")
+        if(NOT WITH_SUBMODULES AND NOT EXISTS "${LIBADITOF_SUBMODULE_PATH}/libzmq/.git")
+            find_package(Libzmq REQUIRED)
+        else()
+            target_link_libraries(${PROJECT_NAME} PUBLIC libzmq)
+        endif()
     endif()
-endif()
 
-#ORIGINAL
-if(WITH_ORIGINAL)
-    add_definitions(-DORIGINAL)
+    #ASIO
+    if(WITH_ASIO)
+        add_definitions(-DASIO)
+        set(ASIO_INCLUDE_DIR "/usr/include/")
+        set(ASIO_LIBRARY "/usr/lib/aarch64-linux-gnu/libboost_system.so")
+
+        if(EXISTS ${ASIO_LIBRARY})
+            target_include_directories(${PROJECT_NAME} PRIVATE ${ASIO_INCLUDE_DIR})
+            target_link_libraries(${PROJECT_NAME} PRIVATE ${ASIO_LIBRARY})
+        else()
+            message(FATAL_ERROR "ASIO library not found at ${ASIO_LIBRARY}")
+        endif()
+    endif()
+
+    #ORIGINAL
+    if(WITH_ORIGINAL)
+        add_definitions(-DORIGINAL)
+    endif()
 endif()
 
 # Generating protobuf files
