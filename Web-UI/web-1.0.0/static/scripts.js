@@ -238,6 +238,8 @@ function hideProgressElements() {
     document.getElementById('timerDisplay').style.display = 'none';
 }
 
+let ro_access = false;
+
 
 async function uploadFileInChunks() {
     const fileInput = document.getElementById('fileInput');
@@ -269,7 +271,8 @@ async function uploadFileInChunks() {
                     body: formData
                 });
                 const result = await response.json();
-                console.log(result.message);
+                ro_access = result;
+                
 
                 const percentComplete = Math.round(((chunkIndex + 1) / totalChunks) * 100);
                 progressBar.value = percentComplete;
@@ -286,10 +289,26 @@ async function uploadFileInChunks() {
             }
         }
         
+        await access();
         await startBackgroundUnzip(totalChunks);
         fileInput.value = '';
     } else {
         alert("Please select a file to upload.");
+    }
+}
+
+async function access(){
+    try {
+        const response = await fetch('/ro-access', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ value: ro_access })
+        });
+
+    }catch(error){
+        console.error('Error in sending access', error);
     }
 }
 
