@@ -40,4 +40,14 @@ else()
     )
 endif()
 
+# ZeroMQ
+if(WITH_ZEROMQ)
+    add_definitions(-DZMQ)
+    if(NOT WITH_SUBMODULES AND NOT EXISTS "${LIBADITOF_SUBMODULE_PATH}/libzmq/.git")
+        find_package(Libzmq REQUIRED)
+    else()
+        target_link_libraries(${PROJECT_NAME} PUBLIC libzmq)
+    endif()
+endif()
+
 target_link_libraries(${PROJECT_NAME} PRIVATE aditof cjson)
