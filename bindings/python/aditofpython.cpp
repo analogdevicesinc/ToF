@@ -259,6 +259,8 @@ PYBIND11_MODULE(aditofpython, m) {
                 format = "B";
             } else if (f.details.subelementSize == 2) {
                 format = "H";
+            } else {
+                format = "f"; // float for MP confidence frames
             }
 
             return py::buffer_info(
