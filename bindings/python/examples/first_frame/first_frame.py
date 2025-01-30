@@ -125,24 +125,65 @@ print("depth frame details:", "width:", frameDataDetails.width, "height:", frame
 status = camera1.stop()
 print("camera1.stop()", status)
 
-image = np.array(frame.getData("depth"), copy=False)
-
+# Get the depth frame
+image_depth = np.array(frame.getData("depth"), copy=False)
+# Get the AB frame
+image_ab = np.array(frame.getData("ab"), copy=False)
+# Get the confidence frame
+image_conf = np.array(frame.getData("conf"), copy=False)
 
 
 metadata = tof.Metadata
 status, metadata = frame.getMetadataStruct()
 
-print("Sensor temperature from metadata: ", metadata.sensorTemperature)
-print("Laser temperature from metadata: ", metadata.laserTemperature)
-print("Frame number from metadata: ", metadata.frameNumber)
-print("Mode from metadata: ", metadata.imagerMode)
-
 #Unregister callback
 status = sensor.adsd3500_unregister_interrupt_callback(callbackFunction)
 
-plt.figure()
-plt.imshow(image, cmap = 'jet')
-plt.colorbar()
+# Metadata values
+sensor_temp = metadata.sensorTemperature
+laser_temp = metadata.laserTemperature
+frame_num = metadata.frameNumber
+imager_mode = metadata.imagerMode
+
+print("Sensor temperature from metadata: ", sensor_temp)
+print("Laser temperature from metadata: ", laser_temp)
+print("Frame number from metadata: ", frame_num)
+print("Mode from metadata: ", imager_mode)
+
+# Create a figure with 4 subplots (3 images + 1 metadata text)
+fig, axs = plt.subplots(1, 4, figsize=(18, 5))  # 1 row, 4 columns
+
+# Plot the depth image
+axs[0].imshow(image_depth, cmap='jet')
+axs[0].set_title("Depth Image")
+axs[0].axis("off")
+
+# Plot the AB image
+axs[1].imshow(image_ab, cmap='gray')
+axs[1].set_title("AB Image")
+axs[1].axis("off")
+
+# Plot the Confidence image
+axs[2].imshow(image_conf, cmap='gray')
+axs[2].set_title("Confidence Image")
+axs[2].axis("off")
+
+# Add colorbars
+fig.colorbar(axs[0].imshow(image_depth, cmap='jet'), ax=axs[0])
+fig.colorbar(axs[1].imshow(image_ab, cmap='gray'), ax=axs[1])
+fig.colorbar(axs[2].imshow(image_conf, cmap='gray'), ax=axs[2])
+
+# Metadata as text in the fourth subplot
+axs[3].axis("off")  # Hide axes
+metadata_text = (
+    f"Sensor Temp: {sensor_temp}°C\n"
+    f"Laser Temp: {laser_temp}°C\n"
+    f"Frame #: {frame_num}\n"
+    f"Mode: {imager_mode}"
+)
+axs[3].text(0.1, 0.5, metadata_text, fontsize=12, verticalalignment='center')
+
+plt.tight_layout()
 plt.show()
 
 
