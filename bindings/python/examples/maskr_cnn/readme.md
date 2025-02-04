@@ -1,4 +1,4 @@
-# MaskR-CNN Example
+# MaskR-CNN Example (DEPRECATED)
 
 ### Overview
 This example  demonstrates object detection on a combination between the depth frame and the AB frame using the MaskR-CNN object detection example from OpenCV and the adiTOF SDK.
