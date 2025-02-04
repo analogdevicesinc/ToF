@@ -11,7 +11,7 @@ To get TENSORFLOW  model configuration files (**frozen_inference_graph.pb and ma
 * use the following script:
 (**https://github.com/opencv/opencv_extra/blob/master/testdata/dnn/download_models.py**). 
 * download one of the archives from the link below and get the *.pb* and *.pbtxt* files from that archive.
-(**https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/detection_model_zoo.md**)
+(**https://github.com/tensorflow/models/blob/v1.13.0/research/object_detection/g3doc/detection_model_zoo.md**)
 
 For running the python program use:
 ```console
