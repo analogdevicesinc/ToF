@@ -44,13 +44,13 @@ jobs:
       #IMX
       ubuntu_20_04_imx:
         imageName: 'ubuntu-20.04'
-        DOCKER: "septimiuvana/tof-imx8-docker"
+        DOCKER: "septimiuvana/arm64-ubuntu"
         EXTRA_CMAKE_FLAGS: "-DNXP=1"
 
       #NVIDIA
       ubuntu_20_04_nvidia:
         imageName: 'ubuntu-20.04'
-        DOCKER: "adismartcamtest/tof_nvidia:4.0"
+        DOCKER: "septimiuvana/arm64-ubuntu"
         EXTRA_CMAKE_FLAGS: "-DNVIDIA=1"
       
       #code quality, TO DO: once entire code is formatted enable clang-format
