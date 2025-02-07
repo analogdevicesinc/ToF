@@ -34,6 +34,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import os
+import struct
 
 def help():
     print(f"{sys.argv[0]} usage:")
@@ -132,6 +133,22 @@ image_ab = np.array(frame.getData("ab"), copy=False)
 # Get the confidence frame
 image_conf = np.array(frame.getData("conf"), copy=False)
 
+if (frameDataDetails.width != 1024 and frameDataDetails.height != 1024):
+    image_conf2 = image_conf.flatten()
+    count = 0
+    final_conf = np.zeros(512*512*4)
+    for i in range(512*256):
+        packed_float = struct.pack('f', image_conf2[i])
+
+    # Unpack the bytes into four uint8 values
+        uint8_values = struct.unpack('2H', packed_float)
+        array_data = np.array(uint8_values)
+        for j in range(2):
+            final_conf[count+j] = array_data[j]
+            #print(j)
+        count = count + 2
+    image_conf = np.reshape(final_conf[frameDataDetails.width*frameDataDetails.height*0:frameDataDetails.width*frameDataDetails.height*1], \
+                            [frameDataDetails.height,frameDataDetails.width])
 
 metadata = tof.Metadata
 status, metadata = frame.getMetadataStruct()
