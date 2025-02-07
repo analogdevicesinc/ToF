@@ -287,6 +287,7 @@ mkdir /home/${USERNAME}/Workspace/bin
 cp /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/data_collect /home/${USERNAME}/Workspace/bin
 cp /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/*.so* /home/${USERNAME}/Workspace/bin
 cp /home/${USERNAME}/Workspace/ToF/build/examples/first-frame/first-frame /home/${USERNAME}/Workspace/bin
+mv /home/${USERNAME}/Workspace/ToF/sdcard-images-utils/nxp/patches/ubuntu_overlay/step1/usr/share/systemd/*.sh /home/${USERNAME}/Workspace/bin
 
 
 #generate licences file
@@ -340,6 +341,27 @@ chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/ADSD3500-firmware
 sudo mv Workspace/  Workspace-6.0.0
 sudo ln -s /home/${USERNAME}/Workspace-6.0.0 Workspace
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace
+
+
+#copy service files to services folder
+mkdir /home/${USERNAME}/Workspace/services
+mv /usr/lib/systemd/system/adi-backup.service /home/${USERNAME}/Workspace/services
+mv /usr/lib/systemd/system/adi-tof.service /home/${USERNAME}/Workspace/services
+mv /usr/lib/systemd/system/network-gadget.service /home/${USERNAME}/Workspace/services
+mv /usr/lib/systemd/system/usb-gadget.service /home/${USERNAME}/Workspace/services
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/services
+
+# link the services in Workspace
+sudo ln -s /home/${USERNAME}/Workspace/services/adi-backup.service /usr/lib/systemd/system/adi-backup.service
+sudo ln -s /home/${USERNAME}/Workspace/services/adi-tof.service /usr/lib/systemd/system/adi-tof.service
+sudo ln -s /home/${USERNAME}/Workspace/services/network-gadget.service /usr/lib/systemd/system/network-gadget.service
+sudo ln -s /home/${USERNAME}/Workspace/services/usb-gadget.service /usr/lib/systemd/system/usb-gadget.service
+
+#copy the driver build in modules folder
+mkdir /home/${USERNAME}/Workspace/module
+mv /usr/lib/modules/5.10.72-adi-00067-g6381be128ba7/kernel/drivers/media/i2c/adsd3500.ko /home/${USERNAME}/Workspace/module
+sudo ln -s /home/${USERNAME}/Workspace/module/adsd3500.ko /usr/lib/modules/5.10.72-adi-00067-g6381be128ba7/kernel/drivers/media/i2c/adsd3500.ko
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/module
 
 EOF
      sudo mv web_ui_setup.sh ${ROOTFS_TMP}/tmp
