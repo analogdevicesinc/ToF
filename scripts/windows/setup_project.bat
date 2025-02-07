@@ -167,6 +167,7 @@ ECHO        Print a usage message briefly summarizing the command line options a
 ECHO -y^|--yes
 ECHO        Automatic yes to prompts.
 ECHO -g^|--generator
+ECHO        Visual Studio 17 2022 = Generates Visual Studio 2022 project files.
 ECHO        Visual Studio 16 2019 = Generates Visual Studio 2019 project files.
 ECHO        Visual Studio 15 2017 Win64 = Generates Visual Studio 2017 project files.
 ECHO        Visual Studio 14 2015 Win64 = Generates Visual Studio 2015 project files.
