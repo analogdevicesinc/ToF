@@ -16,10 +16,15 @@
 #### Installing the pre-requisites
 ```console
 sudo apt update
-sudo apt install cmake g++ python3.8-dev \
+sudo apt install cmake g++ \
      libopencv-contrib-dev libopencv-dev \
      libgl1-mesa-dev libglfw3-dev \
      doxygen graphviz
+```
+
+For Linux builds install the necessary version of Python dev libraries. For example for Ubuntu 24.04 with Python 3.12 as the default Python:
+```console
+sudo apt install python3.12-dev
 ```
 
 ### Building the SDK with Example

@@ -34,6 +34,9 @@ jobs:
       ubuntu_22_04_x86_64:
         imageName: 'ubuntu-22.04'
 
+      ubuntu_24_04_x86_64:
+        imageName: 'ubuntu-24.04'
+
       ubuntu_22_04_x86_64_offline:
         imageName: 'ubuntu-22.04'
         EXTRA_CMAKE_FLAGS: "-DWITH_OFFLINE=on"
@@ -41,13 +44,13 @@ jobs:
       #IMX
       ubuntu_20_04_imx:
         imageName: 'ubuntu-20.04'
-        DOCKER: "septimiuvana/tof-imx8-docker"
+        DOCKER: "septimiuvana/arm64-ubuntu"
         EXTRA_CMAKE_FLAGS: "-DNXP=1"
 
       #NVIDIA
       ubuntu_20_04_nvidia:
         imageName: 'ubuntu-20.04'
-        DOCKER: "adismartcamtest/tof_nvidia:4.0"
+        DOCKER: "septimiuvana/arm64-ubuntu"
         EXTRA_CMAKE_FLAGS: "-DNVIDIA=1"
       
       #code quality, TO DO: once entire code is formatted enable clang-format
@@ -125,18 +128,18 @@ jobs:
   - task: UsePythonVersion@0
     inputs:
       versionSpec: '3.9'
-  - task: Cache@2
-    inputs:
-      key: deps_windows | "$(imageName)" 
-      restoreKeys: deps_windows | "$(imageName)"
-      path: $(Agent.BuildDirectory)/s/deps_installed
-      cacheHitVar: CACHE_RESTORED
-  - task: PowerShell@2
-    inputs:
-      targetType: 'filePath'
-      filePath: ./ci/azure/windows-build/install_deps.ps1
-    condition: eq(variables.CACHE_RESTORED, 'false')
-    displayName: "Install Dependencies"
+  # - task: Cache@2
+  #   inputs:
+  #     key: deps_windows | "$(imageName)" 
+  #     restoreKeys: deps_windows | "$(imageName)"
+  #     path: $(Agent.BuildDirectory)/s/deps_installed
+  #     cacheHitVar: CACHE_RESTORED
+  # - task: PowerShell@2
+  #   inputs:
+  #     targetType: 'filePath'
+  #     filePath: ./ci/azure/windows-build/install_deps.ps1
+  #   condition: eq(variables.CACHE_RESTORED, 'false')
+  #   displayName: "Install Dependencies"
   - task: PowerShell@2
     inputs:
       targetType: 'filePath'
