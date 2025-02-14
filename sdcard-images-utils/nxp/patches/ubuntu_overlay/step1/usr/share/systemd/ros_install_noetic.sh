@@ -140,8 +140,9 @@ echo ""
 echo "" >> /home/$user_name/.bashrc
 echo "source /opt/ros/noetic/setup.bash" >> /home/$user_name/.bashrc
 source /home/$user_name/.bashrc
-sudo apt install -y python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool build-essential
+sudo apt install -y python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool python3-catkin-tools build-essential 
 sudo rosdep init
+sudo rosdep fix-permissions
 rosdep update
 echo ""
 echo "#######################################################################################################################"
