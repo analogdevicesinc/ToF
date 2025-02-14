@@ -71,6 +71,7 @@ function setup_config() {
   LOCALE_LANG=en_US.UTF-8
   ADD_LIST='git build-essential gcc autoconf nano vim parted flex bison'
   ADD_LIST_ST_3='i2c-tools v4l-utils rfkill wpasupplicant libtool libconfig-dev avahi-daemon htpdate openssh-server iperf3 bc python3-dev python3-pip python3-matplotlib gunicorn python3-gevent python3-flask python3-tz unzip'
+  ROS_DEP='software-properties-common'
 
   # output example of the config file
 #  cat <<EOF>config-example
@@ -103,6 +104,7 @@ function setup_config() {
   echo LANG        : ${LOCALE_LANG}
   echo ADD_LIST    : ${ADD_LIST}
   echo ADD_LIST_STAGE_3 : ${ADD_LIST_ST_3}
+  echo ROS_DEP : ${ROS_DEP}
 
   # language pack
   LANG_PACK=language-pack-${LOCALE_LANG%%_*}-base
@@ -226,6 +228,10 @@ echo deb-src ${DISTRO_MIRROR} ${DISTRO_CODE}-security main universe >> /etc/apt/
 
 apt update -y
 apt upgrade -y
+apt-get update -y
+apt-get upgrade -y
+
+apt-get install -y ${ROS_DEP}
 
 apt install -y ${ADD_LIST_ST_3}
 
@@ -289,6 +295,10 @@ cp /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/*.so* /home/${USE
 cp /home/${USERNAME}/Workspace/ToF/build/examples/first-frame/first-frame /home/${USERNAME}/Workspace/bin
 mv /home/${USERNAME}/Workspace/ToF/sdcard-images-utils/nxp/patches/ubuntu_overlay/step1/usr/share/systemd/*.sh /home/${USERNAME}/Workspace/bin
 
+pushd /home/${USERNAME}/Workspace/bin
+chmod +x ros_install_noetic.sh
+echo "3" | ./ros_install_noetic.sh
+popd
 
 #generate licences file
 tail -n 10000 /usr/share/doc/*/copyright > /licenses.txt
@@ -359,8 +369,8 @@ sudo ln -s /home/${USERNAME}/Workspace/services/usb-gadget.service /usr/lib/syst
 
 #copy the driver build in modules folder
 mkdir /home/${USERNAME}/Workspace/module
-mv /usr/lib/modules/5.10.72-adi-00067-g6381be128ba7/kernel/drivers/media/i2c/adsd3500.ko /home/${USERNAME}/Workspace/module
-sudo ln -s /home/${USERNAME}/Workspace/module/adsd3500.ko /usr/lib/modules/5.10.72-adi-00067-g6381be128ba7/kernel/drivers/media/i2c/adsd3500.ko
+mv /usr/lib/modules/5.10.72-adi-00067-*/kernel/drivers/media/i2c/adsd3500.ko /home/${USERNAME}/Workspace/module
+sudo ln -s /home/${USERNAME}/Workspace/module/adsd3500.ko /usr/lib/modules/5.10.72-adi-00067-*/kernel/drivers/media/i2c/adsd3500.ko
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/module
 
 EOF
