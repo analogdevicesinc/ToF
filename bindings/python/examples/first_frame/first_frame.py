@@ -133,7 +133,7 @@ image_ab = np.array(frame.getData("ab"), copy=False)
 # Get the confidence frame
 image_conf = np.array(frame.getData("conf"), copy=False)
 
-if ((frameDataDetails.width != 1024 and frameDataDetails.height != 1024) or (frameDataDetails.width != 512 and frameDataDetails.height != 640)):
+if ((frameDataDetails.width != 1024 and frameDataDetails.height != 1024)):
     image_conf2 = image_conf.flatten()
     count = 0
     final_conf = np.zeros(frameDataDetails.width*frameDataDetails.height*4)
