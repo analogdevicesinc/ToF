@@ -105,7 +105,6 @@ echo "     [3. ROS-Base: (Bare Bones) ROS packaging, build, and communication li
 echo ""
 #Assigning default ros-base
 package_type="ros-base"
-esac
 echo "#######################################################################################################################"
 echo ""
 echo ">>>  {Starting ROS installation, this will take about 20 min. It will depends on your internet  connection}"
