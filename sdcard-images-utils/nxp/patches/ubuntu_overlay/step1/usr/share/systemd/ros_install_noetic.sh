@@ -1,10 +1,4 @@
-#!/bin/bash -eu
-
-# The BSD License
-# Copyright (c) 2020 Qbotics Labs Pvt Ltd
-# Copyright (c) 2014 OROCA and ROS Korea Users Group
-
-#set -x
+#!/bin/bash
 
 name_ros_distro=noetic 
 user_name=analog
@@ -109,22 +103,8 @@ echo "     [2. Desktop Install: Everything in ROS-Base plus tools like rqt and r
 echo ""
 echo "     [3. ROS-Base: (Bare Bones) ROS packaging, build, and communication libraries. No GUI tools.]"
 echo ""
-#Assigning default value as 1: Desktop full install
-read -p "Enter your install (Default is 1):" answer 
-
-case "$answer" in
-  1)
-    package_type="desktop-full"
-    ;;
-  2)
-    package_type="desktop"
-    ;;
-  3)
-    package_type="ros-base"
-    ;;
-  * )
-    package_type="desktop-full"
-    ;;
+#Assigning default ros-base
+package_type="ros-base"
 esac
 echo "#######################################################################################################################"
 echo ""
