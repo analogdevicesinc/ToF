@@ -253,6 +253,7 @@ mkdir Workspace
 pushd Workspace
 
 if ls /*.so 1> /dev/null 2>&1; then
+	echo " Got the libs !"
 	mkdir libs
 	sudo cp /*.so /home/${USERNAME}/Workspace/libs 1> /dev/null 2>&1
 	sudo rm -rf /*.so 1> /dev/null 2>&1
@@ -297,7 +298,7 @@ mv /home/${USERNAME}/Workspace/ToF/sdcard-images-utils/nxp/patches/ubuntu_overla
 
 pushd /home/${USERNAME}/Workspace/bin
 chmod +x ros_install_noetic.sh
-echo "3" | ./ros_install_noetic.sh
+./ros_install_noetic.sh
 popd
 
 #generate licences file
@@ -358,26 +359,69 @@ mkdir /home/${USERNAME}/Workspace/services
 mv /usr/lib/systemd/system/adi-backup.service /home/${USERNAME}/Workspace/services
 mv /usr/lib/systemd/system/adi-tof.service /home/${USERNAME}/Workspace/services
 mv /usr/lib/systemd/system/network-gadget.service /home/${USERNAME}/Workspace/services
+mv /usr/lib/systemd/system/network-gadget.path /home/${USERNAME}/Workspace/services
 mv /usr/lib/systemd/system/usb-gadget.service /home/${USERNAME}/Workspace/services
+mv /usr/lib/systemd/system/usb-gadget.path /home/${USERNAME}/Workspace/services
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/services
 
 # link the services in Workspace
 sudo ln -s /home/${USERNAME}/Workspace/services/adi-backup.service /usr/lib/systemd/system/adi-backup.service
 sudo ln -s /home/${USERNAME}/Workspace/services/adi-tof.service /usr/lib/systemd/system/adi-tof.service
 sudo ln -s /home/${USERNAME}/Workspace/services/network-gadget.service /usr/lib/systemd/system/network-gadget.service
+sudo ln -s /home/${USERNAME}/Workspace/services/network-gadget.path /usr/lib/systemd/system/network-gadget.path
 sudo ln -s /home/${USERNAME}/Workspace/services/usb-gadget.service /usr/lib/systemd/system/usb-gadget.service
+sudo ln -s /home/${USERNAME}/Workspace/services/usb-gadget.path /usr/lib/systemd/system/usb-gadget.path
 
 #copy the driver build in modules folder
 mkdir /home/${USERNAME}/Workspace/module
 mv /usr/lib/modules/5.10.72-adi-00067-*/kernel/drivers/media/i2c/adsd3500.ko /home/${USERNAME}/Workspace/module
-sudo ln -s /home/${USERNAME}/Workspace/module/adsd3500.ko /usr/lib/modules/5.10.72-adi-00067-*/kernel/drivers/media/i2c/adsd3500.ko
+expanded_path=$(echo /usr/lib/modules/5.10.72-adi-00067-*/kernel/drivers/media/i2c)
+sudo ln -s /home/${USERNAME}/Workspace/module/adsd3500.ko $expanded_path/adsd3500.ko
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/module
+popd
 
 EOF
      sudo mv web_ui_setup.sh ${ROOTFS_TMP}/tmp
      sudo chmod +x ${ROOTFS_TMP}/tmp/web_ui_setup.sh
      sudo chroot ${ROOTFS_TMP} /tmp/web_ui_setup.sh
      sudo rm -f ${ROOTFS_TMP}/tmp/web_ui_setup.sh
+}
+
+function create_ros_setup(){
+	cat<<EOF>ros_setup.sh
+#!/bin/bash 
+
+pushd /home/${USERNAME}
+
+mkdir -p /home/${USERNAME}/Workspace/ROS1/src
+pushd /home/${USERNAME}/Workspace/ROS1/src
+sudo mv /adi_3dtof_adtf31xx /home/${USERNAME}/Workspace/ROS1/src/
+
+if [ -d  "/home/${USERNAME}/Workspace/libs" ]; then
+   ln -s /home/${USERNAME}/Workspace/ToF/libaditof libaditof
+   chown -R  ${USERNAME}:${USERNAME} libaditof
+   ln -s /home/${USERNAME}/Workspace/libs /home/${USERNAME}/Workspace/ToF/libs
+   chown -R  ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/ToF/libs
+   cd ../
+   catkin config --install --extend /opt/ros/noetic
+   rosdep update
+   rosdep install --from-paths src --ignore-src -r -y
+   sudo -H apt-get install -y ros-noetic-pcl-ros
+   catkin build -DCMAKE_BUILD_TYPE=RELEASE -DSENSOR_CONNECTED=TRUE -DNXP=1 -j2
+else
+  echo "libs directory does not exist."
+fi
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/ROS1
+sudo rm -rf /home/${USERNAME}/Workspace/libs
+
+popd
+popd
+
+EOF
+    sudo mv ros_setup.sh ${ROOTFS_TMP}/tmp
+    sudo chmod +x ${ROOTFS_TMP}/tmp/ros_setup.sh
+    sudo chroot ${ROOTFS_TMP} /tmp/ros_setup.sh
+    sudo rm -f ${ROOTFS_TMP}/tmp/ros_setup.sh
 }
 
 function main() {
@@ -398,6 +442,9 @@ function main() {
   # debootstrap 1st
   sudo debootstrap --arch=${TARGET_ARCH} --include="${INCLUDE_LIST}" --foreign ${DISTRO_CODE} ${ROOTFS_TMP} ${DISTRO_MIRROR}
   # copy libs to ${SCRIPT_DIR}/build/ubuntu/rootfs_tmp/home/temp(Make sure to add a path to .so files here)
+  sudo cp /home/esptguest/SSingh/Workspace/libs/*.so ${SCRIPT_DIR}/build/ubuntu/rootfs_tmp
+  echo "libs copied sucessfully"> /home/esptguest/SSingh/Workspace/libs/log.txt
+  date >> /home/esptguest/SSingh/Workspace/libs/log.txt 1> /dev/null 2>&1
   # debootstrap 2nd
   sudo chroot ${ROOTFS_TMP} /debootstrap/debootstrap --second-stage
 
@@ -405,6 +452,11 @@ function main() {
 
   # for web-ui
   create_ui_setup
+
+  # for ROS
+  sudo cp -r /home/esptguest/SSingh/Workspace/ROS/adi_3dtof_adtf31xx  ${SCRIPT_DIR}/build/ubuntu/rootfs_tmp
+  echo "ROS copied sucessfully"> /home/esptguest/SSingh/Workspace/ROS/log.txt
+  create_ros_setup
 
   uninstall_qemu
   
