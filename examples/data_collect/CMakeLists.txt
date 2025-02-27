@@ -3,7 +3,7 @@ project(data_collect)
 
 add_executable(${PROJECT_NAME} main.cpp ${SOURCES})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11)
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 14)
 
 if (NOT WIN32)
     find_library(PTHREAD_LIBRARIES pthread)

@@ -51,6 +51,12 @@
 #include <string>
 #include <sys/time.h>
 
+#ifdef USE_ZMQ
+#include <zmq.hpp>
+#include <thread>
+#include <atomic>
+#endif
+
 using namespace google::protobuf::io;
 
 static const int FRAME_PREPADDING_BYTES = 2;
@@ -105,10 +111,33 @@ std::thread
 bool keepCaptureThreadAlive =
     false; // Flag used by frame capturing thread to know whether to continue or finish
 
+
+#ifdef USE_ZMQ
+
+std::unique_ptr<zmq::socket_t> server_socket;
+uint32_t max_send_frames = 10;
+std::atomic<bool> running(false);
+std::atomic<bool> stop_flag(false);
+
+#endif
+
 struct clientData {
     bool hasFragments;
     std::vector<char> data;
 };
+
+#ifdef USE_ZMQ
+
+void close_zmq_connection() {
+    if (server_socket) {
+        server_socket->close(); // Close the socket
+        server_socket.reset();  // Release the unique pointer
+    }
+
+    LOG(INFO) << "ZMQ Client Connection closed.";
+} 
+
+#endif
 
 static struct lws_protocols protocols[] = {
     {
@@ -141,13 +170,33 @@ static void captureFrameFromHardware() {
         // 2. The signal has been received, now go capture the frame
         goCaptureFrame = false;
 
-        aditof::Status status = camDepthSensor->getFrame(
-            (uint16_t *)(buff_frame_to_be_captured +
-                         LWS_SEND_BUFFER_PRE_PADDING + FRAME_PREPADDING_BYTES));
-        if (status != aditof::Status::OK) {
-            LOG(ERROR) << "Failed to get frame!";
-            //TO DO: buff_send.set_status(static_cast<::payload::Status>(status));
-        }
+        #ifdef USE_ZMQ 
+            // Send frames to PC via ZMQ socket.
+            aditof::Status status = camDepthSensor->getFrame((uint16_t *)buff_frame_to_be_captured);
+            if (status == aditof::Status::UNREACHABLE) {
+                LOG(INFO) << "The capture_frame thread is stopped. Stopping the stream_frame thread"; 
+                break;
+            } else {
+                if (!server_socket) {
+                    LOG(ERROR) << "ZMQ server socket is not initialized!";
+                    break;
+                }
+                zmq::message_t message(buff_frame_length);
+                memcpy(message.data(), buff_frame_to_be_captured, buff_frame_length);
+                server_socket->send(message, zmq::send_flags::none);
+            #ifdef DEBUG            
+                        LOG(INFO) << "Frame sent successfully";
+            #endif
+                    }
+        #else
+            aditof::Status status = camDepthSensor->getFrame(
+                (uint16_t *)(buff_frame_to_be_captured +
+                            LWS_SEND_BUFFER_PRE_PADDING + FRAME_PREPADDING_BYTES));
+            if (status != aditof::Status::OK) {
+                LOG(ERROR) << "Failed to get frame!";
+                //TO DO: buff_send.set_status(static_cast<::payload::Status>(status));
+            }
+        #endif
 
         // 3. Notify others that there is a new frame available
         frameCaptured = true;
@@ -166,6 +215,9 @@ static void cleanup_sensors() {
         cvGetFrame.notify_one();
         frameCaptureThread.join();
     }
+    #ifdef USE_ZMQ
+     close_zmq_connection();
+    #endif
 
     camDepthSensor->adsd3500_unregister_interrupt_callback(callback);
     sensorV4lBufAccess.reset();
@@ -303,6 +355,11 @@ int Network::callback_function(struct lws *wsi,
                 clientEngagedWithSensors = false;
             }
 
+            #ifdef USE_ZMQ
+            // Close the ZMQ connection
+                close_zmq_connection();
+            #endif
+
             Client_Connected = false;
             break;
         } else {
@@ -323,7 +380,20 @@ int Network::callback_function(struct lws *wsi,
     return 0;
 }
 
-void sigint_handler(int) { interrupted = 1; }
+void sigint_handler(int) {
+    interrupted = 1;
+
+    if (sensors_are_created) {
+        cleanup_sensors();
+    }
+    clientEngagedWithSensors = false;
+
+    #ifdef USE_ZMQ
+    // cleanup_sensors();
+    // Close the ZMQ connection
+        close_zmq_connection();
+    #endif
+}
 
 int main(int argc, char *argv[]) {
 
@@ -363,6 +433,14 @@ int main(int argc, char *argv[]) {
   {
     fprintf(stderr,"Failed to daemonize\n");
   }
+#endif
+
+#ifdef USE_ZMQ
+    zmq::context_t zmq_context(1);
+    server_socket = std::make_unique<zmq::socket_t>(zmq_context, zmq::socket_type::push);
+    server_socket->setsockopt(ZMQ_SNDHWM, (int *)&max_send_frames, sizeof(max_send_frames));
+    server_socket->bind("tcp://*:5555"); 
+    LOG(INFO) << "ZMQ server socket connection established.";
 #endif
 
     while (!interrupted) {
@@ -559,10 +637,18 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                 delete[] buff_frame_to_send;
                 buff_frame_to_send = nullptr;
             }
+            #ifdef USE_ZMQ
+
             buff_frame_to_send =
-                new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
-                            FRAME_PREPADDING_BYTES +
-                            processedFrameSize * sizeof(uint16_t)];
+            new uint8_t[processedFrameSize * sizeof(uint16_t)];
+
+            #else
+                buff_frame_to_send =
+                    new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
+                                FRAME_PREPADDING_BYTES +
+                                processedFrameSize * sizeof(uint16_t)];
+
+            #endif
 
             if (buff_frame_to_be_captured != nullptr) {
                 delete[] buff_frame_to_be_captured;
@@ -573,7 +659,11 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                             FRAME_PREPADDING_BYTES +
                             processedFrameSize * sizeof(uint16_t)];
 
-            buff_frame_length = processedFrameSize * 2 + FRAME_PREPADDING_BYTES;
+            #ifdef USE_ZMQ
+                buff_frame_length = processedFrameSize * 2;
+            #else
+                buff_frame_length = processedFrameSize * 2 + FRAME_PREPADDING_BYTES;
+            #endif
         }
 
         buff_send.set_status(static_cast<::payload::Status>(status));
