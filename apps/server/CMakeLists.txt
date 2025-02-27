@@ -39,4 +39,12 @@ set(NET_PROTO_HRDS "${CMAKE_BINARY_DIR}/buffer.pb.h")
 target_link_libraries(${PROJECT_NAME} PRIVATE aditof)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/libaditof/libwebsockets/include)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11)
+if (USE_ZMQ) 
+    message("Included ZMQ libraries")
+    set(ZeroMQ_INCLUDE_DIRS "/usr/include")
+    set(ZeroMQ_LIBRARY_DIRS "/usr/lib/aarch64-linux-gnu")
+    target_include_directories(${PROJECT_NAME} PRIVATE ${ZeroMQ_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${ZeroMQ_LIBRARIES} zmq)
+endif()
+
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 14)
