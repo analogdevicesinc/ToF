@@ -344,7 +344,7 @@ int main(int argc, char *argv[]) {
                       << saveconfigurationFileValue;
         }
     }
-    
+
     aditof::CameraDetails cameraDetails;
     camera->getDetails(cameraDetails);
 
