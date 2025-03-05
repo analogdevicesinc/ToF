@@ -222,6 +222,7 @@ void stop_stream_thread() {
 
 }
 
+
 #endif
 
 static struct lws_protocols protocols[] = {
@@ -508,13 +509,13 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
-#ifdef USE_ZMQ
+    #ifdef USE_ZMQ
     zmq::context_t zmq_context(1);
     server_socket = std::make_unique<zmq::socket_t>(zmq_context, zmq::socket_type::push);
     server_socket->setsockopt(ZMQ_SNDHWM, (int *)&max_send_frames, sizeof(max_send_frames));
-    server_socket->bind("tcp://*:5555"); 
+    server_socket->bind("tcp://*:5555");
     LOG(INFO) << "ZMQ server socket connection established.";
-#endif
+    #endif
 
     while (!interrupted) {
         lws_service(network->context, msTimeout /* timeout_ms */);
@@ -832,40 +833,41 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     case GET_FRAME: {
         aditof::Status status = aditof::Status::OK;
 
-        if (sameFrameEndlessRepeat) {
-            m_frame_ready = true;
-            buff_send.set_status(static_cast<::payload::Status>(status));
-            break;
-        } else {
-            // 1. Wait for frame to be captured on the other thread
-            std::unique_lock<std::mutex> lock(frameMutex);
-            cvGetFrame.wait(lock, []() { return frameCaptured; });
-
-            // 2. Get your hands on the captured frame
-            std::swap(buff_frame_to_send, buff_frame_to_be_captured);
-            frameCaptured = false;
-            lock.unlock();
-
-            // 3. Trigger the other thread to capture another frame while we do stuff with current frame
-            {
-                std::lock_guard<std::mutex> lock(frameMutex);
-                goCaptureFrame = true;
-            }
-            cvGetFrame.notify_one();
-
-            // 4. Send current frame over network
-            // This will be done by the callback_function()
-
-            uint8_t *pInterruptOccuredByte =
-                &buff_frame_to_send[LWS_SEND_BUFFER_PRE_PADDING +
-                                    0]; // 1st byte after LWS prepadding bytes
-            if (!adsd3500InterruptsQueue.empty()) {
-                *pInterruptOccuredByte = 123;
+        #ifndef USE_ZMQ
+            if (sameFrameEndlessRepeat) {
+                m_frame_ready = true;
+                buff_send.set_status(static_cast<::payload::Status>(status));
+                break;
             } else {
-                *pInterruptOccuredByte = 0;
-            }
+                // 1. Wait for frame to be captured on the other thread
+                std::unique_lock<std::mutex> lock(frameMutex);
+                cvGetFrame.wait(lock, []() { return frameCaptured; });
 
-            m_frame_ready = true;
+                // 2. Get your hands on the captured frame
+                std::swap(buff_frame_to_send, buff_frame_to_be_captured);
+                frameCaptured = false;
+                lock.unlock();
+
+                // 3. Trigger the other thread to capture another frame while we do stuff with current frame
+                {
+                    std::lock_guard<std::mutex> lock(frameMutex);
+                    goCaptureFrame = true;
+                }
+                cvGetFrame.notify_one();
+
+                // 4. Send current frame over network
+                // This will be done by the callback_function()
+
+                uint8_t *pInterruptOccuredByte =
+                    &buff_frame_to_send[LWS_SEND_BUFFER_PRE_PADDING +
+                                        0]; // 1st byte after LWS prepadding bytes
+                if (!adsd3500InterruptsQueue.empty()) {
+                    *pInterruptOccuredByte = 123;
+                } else {
+                    *pInterruptOccuredByte = 0;
+                }
+
+                m_frame_ready = true;
 
             buff_send.set_status(payload::Status::OK);
             break;
@@ -917,6 +919,11 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         }
 
         buff_send.set_status(payload::Status::OK);
+
+    #else
+        LOG(INFO) << "Server App is build to work with ZMQ";
+        buff_send.set_status(static_cast<::payload::Status>(status));
+    #endif
         break;
     }
 
@@ -1095,11 +1102,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             cleanup_sensors();
         }
         clientEngagedWithSensors = false;
-
-        #ifdef USE_ZMQ
-        // Close the ZMQ connection
-            close_zmq_connection();
-        #endif
 
         break;
     }
