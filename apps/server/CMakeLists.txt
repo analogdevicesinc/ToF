@@ -41,10 +41,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/libaditof
 
 if (USE_ZMQ) 
     message("Included ZMQ libraries")
-    set(ZeroMQ_INCLUDE_DIRS "/usr/include")
-    set(ZeroMQ_LIBRARY_DIRS "/usr/lib/aarch64-linux-gnu")
-    target_include_directories(${PROJECT_NAME} PRIVATE ${ZeroMQ_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${ZeroMQ_LIBRARIES} zmq)
+    set(CPPZMQ_INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../libaditof/cppzmq")
+    target_include_directories(${PROJECT_NAME} PRIVATE ${CPPZMQ_INSTALL_DIR})
+    target_link_libraries(${PROJECT_NAME} PRIVATE libzmq-static)
 endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 14)
