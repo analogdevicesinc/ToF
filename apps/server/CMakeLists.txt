@@ -39,4 +39,11 @@ set(NET_PROTO_HRDS "${CMAKE_BINARY_DIR}/buffer.pb.h")
 target_link_libraries(${PROJECT_NAME} PRIVATE aditof)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/libaditof/libwebsockets/include)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11)
+if (USE_ZMQ) 
+    message("Included ZMQ libraries")
+    set(CPPZMQ_INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../libaditof/cppzmq")
+    target_include_directories(${PROJECT_NAME} PRIVATE ${CPPZMQ_INSTALL_DIR})
+    target_link_libraries(${PROJECT_NAME} PRIVATE libzmq-static)
+endif()
+
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 14)
