@@ -116,7 +116,7 @@ if (WITH_NETWORK)
 endif()
 
 if(USE_ZMQ)
-        set(WITH_ZEROMQ_DEPENDENCY ON CACHE BOOL "Build with ZMQ")
+        set(WITH_ZMQ_DEPENDENCY ON CACHE BOOL "Build with ZMQ")
         add_definitions(-DUSE_ZMQ)
 endif()
 
