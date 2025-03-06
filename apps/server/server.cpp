@@ -52,9 +52,9 @@
 #include <sys/time.h>
 
 #ifdef USE_ZMQ
-#include <zmq.hpp>
-#include <thread>
 #include <atomic>
+#include <thread>
+#include <zmq.hpp>
 #endif
 
 using namespace google::protobuf::io;
@@ -111,7 +111,6 @@ std::thread
 bool keepCaptureThreadAlive =
     false; // Flag used by frame capturing thread to know whether to continue or finish
 
-
 #ifdef USE_ZMQ
 
 std::unique_ptr<zmq::socket_t> server_socket;
@@ -138,20 +137,20 @@ void close_zmq_connection() {
     }
 
     LOG(INFO) << "ZMQ Client Connection closed.";
-} 
+}
 
-void stream_zmq_frame(){
+void stream_zmq_frame() {
 
     LOG(INFO) << "stream_frame thread running in the background.";
 
     running = true;
 
-while(true)  {
+    while (true) {
 
-    if(stop_flag.load()){
-        LOG(INFO) << "stream_frame thread is exiting.";
-        break;
-    }
+        if (stop_flag.load()) {
+            LOG(INFO) << "stream_frame thread is exiting.";
+            break;
+        }
         // 1. Wait for frame to be captured on the other thread
         std::unique_lock<std::mutex> lock(frameMutex);
         cvGetFrame.wait(lock, []() { return frameCaptured; });
@@ -203,7 +202,7 @@ void start_stream_thread() {
 void stop_stream_thread() {
 
     if (!running) {
-        return;  // If the thread is already stopped, exit the function.
+        return; // If the thread is already stopped, exit the function.
     }
 
     {
@@ -219,9 +218,7 @@ void stop_stream_thread() {
     if (stream_thread.joinable()) {
         stream_thread.join(); // Ensure the thread exits cleanly
     }
-
 }
-
 
 #endif
 
@@ -256,22 +253,24 @@ static void captureFrameFromHardware() {
         // 2. The signal has been received, now go capture the frame
         goCaptureFrame = false;
 
-        #ifdef USE_ZMQ 
-            // Send frames to PC via ZMQ socket.
-            aditof::Status status = camDepthSensor->getFrame((uint16_t *)buff_frame_to_be_captured);
-            if (status == aditof::Status::UNREACHABLE) {
-                LOG(INFO) << "The capture_frame thread is stopped. Stopping the stream_frame thread"; 
-                break;
-            }
-        #else
-            aditof::Status status = camDepthSensor->getFrame(
-                (uint16_t *)(buff_frame_to_be_captured +
-                            LWS_SEND_BUFFER_PRE_PADDING + FRAME_PREPADDING_BYTES));
-            if (status != aditof::Status::OK) {
-                LOG(ERROR) << "Failed to get frame!";
-                //TO DO: buff_send.set_status(static_cast<::payload::Status>(status));
-            }
-        #endif
+#ifdef USE_ZMQ
+        // Send frames to PC via ZMQ socket.
+        aditof::Status status =
+            camDepthSensor->getFrame((uint16_t *)buff_frame_to_be_captured);
+        if (status == aditof::Status::UNREACHABLE) {
+            LOG(INFO) << "The capture_frame thread is stopped. Stopping the "
+                         "stream_frame thread";
+            break;
+        }
+#else
+        aditof::Status status = camDepthSensor->getFrame(
+            (uint16_t *)(buff_frame_to_be_captured +
+                         LWS_SEND_BUFFER_PRE_PADDING + FRAME_PREPADDING_BYTES));
+        if (status != aditof::Status::OK) {
+            LOG(ERROR) << "Failed to get frame!";
+            //TO DO: buff_send.set_status(static_cast<::payload::Status>(status));
+        }
+#endif
 
         // 3. Notify others that there is a new frame available
         frameCaptured = true;
@@ -281,8 +280,6 @@ static void captureFrameFromHardware() {
 
     return;
 }
-
-
 
 static void cleanup_sensors() {
     // Stop the frame capturing thread
@@ -429,10 +426,10 @@ int Network::callback_function(struct lws *wsi,
                 clientEngagedWithSensors = false;
             }
 
-            #ifdef USE_ZMQ
-                // Call the stop_stream_thread() to stop the stream_frame thread when the connection is closed.
-                stop_stream_thread();
-            #endif
+#ifdef USE_ZMQ
+            // Call the stop_stream_thread() to stop the stream_frame thread when the connection is closed.
+            stop_stream_thread();
+#endif
 
             Client_Connected = false;
             break;
@@ -462,11 +459,11 @@ void sigint_handler(int) {
     }
     clientEngagedWithSensors = false;
 
-    #ifdef USE_ZMQ
+#ifdef USE_ZMQ
     stop_stream_thread();
     // Close the ZMQ connection
-        close_zmq_connection();
-    #endif
+    close_zmq_connection();
+#endif
 }
 
 int main(int argc, char *argv[]) {
@@ -509,13 +506,15 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
-    #ifdef USE_ZMQ
+#ifdef USE_ZMQ
     zmq::context_t zmq_context(1);
-    server_socket = std::make_unique<zmq::socket_t>(zmq_context, zmq::socket_type::push);
-    server_socket->setsockopt(ZMQ_SNDHWM, (int *)&max_send_frames, sizeof(max_send_frames));
+    server_socket =
+        std::make_unique<zmq::socket_t>(zmq_context, zmq::socket_type::push);
+    server_socket->setsockopt(ZMQ_SNDHWM, (int *)&max_send_frames,
+                              sizeof(max_send_frames));
     server_socket->bind("tcp://*:5555");
     LOG(INFO) << "ZMQ server socket connection established.";
-    #endif
+#endif
 
     while (!interrupted) {
         lws_service(network->context, msTimeout /* timeout_ms */);
@@ -636,9 +635,9 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             }
             cvGetFrame.notify_one();
         }
-        #ifdef USE_ZMQ
-            start_stream_thread(); // Start the stream_frame thread .
-        #endif
+#ifdef USE_ZMQ
+        start_stream_thread(); // Start the stream_frame thread .
+#endif
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
@@ -646,9 +645,9 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     case STOP: {
         aditof::Status status = camDepthSensor->stop();
         buff_send.set_status(static_cast<::payload::Status>(status));
-        #ifdef USE_ZMQ
-            stop_stream_thread();
-        #endif
+#ifdef USE_ZMQ
+        stop_stream_thread();
+#endif
         break;
     }
 
@@ -715,38 +714,39 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                 delete[] buff_frame_to_send;
                 buff_frame_to_send = nullptr;
             }
-            #ifdef USE_ZMQ
+#ifdef USE_ZMQ
 
             buff_frame_to_send =
-            new uint8_t[processedFrameSize * sizeof(uint16_t)];
+                new uint8_t[processedFrameSize * sizeof(uint16_t)];
 
-            #else
-                buff_frame_to_send =
-                    new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
-                                FRAME_PREPADDING_BYTES +
-                                processedFrameSize * sizeof(uint16_t)];
+#else
+            buff_frame_to_send =
+                new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
+                            FRAME_PREPADDING_BYTES +
+                            processedFrameSize * sizeof(uint16_t)];
 
-            #endif
+#endif
 
             if (buff_frame_to_be_captured != nullptr) {
                 delete[] buff_frame_to_be_captured;
                 buff_frame_to_be_captured = nullptr;
             }
-            #ifdef USE_ZMQ
-            buff_frame_to_be_captured = new uint8_t[processedFrameSize * sizeof(uint16_t)];
+#ifdef USE_ZMQ
+            buff_frame_to_be_captured =
+                new uint8_t[processedFrameSize * sizeof(uint16_t)];
 
-            #else
-                buff_frame_to_be_captured =
-                    new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
-                                FRAME_PREPADDING_BYTES +
-                                processedFrameSize * sizeof(uint16_t)];
-            #endif
+#else
+            buff_frame_to_be_captured =
+                new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
+                            FRAME_PREPADDING_BYTES +
+                            processedFrameSize * sizeof(uint16_t)];
+#endif
 
-            #ifdef USE_ZMQ
-                buff_frame_length = processedFrameSize * 2;
-            #else
-                buff_frame_length = processedFrameSize * 2 + FRAME_PREPADDING_BYTES;
-            #endif
+#ifdef USE_ZMQ
+            buff_frame_length = processedFrameSize * 2;
+#else
+            buff_frame_length = processedFrameSize * 2 + FRAME_PREPADDING_BYTES;
+#endif
         }
 
         buff_send.set_status(static_cast<::payload::Status>(status));
@@ -792,38 +792,39 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                 delete[] buff_frame_to_send;
                 buff_frame_to_send = nullptr;
             }
-            #ifdef USE_ZMQ
+#ifdef USE_ZMQ
 
             buff_frame_to_send =
-            new uint8_t[processedFrameSize * sizeof(uint16_t)];
+                new uint8_t[processedFrameSize * sizeof(uint16_t)];
 
-            #else
-                buff_frame_to_send =
-                    new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
-                                FRAME_PREPADDING_BYTES +
-                                processedFrameSize * sizeof(uint16_t)];
+#else
+            buff_frame_to_send =
+                new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
+                            FRAME_PREPADDING_BYTES +
+                            processedFrameSize * sizeof(uint16_t)];
 
-            #endif
+#endif
 
             if (buff_frame_to_be_captured != nullptr) {
                 delete[] buff_frame_to_be_captured;
                 buff_frame_to_be_captured = nullptr;
             }
-            #ifdef USE_ZMQ
-            buff_frame_to_be_captured = new uint8_t[processedFrameSize * sizeof(uint16_t)];
+#ifdef USE_ZMQ
+            buff_frame_to_be_captured =
+                new uint8_t[processedFrameSize * sizeof(uint16_t)];
 
-            #else
-                buff_frame_to_be_captured =
-                    new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
-                                FRAME_PREPADDING_BYTES +
-                                processedFrameSize * sizeof(uint16_t)];
-            #endif
+#else
+            buff_frame_to_be_captured =
+                new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
+                            FRAME_PREPADDING_BYTES +
+                            processedFrameSize * sizeof(uint16_t)];
+#endif
 
-            #ifdef USE_ZMQ
-                buff_frame_length = processedFrameSize * 2;
-            #else
-                buff_frame_length = processedFrameSize * 2 + FRAME_PREPADDING_BYTES;
-            #endif
+#ifdef USE_ZMQ
+            buff_frame_length = processedFrameSize * 2;
+#else
+            buff_frame_length = processedFrameSize * 2 + FRAME_PREPADDING_BYTES;
+#endif
         }
 
         buff_send.set_status(static_cast<::payload::Status>(status));
@@ -833,41 +834,41 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     case GET_FRAME: {
         aditof::Status status = aditof::Status::OK;
 
-        #ifndef USE_ZMQ
-            if (sameFrameEndlessRepeat) {
-                m_frame_ready = true;
-                buff_send.set_status(static_cast<::payload::Status>(status));
-                break;
+#ifndef USE_ZMQ
+        if (sameFrameEndlessRepeat) {
+            m_frame_ready = true;
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        } else {
+            // 1. Wait for frame to be captured on the other thread
+            std::unique_lock<std::mutex> lock(frameMutex);
+            cvGetFrame.wait(lock, []() { return frameCaptured; });
+
+            // 2. Get your hands on the captured frame
+            std::swap(buff_frame_to_send, buff_frame_to_be_captured);
+            frameCaptured = false;
+            lock.unlock();
+
+            // 3. Trigger the other thread to capture another frame while we do stuff with current frame
+            {
+                std::lock_guard<std::mutex> lock(frameMutex);
+                goCaptureFrame = true;
+            }
+            cvGetFrame.notify_one();
+
+            // 4. Send current frame over network
+            // This will be done by the callback_function()
+
+            uint8_t *pInterruptOccuredByte =
+                &buff_frame_to_send[LWS_SEND_BUFFER_PRE_PADDING +
+                                    0]; // 1st byte after LWS prepadding bytes
+            if (!adsd3500InterruptsQueue.empty()) {
+                *pInterruptOccuredByte = 123;
             } else {
-                // 1. Wait for frame to be captured on the other thread
-                std::unique_lock<std::mutex> lock(frameMutex);
-                cvGetFrame.wait(lock, []() { return frameCaptured; });
+                *pInterruptOccuredByte = 0;
+            }
 
-                // 2. Get your hands on the captured frame
-                std::swap(buff_frame_to_send, buff_frame_to_be_captured);
-                frameCaptured = false;
-                lock.unlock();
-
-                // 3. Trigger the other thread to capture another frame while we do stuff with current frame
-                {
-                    std::lock_guard<std::mutex> lock(frameMutex);
-                    goCaptureFrame = true;
-                }
-                cvGetFrame.notify_one();
-
-                // 4. Send current frame over network
-                // This will be done by the callback_function()
-
-                uint8_t *pInterruptOccuredByte =
-                    &buff_frame_to_send[LWS_SEND_BUFFER_PRE_PADDING +
-                                        0]; // 1st byte after LWS prepadding bytes
-                if (!adsd3500InterruptsQueue.empty()) {
-                    *pInterruptOccuredByte = 123;
-                } else {
-                    *pInterruptOccuredByte = 0;
-                }
-
-                m_frame_ready = true;
+            m_frame_ready = true;
 
             buff_send.set_status(payload::Status::OK);
             break;
@@ -920,10 +921,10 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
         buff_send.set_status(payload::Status::OK);
 
-    #else
+#else
         LOG(INFO) << "Server App is build to work with ZMQ";
         buff_send.set_status(static_cast<::payload::Status>(status));
-    #endif
+#endif
         break;
     }
 
