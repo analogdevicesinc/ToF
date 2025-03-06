@@ -40,7 +40,7 @@ remove_adsd3500_i2c_driver() {
 probe_adsd3500_i2c_driver() {
 
 	echo "Started ADSD3500 I2C host boot"
-	sudo modprobe adsd3500 fw_load=1
+	sudo modprobe adsd3500 fw_load=1 dyndbg==pmf
 	sudo modprobe imx8_media_dev
 	sleep 1
 	echo "Completed"
@@ -55,27 +55,11 @@ remove_adsd3500_spi_driver() {
 probe_adsd3500_spi_driver() {
 
 	echo "Started ADSD3500 SPI host boot"
-	sudo modprobe adsd3500-spi fw_load=1
+	sudo modprobe adsd3500-spi fw_load=1 dyndbg==pmf
 	sudo modprobe imx8_media_dev
 	sleep 1
 	echo "Completed"
 }
-
-remove_adsd3500_dual_i2c_driver() {
-
-	sudo rmmod imx8_media_dev
-	sudo rmmod adsd3500_dual
-}
-
-probe_adsd3500_dual_i2c_driver() {
-
-	echo "Started ADSD3500 I2C host boot"
-	sudo modprobe adsd3500_dual fw_load=1 dyndbg==pmf
-	sudo modprobe imx8_media_dev
-	sleep 1
-	echo "Completed"
-}
-
 
 adsd3100_power_sequence(){
 
@@ -225,10 +209,10 @@ enable_host_boot(){
 		"NXP i.MX8MPlus ADI TOF carrier ADSD3500-DUAL + ADSD3100")
 			echo "Running on ADSD3500-DUAL + ADSD3100"
 			check_host_boot_pin_state
-			remove_adsd3500_dual_i2c_driver
+			remove_adsd3500_i2c_driver
 			adsd3500_dual_power_sequence
 			detect_i2c_devices
-			probe_adsd3500_dual_i2c_driver
+			probe_adsd3500_i2c_driver
 			;;
 		*)
 			echo "Board model not valid"

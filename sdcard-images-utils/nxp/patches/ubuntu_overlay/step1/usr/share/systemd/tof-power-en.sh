@@ -412,9 +412,9 @@ if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier ADSD3500-DUAL + ADSD3100" ]]; th
 	# Pull reset high
 	echo 1 > /sys/class/gpio/gpio64/value
 
-	# Probe ADSD3500-Dual I2C driver
-	echo "probe adsd3500-dual i2c driver"
-	modprobe adsd3500-dual
+	# Probe ADSD3500 I2C driver
+	echo "probe adsd3500 i2c driver"
+	modprobe adsd3500
 	modprobe imx8_media_dev
         exit 0
 fi
