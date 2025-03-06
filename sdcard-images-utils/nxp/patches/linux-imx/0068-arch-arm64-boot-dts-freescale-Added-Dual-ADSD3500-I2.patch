@@ -368,8 +368,8 @@ index 000000000000..2fbe7996239f
 +	pinctrl-0 = <&pinctrl_i2c2>;
 +	status = "okay";
 +
-+	adsd3500-dual@38 {
-+		compatible = "adi,adsd3500-dual";
++	adsd3500@38 {
++		compatible = "adi,adsd3500";
 +		reg = <0x38>;
 +		interrupt-gpios = <&gpio1 9 GPIO_ACTIVE_LOW>;
 +		port {
