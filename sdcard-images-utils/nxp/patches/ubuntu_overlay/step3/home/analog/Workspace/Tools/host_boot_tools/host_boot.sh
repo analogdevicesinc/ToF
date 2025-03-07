@@ -151,6 +151,8 @@ adsd3500_dual_power_sequence(){
 	#EN_PWR2
 	echo 1 > /sys/class/gpio/gpio129/value
 
+	sleep 1
+
 	#Enable MAX77857
 	sudo i2cset -y 1 0x66 0x14 0x20
 	sleep 0.1
