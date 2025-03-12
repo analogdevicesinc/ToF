@@ -77,7 +77,6 @@ jobs:
 
   - task: Cache@2
     condition: and(
-      eq(variables['DOCKER'], ''),
       ne(variables['BUILD_TYPE'], 'clang_format'),
       ne(variables['BUILD_TYPE'], 'cppcheck'),
       ne(variables['BUILD_TYPE'], 'deploy_doxygen')
@@ -98,6 +97,34 @@ jobs:
       )
       
     displayName: "Install Dependencies"
+
+  - script: ./ci/azure/run_build.sh
+    displayName: "Build"
+
+- job: DockerBuilds
+  timeoutInMinutes: 200
+  strategy:
+    matrix:
+      #IMX
+      ubuntu_20_04_imx:
+        DOCKER: "septimiuvana/arm64-ubuntu"
+        EXTRA_CMAKE_FLAGS: "-DNXP=1"
+
+      #NVIDIA
+      ubuntu_20_04_nvidia:
+        DOCKER: "septimiuvana/arm64-ubuntu"
+        EXTRA_CMAKE_FLAGS: "-DNVIDIA=1"
+
+  pool:
+    name: Default
+    demands:
+      - agent.name -equals ToF
+  steps:
+  - checkout: self
+    fetchDepth: 1
+    submodules: true
+    clean: true
+    persistCredentials: true
 
   - script: ./ci/azure/run_build.sh
     displayName: "Build"
