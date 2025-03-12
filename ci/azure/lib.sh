@@ -336,7 +336,7 @@ run_docker() {
     script=$2
     script_args="$3"
 
-    sudo apt-get -qq update
+    #sudo apt-get -qq update
 
     sudo DEBIAN_FRONTEND=noninteractive apt-get install -y qemu \
         qemu binfmt-support qemu-user-static
@@ -345,7 +345,7 @@ run_docker() {
     
     sudo service docker restart
     sudo docker pull ${docker}
-
+    pwd
     sudo docker run --rm=true \
 			-v `pwd`:/ToF:rw \
 			${docker} \

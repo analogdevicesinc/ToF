@@ -5,6 +5,7 @@ git config --global --add safe.directory /ToF/libaditof/glog
 git config --global --add safe.directory /ToF/libaditof/libwebsockets
 git config --global --add safe.directory /ToF/libaditof/protobuf
 git config --global --add safe.directory /ToF/libaditof/cppzmq
+ls -al /ToF/libaditof/
 git config --global --add safe.directory /ToF/libaditof/libzmq
 
 project_dir=$1
