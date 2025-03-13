@@ -17,9 +17,11 @@ OPENCV_INSTALL_DIR="/aditof-deps/installed/opencv"
 NUM_JOBS=4
 ARGS="$2"
 
+rmdir build
 mkdir -p build
 mkdir ../libs
 
+git submodule update --init
 pushd build
 cmake .. ${ARGS} -DCMAKE_PREFIX_PATH="${GLOG_INSTALL_DIR};${PROTOBUF_INSTALL_DIR};${WEBSOCKETS_INSTALL_DIR};${OPENCV_INSTALL_DIR}" -DWITH_OPENCV=0
 make -j${NUM_JOBS}
