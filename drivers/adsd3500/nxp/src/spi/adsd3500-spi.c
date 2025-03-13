@@ -1318,7 +1318,7 @@ static int adsd3500_set_format(struct v4l2_subdev *sd,
 
 	framefmt->width = crop->width;
 	framefmt->height = crop->height;
-	framefmt->code = new_mode->code;
+	framefmt->code = format->format.code;
 	framefmt->field = V4L2_FIELD_NONE;
 	framefmt->colorspace = V4L2_COLORSPACE_RAW;
 
