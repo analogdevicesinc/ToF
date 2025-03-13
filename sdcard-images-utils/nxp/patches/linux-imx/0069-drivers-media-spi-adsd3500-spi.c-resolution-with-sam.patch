@@ -1,0 +1,27 @@
+From e1db9f240f2f99d9d28eb2fe65157e22f4b10587 Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Thu, 13 Mar 2025 20:22:44 +0530
+Subject: [PATCH 2/2] drivers: media: spi: adsd3500-spi.c: resolution with same
+ width and height should support the different pixel format
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ drivers/media/spi/adsd3500-spi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/spi/adsd3500-spi.c b/drivers/media/spi/adsd3500-spi.c
+index 3020bbe8c116..d290ab6fe719 100644
+--- a/drivers/media/spi/adsd3500-spi.c
++++ b/drivers/media/spi/adsd3500-spi.c
+@@ -1318,7 +1318,7 @@ static int adsd3500_set_format(struct v4l2_subdev *sd,
+ 
+ 	framefmt->width = crop->width;
+ 	framefmt->height = crop->height;
+-	framefmt->code = new_mode->code;
++	framefmt->code = format->format.code;
+ 	framefmt->field = V4L2_FIELD_NONE;
+ 	framefmt->colorspace = V4L2_COLORSPACE_RAW;
+ 
+-- 
+2.28.0
+
