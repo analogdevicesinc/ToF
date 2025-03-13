@@ -43,13 +43,13 @@ jobs:
 
       #IMX
       ubuntu_20_04_imx:
-        imageName: 'ubuntu-20.04'
+        imageName: 'ubuntu-24.04'
         DOCKER: "septimiuvana/arm64-ubuntu"
         EXTRA_CMAKE_FLAGS: "-DNXP=1"
 
       #NVIDIA
       ubuntu_20_04_nvidia:
-        imageName: 'ubuntu-20.04'
+        imageName: 'ubuntu-22.04'
         DOCKER: "septimiuvana/arm64-ubuntu"
         EXTRA_CMAKE_FLAGS: "-DNVIDIA=1"
       
@@ -111,9 +111,9 @@ jobs:
         EXTRA_CMAKE_FLAGS: "-DNXP=1"
 
       #NVIDIA
-      ubuntu_20_04_nvidia:
-        DOCKER: "septimiuvana/arm64-ubuntu"
-        EXTRA_CMAKE_FLAGS: "-DNVIDIA=1"
+      # ubuntu_20_04_nvidia:
+      #   DOCKER: "septimiuvana/arm64-ubuntu"
+      #   EXTRA_CMAKE_FLAGS: "-DNVIDIA=1"
 
   pool:
     name: Default

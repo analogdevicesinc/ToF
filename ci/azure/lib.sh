@@ -338,8 +338,8 @@ run_docker() {
 
     sudo apt-get -qq update
 
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y qemu \
-        qemu binfmt-support qemu-user-static
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y qemu-system \
+        binfmt-support qemu-user-static
 
     docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
     
