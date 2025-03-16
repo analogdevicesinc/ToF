@@ -378,6 +378,9 @@ PYBIND11_MODULE(aditofpython, m) {
         .def("saveDepthParamsToJsonFile",
              &aditof::Camera::saveDepthParamsToJsonFile,
              py::arg("savePathFile"))
+        .def("loadDepthParamsFromJsonFile",
+             &aditof::Camera::loadDepthParamsFromJsonFile,
+             py::arg("loadPathFile"), py::arg("mode"))
         .def("setSensorConfiguration", &aditof::Camera::setSensorConfiguration,
              py::arg("sensorConf"))
         .def("adsd3500SetToggleMode", &aditof::Camera::adsd3500SetToggleMode,
