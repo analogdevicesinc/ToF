@@ -44,6 +44,9 @@
 #include <ios>
 #include <iostream>
 #include <map>
+#include <chrono>
+#include <ctime>
+#include <iomanip>  // For std::setw, std::setfill
 
 using namespace aditof;
 
@@ -96,6 +99,42 @@ Status save_frame(aditof::Frame &frame, std::string frameType) {
     g.close();
 
     return status;
+}
+
+void print_wall_clock_time(int64_t epoch_time) {
+    // Convert epoch time to local time
+    std::time_t time = static_cast<std::time_t>(epoch_time / 1000);  // Convert to seconds
+    std::tm *tm_info = std::localtime(&time);
+
+    if (!tm_info) {
+        std::cerr << "Error: localtime() returned nullptr. Invalid epoch value?" << std::endl;
+        return;
+    }
+
+    char buffer[30];
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", tm_info);
+
+    // Extract milliseconds
+    int milliseconds = epoch_time % 1000;
+
+    std::cout << "Given 64-bit Epoch Time: " << epoch_time << std::endl;
+    std::cout << "Converted Wall Clock Time: " << buffer << "." 
+              << std::setw(3) << std::setfill('0') << milliseconds << std::endl;
+
+    // Get current wall clock time from system with milliseconds
+    auto now = std::chrono::system_clock::now();
+    auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch());
+
+    std::time_t current_time = std::chrono::system_clock::to_time_t(now);
+    std::tm *current_tm = std::localtime(&current_time);
+
+    char current_buffer[30];
+    std::strftime(current_buffer, sizeof(current_buffer), "%Y-%m-%d %H:%M:%S", current_tm);
+
+    int current_milliseconds = now_ms.count() % 1000;
+
+    std::cout << "Current Wall Clock Time (System Time): " << current_buffer << "."
+              << std::setw(3) << std::setfill('0') << current_milliseconds << std::endl;
 }
 
 int main(int argc, char *argv[]) {
@@ -226,6 +265,12 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+    status = camera->adsd3500SetFrameRate(10);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not set camera mode!";
+        return 0;
+    }
+
     status = camera->start();
     if (status != Status::OK) {
         LOG(ERROR) << "Could not start the camera!";
@@ -233,16 +278,32 @@ int main(int argc, char *argv[]) {
     }
     aditof::Frame frame;
 
-    status = camera->requestFrame(&frame);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not request frame!";
-        return 0;
-    } else {
-        LOG(INFO) << "succesfully requested frame!";
-    }
+    for (int32_t idx = 0; idx < 5; idx++) {
+        status = camera->requestFrame(&frame);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Could not request frame!";
+            return 0;
+        } else {
+            LOG(INFO) << "succesfully requested frame!";
+        }
 
-    save_frame(frame, "ab");
-    save_frame(frame, "depth");
+        Metadata metadata;
+        status = frame.getMetadataStruct(metadata);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Could not get frame metadata!";
+            return 0;
+        }
+
+        uint64_t *epoch_time = (uint64_t *)&metadata.elapsedTimeFractionalValue;
+        print_wall_clock_time(*epoch_time);
+        LOG(INFO) << "Sensor Temperature: " << metadata.sensorTemperature;
+        LOG(INFO) << "Laser Temperature: " << metadata.laserTemperature;
+        LOG(INFO) << "Frame Number: " << metadata.frameNumber;
+        LOG(INFO) << "Mode: " << static_cast<unsigned int>(metadata.imagerMode);
+
+        //save_frame(frame, "ab");
+        //save_frame(frame, "depth");
+    }
 
     status = camera->stop();
     if (status != Status::OK) {
@@ -260,18 +321,6 @@ int main(int argc, char *argv[]) {
 
     LOG(INFO) << "Chip status error code: " << chipStatus;
     LOG(INFO) << "Imager status error code: " << imagerStatus;
-
-    Metadata metadata;
-    status = frame.getMetadataStruct(metadata);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not get frame metadata!";
-        return 0;
-    }
-
-    LOG(INFO) << "Sensor Temperature: " << metadata.sensorTemperature;
-    LOG(INFO) << "Laser Temperature: " << metadata.laserTemperature;
-    LOG(INFO) << "Frame Number: " << metadata.frameNumber;
-    LOG(INFO) << "Mode: " << static_cast<unsigned int>(metadata.imagerMode);
 
     // Example on how to unregister a callback from ADSD3500 interupts
     if (registerCbStatus == Status::OK) {
