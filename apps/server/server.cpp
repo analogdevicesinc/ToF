@@ -192,6 +192,8 @@ void start_stream_thread() {
     // Reset the stop flag
     stop_flag.store(false);
 
+    keepCaptureThreadAlive = true;
+
     if (stream_thread.joinable()) {
         stream_thread.join(); // Ensure the previous thread is cleaned up
     }
@@ -213,6 +215,11 @@ void stop_stream_thread() {
     {
         std::unique_lock<std::mutex> lock(mtx);
         cv.wait(lock, [] { return running.load() == false; });
+    }
+
+    // Flush the messages
+    if (server_socket) {
+        server_socket->setsockopt(ZMQ_LINGER, 0);
     }
 
     if (stream_thread.joinable()) {
@@ -647,6 +654,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         buff_send.set_status(static_cast<::payload::Status>(status));
 #ifdef USE_ZMQ
         stop_stream_thread();
+
 #endif
         break;
     }
