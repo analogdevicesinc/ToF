@@ -38,6 +38,8 @@ import argparse
 import cv2 as cv
 import open3d as o3d
 import struct
+import datetime
+import time
 
 MegaPixel = 1024
 qMegaPixel = [512, 640, 256, 320]
@@ -85,6 +87,12 @@ def parse_metadata(filename, directory, index):
         
         # Create a list of elements with names and values
         elements = [(name, value) for (name, fmt), value in zip(elemsList, values)]
+        values_only = [item[1] for item in elements if item[0] in ('ElapsedTimeinFrac', 'ElapsedTimeinSec')]
+        epoch_64bit = ((values_only[1] << 32) | values_only[0]) / 1000.0
+        dt_epoch64 = datetime.datetime.utcfromtimestamp(epoch_64bit)
+        elements.append(('epoch64', epoch_64bit))
+        elements.append(('dt_epoch64', dt_epoch64))
+        
         # depthbitsPerPx, abbitsPerPx, confbitsPerPx = elements[3:6]
                 
         # print('Bits in depth: %s, AB: %s and Conf: %s' %(depthPerPx, abBytesPerPx, confBytesPerPx))
@@ -174,11 +182,11 @@ def visualize_pcloud(filename, directory, index):
         point_cloud.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
         o3d.io.write_point_cloud(directory + 'pointcloud_' + base_filename 
             + '_' + index + plyFileType,point_cloud)
-        vis.add_geometry(point_cloud)
-        vis.update_geometry(point_cloud)
-        vis.run()
-        vis.poll_events()
-        vis.update_renderer()
+        #vis.add_geometry(point_cloud)
+        #vis.update_geometry(point_cloud)
+        #vis.run()
+        #vis.poll_events()
+        #vis.update_renderer()
         
 def generate_vid(mainDir,numberOfFrames,width,height):
     #create video directory
