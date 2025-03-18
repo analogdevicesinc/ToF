@@ -35,6 +35,8 @@ import matplotlib.pyplot as plt
 import sys
 import os
 import struct
+import datetime
+import time
 
 def help():
     print(f"{sys.argv[0]} usage:")
@@ -161,6 +163,8 @@ sensor_temp = metadata.sensorTemperature
 laser_temp = metadata.laserTemperature
 frame_num = metadata.frameNumber
 imager_mode = metadata.imagerMode
+epoch_64bit = ((int(metadata.elapsedTimeSecondsValue) << 32) | int(metadata.elapsedTimeFractionalValue)) / 1000.0
+dt_epoch64 = datetime.datetime.utcfromtimestamp(epoch_64bit)
 
 print("Sensor temperature from metadata: ", sensor_temp)
 print("Laser temperature from metadata: ", laser_temp)
@@ -196,7 +200,8 @@ metadata_text = (
     f"Sensor Temp: {sensor_temp}°C\n"
     f"Laser Temp: {laser_temp}°C\n"
     f"Frame #: {frame_num}\n"
-    f"Mode: {imager_mode}"
+    f"Mode: {imager_mode}\n"
+    f"Capture Time: {dt_epoch64}"
 )
 axs[3].text(0.1, 0.5, metadata_text, fontsize=12, verticalalignment='center')
 
