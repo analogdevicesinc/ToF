@@ -1,0 +1,93 @@
+From 6eaf23f40338d4ff356a1e1ae949329c4eb1195c Mon Sep 17 00:00:00 2001
+From: Bogdan Togorean <bogdan.togorean@analog.com>
+Date: Fri, 20 Jan 2023 11:26:59 +0200
+Subject: [PATCH 1/5] drivers: media: platform: tegra: camera: vi: Add Embedded
+ Header support
+
+Signed-off-by: Bogdan Togorean <bogdan.togorean@analog.com>
+---
+ .../media/platform/tegra/camera/vi/channel.c  | 31 +++++++++++++++++--
+ .../media/platform/tegra/camera/vi/vi5_fops.c |  4 ++-
+ 2 files changed, 32 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/media/platform/tegra/camera/vi/channel.c b/drivers/media/platform/tegra/camera/vi/channel.c
+index 91f8d5f8..3b307bf1 100644
+--- a/drivers/media/platform/tegra/camera/vi/channel.c
++++ b/drivers/media/platform/tegra/camera/vi/channel.c
+@@ -247,6 +247,33 @@ static void tegra_channel_set_interlace_mode(struct tegra_channel *chan)
+ 	}
+ }
+ 
++static int tegra_channel_get_embedded_data_height(struct tegra_channel *chan)
++{
++	struct v4l2_subdev *sd = NULL;
++	struct camera_common_data *s_data = NULL;
++	struct device_node *node = NULL;
++	struct sensor_mode_properties *s_mode = NULL;
++	int emb_meta_height = 0;
++
++	if (chan->subdev_on_csi) {
++		sd = chan->subdev_on_csi;
++		s_data = to_camera_common_data(sd->dev);
++		node = sd->dev->of_node;
++	}
++
++	if (s_data != NULL && node != NULL) {
++		int idx = s_data->mode_prop_idx;
++
++		if (idx < s_data->sensor_props.num_modes) {
++			s_mode = &s_data->sensor_props.sensor_modes[idx];
++			emb_meta_height = s_mode->image_properties.\
++							  embedded_metadata_height;
++		}
++	}
++
++	return emb_meta_height;
++}
++
+ static void tegra_channel_update_format(struct tegra_channel *chan,
+ 		u32 width, u32 height, u32 fourcc,
+ 		const struct tegra_frac *bpp,
+@@ -277,8 +304,8 @@ static void tegra_channel_update_format(struct tegra_channel *chan,
+ 				&chan->format.bytesperline);
+ 
+ 	/* Calculate the sizeimage per plane */
+-	chan->format.sizeimage = get_aligned_buffer_size(chan,
+-			chan->format.bytesperline, chan->format.height);
++	chan->format.sizeimage = get_aligned_buffer_size(chan, chan->format.bytesperline,
++			chan->format.height + tegra_channel_get_embedded_data_height(chan));
+ 
+ 	tegra_channel_set_interlace_mode(chan);
+ 	/* Double the size of allocated buffer for interlaced sensor modes */
+diff --git a/drivers/media/platform/tegra/camera/vi/vi5_fops.c b/drivers/media/platform/tegra/camera/vi/vi5_fops.c
+index 7b16dcaf..a20558fa 100644
+--- a/drivers/media/platform/tegra/camera/vi/vi5_fops.c
++++ b/drivers/media/platform/tegra/camera/vi/vi5_fops.c
+@@ -414,7 +414,7 @@ static void vi5_setup_surface(struct tegra_channel *chan,
+ 		desc->ch_cfg.frame.embed_y = chan->embedded_data_height;
+ 
+ 		desc_memoryinfo->surface[VI_ATOMP_SURFACE_EMBEDDED].base_address
+-			= chan->emb_buf;
++			= offset + (chan->format.bytesperline * height);
+ 		desc_memoryinfo->surface[VI_ATOMP_SURFACE_EMBEDDED].size
+ 			= desc->ch_cfg.frame.embed_x * desc->ch_cfg.frame.embed_y;
+ 
+@@ -865,6 +865,7 @@ static int vi5_channel_start_streaming(struct vb2_queue *vq, u32 count)
+ 							BPP_MEM, PAGE_SIZE);
+ 					}
+ 				}
++#if 0
+ 				/* Allocate buffer for Embedded Data if need to*/
+ 				if (emb_buf_size > chan->emb_buf_size) {
+ 					struct device *vi_unit_dev;
+@@ -897,6 +898,7 @@ static int vi5_channel_start_streaming(struct vb2_queue *vq, u32 count)
+ 					}
+ 					chan->emb_buf_size = emb_buf_size;
+ 				}
++#endif
+ 			}
+ 			ret = tegra_channel_capture_setup(chan, vi_port);
+ 			if (ret < 0)
+-- 
+2.34.1
+

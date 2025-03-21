@@ -1,0 +1,47 @@
+From 191dc5cc5b8e34586d07da9e84173e50098ae90f Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Tue, 16 Jul 2024 10:59:55 +0530
+Subject: [PATCH 5/5] drivers: media: i2c: nv_adsd3500.c: Initialize depth bits
+ to 0
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ drivers/media/i2c/nv_adsd3500.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/media/i2c/nv_adsd3500.c b/drivers/media/i2c/nv_adsd3500.c
+index db5222b1..0edaf0a8 100644
+--- a/drivers/media/i2c/nv_adsd3500.c
++++ b/drivers/media/i2c/nv_adsd3500.c
+@@ -116,11 +116,11 @@ static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
+ 		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
+ 		.link_freq_idx = 1 /* an index in link_freq_tbl[] */
+ 	},
+-	{ //RAW12 12BPP
++	{ //RAW8 8BPP
+ 		.width = 512,
+ 		.height = 512,
+-		.pixel_rate = 488000000,
+-		.code = MEDIA_BUS_FMT_SRGGB12_1X12,
++		.pixel_rate = 625000000,
++		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
+ 	{ //RAW8 16BPP
+@@ -533,10 +533,10 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
+ 		.id			= V4L2_CID_ADSD3500_DEPTH_BITS,
+ 		.name		= "Phase / Depth Bits",
+ 		.type		= V4L2_CTRL_TYPE_INTEGER_MENU,
+-		.def		= 2,
+-		.min		= 2,
++		.def		= 0,
++		.min		= 0,
+ 		.max		= 6,
+-		.menu_skip_mask = 0x03,
++		.menu_skip_mask = 0x02,
+ 		.qmenu_int	= nr_bits_qmenu,
+ 	},
+ 	{
+-- 
+2.34.1
+

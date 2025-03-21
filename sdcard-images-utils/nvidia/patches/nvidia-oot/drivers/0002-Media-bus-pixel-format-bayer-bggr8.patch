@@ -1,0 +1,26 @@
+From 88d2314cac0c7167b26d62c93251a23ba73149aa Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Thu, 25 Apr 2024 16:57:58 +0530
+Subject: [PATCH 2/5] Media bus pixel format bayer bggr8
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ drivers/media/platform/tegra/camera/sensor_common.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/media/platform/tegra/camera/sensor_common.c b/drivers/media/platform/tegra/camera/sensor_common.c
+index 92cc2fdf..23c44675 100644
+--- a/drivers/media/platform/tegra/camera/sensor_common.c
++++ b/drivers/media/platform/tegra/camera/sensor_common.c
+@@ -243,6 +243,8 @@ static int extract_pixel_format(
+ 		*format = V4L2_PIX_FMT_SGBRG12;
+ 	else if (strncmp(pixel_t, "bayer_grbg12", size) == 0)
+ 		*format = V4L2_PIX_FMT_SGRBG12;
++	else if (strncmp(pixel_t, "bayer_bggr8", size) == 0)
++		*format = V4L2_PIX_FMT_SBGGR8;
+ 	else if (strncmp(pixel_t, "rgb_rgb88824", size) == 0)
+ 		*format = V4L2_PIX_FMT_RGB24;
+ 	else if (strncmp(pixel_t, "bayer_wdr_pwl_rggb12", size) == 0)
+-- 
+2.34.1
+

@@ -1,0 +1,26 @@
+From 0fd1ee01f0af3d2494884093da75cfc340c5f33c Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Thu, 27 Jun 2024 16:52:19 +0530
+Subject: [PATCH 3/3] arm64: configs: defconfig: Enable
+ CONFIG_DYNAMIC_DEBUG_CORE support
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 494699851274..a5a27ae977bb 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -1317,6 +1317,7 @@ CONFIG_CRYPTO_DEV_HISI_TRNG=m
+ CONFIG_DMA_RESTRICTED_POOL=y
+ CONFIG_CMA_SIZE_MBYTES=32
+ CONFIG_PRINTK_TIME=y
++CONFIG_DYNAMIC_DEBUG_CORE=y
+ CONFIG_DEBUG_INFO=y
+ CONFIG_DEBUG_INFO_REDUCED=y
+ CONFIG_MAGIC_SYSRQ=y
+-- 
+2.34.1
+
