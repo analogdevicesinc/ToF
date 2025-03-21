@@ -1,4 +1,4 @@
-APP_NAME=adacm_installer
+APP_NAME=adcam-installer
 BUILD_DIR=target/release
 INSTALLER=$(BUILD_DIR)/$(APP_NAME)
 
