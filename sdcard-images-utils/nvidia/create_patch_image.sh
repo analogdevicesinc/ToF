@@ -145,7 +145,7 @@ function apply_ubuntu_overlay()
 	cp $ROOTDIR/patches/ubuntu_overlay/etc/systemd/system/network-gadget.service $ROOTDIR/build/Linux_for_Tegra/rootfs/etc/systemd/system
 
 	echo "Remove the default dtb overlay file"
-	sed -i 's/,tegra234-p3768-0000+p3767-0000-dynamic.dtbo/tegra234-p3767-camera-p3768-adsd3500.dtbo/g' $ROOTDIR/build/Linux_for_Tegra/p3768-0000-p3767-0000-a0.conf
+	sed -i 's/,tegra234-p3768-0000+p3767-0000-dynamic.dtbo//g' $ROOTDIR/build/Linux_for_Tegra/p3768-0000-p3767-0000-a0.conf
 
 }
 

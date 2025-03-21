@@ -68,7 +68,6 @@ function build_protobuf()
 	popd
 }
 
-
 function build_sdk()
 {
 	pushd .
@@ -141,6 +140,11 @@ function update_kernel()
 {
 	mkdir test
 	sudo cp sw-versions /boot/
+	if [ ! -f /boot/Image.backup ]; then
+		echo "The regular file /boot/Image.backup does not exist."
+		echo " Make a backup of the original kernel"
+		sudo cp /boot/Image /boot/Image.backup
+	fi
 	tar -xvf kernel_supplements.tbz2 -C test
 	sudo cp Image.fgv2 /boot/Image
 	sudo cp -rf dtb/* /boot/
@@ -168,25 +172,32 @@ function get_uuid_count()
 	echo "get_uuid_count = ${count_part_uuid}"
 }
 
-function get_uuid_number() 
-{
-	# Extract the 36 characters after PARTUUID=
-	partuuid=$(cat ${extlinux_conf_file} | grep -oP '(?<=PARTUUID=).{36}')
-	# Print the extracted PARTUUID
-	echo "partuuid = ${partuuid}"
-}
-
 function add_boot_label()
 {
 	echo "Add the backup kernel label"
 	echo "LABEL backup" >> ${extlinux_conf_file}
 	echo "      MENU LABEL backup kernel" >> ${extlinux_conf_file}
 	echo "      LINUX /boot/Image.backup" >> ${extlinux_conf_file}
-	echo "      FDT /boot/dtb/kernel_tegra234-p3767-0004-p3768-0000-a0.dtb" >> ${extlinux_conf_file}
+	echo "      FDT /boot/dtb/kernel_tegra234-p3768-0000+p3767-0005-nv-super.dtb" >> ${extlinux_conf_file}
 	echo "      INITRD /boot/initrd" >> ${extlinux_conf_file}
-	echo "      APPEND \${cbootargs} root=PARTUUID=${partuuid} rw rootwait rootfstype=ext4 mminit_loglevel=4 console=ttyTCU0,115200 console=ttyAMA0,115200 firmware_class.path=/etc/firmware fbcon=map:0 net.ifnames=0 nospectre_bhb" >> ${extlinux_conf_file}
+	echo "       APPEND ${cbootargs} root=/dev/mmcblk0p1 rw rootwait rootfstype=ext4 mminit_loglevel=4 console=ttyTCU0,115200 firmware_class.path=/etc/firmware fbcon=map:0 nospectre_bhb video=efifb:off console=tty0" >> ${extlinux_conf_file}
 	echo " " >> ${extlinux_conf_file}
 
+	echo "Add the ADSD3500+ADSD3100 label"
+	echo "LABEL ADSD3500+ADSD3100" >> ${extlinux_conf_file}
+	echo "      MENU LABEL ADSD3500: <CSI ToF Camera ADSD3100>" >> ${extlinux_conf_file}
+	echo "      LINUX /boot/Image" >> ${extlinux_conf_file}
+	echo "      FDT /boot/dtb/kernel_tegra234-p3768-0000+p3767-0005-nv-super.dtb" >> ${extlinux_conf_file}
+	echo "      OVERLAYS /boot/tegra234-p3767-camera-p3768-adsd3500.dtbo" >> ${extlinux_conf_file}
+	echo "      INITRD /boot/initrd" >> ${extlinux_conf_file}
+	echo "      APPEND ${cbootargs} root=/dev/mmcblk0p1 rw rootwait rootfstype=ext4 mminit_loglevel=4 console=ttyTCU0,115200 firmware_class.path=/etc/firmware fbcon=map:0 nospectre_bhb video=efifb:off console=tty0" >> ${extlinux_conf_file}
+	echo " " >> ${extlinux_conf_file}
+}
+
+function set_default_boot_label()
+{
+        echo "Setting the default label name to ADSD3500+ADSD3100"
+        sed -i "s/^DEFAULT .*/DEFAULT ADSD3500+ADSD3100/" ${extlinux_conf_file}
 }
 
 function main()
@@ -201,11 +212,8 @@ function main()
 	build_sdk
 	
 	echo "******* Update the Extlinux Conf file *******"
-	get_uuid_count
-	if [[ "${count_part_uuid}" == 1 ]]; then
-		get_uuid_number
-		add_boot_label
-	fi
+	add_boot_label
+	set_default_boot_label
 
 	echo "******* Apply Ubuntu Overlay *******"
 	apply_ubuntu_overlay
