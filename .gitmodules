@@ -2,3 +2,6 @@
 	path = bindings/python/pybind11
 	url = https://github.com/pybind/pybind11
 	branch = v2.11
+[submodule "libaditof"]
+	path = libaditof
+	url = https://github.com/analogdevicesinc/libaditof.git
