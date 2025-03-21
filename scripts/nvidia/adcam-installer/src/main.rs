@@ -20,6 +20,9 @@ struct RegistryEntry {
 }
 
 fn main() {
+    // Print tool version from Cargo.toml
+    println!("ADCAM Installer v{}\n", env!("CARGO_PKG_VERSION"));
+
     // Load config.json FIRST
     let config_file = RESOURCES
         .get_file("config.json")
@@ -30,7 +33,6 @@ fn main() {
     let config: Config =
         serde_json::from_str(config_data).expect("Failed to parse config.json");
 
-    // Build install path from prefix + version
     let expanded_prefix = shellexpand::tilde(&config.install_path_prefix).to_string();
     let install_dir = PathBuf::from(&expanded_prefix).join(&config.version);
 
