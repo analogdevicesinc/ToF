@@ -1,22 +1,65 @@
 use include_dir::{include_dir, Dir};
 use indicatif::{ProgressBar, ProgressStyle};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
-// Embed the resources folder
 static RESOURCES: Dir = include_dir!("$CARGO_MANIFEST_DIR/resources");
 
-// Configuration structure loaded from config.json
 #[derive(Debug, Deserialize)]
 struct Config {
     version: String,
     install_path_prefix: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct RegistryEntry {
+    version: String,
+    path: String,
+}
+
 fn main() {
-    // Load and display license
+    // Load config.json FIRST
+    let config_file = RESOURCES
+        .get_file("config.json")
+        .expect("Missing config.json");
+    let config_data = config_file
+        .contents_utf8()
+        .expect("config.json not UTF-8");
+    let config: Config =
+        serde_json::from_str(config_data).expect("Failed to parse config.json");
+
+    // Build install path from prefix + version
+    let expanded_prefix = shellexpand::tilde(&config.install_path_prefix).to_string();
+    let install_dir = PathBuf::from(&expanded_prefix).join(&config.version);
+
+    // Check registry before anything else
+    if let Some(existing) = is_version_installed(&config.version, &config.install_path_prefix) {
+        println!(
+            "⚠️  Version {} is already installed at '{}'.",
+            existing.version, existing.path
+        );
+        match prompt_user_choice() {
+            1 => {
+                println!("Proceeding to overwrite...\n");
+                // Fall through to license agreement
+            }
+            2 => {
+                match uninstall_version(&config.version, &config.install_path_prefix) {
+                    Ok(_) => println!("✅ Uninstalled version {} successfully.", config.version),
+                    Err(e) => println!("❌ Failed to uninstall: {}", e),
+                }
+                return;
+            }
+            _ => {
+                println!("Installation aborted.");
+                return;
+            }
+        }
+    }
+
+    // License agreement only shown AFTER check
     let license_file = RESOURCES
         .get_file("LICENSE.txt")
         .expect("LICENSE.txt not found in resources");
@@ -36,29 +79,114 @@ fn main() {
         return;
     }
 
-    // Load config.json
-    let config_file = RESOURCES
-        .get_file("config.json")
-        .expect("Missing config.json");
-    let config_data = config_file
-        .contents_utf8()
-        .expect("config.json not UTF-8");
-    let config: Config =
-        serde_json::from_str(config_data).expect("Failed to parse config.json");
-
-    // Build install path from prefix + version
-    let expanded_prefix = shellexpand::tilde(&config.install_path_prefix).to_string();
-    let install_dir = PathBuf::from(expanded_prefix).join(&config.version);
-
+    // Proceed with install
     println!("Installing to {:?}\n", install_dir);
-
-    // Extract files with progress bar
     extract_dir_with_progress(&RESOURCES, &install_dir, "config.json").expect("Installation failed.");
 
-    println!("\nInstallation complete.");
+    update_registry(
+        &config.version,
+        &install_dir.to_string_lossy(),
+        &config.install_path_prefix,
+    )
+    .expect("Failed to update registry");
+
+    println!("\nInstallation complete. Registry updated.");
 }
 
-/// Recursively collect files (excluding one) and extract them with a progress bar
+fn prompt_user_choice() -> u8 {
+    loop {
+        println!("\nWhat would you like to do?");
+        println!("[1] Overwrite");
+        println!("[2] Uninstall");
+        println!("[3] Quit");
+
+        print!("Enter your choice [1-3]: ");
+        io::stdout().flush().unwrap();
+
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).unwrap();
+
+        match input.trim() {
+            "1" => return 1,
+            "2" => return 2,
+            "3" => return 3,
+            _ => {
+                println!("Invalid choice. Please enter 1, 2, or 3.");
+            }
+        }
+    }
+}
+
+fn uninstall_version(version: &str, install_path_prefix: &str) -> std::io::Result<()> {
+    let expanded_prefix = shellexpand::tilde(install_path_prefix).to_string();
+    let registry_path = PathBuf::from(&expanded_prefix).join(".registry.json");
+    let version_path = PathBuf::from(&expanded_prefix).join(version);
+
+    // Remove version folder
+    if version_path.exists() {
+        fs::remove_dir_all(&version_path)?;
+    }
+
+    // Remove entry from registry
+    let mut registry: Vec<RegistryEntry> = Vec::new();
+    if registry_path.exists() {
+        let data = fs::read_to_string(&registry_path)?;
+        registry = serde_json::from_str(&data).unwrap_or_else(|_| Vec::new());
+    }
+
+    registry.retain(|entry| entry.version != version);
+
+    let json = serde_json::to_string_pretty(&registry)?;
+    fs::write(&registry_path, json)?;
+
+    Ok(())
+}
+
+fn is_version_installed(version: &str, install_path_prefix: &str) -> Option<RegistryEntry> {
+    let expanded_prefix = shellexpand::tilde(install_path_prefix).to_string();
+    let registry_path = PathBuf::from(expanded_prefix).join(".registry.json");
+
+    if registry_path.exists() {
+        if let Ok(data) = fs::read_to_string(&registry_path) {
+            if let Ok(parsed) = serde_json::from_str::<Vec<RegistryEntry>>(&data) {
+                return parsed.into_iter().find(|entry| entry.version == version);
+            }
+        }
+    }
+
+    None
+}
+
+fn update_registry(version: &str, path: &str, install_path_prefix: &str) -> std::io::Result<()> {
+    let expanded_prefix = shellexpand::tilde(install_path_prefix).to_string();
+    let registry_path = PathBuf::from(expanded_prefix).join(".registry.json");
+
+    if let Some(parent) = registry_path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+
+    let mut registry: Vec<RegistryEntry> = Vec::new();
+
+    if registry_path.exists() {
+        let data = fs::read_to_string(&registry_path)?;
+        registry = serde_json::from_str(&data).unwrap_or_else(|_| Vec::new());
+    }
+
+    // Remove any existing entry with same version
+    registry.retain(|entry| entry.version != version);
+
+    // Add the new one
+    registry.push(RegistryEntry {
+        version: version.to_string(),
+        path: path.to_string(),
+    });
+
+    let json = serde_json::to_string_pretty(&registry)?;
+    fs::write(&registry_path, json)?;
+
+    Ok(())
+}
+
 fn extract_dir_with_progress(dir: &Dir, target: &PathBuf, skip_filename: &str) -> std::io::Result<()> {
     let mut files = Vec::new();
     collect_files_recursively(dir, &mut files, skip_filename);
@@ -83,7 +211,6 @@ fn extract_dir_with_progress(dir: &Dir, target: &PathBuf, skip_filename: &str) -
     Ok(())
 }
 
-/// Helper to recursively collect embedded files, excluding `skip_filename`
 fn collect_files_recursively<'a>(
     dir: &'a Dir<'a>,
     files: &mut Vec<(PathBuf, &'a [u8])>,
