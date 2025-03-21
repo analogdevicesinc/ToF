@@ -167,8 +167,8 @@ function clone_sdk()
 {
 	pushd .
 	cd $PATCH_DIR
-	sudo git clone --branch $BRANCH git@github.com:adi-innersource/tofi-fgv2.git
-	cd $ROOTDIR/build/Linux_for_Tegra/rootfs/usr/local/Workspace/tofi-fgv2/
+	sudo git clone --branch $BRANCH https://github.com/analogdevicesinc/ToF.git
+	cd $ROOTDIR/build/Linux_for_Tegra/rootfs/usr/local/Workspace/ToF/
 	sudo git checkout main
 	sudo git pull
 	popd
