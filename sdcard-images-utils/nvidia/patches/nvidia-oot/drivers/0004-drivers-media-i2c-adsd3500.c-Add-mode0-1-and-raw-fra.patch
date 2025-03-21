@@ -1,0 +1,80 @@
+From 75d939976a1d1ac722e8b17dcfa69db7e64edf4e Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Mon, 1 Jul 2024 16:37:03 +0530
+Subject: [PATCH 4/5] drivers: media: i2c: adsd3500.c: Add mode0,1 and raw
+ frame resolutions.
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ drivers/media/i2c/adsd3500_mode_tbls.h |  8 ++++++++
+ drivers/media/i2c/nv_adsd3500.c        | 28 ++++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+)
+
+diff --git a/drivers/media/i2c/adsd3500_mode_tbls.h b/drivers/media/i2c/adsd3500_mode_tbls.h
+index 8a5988a9..532e24d1 100644
+--- a/drivers/media/i2c/adsd3500_mode_tbls.h
++++ b/drivers/media/i2c/adsd3500_mode_tbls.h
+@@ -10,6 +10,10 @@ enum {
+     ADSD3500_MODE_2048x640_30FPS,
+     ADSD3500_MODE_2560x640_30FPS,
+     ADSD3500_MODE_1024x320_30FPS,
++    ADSD3500_MODE_1024x1024_30FPS,
++    ADSD3500_MODE_2048x2560_30FPS,
++    ADSD3500_MODE_2048x3328_30FPS,
++    ADSD3500_MODE_1024x2304_30FPS,
+ };
+ 
+ static const int adsd3500_30fps[] = {
+@@ -29,6 +33,10 @@ static const struct camera_common_frmfmt adsd3500_frmfmt[] = {
+     {{2048, 640}, adsd3500_30fps, 1, 0, ADSD3500_MODE_2048x640_30FPS},
+     {{2560, 640}, adsd3500_30fps, 1, 0, ADSD3500_MODE_2560x640_30FPS},
+     {{1024, 320}, adsd3500_30fps, 1, 0, ADSD3500_MODE_1024x320_30FPS},
++    {{1024,1024}, adsd3500_30fps, 1, 0, ADSD3500_MODE_1024x1024_30FPS},
++    {{2048,2560}, adsd3500_30fps, 1, 0, ADSD3500_MODE_2048x2560_30FPS},
++    {{2048,3328}, adsd3500_30fps, 1, 0, ADSD3500_MODE_2048x3328_30FPS},
++    {{1024,2304}, adsd3500_30fps, 1, 0, ADSD3500_MODE_1024x2304_30FPS},
+     /* Add modes with no device tree support after below */
+ };
+ 
+diff --git a/drivers/media/i2c/nv_adsd3500.c b/drivers/media/i2c/nv_adsd3500.c
+index 52bc50f5..db5222b1 100644
+--- a/drivers/media/i2c/nv_adsd3500.c
++++ b/drivers/media/i2c/nv_adsd3500.c
+@@ -220,6 +220,34 @@ static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
+ 		.pixel_rate = 488000000,
+ 		.code = MEDIA_BUS_FMT_SRGGB12_1X12,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{ //RAW12 ADSD3100
++		.width = 1024,
++		.height = 1024,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SRGGB12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{ //RAW8 ADSD3100
++		.width = 2048,
++		.height = 2560,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{ //RAW8 ADSD3100
++		.width = 2048,
++		.height = 3328,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
++	{ //RAW12 ADSD3100
++		.width = 1024,
++		.height = 2304,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SRGGB12_1X12,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	}
+ };
+ 
+-- 
+2.34.1
+

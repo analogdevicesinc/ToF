@@ -1,0 +1,8 @@
+[Match]
+Name=rndis0
+
+[Network]
+DHCP=yes
+
+[Link]
+MTUBytes=15000
