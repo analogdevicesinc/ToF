@@ -161,6 +161,8 @@ function start_services()
 	sudo cp /home/analog/Workspace/ToF/build/apps/server/aditof-server /usr/share/systemd/
 	sudo systemctl enable network-gadget
 	sudo systemctl start network-gadget
+	sudo systemctl enable adi-tof
+	sudo systemctl start adi-tof
 
 }
 
