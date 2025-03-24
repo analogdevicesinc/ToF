@@ -1,4 +1,20 @@
 {
-    "version": "1.0.0",
-    "filename": "adcam-installer-1.0.0"
-}
+    "releases": [
+      {
+        "version": "1.0.0",
+        "filename": "adcam-installer-1.0.0.bin",
+        "sa256hash": "5077f7ffd4b548c70861463829efbef73bfd6eb01402fc4b9002260d3182fd3d"
+      },
+      {
+        "version": "0.2.0",
+        "filename": "adcam-installer-0.2.0.bin",
+        "sa256hash": "17a0007a30059da7838a5dbc9ff27edc7bf55ccedfc3438ffb569d15d39d3215"
+      },
+      {
+        "version": "0.1.0",
+        "filename": "adcam-installer-0.1.0.bin",
+        "sa256hash": "17a0007a30059da7838a5dbc9ff27edc7bf55ccedfc3438ffb569d15d39d3216"
+      }
+    ]
+  }
+  

@@ -1,5 +1,5 @@
 # Project config
-BINARY_NAME := adcam-version-check
+BINARY_NAME := adcam
 TARGET_DIR := target/release
 
 # Default target: build the release binary
