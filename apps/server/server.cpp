@@ -44,6 +44,7 @@
 #endif
 #include <algorithm>
 #include <condition_variable>
+#include <future>
 #include <iostream>
 #include <linux/videodev2.h>
 #include <map>
@@ -114,19 +115,20 @@ bool keepCaptureThreadAlive =
 #ifdef USE_ZMQ
 
 std::unique_ptr<zmq::socket_t> server_socket;
-uint32_t max_send_frames = 10;
+uint32_t max_send_frames = 1;
 std::atomic<bool> running(false);
 std::atomic<bool> stop_flag(false);
 std::mutex mtx;
 std::condition_variable cv;
 std::thread stream_thread;
-
 #endif
 
 struct clientData {
     bool hasFragments;
     std::vector<char> data;
 };
+
+void stream_off() { aditof::Status status = camDepthSensor->stop(); }
 
 #ifdef USE_ZMQ
 
@@ -174,7 +176,7 @@ void stream_zmq_frame() {
         zmq::message_t message(buff_frame_length);
         memcpy(message.data(), buff_frame_to_send, buff_frame_length);
         server_socket->send(message, zmq::send_flags::none);
-        // LOG(INFO) << "Frame sent successfully";
+        // LOG(INFO) << "Frame sent successfully size : " << buff_frame_length;
     }
 
     {
@@ -513,16 +515,6 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
-#ifdef USE_ZMQ
-    zmq::context_t zmq_context(1);
-    server_socket =
-        std::make_unique<zmq::socket_t>(zmq_context, zmq::socket_type::push);
-    server_socket->setsockopt(ZMQ_SNDHWM, (int *)&max_send_frames,
-                              sizeof(max_send_frames));
-    server_socket->bind("tcp://*:5555");
-    LOG(INFO) << "ZMQ server socket connection established.";
-#endif
-
     while (!interrupted) {
         lws_service(network->context, msTimeout /* timeout_ms */);
     }
@@ -643,6 +635,14 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             cvGetFrame.notify_one();
         }
 #ifdef USE_ZMQ
+        static zmq::context_t zmq_context(1);
+        server_socket = std::make_unique<zmq::socket_t>(zmq_context,
+                                                        zmq::socket_type::push);
+        server_socket->setsockopt(ZMQ_SNDHWM, (int *)&max_send_frames,
+                                  sizeof(max_send_frames));
+        server_socket->bind("tcp://*:5555");
+        LOG(INFO) << "ZMQ server socket connection established.";
+
         start_stream_thread(); // Start the stream_frame thread .
 #endif
         buff_send.set_status(static_cast<::payload::Status>(status));
@@ -650,10 +650,23 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
 
     case STOP: {
-        aditof::Status status = camDepthSensor->stop();
-        buff_send.set_status(static_cast<::payload::Status>(status));
+        std::future<void> stopFuture =
+            std::async(std::launch::async, stream_off);
+        if (stopFuture.wait_for(std::chrono::seconds(5)) ==
+            std::future_status::timeout) {
+            LOG(WARNING) << "Stop command timed out, clearning up the sensor";
+            buff_send.set_status(
+                static_cast<::payload::Status>(aditof::Status::UNREACHABLE));
+            if (clientEngagedWithSensors) {
+                cleanup_sensors();
+                clientEngagedWithSensors = false;
+            }
+        }
+
 #ifdef USE_ZMQ
         stop_stream_thread();
+
+        close_zmq_connection();
 
 #endif
         break;
