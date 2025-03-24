@@ -141,8 +141,8 @@ function apply_ubuntu_overlay()
 	echo "Updating the usb device mode configuration"
 	cp $ROOTDIR/patches/ubuntu_overlay/opt/nvidia/l4t-usb-device-mode/nv-l4t-usb-device-mode-*.sh  $ROOTDIR/build/Linux_for_Tegra/rootfs/opt/nvidia/l4t-usb-device-mode/
 
-	echo "Copy the network gadget service file"
-	cp $ROOTDIR/patches/ubuntu_overlay/etc/systemd/system/network-gadget.service $ROOTDIR/build/Linux_for_Tegra/rootfs/etc/systemd/system
+	echo "Copy the system service files"
+	cp $ROOTDIR/patches/ubuntu_overlay/etc/systemd/system/*.service $ROOTDIR/build/Linux_for_Tegra/rootfs/etc/systemd/system
 
 	echo "Remove the default dtb overlay file"
 	sed -i 's/,tegra234-p3768-0000+p3767-0000-dynamic.dtbo//g' $ROOTDIR/build/Linux_for_Tegra/p3768-0000-p3767-0000-a0.conf
