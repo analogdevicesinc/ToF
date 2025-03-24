@@ -182,7 +182,7 @@ function main()
 	apply_ubuntu_overlay
 	clone_sdk
 	sw_version_info
-	cp $ROOTDIR/scripts/system_upgrade/apply_overlay.sh $PATCH_DIR
+	cp $ROOTDIR/scripts/system_upgrade/apply_patch.sh $PATCH_DIR
 	cd $ROOTDIR/build
 	zip -r "NVIDIA_ToF_ADSD3500_REL_PATCH_$(date +"%d%b%y").zip" NVIDIA_ToF_ADSD3500_REL_PATCH_*
 	mv *.zip $ROOTDIR

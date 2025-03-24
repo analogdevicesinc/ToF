@@ -1,29 +1,31 @@
 #!/bin/bash
 
-# Copyright (c) 2017-2020, NVIDIA CORPORATION.  All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2017-2020 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
 #
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#  * Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the distribution.
-#  * Neither the name of NVIDIA CORPORATION nor the names of its
-#    contributors may be used to endorse or promote products derived
-#    from this software without specific prior written permission.
+# modification, are permitted provided that the following conditions are met:
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
-# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-# PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
-# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# 1. Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # These variables define which set of protocols are supported. Each variable
@@ -49,26 +51,17 @@
 # - In all cases, any associated Windows INF files MUST be updated to match the
 #   changes made here, or Windows will not match the INF file against the HW.
 #
-CONFIG_TYPE="disable_uvc" # valid options: enable_uvc | disable_uvc
 # Ethernet using the RNDIS protocol.
 # Linux: Supported automatically.
 # Windows: Supported automatically via OS descriptors.
 # MacOS: Requires the HoRNDIS driver to be installed.
-if [[ $CONFIG_TYPE == "enable_uvc" ]]; then
-	enable_rndis=0
-else
-	enable_rndis=1
-fi
+enable_rndis=1
 # CDC ACM serial port/UART.
 # Linux: Supported automatically.
 # Windows 10: Supported automatically.
 # Windows other: Requires driver manual selection by use of l4t-serial.inf.
 # Mac OS: Supported automatically.
-if [[ $CONFIG_TYPE == "enable_uvc" ]]; then
-        enable_acm=0
-else
-        enable_acm=1
-fi
+enable_acm=1
 # Ethernet using the CDC ECM or NCM protocol.
 #  ECM:
 #   Linux: Supported automatically.
@@ -80,11 +73,7 @@ fi
 #   Windows: Not supported.
 #   Mac OS 10.14: Supported automatically.
 #   Mac OS 10.15: Supported automatically.
-if [[ $CONFIG_TYPE == "enable_uvc" ]]; then
-        enable_ecm=0
-else
-        enable_ecm=0
-fi
+enable_ecm=1
 # Ideally, we'd have separate enable_ecm and enable_ncm variables, but that
 # makes the MAC address calculcations longer, and since it doesn't make sense
 # to enable them both, we just share the ECM and NCM MAC addresses and code.
@@ -98,20 +87,7 @@ ecm_ncm=ncm
 # Linux: Supported automatically.
 # Windows: Supported automatically.
 # Mac OS: Supported automatically.
-if [[ $CONFIG_TYPE == "enable_uvc" ]]; then
-        enable_ums=0
-else
-        enable_ums=1
-fi
-#UVC video device class (streaming camera video)
-# Linux: Supported automatically.
-# Windows: Supported automatically.
-# Mac OS: Supported automatically.
-if [[ $CONFIG_TYPE == "enable_uvc" ]]; then
-        enable_uvc=1
-else
-        enable_uvc=0
-fi
+enable_ums=1
 
 # The IP address shared by all USB network interfaces created by this script.
 net_ip=10.43.0.1

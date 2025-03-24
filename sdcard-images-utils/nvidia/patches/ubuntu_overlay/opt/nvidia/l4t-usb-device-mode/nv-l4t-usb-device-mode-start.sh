@@ -1,41 +1,34 @@
 #!/bin/bash
 
-# Copyright (c) 2017-2021, NVIDIA CORPORATION.  All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2017-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
 #
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#  * Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the distribution.
-#  * Neither the name of NVIDIA CORPORATION nor the names of its
-#    contributors may be used to endorse or promote products derived
-#    from this software without specific prior written permission.
+# modification, are permitted provided that the following conditions are met:
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
-# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-# PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
-# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# 1. Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 set -e
-
-CONFIGFS="/sys/kernel/config"
-GADGET="$CONFIGFS/usb_gadget"
-VID="0x0456"
-PID="0xa4a2"
-MANUF="Analog Devices Inc."
-PRODUCT="ADI TOF USB Gadget"
-SERIAL="12345678"
-BOARD=$(strings /proc/device-tree/model)
 
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 #. "${script_dir}/export_gpio_pins.sh"
@@ -238,170 +231,6 @@ mkdir -p "${cfg}/strings/0x409"
 # so unless the string is previously empty.
 echo "${cfg_str:1}" > "${cfg}/strings/0x409/configuration"
 
-
-create_frame() {
-        # Example usage:
-        # create_frame <function name> <width> <height> <format> <name> <Bpp> <guid>
-
-        FUNCTION=$1
-        WIDTH=$2
-        HEIGHT=$3
-        FORMAT=$4
-        NAME=$5
-        BPP=$6
-        GUID=$7
-
-        wdir=functions/$FUNCTION/streaming/$FORMAT/$NAME/${WIDTH}x${HEIGHT}p
-        mkdir -p $wdir
-        echo $WIDTH > $wdir/wWidth
-        echo $HEIGHT > $wdir/wHeight
-        echo $(( $WIDTH * $HEIGHT * $BPP )) > $wdir/dwMaxVideoFrameBufferSize
-        cat <<EOF > $wdir/dwFrameInterval
-333333
-666666
-1000000
-2000000
-EOF
-}
-
-create_uvc() {
-        # Example usage:
-        #       create_uvc <target config> <function name>
-        #       create_uvc config/c.1 uvc.0
-        CONFIG=$1
-        FUNCTION=$2
-
-        ls
-        pwd
-        echo "  Creating UVC gadget functionality : $FUNCTION"
-        mkdir -p functions/$FUNCTION
-        if [ $? -ne 0 ]; then
-            echo "Error creating directory: $FUNCTION"
-            exit 1;
-        else
-            echo "OK"
-        fi
-
-        case $BOARD in
-
-                "NVIDIA Orin Nano Developer Kit + ADSD3030")
-                        create_frame $FUNCTION 4096 480  uncompressed u  2
-                        create_frame $FUNCTION 4096 720  uncompressed u  2
-                        create_frame $FUNCTION 4096 120  uncompressed u  2
-                        create_frame $FUNCTION 4096 180  uncompressed u1 1
-                        create_frame $FUNCTION 4096 80   uncompressed u1 1
-                        create_frame $FUNCTION 1024 720  uncompressed u1 1
-                        create_frame $FUNCTION 4096 480  uncompressed u1 1
-                        create_frame $FUNCTION 1024 80   uncompressed u1 1
-                        create_frame $FUNCTION 4096 20   uncompressed u1 1
-                        echo 8 > functions/$FUNCTION/streaming/uncompressed/u1/bBitsPerPixel
-                        echo -n -e '\x42\x41\x38\x31\x00\x00\x10\x00\x80\x00\x00\xaa\x00\x38\x9b\x71' > $GADGET/g1/functions/$FUNCTION/streaming/uncompressed/u1/guidFormat
-                        ;;
-
-		"NVIDIA Orin nano ADI FG_V2 carrier + ADSD3100")
-			create_frame $FUNCTION 4096 480  uncompressed u  2
-			create_frame $FUNCTION 4096 720  uncompressed u  2
-			create_frame $FUNCTION 4096 120  uncompressed u  2
-			create_frame $FUNCTION 4096 180  uncompressed u1 1
-			create_frame $FUNCTION 4096 80   uncompressed u1 1
-			create_frame $FUNCTION 1024 720  uncompressed u1 1
-			create_frame $FUNCTION 4096 480  uncompressed u1 1
-			create_frame $FUNCTION 1024 80   uncompressed u1 1
-			create_frame $FUNCTION 4096 20   uncompressed u1 1
-			echo 8 > functions/$FUNCTION/streaming/uncompressed/u1/bBitsPerPixel
-			echo -n -e '\x42\x41\x38\x31\x00\x00\x10\x00\x80\x00\x00\xaa\x00\x38\x9b\x71' > $GADGET/g1/functions/$FUNCTION/streaming/uncompressed/u1/guidFormat
-			;;
-
-		"NVIDIA Orin nano ADI FG_V2 carrier + ADSD3030")
-			create_frame $FUNCTION 4096 480  uncompressed u  2
-			create_frame $FUNCTION 4096 720  uncompressed u  2
-			create_frame $FUNCTION 4096 120  uncompressed u  2
-			create_frame $FUNCTION 4096 180  uncompressed u1 1
-			create_frame $FUNCTION 4096 80   uncompressed u1 1
-			create_frame $FUNCTION 1024 720  uncompressed u1 1
-			create_frame $FUNCTION 4096 480  uncompressed u1 1
-			create_frame $FUNCTION 1024 80   uncompressed u1 1
-			create_frame $FUNCTION 4096 20   uncompressed u1 1
-			echo 8 > functions/$FUNCTION/streaming/uncompressed/u1/bBitsPerPixel
-			echo -n -e '\x42\x41\x38\x31\x00\x00\x10\x00\x80\x00\x00\xaa\x00\x38\x9b\x71' > $GADGET/g1/functions/$FUNCTION/streaming/uncompressed/u1/guidFormat
-			;;
-
-                *)
-                        echo "Board model not valid"
-                        exit 1
-                        ;;
-        esac
-
-        echo -n -e '\x59\x55\x59\x32\x00\x00\x10\x00\x80\x00\x00\xaa\x00\x38\x9b\x71' > $GADGET/g1/functions/$FUNCTION/streaming/uncompressed/u/guidFormat
-
-        mkdir functions/$FUNCTION/streaming/header/h
-        cd functions/$FUNCTION/streaming/header/h
-        ln -s ../../uncompressed/u
-        if [[ $BOARD != "NXP i.MX8MPlus ADI TOF board" ]]; then
-                ln -s ../../uncompressed/u1
-        fi
-        cd ../../class/fs
-        ln -s ../../header/h
-        cd ../../class/hs
-        ln -s ../../header/h
-        cd ../../class/ss
-        ln -s ../../header/h
-        cd ../../../control
-        mkdir header/h
-        ln -s header/h class/fs
-        ln -s header/h class/ss
-        cd ../../../
-
-        # Set the packet size: uvc gadget max size is 3k...
-        echo 3072 > functions/$FUNCTION/streaming_maxpacket
-        #echo 2048 > functions/$FUNCTION/streaming_maxpacket
-        #echo 1024 > functions/$FUNCTION/streaming_maxpacket
-
-        echo 15 > functions/$FUNCTION/streaming_maxburst
-        echo 3 > functions/$FUNCTION/streaming_interval
-        echo 1 > functions/$FUNCTION/streaming_bulk_mult
-
-        ln -s functions/$FUNCTION $CONFIG
-}
-
-
-if [ ${enable_uvc} -eq 1 ]; then
-
-  echo "Creating the USB gadget"
-
-        echo "Creating gadget directory g1"
-        mkdir -p $GADGET/g1
-
-        cd $GADGET/g1
-        if [ $? -ne 0 ]; then
-            echo "Error creating usb gadget in configfs"
-            exit 1;
-        else
-            echo "OK"
-        fi
-
-        echo "Setting Vendor and Product ID's"
-        echo $VID > idVendor
-        echo $PID > idProduct
-        echo "OK"
-
-        echo "Setting English strings"
-        mkdir -p strings/0x409
-        echo $SERIAL > strings/0x409/serialnumber
-        echo $MANUF > strings/0x409/manufacturer
-        echo $PRODUCT > strings/0x409/product
-        echo "OK"
-
-        echo "Creating Config"
-        mkdir configs/c.1
-        mkdir configs/c.1/strings/0x409
-
-        echo 896 > configs/c.1/MaxPower
-
-	create_uvc configs/c.1 uvc.0
-
-
-fi
 # Create and configure the network bridge before setting the UDC device. This
 # ensures that no matter how quickly udev events (which run -runtime-start.sh)
 # are triggered after setting the UDC device below, the bridge device is
@@ -413,11 +242,7 @@ fi
 /sbin/brctl addbr l4tbr0
 /sbin/ifconfig l4tbr0 down
 
-echo "Binding USB Device Controller"
 echo "${udc_dev}" > UDC
-echo "OK"
-
-cd /sys/kernel/config/usb_gadget/l4t
 
 # Ethernet devices require additional configuration. This must happen after the
 # UDC device is assigned, since that triggers the creation of the Tegra-side
