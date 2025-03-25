@@ -1,9 +1,13 @@
 use include_dir::{include_dir, Dir};
 use indicatif::{ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
+
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 
 static RESOURCES: Dir = include_dir!("$CARGO_MANIFEST_DIR/resources");
 static CONFIGJSON: Dir = include_dir!("$CARGO_MANIFEST_DIR/..");
@@ -46,7 +50,6 @@ fn main() {
         match prompt_user_choice() {
             1 => {
                 println!("Proceeding to overwrite...\n");
-                // Fall through to license agreement
             }
             2 => {
                 match uninstall_version(&config.version, &config.install_path_prefix) {
@@ -125,12 +128,10 @@ fn uninstall_version(version: &str, install_path_prefix: &str) -> std::io::Resul
     let registry_path = PathBuf::from(&expanded_prefix).join(".registry.json");
     let version_path = PathBuf::from(&expanded_prefix).join(version);
 
-    // Remove version folder
     if version_path.exists() {
         fs::remove_dir_all(&version_path)?;
     }
 
-    // Remove entry from registry
     let mut registry: Vec<RegistryEntry> = Vec::new();
     if registry_path.exists() {
         let data = fs::read_to_string(&registry_path)?;
@@ -175,10 +176,8 @@ fn update_registry(version: &str, path: &str, install_path_prefix: &str) -> std:
         registry = serde_json::from_str(&data).unwrap_or_else(|_| Vec::new());
     }
 
-    // Remove any existing entry with same version
     registry.retain(|entry| entry.version != version);
 
-    // Add the new one
     registry.push(RegistryEntry {
         version: version.to_string(),
         path: path.to_string(),
@@ -194,6 +193,8 @@ fn extract_dir_with_progress(dir: &Dir, target: &PathBuf, skip_filename: &str) -
     let mut files = Vec::new();
     collect_files_recursively(dir, &mut files, skip_filename);
 
+    let permissions_map = load_permissions_map();
+
     let pb = ProgressBar::new(files.len() as u64);
     pb.set_style(
         ProgressStyle::with_template("[{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} {msg}")
@@ -206,7 +207,14 @@ fn extract_dir_with_progress(dir: &Dir, target: &PathBuf, skip_filename: &str) -
         if let Some(parent) = target_path.parent() {
             fs::create_dir_all(parent)?;
         }
+
         fs::write(&target_path, contents)?;
+
+        if let Some(mode) = permissions_map.get(&relative_path.to_string_lossy().to_string()) {
+            #[cfg(unix)]
+            fs::set_permissions(&target_path, fs::Permissions::from_mode(*mode))?;
+        }
+
         pb.inc(1);
     }
 
@@ -229,4 +237,14 @@ fn collect_files_recursively<'a>(
     for sub in dir.dirs() {
         collect_files_recursively(sub, files, skip_filename);
     }
+}
+
+fn load_permissions_map() -> HashMap<String, u32> {
+    let permissions_file = RESOURCES
+        .get_file("permissions.json")
+        .expect("Missing permissions.json");
+    let json = permissions_file
+        .contents_utf8()
+        .expect("permissions.json is not valid UTF-8");
+    serde_json::from_str(json).expect("Failed to parse permissions.json")
 }

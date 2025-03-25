@@ -12,7 +12,7 @@ JSON_FILE=$(OUTPUT_BIN:.bin=.json)
 all: build package
 
 build:
-	cargo build --release
+	cargo build --release -j 1
 
 package:
 	cp $(INSTALLER) $(OUTPUT_BIN)
