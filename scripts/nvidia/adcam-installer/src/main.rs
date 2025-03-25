@@ -6,6 +6,7 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 static RESOURCES: Dir = include_dir!("$CARGO_MANIFEST_DIR/resources");
+static CONFIGJSON: Dir = include_dir!("$CARGO_MANIFEST_DIR/..");
 
 #[derive(Debug, Deserialize)]
 struct Config {
@@ -24,7 +25,7 @@ fn main() {
     println!("ADCAM Installer v{}\n", env!("CARGO_PKG_VERSION"));
 
     // Load config.json FIRST
-    let config_file = RESOURCES
+    let config_file = CONFIGJSON
         .get_file("config.json")
         .expect("Missing config.json");
     let config_data = config_file
