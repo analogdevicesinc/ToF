@@ -1,10 +1,12 @@
 #!/bin/bash
-LIB_INSTALL_FOLDER="/opt/ADI"
+BASE_DST_PREFIX="../adcam-installer/resources"
 SRC_PREFIX="../../../build"
-DST_PREFIX="../adcam-installer/resources/bin"
+DST_PREFIX="$BASE_DST_PREFIX/bin"
 FORCE=false
 UPDATE=false
-GIT_CLONE_SCRIPT_NAME="$DST_PREFIX/git_clone_tof.sh"
+LIB_INSTALL_FOLDER="/opt/ADI"
+GIT_CLONE_SCRIPT_NAME="$BASE_DST_PREFIX/git_clone_tof.sh"
+COPY_LOG="copied_files.txt"
 
 # Parse arguments
 print_help() {
@@ -76,6 +78,7 @@ REQUIRED_PACKAGES=(
     libglfw3-dev
     doxygen
     graphviz
+    python3.10-dev
 )
 # Check and install each package
 for pkg in "${REQUIRED_PACKAGES[@]}"; do
@@ -131,9 +134,6 @@ fi
 ### Copy files to staging folder
 #########################
 
-# 📝 Path to the log file (under destination prefix)
-COPY_LOG="$DST_PREFIX/copied_files.txt"
-
 # ✨ Clear log file
 > "$COPY_LOG"
 
@@ -147,7 +147,7 @@ for entry in "${COPY_PATTERNS[@]}"; do
 
     echo "Processing: '$SRC_PATTERN' → '$DST_DIR'"
 
-    # Create directory (with sudo if needed)
+    # Create destination directory
     if [[ "$DST_DIR" == /opt/* || "$DST_DIR" == /usr/* ]]; then
         sudo mkdir -p "$DST_DIR"
         USE_SUDO=true
@@ -159,25 +159,31 @@ for entry in "${COPY_PATTERNS[@]}"; do
     for file in $SRC_PATTERN; do
         if [ -e "$file" ]; then
             echo "  ↪ Copying $file → $DST_DIR"
+
+            # Copy using appropriate permission
             if [ "$USE_SUDO" = true ]; then
                 sudo cp -r "$file" "$DST_DIR/"
             else
                 cp -r "$file" "$DST_DIR/"
             fi
 
-            # Record copied file(s)
+            # Determine how to log files based on type
             if [ -d "$file" ]; then
                 find "$file" -type f | while read -r subfile; do
-                    echo "$DST_DIR/$(basename "$subfile")" >> "$COPY_LOG"
+                    rel_path="${subfile#$file/}"                    # relative to the source dir
+                    dest_path="$DST_DIR/$(basename "$file")/$rel_path"
+                    echo "$dest_path" >> "$COPY_LOG"
                 done
             else
-                echo "$DST_DIR/$(basename "$file")" >> "$COPY_LOG"
+                dest_path="$DST_DIR/$(basename "$file")"
+                echo "$dest_path" >> "$COPY_LOG"
             fi
         else
             echo "  ⚠️  No match for: $file"
         fi
     done
 done
+
 
 echo "✅ Done copying files!"
 echo "📄 File list saved to: $COPY_LOG"
@@ -209,5 +215,7 @@ EOF
 
 # Make it executable
 chmod +x "$GIT_CLONE_SCRIPT_NAME"
+
+echo "$GIT_CLONE_SCRIPT_NAME" >> "$COPY_LOG"
 
 echo "Created script: $GIT_CLONE_SCRIPT_NAME"
