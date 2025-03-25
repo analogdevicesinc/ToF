@@ -2,32 +2,22 @@
 
 set -x
 
-if [[ $EUID > 0 ]]; then
-	echo "This script must be run as root user"
-	echo "Usage: sudo ./apply_patch.sh"
-	exit 1
-fi
-
 ROOTDIR=`pwd`
+USER=`whoami`
 
 function setup_workspace_directory()
 {
-	# Check if /home/analog/Workspace exists
-	if [ -d "/home/analog/Workspace" ]; then
-		echo "Workspace directory exists. Removing it..."
-		sudo rm -rf /home/analog/Workspace
+	# Check if /home/${USER}/Workspace exists
+	if [ ! -d "/home/${USER}/Workspace" ]; then
+		echo "Workspace directory doesn't exists"
+		exit 1
 	fi
 
 	# Delete the existing ToF repo on the device.
-	sudo rm -rf /usr/local/Workspace/ToF
+	rm -rf /home/${USER}/Workspace/ToF
 
-	# Copy Workspace directory from /usr/local/ to /home/analog/
-	echo "Copying Workspace directory from /usr/local/ to /home/analog/"
-	sudo cp -r /usr/local/Workspace /home/analog/
-
-	# Copy the ToF directory to the /usr/local/ and /home/analog/Workspace/ location.
-	sudo cp -r $ROOTDIR/ToF /usr/local/Workspace/
-	sudo cp -r $ROOTDIR/ToF /home/analog/Workspace/
+	# Copy the ToF and other directory to the ~/Workspace location.
+	cp -rf $ROOTDIR/ToF /home/${USER}/Workspace/
 
 	# Stop existing services running on the NVIDIA ToF device
 	for service in network-gadget; do
@@ -37,48 +27,34 @@ function setup_workspace_directory()
 	done
 }
 
+CONFIG_LIB_PATH="/home/$USER/Workspace/libs/libtofi_config.so"
+COMPUTE_LIB_PATH="/home/$USER/Workspace/libs/libtofi_compute.so"
 
-function build_glog()
+function check_sdk_build_pre_req()
 {
-	pushd .
-	cd /home/analog/Workspace/glog
-	mkdir -p build_0_6_0 && cd build_0_6_0
-	cmake -DWITH_GFLAGS=off -DCMAKE_INSTALL_PREFIX=/opt/glog ..
-	sudo cmake --build . --target install
-	popd
-}
+	if [ -r "$CONFIG_LIB_PATH" ]; then
+		echo "The shared library $CONFIG_LIB_PATH exists and is readable."
+	else
+		echo "The shared library $CONFIG_LIB_PATH does not exist or is not readable."
+		exit 1
+	fi
 
-function build_libwebsockets()
-{
-	pushd .
-	cd /home/analog/Workspace/libwebsockets
-	mkdir -p build_3_1 && cd build_3_1
-	cmake -DLWS_WITH_SSL=OFF -DLWS_STATIC_PIC=ON -DCMAKE_INSTALL_PREFIX=/opt/websockets ..
-	sudo cmake --build . --target install
-	popd
-}
-
-function build_protobuf()
-{
-	pushd .
-	cd /home/analog/Workspace/protobuf
-	mkdir -p build_3_9_0 && cd build_3_9_0
-	cmake -Dprotobuf_BUILD_TESTS=OFF -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX=/opt/protobuf ../cmake
-	sudo cmake --build . --target install
-	popd
+	if [ -r "$COMPUTE_LIB_PATH" ]; then
+		echo "The shared library $COMPUTE_LIB_PATH exists and is readable."
+	else
+		echo "The shared library $COMPUTE_LIB_PATH does not exist or is not readable."
+		exit 1
+	fi
 }
 
 function build_sdk()
 {
 	pushd .
 	echo "Build process started"
-	build_glog
-	build_libwebsockets
-	build_protobuf
-	cd /home/analog/Workspace/ToF
+	cd /home/${USER}/Workspace/ToF
 	rm -rf build
 	mkdir build && cd build
-	cmake -DNVIDIA=1 -DCMAKE_BUILD_TYPE=Release -DWITH_EXAMPLES=on -DWITH_NETWORK=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" ..  -Wno-dev
+	cmake -DNVIDIA=1 -DWITH_EXAMPLES=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" -DCMAKE_BUILD_TYPE=Release .. -Wno-dev
 	make -j4
 	echo "Build Completed!"
 	popd
@@ -87,28 +63,27 @@ function build_sdk()
 function update_server()
 {
 	sudo systemctl stop  network-gadget
-	sudo cp /home/analog/Workspace/ToF/build/apps/server/aditof-server /usr/share/systemd/
+	sudo cp /home/${USER}/Workspace/ToF/build/apps/server/aditof-server /usr/share/systemd/
 }
 
 function apply_ubuntu_overlay()
 {
         echo "Updating dhcpd.conf"
-        cp $ROOTDIR/ubuntu_overlay/opt/nvidia/l4t-usb-device-mode/dhcpd.conf 		/opt/nvidia/l4t-usb-device-mode/
-
-        echo "Update the FAT32 partition to filesystem table"
-        cp $ROOTDIR/ubuntu_overlay/etc/fstab 						/etc/fstab
+        sudo cp $ROOTDIR/ubuntu_overlay/opt/nvidia/l4t-usb-device-mode/dhcpd.conf 		/opt/nvidia/l4t-usb-device-mode/
 
 	#Set the MTU size to 15000 by default
         echo "Configuring the MTU size to 15000 by default"
-        cp $ROOTDIR/ubuntu_overlay/etc/NetworkManager/conf.d/10-ignore-interface.conf 	/etc/NetworkManager/conf.d/
-        cp $ROOTDIR/ubuntu_overlay/etc/systemd/network/10-rndis0.network      		/etc/systemd/network/
+        sudo cp $ROOTDIR/ubuntu_overlay/etc/NetworkManager/conf.d/10-ignore-interface.conf 	/etc/NetworkManager/conf.d/
+        sudo cp $ROOTDIR/ubuntu_overlay/etc/systemd/network/10-rndis0.network      		/etc/systemd/network/
 
         echo "Updating the usb device mode configuration"
-        cp $ROOTDIR/ubuntu_overlay/opt/nvidia/l4t-usb-device-mode/nv-l4t-usb-device-mode-*.sh  	/opt/nvidia/l4t-usb-device-mode/
+        sudo cp $ROOTDIR/ubuntu_overlay/opt/nvidia/l4t-usb-device-mode/nv-l4t-usb-device-mode-*.sh  	/opt/nvidia/l4t-usb-device-mode/
 
-	echo "Copy the network gadget service file"
-        cp $ROOTDIR/ubuntu_overlay/etc/systemd/system/network-gadget.service 		/etc/systemd/system
+	echo "Copy all the service files"
+	sudo cp $ROOTDIR/ubuntu_overlay/etc/systemd/system/*.service 		/etc/systemd/system/
 
+	echo "Copy all the shell scripts"
+	sudo cp $ROOTDIR/ubuntu_overlay/usr/share/systemd/*.sh		/usr/share/systemd/
 
 }
 
@@ -138,18 +113,19 @@ EOF
 
 function update_kernel()
 {
-	mkdir test
+	pushd .
 	sudo cp sw-versions /boot/
 	if [ ! -f /boot/Image.backup ]; then
 		echo "The regular file /boot/Image.backup does not exist."
 		echo " Make a backup of the original kernel"
 		sudo cp /boot/Image /boot/Image.backup
 	fi
-	tar -xvf kernel_supplements.tbz2 -C test
-	sudo cp Image.fgv2 /boot/Image
+	mkdir test && tar -xjf kernel_supplements.tbz2 -C test > /dev/null 2>&1
+	sudo cp Image /boot/Image
 	sudo cp -rf dtb/* /boot/
 	cd test/lib/modules/
 	sudo cp -rf 5.15.148-tegra /lib/modules/
+	popd
 	sudo rm -rf test/
 }
 
@@ -158,7 +134,7 @@ function start_services()
 	sudo systemctl reload NetworkManager
 	sudo systemctl enable systemd-networkd
 	sudo systemctl start  systemd-networkd
-	sudo cp /home/analog/Workspace/ToF/build/apps/server/aditof-server /usr/share/systemd/
+	sudo cp /home/${USER}/Workspace/ToF/build/apps/server/aditof-server /usr/share/systemd/
 	sudo systemctl enable network-gadget
 	sudo systemctl start network-gadget
 	sudo systemctl enable adi-tof
@@ -168,15 +144,17 @@ function start_services()
 
 extlinux_conf_file="/boot/extlinux/extlinux.conf"
 
-function get_uuid_count() 
+function get_root_count()
 {
-	count_part_uuid="$(grep -c "PARTUUID" ${extlinux_conf_file})"
-	echo "get_uuid_count = ${count_part_uuid}"
+	count_value="$(grep -c "root" ${extlinux_conf_file})"
+	echo "get_root_count = ${count_value}"
 }
 
 function add_boot_label()
 {
+	sudo -s <<EOF
 	echo "Add the backup kernel label"
+	echo " " >> ${extlinux_conf_file}
 	echo "LABEL backup" >> ${extlinux_conf_file}
 	echo "      MENU LABEL backup kernel" >> ${extlinux_conf_file}
 	echo "      LINUX /boot/Image.backup" >> ${extlinux_conf_file}
@@ -194,12 +172,14 @@ function add_boot_label()
 	echo "      INITRD /boot/initrd" >> ${extlinux_conf_file}
 	echo "      APPEND ${cbootargs} root=/dev/mmcblk0p1 rw rootwait rootfstype=ext4 mminit_loglevel=4 console=ttyTCU0,115200 firmware_class.path=/etc/firmware fbcon=map:0 nospectre_bhb video=efifb:off console=tty0" >> ${extlinux_conf_file}
 	echo " " >> ${extlinux_conf_file}
+	exit
+EOF
 }
 
 function set_default_boot_label()
 {
         echo "Setting the default label name to ADSD3500+ADSD3100"
-        sed -i "s/^DEFAULT .*/DEFAULT ADSD3500+ADSD3100/" ${extlinux_conf_file}
+        sudo sed -i "s/^DEFAULT .*/DEFAULT ADSD3500+ADSD3100/" ${extlinux_conf_file}
 }
 
 function main()
@@ -209,12 +189,16 @@ function main()
 	
 	echo "******* Setup ToF SDK repo *******"
 	setup_workspace_directory
+	check_sdk_build_pre_req
 	
 	echo "******* Build the SDK *******"
 	build_sdk
 	
 	echo "******* Update the Extlinux Conf file *******"
-	add_boot_label
+	get_root_count
+	if [[ "${count_value}" == 0 ]]; then
+		add_boot_label
+	fi
 	set_default_boot_label
 
 	echo "******* Apply Ubuntu Overlay *******"
