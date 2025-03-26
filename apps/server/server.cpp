@@ -115,7 +115,7 @@ bool keepCaptureThreadAlive =
 #ifdef USE_ZMQ
 
 std::unique_ptr<zmq::socket_t> server_socket;
-uint32_t max_send_frames = 1;
+uint32_t max_send_frames = 10;
 std::atomic<bool> running(false);
 std::atomic<bool> stop_flag(false);
 std::mutex mtx;
