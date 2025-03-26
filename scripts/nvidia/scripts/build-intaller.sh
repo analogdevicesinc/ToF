@@ -185,6 +185,8 @@ for entry in "${COPY_PATTERNS[@]}"; do
     done
 done
 
+sudo chown -R astraker:astraker "$BASE_DST_PREFIX"/*
+
 
 echo "✅ Done copying files!"
 echo "📄 File list saved to: $COPY_LOG"
@@ -192,27 +194,29 @@ echo "📄 File list saved to: $COPY_LOG"
 #########################
 # Create Git clone script in the staging folder for the current branch
 #########################
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
 # Write the embedded script to disk
-cat << 'EOF' > "$GIT_CLONE_SCRIPT_NAME"
+cat << EOF > "$GIT_CLONE_SCRIPT_NAME"
 #!/bin/bash
 
 set -e
 
-VERSION="\$1"
-
-if [ -z "\$VERSION" ]; then
-  echo "Usage: \$0 <version>"
-  echo "Example: \$0 v5.0.0"
-  exit 1
-fi
+DEFAULT_VERSION="$BRANCH"
+VERSION="\${1:-\$DEFAULT_VERSION}"
 
 echo "Cloning branch \$VERSION from ToF repo..."
-git clone --branch "\$VERSION" https://github.com/analogdevicesinc/ToF
+git clone --branch "\$VERSION" https://github.com/analogdevicesinc/ToF ToF-"\$VERSION"
 cd ToF
 git submodule update --init
+git checkout "\$VERSION"
+cd libaditof
+git checkout "\$VERSION"
+cd ..
 
 echo "✅ Done!"
 EOF
+
 
 # Make it executable
 chmod +x "$GIT_CLONE_SCRIPT_NAME"
