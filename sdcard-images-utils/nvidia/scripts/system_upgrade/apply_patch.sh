@@ -103,6 +103,9 @@ function install_packages()
 
 	echo "Install ZMQ libraries"
 	apt install libzmq3-dev
+
+	echo "Install OpenGL libraries"
+	apt install libglfw3-dev
 		
         exit
 EOF

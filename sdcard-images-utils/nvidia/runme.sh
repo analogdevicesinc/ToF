@@ -2,7 +2,7 @@
 set -ex
 
 if [ "$#" -ne 2 ]; then
-        echo 'usage: ./create_patch_image.sh <sdk_version> <tof_branch_name>'
+        echo 'usage: ./runme.sh <sdk_version> <tof_branch_name>'
         exit 1
 fi
 
@@ -16,12 +16,12 @@ echo ${SDK_VERSION}
 echo ${BRANCH}
 
 if [ -z ${SDK_VERSION} ]; then
-        echo 'usage: ./create_patch_image.sh <sdk_version> <tof_branch_name>'
+        echo 'usage: ./runme.sh <sdk_version> <tof_branch_name>'
         exit 1
 fi
 
 if [ -z ${BRANCH} ]; then
-        echo 'usage: ./create_patch_image.sh <sdk_version> <tof_branch_name>'
+        echo 'usage: ./runme.sh <sdk_version> <tof_branch_name>'
         exit 1
 fi
 
