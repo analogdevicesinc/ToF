@@ -3,7 +3,7 @@ use std::io::{self, Read, Write};
 use std::collections::HashSet;
 use std::thread::sleep;
 use std::time::Duration;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use reqwest::blocking::Client;
 use reqwest::header::{USER_AGENT, CACHE_CONTROL, ACCEPT};
@@ -11,11 +11,10 @@ use serde::Deserialize;
 use serde_json::from_str;
 
 use sha2::{Digest, Sha256};
-
 use clap::Parser;
+use rand::{distributions::Alphanumeric, Rng};
 
 const VERSION_URL: &str = "https://swdownloads.analog.com/cse/aditof/aware3d/sw_update/adcam-mipi.json";
-
 const RETRY_LIMIT: u32 = 5;
 const RETRY_DELAY_SECS: u64 = 5;
 
@@ -38,35 +37,86 @@ struct VersionList {
     releases: Vec<Release>,
 }
 
-#[derive(Parser)]
-#[command(name = "adcam", version = env!("CARGO_PKG_VERSION"))]
-#[command(about = "Checks and downloads the latest ADCAM installer.", long_about = None)]
-struct Cli {
-    /// List all available versions from the remote JSON
-    #[arg(short, long)]
-    list: bool,
-
-    /// Download a specific version (e.g. 1.0.0)
-    #[arg(short, long)]
-    download: Option<String>,
-
-    /// Run the uninstaller for a specific version (e.g. 1.0.0)
-    #[arg(short, long)]
-    uninstall: Option<String>,
+#[derive(Debug, Deserialize)]
+struct Config {
+    version: String,
+    install_path_prefix: String,
 }
 
-fn get_registry_path() -> PathBuf {
-    let home = std::env::var("HOME").expect("HOME environment variable not set");
-    PathBuf::from(format!(
-        "{}/Analog Devices/Robotics/Camera/ADCAM/.registry.json",
-        home
-    ))
+#[derive(Parser)]
+#[command(name = "adcam", version = env!("CARGO_PKG_VERSION"))]
+#[command(about = "Checks and installs the latest ADCAM software.", long_about = None)]
+struct Cli {
+    /// Install a specific version (e.g. 1.0.0)
+    #[arg(short = 'i', long = "install")]
+    install: Option<String>,
+
+    /// Run the uninstaller for a specific version (e.g. 1.0.0)
+    #[arg(short = 'u', long = "uninstall")]
+    uninstall: Option<String>,
+
+    /// List all available versions
+    #[arg(short, long)]
+    list: bool,
+}
+
+fn load_config() -> anyhow::Result<Config> {
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let config_path = Path::new(manifest_dir).join("..").join("config.json");
+
+    let config_str = fs::read_to_string(&config_path)?;
+    let mut config: Config = serde_json::from_str(&config_str)?;
+
+    let prefix = &config.install_path_prefix;
+
+    // Expand ~ and $HOME
+    let expanded_path = if prefix.starts_with("~/") {
+        if let Some(home) = std::env::var_os("HOME") {
+            PathBuf::from(home).join(&prefix[2..])
+        } else {
+            return Err(anyhow::anyhow!("HOME environment variable not set"));
+        }
+    } else if prefix.starts_with("$HOME/") {
+        if let Some(home) = std::env::var_os("HOME") {
+            PathBuf::from(home).join(&prefix[6..])
+        } else {
+            return Err(anyhow::anyhow!("HOME environment variable not set"));
+        }
+    } else {
+        PathBuf::from(prefix)
+    };
+
+    config.install_path_prefix = expanded_path.to_string_lossy().to_string();
+
+    // Ensure directory exists
+    fs::create_dir_all(&config.install_path_prefix)?;
+
+    // Check if writable — fail if not
+    let test_path = Path::new(&config.install_path_prefix).join(".test_write");
+    match File::create(&test_path) {
+        Ok(_) => {
+            let _ = fs::remove_file(&test_path);
+        }
+        Err(e) => {
+            return Err(anyhow::anyhow!(
+                "install_path_prefix is not writable: {}\nCaused by: {}",
+                config.install_path_prefix,
+                e
+            ));
+        }
+    }
+
+    Ok(config)
 }
 
 fn fetch_version_json(client: &Client) -> anyhow::Result<String> {
+    let mut rng = rand::thread_rng();
+    let buster: String = (0..8).map(|_| rng.sample(Alphanumeric) as char).collect();
+    let busted_url = format!("{}?nocache={}", VERSION_URL, buster);
+
     for attempt in 1..=RETRY_LIMIT {
         let response = client
-            .get(VERSION_URL)
+            .get(&busted_url)
             .header(USER_AGENT, "Mozilla/5.0 (compatible; ADCAM/1.0)")
             .header(CACHE_CONTROL, "no-cache")
             .header(ACCEPT, "application/json")
@@ -106,9 +156,11 @@ fn print_versions(version_list: &VersionList) {
     }
 }
 
-fn download_file(client: &Client, release: &Release) -> anyhow::Result<()> {
+fn download_file(client: &Client, release: &Release, config: &Config) -> anyhow::Result<()> {
     let base_url = VERSION_URL.trim_end_matches("/adcam-mipi.json");
-    let file_url = format!("{}/{}", base_url, release.filename);
+    let mut rng = rand::thread_rng();
+    let buster: String = (0..8).map(|_| rng.sample(Alphanumeric) as char).collect();
+    let file_url = format!("{}/{}?nocache={}", base_url, release.filename, buster);
     let path = format!("/tmp/{}", release.filename);
 
     println!("⬇️  Downloading {} to {}", release.version, path);
@@ -153,7 +205,6 @@ fn download_file(client: &Client, release: &Release) -> anyhow::Result<()> {
 
     println!("✅ SHA256 hash verified.");
 
-    // chmod +x
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -161,7 +212,6 @@ fn download_file(client: &Client, release: &Release) -> anyhow::Result<()> {
         fs::set_permissions(&path, perms)?;
     }
 
-    // Ask to install
     print!("Do you want to run the installer now? (y/n): ");
     io::stdout().flush()?;
     let mut input = String::new();
@@ -171,7 +221,6 @@ fn download_file(client: &Client, release: &Release) -> anyhow::Result<()> {
     if input == "y" || input == "yes" {
         println!("🚀 Launching installer...");
         let status = std::process::Command::new(&path).status()?;
-
         if status.success() {
             println!("✅ Installer exited successfully.");
         } else {
@@ -181,13 +230,11 @@ fn download_file(client: &Client, release: &Release) -> anyhow::Result<()> {
         println!("ℹ️ Installer was not launched.");
     }
 
-    let home = std::env::var("HOME").expect("HOME not set");
-    let installers_dir = format!("{}/Analog Devices/Robotics/Camera/ADCAM/installers", home);
+    // Copy to install archive folder
+    let installers_dir = format!("{}/installers", config.install_path_prefix.trim_end_matches('/'));
+    fs::create_dir_all(&installers_dir)?;
     let destination_path = format!("{}/{}", installers_dir, release.filename);
-
-    fs::create_dir_all(&installers_dir)?; // ensure folder exists
-    fs::copy(&path, &destination_path)?;  // overwrite if exists
-
+    fs::copy(&path, &destination_path)?;
     println!("📦 Copied installer to: {}", destination_path);
 
     Ok(())
@@ -200,16 +247,18 @@ fn main() -> anyhow::Result<()> {
     }
 
     let cli = Cli::parse();
+    let config = load_config()?;
+    println!("📁 install_path_prefix: {}", config.install_path_prefix);
 
-    // Handle uninstall first
+
     if let Some(version) = &cli.uninstall {
-        let home = std::env::var("HOME").expect("HOME not set");
         let installer_path = format!(
-            "{}/Analog Devices/Robotics/Camera/ADCAM/installers/adcam-installer-{}.bin",
-            home, version
+            "{}/installers/adcam-installer-{}.bin",
+            config.install_path_prefix.trim_end_matches('/'),
+            version
         );
 
-        if std::path::Path::new(&installer_path).exists() {
+        if Path::new(&installer_path).exists() {
             println!("🧹 Running uninstaller at: {}", installer_path);
             let status = std::process::Command::new(&installer_path).status()?;
             if status.success() {
@@ -233,9 +282,9 @@ fn main() -> anyhow::Result<()> {
         return Ok(());
     }
 
-    if let Some(requested_version) = cli.download {
+    if let Some(requested_version) = cli.install {
         match version_list.releases.iter().find(|r| r.version == requested_version) {
-            Some(release) => download_file(&client, release)?,
+            Some(release) => download_file(&client, release, &config)?,
             None => {
                 println!("❌ Version {} not found in remote list.", requested_version);
             }
@@ -243,8 +292,8 @@ fn main() -> anyhow::Result<()> {
         return Ok(());
     }
 
-    // Default: check latest version and prompt to download
-    let registry_path = get_registry_path();
+    // Default: check for latest version and prompt to install
+    let registry_path = Path::new(&config.install_path_prefix).join(".registry.json");
 
     let installed_versions: HashSet<String> = if registry_path.exists() {
         let registry_contents = fs::read_to_string(&registry_path)?;
@@ -276,7 +325,7 @@ fn main() -> anyhow::Result<()> {
     let input = input.trim().to_lowercase();
 
     if input == "y" || input == "yes" {
-        download_file(&client, latest)?;
+        download_file(&client, latest, &config)?;
     } else {
         println!("❌ Download canceled.");
     }
