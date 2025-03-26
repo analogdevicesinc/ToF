@@ -32,8 +32,8 @@ option(WITH_SUBMODULES "Use submodules to build the library" ON)
 option(USE_ZMQ "Use ZMQ for network protocol" ON)
 
 ######################### Target based Options ################################
-option(NXP "Set to ON when building on NXP" OFF)
-option(NVIDIA "Set to ON when building on NVIDIA" OFF)
+option(ON_NXP "Set to ON when building on NXP" OFF)
+option(ON_NVIDIA "Set to ON when building on NVIDIA" OFF)
 option(WITH_PROTOBUF_DEPENDENCY "Build with PROTOBUF dependency?" ON)
 option(USE_DEPTH_COMPUTE_OPENSOURCE "Use an open source implementation?" OFF)
 
@@ -88,7 +88,7 @@ set(LIBADITOF_SUBMODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/libaditof)
 
 # Check whether we configure thgs for remote or we're on target
 set(SELECTED_PLATFORMS 0)
-set(ALL_PLATFORMS NXP;NVIDIA)
+set(ALL_PLATFORMS ON_NXP;ON_NVIDIA)
 foreach(platform IN LISTS ALL_PLATFORMS)
     if(${platform})
         math(EXPR SELECTED_PLATFORMS "${SELECTED_PLATFORMS}+1")
