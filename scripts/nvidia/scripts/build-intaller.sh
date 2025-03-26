@@ -105,7 +105,8 @@ echo "Generating build files in: $SRC_PREFIX"
 cmake -DCMAKE_INSTALL_PREFIX="$LIB_INSTALL_FOLDER" \
       -DCMAKE_INSTALL_RPATH="$LIB_INSTALL_FOLDER"\lib \
       -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
-      -DNVIDIA=1 \
+      -DON_NVIDIA=ON \
+      -DWITH_NETWORK=OFF \
       -S ../../../ \
       -B "$SRC_PREFIX"
 cmake --build "$SRC_PREFIX"
