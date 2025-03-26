@@ -85,6 +85,9 @@ function apply_ubuntu_overlay()
 	echo "Copy all the shell scripts"
 	sudo cp $ROOTDIR/ubuntu_overlay/usr/share/systemd/*.sh		/usr/share/systemd/
 
+	echo "Copy Tools directory"
+	cp -rf $ROOTDIR/ubuntu_overlayTools/ /home/${USER}/Workspace/
+
 }
 
 function install_packages()
@@ -149,7 +152,7 @@ extlinux_conf_file="/boot/extlinux/extlinux.conf"
 
 function get_root_count()
 {
-	count_value="$(grep -c "root" ${extlinux_conf_file})"
+	count_value="$(grep -c "root=/dev/mmcblk0p1" ${extlinux_conf_file})"
 	echo "get_root_count = ${count_value}"
 }
 
@@ -199,7 +202,7 @@ function main()
 	
 	echo "******* Update the Extlinux Conf file *******"
 	get_root_count
-	if [[ "${count_value}" == 0 ]]; then
+	if [[ "${count_value}" == 1 ]]; then
 		add_boot_label
 	fi
 	set_default_boot_label
