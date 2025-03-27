@@ -4,8 +4,9 @@ SRC_PREFIX="../../../build"
 DST_PREFIX="$BASE_DST_PREFIX/bin"
 FORCE=false
 UPDATE=false
-LIB_INSTALL_FOLDER="/opt/ADI"
+LIB_INSTALL_FOLDER="/opt/ADI-ADCAM"
 GIT_CLONE_SCRIPT_NAME="$BASE_DST_PREFIX/git_clone_tof.sh"
+RUNME_SCRIPT_NAME="$BASE_DST_PREFIX/run_me.sh"
 COPY_LOG="copied_files.txt"
 
 # Parse arguments
@@ -120,6 +121,9 @@ fi
 #########################
 ### Clean staging folder
 #########################
+if [ ! -d "$DST_PREFIX" ]; then
+    mkdir "$DST_PREFIX"
+fi
 if [ -d "$DST_PREFIX" ]; then
     echo "Cleaning all contents inside: $DST_PREFIX"
 
@@ -186,6 +190,7 @@ for entry in "${COPY_PATTERNS[@]}"; do
 done
 
 sudo chown -R astraker:astraker "$BASE_DST_PREFIX"/*
+sudo rm -rf "$LIB_INSTALL_FOLDER"
 
 
 echo "✅ Done copying files!"
@@ -224,3 +229,25 @@ chmod +x "$GIT_CLONE_SCRIPT_NAME"
 echo "$GIT_CLONE_SCRIPT_NAME" >> "$COPY_LOG"
 
 echo "Created script: $GIT_CLONE_SCRIPT_NAME"
+
+#########################
+# Create script to point to library files
+#########################
+
+cat << EOF > "$RUNME_SCRIPT_NAME"
+#!/bin/bash
+
+LIBS_PATH="\$(realpath "libs")"
+echo "Creating Directory Path Soft Link: \$LIBS_PATH"
+sudo ln -s "\$LIBS_PATH" "$LIB_INSTALL_FOLDER"
+
+echo "$LIB_INSTALL_FOLDER/lib" | sudo tee /etc/ld.so.conf.d/adi-adcam.conf
+sudo ldconfig
+
+EOF
+
+chmod +x "$RUNME_SCRIPT_NAME"
+
+echo "$RUNME_SCRIPT_NAME" >> "$COPY_LOG"
+
+echo "Created script: $RUNME_SCRIPT_NAME"
