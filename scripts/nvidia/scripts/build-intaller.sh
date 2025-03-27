@@ -212,7 +212,7 @@ VERSION="\${1:-\$DEFAULT_VERSION}"
 
 echo "Cloning branch \$VERSION from ToF repo..."
 git clone --branch "\$VERSION" https://github.com/analogdevicesinc/ToF ToF-"\$VERSION"
-cd ToF
+cd ToF-"\$VERSION"
 git submodule update --init
 git checkout "\$VERSION"
 cd libaditof
