@@ -1,23 +1,20 @@
 #!/bin/bash
 
-COPY_LOG="copied_files.txt"
+BASE_DST_PREFIX="../adcam-installer/resources"
 
-if [ ! -f "$COPY_LOG" ]; then
-    echo "❌ Log file not found: $COPY_LOG"
-    exit 1
+#########################
+### Clean staging folder
+#########################
+if [ ! -d "$BASE_DST_PREFIX" ]; then
+    mkdir "$BASE_DST_PREFIX"
 fi
+if [ -d "$BASE_DST_PREFIX" ]; then
+    echo "Cleaning all contents inside: $BASE_DST_PREFIX"
 
-echo "🧹 Starting cleanup from: $COPY_LOG"
+    # Deletes everything inside the folder — but not the folder itself
+    find "$BASE_DST_PREFIX" -mindepth 1 -delete
 
-while IFS= read -r file; do
-    if [ -e "$file" ]; then
-        echo "  🗑️ Removing: $file"
-        rm -f "$file"
-    else
-        echo "  ⚠️ File not found (skipping): $file"
-    fi
-done < "$COPY_LOG"
-
-rm "$COPY_LOG"
-
-echo "✅ Cleanup complete!"
+    echo "🧼 Folder cleaned!"
+else
+    echo "❌ Directory does not exist: $BASE_DST_PREFIX"
+fi
