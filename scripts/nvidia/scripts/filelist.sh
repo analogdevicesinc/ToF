@@ -16,6 +16,9 @@ COPY_PATTERNS=(
     "$SRC_PREFIX/tools/debug_apps/ctrl_app/ctrl_app,$DST_PREFIX/tools/ctrl_app",
     "$SRC_PREFIX/tools/debug_apps/ctrl_app/infile.txt,$DST_PREFIX/tools/ctrl_app",
     "$SRC_PREFIX/tools/debug_apps/ctrl_app/readme.md,$DST_PREFIX/tools/ctrl_app",
+    ## rawparser
+    "$SRC_PREFIX/../tools/misc/rawparser.py,$DST_PREFIX/tools/rawparser",
+    "$SRC_PREFIX/../tools/misc/README.md,$DST_PREFIX/tools/rawparser",
     ## V4L2 Scripts
     ### TODO
     ## NVM Tools
