@@ -21,13 +21,12 @@ use types::VersionList;
         "Version: ", env!("CARGO_PKG_VERSION")
     )    
 )]
-struct Cli {
-    #[arg(short = 'i', long = "install")]
-    install: Option<String>,
+pub struct Cli {
+    /// Install a specific version from remote or local JSON
+    #[arg(short = 'r', long = "remote")]
+    remote: Option<String>,
 
-    #[arg(short = 'u', long = "uninstall")]
-    uninstall: Option<String>,
-
+    /// Use a local test folder for JSON + binaries
     #[arg(short = 'l', long = "local")]
     local: Option<String>,
 }
@@ -55,7 +54,7 @@ fn main() -> anyhow::Result<()> {
         }
     }
 
-    if let Some(requested_version) = cli.install {
+    if let Some(requested_version) = cli.remote {
         let release = &version_list.installer;
         if release.version == requested_version {
             remote::download_file(&client, release, &config, cli.local.as_deref())?;
