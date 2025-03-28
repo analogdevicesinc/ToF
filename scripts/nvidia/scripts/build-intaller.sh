@@ -1,5 +1,6 @@
 #!/bin/bash
-BASE_DST_PREFIX="../adcam-installer/resources"
+BASE_DST_PREFIX="./output"
+RESOURCES="../adcam-installer/resources"
 SRC_PREFIX="../../../build"
 DST_PREFIX="$BASE_DST_PREFIX/bin"
 FORCE=false
@@ -9,6 +10,32 @@ GIT_CLONE_SCRIPT_NAME="$BASE_DST_PREFIX/git_clone_tof.sh"
 RUNME_SCRIPT_NAME="$BASE_DST_PREFIX/run_me.sh"
 COPY_LOG="copied_files.txt"
 CONFIG_JSON="../config.json"
+
+clean_folder_contents() {
+    local target_dir="$1"
+
+    if [ -z "$target_dir" ]; then
+        echo "❌ Usage: clean_folder_contents <target_dir>"
+        return 1
+    fi
+
+    if [ ! -d "$target_dir" ]; then
+        echo "📁 Creating directory: $target_dir"
+        mkdir -p "$target_dir"
+    fi
+
+    if [ -d "$target_dir" ]; then
+        echo "🧹 Cleaning all contents inside: $target_dir"
+        find "$target_dir" -mindepth 1 -delete
+        echo "✅ Folder cleaned!"
+    else
+        echo "❌ Failed to access directory: $target_dir"
+        return 1
+    fi
+
+    rmdir "$target_dir"
+}
+
 
 # Parse arguments
 print_help() {
@@ -167,19 +194,7 @@ fi
 #########################
 ### Clean staging folder
 #########################
-if [ ! -d "$DST_PREFIX" ]; then
-    mkdir "$DST_PREFIX"
-fi
-if [ -d "$DST_PREFIX" ]; then
-    echo "Cleaning all contents inside: $DST_PREFIX"
-
-    # Deletes everything inside the folder — but not the folder itself
-    find "$DST_PREFIX" -mindepth 1 -delete
-
-    echo "🧼 Folder cleaned!"
-else
-    echo "❌ Directory does not exist: $DST_PREFIX"
-fi
+clean_folder_contents "$DST_PREFIX"
 
 #########################
 ### Copy files to staging folder
@@ -299,9 +314,79 @@ echo "$RUNME_SCRIPT_NAME" >> "$COPY_LOG"
 echo "Created script: $RUNME_SCRIPT_NAME"
 
 #########################
+# Create permissions.json
+#########################
+
+set -e
+
+PERMISSIONS_FILE="$RESOURCES/permissions.json"
+
+# Ensure jq is installed
+if ! command -v jq &>/dev/null; then
+    echo "❌ jq is required but not installed."
+    exit 1
+fi
+
+# Initialize empty JSON object
+echo "{}" > "$PERMISSIONS_FILE"
+
+# Walk through all files under the directory
+find "$BASE_DST_PREFIX" -type f | while read -r file; do
+    # Strip the BASE_DST_PREFIX prefix
+    rel_path="${file#$BASE_DST_PREFIX/}"
+
+    # Get file permissions (mode) in octal
+    mode=$(stat -c "%a" "$file")
+
+    # Add entry to JSON using jq
+    tmp=$(mktemp)
+    jq --arg key "$rel_path" --arg value "$mode" '. + {($key): ($value | tonumber)}' "$PERMISSIONS_FILE" > "$tmp" && mv "$tmp" "$PERMISSIONS_FILE"
+done
+
+echo "✅ Permissions written to: $PERMISSIONS_FILE"
+
+#########################
+# Create output.zip
+#########################
+
+STAGING_FILE=output.tgz
+tar -czf "$STAGING_FILE" "$BASE_DST_PREFIX"
+
+#########################
 # Build the installer
 #########################
 
 echo "Starting build of installer binary: "
 make -C ../adcam-installer clean
-make -C ../adcam-installer JETPACKVERSION="$JETPACK_VERSION"
+make_output=$(make -C ../adcam-installer build JETPACKVERSION="$JETPACK_VERSION")
+installer_path=$(echo "$make_output" | grep "^BuiltXYZ: " | awk '{print $2}')
+installer_path=../adcam-installer/"$installer_path"
+
+#########################
+# Create the final installer
+#########################
+final_installer=$(basename "$installer_path")
+echo Creating final installer $"final_installer"
+
+# Move the installer
+mv "$installer_path" "$final_installer".tmp
+
+# Add the delimiter
+echo "###BUNDLE_START###" >> "$final_installer".tmp
+
+# Add output.zip
+cat "$STAGING_FILE" >> "$final_installer".tmp
+
+# Change the final
+mv "$final_installer".tmp "$final_installer"
+
+# Make it executable
+chmod +x "$final_installer"
+
+#########################
+# Final clean up
+#########################
+
+clean_folder_contents "$BASE_DST_PREFIX"
+rm "$STAGING_FILE"
+rm "$COPY_LOG"

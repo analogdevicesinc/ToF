@@ -1,5 +1,4 @@
 use include_dir::{include_dir, Dir};
-use indicatif::{ProgressBar, ProgressStyle};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -97,7 +96,7 @@ fn main() {
 
     // Proceed with install
     println!("Installing to {:?}\n", install_dir);
-    extract_dir_with_progress(&RESOURCES, &install_dir, "config.json").expect("Installation failed.");
+    // TODO: Do extraction here
 
     update_registry(
         &config.version,
@@ -199,36 +198,39 @@ fn update_registry(version: &str, path: &str, install_path_prefix: &str) -> std:
     Ok(())
 }
 
-fn extract_dir_with_progress(dir: &Dir, target: &PathBuf, skip_filename: &str) -> std::io::Result<()> {
-    let mut files = Vec::new();
-    collect_files_recursively(dir, &mut files, skip_filename);
+fn extract_embedded_tgz(output_path: &Path) -> std::io::Result<()> {
+    use std::fs::File;
+    use std::io::{BufReader, BufRead, Seek, SeekFrom, Read};
+    use flate2::read::GzDecoder;
+    use tar::Archive;
 
-    let permissions_map = load_permissions_map();
+    let exe_path = std::env::current_exe()?;
+    let exe_file = File::open(&exe_path)?;
+    let mut reader = BufReader::new(&exe_file);
 
-    let pb = ProgressBar::new(files.len() as u64);
-    pb.set_style(
-        ProgressStyle::with_template("[{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} {msg}")
-            .unwrap()
-            .progress_chars("##-"),
-    );
-
-    for (relative_path, contents) in files {
-        let target_path = target.join(&relative_path);
-        if let Some(parent) = target_path.parent() {
-            fs::create_dir_all(parent)?;
+    // Search for marker
+    let marker = b"###BUNDLE_START###";
+    let mut offset = 0;
+    loop {
+        let mut buf = vec![0; marker.len()];
+        if reader.read_exact(&mut buf).is_err() {
+            return Err(std::io::Error::new(std::io::ErrorKind::Other, "No bundle marker found"));
         }
-
-        fs::write(&target_path, contents)?;
-
-        if let Some(mode) = permissions_map.get(&relative_path.to_string_lossy().to_string()) {
-            #[cfg(unix)]
-            fs::set_permissions(&target_path, fs::Permissions::from_mode(*mode))?;
+        if buf == marker {
+            offset = reader.stream_position()?;
+            break;
+        } else {
+            reader.seek(SeekFrom::Current(1 - marker.len() as i64))?; // slide by one byte
         }
-
-        pb.inc(1);
     }
 
-    pb.finish_with_message("done");
+    // Seek to payload and extract
+    let mut exe_file = File::open(&exe_path)?;
+    exe_file.seek(SeekFrom::Start(offset))?;
+    let gz = GzDecoder::new(exe_file);
+    let mut archive = Archive::new(gz);
+    archive.unpack(output_path)?;
+
     Ok(())
 }
 
