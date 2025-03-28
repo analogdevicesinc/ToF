@@ -42,9 +42,11 @@ fn main() {
         serde_json::from_str(config_data).expect("Failed to parse config.json");
 
     if jetpack_version != config.jetpack {
-        println!("Expected Jetpack {}, but on Jetpack {}", jetpack_version, config.jetpack);
+        println!("Expected JetPack {}, but on JetPack {}", jetpack_version, config.jetpack);
         return
     }
+
+    println!("Welcome to the installer for ADCAM {} on JetPack {}.", config.version, config.jetpack);
 
     let expanded_prefix = shellexpand::tilde(&config.install_path_prefix).to_string();
     let install_dir = PathBuf::from(&expanded_prefix).join(&config.version);
