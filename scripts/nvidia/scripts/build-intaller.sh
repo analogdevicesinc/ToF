@@ -8,6 +8,7 @@ LIB_INSTALL_FOLDER="/opt/ADI-ADCAM"
 GIT_CLONE_SCRIPT_NAME="$BASE_DST_PREFIX/git_clone_tof.sh"
 RUNME_SCRIPT_NAME="$BASE_DST_PREFIX/run_me.sh"
 COPY_LOG="copied_files.txt"
+CONFIG_JSON="../config.json"
 
 # Parse arguments
 print_help() {
@@ -39,10 +40,16 @@ while getopts ":fh" opt; do
 done
 
 #########################
-# Extract the version
+# Extract the versions
 #########################
 
+## SDK
 CMAKE_FILE="../../../CMakeLists.txt"
+
+if [ ! -f "$CMAKE_FILE" ]; then
+    echo "Cannot find the CMakeLists.txt file."
+    exit 1
+fi
 
 # Extract version components
 MAJOR=$(grep -oP 'set\s*\(\s*ADITOF_VERSION_MAJOR\s+\K[0-9]+' "$CMAKE_FILE")
@@ -52,6 +59,45 @@ PATCH=$(grep -oP 'set\s*\(\s*ADITOF_VERSION_PATCH\s+\K[0-9]+' "$CMAKE_FILE")
 VERSION="$MAJOR.$MINOR.$PATCH"
 
 echo "📦 Extracted ADITOF version: $VERSION"
+
+## JetPack
+JETPACK_FILE="/etc/nv_tegra_release"
+JETPACK_VERSION="unknown"
+
+if [ -f "$JETPACK_FILE" ]; then
+    # Extract the L4T major version (e.g., R36)
+    L4T_MAJOR=$(grep -oP 'R\d+' "$JETPACK_FILE" | head -n 1 | tr -d 'R')
+
+    # Extract the L4T minor version (e.g., 4.3)
+    L4T_REVISION=$(grep "REVISION:" "$JETPACK_FILE" | sed -n 's/.*REVISION: \([^,]*\).*/\1/p')
+
+    FULL_L4T="${L4T_MAJOR}.${L4T_REVISION}"
+
+    echo "$FULL_L4T"
+    case "$FULL_L4T" in
+        36.4.3) JETPACK_VERSION="JP62" ;;
+        *)      
+                echo "Unsupported JetPack version, terminating script."
+                exit 1
+                ;;
+    esac
+
+    echo "🔍 Detected JetPack version: $JETPACK_VERSION"
+else
+    echo "❌ $JETPACK_FILE not found. Are you on a Jetson device?"
+    exit 1
+fi
+
+if [ ! -f "$CONFIG_JSON" ]; then
+    echo "❌ JSON file not found: $CONFIG_JSON"
+    exit 1
+fi
+
+# Use jq to add or update "jetpack"
+jq --arg ver "$JETPACK_VERSION" '.jetpack = $ver' "$CONFIG_JSON" > tmp.json && mv tmp.json "$CONFIG_JSON"
+
+echo "✅ jetpack version set to: $JETPACK_VERSION in $JSON_FILE"
+
 #########################
 # Build the device driver
 #########################
@@ -251,3 +297,11 @@ chmod +x "$RUNME_SCRIPT_NAME"
 echo "$RUNME_SCRIPT_NAME" >> "$COPY_LOG"
 
 echo "Created script: $RUNME_SCRIPT_NAME"
+
+#########################
+# Build the installer
+#########################
+
+echo "Starting build of installer binary: "
+make -C ../adcam-installer clean
+make -C ../adcam-installer JETPACKVERSION="$JETPACK_VERSION"

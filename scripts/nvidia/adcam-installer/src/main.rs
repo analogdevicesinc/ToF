@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
+use regex::Regex;
 
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
@@ -16,6 +17,7 @@ static CONFIGJSON: Dir = include_dir!("$CARGO_MANIFEST_DIR/..");
 struct Config {
     version: String,
     install_path_prefix: String,
+    jetpack: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -27,6 +29,7 @@ struct RegistryEntry {
 fn main() {
     // Print tool version from Cargo.toml
     println!("ADCAM Installer v{}\n", env!("CARGO_PKG_VERSION"));
+    let jetpack_version = detect_jetpack_version().unwrap_or("unknown".to_string());
 
     // Load config.json FIRST
     let config_file = CONFIGJSON
@@ -37,6 +40,11 @@ fn main() {
         .expect("config.json not UTF-8");
     let config: Config =
         serde_json::from_str(config_data).expect("Failed to parse config.json");
+
+    if jetpack_version != config.jetpack {
+        println!("Expected Jetpack {}, but on Jetpack {}", jetpack_version, config.jetpack);
+        return
+    }
 
     let expanded_prefix = shellexpand::tilde(&config.install_path_prefix).to_string();
     let install_dir = PathBuf::from(&expanded_prefix).join(&config.version);
@@ -247,4 +255,24 @@ fn load_permissions_map() -> HashMap<String, u32> {
         .contents_utf8()
         .expect("permissions.json is not valid UTF-8");
     serde_json::from_str(json).expect("Failed to parse permissions.json")
+}
+
+fn detect_jetpack_version() -> Option<String> {
+    let contents = std::fs::read_to_string("/etc/nv_tegra_release").ok()?;
+    let release_re = Regex::new(r"R(\d+)").ok()?;
+    let revision_re = Regex::new(r"REVISION:\s*(\d+)\.(\d+)").ok()?;
+
+    let major = release_re.captures(&contents)?.get(1)?.as_str().parse::<u32>().ok()?;
+    let (minor, _) = {
+        let caps = revision_re.captures(&contents)?;
+        (
+            caps.get(1)?.as_str().parse::<u32>().ok()?,
+            caps.get(2)?.as_str().parse::<u32>().ok()?,
+        )
+    };
+
+    match (major, minor) {
+        (36, 3..) => Some("JP62".to_string()),
+        _ => None,
+    }
 }

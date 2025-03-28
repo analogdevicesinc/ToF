@@ -1,6 +1,11 @@
 PACKAGE_NAME=$(shell grep '^name =' Cargo.toml | sed 's/.*"\(.*\)".*/\1/')
 VERSION=$(shell grep '^version =' Cargo.toml | sed 's/.*"\(.*\)".*/\1/')
-APP_NAME=$(PACKAGE_NAME)-$(VERSION).bin
+JETPACKVERSION ?=
+JETPACKTAG := $(JETPACKVERSION)
+ifneq ($(strip $(JETPACKVERSION)),)
+JETPACKTAG := $(JETPACKVERSION)-
+endif
+APP_NAME=$(PACKAGE_NAME)-$(JETPACKTAG)$(VERSION).bin
 BUILD_DIR=target/release
 INSTALLER=$(BUILD_DIR)/$(PACKAGE_NAME)
 OUTPUT_BIN=$(BUILD_DIR)/$(APP_NAME)
@@ -12,6 +17,7 @@ JSON_FILE=$(OUTPUT_BIN:.bin=.json)
 all: build package
 
 build:
+	echo "Building $(JETPACKVERSION)"
 	cargo build --release -j 1
 
 package:
