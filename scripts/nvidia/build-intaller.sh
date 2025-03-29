@@ -1,15 +1,16 @@
 #!/bin/bash
+
 BASE_DST_PREFIX="./output"
-RESOURCES="../adcam-installer/resources"
-SRC_PREFIX="../../../build"
+RESOURCES="./adcam-installer/resources"
+SRC_PREFIX="../../build"
 DST_PREFIX="$BASE_DST_PREFIX/bin"
 FORCE=false
 UPDATE=false
 LIB_INSTALL_FOLDER="/opt/ADI-ADCAM"
 GIT_CLONE_SCRIPT_NAME="$BASE_DST_PREFIX/git_clone_tof.sh"
 RUNME_SCRIPT_NAME="$BASE_DST_PREFIX/run_me.sh"
-COPY_LOG="copied_files.txt"
-CONFIG_JSON="../config.json"
+COPY_LOG="./copied_files.txt"
+CONFIG_JSON="./config.json"
 
 clean_folder_contents() {
     local target_dir="$1"
@@ -71,7 +72,7 @@ done
 #########################
 
 ## SDK
-CMAKE_FILE="../../../CMakeLists.txt"
+CMAKE_FILE="../../CMakeLists.txt"
 
 if [ ! -f "$CMAKE_FILE" ]; then
     echo "Cannot find the CMakeLists.txt file."
@@ -181,7 +182,7 @@ cmake -DCMAKE_INSTALL_PREFIX="$LIB_INSTALL_FOLDER" \
       -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
       -DON_NVIDIA=ON \
       -DWITH_NETWORK=OFF \
-      -S ../../../ \
+      -S ../../ \
       -B "$SRC_PREFIX"
 cmake --build "$SRC_PREFIX"
 sudo cmake --install "$SRC_PREFIX"
@@ -357,10 +358,10 @@ tar -czf "$STAGING_FILE" "$BASE_DST_PREFIX"
 #########################
 
 echo "Starting build of installer binary: "
-make -C ../adcam-installer clean
-make_output=$(make -C ../adcam-installer build JETPACKVERSION="$JETPACK_VERSION")
+make -C ./adcam-installer clean
+make_output=$(make -C ./adcam-installer build JETPACKVERSION="$JETPACK_VERSION")
 installer_path=$(echo "$make_output" | grep "^BuiltXYZ: " | awk '{print $2}')
-installer_path=../adcam-installer/"$installer_path"
+installer_path=./adcam-installer/"$installer_path"
 
 #########################
 # Create the final installer
