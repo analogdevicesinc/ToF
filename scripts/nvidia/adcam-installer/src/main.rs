@@ -10,7 +10,7 @@ use regex::Regex;
 use std::os::unix::fs::PermissionsExt;
 
 static RESOURCES: Dir = include_dir!("$CARGO_MANIFEST_DIR/resources");
-static CONFIGJSON: Dir = include_dir!("$CARGO_MANIFEST_DIR/..");
+const CONFIG_DATA: &str = include_str!("../../config.json");
 
 #[derive(Debug, Deserialize)]
 struct Config {
@@ -31,14 +31,8 @@ fn main() {
     let jetpack_version = detect_jetpack_version().unwrap_or("unknown".to_string());
 
     // Load config.json FIRST
-    let config_file = CONFIGJSON
-        .get_file("config.json")
-        .expect("Missing config.json");
-    let config_data = config_file
-        .contents_utf8()
-        .expect("config.json not UTF-8");
     let config: Config =
-        serde_json::from_str(config_data).expect("Failed to parse config.json");
+    serde_json::from_str(CONFIG_DATA).expect("Failed to parse config.json");
 
     if jetpack_version != config.jetpack {
         println!("Expected JetPack {}, but on JetPack {}", jetpack_version, config.jetpack);
