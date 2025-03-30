@@ -4,13 +4,15 @@ BASE_DST_PREFIX="./output"
 RESOURCES="./adcam-installer/resources"
 SRC_PREFIX="../../build"
 DST_PREFIX="$BASE_DST_PREFIX/bin"
-FORCE=false
-UPDATE=false
 LIB_INSTALL_FOLDER="/opt/ADI-ADCAM"
 GIT_CLONE_SCRIPT_NAME="$BASE_DST_PREFIX/git_clone_tof.sh"
 RUNME_SCRIPT_NAME="$BASE_DST_PREFIX/run_me.sh"
 COPY_LOG="./copied_files.txt"
 CONFIG_JSON="./config.json"
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+FORCE=false
+UPDATE=false
+BUILDALL=false
 
 clean_folder_contents() {
     local target_dir="$1"
@@ -43,6 +45,8 @@ print_help() {
     echo "🔧 Usage: $0 [-f] [-h][-u"
     echo ""
     echo "  -f    Force rebuild by deleting the existing build directory"
+    echo "  -u    Update the Ubuntu dependencies"
+    echo "  -a    Build installation package to include SDK and Kernel components" 
     echo "  -h    Show this help message"
 }
 
@@ -54,6 +58,9 @@ while getopts ":fh" opt; do
             ;;
         u)
             UPDATE=true
+            ;;
+        a)
+            BUILDALL=true
             ;;
         h)
             print_help
@@ -125,12 +132,6 @@ fi
 jq --arg ver "$JETPACK_VERSION" '.jetpack = $ver' "$CONFIG_JSON" > tmp.json && mv tmp.json "$CONFIG_JSON"
 
 echo "✅ jetpack version set to: $JETPACK_VERSION in $JSON_FILE"
-
-#########################
-# Build the device driver
-#########################
-
-# TODO
 
 #########################
 # Build the ToF Repo - bindings, example, sdk
@@ -259,9 +260,27 @@ echo "✅ Done copying files!"
 echo "📄 File list saved to: $COPY_LOG"
 
 #########################
+# Build the kernel components
+#########################
+
+DRIVER_FOLDER=../../sdcard-images-utils/nvidia
+if [ "$BUILDALL" = true ]; then
+    "$DRIVER_FOLDER"/runme.sh "$VERSION" "$BRANCH"
+fi
+
+MATCH=$(compgen -G "${DRIVER_FOLDER}/NVIDIA_ToF_ADSD3500_REL_PATCH_*.zip" | head -n 1)
+
+if [ -n "$MATCH" ]; then
+    echo "✅ Building with kernel bits: $MATCH"
+    cp "$MATCH" "$BASE_DST_PREFIX"
+else
+    echo "❌ No matching .zip file found - Building without the Kernel bits."
+    pause 10
+fi
+
+#########################
 # Create Git clone script in the staging folder for the current branch
 #########################
-BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 # Write the embedded script to disk
 cat << EOF > "$GIT_CLONE_SCRIPT_NAME"
