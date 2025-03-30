@@ -13,6 +13,7 @@ BRANCH=$(git rev-parse --abbrev-ref HEAD)
 FORCE=false
 UPDATE=false
 BUILDALL=false
+COMPRESS=false
 
 clean_folder_contents() {
     local target_dir="$1"
@@ -42,16 +43,17 @@ clean_folder_contents() {
 
 # Parse arguments
 print_help() {
-    echo "🔧 Usage: $0 [-f] [-h][-u"
+    echo "🔧 Usage: $0 [-f] [-h][-u][-a][-c]"
     echo ""
     echo "  -f    Force rebuild by deleting the existing build directory"
     echo "  -u    Update the Ubuntu dependencies"
     echo "  -a    Build installation package to include SDK and Kernel components" 
+    echo "  -c    Compress Rust generated binary."
     echo "  -h    Show this help message"
 }
 
 # Parse options
-while getopts ":fh" opt; do
+while getopts ":fhuac" opt; do
     case $opt in
         f)
             FORCE=true
@@ -61,6 +63,9 @@ while getopts ":fh" opt; do
             ;;
         a)
             BUILDALL=true
+            ;;
+        c)
+            COMPRESS=true
             ;;
         h)
             print_help
@@ -146,8 +151,10 @@ fi
 
 
 REQUIRED_PACKAGES=(
+    upx
     cmake
     g++
+    gcc
     libopencv-contrib-dev
     libopencv-dev
     libgl1-mesa-dev
@@ -192,6 +199,21 @@ if [ -d "./CMakeFiles" ]; then
 
     rm -rf "./CMakeFiles"
 fi 
+
+# Check if Rust is installed
+if command -v rustc >/dev/null 2>&1; then
+    echo "✅ Rust is already installed (version $(rustc --version))"
+else
+    echo "🛠 Installing Rust for ARM64..."
+
+    # Download and run rustup-init
+    curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable
+
+    # Add Cargo to PATH for current shell session
+    export PATH="$HOME/.cargo/bin:$PATH"
+
+    echo "✅ Rust installed (version $(rustc --version))"
+fi
 
 #########################
 ### Clean staging folder
@@ -381,6 +403,12 @@ make -C ./adcam-installer clean
 make_output=$(make -C ./adcam-installer build JETPACKVERSION="$JETPACK_VERSION")
 installer_path=$(echo "$make_output" | grep "^BuiltXYZ: " | awk '{print $2}')
 installer_path=./adcam-installer/"$installer_path"
+if [ "$COMPRESS" = true ]; then
+    echo "✅ Compressing $installer_path"
+    upx --best --lzma "$installer_path"
+else
+    echo "❌ Not compressing $installer_path"
+fi
 
 #########################
 # Create the final installer
