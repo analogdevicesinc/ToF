@@ -1,12 +1,15 @@
 #!/bin/bash
 
-BASE_DST_PREFIX="./output"
+DESTINATION="./output"
 RESOURCES="./adcam-installer/resources"
 SRC_PREFIX="../../build"
-DST_PREFIX="$BASE_DST_PREFIX/bin"
+EVALUATION="$DESTINATION/eval"
+TOOLS="$DESTINATION/tools"
+DEVELOPMENT="$DESTINATION/dev"
+KERNEL="$DESTINATION/kernel"
 LIB_INSTALL_FOLDER="/opt/ADI-ADCAM"
-GIT_CLONE_SCRIPT_NAME="$BASE_DST_PREFIX/git_clone_tof.sh"
-RUNME_SCRIPT_NAME="$BASE_DST_PREFIX/run_me.sh"
+GIT_CLONE_SCRIPT_NAME="$DEVELOPMENT/git_clone_tof.sh"
+RUNME_SCRIPT_NAME="$DESTINATION/run_me.sh"
 COPY_LOG="./copied_files.txt"
 CONFIG_JSON="./config.json"
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
@@ -138,6 +141,7 @@ jq --arg ver "$JETPACK_VERSION" '.jetpack = $ver' "$CONFIG_JSON" > tmp.json && m
 
 echo "✅ jetpack version set to: $JETPACK_VERSION in $JSON_FILE"
 
+
 #########################
 # Build the ToF Repo - bindings, example, sdk
 #########################
@@ -152,6 +156,7 @@ fi
 
 REQUIRED_PACKAGES=(
     upx
+    jq
     cmake
     g++
     gcc
@@ -218,7 +223,16 @@ fi
 #########################
 ### Clean staging folder
 #########################
-clean_folder_contents "$DST_PREFIX"
+clean_folder_contents "$EVALUATION"
+
+#########################
+### Created needed folders
+#########################
+
+mkdir -p "$EVALUATION"
+mkdir -p "$TOOLS"
+mkdir -p "$DEVELOPMENT"
+mkdir -p "$KERNEL"
 
 #########################
 ### Copy files to staging folder
@@ -274,7 +288,7 @@ for entry in "${COPY_PATTERNS[@]}"; do
     done
 done
 
-sudo chown -R astraker:astraker "$BASE_DST_PREFIX"/*
+sudo chown -R astraker:astraker "$DESTINATION"/*
 sudo rm -rf "$LIB_INSTALL_FOLDER"
 
 
@@ -294,9 +308,9 @@ MATCH=$(compgen -G "${DRIVER_FOLDER}/NVIDIA_ToF_ADSD3500_REL_PATCH_*.zip" | head
 
 if [ -n "$MATCH" ]; then
     echo "✅ Building with kernel bits: $MATCH"
-    cp "$MATCH" "$BASE_DST_PREFIX"
+    cp "$MATCH" "$KERNEL"
 else
-    echo "❌ No matching .zip file found - Building without the Kernel bits."
+    echo "⚠️ No matching .zip file found - Building without the Kernel bits."
     pause 10
 fi
 
@@ -373,9 +387,9 @@ fi
 echo "{}" > "$PERMISSIONS_FILE"
 
 # Walk through all files under the directory
-find "$BASE_DST_PREFIX" -type f | while read -r file; do
-    # Strip the BASE_DST_PREFIX prefix
-    rel_path="${file#$BASE_DST_PREFIX/}"
+find "$DESTINATION" -type f | while read -r file; do
+    # Strip the DESTINATION prefix
+    rel_path="${file#$DESTINATION/}"
 
     # Get file permissions (mode) in octal
     mode=$(stat -c "%a" "$file")
@@ -392,7 +406,7 @@ echo "✅ Permissions written to: $PERMISSIONS_FILE"
 #########################
 
 STAGING_FILE=output.tgz
-tar -czf "$STAGING_FILE" "$BASE_DST_PREFIX"
+tar -czf "$STAGING_FILE" "$DESTINATION/"
 
 #########################
 # Build the installer
@@ -407,7 +421,7 @@ if [ "$COMPRESS" = true ]; then
     echo "✅ Compressing $installer_path"
     upx --best --lzma "$installer_path"
 else
-    echo "❌ Not compressing $installer_path"
+    echo "⚠️ Not compressing $installer_path"
 fi
 
 #########################
@@ -435,6 +449,6 @@ chmod +x "$final_installer"
 # Final clean up
 #########################
 
-clean_folder_contents "$BASE_DST_PREFIX"
+#clean_folder_contents "$DESTINATION"
 rm "$STAGING_FILE"
 rm "$COPY_LOG"
