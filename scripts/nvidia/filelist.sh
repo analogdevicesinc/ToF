@@ -25,5 +25,5 @@ COPY_PATTERNS=(
     ### TODO
     # Stage Library files
     "$SRC_PREFIX/bindings/python/build/lib/aditofpython.cpython-310-aarch64-linux-gnu.so,$EVALUATION/python",
-    "/opt/ADI-ADCAM/*,$BASE_DST_PREFIX/libs"
+    "/opt/ADI-ADCAM/*,$LIBS"
 )

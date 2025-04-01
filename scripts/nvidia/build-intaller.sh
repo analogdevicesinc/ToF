@@ -7,6 +7,7 @@ EVALUATION="$DESTINATION/eval"
 TOOLS="$DESTINATION/tools"
 DEVELOPMENT="$DESTINATION/dev"
 KERNEL="$DESTINATION/kernel"
+LIBS="$DESTINATION/libs"
 LIB_INSTALL_FOLDER="/opt/ADI-ADCAM"
 GIT_CLONE_SCRIPT_NAME="$DEVELOPMENT/git_clone_tof.sh"
 RUNME_SCRIPT_NAME="$DESTINATION/run_me.sh"
@@ -358,7 +359,7 @@ LIBS_PATH="\$(realpath "libs")"
 echo "Creating Directory Path Soft Link: \$LIBS_PATH"
 sudo ln -s "\$LIBS_PATH" "$LIB_INSTALL_FOLDER"
 
-echo "$LIB_INSTALL_FOLDER/lib" | sudo tee /etc/ld.so.conf.d/adi-adcam.conf
+echo "\$LIBS_PATH/lib" | sudo tee /etc/ld.so.conf.d/adi-adcam.conf
 sudo ldconfig
 
 EOF
@@ -405,8 +406,12 @@ echo "✅ Permissions written to: $PERMISSIONS_FILE"
 # Create output.zip
 #########################
 
-STAGING_FILE=output.tgz
-tar -czf "$STAGING_FILE" "$DESTINATION/"
+STAGING_FILE=$(realpath install-bundle.tgz)
+tar -czf "$STAGING_FILE" -C "$DESTINATION/" .
+
+if [ ! -f "$STAGING_FILE" ]; then
+    echo "❌ Stage file not created: $STAGING_FILE"
+fi
 
 #########################
 # Build the installer
@@ -414,7 +419,7 @@ tar -czf "$STAGING_FILE" "$DESTINATION/"
 
 echo "Starting build of installer binary: "
 make -C ./adcam-installer clean
-make_output=$(make -C ./adcam-installer build JETPACKVERSION="$JETPACK_VERSION")
+make_output=$(make -C ./adcam-installer package JETPACKVERSION="$JETPACK_VERSION" BUNDLE="$STAGING_FILE")
 installer_path=$(echo "$make_output" | grep "^BuiltXYZ: " | awk '{print $2}')
 installer_path=./adcam-installer/"$installer_path"
 if [ "$COMPRESS" = true ]; then
@@ -425,30 +430,9 @@ else
 fi
 
 #########################
-# Create the final installer
-#########################
-final_installer=$(basename "$installer_path")
-echo Creating final installer $"final_installer"
-
-# Move the installer
-mv "$installer_path" "$final_installer".tmp
-
-# Add the delimiter
-echo "###BUNDLE_START###" >> "$final_installer".tmp
-
-# Add output.zip
-cat "$STAGING_FILE" >> "$final_installer".tmp
-
-# Change the final
-mv "$final_installer".tmp "$final_installer"
-
-# Make it executable
-chmod +x "$final_installer"
-
-#########################
 # Final clean up
 #########################
 
-#clean_folder_contents "$DESTINATION"
+clean_folder_contents "$DESTINATION"
 rm "$STAGING_FILE"
 rm "$COPY_LOG"
