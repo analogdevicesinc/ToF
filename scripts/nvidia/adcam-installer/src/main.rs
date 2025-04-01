@@ -1,10 +1,12 @@
 use include_dir::{include_dir, Dir};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fs;
-use std::io::{self, Write};
+use std::fs::{self, File};
+use std::io::{self, BufReader, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use regex::Regex;
+use flate2::read::GzDecoder;
+use tar::Archive;
 
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
@@ -90,7 +92,7 @@ fn main() {
 
     // Proceed with install
     println!("Installing to {:?}\n", install_dir);
-    // TODO: Do extraction here
+    extract_embedded_tgz(&install_dir).expect("Failed to extract embedded archive");
 
     update_registry(
         &config.version,
@@ -192,35 +194,61 @@ fn update_registry(version: &str, path: &str, install_path_prefix: &str) -> std:
     Ok(())
 }
 
-fn extract_embedded_tgz(output_path: &Path) -> std::io::Result<()> {
-    use std::fs::File;
-    use std::io::{BufReader, BufRead, Seek, SeekFrom, Read};
-    use flate2::read::GzDecoder;
-    use tar::Archive;
+fn search_in_file(path: &str, pattern: &[u8], instance: usize, start_offset: u64) -> io::Result<usize> {
+    let mut file = File::open(path)?;
+    file.seek(SeekFrom::Start(start_offset))?; // Seek to the specified start offset
+    let mut reader = BufReader::new(file);
 
-    let exe_path = std::env::current_exe()?;
-    let exe_file = File::open(&exe_path)?;
-    let mut reader = BufReader::new(&exe_file);
+    let mut buffer = Vec::new();
+    let mut chunk = [0; 1024]; // Adjust chunk size as needed
+    let mut position = start_offset as usize;
+    let mut count = 0;
 
-    // Search for marker
-    let marker = b"###BUNDLE_START###";
-    let mut offset = 0;
-    loop {
-        let mut buf = vec![0; marker.len()];
-        if reader.read_exact(&mut buf).is_err() {
-            return Err(std::io::Error::new(std::io::ErrorKind::Other, "No bundle marker found"));
-        }
-        if buf == marker {
-            offset = reader.stream_position()?;
+    while let Ok(bytes_read) = reader.read(&mut chunk) {
+        if bytes_read == 0 {
             break;
+        }
+
+        buffer.extend_from_slice(&chunk[..bytes_read]);
+
+        while let Some(pos) = find_pattern(&buffer, pattern) {
+            count += 1;
+            if count == instance {
+                return Ok(position + pos + pattern.len() + 1); // +1 to skip '\0x0a'
+            }
+            position += pos + pattern.len();
+            buffer = buffer[pos + pattern.len()..].to_vec();
+        }
+
+        // Keep the last bytes of the current buffer that might contain the start of the pattern
+        if buffer.len() > pattern.len() {
+            position += buffer.len() - pattern.len();
+            buffer = buffer[buffer.len() - pattern.len()..].to_vec();
         } else {
-            reader.seek(SeekFrom::Current(1 - marker.len() as i64))?; // slide by one byte
+            position += buffer.len();
+            buffer.clear();
         }
     }
 
+    Err(io::Error::new(io::ErrorKind::NotFound, "Pattern not found"))
+}
+
+fn find_pattern(haystack: &[u8], needle: &[u8]) -> Option<usize> {
+    haystack.windows(needle.len()).position(|window| window == needle)
+}
+
+fn extract_embedded_tgz(output_path: &Path) -> std::io::Result<()> {
+    let exe_path = std::env::current_exe()?;
+    let marker = b"ADCAM_TGZ_START";
+
+    // Find the second marker
+    let offset = search_in_file(exe_path.to_str().unwrap(), marker, 2, 0)?;
+
+    //println!("✅ Found appended marker at offset: {}", offset);
+
     // Seek to payload and extract
     let mut exe_file = File::open(&exe_path)?;
-    exe_file.seek(SeekFrom::Start(offset))?;
+    exe_file.seek(SeekFrom::Start(offset as u64))?;
     let gz = GzDecoder::new(exe_file);
     let mut archive = Archive::new(gz);
     archive.unpack(output_path)?;
