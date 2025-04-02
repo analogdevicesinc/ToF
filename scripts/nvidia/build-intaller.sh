@@ -21,6 +21,7 @@ FORCE=false
 UPDATE=false
 BUILDALL=false
 COMPRESS=false
+original_ld_library_path="$LD_LIBRARY_PATH"
 
 # Parse arguments
 print_help() {
@@ -188,11 +189,22 @@ build_eval_kit() {
     if [ "$FORCE" = true ]; then
         echo "Removing existing build directory: $SRC_PREFIX"
         if [ -d "$SRC_PREFIX" ]; then
-            rm -rf "$SRC_PREFIX"
+            sudo rm -rf "$SRC_PREFIX"
+            sudo rm -rf "$LIB_INSTALL_FOLDER"
+            sudo mkdir "$LIB_INSTALL_FOLDER"
         fi
     else
         echo "No existing build directory to remove."
     fi
+
+    if [ -f /etc/ld.so.conf.d/adi-adcam.conf ]; then
+        sudo rm /etc/ld.so.conf.d/adi-adcam.conf
+        sudo ldconfig
+    fi
+
+    # Update LD_LIBRARY_PATH (add a new directory) # TODO: Why is this needed?
+    new_library_directory=$(realpath "$SRC_PREFIX")/libaditof/protobuf/cmake
+    LD_LIBRARY_PATH="$new_library_directory:$LD_LIBRARY_PATH"
 
     # Run CMake to generate build system
     echo "Generating build files in: $SRC_PREFIX"
@@ -200,11 +212,13 @@ build_eval_kit() {
         -DCMAKE_INSTALL_RPATH="$LIB_INSTALL_FOLDER"\lib \
         -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
         -DON_NVIDIA=ON \
-        -DWITH_NETWORK=OFF \
+        -DWITH_NETWORK=ON \
         -S ../../ \
         -B "$SRC_PREFIX" 2> "$CMAKE_LOGS"
     if [ $? -ne 0 ]; then
         echo "cmake configuration failed: $LINENO"
+        echo "Cmake Log"
+        echo "---------"
         cat "$CMAKE_LOGS"
         exit
     fi
@@ -212,6 +226,8 @@ build_eval_kit() {
     cmake --build "$SRC_PREFIX" 2> "$CMAKE_LOGS"
     if [ $? -ne 0 ]; then
         echo "cmake build failed: $LINENO"
+        echo "Cmake Log"
+        echo "---------"
         cat "$CMAKE_LOGS"
         exit
     fi
@@ -219,6 +235,8 @@ build_eval_kit() {
     sudo cmake --install "$SRC_PREFIX" 2> "$CMAKE_LOGS"
     if [ $? -ne 0 ]; then
         echo "cmake install failed: $LINENO"
+        echo "Cmake Log"
+        echo "---------"
         cat "$CMAKE_LOGS"
         exit
     fi
@@ -488,9 +506,11 @@ build_installer() {
 #########################
 clean_up() {
     echo "✅ Cleaning up on exit!"
+    LD_LIBRARY_PATH="$original_ld_library_path"
     clean_folder_contents "$DESTINATION"
     rm "$STAGING_FILE"
     rm "$COPY_LOG"
+    rm "$CMAKE_LOGS"
 }
 
 main() {
