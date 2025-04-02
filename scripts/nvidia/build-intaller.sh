@@ -14,6 +14,7 @@ RUNME_SCRIPT_NAME="$DESTINATION/run_me.sh"
 COPY_LOG="./copied_files.txt"
 CONFIG_JSON="./config.json"
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
+CMAKE_LOGS="./cmake_errors.log"
 JETPACK_VERSION="Unknown"
 VERSION="Unknown"
 FORCE=false
@@ -201,9 +202,27 @@ build_eval_kit() {
         -DON_NVIDIA=ON \
         -DWITH_NETWORK=OFF \
         -S ../../ \
-        -B "$SRC_PREFIX"
-    cmake --build "$SRC_PREFIX"
-    sudo cmake --install "$SRC_PREFIX"
+        -B "$SRC_PREFIX" 2> "$CMAKE_LOGS"
+    if [ $? -ne 0 ]; then
+        echo "cmake configuration failed: $LINENO"
+        cat "$CMAKE_LOGS"
+        exit
+    fi
+
+    cmake --build "$SRC_PREFIX" 2> "$CMAKE_LOGS"
+    if [ $? -ne 0 ]; then
+        echo "cmake build failed: $LINENO"
+        cat "$CMAKE_LOGS"
+        exit
+    fi
+
+    sudo cmake --install "$SRC_PREFIX" 2> "$CMAKE_LOGS"
+    if [ $? -ne 0 ]; then
+        echo "cmake install failed: $LINENO"
+        cat "$CMAKE_LOGS"
+        exit
+    fi
+
     if [ -d "./CMakeFiles" ]; then
         echo "Cleaning up CMake-generated files in: $SRC_PREFIX"
 
