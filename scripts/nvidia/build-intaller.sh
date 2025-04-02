@@ -185,13 +185,13 @@ update_dependencies() {
 
 build_eval_kit() {
 
+    sudo rm -rf "$LIB_INSTALL_FOLDER"
+    sudo mkdir "$LIB_INSTALL_FOLDER"
     # Only remove if the folder exists
     if [ "$FORCE" = true ]; then
         echo "Removing existing build directory: $SRC_PREFIX"
         if [ -d "$SRC_PREFIX" ]; then
-            sudo rm -rf "$SRC_PREFIX"
-            sudo rm -rf "$LIB_INSTALL_FOLDER"
-            sudo mkdir "$LIB_INSTALL_FOLDER"
+            sudo rm -rf "$SRC_PREFIX"            
         fi
     else
         echo "No existing build directory to remove."
