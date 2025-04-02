@@ -245,9 +245,11 @@ setup_staging() {
 
     source ./filelist.sh
 
+    
     for entry in "${COPY_PATTERNS[@]}"; do
-        IFS=',' read -r REL_SRC_PATTERN REL_DST_DIR <<< "$entry"
+        IFS=',' read -r OP REL_SRC_PATTERN REL_DST_DIR <<< "$entry"
 
+        OPERATION="$OP"
         SRC_PATTERN="$REL_SRC_PATTERN"
         DST_DIR="$REL_DST_DIR"
 
@@ -267,10 +269,23 @@ setup_staging() {
                 echo "  ↪ Copying $file → $DST_DIR"
 
                 # Copy using appropriate permission
+                USE_SUDO=""
                 if [ "$USE_SUDO" = true ]; then
-                    sudo cp -r "$file" "$DST_DIR/"
+                    USE_SUDO="sudo "
+                fi
+
+                OP_FAILED=true
+                if [ "$OPERATION" = "mv" ]; then
+                    "$USE_SUDO"mv "$file" "$DST_DIR/"
+                    OP_FAILED=false
                 else
-                    cp -r "$file" "$DST_DIR/"
+                    "$USE_SUDO"cp -r "$file" "$DST_DIR/"
+                    OP_FAILED=false
+                fi
+
+                if [ "$OP_FAILED" = true ]; then
+                    echo "❌ Operation failed: $entry"
+                    exit
                 fi
 
                 # Determine how to log files based on type
@@ -473,11 +488,10 @@ build_installer() {
 # Final clean up
 #########################
 clean_up() {
+    echo "✅ Cleaning up on exit!"
     clean_folder_contents "$DESTINATION"
     rm "$STAGING_FILE"
     rm "$COPY_LOG"
-
-    return 0
 }
 
 main() {
@@ -491,7 +505,7 @@ main() {
     build_run_me_sh
     create_permissions_json
     build_installer
-    clean_up
 }
 
+trap clean_up EXIT
 main
