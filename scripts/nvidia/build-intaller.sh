@@ -338,26 +338,6 @@ build_kernel() {
 #########################
 build_git_clone_sh() {
     # Write the embedded script to disk
-    #cat << EOF > "$GIT_CLONE_SCRIPT_NAME"
-    ##!/bin/bash
-
-    #set -e
-
-    #DEFAULT_VERSION="$BRANCH"
-    #VERSION="\${1:-\$DEFAULT_VERSION}"
-
-    #echo "Cloning branch \$VERSION from ToF repo..."
-    #git clone --branch "\$VERSION" https://github.com/analogdevicesinc/ToF ToF-"\$VERSION"
-    #cd ToF-"\$VERSION"
-    #git submodule update --init
-    #git checkout "\$VERSION"
-    #cd libaditof
-    #git checkout "\$VERSION"
-    #cd ..
-
-    #echo "✅ Done!"
-    #EOF
-
     echo "#!/bin/bash" > "$GIT_CLONE_SCRIPT_NAME"
     echo '' >> "$GIT_CLONE_SCRIPT_NAME"
     echo set -e >> "$GIT_CLONE_SCRIPT_NAME"
@@ -403,11 +383,11 @@ build_run_me_sh() {
 
     echo '#!/bin/bash' > "$RUNME_SCRIPT_NAME"
     echo '' >> "$RUNME_SCRIPT_NAME"
-    echo LIBS_PATH="$(realpath "libs")" >> "$RUNME_SCRIPT_NAME"
-    echo echo "Creating Directory Path Soft Link: $LIBS_PATH" >> "$RUNME_SCRIPT_NAME"
-    echo sudo ln -s "$LIBS_PATH" "$LIB_INSTALL_FOLDER" >> "$RUNME_SCRIPT_NAME"
+    echo LIBS_PATH=\$\(realpath \"libs\"\) >> "$RUNME_SCRIPT_NAME"
+    echo echo \"Creating Directory Path Soft Link: \$LIBS_PATH\" >> "$RUNME_SCRIPT_NAME"
+    echo sudo ln -s \"\$LIBS_PATH\" $LIB_INSTALL_FOLDER >> "$RUNME_SCRIPT_NAME"
     echo '' >> "$RUNME_SCRIPT_NAME"
-    echo echo "$LIBS_PATH/lib" | sudo tee /etc/ld.so.conf.d/adi-adcam.conf >> "$RUNME_SCRIPT_NAME"
+    echo echo \"\$LIBS_PATH/lib\" | sudo tee /etc/ld.so.conf.d/adi-adcam.conf >> "$RUNME_SCRIPT_NAME"
     echo sudo ldconfig >> "$RUNME_SCRIPT_NAME"
 
     if [ ! -f "$RUNME_SCRIPT_NAME" ]; then
