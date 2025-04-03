@@ -21,14 +21,16 @@ FORCE=false
 UPDATE=false
 BUILDALL=false
 COMPRESS=false
+WITH_NETWORK=OFF
 original_ld_library_path="$LD_LIBRARY_PATH"
 
 # Parse arguments
 print_help() {
-    echo "🔧 Usage: $0 [-f] [-h][-u][-a][-c]"
+    echo "🔧 Usage: $0 [-f] [-h][-u][-a][-c][-n]"
     echo ""
     echo "  -f    Force rebuild by deleting the existing build directory"
     echo "  -u    Update the Ubuntu dependencies"
+    echo "  -n    Build WITH_NETWORK=ON"
     echo "  -a    Build installation package to include SDK and Kernel components" 
     echo "  -c    Compress Rust generated binary."
     echo "  -h    Show this help message"
@@ -48,6 +50,9 @@ while getopts ":fhuac" opt; do
             ;;
         c)
             COMPRESS=true
+            ;;
+        n)
+            WITH_NETWORK=ON
             ;;
         h)
             print_help
@@ -212,7 +217,7 @@ build_eval_kit() {
         -DCMAKE_INSTALL_RPATH="$LIB_INSTALL_FOLDER"\lib \
         -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
         -DON_NVIDIA=ON \
-        -DWITH_NETWORK=ON \
+        -DWITH_NETWORK="$WITH_NETWORK" \
         -S ../../ \
         -B "$SRC_PREFIX" 2> "$CMAKE_LOGS"
     if [ $? -ne 0 ]; then

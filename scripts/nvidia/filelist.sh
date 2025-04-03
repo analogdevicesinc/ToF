@@ -34,10 +34,14 @@ COPY_PATTERNS=(
     ## aditof-server
     "cp,$SRC_PREFIX/apps/server/aditof-server,$TOOLS/aditof-server",
     ## V4L2 Scripts: This is not in the build folder
-    "cp,$SRC_PREFIX/../tools/v4l2_scripts/ADCAM/*,$TOOLS/v4l2-scripts",
+    "cp,$SRC_PREFIX/../tools/v4l2_scripts/ADCAM/*,$TOOLS/v4l2_scripts",
     #TODO: Missing some scripts
     ## NVM Tools
-    ### TODO
+    "cp,$SRC_PREFIX/tools/nvm_tools/NVM_READ/NVM_READ,$TOOLS/nvm_tools",
+    #"cp,$SRC_PREFIX/apps/tools/nvm_tools/NVM_WRITE/NVM_WRITE,$TOOLS/NVM_TOOLS",
+    ## CCB Tools
+    "cp,$SRC_PREFIX/tools/nvm_tools/CCB_READ/CCB_READ,$TOOLS/nvm_tools",
+    #"cp,$SRC_PREFIX/apps/tools/nvm_tools/CCB_WRITE/CCB_WRITE,$TOOLS/NVM_TOOLS",
     # Stage Library files
     "cp,$SRC_PREFIX/bindings/python/build/lib/aditofpython.cpython-310-aarch64-linux-gnu.so,$EVALUATION/Python",
     "cp,$LIB_INSTALL_FOLDER/*,$LIBS/"
