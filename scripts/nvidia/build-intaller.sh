@@ -8,13 +8,13 @@ TOOLS="$DESTINATION/tools"
 DEVELOPMENT="$DESTINATION/dev"
 KERNEL="$DESTINATION/kernel"
 LIBS="$DESTINATION/libs"
-LIB_INSTALL_FOLDER="/opt/ADI-ADCAM"
+LIB_INSTALL_FOLDER="/tmp/ADI-ADCAM" # TODO: Get rid of this?
 GIT_CLONE_SCRIPT_NAME="$DEVELOPMENT/git_clone_tof.sh"
 RUNME_SCRIPT_NAME="$DESTINATION/run_me.sh"
-COPY_LOG="./copied_files.txt"
+COPY_LOG="/tmp/copied_files.txt"
 CONFIG_JSON="./config.json"
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
-CMAKE_LOGS="./cmake_errors.log"
+CMAKE_LOGS="/tmp/cmake_errors.log"
 JETPACK_VERSION="Unknown"
 VERSION="Unknown"
 FORCE=false
@@ -406,25 +406,12 @@ build_git_clone_sh() {
 # Create script to point to library files
 #########################
 build_run_me_sh() {
-    #cat << EOF > "$RUNME_SCRIPT_NAME"
-    ##!/bin/bash
-
-    #LIBS_PATH="\$(realpath "libs")"
-    #echo "Creating Directory Path Soft Link: \$LIBS_PATH"
-    #sudo ln -s "\$LIBS_PATH" "$LIB_INSTALL_FOLDER"
-
-    #echo "\$LIBS_PATH/lib" | sudo tee /etc/ld.so.conf.d/adi-adcam.conf
-    #sudo ldconfig
-
-    #EOF
-
     echo '#!/bin/bash' > "$RUNME_SCRIPT_NAME"
     echo '' >> "$RUNME_SCRIPT_NAME"
     echo LIBS_PATH=\$\(realpath \"libs\"\) >> "$RUNME_SCRIPT_NAME"
     echo echo \"Creating Directory Path Soft Link: \$LIBS_PATH\" >> "$RUNME_SCRIPT_NAME"
-    echo sudo ln -s \"\$LIBS_PATH\" $LIB_INSTALL_FOLDER >> "$RUNME_SCRIPT_NAME"
     echo '' >> "$RUNME_SCRIPT_NAME"
-    echo echo \"\$LIBS_PATH/lib\" | sudo tee /etc/ld.so.conf.d/adi-adcam.conf >> "$RUNME_SCRIPT_NAME"
+    echo echo \"\$LIBS_PATH/lib\" \| sudo tee /etc/ld.so.conf.d/adi-adcam.conf >> "$RUNME_SCRIPT_NAME"
     echo sudo ldconfig >> "$RUNME_SCRIPT_NAME"
 
     if [ ! -f "$RUNME_SCRIPT_NAME" ]; then

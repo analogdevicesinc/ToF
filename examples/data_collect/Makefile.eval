@@ -1,0 +1,30 @@
+# Makefile for linking libaditof.so
+
+# Compiler and flags
+CXX = g++
+CXXFLAGS = -Wall -Wextra -std=c++17 # Add your desired compiler flags here
+
+# Include directories
+INCLUDE_DIRS = -I../../../libs/include/ -I../common
+
+# Library directories
+LIBRARY_DIRS = -L../../../libs/lib
+
+# Libraries to link
+LIBRARIES = -laditof
+
+# Source files
+SOURCES = main.cpp ../common/command_parser.cpp
+
+# Output executable name
+EXECUTABLE = data_collect.user
+
+# Rule to build the executable
+$(EXECUTABLE): $(SOURCES)
+	$(CXX) $(CXXFLAGS) $(INCLUDE_DIRS) $(LIBRARY_DIRS) $(SOURCES) -o $(EXECUTABLE) $(LIBRARIES)
+
+# Rule to clean object files and executable
+clean:
+	rm -f $(EXECUTABLE) *.o
+
+.PHONY: clean

@@ -7,25 +7,41 @@ COPY_PATTERNS=(
     "cp,$SRC_PREFIX/bindings/python/examples/dual_cameras/*.py,$EVALUATION/Python",
     "cp,$SRC_PREFIX/bindings/python/examples/saveCCBToFile/*.py,$EVALUATION/Python",
     # C++ Examples
-    "cp,$SRC_PREFIX/examples/first-frame/first-frame,$EVALUATION/C++",
-    "cp,$SRC_PREFIX/examples/data_collect/data_collect,$EVALUATION/C++",
-    "cp,$SRC_PREFIX/examples/tof-viewer/ADIToFGUI,$EVALUATION/C++",
-    "cp,$SRC_PREFIX/examples/tof-viewer/tof-tools.config,$EVALUATION/C++",
+    ## first-frame
+    "cp,$SRC_PREFIX/examples/first-frame/first-frame,$EVALUATION/C++/first-frame",
+    "cp,$SRC_PREFIX/../examples/first-frame/main.cpp,$EVALUATION/C++/first-frame",
+    "cp,$SRC_PREFIX/../examples/first-frame/Makefile.eval,$EVALUATION/C++/first-frame",
+    ## data-collect
+    "cp,$SRC_PREFIX/examples/data_collect/data_collect,$EVALUATION/C++/data_collect",
+    "cp,$SRC_PREFIX/../examples/data_collect/main.cpp,$EVALUATION/C++/data_collect",
+    "cp,$SRC_PREFIX/../examples/data_collect/Makefile.eval,$EVALUATION/C++/data_collect",
+    ## common codes
+    "cp,$SRC_PREFIX/../dependencies/adi/command_parser/command_parser.*,$EVALUATION/C++/common",
+
+    
+
+    "cp,$SRC_PREFIX/examples/tof-viewer/ADIToFGUI,$EVALUATION/C++/ADIToFGUI",
+    "cp,$SRC_PREFIX/examples/tof-viewer/tof-tools.config,$EVALUATION/C++/ADIToFGUI",
+
     # Tools
     ## ctrl_app
     "cp,$SRC_PREFIX/tools/debug_apps/ctrl_app/ctrl_app,$TOOLS/ctrl_app",
     "cp,$SRC_PREFIX/tools/debug_apps/ctrl_app/infile.txt,$TOOLS/ctrl_app",
     "cp,$SRC_PREFIX/tools/debug_apps/ctrl_app/readme.md,$TOOLS/ctrl_app",
-    ## rawparser
+    ## rawparser: This is not in the build folder
     "cp,$SRC_PREFIX/../tools/misc/rawparser.py,$TOOLS/rawparser",
     "cp,$SRC_PREFIX/../tools/misc/README.md,$TOOLS/rawparser",
-    ## V4L2 Scripts
-    ### TODO
+    ## aditof-server
+    "cp,$SRC_PREFIX/apps/server/aditof-server,$TOOLS/aditof-server",
+    ## V4L2 Scripts: This is not in the build folder
+    "cp,$SRC_PREFIX/../tools/v4l2_scripts/ADCAM/*,$TOOLS/v4l2-scripts",
+    #TODO: Missing some scripts
     ## NVM Tools
     ### TODO
     # Stage Library files
     "cp,$SRC_PREFIX/bindings/python/build/lib/aditofpython.cpython-310-aarch64-linux-gnu.so,$EVALUATION/Python",
-    "cp,/opt/ADI-ADCAM/lib/*,$LIBS/lib"
-    "cp,$LIBS/lib/libaditof.*,$EVALUATION/Python"
-    "mv,$LIBS/lib/libaditof.*,$EVALUATION/C++"
+    "cp,$LIB_INSTALL_FOLDER/*,$LIBS/"
+    #"cp,$LIBS/lib/libaditof.*,$TOOLS/aditof-server"
+    #"cp,$LIBS/lib/libaditof.*,$EVALUATION/Python"
+    #"mv,$LIBS/lib/libaditof.*,$EVALUATION/C++"
 )
