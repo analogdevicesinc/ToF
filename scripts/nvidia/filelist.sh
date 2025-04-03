@@ -17,9 +17,7 @@ COPY_PATTERNS=(
     "cp,$SRC_PREFIX/../examples/data_collect/Makefile.eval,$EVALUATION/C++/data_collect",
     ## common codes
     "cp,$SRC_PREFIX/../dependencies/adi/command_parser/command_parser.*,$EVALUATION/C++/common",
-
-    
-
+    ## ADIToFGUI
     "cp,$SRC_PREFIX/examples/tof-viewer/ADIToFGUI,$EVALUATION/C++/ADIToFGUI",
     "cp,$SRC_PREFIX/examples/tof-viewer/tof-tools.config,$EVALUATION/C++/ADIToFGUI",
 
@@ -35,17 +33,12 @@ COPY_PATTERNS=(
     "cp,$SRC_PREFIX/apps/server/aditof-server,$TOOLS/aditof-server",
     ## V4L2 Scripts: This is not in the build folder
     "cp,$SRC_PREFIX/../tools/v4l2_scripts/ADCAM/*,$TOOLS/v4l2_scripts",
-    #TODO: Missing some scripts
+        #TODO: Missing some scripts
     ## NVM Tools
     "cp,$SRC_PREFIX/tools/nvm_tools/NVM_READ/NVM_READ,$TOOLS/nvm_tools",
-    #"cp,$SRC_PREFIX/apps/tools/nvm_tools/NVM_WRITE/NVM_WRITE,$TOOLS/NVM_TOOLS",
     ## CCB Tools
     "cp,$SRC_PREFIX/tools/nvm_tools/CCB_READ/CCB_READ,$TOOLS/nvm_tools",
-    #"cp,$SRC_PREFIX/apps/tools/nvm_tools/CCB_WRITE/CCB_WRITE,$TOOLS/NVM_TOOLS",
     # Stage Library files
     "cp,$SRC_PREFIX/bindings/python/build/lib/aditofpython.cpython-310-aarch64-linux-gnu.so,$EVALUATION/Python",
     "cp,$LIB_INSTALL_FOLDER/*,$LIBS/"
-    #"cp,$LIBS/lib/libaditof.*,$TOOLS/aditof-server"
-    #"cp,$LIBS/lib/libaditof.*,$EVALUATION/Python"
-    #"mv,$LIBS/lib/libaditof.*,$EVALUATION/C++"
 )
