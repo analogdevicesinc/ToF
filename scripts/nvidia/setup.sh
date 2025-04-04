@@ -18,6 +18,7 @@ REQUIRED_PACKAGES=(
     doxygen
     graphviz
     python3.10-dev
+    python3-sphinx
 )
 # Check and install each package
 for pkg in "${REQUIRED_PACKAGES[@]}"; do
