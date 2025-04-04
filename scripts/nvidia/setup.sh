@@ -29,3 +29,6 @@ for pkg in "${REQUIRED_PACKAGES[@]}"; do
         sudo apt install -y "$pkg"
     fi
 done
+
+# Install Sphix RTD theme
+pip install sphinx_rtd_theme
