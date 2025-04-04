@@ -285,9 +285,8 @@ setup_staging() {
     # ✨ Clear log file
     > "$COPY_LOG"
 
-    source ./filelist.sh
+    source ./extra/filelist.sh
 
-    
     for entry in "${COPY_PATTERNS[@]}"; do
         IFS=',' read -r OP REL_SRC_PATTERN REL_DST_DIR <<< "$entry"
 
@@ -357,11 +356,20 @@ setup_staging() {
 
 #########################
 # Build the kernel components
+## It may be useful to build the kernel components separately
+## on a different machine using cross-compilation.
+## Add an option to do this
 #########################
 build_kernel() {
     DRIVER_FOLDER=../../sdcard-images-utils/nvidia
     if [ "$BUILDALL" = true ]; then
+        pushd .
+        cd "$DRIVER_FOLDER"
         "$DRIVER_FOLDER"/runme.sh "$VERSION" "$BRANCH"
+        if [ -f ./build ]; then
+            rm -rf ./build
+        fi
+        popd 
     fi
 
     MATCH=$(compgen -G "${DRIVER_FOLDER}/NVIDIA_ToF_ADSD3500_REL_PATCH_*.zip" | head -n 1)
@@ -411,7 +419,13 @@ build_git_clone_sh() {
 # Create script to point to library files
 #########################
 build_run_me_sh() {
+    # TODO:  Make this also install the dependencies for the build
+    # and the execution.
+    # Check if a depdenency is missing and install it
+
     echo '#!/bin/bash' > "$RUNME_SCRIPT_NAME"
+    echo '' >> "$RUNME_SCRIPT_NAME"
+    cat extra/add_on_run_me_sh.sh >> "$RUNME_SCRIPT_NAME"
     echo '' >> "$RUNME_SCRIPT_NAME"
     echo LIBS_PATH=\$\(realpath \"libs\"\) >> "$RUNME_SCRIPT_NAME"
     echo echo \"Creating Directory Path Soft Link: \$LIBS_PATH\" >> "$RUNME_SCRIPT_NAME"
