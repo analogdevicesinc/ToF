@@ -203,6 +203,11 @@ function main()
 	mv *.tgz $ROOTDIR
 	rm -rf $PATCH_DIR
 	echo "System image patch $ARCHIVE_FILENAME file created successfully."
+	if [ -f "$ARCHIVE_FILENAME" ]; then
+		return $ARCHIVE_FILENAME
+	else
+		return ""
+	fi
 }
 
 main

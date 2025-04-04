@@ -21,12 +21,13 @@ FORCE=false
 UPDATE=false
 BUILDALL=false
 COMPRESS=false
+REMOTE_KERNEL_BUILD=false
 WITH_NETWORK=OFF
 original_ld_library_path="$LD_LIBRARY_PATH"
 
 # Parse arguments
 print_help() {
-    echo "🔧 Usage: $0 [-f] [-h][-u][-a][-c][-n]"
+    echo "🔧 Usage: $0 [-h][-f][-u][-a][-c][-n][-r]"
     echo ""
     echo "  -f    Force rebuild by deleting the existing build directory"
     echo "  -u    Update the Ubuntu dependencies"
@@ -53,6 +54,9 @@ while getopts ":fhuac" opt; do
             ;;
         n)
             WITH_NETWORK=ON
+            ;;
+        r)
+            REMOTE_KERNEL_BUILD=true
             ;;
         h)
             print_help
@@ -285,6 +289,7 @@ setup_staging() {
     # ✨ Clear log file
     > "$COPY_LOG"
 
+
     source ./extra/filelist.sh
 
     for entry in "${COPY_PATTERNS[@]}"; do
@@ -361,6 +366,41 @@ setup_staging() {
 ## Add an option to do this
 #########################
 build_kernel() {
+    if [ "$REMOTE_KERNEL_BUILD" == true ]; then
+        RANDOM_DIRECTORY=/tmp/"$RANDOM"
+
+        # Create directory on remote host
+        ssh "$REMOTE_USER"@"$REMOTE_IP" "mkdir -p $RANDOM_DIRECTORY"
+        if [ "$?" -ne 0 ]; then
+            break
+        fi
+
+        # Copy script to remove machine
+        scp "$REMOTE_USER"@"$REMOTE_IP":./extra/remote_kernel_build.sh "$RANDOM_DIRECTORY"
+        if [ "$?" -ne 0 ]; then
+            break
+        fi 
+        echo "✅ Remote kernel build script copied successfully."
+    
+        # Execute remote script
+        # TODO: Execute in the background
+        ssh "$REMOTE_USER"@"$REMOTE_IP" "cd $RANDOM_DIRECTORY && source ./remote_kernel_build.sh $VERSION $BRANCH"
+        if [ "$?" -ne 0 ]; then
+            echo "❌ Remote kernel build failed."
+            break
+        fi
+
+        # Copy script to remove machine
+        scp "$REMOTE_USER"@"$REMOTE_IP":"$RANDOM_DIRECTORY"/NVIDIA_ToF_ADSD3500_REL_PATCH.tgz .
+        if [ "$?" -ne 0 ]; then
+            echo "❌ Failed to copy the kernel build from remote machine."
+            break
+        fi 
+
+        echo "✅ Remote kernel build completed."
+        return
+    fi
+
     DRIVER_FOLDER=../../sdcard-images-utils/nvidia
     if [ "$BUILDALL" = true ]; then
         pushd .
