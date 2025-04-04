@@ -33,42 +33,43 @@ print_help() {
     echo "  -u    Update the Ubuntu dependencies"
     echo "  -n    Build WITH_NETWORK=ON"
     echo "  -a    Build installation package to include SDK and Kernel components" 
+    echo "  -r <user>,<ip>   Build kernel remotely" 
     echo "  -c    Compress Rust generated binary."
     echo "  -h    Show this help message"
 }
 
 # Parse options
-while getopts ":fhuac" opt; do
-    case $opt in
-        f)
-            FORCE=true
-            ;;
-        u)
-            UPDATE=true
-            ;;
-        a)
-            BUILDALL=true
-            ;;
-        c)
-            COMPRESS=true
-            ;;
-        n)
-            WITH_NETWORK=ON
-            ;;
-        r)
-            REMOTE_KERNEL_BUILD=true
-            ;;
-        h)
-            print_help
-            exit 0
-            ;;
-        \?)
-            echo "❌ Invalid option: -$OPTARG" >&2
-            print_help
-            exit 1
-            ;;
-    esac
+while getopts ":fhuar:c" opt; do
+  case $opt in
+    f) FORCE=true ;;
+    u) UPDATE=true ;;
+    a) BUILDALL=true ;;
+    c) COMPRESS=true ;;
+    n) WITH_NETWORK=ON ;;
+    r)
+      REMOTE_KERNEL_BUILD=true
+      IFS=',' read -r REMOTE_USER REMOTE_IP <<< "$OPTARG" # Split the argument
+      ;;
+    h) print_help; exit 0 ;;
+    \?) echo "❌ Invalid option: -$OPTARG" >&2; print_help; exit 1 ;;
+    :) echo "❌ Option -$OPTARG requires an argument." >&2; print_help; exit 1 ;;
+  esac
 done
+
+shift $((OPTIND - 1))
+
+if $REMOTE_KERNEL_BUILD; then
+  if [ -z "$REMOTE_USER" ] || [ -z "$REMOTE_IP" ]; then
+    echo "❌ Error: -r option requires a username and IP address (e.g., -r user,192.168.1.1)." >&2
+    print_help
+    exit 1
+  fi
+  echo "Building kernel remotely as user: $REMOTE_USER on IP: $REMOTE_IP"
+  # ... your remote build commands here ...
+else
+  echo "Building kernel locally."
+  # ... your local build commands here ...
+fi
 
 clean_folder_contents() {
     local target_dir="$1"
@@ -159,59 +160,28 @@ get_jetpack_version() {
     return $JETPACK_VERSION
 }
 
-update_dependencies() {
-    # List of required packages
-    if [ "$UPDATE" = true ]; then
-        # Update package list first
-        echo "Updating package list..."
-        sudo apt update
-    fi
-
-    REQUIRED_PACKAGES=(
-        upx
-        jq
-        cmake
-        g++
-        gcc
-        libopencv-contrib-dev
-        libopencv-dev
-        libgl1-mesa-dev
-        libglfw3-dev
-        doxygen
-        graphviz
-        python3.10-dev
-    )
-    # Check and install each package
-    for pkg in "${REQUIRED_PACKAGES[@]}"; do
-        if dpkg -s "$pkg" &> /dev/null; then
-            echo "$pkg is already installed ✅"
-        else
-            echo "$pkg is missing, installing... ⏳"
-            sudo apt install -y "$pkg"
-        fi
-    done
-}
-
 build_eval_kit() {
 
-    sudo rm -rf "$LIB_INSTALL_FOLDER"
-    sudo mkdir "$LIB_INSTALL_FOLDER"
+    rm -rf "$LIB_INSTALL_FOLDER"
+    mkdir "$LIB_INSTALL_FOLDER"
     # Only remove if the folder exists
     if [ "$FORCE" = true ]; then
         echo "Removing existing build directory: $SRC_PREFIX"
         if [ -d "$SRC_PREFIX" ]; then
-            sudo rm -rf "$SRC_PREFIX"            
+            #sudo rm -rf "$SRC_PREFIX"
+            rm -rf "$SRC_PREFIX"
         fi
     else
         echo "No existing build directory to remove."
     fi
 
-    if [ -f /etc/ld.so.conf.d/adi-adcam.conf ]; then
-        sudo rm /etc/ld.so.conf.d/adi-adcam.conf
-        sudo ldconfig
-    fi
+    # TODO: Removed 4/4 137PM - is this needed??
+    #if [ -f /etc/ld.so.conf.d/adi-adcam.conf ]; then
+        #sudo rm /etc/ld.so.conf.d/adi-adcam.conf
+        #sudo ldconfig
+    #fi
 
-    # Update LD_LIBRARY_PATH (add a new directory) # TODO: Why is this needed?
+    # Update LD_LIBRARY_PATH (add a new directory) # TODO: Why is this needed??
     new_library_directory=$(realpath "$SRC_PREFIX")/libaditof/protobuf/cmake
     LD_LIBRARY_PATH="$new_library_directory:$LD_LIBRARY_PATH"
 
@@ -241,7 +211,9 @@ build_eval_kit() {
         exit
     fi
 
-    sudo cmake --install "$SRC_PREFIX" 2> "$CMAKE_LOGS"
+    ## TODO: Is this "sudo" needed considering installation is to "/tmp"??
+    #sudo cmake --install "$SRC_PREFIX" 2> "$CMAKE_LOGS"
+    cmake --install "$SRC_PREFIX" 2> "$CMAKE_LOGS"
     if [ $? -ne 0 ]; then
         echo "cmake install failed: $LINENO"
         echo "Cmake Log"
@@ -303,29 +275,22 @@ setup_staging() {
 
         # Create destination directory
         if [[ "$DST_DIR" == /opt/* || "$DST_DIR" == /usr/* ]]; then
-            sudo mkdir -p "$DST_DIR"
-            USE_SUDO=true
+            echo "❌ Destination directory is not writable: $DST_DIR"
+            exit
         else
             mkdir -p "$DST_DIR"
-            USE_SUDO=false
         fi
 
         for file in $SRC_PATTERN; do
             if [ -e "$file" ]; then
                 echo "  ↪ Copying $file → $DST_DIR"
 
-                # Copy using appropriate permission
-                USE_SUDO=""
-                if [ "$USE_SUDO" = true ]; then
-                    USE_SUDO="sudo "
-                fi
-
                 OP_FAILED=true
                 if [ "$OPERATION" = "mv" ]; then
-                    "$USE_SUDO"mv "$file" "$DST_DIR/"
+                    mv "$file" "$DST_DIR/"
                     OP_FAILED=false
                 else
-                    "$USE_SUDO"cp -r "$file" "$DST_DIR/"
+                    cp -r "$file" "$DST_DIR/"
                     OP_FAILED=false
                 fi
 
@@ -351,12 +316,39 @@ setup_staging() {
         done
     done
 
-    sudo chown -R astraker:astraker "$DESTINATION"/*
-    sudo rm -rf "$LIB_INSTALL_FOLDER"
+    ## TODO: Is this "sudo" needed considering installation is to "/tmp"??
+    #sudo rm -rf "$LIB_INSTALL_FOLDER"
+    rm -rf "$LIB_INSTALL_FOLDER"
 
 
     echo "✅ Done copying files!"
     echo "📄 File list saved to: $COPY_LOG"
+}
+
+build_kernel_local() {
+
+    DRIVER_FOLDER=../../sdcard-images-utils/nvidia
+    if [ "$BUILDALL" = true ]; then
+        pushd .
+        cd "$DRIVER_FOLDER"
+        "$DRIVER_FOLDER"/runme.sh "$VERSION" "$BRANCH"
+        if [ -f ./build ]; then
+            rm -rf ./build
+        fi
+        popd 
+    else
+        return
+    fi
+
+    MATCH=$(compgen -G "${DRIVER_FOLDER}/NVIDIA_ToF_ADSD3500_REL_PATCH_*.zip" | head -n 1)
+
+    if [ -n "$MATCH" ]; then
+        echo "✅ Building with kernel bits: $MATCH"
+        cp "$MATCH" "$KERNEL"
+    else
+        echo "⚠️ No matching .zip file found - Building without the Kernel bits."
+        pause 10
+    fi
 }
 
 #########################
@@ -369,16 +361,24 @@ build_kernel() {
     if [ "$REMOTE_KERNEL_BUILD" == true ]; then
         RANDOM_DIRECTORY=/tmp/"$RANDOM"
 
+        echo "$REMOTE_USER" "$REMOTE_IP" "$RANDOM_DIRECTORY"
+
         # Create directory on remote host
         ssh "$REMOTE_USER"@"$REMOTE_IP" "mkdir -p $RANDOM_DIRECTORY"
         if [ "$?" -ne 0 ]; then
-            break
+            echo "❌ Unable to create remote directory, remote build failed, starting local build."
+            pause
+            build_kernel_local
+            return
         fi
 
         # Copy script to remove machine
-        scp "$REMOTE_USER"@"$REMOTE_IP":./extra/remote_kernel_build.sh "$RANDOM_DIRECTORY"
+        scp ./extra/remote_kernel_build.sh "$REMOTE_USER"@"$REMOTE_IP":"$RANDOM_DIRECTORY"
         if [ "$?" -ne 0 ]; then
-            break
+            echo "❌ Unable to copy file to remote server, remote build failed, starting local build."
+            pause
+            build_kernel_local
+            return
         fi 
         echo "✅ Remote kernel build script copied successfully."
     
@@ -386,40 +386,25 @@ build_kernel() {
         # TODO: Execute in the background
         ssh "$REMOTE_USER"@"$REMOTE_IP" "cd $RANDOM_DIRECTORY && source ./remote_kernel_build.sh $VERSION $BRANCH"
         if [ "$?" -ne 0 ]; then
-            echo "❌ Remote kernel build failed."
-            break
+            echo "❌ Remote kernel build failed, remote build failed, starting local build."
+            pause
+            build_kernel_local
+            return
         fi
 
         # Copy script to remove machine
         scp "$REMOTE_USER"@"$REMOTE_IP":"$RANDOM_DIRECTORY"/NVIDIA_ToF_ADSD3500_REL_PATCH.tgz .
         if [ "$?" -ne 0 ]; then
-            echo "❌ Failed to copy the kernel build from remote machine."
-            break
+            echo "❌ Failed to copy the kernel build from remote machine, remote build failed, starting local build."
+            pause
+            build_kernel_local
+            return
         fi 
 
         echo "✅ Remote kernel build completed."
         return
-    fi
-
-    DRIVER_FOLDER=../../sdcard-images-utils/nvidia
-    if [ "$BUILDALL" = true ]; then
-        pushd .
-        cd "$DRIVER_FOLDER"
-        "$DRIVER_FOLDER"/runme.sh "$VERSION" "$BRANCH"
-        if [ -f ./build ]; then
-            rm -rf ./build
-        fi
-        popd 
-    fi
-
-    MATCH=$(compgen -G "${DRIVER_FOLDER}/NVIDIA_ToF_ADSD3500_REL_PATCH_*.zip" | head -n 1)
-
-    if [ -n "$MATCH" ]; then
-        echo "✅ Building with kernel bits: $MATCH"
-        cp "$MATCH" "$KERNEL"
     else
-        echo "⚠️ No matching .zip file found - Building without the Kernel bits."
-        pause 10
+        build_kernel_local
     fi
 }
 
@@ -459,13 +444,13 @@ build_git_clone_sh() {
 # Create script to point to library files
 #########################
 build_run_me_sh() {
-    # TODO:  Make this also install the dependencies for the build
-    # and the execution.
-    # Check if a depdenency is missing and install it
+    # TODO:  Make this script install the kernel patch - if needed
 
     echo '#!/bin/bash' > "$RUNME_SCRIPT_NAME"
     echo '' >> "$RUNME_SCRIPT_NAME"
-    cat extra/add_on_run_me_sh.sh >> "$RUNME_SCRIPT_NAME"
+    cat extra/add_on_apply_kernel_patch.sh >> "$RUNME_SCRIPT_NAME"
+    echo '' >> "$RUNME_SCRIPT_NAME"
+    cat extra/add_on_check_packages.sh >> "$RUNME_SCRIPT_NAME"
     echo '' >> "$RUNME_SCRIPT_NAME"
     echo LIBS_PATH=\$\(realpath \"libs\"\) >> "$RUNME_SCRIPT_NAME"
     echo echo \"Creating Directory Path Soft Link: \$LIBS_PATH\" >> "$RUNME_SCRIPT_NAME"
@@ -562,7 +547,6 @@ clean_up() {
 main() {
     get_sdk_version
     get_jetpack_version
-    update_dependencies
     build_eval_kit
     setup_staging
     build_kernel

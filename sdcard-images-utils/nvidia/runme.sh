@@ -128,17 +128,17 @@ function build_kernel_Image()
 	mkdir -p $BUILD_DIR/modules/dtb
 
 	echo "Build kernel"
-	make -C kernel
+	make -C kernel -j$(nproc)
 
 	echo "Build in tree kernel modules"
 	make install -C kernel
 
 	echo "Build out of tree kernel modules"
-	make modules
+	make modules -j$(nproc)
 	make modules_install
 
 	echo "Build DTB"
-	make dtbs
+	make dtbs -j$(nproc)
 	cp -rf $BUILD_DIR/kernel-devicetree/generic-dts/dtbs/*.dtb  $BUILD_DIR/modules/dtb
 	cp -rf $BUILD_DIR/kernel-devicetree/generic-dts/dtbs/*.dtbo $BUILD_DIR/modules/dtb
 

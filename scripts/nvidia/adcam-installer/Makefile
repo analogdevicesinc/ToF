@@ -18,7 +18,7 @@ BUNDLE_ARCHIVE=$(BUNDLE)
 
 build:
 	@echo "🔨 Building $(JETPACKVERSION)"
-	cargo build --release -j 1
+	cargo build --release
 	@cp $(INSTALLER) $(OUTPUT_BIN)
 
 run: build
