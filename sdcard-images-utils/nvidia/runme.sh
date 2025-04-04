@@ -112,7 +112,10 @@ function build_kernel_Image()
 
 	export INSTALL_MOD_PATH=$BUILD_DIR/modules
 	export KERNEL_HEADERS=$BUILD_DIR/kernel/kernel-jammy-src
-	export CROSS_COMPILE=$ROOTDIR/build/aarch64--glibc--stable-final/bin/aarch64-linux-
+	if [ ! -f "/etc/nv_tegra_release" ]; then
+		echo "Doing a cross compilation"
+		export CROSS_COMPILE=$ROOTDIR/build/aarch64--glibc--stable-final/bin/aarch64-linux-
+	fi
 
 	rm -rf modules
 	make clean
@@ -189,14 +192,17 @@ function main()
 	apply_git_format_patches
 	build_kernel_Image
 	copy_ubuntu_overlay
-	clone_sdk
+	#clone_sdk
 	sw_version_info
 	cp $ROOTDIR/scripts/system_upgrade/apply_patch.sh $PATCH_DIR
 	cd $ROOTDIR/build
-	zip -r "NVIDIA_ToF_ADSD3500_REL_PATCH_$(date +"%d%b%y").zip" NVIDIA_ToF_ADSD3500_REL_PATCH_*
-	mv *.zip $ROOTDIR
+
+	ARCHIVE_FILENAME="NVIDIA_ToF_ADSD3500_REL_PATCH_$(date +"%d%b%y").tgz"
+	#zip -r "NVIDIA_ToF_ADSD3500_REL_PATCH_$(date +"%d%b%y").zip" NVIDIA_ToF_ADSD3500_REL_PATCH_*
+	tar -czf "$ARCHIVE_FILENAME" NVIDIA_ToF_ADSD3500_REL_PATCH_*
+	mv *.tgz $ROOTDIR
 	rm -rf $PATCH_DIR
-	echo "System image patch "NVIDIA_ToF_ADSD3500_REL_PATCH_$(date +"%d%b%y").zip" file created successfully"
+	echo "System image patch $ARCHIVE_FILENAME file created successfully."
 }
 
 main
