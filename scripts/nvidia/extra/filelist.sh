@@ -38,6 +38,8 @@ COPY_PATTERNS=(
     "cp,$SRC_PREFIX/tools/nvm_tools/NVM_READ/NVM_READ,$TOOLS/nvm_tools",
     ## CCB Tools
     "cp,$SRC_PREFIX/tools/nvm_tools/CCB_READ/CCB_READ,$TOOLS/nvm_tools",
+    ## ADSD3500 Firmware Tools
+    "cp,$SRC_PREFIX/tools/nvm_tools/adsd3500_fw_update/adsd3500_fw_update,$TOOLS/adsd3500_fw_update",
     # Stage Library files
     "cp,$SRC_PREFIX/bindings/python/build/lib/aditofpython.cpython-310-aarch64-linux-gnu.so,$EVALUATION/Python",
     "cp,$LIB_INSTALL_FOLDER/*,$LIBS/"
