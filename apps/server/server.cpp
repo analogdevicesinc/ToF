@@ -183,7 +183,6 @@ void stream_zmq_frame() {
             LOG(INFO) << "Socket not ready, Dropping Frames";
         }
     }
-    
 
     {
         std::lock_guard<std::mutex> thread_lock(mtx);
