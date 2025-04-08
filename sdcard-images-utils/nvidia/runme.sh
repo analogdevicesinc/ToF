@@ -128,17 +128,17 @@ function build_kernel_Image()
 	mkdir -p $BUILD_DIR/modules/dtb
 
 	echo "Build kernel"
-	make -C kernel -j$(nproc)
+	make -C kernel -j $(( $(nproc) - 2 ))
 
 	echo "Build in tree kernel modules"
 	make install -C kernel
 
 	echo "Build out of tree kernel modules"
-	make modules -j$(nproc)
+	make modules -j $(( $(nproc) - 2 ))
 	make modules_install
 
 	echo "Build DTB"
-	make dtbs -j$(nproc)
+	make dtbs -j $(( $(nproc) - 2 ))
 	cp -rf $BUILD_DIR/kernel-devicetree/generic-dts/dtbs/*.dtb  $BUILD_DIR/modules/dtb
 	cp -rf $BUILD_DIR/kernel-devicetree/generic-dts/dtbs/*.dtbo $BUILD_DIR/modules/dtb
 
@@ -203,11 +203,6 @@ function main()
 	mv *.tgz $ROOTDIR
 	rm -rf $PATCH_DIR
 	echo "System image patch $ARCHIVE_FILENAME file created successfully."
-	if [ -f "$ARCHIVE_FILENAME" ]; then
-		return $ARCHIVE_FILENAME
-	else
-		return ""
-	fi
 }
 
 main
