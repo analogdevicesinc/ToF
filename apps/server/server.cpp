@@ -113,7 +113,6 @@ bool keepCaptureThreadAlive =
     false; // Flag used by frame capturing thread to know whether to continue or finish
 
 #ifdef USE_ZMQ
-
 std::unique_ptr<zmq::socket_t> server_socket;
 uint32_t max_send_frames = 10;
 std::atomic<bool> running(false);
@@ -127,8 +126,6 @@ struct clientData {
     bool hasFragments;
     std::vector<char> data;
 };
-
-void stream_off() { aditof::Status status = camDepthSensor->stop(); }
 
 #ifdef USE_ZMQ
 
@@ -144,10 +141,14 @@ void close_zmq_connection() {
 void stream_zmq_frame() {
 
     LOG(INFO) << "stream_frame thread running in the background.";
+    zmq::pollitem_t items[] = {
+        {static_cast<void *>(*server_socket), 0, ZMQ_POLLOUT, 0}};
 
     running = true;
 
     while (true) {
+
+        zmq::poll(items, 1, FRAME_TIMEOUT); // Poll with a timeout of 1000 ms
 
         if (stop_flag.load()) {
             LOG(INFO) << "stream_frame thread is exiting.";
@@ -175,9 +176,14 @@ void stream_zmq_frame() {
         }
         zmq::message_t message(buff_frame_length);
         memcpy(message.data(), buff_frame_to_send, buff_frame_length);
-        server_socket->send(message, zmq::send_flags::none);
-        // LOG(INFO) << "Frame sent successfully size : " << buff_frame_length;
+        if (items[0].revents & ZMQ_POLLOUT) {
+            server_socket->send(message, zmq::send_flags::none);
+            // LOG(INFO) << "Frame sent successfully size : " << buff_frame_length;
+        } else {
+            LOG(INFO) << "Socket not ready, Dropping Frames";
+        }
     }
+    
 
     {
         std::lock_guard<std::mutex> thread_lock(mtx);
@@ -650,18 +656,8 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
 
     case STOP: {
-        std::future<void> stopFuture =
-            std::async(std::launch::async, stream_off);
-        if (stopFuture.wait_for(std::chrono::seconds(5)) ==
-            std::future_status::timeout) {
-            LOG(WARNING) << "Stop command timed out, clearning up the sensor";
-            buff_send.set_status(
-                static_cast<::payload::Status>(aditof::Status::UNREACHABLE));
-            if (clientEngagedWithSensors) {
-                cleanup_sensors();
-                clientEngagedWithSensors = false;
-            }
-        }
+        aditof::Status status = camDepthSensor->stop();
+        buff_send.set_status(static_cast<::payload::Status>(status));
 
 #ifdef USE_ZMQ
         stop_stream_thread();

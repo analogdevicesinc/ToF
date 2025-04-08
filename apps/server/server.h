@@ -35,6 +35,10 @@
 
 #define RX_BUFFER_BYTES (20996420)
 
+#ifdef USE_ZMQ
+#define FRAME_TIMEOUT 500
+#endif
+
 enum api_Values {
     API_NOT_DEFINED,
     FIND_SENSORS,
