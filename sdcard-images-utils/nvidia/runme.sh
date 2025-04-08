@@ -197,10 +197,9 @@ function main()
 	cp $ROOTDIR/scripts/system_upgrade/apply_patch.sh $PATCH_DIR
 	cd $ROOTDIR/build
 
-	ARCHIVE_FILENAME="NVIDIA_ToF_ADSD3500_REL_PATCH_$(date +"%d%b%y").tgz"
-	#zip -r "NVIDIA_ToF_ADSD3500_REL_PATCH_$(date +"%d%b%y").zip" NVIDIA_ToF_ADSD3500_REL_PATCH_*
-	tar -czf "$ARCHIVE_FILENAME" NVIDIA_ToF_ADSD3500_REL_PATCH_*
-	mv *.tgz $ROOTDIR
+	ARCHIVE_FILENAME="NVIDIA_ToF_ADSD3500_REL_PATCH_$(date +"%d%b%y").zip"
+	zip -r "NVIDIA_ToF_ADSD3500_REL_PATCH_$(date +"%d%b%y").zip" NVIDIA_ToF_ADSD3500_REL_PATCH_*
+	mv *.zip $ROOTDIR
 	rm -rf $PATCH_DIR
 	echo "System image patch $ARCHIVE_FILENAME file created successfully."
 }
