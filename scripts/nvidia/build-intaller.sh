@@ -368,12 +368,18 @@ build_kernel() {
 
             echo "✅ Remote kernel build completed."
         else
-            DRIVER_FOLDER=../../sdcard-images-utils/nvidia
+            DRIVER_FOLDER=$(realpath ../../sdcard-images-utils/nvidia)
             pushd .
             cd "$DRIVER_FOLDER"
-            "$DRIVER_FOLDER"/runme.sh "$VERSION" "$BRANCH"
-            if [ -f ./build ]; then
-                rm -rf ./build
+            if [ -d "$DRIVER_FOLDER" ]; then
+                if [ -d "./build"]; then
+                    rm -rf ./build
+                fi
+                rm *.zip
+                source "$DRIVER_FOLDER"/runme.sh "$VERSION" "$BRANCH"
+                if [ -f ./build ]; then
+                    rm -rf ./build
+                fi
             fi
             popd 
 
@@ -382,9 +388,6 @@ build_kernel() {
             if [ -n "$MATCH" ]; then
                 echo "✅ Building with kernel bits: $MATCH"
                 cp "$MATCH" ./extra/NVIDIA_ToF_ADSD3500_REL_PATCH.zip
-            else
-                echo "⚠️ No matching .zip file found - Building without the Kernel bits."
-                confim_yes_or_no
             fi
         fi
     fi
