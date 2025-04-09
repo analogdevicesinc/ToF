@@ -71,6 +71,21 @@ else
   # ... your local build commands here ...
 fi
 
+confim_yes_or_no() {
+
+    read -p "Are you sure? (yes/no): " confirmation
+
+    # Convert to lowercase for case-insensitive comparison
+    confirmation=$(echo "$confirmation" | tr '[:upper:]' '[:lower:]')
+
+    if [[ "$confirmation" == "yes" ]]; then
+        echo "Confirmed. Proceeding..."
+    else
+        echo "Terminating process, exiting."
+        exit
+    fi
+}
+
 clean_folder_contents() {
     local target_dir="$1"
 
@@ -155,9 +170,9 @@ get_jetpack_version() {
     # Use jq to add or update "jetpack"
     jq --arg ver "$JETPACK_VERSION" '.jetpack = $ver' "$CONFIG_JSON" > tmp.json && mv tmp.json "$CONFIG_JSON"
 
-    echo "✅ jetpack version set to: $JETPACK_VERSION in $JSON_FILE"
+    echo "✅ jetpack version set to: $JETPACK_VERSION in $CONFIG_JSON"
 
-    return $JETPACK_VERSION
+    echo "$JETPACK_VERSION"
 }
 
 build_eval_kit() {
@@ -168,18 +183,11 @@ build_eval_kit() {
     if [ "$FORCE" = true ]; then
         echo "Removing existing build directory: $SRC_PREFIX"
         if [ -d "$SRC_PREFIX" ]; then
-            #sudo rm -rf "$SRC_PREFIX"
             rm -rf "$SRC_PREFIX"
         fi
     else
         echo "No existing build directory to remove."
     fi
-
-    # TODO: Removed 4/4 137PM - is this needed??
-    #if [ -f /etc/ld.so.conf.d/adi-adcam.conf ]; then
-        #sudo rm /etc/ld.so.conf.d/adi-adcam.conf
-        #sudo ldconfig
-    #fi
 
     # Update LD_LIBRARY_PATH (add a new directory) # TODO: Why is this needed??
     new_library_directory=$(realpath "$SRC_PREFIX")/libaditof/protobuf/cmake
@@ -211,8 +219,6 @@ build_eval_kit() {
         exit
     fi
 
-    ## TODO: Is this "sudo" needed considering installation is to "/tmp"??
-    #sudo cmake --install "$SRC_PREFIX" 2> "$CMAKE_LOGS"
     cmake --install "$SRC_PREFIX" 2> "$CMAKE_LOGS"
     if [ $? -ne 0 ]; then
         echo "cmake install failed: $LINENO"
@@ -251,12 +257,6 @@ setup_staging() {
 
     # Clean staging folder
     clean_folder_contents "$EVALUATION"
-
-    # Created needed folders
-    mkdir -p "$EVALUATION"
-    mkdir -p "$TOOLS"
-    mkdir -p "$DEVELOPMENT"
-    mkdir -p "$KERNEL"
 
     # ✨ Clear log file
     > "$COPY_LOG"
@@ -316,39 +316,10 @@ setup_staging() {
         done
     done
 
-    ## TODO: Is this "sudo" needed considering installation is to "/tmp"??
-    #sudo rm -rf "$LIB_INSTALL_FOLDER"
     rm -rf "$LIB_INSTALL_FOLDER"
-
 
     echo "✅ Done copying files!"
     echo "📄 File list saved to: $COPY_LOG"
-}
-
-build_kernel_local() {
-
-    DRIVER_FOLDER=../../sdcard-images-utils/nvidia
-    if [ "$BUILDALL" = true ]; then
-        pushd .
-        cd "$DRIVER_FOLDER"
-        "$DRIVER_FOLDER"/runme.sh "$VERSION" "$BRANCH"
-        if [ -f ./build ]; then
-            rm -rf ./build
-        fi
-        popd 
-    else
-        return
-    fi
-
-    MATCH=$(compgen -G "${DRIVER_FOLDER}/NVIDIA_ToF_ADSD3500_REL_PATCH_*.zip" | head -n 1)
-
-    if [ -n "$MATCH" ]; then
-        echo "✅ Building with kernel bits: $MATCH"
-        cp "$MATCH" "$KERNEL"
-    else
-        echo "⚠️ No matching .zip file found - Building without the Kernel bits."
-        pause 10
-    fi
 }
 
 #########################
@@ -358,53 +329,88 @@ build_kernel_local() {
 ## Add an option to do this
 #########################
 build_kernel() {
-    if [ "$REMOTE_KERNEL_BUILD" == true ]; then
-        RANDOM_DIRECTORY=/tmp/"$RANDOM"
+    if [ "$BUILDALL" = true ]; then
 
-        echo "$REMOTE_USER" "$REMOTE_IP" "$RANDOM_DIRECTORY"
+        if [ "$REMOTE_KERNEL_BUILD" == true ]; then
+            RANDOM_DIRECTORY=/tmp/"$RANDOM"
 
-        # Create directory on remote host
-        ssh "$REMOTE_USER"@"$REMOTE_IP" "mkdir -p $RANDOM_DIRECTORY"
-        if [ "$?" -ne 0 ]; then
-            echo "❌ Unable to create remote directory, remote build failed, starting local build."
-            pause
-            build_kernel_local
-            return
+            echo "$REMOTE_USER" "$REMOTE_IP" "$RANDOM_DIRECTORY"
+
+            # Create directory on remote host
+            ssh "$REMOTE_USER"@"$REMOTE_IP" "mkdir -p $RANDOM_DIRECTORY"
+            if [ "$?" -ne 0 ]; then
+                echo "❌ Unable to create remote directory, remote build failed, starting local build."
+                exit
+            fi
+
+            # Copy script to remove machine
+            scp ./extra/remote_kernel_build.sh "$REMOTE_USER"@"$REMOTE_IP":"$RANDOM_DIRECTORY"
+            if [ "$?" -ne 0 ]; then
+                echo "❌ Unable to copy file to remote server, remote build failed, starting local build."
+                exit
+            fi 
+            echo "✅ Remote kernel build script copied successfully."
+        
+            # Execute remote script
+            # TODO: Execute in the background
+            ssh "$REMOTE_USER"@"$REMOTE_IP" "cd $RANDOM_DIRECTORY && source ./remote_kernel_build.sh $VERSION $BRANCH"
+            if [ "$?" -ne 0 ]; then
+                echo "❌ Remote kernel build failed, remote build failed, starting local build."
+                exit
+            fi
+
+            # Copy script to remove machine
+            scp "$REMOTE_USER"@"$REMOTE_IP":"$RANDOM_DIRECTORY"/NVIDIA_ToF_ADSD3500_REL_PATCH.zip "./extra/NVIDIA_ToF_ADSD3500_REL_PATCH.zip"
+            if [ "$?" -ne 0 ]; then
+                echo "❌ Failed to copy the kernel build from remote machine, remote build failed, starting local build."
+                exit
+            fi 
+
+            echo "✅ Remote kernel build completed."
+        else
+            DRIVER_FOLDER=../../sdcard-images-utils/nvidia
+            pushd .
+            cd "$DRIVER_FOLDER"
+            "$DRIVER_FOLDER"/runme.sh "$VERSION" "$BRANCH"
+            if [ -f ./build ]; then
+                rm -rf ./build
+            fi
+            popd 
+
+            MATCH=$(compgen -G "${DRIVER_FOLDER}/NVIDIA_ToF_ADSD3500_REL_PATCH_*.zip" | head -n 1)
+
+            if [ -n "$MATCH" ]; then
+                echo "✅ Building with kernel bits: $MATCH"
+                cp "$MATCH" ./extra/NVIDIA_ToF_ADSD3500_REL_PATCH.zip
+            else
+                echo "⚠️ No matching .zip file found - Building without the Kernel bits."
+                confim_yes_or_no
+            fi
         fi
+    fi
 
-        # Copy script to remove machine
-        scp ./extra/remote_kernel_build.sh "$REMOTE_USER"@"$REMOTE_IP":"$RANDOM_DIRECTORY"
-        if [ "$?" -ne 0 ]; then
-            echo "❌ Unable to copy file to remote server, remote build failed, starting local build."
-            pause
-            build_kernel_local
-            return
-        fi 
-        echo "✅ Remote kernel build script copied successfully."
-    
-        # Execute remote script
-        # TODO: Execute in the background
-        ssh "$REMOTE_USER"@"$REMOTE_IP" "cd $RANDOM_DIRECTORY && source ./remote_kernel_build.sh $VERSION $BRANCH"
-        if [ "$?" -ne 0 ]; then
-            echo "❌ Remote kernel build failed, remote build failed, starting local build."
-            pause
-            build_kernel_local
-            return
-        fi
-
-        # Copy script to remove machine
-        scp "$REMOTE_USER"@"$REMOTE_IP":"$RANDOM_DIRECTORY"/NVIDIA_ToF_ADSD3500_REL_PATCH.tgz .
-        if [ "$?" -ne 0 ]; then
-            echo "❌ Failed to copy the kernel build from remote machine, remote build failed, starting local build."
-            pause
-            build_kernel_local
-            return
-        fi 
-
-        echo "✅ Remote kernel build completed."
-        return
+    if [ -f "$KERNEL/NVIDIA_ToF_ADSD3500_REL_PATCH.zip" ]; then
+        # Backup kernel image for later use if needed
+        echo "Backuping up NVIDIA_ToF_ADSD3500_REL_PATCH.zip for later use, if needed."
+        cp "$KERNEL/NVIDIA_ToF_ADSD3500_REL_PATCH.zip" ./extra/
     else
-        build_kernel_local
+        # Use backup if avaialble
+        if [ -f "./extra/NVIDIA_ToF_ADSD3500_REL_PATCH.zip" ]; then
+            echo "Attempting to use backup kernel."
+            cp ./extra/NVIDIA_ToF_ADSD3500_REL_PATCH.zip "$KERNEL/NVIDIA_ToF_ADSD3500_REL_PATCH.zip"
+        fi
+    fi
+
+    if [ ! -f "$KERNEL/NVIDIA_ToF_ADSD3500_REL_PATCH.zip" ]; then
+            echo "❌ No kernel build found, exiting build."
+            exit
+    else
+        echo "Unpacking NVIDIA_ToF_ADSD3500_REL_PATCH.zip"
+        pushd .
+        cd "$KERNEL"
+        unzip -o NVIDIA_ToF_ADSD3500_REL_PATCH.zip
+        rm NVIDIA_ToF_ADSD3500_REL_PATCH.zip
+        popd
     fi
 }
 
@@ -533,6 +539,13 @@ build_installer() {
 }
 
 #########################
+# Build the documentation
+#########################
+build_documentation() {
+    echo For building the documentation
+}
+
+#########################
 # Final clean up
 #########################
 clean_up() {
@@ -547,11 +560,19 @@ clean_up() {
 main() {
     get_sdk_version
     get_jetpack_version
+
+    # Created needed folders
+    mkdir -p "$EVALUATION"
+    mkdir -p "$TOOLS"
+    mkdir -p "$DEVELOPMENT"
+    mkdir -p "$KERNEL"
+
+    build_kernel
     build_eval_kit
     setup_staging
-    build_kernel
     build_git_clone_sh
     build_run_me_sh
+    build_documentation
     create_permissions_json
     build_installer
 }
