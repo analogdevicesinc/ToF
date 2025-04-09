@@ -1,0 +1,36 @@
+From 7e34fb25318d8992f4cfdd1f78e2c43724f8ee7b Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Wed, 9 Apr 2025 15:13:21 +0530
+Subject: [PATCH] drivers: media: i2c: nv_adsd3500.c: add driver version number
+ as 6.1.0
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ drivers/media/i2c/adsd3500_regs.h | 1 +
+ drivers/media/i2c/nv_adsd3500.c   | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/drivers/media/i2c/adsd3500_regs.h b/drivers/media/i2c/adsd3500_regs.h
+index 4e9da737..8ff37baf 100644
+--- a/drivers/media/i2c/adsd3500_regs.h
++++ b/drivers/media/i2c/adsd3500_regs.h
+@@ -11,6 +11,7 @@
+ 
+ #include <linux/bitfield.h>
+ 
++#define DRIVER_VERSION 			    "6.1.0"
+ #define GET_CHIP_ID_CMD                     0x0112
+ 
+ #define STREAM_ON_CMD                       0x00AD
+diff --git a/drivers/media/i2c/nv_adsd3500.c b/drivers/media/i2c/nv_adsd3500.c
+index 0edaf0a8..84085bd1 100644
+--- a/drivers/media/i2c/nv_adsd3500.c
++++ b/drivers/media/i2c/nv_adsd3500.c
+@@ -1049,3 +1049,4 @@ module_i2c_driver(adsd3500_i2c_driver);
+ MODULE_DESCRIPTION("Analog Devices ADSD3500 Driver");
+ MODULE_AUTHOR("Bogdan Togorean");
+ MODULE_LICENSE("GPL v2");
++MODULE_VERSION(DRIVER_VERSION);
+-- 
+2.25.1
+
