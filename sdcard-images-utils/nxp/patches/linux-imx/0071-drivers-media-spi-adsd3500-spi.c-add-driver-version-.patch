@@ -1,0 +1,37 @@
+From d32bbbdf9e04bcd0a0cd6fd2d9118f94ff3219ae Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Wed, 9 Apr 2025 12:53:05 +0530
+Subject: [PATCH 2/2] drivers: media: spi: adsd3500-spi.c: add driver version
+ number as 6.1.0
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ drivers/media/spi/adsd3500-spi.c  | 1 +
+ drivers/media/spi/adsd3500_regs.h | 2 ++
+ 2 files changed, 3 insertions(+)
+
+diff --git a/drivers/media/spi/adsd3500-spi.c b/drivers/media/spi/adsd3500-spi.c
+index d290ab6fe719..8ae7175e2749 100644
+--- a/drivers/media/spi/adsd3500-spi.c
++++ b/drivers/media/spi/adsd3500-spi.c
+@@ -2011,3 +2011,4 @@ module_spi_driver(adsd3500_spi_driver);
+ MODULE_DESCRIPTION("Analog Devices ADI ADSD3500 SPI Driver");
+ MODULE_AUTHOR("Analog Devices Inc");
+ MODULE_LICENSE("GPL v2");
++MODULE_VERSION(DRIVER_VERSION);
+diff --git a/drivers/media/spi/adsd3500_regs.h b/drivers/media/spi/adsd3500_regs.h
+index e543901dbf38..b97df1bfe59c 100644
+--- a/drivers/media/spi/adsd3500_regs.h
++++ b/drivers/media/spi/adsd3500_regs.h
+@@ -11,6 +11,8 @@
+ 
+ #include <linux/bitfield.h>
+ 
++#define DRIVER_VERSION				"6.1.0"
++
+ #define REVERSE_SHORT(x) ((0x0000FF00 & x << 8) | (0x000000FF & x >> 8))
+ #define REVERSE_LONG(x) ( ((x&0xff000000)>>24) | (((x&0x00ff0000)<<8)>>16) | (((x&0x0000ff00)>>8)<<16) | ((x&0x000000ff) << 24) )
+ 
+-- 
+2.28.0
+
