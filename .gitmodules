@@ -6,6 +6,3 @@
 	path = bindings/python/pybind11
 	url = https://github.com/pybind/pybind11
 	branch = v2.11
-[submodule "scripts/tofi-adcam-installer"]
-	path = scripts/tofi-adcam-installer
-	url = https://github.com/adi-innersource/tofi-adcam-installer
