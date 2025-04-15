@@ -1,0 +1,26 @@
+From b32040d235ceaee887129e6904e2dbd342de8c02 Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Tue, 15 Apr 2025 16:50:03 +0530
+Subject: [PATCH] arch: arm64: configs: defconfig: add pwm-gpio support to the
+ kernel modules
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 6e363e568b40..126a863963cc 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -1188,6 +1188,7 @@ CONFIG_PWM_SL28CPLD=m
+ CONFIG_PWM_SUN4I=m
+ CONFIG_PWM_TEGRA=m
+ CONFIG_PWM_VISCONTI=m
++CONFIG_PWM_GPIO=m
+ CONFIG_SL28CPLD_INTC=y
+ CONFIG_QCOM_PDC=y
+ CONFIG_RESET_IMX7=y
+-- 
+2.25.1
+
