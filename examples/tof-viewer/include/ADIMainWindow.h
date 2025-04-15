@@ -198,16 +198,6 @@ struct AppLog {
 namespace adiMainWindow {
 
 class ADIMainWindow {
-  private:
-    const uint32_t MAX_RECORD_TIME = 60;
-    const float OFFSETFROMTOPOFGUI = 38;
-    const float OFFSETFROMLEFT = 38;
-    const float INITIALRAD = 0.0f;
-    const uint32_t INITIALDEG = 0;
-    const float NORMALDPISCALAR = 1.0f;
-    const float HIGHDPISCALAR = 2.0f;
-    const std::string DEFAULT_TOOLS_CONFIG_FILENAME = "tof-tools.config";
-
   public:
     /**
 		* @brief Main window constructor
@@ -230,22 +220,11 @@ class ADIMainWindow {
 		*/
     void render();
 
+  private:
     /**
 		* @brief Modify Screen DPI
 		*/
     void setDpi();
-
-    bool _isHighDPI = false;
-    float dpiScaleFactor = HIGHDPISCALAR;
-
-    std::thread initCameraWorker;
-    bool m_cameraWorkerDone = false;
-
-    /**
-		* @brief	CPU percentage Usage
-		*/
-    double getCurrentValue();
-    int recordingSeconds = 5; //Default value
 
     /**
 		* @brief Stops Playback
@@ -256,33 +235,8 @@ class ADIMainWindow {
 		* @brief Deletes all buffers and
 		*        frees up memory
 		*/
+  
     void openGLCleanUp();
-
-    //Point Cloud
-    mat4x4 m_view;
-    mat4x4 m_projection;
-    mat4x4 m_model;
-    vec3 cameraPos = {0.0f, 0.0f, 3.0f};
-    vec3 cameraFront = {0.0f, 0.0f, -1.0f};
-    vec3 cameraUp = {0.0f, 1.0f, 0.0f};
-    vec3 cameraPos_Front;
-    float deltaTime = 0;
-    float lastFrame = 0;
-    float fov = 8.0f; //field of view angle in degrees.
-    // yaw is initialized to -90.0 degrees since a yaw of 0.0
-    //results in a direction vector pointing to the right so
-    //we initially rotate a bit to the left.
-    float yaw = -90.0f;
-    float pitch = 0.0f;
-    bool firstMouse = true;
-    float lastX = 1280.0f;
-    float lastY = 720.0;
-    float TranslationSensitivity = 0.03f;
-    int pointSize = 1;
-    unsigned int framebuffer;
-    bool mouseDown = false;
-    bool m_saveBinaryFormatTmp = false;
-    float tofImagePosY;
 
     /**
 		* @brief Virtual Sphere
@@ -305,16 +259,6 @@ class ADIMainWindow {
         */
     void MatrixMultiply(mat4x4 out, mat4x4 a, mat4x4 b);
 
-    // The type of movement that a mouse movement should be interpreted as (if any)
-    //
-    enum class MouseMovementType { None, Rotation, Translation };
-
-    AppLog *getLog() { return &my_log; }
-    const std::string INIT_LOG_WARNING =
-        "WARNING: Logging before InitGoogleLogging() is written to "
-        "STDERR\n";
-
-  private:
     /**
 		* @brief Rotation of an ImGui texture.
 		*/
@@ -550,6 +494,51 @@ class ADIMainWindow {
 		*/
     bool displayDataWindow(ImVec2 &displayUpdate, ImVec2 &size);
 
+    // The type of movement that a mouse movement should be interpreted as (if any)
+    //
+    enum class MouseMovementType { None, Rotation, Translation };
+    AppLog *getLog() { return &my_log; }
+    const std::string INIT_LOG_WARNING =
+        "WARNING: Logging before InitGoogleLogging() is written to "
+        "STDERR\n";
+    int32_t recordingSeconds = 5; //Default value
+    //Point Cloud
+    mat4x4 m_view;
+    mat4x4 m_projection;
+    mat4x4 m_model;
+    vec3 cameraPos = {0.0f, 0.0f, 3.0f};
+    vec3 cameraFront = {0.0f, 0.0f, -1.0f};
+    vec3 cameraUp = {0.0f, 1.0f, 0.0f};
+    vec3 cameraPos_Front;
+    float deltaTime = 0;
+    float lastFrame = 0;
+    float fov = 8.0f; //field of view angle in degrees.
+    // yaw is initialized to -90.0 degrees since a yaw of 0.0
+    //results in a direction vector pointing to the right so
+    //we initially rotate a bit to the left.
+    float yaw = -90.0f;
+    float pitch = 0.0f;
+    bool firstMouse = true;
+    float lastX = 1280.0f;
+    float lastY = 720.0;
+    float TranslationSensitivity = 0.03f;
+    int pointSize = 1;
+    unsigned int framebuffer;
+    bool mouseDown = false;
+    bool m_saveBinaryFormatTmp = false;
+    float tofImagePosY;
+    bool _isHighDPI = false;
+    float dpiScaleFactor = HIGHDPISCALAR;
+    std::thread initCameraWorker;
+    bool m_cameraWorkerDone = false;
+    const int32_t MAX_RECORD_TIME = 60;
+    const float OFFSETFROMTOPOFGUI = 38;
+    const float OFFSETFROMLEFT = 38;
+    const float INITIALRAD = 0.0f;
+    const uint32_t INITIALDEG = 0;
+    const float NORMALDPISCALAR = 1.0f;
+    const float HIGHDPISCALAR = 2.0f;
+    const std::string DEFAULT_TOOLS_CONFIG_FILENAME = "tof-tools.config";
     aditof::System m_system;
     std::vector<std::shared_ptr<aditof::Camera>> m_camerasList;
 

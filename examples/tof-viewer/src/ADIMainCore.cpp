@@ -25,8 +25,6 @@
 
 #include <aditof/system.h>
 #include <cJSON.h>
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
 #if defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
 #include "psapi.h"
@@ -92,22 +90,22 @@ ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
         }
     }
     char wholeLogPath[30];
-    char timebuff[20];
+    char timebuff[100];
     time_t timeNow = time(0);
     struct tm *timeinfo;
     time(&timeNow);
     timeinfo = localtime(&timeNow);
     strftime(timebuff, sizeof(timebuff), "%Y%m%d_%H%M%S", timeinfo);
     // Concatenate the whole path
-    strcpy(wholeLogPath, folderName);
+    strcpy_s(wholeLogPath, folderName);
 #ifdef _WIN32
-    strcat(wholeLogPath, "\\");
+    strcat_s(wholeLogPath, "\\");
 #elif __linux__
     strcat(wholeLogPath, "/");
 #endif
-    strcat(wholeLogPath, "log_");
-    strcat(wholeLogPath, timebuff);
-    strcat(wholeLogPath, ".txt");
+    strcat_s(wholeLogPath, "log_");
+    strcat_s(wholeLogPath, timebuff);
+    strcat_s(wholeLogPath, ".txt");
 
     /********************/
     stream = freopen(wholeLogPath, "w", stderr); // Added missing pointer
@@ -588,7 +586,7 @@ void ADIMainWindow::showSaveAdsdParamsMenu() {
         } else {
             LOG(INFO) << "Current configuration info saved to file "
                       << saveconfigurationFileValue << std::endl;
-            std::strcpy(saveConfigurationPath,
+            strcpy_s(saveConfigurationPath,
                         saveconfigurationFileValue.c_str());
         }
     }

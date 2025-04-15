@@ -44,29 +44,13 @@ void ADIMainWindow::synchronizeDepthABVideo() {
     aditof::FrameDetails frameDetails;
     view->m_capturedFrame->getDetails(frameDetails);
     std::unique_lock<std::mutex> lock(view->m_frameCapturedMutex);
-    if (displayAB) {
-        view->m_abFrameAvailable = true;
-    } else {
-        view->m_abFrameAvailable = false;
-        view->ab_video_data_8bit = nullptr;
-    }
-    if (displayDepth) {
-        view->m_depthFrameAvailable = true;
-    } else {
-        view->m_depthFrameAvailable = false;
-        view->depth_video_data_8bit = nullptr;
-    }
-    if (displayAB && displayDepth) {
-        view->numOfThreads = 2;
-    } else {
-        view->numOfThreads = 1;
-    }
 
-    /************************************/
-    //CMOS
+    view->m_abFrameAvailable = true;
+    view->m_depthFrameAvailable = true;
+    view->numOfThreads = 2;
+
     view->frameHeight = frameDetails.height;
     view->frameWidth = frameDetails.width;
-    /************************************/
 
     lock.unlock();
     view->m_frameCapturedCv.notify_all();
@@ -90,7 +74,10 @@ void ADIMainWindow::synchronizePointCloudVideo() {
     std::unique_lock<std::mutex> lock(view->m_frameCapturedMutex);
 
     view->m_depthFrameAvailable = true;
+    view->m_abFrameAvailable = true;
     view->m_pointCloudFrameAvailable = true;
+    view->numOfThreads = 3;
+
     view->frameHeight = frameDetails.height;
     view->frameWidth = frameDetails.width;
 
@@ -227,6 +214,28 @@ void ADIMainWindow::DisplayActiveBrightnessWindow(
     ImGui::End();
 }
 
+void ADIMainWindow::CaptureABVideo() {
+    if (view->ab_video_data_8bit != nullptr) {
+        glBindTexture(GL_TEXTURE_2D, ab_video_texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, view->frameWidth,
+                     view->frameHeight, 0, GL_BGR, GL_UNSIGNED_BYTE,
+                     view->ab_video_data_8bit);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        delete view->ab_video_data_8bit;
+
+        ImVec2 _displayABDimensions = displayABDimensions;
+
+        if (rotationangledegrees == 90 || rotationangledegrees == 270) {
+            std::swap(_displayABDimensions.x, _displayABDimensions.y);
+        }
+
+        ImageRotated(reinterpret_cast<ImTextureID>(ab_video_texture),
+                     ImVec2(dictWinPosition["ab"][2], dictWinPosition["ab"][3]),
+                     ImVec2(_displayABDimensions.x, _displayABDimensions.y),
+                     rotationangleradians);
+    }
+}
+
 //*******************************************
 //* Section: Handling of Depth Widow
 //*******************************************
@@ -301,6 +310,29 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
     ImGui::End();
 }
 
+void ADIMainWindow::CaptureDepthVideo() {
+    if (view->depth_video_data_8bit != nullptr) {
+        glBindTexture(GL_TEXTURE_2D, depth_video_texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, view->frameWidth,
+                     view->frameHeight, 0, GL_BGR, GL_UNSIGNED_BYTE,
+                     view->depth_video_data_8bit);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        delete view->depth_video_data_8bit;
+
+        ImVec2 _displayDepthDimensions = displayDepthDimensions;
+
+        if (rotationangledegrees == 90 || rotationangledegrees == 270) {
+            std::swap(_displayDepthDimensions.x, _displayDepthDimensions.y);
+        }
+
+        ImageRotated(
+            reinterpret_cast<ImTextureID>(depth_video_texture),
+            ImVec2(dictWinPosition["depth"][2], dictWinPosition["depth"][3]),
+            ImVec2(_displayDepthDimensions.x, _displayDepthDimensions.y),
+            rotationangleradians);
+    }
+}
+
 //*******************************************
 //* Section: Handling of Point Cloud Window
 //*******************************************
@@ -360,7 +392,7 @@ void ADIMainWindow::preparePointCloudVertices(unsigned int &vbo,
     //Pass on Image buffer here:
     glBufferData(GL_ARRAY_BUFFER, view->vertexArraySize,
                  view->normalized_vertices,
-                 GL_DYNAMIC_DRAW); //GL_STATIC_DRAW
+                 GL_DYNAMIC_DRAW);
 
     //Image
     glVertexAttribPointer(
@@ -410,7 +442,6 @@ void ADIMainWindow::initOpenGLPointCloudTexture() {
 				in vec4 color_based_on_position;
 				void main()
 				{
-					//FragColor = vec4(0.1f, 0.8f, 0.1f, 1.0f);
 					FragColor = color_based_on_position;
 				}
 				)";
@@ -452,6 +483,55 @@ void ADIMainWindow::initOpenGLPointCloudTexture() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void ADIMainWindow::CapturePointCloudVideo() {
+
+    processInputs(window);
+
+    preparePointCloudVertices(view->vertexBufferObject,
+                              view->vertexArrayObject);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glPointSize(pointSize);
+
+    // draw our Image
+    glUseProgram(view->pcShader.Id());
+    mat4x4_perspective(m_projection, radians(fov),
+                       (float)view->frameWidth / (float)view->frameHeight, 0.1f,
+                       100.0f);
+    glUniformMatrix4fv(view->projectionIndex, 1, GL_FALSE, &m_projection[0][0]);
+
+    //Look-At function[ x, y, z] = (cameraPos, cameraPos + cameraFront, cameraUp);
+    vec3_add(cameraPos_Front, cameraPos, cameraFront);
+    mat4x4_look_at(m_view, cameraPos, cameraPos_Front, cameraUp);
+    glUniformMatrix4fv(view->viewIndex, 1, GL_FALSE, &m_view[0][0]);
+    glUniformMatrix4fv(view->modelIndex, 1, GL_FALSE, &m_model[0][0]);
+
+    glBindVertexArray(
+        view->vertexArrayObject); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(view->vertexArraySize));
+    glBindVertexArray(0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDisable(GL_DEPTH_TEST);
+
+    ImVec2 _displayPointCloudDimensions = displayPointCloudDimensions;
+
+    if (rotationangledegrees == 90 || rotationangledegrees == 270) {
+        std::swap(_displayPointCloudDimensions.x,
+                  _displayPointCloudDimensions.y);
+    }
+
+    ImageRotated(
+        reinterpret_cast<ImTextureID>(pointCloud_video_texture),
+        ImVec2(dictWinPosition["pc"][2], dictWinPosition["pc"][3]),
+        ImVec2(_displayPointCloudDimensions.x, _displayPointCloudDimensions.y),
+        rotationangleradians);
+    glDeleteVertexArrays(1, &view->vertexArrayObject);
+    glDeleteBuffers(1, &view->vertexBufferObject);
+}
+
 static inline ImVec2 operator+(const ImVec2 &lhs, const ImVec2 &rhs) {
     return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y);
 }
@@ -491,100 +571,6 @@ void ADIMainWindow::ImageRotated(ImTextureID tex_id, ImVec2 center, ImVec2 size,
 
     draw_list->AddImageQuad(tex_id, pos[0], pos[1], pos[2], pos[3], uvs[0],
                             uvs[1], uvs[2], uvs[3], IM_COL32_WHITE);
-}
-
-void ADIMainWindow::CaptureDepthVideo() {
-    if (view->depth_video_data_8bit != nullptr) {
-        glBindTexture(GL_TEXTURE_2D, depth_video_texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, view->frameWidth,
-                     view->frameHeight, 0, GL_BGR, GL_UNSIGNED_BYTE,
-                     view->depth_video_data_8bit);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        delete view->depth_video_data_8bit;
-
-        ImVec2 _displayDepthDimensions = displayDepthDimensions;
-
-        if (rotationangledegrees == 90 || rotationangledegrees == 270) {
-            std::swap(_displayDepthDimensions.x, _displayDepthDimensions.y);
-        }
-
-        ImageRotated(
-            (ImTextureID)depth_video_texture,
-            ImVec2(dictWinPosition["depth"][2], dictWinPosition["depth"][3]),
-            ImVec2(_displayDepthDimensions.x, _displayDepthDimensions.y),
-            rotationangleradians);
-    }
-}
-
-void ADIMainWindow::CaptureABVideo() {
-    if (view->ab_video_data_8bit != nullptr) {
-        glBindTexture(GL_TEXTURE_2D, ab_video_texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, view->frameWidth,
-                     view->frameHeight, 0, GL_BGR, GL_UNSIGNED_BYTE,
-                     view->ab_video_data_8bit);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        delete view->ab_video_data_8bit;
-
-        ImVec2 _displayABDimensions = displayABDimensions;
-
-        if (rotationangledegrees == 90 || rotationangledegrees == 270) {
-            std::swap(_displayABDimensions.x, _displayABDimensions.y);
-        }
-
-        ImageRotated((ImTextureID)ab_video_texture,
-                     ImVec2(dictWinPosition["ab"][2], dictWinPosition["ab"][3]),
-                     ImVec2(_displayABDimensions.x, _displayABDimensions.y),
-                     rotationangleradians);
-    }
-}
-
-void ADIMainWindow::CapturePointCloudVideo() {
-
-    processInputs(window);
-
-    preparePointCloudVertices(view->vertexBufferObject,
-                              view->vertexArrayObject);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glPointSize(pointSize);
-
-    // draw our Image
-    glUseProgram(view->pcShader.Id());
-    mat4x4_perspective(m_projection, radians(fov),
-                       (float)view->frameWidth / (float)view->frameHeight, 0.1f,
-                       100.0f);
-    glUniformMatrix4fv(view->projectionIndex, 1, GL_FALSE, &m_projection[0][0]);
-
-    //Look-At function[ x, y, z] = (cameraPos, cameraPos + cameraFront, cameraUp);
-    vec3_add(cameraPos_Front, cameraPos, cameraFront);
-    mat4x4_look_at(m_view, cameraPos, cameraPos_Front, cameraUp);
-    glUniformMatrix4fv(view->viewIndex, 1, GL_FALSE, &m_view[0][0]);
-    glUniformMatrix4fv(view->modelIndex, 1, GL_FALSE, &m_model[0][0]);
-
-    glBindVertexArray(
-        view->vertexArrayObject); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-    glDrawArrays(GL_POINTS, 0, view->vertexArraySize);
-    glBindVertexArray(0);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glDisable(GL_DEPTH_TEST);
-
-    ImVec2 _displayPointCloudDimensions = displayPointCloudDimensions;
-
-    if (rotationangledegrees == 90 || rotationangledegrees == 270) {
-        std::swap(_displayPointCloudDimensions.x,
-                  _displayPointCloudDimensions.y);
-    }
-
-    ImageRotated(
-        (ImTextureID)pointCloud_video_texture,
-        ImVec2(dictWinPosition["pc"][2], dictWinPosition["pc"][3]),
-        ImVec2(_displayPointCloudDimensions.x, _displayPointCloudDimensions.y),
-        rotationangleradians);
-    glDeleteVertexArrays(1, &view->vertexArrayObject);
-    glDeleteBuffers(1, &view->vertexBufferObject);
 }
 
 void ADIMainWindow::pointCloudReset() {

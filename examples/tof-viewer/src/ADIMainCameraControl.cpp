@@ -275,7 +275,7 @@ void ADIMainWindow::RefreshDevices() {
         // Add network camera
         m_system.getCameraList(m_camerasList, m_cameraIp + m_ipSuffix);
         if (m_camerasList.size() > 0) {
-            int index = m_connectedDevices.size();
+            uint32_t index = static_cast<uint32_t>(m_connectedDevices.size());
             m_connectedDevices.emplace_back(index, "ToF Camera" +
                                                        std::to_string(index));
         }
