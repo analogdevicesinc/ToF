@@ -66,11 +66,6 @@ void ADIController::StopCapture() {
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 }
 
-std::string ADIController::getMode() const {
-    // TODO: implement get mode
-    return "";
-}
-
 void ADIController::setMode(const uint8_t &mode) {
     if (m_cameraInUse == -1) {
         return;
@@ -79,36 +74,21 @@ void ADIController::setMode(const uint8_t &mode) {
     camera->setMode(mode);
 }
 
-std::pair<float, float> ADIController::getTemperature() {
-    auto returnValue = std::make_pair<float, float>(0.0, 0.0);
-
-    if (m_cameraInUse == -1) {
-        return returnValue;
-    }
-
-    auto camera = m_cameras[static_cast<unsigned int>(m_cameraInUse)];
-
-    // TODO: Implement
-    //std::shared_ptr<aditof::DepthSensorInterface> device = camera->getSensor();
-    //device->readLaserTemp(returnValue.second);
-    return returnValue;
-}
-
 void ADIController::startRecording(const std::string &fileName,
                                    unsigned int height, unsigned int width,
-                                   unsigned int fps) {
+                                   unsigned int seconds) {
 
     if (m_recorder != nullptr) {
         m_recorder = std::make_unique<ADIToFRecorder>();
     }
     m_recorder->setSaveBinaryFormat(this->m_saveBinaryFormat);
-    m_recorder->startRecording(fileName, height, width, fps);
+    m_recorder->startRecording(fileName, height, width, seconds);
 }
 
 void ADIController::stopRecording() { m_recorder->stopRecording(); }
 
-int ADIController::startPlayback(const std::string &fileName, int &fps) {
-    return m_recorder->startPlayback(fileName, fps);
+int ADIController::startPlayback(const std::string &fileName) {
+    return m_recorder->startPlayback(fileName);
 }
 
 void ADIController::stopPlayback() { m_recorder->stopPlayback(); }
@@ -181,35 +161,6 @@ void ADIController::captureFrames() {
         m_queue.enqueue(frame);
         m_frameRequested = false;
     }
-}
-
-//int ADIController::getRange() const
-//{
-//	aditof::CameraDetails cameraDetails;
-//	m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getDetails(
-//		cameraDetails);
-//	return cameraDetails.range;
-//}
-
-int ADIController::getRangeMax() const {
-    aditof::CameraDetails cameraDetails;
-    m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getDetails(
-        cameraDetails);
-    return cameraDetails.maxDepth;
-}
-
-int ADIController::getRangeMin() const {
-    aditof::CameraDetails cameraDetails;
-    m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getDetails(
-        cameraDetails);
-    return cameraDetails.minDepth;
-}
-
-int ADIController::getbitCount() const {
-    aditof::CameraDetails cameraDetails;
-    m_cameras[static_cast<unsigned int>(m_cameraInUse)]->getDetails(
-        cameraDetails);
-    return cameraDetails.bitCount;
 }
 
 int ADIController::getCameraInUse() const { return m_cameraInUse; }

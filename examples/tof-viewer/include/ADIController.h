@@ -71,12 +71,12 @@ class ADIController {
     /**
 		* @brief			Start recording video.
 		* @param fileName	User sets a file name, along with its file extension
-		* @param height	Height in pixels, gathered from current camera mode
-		* @param width	Width in pixels, gathered from curren camera mode
-		* @param fps		Frames to be recorded (No parameter time at this moment)
+		* @param height	    Height in pixels, gathered from current camera mode
+		* @param width	    Width in pixels, gathered from curren camera mode
+		* @param seconds	Number of seconds to record
 		*/
     void startRecording(const std::string &fileName, unsigned int height,
-                        unsigned int width, unsigned int fps);
+                        unsigned int width, unsigned int seconds);
 
     /**
 		* @brief	Stops current recording
@@ -86,9 +86,8 @@ class ADIController {
     /**
 		* @brief				Opens a currently saved recording and plays it back
 		* @param	fileName	Chosen recording file name
-		* @param	fps			Number of frames from file
 		*/
-    int startPlayback(const std::string &fileName, int &fps);
+    int startPlayback(const std::string &fileName);
 
     /**
 		* @brief	Stops current playback recording

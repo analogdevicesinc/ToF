@@ -46,33 +46,7 @@ class ADIView {
     /**
 		* @brief Not implemented. Code under development
 		*/
-    void render();
     bool startImGUI(bool *success);
-
-    /**
-		* @brief Not implemented
-		*/
-    void showWindows();
-
-    /**
-		* @brief Not implemented
-		*/
-    void initVideo();
-
-    /**
-		* @brief Not implemented
-		*/
-    void captureVideo();
-
-    /**
-		* @brief Not implemented
-		*/
-    void initShaders();
-
-    /**
-		* @brief Will Try to render the image pixel by pixel
-		*/
-    uint8_t *imageRender(uint16_t *image);
 
     void setLogImage(bool value) { m_logImage = value; }
     bool getLogImage() { return m_logImage; }

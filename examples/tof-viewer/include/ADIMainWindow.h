@@ -199,6 +199,7 @@ namespace adiMainWindow {
 
 class ADIMainWindow {
   private:
+    const uint32_t MAX_RECORD_TIME = 60;
     const float OFFSETFROMTOPOFGUI = 38;
     const float OFFSETFROMLEFT = 38;
     const float INITIALRAD = 0.0f;
@@ -238,7 +239,7 @@ class ADIMainWindow {
     float dpiScaleFactor = HIGHDPISCALAR;
 
     std::thread initCameraWorker;
-    bool cameraWorkerDone = false;
+    bool m_cameraWorkerDone = false;
 
     /**
 		* @brief	CPU percentage Usage
@@ -314,20 +315,6 @@ class ADIMainWindow {
         "STDERR\n";
 
   private:
-    float rotationangleradians = INITIALRAD;
-    uint32_t rotationangledegrees = INITIALDEG;
-    const float offsetfromtop = OFFSETFROMTOPOFGUI;
-    const float offsetfromleft = OFFSETFROMLEFT;
-    std::unordered_map<std::string, std::array<float, 4>> dictWinPosition;
-    std::shared_ptr<adiviewer::ADIView> view = nullptr;
-    AppLog my_log;
-
-    bool m_callbackInitialized = false;
-    int frameCounter = 0;
-    int fps = 0;
-    bool m_netLinkTest = false;
-    std::string m_ipSuffix;
-
     /**
 		* @brief Rotation of an ImGui texture.
 		*/
@@ -410,7 +397,7 @@ class ADIMainWindow {
 		*						- Depth and AB
 		*						- Blended Depth with AB
 		*/
-    void PlayCCD(int modeSelect, int viewSelect);
+    void CameraPlay(int modeSelect, int viewSelect);
 
     /**
 		* @brief Playback recorded video
@@ -461,7 +448,7 @@ class ADIMainWindow {
     /**
 		* @brief Stops playing CCD Camera
 		*/
-    void stopPlayCCD();
+    void CameraStop();
 
     /**
 		* @brief Sets the threads to get both
@@ -487,8 +474,6 @@ class ADIMainWindow {
 		*/
     void GetHoveredImagePix(ImVec2 &hoveredImagePixel, ImVec2 imageStartPos,
                             ImVec2 mousePos, ImVec2 displayDimensions);
-    int m_selectedDevice = -1;
-    std::vector<std::pair<int, std::string>> m_connectedDevices;
 
     /**
 		* @brief Returns current application path
@@ -499,43 +484,33 @@ class ADIMainWindow {
 		* @brief			Prepares the camera with the selected mode
 		* @param	mode	Camera mode
 		*/
-    void prepareCamera(uint8_t mode);
+    void PrepareCamera(uint8_t mode);
 
     /**
 		* @brief Displays the Information Window
 		*/
-    void displayInfoWindow(ImGuiWindowFlags overlayFlags);
+    void DisplayInfoWindow(ImGuiWindowFlags overlayFlags);
+    bool DisplayFrameWindow(ImVec2 &displayUpdate, ImVec2 &size);
 
     /**
 		* @brief Displays AB Window
 		*/
-    void displayActiveBrightnessWindow(ImGuiWindowFlags overlayFlags);
+    void DisplayActiveBrightnessWindow(ImGuiWindowFlags overlayFlags);
 
     /**
 		* @brief Displays Depth Window
 		*/
-    void displayDepthWindow(ImGuiWindowFlags overlayFlags);
+    void DisplayDepthWindow(ImGuiWindowFlags overlayFlags);
 
     /**
 		* @brief Displays Point Cloud Window
 		*/
-    void displayPointCloudWindow(ImGuiWindowFlags overlayFlags);
-
-    /**
-		 * @brief Checks if the frame type set in camera has a certain
-		 *        content. (e.g. 'depth', 'ab', 'xyz', etc.)
-		 */
-    bool checkCameraSetToReceiveContent(const std::string &contentType);
+    void DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags);
 
     /**
      * @brief Computes streaming fps
     */
     void computeFPS(int &fps);
-
-    /**
-     * @brief save current customizable ini parameters to a file
-    */
-    int saveIniFile();
 
     /**
      * @brief print out warning message in popup window if ini param is out of valid range
@@ -549,55 +524,9 @@ class ADIMainWindow {
     */
     std::shared_ptr<aditof::Camera> getActiveCamera();
 
-    aditof::System m_system;
-    std::vector<std::shared_ptr<aditof::Camera>> m_camerasList;
-
-    bool m_focusedOnce = false;
-
-    bool m_skipNetworkCameras;
-    std::string m_cameraIp;
-    std::vector<std::pair<int, std::string>> m_configFiles;
-    int configSelection = 0;
-
-    std::string modes[3] = {"near", "medium", "far"};
-    bool _usesExternalModeDefinition = false;
-    bool captureSeparateEnabled = true;
-    bool captureBlendedEnabled = true;
-    const ImVec2 InvalidHoveredPixel = ImVec2(-1, -1);
-    std::vector<uint8_t> _cameraModes;
-    std::vector<std::pair<int, uint8_t>> m_cameraModes;
-    std::vector<std::pair<int, std::string>> m_cameraModesDropDown;
-
-    const ImVec2 depthWinSize = ImVec2(0, 0);
-    ImVec2 sourceDepthImageDimensions;
-    ImVec2 displayDepthDimensions;
-    ImVec2 sourceABImageDimensions;
-    ImVec2 displayABDimensions;
-    ImVec2 sourcePointCloudImageDimensions;
-    ImVec2 displayPointCloudDimensions;
-
-    size_t dephtWinCtr = 0;
-
-    //imGUI
-    GLFWwindow *window;
-    int mainWindowHeight;
-    int mainWindowWidth;
-    bool showABWindow = false;
-    bool showDepthWindow = false;
-    int modeSelection = 0;
-    int modeSelectChanged = 0; //flag when changed
-    bool isPlaying = false;
-    bool isRecording = false;
-    bool isPlayRecorded = false;
-    bool isPlayRecordPaused = false;
-    int viewSelection = 0;
-    int viewSelectionChanged = 0; //flag when changed
-    bool cameraOptionsTreeEnabled = true;
-    bool pointCloudEnable = true;
-
     /**
-		* @brief Set any window a specific position
-		*/
+	* @brief Set any window a specific position
+	*/
     void setWindowPosition(float x, float y);
 
     /**
@@ -621,6 +550,46 @@ class ADIMainWindow {
 		*/
     bool displayDataWindow(ImVec2 &displayUpdate, ImVec2 &size);
 
+    aditof::System m_system;
+    std::vector<std::shared_ptr<aditof::Camera>> m_camerasList;
+
+    bool m_focusedOnce = false;
+
+    bool m_skipNetworkCameras;
+    std::string m_cameraIp;
+    std::vector<std::pair<int, std::string>> m_configFiles;
+    int configSelection = 0;
+
+    bool _usesExternalModeDefinition = false;
+    bool captureSeparateEnabled = true;
+    bool captureBlendedEnabled = true;
+    const ImVec2 InvalidHoveredPixel = ImVec2(-1, -1);
+    std::vector<uint8_t> _cameraModes;
+    std::vector<std::pair<int, uint8_t>> m_cameraModes;
+    std::vector<std::pair<int, std::string>> m_cameraModesDropDown;
+
+    ImVec2 sourceDepthImageDimensions;
+    ImVec2 displayDepthDimensions;
+    ImVec2 sourceABImageDimensions;
+    ImVec2 displayABDimensions;
+    ImVec2 sourcePointCloudImageDimensions;
+    ImVec2 displayPointCloudDimensions;
+    //imGUI
+    GLFWwindow *window;
+    int mainWindowHeight;
+    int mainWindowWidth;
+    bool showABWindow = false;
+    bool showDepthWindow = false;
+    int modeSelection = 0;
+    int modeSelectChanged = 0; //flag when changed
+    bool isPlaying = false;
+    bool isRecording = false;
+    bool isPlayRecorded = false;
+    bool isPlayRecordPaused = false;
+    int viewSelection = 0;
+    int viewSelectionChanged = 0; //flag when changed
+    bool cameraOptionsTreeEnabled = true;
+    bool pointCloudEnable = true;
     float imagescale = 1.0f;
     const float imagesizemax = 516.0f;
     unsigned int ab_video_texture = 0;
@@ -641,12 +610,32 @@ class ADIMainWindow {
     bool displayDepth = true;
     bool displayPointCloud = false;
     bool displayTemp = true;
-    int rawSeeker = 0;
+    int32_t rawSeeker = 0;
 
     //Logging
     char buffer[1024];
     FILE *stream;
     FILE *input;
+    float rotationangleradians = INITIALRAD;
+    uint32_t rotationangledegrees = INITIALDEG;
+    const float offsetfromtop = OFFSETFROMTOPOFGUI;
+    const float offsetfromleft = OFFSETFROMLEFT;
+    std::unordered_map<std::string, std::array<float, 4>> dictWinPosition;
+    std::shared_ptr<adiviewer::ADIView> view = nullptr;
+    AppLog my_log;
+
+    bool m_callbackInitialized = false;
+    bool m_netLinkTest = false;
+    std::string m_ipSuffix;
+
+    int32_t frameCounter = 0;
+    int32_t m_fps = 0;
+    uint16_t m_fps_expectedFPS = 0;
+    uint32_t m_fps_firstFrame = 0;
+    uint32_t m_fps_frameRecvd = 0;
+    std::chrono::time_point<std::chrono::system_clock> m_fps_startTime;
+    int m_selectedDevice = -1;
+    std::vector<std::pair<int, std::string>> m_connectedDevices;
 };
 } // namespace adiMainWindow
 #endif //ADIMAINWINDOW_H

@@ -25,17 +25,13 @@ endif()
 
 set(IMGUI_SOURCE_DIR ${CMAKE_SOURCE_DIR}/dependencies/third-party/imgui)
 set(ADIToF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+file(GLOB ADIToF_SOURCES CONFIGURE_DEPENDS "${ADIToF_SOURCE_DIR}/*.cpp")
+
 add_executable(ADIToFGUI
-			   ${ADIToF_SOURCE_DIR}/wmain.cpp
-			   ${ADIToF_SOURCE_DIR}/ADIView.cpp
-			   ${ADIToF_SOURCE_DIR}/ADIToFRecorder.cpp
-			   ${ADIToF_SOURCE_DIR}/ADIToF.cpp
-			   ${ADIToF_SOURCE_DIR}/ADIMainWindow.cpp
-			   ${ADIToF_SOURCE_DIR}/ADIImGUIExtensions.cpp
-			   ${ADIToF_SOURCE_DIR}/ADIController.cpp
-               ${ADIToF_SOURCE_DIR}/ADIOpenFile.cpp			   
-               ${OS_SPECIFIC_SOURCES}			   
-			   )
+    ${ADIToF_SOURCES}
+    ${OS_SPECIFIC_SOURCES}
+)
 
 # Link Libraries
 if(UNIX)

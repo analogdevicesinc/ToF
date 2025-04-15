@@ -39,20 +39,20 @@ class ADIToFRecorder {
 	* @param fileName	Given file name by the user
 	* @param height		Image height, set by SDK
 	* @param width		Image width, set by SDK
-	* @param fps		Number of frames set by the user
+	* @param seconds	Number of seconds to record
 	*/
     void startRecording(const std::string &fileName, unsigned int height,
-                        unsigned int width, unsigned int fps);
+                        unsigned int width, unsigned int seconds);
 
     /**
     * @brief           Start RAW fileformat recording
     * @param fileName	Given file name by the user
     * @param height		Image height, set by SDK
     * @param width		Image width, set by SDK
-    * @param fps		Number of frames set by the user
+    * @param seconds	Number of seconds to record
     */
     void startRecordingRaw(const std::string &fileName, unsigned int height,
-                           unsigned int width, unsigned int fps);
+                           unsigned int width, unsigned int seconds);
 
     /**
 	* @brief Stops Recording
@@ -64,14 +64,14 @@ class ADIToFRecorder {
 	* @param fileName	Given file name by the user
 	* @param fps		Number of frames set by the user
 	*/
-    int startPlayback(const std::string &fileName, int &fps);
+    int startPlayback(const std::string &fileName);
 
     /**
 	* @brief			Starts ADI's raw playback
 	* @param fileName	Given file name by the user
 	* @param fps		Number of frames set by the user
 	*/
-    int startPlaybackRaw(const std::string &fileName, int &fps);
+    int startPlaybackRaw(const std::string &fileName);
 
     /**
 	* @brief Stop playback
@@ -216,7 +216,7 @@ class ADIToFRecorder {
     bool m_shouldReadNewFrame;
     bool m_playBackEofReached;
     bool isPaused = false;
-    int framesToRecord = 0;
+    unsigned int m_secondsToRecord = 0;
     const int _depth = 2;
     const int _ab = 1;
     size_t frameCtr = 0;
