@@ -43,6 +43,7 @@
 #include <aditof/log.h>
 #endif
 #include <algorithm>
+#include <atomic>
 #include <condition_variable>
 #include <future>
 #include <iostream>
@@ -51,12 +52,7 @@
 #include <queue>
 #include <string>
 #include <sys/time.h>
-
-#ifdef USE_ZMQ
-#include <atomic>
 #include <thread>
-#include <zmq.hpp>
-#endif
 
 using namespace google::protobuf::io;
 
@@ -120,12 +116,16 @@ std::atomic<bool> stop_flag(false);
 std::mutex mtx;
 std::condition_variable cv;
 std::thread stream_thread;
-#endif
+zmq::context_t context(1);
+zmq::socket_t socket_cmd(context, ZMQ_REP);
+zmq::socket_t monitor_socket(context, ZMQ_PAIR);
 
 struct clientData {
     bool hasFragments;
     std::vector<char> data;
 };
+
+void stream_off() { aditof::Status status = camDepthSensor->stop(); }
 
 #ifdef USE_ZMQ
 
@@ -234,18 +234,6 @@ void stop_stream_thread() {
     }
 }
 
-#endif
-
-static struct lws_protocols protocols[] = {
-    {
-        "network-protocol",
-        Network::callback_function,
-        sizeof(clientData),
-        RX_BUFFER_BYTES,
-    },
-    {NULL, NULL, 0, 0} /* terminator */
-};
-
 aditof::SensorInterruptCallback callback = [](aditof::Adsd3500Status status) {
     adsd3500InterruptsQueue.push(status);
     DLOG(INFO) << "ADSD3500 interrupt occured: status = " << status;
@@ -267,7 +255,6 @@ static void captureFrameFromHardware() {
         // 2. The signal has been received, now go capture the frame
         goCaptureFrame = false;
 
-#ifdef USE_ZMQ
         // Send frames to PC via ZMQ socket.
         aditof::Status status =
             camDepthSensor->getFrame((uint16_t *)buff_frame_to_be_captured);
@@ -276,15 +263,6 @@ static void captureFrameFromHardware() {
                          "stream_frame thread";
             break;
         }
-#else
-        aditof::Status status = camDepthSensor->getFrame(
-            (uint16_t *)(buff_frame_to_be_captured +
-                         LWS_SEND_BUFFER_PRE_PADDING + FRAME_PREPADDING_BYTES));
-        if (status != aditof::Status::OK) {
-            LOG(ERROR) << "Failed to get frame!";
-            //TO DO: buff_send.set_status(static_cast<::payload::Status>(status));
-        }
-#endif
 
         // 3. Notify others that there is a new frame available
         frameCaptured = true;
@@ -315,220 +293,144 @@ static void cleanup_sensors() {
     clientEngagedWithSensors = false;
 }
 
-Network ::Network() : context(nullptr) {}
-
-int Network::callback_function(struct lws *wsi,
-                               enum lws_callback_reasons reason, void *user,
-                               void *in, size_t len) {
-    uint n;
-
-    switch (reason) {
-    case LWS_CALLBACK_ESTABLISHED: {
-        /*Check if another client is connected or not*/
+int Network::callback_function(const zmq_event_t &event, const char *addr) {
+    switch (event.event) {
+    case ZMQ_EVENT_CONNECTED: {
         buff_send.Clear();
-        if (Client_Connected == false) {
+        if (!Client_Connected) {
             std::cout << "Conn Established" << std::endl;
             Client_Connected = true;
             buff_send.set_message("Connection Allowed");
-            lws_callback_on_writable(wsi);
-            break;
         } else {
             std::cout << "Another client connected" << std::endl;
             no_of_client_connected = true;
             buff_send.set_message("Only 1 client connection allowed");
-            lws_callback_on_writable(wsi);
         }
         break;
     }
-
-    case LWS_CALLBACK_RECEIVE: {
-#ifdef NW_DEBUG
-        cout << endl << "Server has received data with len: " << len << endl;
-#endif
-        const size_t remaining = lws_remaining_packet_payload(wsi);
-        bool isFinal = lws_is_final_fragment(wsi);
-
-        struct clientData *clientData = static_cast<struct clientData *>(user);
-
-        if (!remaining && isFinal) {
-            if (clientData->hasFragments) {
-                // apend message
-                char *inData = static_cast<char *>(in);
-                clientData->data.insert(clientData->data.end(), inData,
-                                        inData + len);
-                in = static_cast<void *>(clientData->data.data());
-                len = clientData->data.size();
-            }
-
-            // process message
-            google::protobuf::io::ArrayInputStream ais(in, len);
-            CodedInputStream coded_input(&ais);
-
-            buff_recv.ParseFromCodedStream(&coded_input);
-
-            invoke_sdk_api(buff_recv);
-            lws_callback_on_writable(wsi);
-
-            clientData->data.clear();
-            clientData->hasFragments = false;
-        } else {
-            // append message
-            if (clientData->data.size() == 0) {
-                clientData->data.reserve(len + remaining);
-            }
-            char *inData = static_cast<char *>(in);
-            clientData->data.insert(clientData->data.end(), inData,
-                                    inData + len);
-            clientData->hasFragments = true;
-        }
-
+    case ZMQ_EVENT_CLOSED:
+        std::cout << "Closed connection at " << addr << std::endl;
         break;
-    }
-
-    case LWS_CALLBACK_SERVER_WRITEABLE: {
-        // TO INVESTIGATE: Currently this workaround prevents the server to send
-        // the image buffer over and over again but as a side effect it lowers
-        // the FPS with about 2-3 frames. How to avoid FPS reduction?
-        if (latest_sent_msg_is_was_buffered) {
-            latest_sent_msg_is_was_buffered = false;
-            break;
-        }
-        unsigned int siz = 0;
-        // Send the frame content without wrapping it in a protobuf message (speed optimization)
-        if (m_frame_ready == true) {
-            siz = buff_frame_length;
-
-            n = lws_write(wsi, buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING,
-                          buff_frame_length, LWS_WRITE_TEXT);
-            m_frame_ready = false;
-            if (lws_partial_buffered(wsi)) {
-                latest_sent_msg_is_was_buffered = true;
-            }
-        } else {
-            siz = buff_send.ByteSize();
-            unsigned char *pkt =
-                new unsigned char[siz + LWS_SEND_BUFFER_PRE_PADDING];
-            unsigned char *pkt_pad = pkt + LWS_SEND_BUFFER_PRE_PADDING;
-
-            google::protobuf::io::ArrayOutputStream aos(pkt_pad, siz);
-            CodedOutputStream *coded_output = new CodedOutputStream(&aos);
-            buff_send.SerializeToCodedStream(coded_output);
-            n = lws_write(wsi, pkt_pad, siz, LWS_WRITE_TEXT);
-
-            if (lws_partial_buffered(wsi)) {
-                latest_sent_msg_is_was_buffered = true;
-            }
-
-            delete coded_output;
-            delete[] pkt;
-        }
-        if (n < 0)
-            std::cout << "Error Sending" << std::endl;
-        else if (n < siz)
-            std::cout << "Partial write" << std::endl;
-        else if (n == siz) {
-        }
+    case ZMQ_EVENT_CONNECT_RETRIED:
+        std::cout << "Connection retried to " << addr << std::endl;
         break;
-    }
-
-    case LWS_CALLBACK_CLOSED: {
-        if (Client_Connected == true && no_of_client_connected == false) {
-            /*CONN_CLOSED event is for first and only client connected*/
+    case ZMQ_EVENT_DISCONNECTED: {
+        if (Client_Connected && !no_of_client_connected) {
             std::cout << "Connection Closed" << std::endl;
             if (clientEngagedWithSensors) {
                 cleanup_sensors();
                 clientEngagedWithSensors = false;
             }
-
-#ifdef USE_ZMQ
-            // Call the stop_stream_thread() to stop the stream_frame thread when the connection is closed.
             stop_stream_thread();
-#endif
-
             Client_Connected = false;
-            break;
         } else {
-            /*CONN_CLOSED event for more than 1 client connected */
             std::cout << "Another Client Connection Closed" << std::endl;
             no_of_client_connected = false;
-            break;
         }
+        break;
     }
-
-    default: {
+    default:
 #ifdef NW_DEBUG
-        cout << reason << endl;
+        std::cout << "Event: " << event.event << " on " << addr << std::endl;
 #endif
-    } break;
+        break;
     }
-
     return 0;
 }
 
+void process_message(void *in, size_t len) {
+    google::protobuf::io::ArrayInputStream ais(in, len);
+    google::protobuf::io::CodedInputStream coded_input(&ais);
+    buff_recv.ParseFromCodedStream(&coded_input);
+    invoke_sdk_api(buff_recv);
+}
+
+void run_server() {
+    while (!interrupted) {
+        // Handle monitor events
+        zmq_event_t event;
+        char addr[256];
+        zmq_msg_t msg;
+
+        zmq_msg_init(&msg);
+        if (zmq_msg_recv(&msg, monitor_socket.handle(), 0) != -1) {
+            memcpy(&event, zmq_msg_data(&msg), sizeof(event));
+            zmq_msg_close(&msg);
+
+            zmq_msg_init(&msg);
+            if (zmq_msg_recv(&msg, monitor_socket.handle(), 0) != -1) {
+                memcpy(addr, zmq_msg_data(&msg), zmq_msg_size(&msg));
+                addr[zmq_msg_size(&msg)] = '\0';
+                zmq_msg_close(&msg);
+
+                Network::callback_function(event, addr);
+            }
+        }
+
+        if (Client_Connected) {
+            zmq::pollitem_t items[] = {{static_cast<void *>(socket_cmd), 0,
+                                        ZMQ_POLLIN | ZMQ_POLLOUT, 0}};
+
+            zmq::poll(items, 1, -1); // Poll indefinitely
+
+            if (items[0].revents & ZMQ_POLLIN) {
+                zmq::message_t request;
+                socket_cmd.recv(request, zmq::recv_flags::none);
+                process_message(request.data(), request.size());
+            }
+
+            if (items[0].revents & ZMQ_POLLOUT) {
+                zmq::message_t reply(5);
+                memcpy(reply.data(), "World", 5);
+                socket_cmd.send(reply, zmq::send_flags::none);
+            }
+        }
+    }
+}
+
 void sigint_handler(int) {
-    interrupted = 1;
+    interrupted = true;
 
     if (sensors_are_created) {
         cleanup_sensors();
     }
     clientEngagedWithSensors = false;
 
-#ifdef USE_ZMQ
     stop_stream_thread();
-    // Close the ZMQ connection
     close_zmq_connection();
-#endif
 }
 
 int main(int argc, char *argv[]) {
-
     signal(SIGINT, sigint_handler);
     signal(SIGTERM, sigint_handler);
 
     LOG(INFO) << "Server built \n"
-              << "with libwebsockets version: " << LWS_LIBRARY_VERSION << "\n"
               << "with SDK version: " << aditof::getApiVersion()
               << " | branch: " << aditof::getBranchVersion()
               << " | commit: " << aditof::getCommitVersion();
 
-    struct lws_context_creation_info info;
-    memset(&info, 0, sizeof(info));
+    // Set maximum message size
+    // int max_msg_size = 4096;
+    // socket_cmd.setsockopt(ZMQ_MAXMSGSIZE, &max_msg_size, sizeof(max_msg_size));
 
-    info.port = 5000;
-    info.protocols = protocols;
-    info.gid = -1;
-    info.uid = -1;
-    info.pt_serv_buf_size = 4096;
-    std::unique_ptr<Network> network(new Network);
+    // Set up the monitor using the C API
+    std::string monitor_endpoint = "inproc://monitor";
+    zmq_socket_monitor(socket_cmd.handle(), monitor_endpoint.c_str(),
+                       ZMQ_EVENT_ALL);
 
-    network->context = lws_create_context(&info);
+    // Bind the socket
+    socket_cmd.bind("tcp://*:5556");
+
+    // Connect the monitor socket
+    monitor_socket.connect(monitor_endpoint);
 
     Initialize();
-    int msTimeout;
-// TO DO: After 6-12 months we should remove this #if-else and keep only things related to 3.2.3
-#if LWS_LIBRARY_VERSION_NUMBER > 3002003
-    msTimeout = 0;
-#else
-    msTimeout = 50;
-#endif
-
-#if 0
-  /* Note: Simply enabling this won't work, need libwebsocket compiled differently to demonize this */
-  if(lws_daemonize("/tmp/server_lock"))
-  {
-    fprintf(stderr,"Failed to daemonize\n");
-  }
-#endif
-
-    while (!interrupted) {
-        lws_service(network->context, msTimeout /* timeout_ms */);
-    }
 
     if (sensors_are_created) {
         cleanup_sensors();
     }
 
-    lws_context_destroy(network->context);
+    run_server();
 
     return 0;
 }
@@ -624,10 +526,10 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         // 2nd frame will be the one sent over and over again by server in test mode.
         if (sameFrameEndlessRepeat) {
             for (int i = 0; i < 2; ++i) {
-                status = camDepthSensor->getFrame(
-                    (uint16_t *)(buff_frame_to_send +
-                                 LWS_SEND_BUFFER_PRE_PADDING +
-                                 FRAME_PREPADDING_BYTES));
+                // status = camDepthSensor->getFrame(
+                //     (uint16_t *)(buff_frame_to_send +
+                //                  LWS_SEND_BUFFER_PRE_PADDING +
+                //                  FRAME_PREPADDING_BYTES));
                 if (status != aditof::Status::OK) {
                     LOG(ERROR) << "Failed to get frame!";
                 }
@@ -639,7 +541,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             }
             cvGetFrame.notify_one();
         }
-#ifdef USE_ZMQ
         static zmq::context_t zmq_context(1);
         server_socket = std::make_unique<zmq::socket_t>(zmq_context,
                                                         zmq::socket_type::push);
@@ -649,7 +550,7 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         LOG(INFO) << "ZMQ server socket connection established.";
 
         start_stream_thread(); // Start the stream_frame thread .
-#endif
+
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
@@ -663,7 +564,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
         close_zmq_connection();
 
-#endif
         break;
     }
 
@@ -730,39 +630,19 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                 delete[] buff_frame_to_send;
                 buff_frame_to_send = nullptr;
             }
-#ifdef USE_ZMQ
 
             buff_frame_to_send =
                 new uint8_t[processedFrameSize * sizeof(uint16_t)];
-
-#else
-            buff_frame_to_send =
-                new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
-                            FRAME_PREPADDING_BYTES +
-                            processedFrameSize * sizeof(uint16_t)];
-
-#endif
 
             if (buff_frame_to_be_captured != nullptr) {
                 delete[] buff_frame_to_be_captured;
                 buff_frame_to_be_captured = nullptr;
             }
-#ifdef USE_ZMQ
+
             buff_frame_to_be_captured =
                 new uint8_t[processedFrameSize * sizeof(uint16_t)];
 
-#else
-            buff_frame_to_be_captured =
-                new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
-                            FRAME_PREPADDING_BYTES +
-                            processedFrameSize * sizeof(uint16_t)];
-#endif
-
-#ifdef USE_ZMQ
             buff_frame_length = processedFrameSize * 2;
-#else
-            buff_frame_length = processedFrameSize * 2 + FRAME_PREPADDING_BYTES;
-#endif
         }
 
         buff_send.set_status(static_cast<::payload::Status>(status));
@@ -808,39 +688,19 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                 delete[] buff_frame_to_send;
                 buff_frame_to_send = nullptr;
             }
-#ifdef USE_ZMQ
 
             buff_frame_to_send =
                 new uint8_t[processedFrameSize * sizeof(uint16_t)];
-
-#else
-            buff_frame_to_send =
-                new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
-                            FRAME_PREPADDING_BYTES +
-                            processedFrameSize * sizeof(uint16_t)];
-
-#endif
 
             if (buff_frame_to_be_captured != nullptr) {
                 delete[] buff_frame_to_be_captured;
                 buff_frame_to_be_captured = nullptr;
             }
-#ifdef USE_ZMQ
+
             buff_frame_to_be_captured =
                 new uint8_t[processedFrameSize * sizeof(uint16_t)];
 
-#else
-            buff_frame_to_be_captured =
-                new uint8_t[LWS_SEND_BUFFER_PRE_PADDING +
-                            FRAME_PREPADDING_BYTES +
-                            processedFrameSize * sizeof(uint16_t)];
-#endif
-
-#ifdef USE_ZMQ
             buff_frame_length = processedFrameSize * 2;
-#else
-            buff_frame_length = processedFrameSize * 2 + FRAME_PREPADDING_BYTES;
-#endif
         }
 
         buff_send.set_status(static_cast<::payload::Status>(status));
@@ -850,97 +710,97 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     case GET_FRAME: {
         aditof::Status status = aditof::Status::OK;
 
-#ifndef USE_ZMQ
-        if (sameFrameEndlessRepeat) {
-            m_frame_ready = true;
-            buff_send.set_status(static_cast<::payload::Status>(status));
-            break;
-        } else {
-            // 1. Wait for frame to be captured on the other thread
-            std::unique_lock<std::mutex> lock(frameMutex);
-            cvGetFrame.wait(lock, []() { return frameCaptured; });
+        // #ifndef USE_ZMQ
+        //         if (sameFrameEndlessRepeat) {
+        //             m_frame_ready = true;
+        //             buff_send.set_status(static_cast<::payload::Status>(status));
+        //             break;
+        //         } else {
+        //             // 1. Wait for frame to be captured on the other thread
+        //             std::unique_lock<std::mutex> lock(frameMutex);
+        //             cvGetFrame.wait(lock, []() { return frameCaptured; });
 
-            // 2. Get your hands on the captured frame
-            std::swap(buff_frame_to_send, buff_frame_to_be_captured);
-            frameCaptured = false;
-            lock.unlock();
+        //             // 2. Get your hands on the captured frame
+        //             std::swap(buff_frame_to_send, buff_frame_to_be_captured);
+        //             frameCaptured = false;
+        //             lock.unlock();
 
-            // 3. Trigger the other thread to capture another frame while we do stuff with current frame
-            {
-                std::lock_guard<std::mutex> lock(frameMutex);
-                goCaptureFrame = true;
-            }
-            cvGetFrame.notify_one();
+        //             // 3. Trigger the other thread to capture another frame while we do stuff with current frame
+        //             {
+        //                 std::lock_guard<std::mutex> lock(frameMutex);
+        //                 goCaptureFrame = true;
+        //             }
+        //             cvGetFrame.notify_one();
 
-            // 4. Send current frame over network
-            // This will be done by the callback_function()
+        //             // 4. Send current frame over network
+        //             // This will be done by the callback_function()
 
-            uint8_t *pInterruptOccuredByte =
-                &buff_frame_to_send[LWS_SEND_BUFFER_PRE_PADDING +
-                                    0]; // 1st byte after LWS prepadding bytes
-            if (!adsd3500InterruptsQueue.empty()) {
-                *pInterruptOccuredByte = 123;
-            } else {
-                *pInterruptOccuredByte = 0;
-            }
+        //             uint8_t *pInterruptOccuredByte =
+        //                 &buff_frame_to_send[LWS_SEND_BUFFER_PRE_PADDING +
+        //                                     0]; // 1st byte after LWS prepadding bytes
+        //             if (!adsd3500InterruptsQueue.empty()) {
+        //                 *pInterruptOccuredByte = 123;
+        //             } else {
+        //                 *pInterruptOccuredByte = 0;
+        //             }
 
-            m_frame_ready = true;
+        //             m_frame_ready = true;
 
-            buff_send.set_status(payload::Status::OK);
-            break;
-        }
+        //             buff_send.set_status(payload::Status::OK);
+        //             break;
+        //         }
 
-        status = sensorV4lBufAccess->waitForBuffer();
+        //         status = sensorV4lBufAccess->waitForBuffer();
 
-        if (status != aditof::Status::OK) {
-            buff_send.set_status(static_cast<::payload::Status>(status));
-            break;
-        }
+        //         if (status != aditof::Status::OK) {
+        //             buff_send.set_status(static_cast<::payload::Status>(status));
+        //             break;
+        //         }
 
-        struct v4l2_buffer buf;
+        //         struct v4l2_buffer buf;
 
-        status = sensorV4lBufAccess->dequeueInternalBuffer(buf);
-        if (status != aditof::Status::OK) {
-            buff_send.set_status(static_cast<::payload::Status>(status));
-            break;
-        }
+        //         status = sensorV4lBufAccess->dequeueInternalBuffer(buf);
+        //         if (status != aditof::Status::OK) {
+        //             buff_send.set_status(static_cast<::payload::Status>(status));
+        //             break;
+        //         }
 
-        uint8_t *buffer;
+        //         uint8_t *buffer;
 
-        status = sensorV4lBufAccess->getInternalBuffer(&buffer,
-                                                       buff_frame_length, buf);
-        if (buff_frame_to_send != NULL) {
-            free(buff_frame_to_send);
-            buff_frame_to_send = NULL;
-        }
-        buff_frame_to_send =
-            (uint8_t *)malloc((buff_frame_length + LWS_SEND_BUFFER_PRE_PADDING +
-                               FRAME_PREPADDING_BYTES) *
-                              sizeof(uint8_t));
+        //         status = sensorV4lBufAccess->getInternalBuffer(&buffer,
+        //                                                        buff_frame_length, buf);
+        //         if (buff_frame_to_send != NULL) {
+        //             free(buff_frame_to_send);
+        //             buff_frame_to_send = NULL;
+        //         }
+        //         buff_frame_to_send =
+        //             (uint8_t *)malloc((buff_frame_length + LWS_SEND_BUFFER_PRE_PADDING +
+        //                                FRAME_PREPADDING_BYTES) *
+        //                               sizeof(uint8_t));
 
-        memcpy(buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING +
-                   FRAME_PREPADDING_BYTES,
-               buffer, buff_frame_length * sizeof(uint8_t));
+        //         memcpy(buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING +
+        //                    FRAME_PREPADDING_BYTES,
+        //                buffer, buff_frame_length * sizeof(uint8_t));
 
-        m_frame_ready = true;
+        //         m_frame_ready = true;
 
-        if (status != aditof::Status::OK) {
-            buff_send.set_status(static_cast<::payload::Status>(status));
-            break;
-        }
+        //         if (status != aditof::Status::OK) {
+        //             buff_send.set_status(static_cast<::payload::Status>(status));
+        //             break;
+        //         }
 
-        status = sensorV4lBufAccess->enqueueInternalBuffer(buf);
-        if (status != aditof::Status::OK) {
-            buff_send.set_status(static_cast<::payload::Status>(status));
-            break;
-        }
+        //         status = sensorV4lBufAccess->enqueueInternalBuffer(buf);
+        //         if (status != aditof::Status::OK) {
+        //             buff_send.set_status(static_cast<::payload::Status>(status));
+        //             break;
+        //         }
 
-        buff_send.set_status(payload::Status::OK);
+        //         buff_send.set_status(payload::Status::OK);
 
-#else
+        // #else
         LOG(INFO) << "Server App is build to work with ZMQ";
         buff_send.set_status(static_cast<::payload::Status>(status));
-#endif
+        // #endif
         break;
     }
 
