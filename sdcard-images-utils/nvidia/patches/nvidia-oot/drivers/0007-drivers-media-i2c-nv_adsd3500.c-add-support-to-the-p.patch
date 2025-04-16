@@ -1,0 +1,327 @@
+From aabe89218e002b0efe19689007e5fa0e72159ac6 Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Wed, 16 Apr 2025 16:11:12 +0530
+Subject: [PATCH] drivers: media: i2c: nv_adsd3500.c: add support to the pwm
+ external fysnc
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ drivers/media/i2c/adsd3500_regs.h |   2 +
+ drivers/media/i2c/nv_adsd3500.c   | 146 ++++++++++++++++++++++++------
+ 2 files changed, 122 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/media/i2c/adsd3500_regs.h b/drivers/media/i2c/adsd3500_regs.h
+index 8ff37baf..a8e7378a 100644
+--- a/drivers/media/i2c/adsd3500_regs.h
++++ b/drivers/media/i2c/adsd3500_regs.h
+@@ -61,5 +61,7 @@
+ #define SWITCH_TO_STANDARD_CMD              0xFFFF
+ 
+ #define ADSD3500_CHIP_ID                    0x5931
++#define PWM_TRIGGER			    0x0000
++#define INTR_TRIGGER			    0x0001
+ 
+ #endif /* _ADI_ADSD3500_REGS_H_ */
+diff --git a/drivers/media/i2c/nv_adsd3500.c b/drivers/media/i2c/nv_adsd3500.c
+index 84085bd1..daa92eea 100644
+--- a/drivers/media/i2c/nv_adsd3500.c
++++ b/drivers/media/i2c/nv_adsd3500.c
+@@ -30,6 +30,7 @@
+ #define ADSD3500_DEFAULT_WIDTH		512
+ #define ADSD3500_DEFAULT_HEIGHT		512
+ #define ADSD3500_DEFAULT_CLK_FREQ	104250000
++#define ADSD3500_DEFAULT_FPS            10
+ 
+ struct adsd3500_mode_info {
+ 	uint32_t width;
+@@ -48,27 +49,29 @@ struct adsd3500_config_info {
+ };
+ 
+ struct adsd3500 {
+-	struct i2c_client *i2c_client;
+-	struct regmap *regmap;
+-	struct device *dev;
+-	struct v4l2_subdev *sd;
+-	struct media_pad pad;
+-	struct v4l2_mbus_framefmt fmt;
+-	struct v4l2_rect crop;
++	struct i2c_client 		*i2c_client;
++	struct regmap 			*regmap;
++	struct device 			*dev;
++	struct v4l2_subdev 		*sd;
++	struct media_pad 		pad;
++	struct v4l2_mbus_framefmt 	fmt;
++	struct v4l2_rect 		crop;
+ 
+ 	const struct adsd3500_mode_info *current_mode;
+-	struct adsd3500_config_info current_config;
++	struct adsd3500_config_info 	current_config;
+ 
+ 	struct camera_common_data	*s_data;
+ 	struct camera_common_pdata	*pdata;
+ 
+ 	struct v4l2_ctrl_handler 	ctrl_handler;
+ 
+-	struct mutex lock;
+-	bool streaming;
+-	s64 framerate;
++	struct mutex 			lock;
++	bool 				streaming;
++	s64 				framerate;
++	u8 				curr_sync_mode;
+ 
+-	struct v4l2_ctrl *ctrls[];
++	struct v4l2_ctrl 		*ctrls[10];
++	struct pwm_device 		*pwm_fsync;
+ };
+ 
+ #define V4L2_CID_ADSD3500_OPERATING_MODE  (V4L2_CID_USER_ADITOF_BASE + 0)
+@@ -78,6 +81,9 @@ struct adsd3500 {
+ #define V4L2_CID_ADSD3500_CONFIDENCE_BITS (V4L2_CID_USER_ADITOF_BASE + 4)
+ #define V4L2_CID_ADSD3500_AB_AVG (V4L2_CID_USER_ADITOF_BASE + 5)
+ #define V4L2_CID_ADSD3500_DEPTH_EN (V4L2_CID_USER_ADITOF_BASE + 6)
++#define V4L2_CID_ADSD3500_SYNC_MODE (V4L2_CID_USER_ADITOF_BASE + 7)
++
++static int adsd3500_sync_mode(struct adsd3500 *adsd3500, s32 val);
+ 
+ static const struct reg_sequence adsd3500_powerup_setting[] = {
+ };
+@@ -450,6 +456,9 @@ static int adsd3500_s_ctrl(struct v4l2_ctrl *ctrl)
+ 	case V4L2_CID_ADSD3500_CONFIDENCE_BITS:
+ 		ret = adsd3500_bpp_config(adsd3500, ctrl);
+ 		break;
++	case V4L2_CID_ADSD3500_SYNC_MODE:
++		ret = adsd3500_sync_mode(adsd3500, ctrl->val);
++		break;
+ 	case TEGRA_CAMERA_CID_FRAME_RATE:
+ 		ret = adsd3500_set_frame_rate(adsd3500, *ctrl->p_new.p_s64);
+ 		break;
+@@ -475,7 +484,7 @@ static const s64 nr_bits_qmenu[] = {
+ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
+ 	{
+ 		.ops		= &adsd3500_ctrl_ops,
+-		.id			= TEGRA_CAMERA_CID_SENSOR_MODE_ID,
++		.id		= TEGRA_CAMERA_CID_SENSOR_MODE_ID,
+ 		.name		= "Sensor Mode",
+ 		.type		= V4L2_CTRL_TYPE_INTEGER64,
+ 		.flags		= V4L2_CTRL_FLAG_SLIDER,
+@@ -487,7 +496,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
+ 	{
+ 		/* Should always be second control in list*/
+ 		.ops		= &adsd3500_ctrl_ops,
+-		.id			= V4L2_CID_ADSD3500_OPERATING_MODE,
++		.id		= V4L2_CID_ADSD3500_OPERATING_MODE,
+ 		.name		= "Operating Mode",
+ 		.type		= V4L2_CTRL_TYPE_INTEGER,
+ 		.def		= 7,
+@@ -498,7 +507,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
+ 	{
+ 		/* Should always be third control in list*/
+ 		.ops		= &adsd3500_ctrl_ops,
+-		.id			= V4L2_CID_ADSD3500_AB_AVG,
++		.id		= V4L2_CID_ADSD3500_AB_AVG,
+ 		.name		= "AB Averaging",
+ 		.type		= V4L2_CTRL_TYPE_BOOLEAN,
+ 		.def		= 1,
+@@ -509,7 +518,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
+ 	{
+ 		/* Should always be fourth control in list*/
+ 		.ops		= &adsd3500_ctrl_ops,
+-		.id			= V4L2_CID_ADSD3500_DEPTH_EN,
++		.id		= V4L2_CID_ADSD3500_DEPTH_EN,
+ 		.name		= "Depth enable",
+ 		.type		= V4L2_CTRL_TYPE_BOOLEAN,
+ 		.def		= 1,
+@@ -519,7 +528,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
+ 	},
+ 	{
+ 		.ops		= &adsd3500_ctrl_ops,
+-		.id			= V4L2_CID_ADSD3500_CHIP_CONFIG,
++		.id		= V4L2_CID_ADSD3500_CHIP_CONFIG,
+ 		.name		= "Chip Config",
+ 		.type		= V4L2_CTRL_TYPE_U8,
+ 		.def		= 0x00,
+@@ -530,7 +539,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
+ 	},
+ 	{
+ 		.ops		= &adsd3500_ctrl_ops,
+-		.id			= V4L2_CID_ADSD3500_DEPTH_BITS,
++		.id		= V4L2_CID_ADSD3500_DEPTH_BITS,
+ 		.name		= "Phase / Depth Bits",
+ 		.type		= V4L2_CTRL_TYPE_INTEGER_MENU,
+ 		.def		= 0,
+@@ -541,7 +550,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
+ 	},
+ 	{
+ 		.ops		= &adsd3500_ctrl_ops,
+-		.id			= V4L2_CID_ADSD3500_AB_BITS,
++		.id		= V4L2_CID_ADSD3500_AB_BITS,
+ 		.name		= "AB Bits",
+ 		.type		= V4L2_CTRL_TYPE_INTEGER_MENU,
+ 		.def		= 0,
+@@ -552,7 +561,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
+ 	},
+ 	{
+ 		.ops		= &adsd3500_ctrl_ops,
+-		.id			= V4L2_CID_ADSD3500_CONFIDENCE_BITS,
++		.id		= V4L2_CID_ADSD3500_CONFIDENCE_BITS,
+ 		.name		= "Confidence Bits",
+ 		.type		= V4L2_CTRL_TYPE_INTEGER_MENU,
+ 		.def		= 0,
+@@ -560,6 +569,16 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
+ 		.max		= 2,
+ 		.qmenu_int	= nr_bits_qmenu,
+ 	},
++	{
++		.ops    	= &adsd3500_ctrl_ops,
++		.id     	= V4L2_CID_ADSD3500_SYNC_MODE,
++		.name   	= "Sync Mode",
++		.type   	= V4L2_CTRL_TYPE_INTEGER,
++		.def    	= 0,
++		.min    	= 0,
++		.max    	= 2,
++		.step   	= 1,
++	},
+ 	{
+ 		.ops 		= &adsd3500_ctrl_ops,
+ 		.id 		= TEGRA_CAMERA_CID_FRAME_RATE,
+@@ -653,6 +672,13 @@ static int adsd3500_start_streaming(struct adsd3500 *adsd3500)
+ {
+ 	int ret;
+ 
++	if(adsd3500->curr_sync_mode == PWM_TRIGGER){
++		ret = pwm_enable(adsd3500->pwm_fsync);
++		if (ret)
++			dev_err(adsd3500->dev, "Could not enable FSYNC PWM\n");
++		return ret;
++	}
++
+ 	ret = regmap_write(adsd3500->regmap, STREAM_ON_CMD, STREAM_ON_VAL);
+ 	if (ret < 0)
+ 		dev_err(adsd3500->dev, "Write of STREAM-ON command failed.\n");
+@@ -664,6 +690,11 @@ static int adsd3500_stop_streaming(struct adsd3500 *adsd3500)
+ {
+ 	int ret;
+ 
++	if(adsd3500->curr_sync_mode == PWM_TRIGGER){
++		pwm_disable(adsd3500->pwm_fsync);
++		return ret;
++	}
++
+ 	ret = regmap_write(adsd3500->regmap, STREAM_OFF_CMD, STREAM_OFF_VAL);
+ 	if (ret < 0)
+ 		dev_err(adsd3500->dev, "Write of STREAM-OFF command failed.\n");
+@@ -710,10 +741,16 @@ err_unlock:
+ static int adsd3500_set_frame_rate(struct adsd3500 *priv, s64 val)
+ {
+ 	struct device *dev = &priv->i2c_client->dev;
++	struct pwm_state state;
+ 	int ret;
+ 
+ 	priv->framerate = val;
+ 
++	pwm_init_state(priv->pwm_fsync, &state);
++	state.period = DIV_ROUND_UP(1 * NSEC_PER_SEC, priv->framerate);
++	pwm_set_relative_duty_cycle(&state, 50, 100);
++	ret = pwm_apply_state(priv->pwm_fsync, &state);
++
+ 	ret = regmap_write(priv->regmap, SET_FRAMERATE_CMD, val);
+ 	if (ret < 0)
+ 		dev_err(dev, "Set FRAMERATE COMMAND failed.\n");
+@@ -723,6 +760,50 @@ static int adsd3500_set_frame_rate(struct adsd3500 *priv, s64 val)
+ 	return ret;
+ }
+ 
++static int adsd3500_sync_mode(struct adsd3500 *adsd3500, s32 val){
++
++	struct device *dev = adsd3500->dev;
++	struct i2c_client *client = adsd3500->i2c_client;
++	struct pwm_state state;
++	int ret;
++
++	dev_info(dev, "Entered: %s Value: %d\n", __func__, val);
++	adsd3500->curr_sync_mode = val;
++
++	if(adsd3500->curr_sync_mode == PWM_TRIGGER){
++		dev_info(dev, "Enable frame sync using pwm trigger\n");
++		if(IS_ERR(adsd3500->pwm_fsync)){
++			dev_err(&client->dev, "Failed to get the pwm device\n");
++			goto error;
++		}
++
++		pwm_init_state(adsd3500->pwm_fsync, &state);
++		state.polarity = PWM_POLARITY_NORMAL;
++		ret = pwm_apply_state(adsd3500->pwm_fsync, &state);
++		if(ret){
++			dev_err(&client->dev, "Failed to change the PWM state\n");
++		}
++	}
++	else if(adsd3500->curr_sync_mode == INTR_TRIGGER){
++		dev_info(dev, "Enable interrupt trigger\n");
++		pwm_init_state(adsd3500->pwm_fsync, &state);
++		state.polarity = PWM_POLARITY_INVERSED;
++		ret = pwm_apply_state(adsd3500->pwm_fsync, &state);
++		if(ret) {
++			dev_err(&client->dev, "Failed to change the PWM state\n");
++		}
++	}
++	else{
++		dev_err(dev, "Invalid sync mode %d\n", adsd3500->curr_sync_mode);
++	}
++
++	return 0;
++
++error:
++	return -ENXIO;
++
++}
++
+ static int adsd3500_link_setup(struct media_entity *entity,
+ 			   const struct media_pad *local,
+ 			   const struct media_pad *remote, u32 flags)
+@@ -802,8 +883,8 @@ static struct camera_common_pdata *adsd3500_parse_dt(struct i2c_client *client,
+ 	struct adsd3500 *adsd3500 = (struct adsd3500 *)s_data->priv;
+ 	struct device_node *np = client->dev.of_node;
+ 	struct camera_common_pdata *board_priv_pdata;
++	struct pwm_state state;
+ 	int err;
+-	int gpio;
+ 	const char *str;
+ 
+ 	if (!np)
+@@ -824,14 +905,27 @@ static struct camera_common_pdata *adsd3500_parse_dt(struct i2c_client *client,
+ 			s_data->use_sensor_mode_id = false;
+ 	}
+ 
+-	gpio = of_get_named_gpio(np, "reset-gpios", 0);
+-	if (gpio < 0) {
+-		dev_err(&client->dev, "Reset-gpios not found %d\n", gpio);
+-		gpio = 0;
++	adsd3500->pwm_fsync = devm_pwm_get(&client->dev, NULL);
++	if(IS_ERR(adsd3500->pwm_fsync)){
++		dev_err(&client->dev, "Failed to get the pwm device\n");
++		goto error;
++	}
++
++	adsd3500->framerate = ADSD3500_DEFAULT_FPS;
++	pwm_init_state(adsd3500->pwm_fsync, &state);
++	state.period = DIV_ROUND_UP(1 * NSEC_PER_SEC, adsd3500->framerate);
++	pwm_set_relative_duty_cycle(&state, 50, 100);
++	err = pwm_apply_state(adsd3500->pwm_fsync, &state);
++	if(err){
++		dev_err(&client->dev, "PWM init failed %d\n", err);
++		goto error;
+ 	}
+-	board_priv_pdata->reset_gpio = (unsigned int)gpio;
+ 
+ 	return board_priv_pdata;
++
++error:
++	devm_kfree(&client->dev, board_priv_pdata);
++	return NULL;
+ }
+ 
+ MODULE_DEVICE_TABLE(of, adsd3500_of_match);
+-- 
+2.25.1
+
