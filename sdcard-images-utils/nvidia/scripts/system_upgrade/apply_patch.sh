@@ -3,21 +3,20 @@
 set -x
 
 ROOTDIR=`pwd`
-USER=`whoami`
 
 function setup_workspace_directory()
 {
-	# Check if /home/${USER}/Workspace exists
-	if [ ! -d "/home/${USER}/Workspace" ]; then
+	# Check if ${HOME}/Workspace exists
+	if [ ! -d "${HOME}/Workspace" ]; then
 		echo "Workspace directory doesn't exists"
 		exit 1
 	fi
 
 	# Delete the existing ToF repo on the device.
-	rm -rf /home/${USER}/Workspace/ToF
+	rm -rf ${HOME}/Workspace/ToF
 
 	# Copy the ToF and other directory to the ~/Workspace location.
-	cp -rf $ROOTDIR/ToF /home/${USER}/Workspace/
+	cp -rf $ROOTDIR/ToF ${HOME}/Workspace/
 
 	# Stop existing services running on the NVIDIA ToF device
 	for service in network-gadget; do
@@ -27,8 +26,8 @@ function setup_workspace_directory()
 	done
 }
 
-CONFIG_LIB_PATH="/home/$USER/Workspace/libs/libtofi_config.so"
-COMPUTE_LIB_PATH="/home/$USER/Workspace/libs/libtofi_compute.so"
+CONFIG_LIB_PATH="${HOME}/Workspace/libs/libtofi_config.so"
+COMPUTE_LIB_PATH="${HOME}/Workspace/libs/libtofi_compute.so"
 
 function check_sdk_build_pre_req()
 {
@@ -51,7 +50,7 @@ function build_sdk()
 {
 	pushd .
 	echo "Build process started"
-	cd /home/${USER}/Workspace/ToF
+	cd ${HOME}/Workspace/ToF
 	rm -rf build
 	mkdir build && cd build
 	cmake -DNVIDIA=1 -DWITH_EXAMPLES=on -DCMAKE_PREFIX_PATH="/opt/glog;/opt/protobuf;/opt/websockets" -DCMAKE_BUILD_TYPE=Release .. -Wno-dev
@@ -63,7 +62,7 @@ function build_sdk()
 function update_server()
 {
 	sudo systemctl stop  network-gadget
-	sudo cp /home/${USER}/Workspace/ToF/build/apps/server/aditof-server /usr/share/systemd/
+	sudo cp ${HOME}/Workspace/ToF/build/apps/server/aditof-server /usr/share/systemd/
 }
 
 function apply_ubuntu_overlay()
@@ -85,8 +84,8 @@ function apply_ubuntu_overlay()
 	echo "Copy all the shell scripts"
 	sudo cp $ROOTDIR/ubuntu_overlay/usr/share/systemd/*.sh		/usr/share/systemd/
 
-	echo "Copy Tools directory"
-	cp -rf $ROOTDIR/ubuntu_overlayTools/ /home/${USER}/Workspace/
+	#echo "Copy Tools directory"
+	#cp -rf $ROOTDIR/ubuntu_overlay/Tools/ ${HOME}/Workspace/
 
 }
 
@@ -127,10 +126,10 @@ function update_kernel()
 		sudo cp /boot/Image /boot/Image.backup
 	fi
 	mkdir test && tar -xjf kernel_supplements.tbz2 -C test > /dev/null 2>&1
-	sudo cp Image /boot/Image
+	sudo cp Image /boot/Image.adi
 	sudo cp -rf dtb/* /boot/
 	cd test/lib/modules/
-	sudo cp -rf 5.15.148-tegra /lib/modules/
+	sudo cp -rf 5.15.148-adi-tegra /lib/modules/
 	popd
 	sudo rm -rf test/
 }
@@ -140,7 +139,7 @@ function start_services()
 	sudo systemctl reload NetworkManager
 	sudo systemctl enable systemd-networkd
 	sudo systemctl start  systemd-networkd
-	sudo cp /home/${USER}/Workspace/ToF/build/apps/server/aditof-server /usr/share/systemd/
+	#sudo cp ${HOME}/Workspace/ToF/build/apps/server/aditof-server /usr/share/systemd/
 	sudo systemctl enable network-gadget
 	sudo systemctl start network-gadget
 	sudo systemctl enable adi-tof
@@ -172,12 +171,23 @@ function add_boot_label()
 	echo "Add the ADSD3500+ADSD3100 label"
 	echo "LABEL ADSD3500+ADSD3100" >> ${extlinux_conf_file}
 	echo "      MENU LABEL ADSD3500: <CSI ToF Camera ADSD3100>" >> ${extlinux_conf_file}
-	echo "      LINUX /boot/Image" >> ${extlinux_conf_file}
+	echo "      LINUX /boot/Image.adi" >> ${extlinux_conf_file}
 	echo "      FDT /boot/dtb/kernel_tegra234-p3768-0000+p3767-0005-nv-super.dtb" >> ${extlinux_conf_file}
 	echo "      OVERLAYS /boot/tegra234-p3767-camera-p3768-adsd3500.dtbo" >> ${extlinux_conf_file}
 	echo "      INITRD /boot/initrd" >> ${extlinux_conf_file}
 	echo "      APPEND ${cbootargs} root=/dev/mmcblk0p1 rw rootwait rootfstype=ext4 mminit_loglevel=4 console=ttyTCU0,115200 firmware_class.path=/etc/firmware fbcon=map:0 nospectre_bhb video=efifb:off console=tty0" >> ${extlinux_conf_file}
 	echo " " >> ${extlinux_conf_file}
+
+	echo "Add the ADSD3500-DUAL+ADSD3100 label"
+        echo "LABEL ADSD3500-DUAL+ADSD3100" >> ${extlinux_conf_file}
+        echo "      MENU LABEL ADSD3500-DUAL: <CSI ToF Camera ADSD3100>" >> ${extlinux_conf_file}
+        echo "      LINUX /boot/Image.adi" >> ${extlinux_conf_file}
+        echo "      FDT /boot/dtb/kernel_tegra234-p3768-0000+p3767-0005-nv-super.dtb" >> ${extlinux_conf_file}
+        echo "      OVERLAYS /boot/tegra234-p3767-camera-p3768-dual-adsd3500-adsd3100.dtbo" >> ${extlinux_conf_file}
+        echo "      INITRD /boot/initrd" >> ${extlinux_conf_file}
+        echo "      APPEND ${cbootargs} root=/dev/mmcblk0p1 rw rootwait rootfstype=ext4 mminit_loglevel=4 console=ttyTCU0,115200 firmware_class.path=/etc/firmware fbcon=map:0 nospectre_bhb video=efifb:off console=tty0" >> ${extlinux_conf_file}
+        echo " " >> ${extlinux_conf_file}
+
 	exit
 EOF
 }
@@ -185,7 +195,7 @@ EOF
 function set_default_boot_label()
 {
         echo "Setting the default label name to ADSD3500+ADSD3100"
-        sudo sed -i "s/^DEFAULT .*/DEFAULT ADSD3500+ADSD3100/" ${extlinux_conf_file}
+        sudo sed -i "s/^DEFAULT .*/DEFAULT ADSD3500-DUAL+ADSD3100/" ${extlinux_conf_file}
 }
 
 function main()
@@ -193,12 +203,12 @@ function main()
 	echo "******* Install Software Packages *******"
 	install_packages
 	
-	echo "******* Setup ToF SDK repo *******"
-	setup_workspace_directory
-	check_sdk_build_pre_req
+	#echo "******* Setup ToF SDK repo *******"
+	#setup_workspace_directory
+	#check_sdk_build_pre_req
 	
-	echo "******* Build the SDK *******"
-	build_sdk
+	#echo "******* Build the SDK *******"
+	#build_sdk
 	
 	echo "******* Update the Extlinux Conf file *******"
 	get_root_count
