@@ -82,6 +82,7 @@ bool m_frame_ready = false;
 
 static std::map<std::string, api_Values> s_map_api_Values;
 static void Initialize();
+static void data_transaction();
 void invoke_sdk_api(payload::ClientRequest buff_recv);
 static bool Client_Connected = false;
 static bool no_of_client_connected = false;
@@ -113,12 +114,13 @@ std::unique_ptr<zmq::socket_t> server_socket;
 uint32_t max_send_frames = 10;
 std::atomic<bool> running(false);
 std::atomic<bool> stop_flag(false);
+std::thread data_transaction_thread;
 std::mutex mtx;
 std::condition_variable cv;
 std::thread stream_thread;
-zmq::context_t context(1);
-zmq::socket_t socket_cmd(context, ZMQ_REP);
-zmq::socket_t monitor_socket(context, ZMQ_PAIR);
+static std::unique_ptr<zmq::context_t> context;
+static std::unique_ptr<zmq::socket_t> server_cmd;
+static std::unique_ptr<zmq::socket_t> monitor_socket;
 
 struct clientData {
     bool hasFragments;
@@ -293,7 +295,27 @@ static void cleanup_sensors() {
     clientEngagedWithSensors = false;
 }
 
-int Network::callback_function(const zmq_event_t &event, const char *addr) {
+void server_event(std::unique_ptr<zmq::socket_t> &monitor) {
+    while (!interrupted) {
+        zmq::pollitem_t items[] = {
+            {static_cast<void *>(monitor->handle()), 0, ZMQ_POLLIN, 0}};
+
+        int rc;
+        do {
+            rc = zmq_poll(items, 1, 1000);
+        } while (rc == -1 && zmq_errno() == EINTR);
+
+        if (items[0].revents & ZMQ_POLLIN) {
+            zmq_event_t event;
+            zmq::message_t msg;
+            monitor->recv(msg);
+            memcpy(&event, msg.data(), sizeof(event));
+            Network::callback_function(event);
+        }
+    }
+}
+
+int Network::callback_function(const zmq_event_t &event) {
     switch (event.event) {
     case ZMQ_EVENT_CONNECTED: {
         buff_send.Clear();
@@ -309,10 +331,36 @@ int Network::callback_function(const zmq_event_t &event, const char *addr) {
         break;
     }
     case ZMQ_EVENT_CLOSED:
-        std::cout << "Closed connection at " << addr << std::endl;
+        std::cout << "Closed connection " << std::endl;
+        if (Client_Connected && !no_of_client_connected) {
+            std::cout << "Connection Closed" << std::endl;
+            if (clientEngagedWithSensors) {
+                cleanup_sensors();
+                clientEngagedWithSensors = false;
+            }
+            stop_stream_thread();
+            Client_Connected = false;
+        } else {
+            std::cout << "Another Client Connection Closed" << std::endl;
+            no_of_client_connected = false;
+        }
         break;
     case ZMQ_EVENT_CONNECT_RETRIED:
-        std::cout << "Connection retried to " << addr << std::endl;
+        std::cout << "Connection retried to " << std::endl;
+        break;
+    case ZMQ_EVENT_ACCEPTED:
+        std::cout << "Event: ACCEPTED - A connection was accepted."
+                  << std::endl;
+        buff_send.Clear();
+        if (!Client_Connected) {
+            std::cout << "Conn Established" << std::endl;
+            Client_Connected = true;
+            buff_send.set_message("Connection Allowed");
+        } else {
+            std::cout << "Another client connected" << std::endl;
+            no_of_client_connected = true;
+            buff_send.set_message("Only 1 client connection allowed");
+        }
         break;
     case ZMQ_EVENT_DISCONNECTED: {
         if (Client_Connected && !no_of_client_connected) {
@@ -338,58 +386,38 @@ int Network::callback_function(const zmq_event_t &event, const char *addr) {
     return 0;
 }
 
-void process_message(void *in, size_t len) {
-    google::protobuf::io::ArrayInputStream ais(in, len);
-    google::protobuf::io::CodedInputStream coded_input(&ais);
-    buff_recv.ParseFromCodedStream(&coded_input);
-    invoke_sdk_api(buff_recv);
-}
+void data_transaction() {
 
-void run_server() {
     while (!interrupted) {
-        // Handle monitor events
-        zmq_event_t event;
-        char addr[256];
-        zmq_msg_t msg;
 
-        zmq_msg_init(&msg);
-        if (zmq_msg_recv(&msg, monitor_socket.handle(), 0) != -1) {
-            memcpy(&event, zmq_msg_data(&msg), sizeof(event));
-            zmq_msg_close(&msg);
+        zmq::message_t request;
+        if (server_cmd->recv(request, zmq::recv_flags::dontwait)) {
+            google::protobuf::io::ArrayInputStream ais(request.data(),
+                                                       request.size());
+            google::protobuf::io::CodedInputStream coded_input(&ais);
+            buff_recv.ParseFromCodedStream(&coded_input);
+            invoke_sdk_api(buff_recv);
 
-            zmq_msg_init(&msg);
-            if (zmq_msg_recv(&msg, monitor_socket.handle(), 0) != -1) {
-                memcpy(addr, zmq_msg_data(&msg), zmq_msg_size(&msg));
-                addr[zmq_msg_size(&msg)] = '\0';
-                zmq_msg_close(&msg);
+            // Preparing to send the data
+            unsigned int siz = buff_send.ByteSize();
+            unsigned char *pkt = new unsigned char[siz];
 
-                Network::callback_function(event, addr);
+            google::protobuf::io::ArrayOutputStream aos(pkt, siz);
+            google::protobuf::io::CodedOutputStream coded_output(&aos);
+            buff_send.SerializeToCodedStream(&coded_output);
+
+            // Create a zmq message
+            zmq::message_t reply(pkt, siz);
+            if (server_cmd->send(reply, zmq::send_flags::none)) {
+                LOG(INFO) << "Data is sent ";
             }
-        }
-
-        if (Client_Connected) {
-            zmq::pollitem_t items[] = {{static_cast<void *>(socket_cmd), 0,
-                                        ZMQ_POLLIN | ZMQ_POLLOUT, 0}};
-
-            zmq::poll(items, 1, -1); // Poll indefinitely
-
-            if (items[0].revents & ZMQ_POLLIN) {
-                zmq::message_t request;
-                socket_cmd.recv(request, zmq::recv_flags::none);
-                process_message(request.data(), request.size());
-            }
-
-            if (items[0].revents & ZMQ_POLLOUT) {
-                zmq::message_t reply(5);
-                memcpy(reply.data(), "World", 5);
-                socket_cmd.send(reply, zmq::send_flags::none);
-            }
+            delete[] pkt;
         }
     }
 }
 
 void sigint_handler(int) {
-    interrupted = true;
+    interrupted = 1;
 
     if (sensors_are_created) {
         cleanup_sensors();
@@ -398,6 +426,13 @@ void sigint_handler(int) {
 
     stop_stream_thread();
     close_zmq_connection();
+
+    server_cmd->close();
+    server_cmd.reset();
+    monitor_socket->close();
+    monitor_socket.reset();
+    context->close();
+    context.reset();
 }
 
 int main(int argc, char *argv[]) {
@@ -409,28 +444,28 @@ int main(int argc, char *argv[]) {
               << " | branch: " << aditof::getBranchVersion()
               << " | commit: " << aditof::getCommitVersion();
 
-    // Set maximum message size
-    // int max_msg_size = 4096;
-    // socket_cmd.setsockopt(ZMQ_MAXMSGSIZE, &max_msg_size, sizeof(max_msg_size));
-
-    // Set up the monitor using the C API
-    std::string monitor_endpoint = "inproc://monitor";
-    zmq_socket_monitor(socket_cmd.handle(), monitor_endpoint.c_str(),
-                       ZMQ_EVENT_ALL);
-
+    context = std::make_unique<zmq::context_t>(1);
+    server_cmd = std::make_unique<zmq::socket_t>(*context, ZMQ_REP);
     // Bind the socket
-    socket_cmd.bind("tcp://*:5556");
+    server_cmd->bind("tcp://*:5556");
+    std::string monitor_endpoint = "inproc://monitor";
+    zmq_socket_monitor(server_cmd->handle(), "inproc://monitor", ZMQ_EVENT_ALL);
 
+    monitor_socket = std::make_unique<zmq::socket_t>(*context, ZMQ_PAIR);
     // Connect the monitor socket
-    monitor_socket.connect(monitor_endpoint);
+    monitor_socket->connect("inproc://monitor");
+
+    // run thread to receive data
+    data_transaction_thread = std::thread(data_transaction);
+    data_transaction_thread.detach();
+
+    server_event(monitor_socket);
 
     Initialize();
 
     if (sensors_are_created) {
         cleanup_sensors();
     }
-
-    run_server();
 
     return 0;
 }

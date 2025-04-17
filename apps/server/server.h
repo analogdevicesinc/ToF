@@ -75,5 +75,5 @@ enum protocols { PROTOCOL_EXAMPLE, PROTOCOL_COUNT };
 class Network {
   public:
     Network();
-    static int callback_function(const zmq_event_t &event, const char *addr);
+    static int callback_function(const zmq_event_t &event);
 };
