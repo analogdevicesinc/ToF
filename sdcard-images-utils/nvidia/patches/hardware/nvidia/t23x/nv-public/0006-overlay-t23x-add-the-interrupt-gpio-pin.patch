@@ -1,0 +1,25 @@
+From 0ade0ad342d7fe7f9f21525f9bc52342bde855c7 Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Thu, 17 Apr 2025 14:12:02 +0530
+Subject: [PATCH]  overlay: t23x: adsd3500-dual: add the interrupt gpio pin
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ overlay/tegra234-p3767-camera-p3768-dual-adsd3500-adsd3100.dts | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/overlay/tegra234-p3767-camera-p3768-dual-adsd3500-adsd3100.dts b/overlay/tegra234-p3767-camera-p3768-dual-adsd3500-adsd3100.dts
+index 8f296cd..d30547d 100644
+--- a/overlay/tegra234-p3767-camera-p3768-dual-adsd3500-adsd3100.dts
++++ b/overlay/tegra234-p3767-camera-p3768-dual-adsd3500-adsd3100.dts
+@@ -133,6 +133,7 @@
+ 						sensor_model ="adsd3500";
+ 						/* Define any required hw resources needed by driver */
+ 						/* ie. clocks, io pins, power sources */
++						interrupt-gpios = <&gpio TEGRA234_MAIN_GPIO(P, 0) GPIO_ACTIVE_LOW>;
+ 						pwms = <&pwm 0 50000000>;
+ 						pwm-names = "fsync";
+ 
+-- 
+2.25.1
+
