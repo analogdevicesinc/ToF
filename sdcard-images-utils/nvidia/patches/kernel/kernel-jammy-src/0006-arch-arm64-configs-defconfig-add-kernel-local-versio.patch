@@ -1,0 +1,25 @@
+From 18aa9db3f580be2f31d72998a10c7ea8aeb556fb Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Thu, 17 Apr 2025 15:17:25 +0530
+Subject: [PATCH] arch: arm64: configs: defconfig: add kernel local version
+ suffix name as "adi"
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ arch/arm64/configs/defconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 126a863963cc..3aac17cf1b6e 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -1,4 +1,5 @@
+-# CONFIG_LOCALVERSION_AUTO is not set
++CONFIG_LOCALVERSION_AUTO=n
++CONFIG_LOCALVERSION="-adi"
+ CONFIG_SYSVIPC=y
+ CONFIG_POSIX_MQUEUE=y
+ CONFIG_AUDIT=y
+-- 
+2.25.1
+
