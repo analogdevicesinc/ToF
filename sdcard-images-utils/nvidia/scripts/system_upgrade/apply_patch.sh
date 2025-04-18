@@ -194,7 +194,7 @@ EOF
 
 function set_default_boot_label()
 {
-        echo "Setting the default label name to ADSD3500+ADSD3100"
+        echo "Setting the default label name to ADSD3500-DUAL+ADSD3100"
         sudo sed -i "s/^DEFAULT .*/DEFAULT ADSD3500-DUAL+ADSD3100/" ${extlinux_conf_file}
 }
 
