@@ -1,0 +1,298 @@
+From cae422c3328fdca45420eca1fd6ea13367c99ce1 Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Thu, 17 Apr 2025 14:04:53 +0530
+Subject: [PATCH] drivers: media: i2c: nv_adsd3500.c: request gpio as interrupt
+ and assign the irq handler
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ drivers/media/i2c/adsd3500_regs.h |   3 +
+ drivers/media/i2c/nv_adsd3500.c   | 184 +++++++++++++++++++++++++++++-
+ 2 files changed, 186 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/media/i2c/adsd3500_regs.h b/drivers/media/i2c/adsd3500_regs.h
+index a8e7378a..6c432d5c 100644
+--- a/drivers/media/i2c/adsd3500_regs.h
++++ b/drivers/media/i2c/adsd3500_regs.h
+@@ -45,6 +45,7 @@
+ #define GET_IMAGER_CONFIDENCE_TRSHLD        0x0016
+ #define GET_IMAGER_JBLF_STATE               0x0017
+ #define GET_IMAGER_JBLF_FILT_SIZE           0x0018
++#define GET_IMAGER_STATUS_CMD		    0x0020
+ 
+ #define SET_FRAMERATE_CMD                   0x0022
+ #define GET_FRAMERATE_CMD                   0x0023
+@@ -63,5 +64,7 @@
+ #define ADSD3500_CHIP_ID                    0x5931
+ #define PWM_TRIGGER			    0x0000
+ #define INTR_TRIGGER			    0x0001
++#define USER_TASK 			    _IOW('A',1,int32_t*)
++#define SIGETX				    44
+ 
+ #endif /* _ADI_ADSD3500_REGS_H_ */
+diff --git a/drivers/media/i2c/nv_adsd3500.c b/drivers/media/i2c/nv_adsd3500.c
+index daa92eea..379a03f4 100644
+--- a/drivers/media/i2c/nv_adsd3500.c
++++ b/drivers/media/i2c/nv_adsd3500.c
+@@ -17,6 +17,7 @@
+ #include <linux/of_device.h>
+ #include <linux/of_gpio.h>
+ #include <linux/regmap.h>
++#include <linux/debugfs.h>
+ #include <media/v4l2-ctrls.h>
+ #include <media/v4l2-subdev.h>
+ 
+@@ -69,9 +70,14 @@ struct adsd3500 {
+ 	bool 				streaming;
+ 	s64 				framerate;
+ 	u8 				curr_sync_mode;
++	int 				gpio;
++	int				irq;
++	int                             signalnum;
+ 
+ 	struct v4l2_ctrl 		*ctrls[10];
+ 	struct pwm_device 		*pwm_fsync;
++	struct dentry 			*debugfs;
++	struct task_struct 		*task;
+ };
+ 
+ #define V4L2_CID_ADSD3500_OPERATING_MODE  (V4L2_CID_USER_ADITOF_BASE + 0)
+@@ -83,6 +89,8 @@ struct adsd3500 {
+ #define V4L2_CID_ADSD3500_DEPTH_EN (V4L2_CID_USER_ADITOF_BASE + 6)
+ #define V4L2_CID_ADSD3500_SYNC_MODE (V4L2_CID_USER_ADITOF_BASE + 7)
+ 
++ssize_t debug_read(struct file *file, char __user *buff, size_t count, loff_t *offset);
++ssize_t debug_write(struct file *file, const char __user *buff, size_t count, loff_t *offset);
+ static int adsd3500_sync_mode(struct adsd3500 *adsd3500, s32 val);
+ 
+ static const struct reg_sequence adsd3500_powerup_setting[] = {
+@@ -99,6 +107,112 @@ static const s64 link_freq_tbl[] = {
+ 	1250000000,
+ };
+ 
++static int debug_open(struct inode *inode, struct file *file)
++{
++	struct adsd3500 *adsd3500;
++
++	if (inode->i_private)
++		file->private_data = inode->i_private;
++
++	adsd3500 = (struct adsd3500 *) file->private_data;
++
++	dev_dbg(adsd3500->dev, "Entered debugfs file open\n");
++
++	return 0;
++}
++
++static int debug_release(struct inode *inode, struct file *file)
++{
++	struct adsd3500 *adsd3500;
++	struct task_struct *release_task = get_current();
++
++	if (inode->i_private)
++		file->private_data = inode->i_private;
++
++	adsd3500 = (struct adsd3500 *) file->private_data;
++
++	dev_dbg(adsd3500->dev, "Entered debugfs file close\n");
++	if(release_task == adsd3500->task) {
++		adsd3500->task = NULL;
++	}
++
++	return 0;
++}
++
++ssize_t debug_read(struct file *file, char __user *buff, size_t count, loff_t *offset){
++
++	struct adsd3500 *adsd3500 = file->private_data;
++	unsigned int read_val;
++	unsigned int len;
++	int ret;
++	char data[16];
++
++	dev_dbg(adsd3500->dev, "Entered debugfs file read\n");
++	ret = regmap_read(adsd3500->regmap, GET_IMAGER_STATUS_CMD, &read_val);
++	if (ret < 0) {
++		dev_err(adsd3500->dev, "Read of get status cmd failed.\n");
++		len = snprintf(data, sizeof(data), "Read failed\n");
++	}
++	else{
++		dev_dbg(adsd3500->dev, "Read the error status: %.4X\n", read_val);
++		len = snprintf(data, sizeof(data), "0x%.4X\n",read_val);
++	}
++	return simple_read_from_buffer(buff, count, offset, data, len);
++
++}
++
++ssize_t debug_write(struct file *file, const char __user *buff, size_t count, loff_t *offset){
++
++	struct adsd3500 *adsd3500 = file->private_data;
++
++	dev_dbg(adsd3500->dev, "Entered debugfs file write\n");
++
++	return count;
++}
++
++static long debug_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
++{
++	struct adsd3500 *adsd3500;
++
++	adsd3500 = (struct adsd3500 *) file->private_data;
++
++	dev_dbg(adsd3500->dev, "Entered debugfs ioctl\n");
++	if (cmd == USER_TASK) {
++		dev_dbg(adsd3500->dev, "Registered user task\n");
++		adsd3500->task = get_current();
++		adsd3500->signalnum = SIGETX;
++	}
++
++	return 0;
++}
++
++static const struct file_operations adsd3500_debug_fops = {
++	.owner 	= THIS_MODULE,
++	.open   = debug_open,
++	.read 	= debug_read,
++	.write  = debug_write,
++	.unlocked_ioctl = debug_ioctl,
++	.release= debug_release,
++};
++
++static irqreturn_t adsd3500_irq_handler(int irq,void *priv)
++{
++
++	struct adsd3500 *adsd3500 = (struct adsd3500 *) priv;
++
++	dev_dbg(adsd3500-> dev, "Entered ADSD3500 IRQ handler\n");
++
++	if (adsd3500->task != NULL) {
++		dev_dbg(adsd3500->dev, "Sending signal to app\n");
++		if(send_sig_info(SIGETX, SEND_SIG_PRIV, adsd3500->task) < 0) {
++			dev_err(adsd3500->dev, "Unable to send signal\n");
++		}
++	}
++
++	return IRQ_HANDLED;
++
++}
++
+ /* Elements of the structure must be ordered ascending by width & height */
+ static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
+ 	{ //RAW12 12BPP ADSD3030
+@@ -760,6 +874,50 @@ static int adsd3500_set_frame_rate(struct adsd3500 *priv, s64 val)
+ 	return ret;
+ }
+ 
++static int adsd3500_configure_interrupt(struct adsd3500 *adsd3500){
++
++	struct device *dev = adsd3500->dev;
++	struct i2c_client *client = adsd3500->i2c_client;
++	struct device_node *np = client->dev.of_node;
++	int gpio, ret = 0;
++
++	dev_info(dev, "Entered: %s\n", __func__);
++	gpio = of_get_named_gpio(np, "interrupt-gpios", 0);
++	if (!gpio_is_valid(gpio)){
++		dev_err(&client->dev, "interrupt-gpios not found %d\n", gpio);
++		return ret;
++	}
++	adsd3500->gpio = gpio;
++
++	ret = gpio_request(adsd3500->gpio, "adsd3500_irq");
++	if (ret){
++		dev_err(&client->dev, "Unable to get adsd3500 gpio\n");
++		return ret;
++	}
++
++	ret = gpio_direction_input(adsd3500->gpio);
++	if (ret < 0) {
++		dev_err(&client->dev,"Unable to set adsd3500 gpio as input\n");
++		return ret;
++	}
++
++	ret = gpio_to_irq(adsd3500->gpio);
++	if (ret < 0){
++		dev_err(&client->dev, "Unable to map GPIO adsd3500 gpio to an IRQ\n");
++		return ret;
++	}
++	adsd3500->irq = ret;
++
++	ret = request_irq(adsd3500->irq, adsd3500_irq_handler,
++			IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "adsd3500", adsd3500);
++	if (ret) {
++		dev_err(&client->dev, "Failed to request adsd3500 irq\n");
++	}
++
++	return ret;
++
++}
++
+ static int adsd3500_sync_mode(struct adsd3500 *adsd3500, s32 val){
+ 
+ 	struct device *dev = adsd3500->dev;
+@@ -776,6 +934,8 @@ static int adsd3500_sync_mode(struct adsd3500 *adsd3500, s32 val){
+ 			dev_err(&client->dev, "Failed to get the pwm device\n");
+ 			goto error;
+ 		}
++		free_irq(adsd3500->irq, adsd3500);
++		gpio_free(adsd3500->gpio);
+ 
+ 		pwm_init_state(adsd3500->pwm_fsync, &state);
+ 		state.polarity = PWM_POLARITY_NORMAL;
+@@ -792,6 +952,8 @@ static int adsd3500_sync_mode(struct adsd3500 *adsd3500, s32 val){
+ 		if(ret) {
+ 			dev_err(&client->dev, "Failed to change the PWM state\n");
+ 		}
++		ret = adsd3500_configure_interrupt(adsd3500);
++
+ 	}
+ 	else{
+ 		dev_err(dev, "Invalid sync mode %d\n", adsd3500->curr_sync_mode);
+@@ -877,6 +1039,17 @@ const static struct of_device_id adsd3500_of_match[] = {
+ 	{ /* sentinel */ }
+ };
+ 
++static int adsd3500_debugfs_init(struct adsd3500 *priv){
++
++	priv->debugfs = debugfs_create_dir("adsd3500", NULL);
++	if(!priv->debugfs)
++		return -ENOMEM;
++
++	debugfs_create_file("value", 0660, priv->debugfs, priv, &adsd3500_debug_fops);
++
++	return 0;
++}
++
+ static struct camera_common_pdata *adsd3500_parse_dt(struct i2c_client *client,
+ 				struct camera_common_data *s_data)
+ {
+@@ -1057,9 +1230,17 @@ static int adsd3500_probe(struct i2c_client *client,
+ 
+ 	v4l2_i2c_subdev_init(priv->sd, client, &adsd3500_subdev_ops);
+ 
++	ret= adsd3500_debugfs_init(priv);
++	if(ret < 0){
++		dev_err(&client->dev, "Failed to initialize debugfs.\n");
++		return ret;
++	}
++
+ 	ret = adsd3500_ctrls_init(priv);
+-	if (ret)
++	if (ret < 0){
++		dev_err(&client->dev, "Failed to initialze v4l2 ctrls\n");
+ 		return ret;
++	}
+ 
+ 	priv->sd->internal_ops = &adsd3500_subdev_internal_ops;
+ 	priv->sd->flags |= V4L2_SUBDEV_FL_HAS_DEVNODE;
+@@ -1114,6 +1295,7 @@ static int adsd3500_remove(struct i2c_client *client)
+ 	v4l2_ctrl_handler_free(&priv->ctrl_handler);
+ 	camera_common_cleanup(priv->s_data);
+ 	mutex_destroy(&priv->lock);
++	debugfs_remove(priv->debugfs);
+ 
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0)
+ 	return 0;
+-- 
+2.25.1
+

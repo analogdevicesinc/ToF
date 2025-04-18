@@ -1,0 +1,92 @@
+From 160aaac8403f727a8055652d3b9287154371cd4a Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Fri, 18 Apr 2025 11:23:59 +0530
+Subject: [PATCH] drivers: media: i2c: nv_adsd3500.c: add the enable fsync
+ trigger control
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ drivers/media/i2c/adsd3500_regs.h |  2 +-
+ drivers/media/i2c/nv_adsd3500.c   | 31 +++++++++++++++++++++++++++++++
+ 2 files changed, 32 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/media/i2c/adsd3500_regs.h b/drivers/media/i2c/adsd3500_regs.h
+index 6c432d5c..6e7a0801 100644
+--- a/drivers/media/i2c/adsd3500_regs.h
++++ b/drivers/media/i2c/adsd3500_regs.h
+@@ -49,8 +49,8 @@
+ 
+ #define SET_FRAMERATE_CMD                   0x0022
+ #define GET_FRAMERATE_CMD                   0x0023
++#define ENABLE_FSYNC_TRIGGER		    0x0025
+ 
+-#define GET_STATUS_CMD                      0x0020
+ 
+ #define READ_REGISTER_CMD                   0xFFFF
+ #define WRITE_REGISTER_CMD                  0xFFFF
+diff --git a/drivers/media/i2c/nv_adsd3500.c b/drivers/media/i2c/nv_adsd3500.c
+index 379a03f4..b21c0468 100644
+--- a/drivers/media/i2c/nv_adsd3500.c
++++ b/drivers/media/i2c/nv_adsd3500.c
+@@ -88,6 +88,7 @@ struct adsd3500 {
+ #define V4L2_CID_ADSD3500_AB_AVG (V4L2_CID_USER_ADITOF_BASE + 5)
+ #define V4L2_CID_ADSD3500_DEPTH_EN (V4L2_CID_USER_ADITOF_BASE + 6)
+ #define V4L2_CID_ADSD3500_SYNC_MODE (V4L2_CID_USER_ADITOF_BASE + 7)
++#define V4L2_CID_ADSD3500_FSYNC_TRIGGER (V4L2_CID_USER_ADITOF_BASE + 8)
+ 
+ ssize_t debug_read(struct file *file, char __user *buff, size_t count, loff_t *offset);
+ ssize_t debug_write(struct file *file, const char __user *buff, size_t count, loff_t *offset);
+@@ -399,6 +400,23 @@ static const struct regmap_config adsd3500_regmap_config = {
+ 	.readable_reg = adsd3500_regmap_accessible_reg,
+ };
+ 
++static int adsd3500_set_fsync_trigger(struct adsd3500 *adsd3500, s32 val)
++{
++	int ret;
++
++	if(adsd3500->curr_sync_mode == PWM_TRIGGER){
++		dev_info(adsd3500->dev, "Entered: %s value = %d\n",__func__, val);
++		ret = regmap_write(adsd3500->regmap, ENABLE_FSYNC_TRIGGER, val);
++		if (ret < 0){
++			dev_err(adsd3500->dev, "Write of ENABLE_FSYNC_TRIGGER command failed.\n");
++			return ret;
++		}
++	}
++
++	return ret;
++}
++
++
+ static int _adsd3500_power_on(struct camera_common_data *s_data)
+ {
+ 	struct adsd3500 *adsd3500 = (struct adsd3500 *)s_data->priv;
+@@ -573,6 +591,9 @@ static int adsd3500_s_ctrl(struct v4l2_ctrl *ctrl)
+ 	case V4L2_CID_ADSD3500_SYNC_MODE:
+ 		ret = adsd3500_sync_mode(adsd3500, ctrl->val);
+ 		break;
++	case V4L2_CID_ADSD3500_FSYNC_TRIGGER:
++		ret = adsd3500_set_fsync_trigger(adsd3500, ctrl->val);
++		break;
+ 	case TEGRA_CAMERA_CID_FRAME_RATE:
+ 		ret = adsd3500_set_frame_rate(adsd3500, *ctrl->p_new.p_s64);
+ 		break;
+@@ -693,6 +714,16 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
+ 		.max    	= 2,
+ 		.step   	= 1,
+ 	},
++	{
++		.ops            = &adsd3500_ctrl_ops,
++		.id             = V4L2_CID_ADSD3500_FSYNC_TRIGGER,
++		.name           = "Fsync Trigger",
++		.type           = V4L2_CTRL_TYPE_INTEGER,
++		.def            = 0,
++		.min            = 0,
++		.max            = 2,
++		.step           = 1,
++	},
+ 	{
+ 		.ops 		= &adsd3500_ctrl_ops,
+ 		.id 		= TEGRA_CAMERA_CID_FRAME_RATE,
+-- 
+2.25.1
+
