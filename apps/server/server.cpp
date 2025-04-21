@@ -78,7 +78,6 @@ static payload::ServerResponse buff_send;
 uint8_t *buff_frame_to_be_captured = nullptr;
 uint8_t *buff_frame_to_send = nullptr;
 unsigned int buff_frame_length;
-bool m_frame_ready = false;
 
 static std::map<std::string, api_Values> s_map_api_Values;
 static void Initialize();
@@ -123,10 +122,7 @@ static std::unique_ptr<zmq::context_t> context;
 static std::unique_ptr<zmq::socket_t> server_cmd;
 static std::unique_ptr<zmq::socket_t> monitor_socket;
 
-struct clientData {
-    bool hasFragments;
-    std::vector<char> data;
-};
+std::ofstream outfile("frame.bin");
 
 void close_zmq_connection() {
     if (server_socket) {
@@ -135,6 +131,16 @@ void close_zmq_connection() {
     }
 
     LOG(INFO) << "ZMQ Client Connection closed.";
+}
+
+void FrameSocketConnection() {
+    static zmq::context_t zmq_context(1);
+    server_socket =
+        std::make_unique<zmq::socket_t>(zmq_context, zmq::socket_type::push);
+    server_socket->setsockopt(ZMQ_SNDHWM, (int *)&max_send_frames,
+                              sizeof(max_send_frames));
+    server_socket->bind("tcp://*:5555");
+    LOG(INFO) << "ZMQ server socket connection established.";
 }
 
 void stream_zmq_frame() {
@@ -262,12 +268,10 @@ static void captureFrameFromHardware() {
         // 2. The signal has been received, now go capture the frame
         goCaptureFrame = false;
 
-        // Send frames to PC via ZMQ socket.
         aditof::Status status =
             camDepthSensor->getFrame((uint16_t *)buff_frame_to_be_captured);
-        if (status == aditof::Status::UNREACHABLE) {
-            LOG(INFO) << "The capture_frame thread is stopped. Stopping the "
-                         "stream_frame thread";
+        if (status != aditof::Status::OK) {
+            LOG(INFO) << "Failed to get frame !";
             break;
         }
 
@@ -323,7 +327,17 @@ void server_event(std::unique_ptr<zmq::socket_t> &monitor) {
 int Network::callback_function(const zmq_event_t &event) {
     switch (event.event) {
     case ZMQ_EVENT_CONNECTED: {
-
+        buff_send.Clear();
+        if (!Client_Connected) {
+            std::cout << "Conn Established" << std::endl;
+            {
+                std::unique_lock<std::mutex> lock(connection_mtx);
+                Client_Connected = true;
+            }
+        } else {
+            std::cout << "Another client connected" << std::endl;
+            no_of_client_connected = true;
+        }
         break;
     }
     case ZMQ_EVENT_CLOSED:
@@ -352,11 +366,9 @@ int Network::callback_function(const zmq_event_t &event) {
                 std::unique_lock<std::mutex> lock(connection_mtx);
                 Client_Connected = true;
             }
-            buff_send.set_message("Connection Allowed");
         } else {
             std::cout << "Another client connected" << std::endl;
             no_of_client_connected = true;
-            buff_send.set_message("Only 1 client connection allowed");
         }
         break;
     case ZMQ_EVENT_DISCONNECTED: {
@@ -570,10 +582,8 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         // 2nd frame will be the one sent over and over again by server in test mode.
         if (sameFrameEndlessRepeat) {
             for (int i = 0; i < 2; ++i) {
-                // status = camDepthSensor->getFrame(
-                //     (uint16_t *)(buff_frame_to_send +
-                //                  LWS_SEND_BUFFER_PRE_PADDING +
-                //                  FRAME_PREPADDING_BYTES));
+                status =
+                    camDepthSensor->getFrame((uint16_t *)(buff_frame_to_send));
                 if (status != aditof::Status::OK) {
                     LOG(ERROR) << "Failed to get frame!";
                 }
@@ -585,15 +595,12 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             }
             cvGetFrame.notify_one();
         }
-        static zmq::context_t zmq_context(1);
-        server_socket = std::make_unique<zmq::socket_t>(zmq_context,
-                                                        zmq::socket_type::push);
-        server_socket->setsockopt(ZMQ_SNDHWM, (int *)&max_send_frames,
-                                  sizeof(max_send_frames));
-        server_socket->bind("tcp://*:5555");
-        LOG(INFO) << "ZMQ server socket connection established.";
 
-        start_stream_thread(); // Start the stream_frame thread .
+        FrameSocketConnection();
+#ifdef SEND_ASYNC
+        // Start the stream_frame thread .
+        start_stream_thread();
+#endif
 
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
@@ -603,9 +610,9 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         aditof::Status status = camDepthSensor->stop();
         buff_send.set_status(static_cast<::payload::Status>(status));
 
-#ifdef USE_ZMQ
+#ifdef SEND_ASYNC
         stop_stream_thread();
-
+#endif
         close_zmq_connection();
 
         break;
@@ -753,10 +760,45 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
     case GET_FRAME: {
         aditof::Status status = aditof::Status::OK;
-        LOG(INFO) << "Server App is build to work with ZMQ";
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        // #endif
-        break;
+
+        if (sameFrameEndlessRepeat) {
+            zmq::message_t message(buff_frame_length);
+            memcpy(message.data(), buff_frame_to_send, buff_frame_length);
+            if (!server_socket->send(message, zmq::send_flags::none)) {
+                LOG(INFO) << "Socket not able to send the frames !!";
+            }
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        } else {
+            // 1. Wait for frame to be captured on the other thread
+            std::unique_lock<std::mutex> lock(frameMutex);
+            cvGetFrame.wait(lock, []() { return frameCaptured; });
+
+            // 2. Get your hands on the captured frame
+            std::swap(buff_frame_to_send, buff_frame_to_be_captured);
+            frameCaptured = false;
+            lock.unlock();
+
+            // 3. Trigger the other thread to capture another frame while we do stuff with current frame
+            {
+                std::lock_guard<std::mutex> lock(frameMutex);
+                goCaptureFrame = true;
+            }
+            cvGetFrame.notify_one();
+
+            if (!server_socket) {
+                LOG(ERROR) << "ZMQ server socket is not initialized!";
+                break;
+            }
+            zmq::message_t message(buff_frame_length);
+            memcpy(message.data(), buff_frame_to_send, buff_frame_length);
+            if (!server_socket->send(message, zmq::send_flags::none)) {
+                LOG(INFO) << "Socket not able to send the frames !!";
+            }
+
+            buff_send.set_status(payload::Status::OK);
+            break;
+        }
     }
 
     case GET_AVAILABLE_CONTROLS: {
@@ -994,7 +1036,11 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
     case SERVER_CONNECT: {
-        buff_send.set_message("Connection Allowed");
+        if (!no_of_client_connected) {
+            buff_send.set_message("Connection Allowed");
+        } else {
+            buff_send.set_message("Only 1 client connection allowed");
+        }
         break;
     }
 
