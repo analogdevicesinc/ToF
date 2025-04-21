@@ -128,10 +128,6 @@ struct clientData {
     std::vector<char> data;
 };
 
-void stream_off() { aditof::Status status = camDepthSensor->stop(); }
-
-#ifdef USE_ZMQ
-
 void close_zmq_connection() {
     if (server_socket) {
         server_socket->close(); // Close the socket
@@ -288,9 +284,7 @@ static void cleanup_sensors() {
     // Stop the frame capturing thread
     if (frameCaptureThread.joinable()) {
         keepCaptureThreadAlive = false;
-        {
-            std::lock_guard<std::mutex> lock(frameMutex);
-        }
+        { std::lock_guard<std::mutex> lock(frameMutex); }
         cvGetFrame.notify_one();
         frameCaptureThread.join();
     }
@@ -759,95 +753,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
     case GET_FRAME: {
         aditof::Status status = aditof::Status::OK;
-
-        // #ifndef USE_ZMQ
-        //         if (sameFrameEndlessRepeat) {
-        //             m_frame_ready = true;
-        //             buff_send.set_status(static_cast<::payload::Status>(status));
-        //             break;
-        //         } else {
-        //             // 1. Wait for frame to be captured on the other thread
-        //             std::unique_lock<std::mutex> lock(frameMutex);
-        //             cvGetFrame.wait(lock, []() { return frameCaptured; });
-
-        //             // 2. Get your hands on the captured frame
-        //             std::swap(buff_frame_to_send, buff_frame_to_be_captured);
-        //             frameCaptured = false;
-        //             lock.unlock();
-
-        //             // 3. Trigger the other thread to capture another frame while we do stuff with current frame
-        //             {
-        //                 std::lock_guard<std::mutex> lock(frameMutex);
-        //                 goCaptureFrame = true;
-        //             }
-        //             cvGetFrame.notify_one();
-
-        //             // 4. Send current frame over network
-        //             // This will be done by the callback_function()
-
-        //             uint8_t *pInterruptOccuredByte =
-        //                 &buff_frame_to_send[LWS_SEND_BUFFER_PRE_PADDING +
-        //                                     0]; // 1st byte after LWS prepadding bytes
-        //             if (!adsd3500InterruptsQueue.empty()) {
-        //                 *pInterruptOccuredByte = 123;
-        //             } else {
-        //                 *pInterruptOccuredByte = 0;
-        //             }
-
-        //             m_frame_ready = true;
-
-        //             buff_send.set_status(payload::Status::OK);
-        //             break;
-        //         }
-
-        //         status = sensorV4lBufAccess->waitForBuffer();
-
-        //         if (status != aditof::Status::OK) {
-        //             buff_send.set_status(static_cast<::payload::Status>(status));
-        //             break;
-        //         }
-
-        //         struct v4l2_buffer buf;
-
-        //         status = sensorV4lBufAccess->dequeueInternalBuffer(buf);
-        //         if (status != aditof::Status::OK) {
-        //             buff_send.set_status(static_cast<::payload::Status>(status));
-        //             break;
-        //         }
-
-        //         uint8_t *buffer;
-
-        //         status = sensorV4lBufAccess->getInternalBuffer(&buffer,
-        //                                                        buff_frame_length, buf);
-        //         if (buff_frame_to_send != NULL) {
-        //             free(buff_frame_to_send);
-        //             buff_frame_to_send = NULL;
-        //         }
-        //         buff_frame_to_send =
-        //             (uint8_t *)malloc((buff_frame_length + LWS_SEND_BUFFER_PRE_PADDING +
-        //                                FRAME_PREPADDING_BYTES) *
-        //                               sizeof(uint8_t));
-
-        //         memcpy(buff_frame_to_send + LWS_SEND_BUFFER_PRE_PADDING +
-        //                    FRAME_PREPADDING_BYTES,
-        //                buffer, buff_frame_length * sizeof(uint8_t));
-
-        //         m_frame_ready = true;
-
-        //         if (status != aditof::Status::OK) {
-        //             buff_send.set_status(static_cast<::payload::Status>(status));
-        //             break;
-        //         }
-
-        //         status = sensorV4lBufAccess->enqueueInternalBuffer(buf);
-        //         if (status != aditof::Status::OK) {
-        //             buff_send.set_status(static_cast<::payload::Status>(status));
-        //             break;
-        //         }
-
-        //         buff_send.set_status(payload::Status::OK);
-
-        // #else
         LOG(INFO) << "Server App is build to work with ZMQ";
         buff_send.set_status(static_cast<::payload::Status>(status));
         // #endif

@@ -21,7 +21,7 @@ function(PopulateforPython targetdir)
     if( WIN32 )
         if (WITH_NETWORK)
             add_custom_command(TARGET aditofpython POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory ${libwebsockets_BINARY_DIR}/bin/$<CONFIG> ${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>
+            COMMAND ${CMAKE_COMMAND} -E copy_directory ${ZeroMQ_BINARY_DIR}/bin/$<CONFIG> ${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>
             )
         endif()
         if (WITH_GLOG_DEPENDENCY)

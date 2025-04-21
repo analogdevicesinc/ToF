@@ -32,7 +32,7 @@ if(WIN32)
 					)
 	if (WITH_NETWORK)
 		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy_directory ${libwebsockets_BINARY_DIR}/bin/$<CONFIG> ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>
+		COMMAND ${CMAKE_COMMAND} -E copy_directory ${ZeroMQ_BINARY_DIR}/bin/$<CONFIG> ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>
 		)
 	endif()
 	if (WITH_GLOG_DEPENDENCY)
