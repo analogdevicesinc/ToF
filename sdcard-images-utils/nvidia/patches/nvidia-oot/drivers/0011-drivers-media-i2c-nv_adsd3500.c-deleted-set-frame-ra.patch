@@ -1,0 +1,47 @@
+From 74c524ea62e815a594dada66369b612a365d979e Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Mon, 21 Apr 2025 12:54:43 +0530
+Subject: [PATCH] drivers: media: i2c: nv_adsd3500.c: deleted set frame rate
+ command from the power on function
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ drivers/media/i2c/nv_adsd3500.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/media/i2c/nv_adsd3500.c b/drivers/media/i2c/nv_adsd3500.c
+index 96a1f171..95233645 100644
+--- a/drivers/media/i2c/nv_adsd3500.c
++++ b/drivers/media/i2c/nv_adsd3500.c
+@@ -405,7 +405,7 @@ static int adsd3500_set_fsync_trigger(struct adsd3500 *adsd3500, s32 val)
+ 	int ret;
+ 
+ 	if(adsd3500->pwm_fsync == NULL){
+-		dev_err(adsd3500->dev, "Failed to get the pwm device\n");
++		dev_warn(adsd3500->dev, "Failed to get the pwm device\n");
+ 		return -ENODEV;
+ 	}
+ 
+@@ -454,10 +454,6 @@ static int _adsd3500_power_on(struct camera_common_data *s_data)
+ 		return ret;
+ 	}
+ 
+-	ret = regmap_write(adsd3500->regmap, SET_FRAMERATE_CMD, adsd3500->framerate);
+-	if (ret < 0)
+-		dev_err(adsd3500->dev, "SET_FRAMERATE command failed.\n");
+-
+ 	return 0;
+ }
+ 
+@@ -964,7 +960,7 @@ static int adsd3500_sync_mode(struct adsd3500 *adsd3500, s32 val){
+ 	int ret;
+ 
+ 	if(adsd3500->pwm_fsync == NULL){
+-		dev_err(dev, "Failed to get the pwm device\n");
++		dev_warn(dev, "Failed to get the pwm device\n");
+ 		return -ENODEV;
+ 	}
+ 
+-- 
+2.25.1
+
