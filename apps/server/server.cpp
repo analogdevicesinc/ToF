@@ -115,6 +115,7 @@ uint32_t max_send_frames = 10;
 std::atomic<bool> running(false);
 std::atomic<bool> stop_flag(false);
 std::thread data_transaction_thread;
+std::mutex connection_mtx;
 std::mutex mtx;
 std::condition_variable cv;
 std::thread stream_thread;
@@ -145,12 +146,14 @@ void stream_zmq_frame() {
     LOG(INFO) << "stream_frame thread running in the background.";
     zmq::pollitem_t items[] = {
         {static_cast<void *>(*server_socket), 0, ZMQ_POLLOUT, 0}};
+    zmq::pollitem_t items[] = {
+        {static_cast<void *>(*server_socket), 0, ZMQ_POLLOUT, 0}};
 
     running = true;
 
     while (true) {
 
-        zmq::poll(items, 1, FRAME_TIMEOUT); // Poll with a timeout of 1000 ms
+        zmq::poll(items, 1, FRAME_TIMEOUT); // Poll with a timeout of 500 ms
 
         if (stop_flag.load()) {
             LOG(INFO) << "stream_frame thread is exiting.";
@@ -178,6 +181,12 @@ void stream_zmq_frame() {
         }
         zmq::message_t message(buff_frame_length);
         memcpy(message.data(), buff_frame_to_send, buff_frame_length);
+        if (items[0].revents & ZMQ_POLLOUT) {
+            server_socket->send(message, zmq::send_flags::none);
+            // LOG(INFO) << "Frame sent successfully size : " << buff_frame_length;
+        } else {
+            LOG(INFO) << "Socket not ready, Dropping Frames";
+        }
         if (items[0].revents & ZMQ_POLLOUT) {
             server_socket->send(message, zmq::send_flags::none);
             // LOG(INFO) << "Frame sent successfully size : " << buff_frame_length;
@@ -279,7 +288,9 @@ static void cleanup_sensors() {
     // Stop the frame capturing thread
     if (frameCaptureThread.joinable()) {
         keepCaptureThreadAlive = false;
-        { std::lock_guard<std::mutex> lock(frameMutex); }
+        {
+            std::lock_guard<std::mutex> lock(frameMutex);
+        }
         cvGetFrame.notify_one();
         frameCaptureThread.join();
     }
@@ -318,16 +329,7 @@ void server_event(std::unique_ptr<zmq::socket_t> &monitor) {
 int Network::callback_function(const zmq_event_t &event) {
     switch (event.event) {
     case ZMQ_EVENT_CONNECTED: {
-        buff_send.Clear();
-        if (!Client_Connected) {
-            std::cout << "Conn Established" << std::endl;
-            Client_Connected = true;
-            buff_send.set_message("Connection Allowed");
-        } else {
-            std::cout << "Another client connected" << std::endl;
-            no_of_client_connected = true;
-            buff_send.set_message("Only 1 client connection allowed");
-        }
+
         break;
     }
     case ZMQ_EVENT_CLOSED:
@@ -349,12 +351,13 @@ int Network::callback_function(const zmq_event_t &event) {
         std::cout << "Connection retried to " << std::endl;
         break;
     case ZMQ_EVENT_ACCEPTED:
-        std::cout << "Event: ACCEPTED - A connection was accepted."
-                  << std::endl;
         buff_send.Clear();
         if (!Client_Connected) {
             std::cout << "Conn Established" << std::endl;
-            Client_Connected = true;
+            {
+                std::unique_lock<std::mutex> lock(connection_mtx);
+                Client_Connected = true;
+            }
             buff_send.set_message("Connection Allowed");
         } else {
             std::cout << "Another client connected" << std::endl;
@@ -391,27 +394,33 @@ void data_transaction() {
     while (!interrupted) {
 
         zmq::message_t request;
-        if (server_cmd->recv(request, zmq::recv_flags::dontwait)) {
-            google::protobuf::io::ArrayInputStream ais(request.data(),
-                                                       request.size());
-            google::protobuf::io::CodedInputStream coded_input(&ais);
-            buff_recv.ParseFromCodedStream(&coded_input);
-            invoke_sdk_api(buff_recv);
 
-            // Preparing to send the data
-            unsigned int siz = buff_send.ByteSize();
-            unsigned char *pkt = new unsigned char[siz];
+        std::unique_lock<std::mutex> lock(connection_mtx);
+        if (Client_Connected) {
+            if (server_cmd->recv(request, zmq::recv_flags::dontwait)) {
+                google::protobuf::io::ArrayInputStream ais(request.data(),
+                                                           request.size());
+                google::protobuf::io::CodedInputStream coded_input(&ais);
+                buff_recv.ParseFromCodedStream(&coded_input);
+                invoke_sdk_api(buff_recv);
 
-            google::protobuf::io::ArrayOutputStream aos(pkt, siz);
-            google::protobuf::io::CodedOutputStream coded_output(&aos);
-            buff_send.SerializeToCodedStream(&coded_output);
+                // Preparing to send the data
+                unsigned int siz = buff_send.ByteSize();
+                unsigned char *pkt = new unsigned char[siz];
 
-            // Create a zmq message
-            zmq::message_t reply(pkt, siz);
-            if (server_cmd->send(reply, zmq::send_flags::none)) {
-                LOG(INFO) << "Data is sent ";
+                google::protobuf::io::ArrayOutputStream aos(pkt, siz);
+                google::protobuf::io::CodedOutputStream coded_output(&aos);
+                buff_send.SerializeToCodedStream(&coded_output);
+
+                // Create a zmq message
+                zmq::message_t reply(pkt, siz);
+                if (server_cmd->send(reply, zmq::send_flags::none)) {
+#ifdef NW_DEBUG
+                    LOG(INFO) << "Data is sent ";
+#endif
+                }
+                delete[] pkt;
             }
-            delete[] pkt;
         }
     }
 }
@@ -427,12 +436,18 @@ void sigint_handler(int) {
     stop_stream_thread();
     close_zmq_connection();
 
-    server_cmd->close();
-    server_cmd.reset();
-    monitor_socket->close();
-    monitor_socket.reset();
-    context->close();
-    context.reset();
+    if (server_cmd) {
+        server_cmd->close();
+        server_cmd.reset();
+    }
+    if (monitor_socket) {
+        monitor_socket->close();
+        monitor_socket.reset();
+    }
+    if (context) {
+        context->close();
+        context.reset();
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -444,7 +459,7 @@ int main(int argc, char *argv[]) {
               << " | branch: " << aditof::getBranchVersion()
               << " | commit: " << aditof::getCommitVersion();
 
-    context = std::make_unique<zmq::context_t>(1);
+    context = std::make_unique<zmq::context_t>(2);
     server_cmd = std::make_unique<zmq::socket_t>(*context, ZMQ_REP);
     // Bind the socket
     server_cmd->bind("tcp://*:5556");
@@ -459,13 +474,13 @@ int main(int argc, char *argv[]) {
     data_transaction_thread = std::thread(data_transaction);
     data_transaction_thread.detach();
 
-    server_event(monitor_socket);
-
     Initialize();
 
     if (sensors_are_created) {
         cleanup_sensors();
     }
+
+    server_event(monitor_socket);
 
     return 0;
 }
@@ -1073,6 +1088,10 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
     }
+    case SERVER_CONNECT: {
+        buff_send.set_message("Connection Allowed");
+        break;
+    }
 
     default: {
         std::string msgErr = "Function not found";
@@ -1116,4 +1135,5 @@ void Initialize() {
     s_map_api_Values["GetDepthComputeParam"] = GET_DEPTH_COMPUTE_PARAM;
     s_map_api_Values["SetDepthComputeParam"] = SET_DEPTH_COMPUTE_PARAM;
     s_map_api_Values["GetIniArray"] = GET_INI_ARRAY;
+    s_map_api_Values["ServerConnect"] = SERVER_CONNECT;
 }
