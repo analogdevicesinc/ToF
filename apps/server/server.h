@@ -36,9 +36,7 @@
 
 #define RX_BUFFER_BYTES (20996420)
 
-#ifdef USE_ZMQ
 #define FRAME_TIMEOUT 500
-#endif
 
 enum api_Values {
     API_NOT_DEFINED,
@@ -67,7 +65,8 @@ enum api_Values {
     GET_DEPTH_COMPUTE_PARAM,
     SET_DEPTH_COMPUTE_PARAM,
     SET_SENSOR_CONFIGURATION,
-    GET_INI_ARRAY
+    GET_INI_ARRAY,
+    SERVER_CONNECT
 };
 
 enum protocols { PROTOCOL_EXAMPLE, PROTOCOL_COUNT };
