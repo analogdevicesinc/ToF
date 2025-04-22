@@ -16,8 +16,8 @@
 #include <sstream>
 
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#include "backends\imgui_impl_glfw.h"
+#include "backends\imgui_impl_opengl3.h"
 
 namespace {
 std::string ConvertToVerticalText(const char *str) {
@@ -76,33 +76,6 @@ bool ADIInputScalar(const char *label, ImGuiDataType dataType, void *dataPtr,
                                       format);
         },
         enabled);
-}
-
-bool ADISliderInt(const char *label, int *value, int valueMin, int valueMax,
-                  const char *format, bool enabled) {
-    return ShowDisableableControl<bool>(
-        [&]() {
-            return ImGui::SliderInt(label, value, valueMin, valueMax, format);
-        },
-        enabled);
-}
-
-bool ADISliderFloat(const char *label, float *value, float valueMin,
-                    float valueMax, const char *format, float power,
-                    bool enabled) {
-    return ShowDisableableControl<bool>(
-        [&]() {
-            return ImGui::SliderFloat(label, value, valueMin, valueMax, format,
-                                      power);
-        },
-        enabled);
-}
-
-bool ADIVSliderFloat(const char *name, ImVec2 size, float *value,
-                     float minValue, float maxValue, const char *label) {
-    const std::string vLabel = ConvertToVerticalText(label);
-    return ImGui::VSliderFloat(name, size, value, minValue, maxValue,
-                               vLabel.c_str());
 }
 
 void ADIVText(const char *s) {

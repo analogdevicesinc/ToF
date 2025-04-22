@@ -35,9 +35,13 @@ ADIView::ADIView(std::shared_ptr<ADIController> ctrl, const std::string &name)
       m_center(true), m_waitKeyBarrier(0), m_distanceVal(0),
       m_smallSignal(false), m_crtSmallSignalState(false) {
     //Create AB and Depth independent threads
+
+    ab_video_data_8bit = nullptr;
+
     m_depthImageWorker =
         std::thread(std::bind(&ADIView::_displayDepthImage, this));
     m_abImageWorker = std::thread(std::bind(&ADIView::_displayAbImage, this));
+
 
     //Create a Point Cloud independent thread
     m_pointCloudImageWorker =
@@ -56,6 +60,10 @@ ADIView::~ADIView() {
     m_depthImageWorker.join();
     m_abImageWorker.join();
     m_pointCloudImageWorker.join();
+
+    if (ab_video_data_8bit != nullptr) {
+        delete [] ab_video_data_8bit;
+    }
 }
 
 static void glfw_error_callback(int error, const char *description) {
@@ -80,22 +88,29 @@ void ADIView::setABMaxRange(std::string value) {
     m_maxABPixelValue = (1 << base) - 1;
 }
 
+std::mutex mtx;
+std::condition_variable cv;
+bool data_ready = false;
+
 void ADIView::_displayAbImage() {
     while (!m_stopWorkersFlag) {
-        std::unique_lock<std::mutex> lock(m_frameCapturedMutex);
-        m_frameCapturedCv.wait(
-            lock, [&]() { return m_abFrameAvailable || m_stopWorkersFlag; });
+        {
+            std::unique_lock<std::mutex> lock(m_frameCapturedMutex);
+            m_frameCapturedCv.wait(lock, [&]() {
+                return m_abFrameAvailable || m_stopWorkersFlag;
+            });
 
-        if (m_stopWorkersFlag) {
-            break;
+            if (m_stopWorkersFlag) {
+                break;
+            }
+
+            m_abFrameAvailable = false;
+            if (m_capturedFrame == nullptr) {
+                continue;
+            }
+
+            lock.unlock(); // Lock is no longer needed
         }
-
-        m_abFrameAvailable = false;
-        if (m_capturedFrame == nullptr) {
-            continue;
-        }
-
-        lock.unlock(); // Lock is no longer needed
 
         auto camera = m_ctrl->m_cameras[static_cast<unsigned int>(
             m_ctrl->getCameraInUse())];
@@ -125,7 +140,10 @@ void ADIView::_displayAbImage() {
 
         size_t imageSize = frameHeight * frameWidth;
         size_t bgrSize = 0;
-        ab_video_data_8bit = new uint8_t[frameHeight * frameWidth * 3];
+
+        if (ab_video_data_8bit == nullptr) {
+            ab_video_data_8bit = new uint8_t[frameHeight * frameWidth * 3];
+        }
 
         for (size_t dummyCtr = 0; dummyCtr < imageSize; dummyCtr++) {
             uint16_t pix = _ab_video_data[dummyCtr];
@@ -139,6 +157,16 @@ void ADIView::_displayAbImage() {
             needsInit = false;
         }
 
+        {
+            std::unique_lock<std::mutex> lock(mtx);
+            data_ready = true;
+        }
+        cv.notify_one();
+        {
+            std::unique_lock<std::mutex> lock(mtx);
+            cv.wait(lock, [] { return !data_ready; });
+        }
+
         std::unique_lock<std::mutex> imshow_lock(m_imshowMutex);
         m_waitKeyBarrier += 1;
         if (m_waitKeyBarrier == /*2*/ numOfThreads) {
@@ -149,43 +177,31 @@ void ADIView::_displayAbImage() {
         delete[] _ab_video_data;
     }
 }
-static std::chrono::duration<double, std::milli> millisecondsPast;
-static std::chrono::high_resolution_clock::time_point t1;
-static std::chrono::high_resolution_clock::time_point t2;
-static std::chrono::duration<double, std::milli> time_span;
-static std::chrono::duration<double, std::milli> averagemilliSecs;
 
 void ADIView::_displayDepthImage() {
     while (!m_stopWorkersFlag) {
-        std::unique_lock<std::mutex> lock(m_frameCapturedMutex);
-        m_frameCapturedCv.wait(
-            lock, [&]() { return m_depthFrameAvailable || m_stopWorkersFlag; });
+        {
+            std::unique_lock<std::mutex> lock(m_frameCapturedMutex);
+            m_frameCapturedCv.wait(lock, [&]() {
+                return m_depthFrameAvailable || m_stopWorkersFlag;
+            });
 
-        if (m_stopWorkersFlag) {
-            break;
+            if (m_stopWorkersFlag) {
+                break;
+            }
+
+            m_depthFrameAvailable = false;
+
+            if (m_capturedFrame == nullptr) {
+                continue;
+            }
+
+            lock.unlock(); // Lock is no longer needed
         }
-
-        m_depthFrameAvailable = false;
-
-        if (m_capturedFrame == nullptr) {
-            continue;
-        }
-
-        lock.unlock(); // Lock is no longer needed
-
-        //number of frames
-        //CPU process power/cycles?
-        //Capture time
-        t1 = std::chrono::high_resolution_clock::now();
 
         uint16_t *data;
         m_capturedFrame->getData("depth", &depth_video_data);
-        t2 = std::chrono::high_resolution_clock::now();
 
-        time_span = t2 - t1; //Delayed process time
-        averagemilliSecs =
-            (time_span + millisecondsPast) / 2; //average time to get Depth data
-        millisecondsPast = time_span;
         aditof::FrameDataDetails frameDepthDetails;
         m_capturedFrame->getDataDetails("depth", frameDepthDetails);
 
@@ -238,30 +254,25 @@ void ADIView::_displayDepthImage() {
     }
 }
 
-void ADIView::_displayBlendedImage() {
-    std::shared_ptr<aditof::Frame> localFrame = m_capturedFrame;
-
-    uint16_t *abData;
-    localFrame->getData("ab", &abData);
-}
-
 void ADIView::_displayPointCloudImage() {
     while (!m_stopWorkersFlag) {
-        std::unique_lock<std::mutex> lock(m_frameCapturedMutex);
-        m_frameCapturedCv.wait(lock, [&]() {
-            return m_pointCloudFrameAvailable || m_stopWorkersFlag;
-        });
+        {
+            std::unique_lock<std::mutex> lock(m_frameCapturedMutex);
+            m_frameCapturedCv.wait(lock, [&]() {
+                return m_pointCloudFrameAvailable || m_stopWorkersFlag;
+            });
 
-        if (m_stopWorkersFlag) {
-            break;
+            if (m_stopWorkersFlag) {
+                break;
+            }
+
+            m_pointCloudFrameAvailable = false;
+            if (m_capturedFrame == nullptr) {
+                continue;
+            }
+
+            lock.unlock(); // Lock is no longer needed
         }
-
-        m_pointCloudFrameAvailable = false;
-        if (m_capturedFrame == nullptr) {
-            continue;
-        }
-
-        lock.unlock(); // Lock is no longer needed
 
         //Get XYZ table
         m_capturedFrame->getData("xyz", &pointCloud_video_data);
@@ -287,30 +298,47 @@ void ADIView::_displayPointCloudImage() {
         float fGreen = 0.f;
         float fBlue = 0.f;
         size_t bgrSize = 0;
+        size_t cntr = 0;
 
         constexpr uint8_t PixelMax = std::numeric_limits<uint8_t>::max();
+
+        std::unique_lock<std::mutex> lock(mtx);
+        cv.wait(lock, [this] { return data_ready || this->m_stopWorkersFlag; });
 
         //1) convert the buffer from uint16 to float
         //2) normalize between [-1.0, 1.0]
         //3) X and Y ranges between [-32768, 32767] or [FFFF, 7FFF]. Z axis is [0, 7FFF]
 
         for (int i = 0; i < pointcloudTableSize; i += 3) {
+            
+            //XYZ
             normalized_vertices[bgrSize++] =
                 (((int16_t)pointCloud_video_data[i])) / (Max_X);
             normalized_vertices[bgrSize++] =
-                (((int16_t)pointCloud_video_data[i + 1])) / ((Max_Y));
+                (((int16_t)pointCloud_video_data[i + 1])) / ((Max_Y)); 
             normalized_vertices[bgrSize++] =
                 (((int16_t)pointCloud_video_data[i + 2])) / ((Max_Z));
+
+            //RGB
             if ((int16_t)pointCloud_video_data[i + 2] == 0) {
+
                 normalized_vertices[bgrSize++] = 0.0; //R = 0.0
                 normalized_vertices[bgrSize++] = 0.0; //G = 0.0
                 normalized_vertices[bgrSize++] = 0.0; //B = 0.0
+                cntr += 3;
+
             } else {
+
                 hsvColorMap((pointCloud_video_data[i + 2]), maxRange, minRange,
                             fRed, fGreen, fBlue);
-                normalized_vertices[bgrSize++] = fRed;   //Red
-                normalized_vertices[bgrSize++] = fGreen; //Green
-                normalized_vertices[bgrSize++] = fBlue;  //Blue
+
+                normalized_vertices[bgrSize++] = 
+                    (float)ab_video_data_8bit[cntr++] / 255.0f;
+                normalized_vertices[bgrSize++] =
+                    (float)ab_video_data_8bit[cntr++] / 255.0f;
+                normalized_vertices[bgrSize++] =
+                    (float)ab_video_data_8bit[cntr++] / 255.0f;
+
             }
         }
 
@@ -320,6 +348,10 @@ void ADIView::_displayPointCloudImage() {
         if (needsInit) {
             needsInit = false;
         }
+
+        data_ready = false;
+        lock.unlock();
+        cv.notify_one(); // Wake up producer
 
         std::unique_lock<std::mutex> imshow_lock(m_imshowMutex);
         m_waitKeyBarrier += 1;

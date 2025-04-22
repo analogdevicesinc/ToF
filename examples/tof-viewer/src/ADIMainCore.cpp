@@ -6,6 +6,7 @@
 /*																				*/
 /********************************************************************************/
 
+#include "glad/gl.h"
 #include "ADIMainWindow.h"
 #include "ADIImGUIExtensions.h"
 #include "ADIOpenFile.h"
@@ -43,14 +44,8 @@ namespace fs = ghc::filesystem;
 #define PATH_SEPARATOR "/"
 #endif
 
-// About OpenGL function loaders: modern OpenGL doesn't have a standard header
-// file and requires individual function pointers to be loaded manually. Helper
-// libraries are often used for this purpose! Here we are supporting a few
-// common ones: gl3w, glew, glad. You may use another loader/header of your
-// choice (glext, glLoadGen, etc.), or chose to manually implement your own.
-//#if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
-#include <GL/gl3w.h> // Initialize with gl3wInit()
-#include <GLFW/glfw3.h>
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_opengl3.h"
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to
 // maximize ease of testing and compatibility with old VS compilers. To link
@@ -232,7 +227,7 @@ bool ADIMainWindow::startImGUI(const ADIViewerArgs &args) {
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
     bool err = glewInit() != GLEW_OK;
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
-    bool err = gladLoadGL() == 0;
+    bool err = gladLoadGL((GLADloadfunc)glfwGetProcAddress) == 0;
 #else
     bool err = false; // If you use IMGUI_IMPL_OPENGL_LOADER_CUSTOM, your loader
                       // is likely to requires some form of initialization.
@@ -814,9 +809,7 @@ void ADIMainWindow::PlayRecorded() {
     if (displayPointCloud && viewSelection == 1) {
         DisplayPointCloudWindow(overlayFlags);
     }
-    if (displayTemp) {
-        DisplayInfoWindow(overlayFlags);
-    }
+    DisplayInfoWindow(overlayFlags);
 }
 
 void ADIMainWindow::showIniWindow(bool *p_open) {

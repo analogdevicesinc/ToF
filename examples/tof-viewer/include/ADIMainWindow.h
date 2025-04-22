@@ -13,8 +13,10 @@
 #include "ADIView.h"
 
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#include "backends\imgui_impl_glfw.h"
+#include "backends\imgui_impl_opengl3.h"
+#include "backends\imgui_impl_opengl3_loader.h"
+#include <GLFW/glfw3.h>
 #include <aditof/system.h>
 #include <linmath.h>
 #include <stdio.h>
@@ -79,7 +81,8 @@ struct AppLog {
             return;
         }
 
-        // Options menu
+        // Options menu: TODO - fix me
+        /*
         if (ImGui::BeginPopup("Options")) {
             if (ImGui::Checkbox("Auto-scroll", &AutoScroll))
                 if (AutoScroll)
@@ -87,9 +90,10 @@ struct AppLog {
             ImGui::EndPopup();
         }
 
-        // Main window
         if (ImGui::Button("Options"))
             ImGui::OpenPopup("Options");
+        */
+
         ImGui::SameLine();
         bool clear = ImGui::Button("Clear");
         ImGui::SameLine();

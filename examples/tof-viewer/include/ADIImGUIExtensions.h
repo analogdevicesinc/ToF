@@ -8,8 +8,8 @@
 #ifndef ADIIMGUIEXTENSIONS_H
 #define ADIIMGUIEXTENSIONS_H
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#include "backends\imgui_impl_glfw.h"
+#include "backends\imgui_impl_opengl3.h"
 #include <imgui_internal.h>
 
 // System headers
@@ -227,11 +227,6 @@ bool ADIRadioButton(const char *label, int *v, int vButton,
 bool ADIInputScalar(const char *label, ImGuiDataType dataType, void *dataPtr,
                     const void *step, const void *stepFast, const char *format,
                     bool enabled = true);
-
-// Behaves like a normal ImGui::SliderInt, but with support for being disabled
-//
-bool ADISliderInt(const char *label, int *value, int valueMin, int valueMax,
-                  const char *format, bool enabled = true);
 
 // Behaves like a normal ImGui::SliderFloat, but with support for being disabled
 //

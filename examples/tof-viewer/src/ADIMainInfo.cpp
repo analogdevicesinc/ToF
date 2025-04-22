@@ -9,6 +9,38 @@
 
 using namespace adiMainWindow;
 
+#include <cstdarg> // for va_list
+#include <imgui.h>
+
+void DrawColoredLabel(const char *fmt, ...) {
+    // Format the text
+    char buf[512];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+    ImVec4 box_color = ImVec4(0.2f, 0.6f, 0.9f, 1.0f); // RGBa
+
+    // Get draw list and cursor position
+    ImVec2 textPos = ImGui::GetCursorScreenPos();
+    ImVec2 textSize = ImGui::CalcTextSize(buf);
+    float padding = 2.0f;
+
+    // Draw background box
+    ImDrawList *drawList = ImGui::GetWindowDrawList();
+    drawList->AddRectFilled(ImVec2(textPos.x - padding, textPos.y - padding),
+                            ImVec2(textPos.x + textSize.x + padding,
+                                   textPos.y + textSize.y + padding),
+                            ImGui::ColorConvertFloat4ToU32(box_color),
+                            4.0f // optional: corner radius
+    );
+
+    // Draw the text on top
+    ImGui::SetCursorScreenPos(textPos);
+    ImGui::TextUnformatted(buf);
+}
+
+
 void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
     using namespace aditof;
     static bool show_ini_window = false;
@@ -47,39 +79,10 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
         std::string formattedIP;
         for (int i = 0; i < m_cameraIp.length(); i++)
             formattedIP += toupper(m_cameraIp[i]);
-        ImGui::Text(" Camera %s", formattedIP.c_str());
-        ImGui::Text(" Rotate: ");
-        ImGui::SameLine();
-        bool rotate = ImGui::Button("+");
-        ImGui::SameLine();
-        if (rotate) {
-            rotationangleradians += M_PI / 2;
-            rotationangledegrees += 90;
-            if (rotationangledegrees >= 360) {
-                rotationangleradians = 0;
-                rotationangledegrees = 0;
-            }
-        }
-        ImGui::Text("%i", rotationangledegrees);
-        ImGui::SameLine();
 
-        ImGui::Text(" | Scale: ");
+        ImGui::Text(" Camera ");
         ImGui::SameLine();
-        bool scale05 = ImGui::Button("0.5x");
-        ImGui::SameLine();
-        bool scale10 = ImGui::Button("1x");
-        ImGui::SameLine();
-        ImGui::PushItemWidth(300 * dpiScaleFactor);
-        ImGui::SliderFloat("", &imagescale, 0.25f, 3.0f);
-        ImGui::PopItemWidth();
-        ImGui::SameLine();
-        if (scale05)
-            imagescale = 0.5f;
-        if (scale10)
-            imagescale = 1.0f;
-        ImGui::Text("%ipx x %ipx -> %ipx x %ipx", view->frameWidth,
-                    view->frameHeight, (uint32_t)displayABDimensions.x,
-                    (uint32_t)displayABDimensions.y);
+        DrawColoredLabel("%s", formattedIP.c_str());
 
         if (isPlaying || isRecording) {
             auto camera = getActiveCamera();
@@ -99,11 +102,18 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
             camera->getDetails(cameraDetails);
             uint8_t camera_mode = cameraDetails.mode;
 
-            ImGui::Text(" Camera Mode: %d", camera_mode);
-            ImGui::Text(" Current FPS: %i", m_fps);
+            ImGui::Text(" Camera Mode ");
+            ImGui::SameLine();
+            DrawColoredLabel("%i", camera_mode);
             if (m_fps_expectedFPS) {
+                ImGui::Text(" Frame Rate (Current/Expected) ");
                 ImGui::SameLine();
-                ImGui::Text(" | Expected FPS: %i", m_fps_expectedFPS);
+                DrawColoredLabel("%i/%i", m_fps, m_fps_expectedFPS);
+            }
+            else {
+                ImGui::Text(" Current FPS ");
+                ImGui::SameLine();
+                DrawColoredLabel("%i/%i", m_fps, "Unknown");
             }
 
             if (camera_mode != 4) { // 4 - pcm-native
@@ -120,18 +130,38 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
                     int32_t laserTemp = (metadata.laserTemperature);
                     uint32_t totalFrames = frameNum - m_fps_firstFrame + 1;
                     uint32_t frameLost = totalFrames - m_fps_frameRecvd;
-                    ImGui::Text(" Number of frames lost: %u", frameLost);
+                    ImGui::Text(" Frames Rx, Lost ");
                     ImGui::SameLine();
-                    ImGui::Text(" | Number of frames received: %u",
-                                m_fps_frameRecvd);
-                    ImGui::Text(" Laser Temperature: %iC", laserTemp);
+                    DrawColoredLabel("%i, %i", m_fps_frameRecvd, frameLost);
+                    ImGui::Text(" Laser, Sensor Temp ");
                     ImGui::SameLine();
-                    ImGui::Text(" | Sensor Temperature: %iC", sensorTemp);
+                    DrawColoredLabel("%iC, %iC", laserTemp, sensorTemp);
                 }
             }
         }
 
-        ImGui::NewLine();
+        //ImGui::NewLine();
+        ImGui::Text(" Rotate: ");
+        ImGui::SameLine();
+        bool rotate = ImGui::Button("+");
+        ImGui::SameLine();
+        if (rotate) {
+            rotationangleradians += M_PI / 2;
+            rotationangledegrees += 90;
+            if (rotationangledegrees >= 360) {
+                rotationangleradians = 0;
+                rotationangledegrees = 0;
+            }
+        }
+        ImGui::Text("%i", rotationangledegrees);
+        ImGui::Text(" Point Cloud Control: ");
+        ImGui::SameLine();
+        if (ImGuiExtensions::ADIButton("Reset", true)) {
+            pointCloudReset();
+        }
+        ImGui::SameLine();
+        ImGui::SliderInt("", &pointSize, 1, 10,
+                                      "Point Size: %d px");
 
         // "Stop" button
         ImGuiExtensions::ButtonColorChanger colorChangerStop(customColorStop,
@@ -196,12 +226,13 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
 
             rawSeeker = view->m_ctrl->m_recorder->getPlaybackFrameNumber();
 
-            ImGuiExtensions::ADISliderInt("Frame #", &rawSeeker, 0,
-                                          totalFrames - 1, "%d", true);
+            ImGui::SliderInt("Frame #", &rawSeeker, 0,
+                                          totalFrames - 1, "%d");
 
             view->m_ctrl->m_recorder->setPlaybackFrameNumber(rawSeeker);
         }
     }
+
     ImGui::End();
 }
 

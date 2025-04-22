@@ -23,6 +23,8 @@ else()
     message(FATAL_ERROR "Platform not supported")
 endif()
 
+add_subdirectory("${CMAKE_SOURCE_DIR}/dependencies/third-party/imgui/glfw" "${CMAKE_BINARY_DIR}/glfw")
+
 set(IMGUI_SOURCE_DIR ${CMAKE_SOURCE_DIR}/dependencies/third-party/imgui)
 set(ADIToF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
@@ -40,9 +42,8 @@ endif()
 
 find_package(OpenGL REQUIRED)
 if( WIN32 )																	 
-	target_link_libraries(ADIToFGUI PRIVATE "${IMGUI_SOURCE_DIR}/src/examples/libs/glfw/lib-vc2010-64/glfw3.lib")
-elseif(APPLE)
-    target_link_libraries(ADIToFGUI PRIVATE "${IMGUI_SOURCE_DIR}/lib/macOS/glfw/lib-x86_64/libglfw3.a")
+	#target_link_libraries(ADIToFGUI PRIVATE "${PROJECT_BINARY_DIR}/src/examples/libs/glfw/lib-vc2010-64/glfw3.lib")
+	target_link_libraries(ADIToFGUI PUBLIC glfw)
 elseif (UNIX)
 	find_package(glfw3 REQUIRED)
 	target_link_libraries(${PROJECT_NAME} PRIVATE glfw)

@@ -1,3 +1,4 @@
+#include <glad/gl.h>
 #include "ADIMainWindow.h"
 #include "ADIImGUIExtensions.h"
 
@@ -7,7 +8,6 @@
 #include <aditof/log.h>
 #endif
 
-#include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
 
 using namespace adiMainWindow;
@@ -218,10 +218,10 @@ void ADIMainWindow::CaptureABVideo() {
     if (view->ab_video_data_8bit != nullptr) {
         glBindTexture(GL_TEXTURE_2D, ab_video_texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, view->frameWidth,
-                     view->frameHeight, 0, GL_BGR, GL_UNSIGNED_BYTE,
+                     view->frameHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
                      view->ab_video_data_8bit);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        delete view->ab_video_data_8bit;
+        glad_glGenerateMipmap(GL_TEXTURE_2D);
+        //delete view->ab_video_data_8bit;
 
         ImVec2 _displayABDimensions = displayABDimensions;
 
@@ -229,7 +229,7 @@ void ADIMainWindow::CaptureABVideo() {
             std::swap(_displayABDimensions.x, _displayABDimensions.y);
         }
 
-        ImageRotated(reinterpret_cast<ImTextureID>(ab_video_texture),
+        ImageRotated((ImTextureID)ab_video_texture,
                      ImVec2(dictWinPosition["ab"][2], dictWinPosition["ab"][3]),
                      ImVec2(_displayABDimensions.x, _displayABDimensions.y),
                      rotationangleradians);
@@ -316,7 +316,7 @@ void ADIMainWindow::CaptureDepthVideo() {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, view->frameWidth,
                      view->frameHeight, 0, GL_BGR, GL_UNSIGNED_BYTE,
                      view->depth_video_data_8bit);
-        glGenerateMipmap(GL_TEXTURE_2D);
+        glad_glGenerateMipmap(GL_TEXTURE_2D);
         delete view->depth_video_data_8bit;
 
         ImVec2 _displayDepthDimensions = displayDepthDimensions;
@@ -326,7 +326,7 @@ void ADIMainWindow::CaptureDepthVideo() {
         }
 
         ImageRotated(
-            reinterpret_cast<ImTextureID>(depth_video_texture),
+            (ImTextureID)depth_video_texture,
             ImVec2(dictWinPosition["depth"][2], dictWinPosition["depth"][3]),
             ImVec2(_displayDepthDimensions.x, _displayDepthDimensions.y),
             rotationangleradians);
@@ -366,15 +366,6 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
         }
 
         CapturePointCloudVideo();
-
-        ImGui::SameLine();
-        ImGuiExtensions::ADISliderInt("", &pointSize, 1, 10,
-                                      "Point Size: %d px");
-
-        ImGui::SameLine();
-        if (ImGuiExtensions::ADIButton("Reset", true)) {
-            pointCloudReset();
-        }
     }
     ImGui::End();
 }
@@ -469,8 +460,8 @@ void ADIMainWindow::initOpenGLPointCloudTexture() {
     mat4x4_identity(m_model);
 
     //Create Frame Buffers to be able to display on the Point Cloud Window.
-    glGenFramebuffers(1, &framebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glad_glGenFramebuffers(1, &framebuffer);
+    glad_glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     // create a color attachment texture
     glGenTextures(1, &pointCloud_video_texture);
     glBindTexture(GL_TEXTURE_2D, pointCloud_video_texture);
@@ -478,9 +469,10 @@ void ADIMainWindow::initOpenGLPointCloudTexture() {
                  GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+    glad_glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                GL_TEXTURE_2D,
                            pointCloud_video_texture, 0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glad_glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void ADIMainWindow::CapturePointCloudVideo() {
@@ -490,7 +482,7 @@ void ADIMainWindow::CapturePointCloudVideo() {
     preparePointCloudVertices(view->vertexBufferObject,
                               view->vertexArrayObject);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glad_glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glPointSize(pointSize);
@@ -524,7 +516,7 @@ void ADIMainWindow::CapturePointCloudVideo() {
     }
 
     ImageRotated(
-        reinterpret_cast<ImTextureID>(pointCloud_video_texture),
+        (ImTextureID)pointCloud_video_texture,
         ImVec2(dictWinPosition["pc"][2], dictWinPosition["pc"][3]),
         ImVec2(_displayPointCloudDimensions.x, _displayPointCloudDimensions.y),
         rotationangleradians);

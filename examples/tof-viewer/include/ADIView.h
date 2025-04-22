@@ -14,8 +14,8 @@
 
 #include "ADIController.h"
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#include "backends\imgui_impl_glfw.h"
+#include "backends\imgui_impl_opengl3.h"
 #include <ADIShader.h>
 #include <aditof/frame.h>
 
@@ -135,11 +135,6 @@ class ADIView {
 		* @brief Creates AB buffer data
 		*/
     void _displayAbImage();
-
-    /**
-		* @brief Creates a blended AB and Depth buffer data
-		*/
-    void _displayBlendedImage();
 
     /**
 		* @brief Creates a Point Cloud buffer data
