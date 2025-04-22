@@ -6,3 +6,6 @@
 	path = bindings/python/pybind11
 	url = https://github.com/pybind/pybind11
 	branch = v2.11
+[submodule "dependencies/third-party/imgui/imgui"]
+	path = dependencies/third-party/imgui/imgui
+	url = https://github.com/ocornut/imgui.git
