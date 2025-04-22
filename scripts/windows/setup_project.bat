@@ -9,7 +9,6 @@ set /a display_help=0
 set /a answer_yes=0
 set /a threads=4
 
-
 set generator=""
 set tof_dire=%CD%..\..\
 set build_dire=..\..\build
@@ -93,47 +92,32 @@ if "%config_type%"=="Release" (
 if "%config_type%"=="Debug" (
     set /a opt=1
 )
-if %set_config%==0 ( 
-    set /a opt=1
-    set config_type=Release
-    )
-if %opt%==0 (
-    echo Please enter a correct configuration (Release or Debug^)
-    EXIT /B %ERRORLEVEL%
-)
-echo Setup will continue with the configuration: %config_type%
 
 ::check if the generator is correct
-set /a opt=0
 set opencv_vs=15
-if %generator%=="Visual Studio 17 2022" (
-    set /a opt=1
+if %generator%=="vs2022" (
+	set generator="Visual Studio 17 2022"
     set opencv_vs=15
 )
-if %generator%=="Visual Studio 16 2019" (
-    set /a opt=1
+if %generator%=="vs2019" (
+	set generator="Visual Studio 16 2019"
     set opencv_vs=15
 )
-if %generator%=="Visual Studio 15 2017 Win64" (
-    set /a opt=1
+if %generator%=="vs2017" (
+	set generator="Visual Studio 15 2017 Win64"
     set opencv_vs=15
 )
-if %generator%=="Visual Studio 14 2015 Win64" (
-    set /a opt=1
+if %generator%=="vs2015" (
+	set generator="Visual Studio 14 2015 Win64"
     set opencv_vs=14
 )
 
 if %set_generator%==0 (
-   set /a opt=1
-   set generator="Visual Studio 16 2019"
-   set opencv_vs=16
+   echo "No generator specified, see help '-g'."
+   EXIT /B 0
    )
-if %opt%==0 (
-    echo Please enter a correct configuration ("Visual Studio 17 2022";"Visual Studio 16 2019"; "Visual Studio 15 2017 Win64" or "Visual Studio 14 2015 Win64"^)
-    EXIT /B %ERRORLEVEL%
-)
-echo Setup will continue with the generator: %generator%
 
+echo Setup will continue with the generator: %generator%
 
 echo The sdk will be built in: %build_dire%
 
@@ -144,19 +128,22 @@ if %answer_yes%==0 (
    )
 
 ::create the missing folders
+if exist %build_dire% rd %build_dire% /s /q
 if not exist %build_dire% md %build_dire%
 
 
 ::init and update of libaditof submodule
-echo "Cloning sub modules"
-pushd %tof_dire%
-git submodule update --init --recursive
-popd
+::echo "Cloning sub modules"
+::pushd %tof_dire%
+::git submodule update --init --recursive
+::popd
 
 ::build the project with the selected options
 pushd %build_dire%
 cmake -G %generator% -DWITH_PYTHON=on %source_dir% -DCMAKE_BUILD_TYPE=%config_type%
-cmake --build . --config %config_type% -j %threads%
+if %opt%==1 (
+	cmake --build . --config %config_type% -j %threads%
+	)
 popd
 EXIT /B %ERRORLEVEL%
 
@@ -167,10 +154,10 @@ ECHO        Print a usage message briefly summarizing the command line options a
 ECHO -y^|--yes
 ECHO        Automatic yes to prompts.
 ECHO -g^|--generator
-ECHO        Visual Studio 17 2022 = Generates Visual Studio 2022 project files.
-ECHO        Visual Studio 16 2019 = Generates Visual Studio 2019 project files.
-ECHO        Visual Studio 15 2017 Win64 = Generates Visual Studio 2017 project files.
-ECHO        Visual Studio 14 2015 Win64 = Generates Visual Studio 2015 project files.
+ECHO        vs2022 = Generates Visual Studio 2022 project files.
+ECHO        vs2019 = Generates Visual Studio 2019 project files.
+ECHO        vs2017 = Generates Visual Studio 2017 project files.
+ECHO        vs2015 = Generates Visual Studio 2015 project files.
 ECHO -c^|--configuration
 ECHO        Release = Configuration for Release build.
 ECHO        Debug   = Configuration for Debug build.
