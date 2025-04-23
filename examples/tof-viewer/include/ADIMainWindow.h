@@ -493,6 +493,7 @@ class ADIMainWindow {
     void DrawColoredLabel(const char *fmt, ...);
     void DrawBarLabel(const char *fmt, ...);
     void NewLine(float spacing);
+    void showStartWizard();
 
     // The type of movement that a mouse movement should be interpreted as (if any)
     //

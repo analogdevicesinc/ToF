@@ -88,8 +88,6 @@ float ADIMainWindow::DisplayFrameWindow(ImVec2 windowSize, ImVec2 &displayUpdate
     float autoscale = std::fmin((windowSize.x / view->frameWidth),
                                (windowSize.y / view->frameHeight));
 
-    LOG(INFO) << autoscale;
-
     size.x = view->frameWidth * autoscale;
     size.y = view->frameHeight * autoscale;
 

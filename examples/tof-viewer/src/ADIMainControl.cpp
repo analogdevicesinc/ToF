@@ -30,15 +30,12 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
     setWindowSize(dictWinPosition["control"].width, dictWinPosition["control"].height);
 
     if (ImGui::Begin("Control Window", nullptr,
-                     overlayFlags | ImGuiWindowFlags_NoTitleBar)) {
+                     overlayFlags)) {
 
         if (!m_focusedOnce) {
             ImGui::SetWindowFocus();
             m_focusedOnce = true;
         }
-
-        DrawBarLabel("Control Window");
-        NewLine(5.0f);
 
         if (ImGuiExtensions::ADIButton("Stop Streaming", isPlaying)) {
             isPlaying = false;

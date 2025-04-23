@@ -48,23 +48,15 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
     setWindowSize(dictWinPosition["info"].width, dictWinPosition["info"].height);
 
     if (ImGui::Begin("Information Window", nullptr,
-                     overlayFlags | ImGuiWindowFlags_NoTitleBar)) {
-
-        if (!m_focusedOnce) {
-            ImGui::SetWindowFocus();
-            m_focusedOnce = true;
-        }
+                     overlayFlags)) {
 
         std::string formattedIP;
         for (int i = 0; i < m_cameraIp.length(); i++)
             formattedIP += toupper(m_cameraIp[i]);
 
-        const char *col1Text = "Laser Temp (C)";
+        const char *col1Text = "Frames Received";
         const float padding = 20.0f; // Optional extra space
         float col1Width = ImGui::CalcTextSize(col1Text).x + padding;
-
-        DrawBarLabel("Information Window");
-        NewLine(5.0f);
 
         if (ImGui::BeginTable("Information Table", 2)) {
             ImGui::TableSetupColumn(
@@ -107,14 +99,14 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
                 if (status != Status::OK) {
                     LOG(ERROR) << "Failed to get frame metadata.";
                 } else {
-                    uint32_t frameNum = (metadata.frameNumber);
-                    if (!m_fps_firstFrame) {
+                    uint32_t frameNum = metadata.frameNumber;
+                    if (m_fps_firstFrame == 0) {
                         m_fps_firstFrame = frameNum;
                     }
                     int32_t sensorTemp = (metadata.sensorTemperature);
                     int32_t laserTemp = (metadata.laserTemperature);
                     uint32_t totalFrames = frameNum - m_fps_firstFrame + 1;
-                    uint32_t frameLost = totalFrames - m_fps_frameRecvd;
+                    uint32_t framesLost = totalFrames - m_fps_frameRecvd;
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
@@ -126,19 +118,19 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
                     ImGui::TableSetColumnIndex(0);
                     ImGui::Text("Frames Lost");
                     ImGui::TableSetColumnIndex(1);
-                    ImGui::Text("%i", frameLost);
+                    ImGui::Text("%i", framesLost);
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
-                    ImGui::Text("Laser Temp (C)");
+                    ImGui::Text("Laser Temp");
                     ImGui::TableSetColumnIndex(1);
-                    ImGui::Text("%i", laserTemp);
+                    ImGui::Text("%i ", laserTemp);
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
-                    ImGui::Text("Sensor Temp (C)");
+                    ImGui::Text("Sensor Temp");
                     ImGui::TableSetColumnIndex(1);
-                    ImGui::Text("%i", sensorTemp);
+                    ImGui::Text("%i C", sensorTemp);
                 }
             }
 
