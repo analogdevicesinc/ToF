@@ -202,6 +202,36 @@ void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
         }
     }
 
+    static int16_t state = 0;
+    if (ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
+        state++;
+        if (state > 2)
+            state = 0;
+    }
+    if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) {
+        state--;
+        if (state < 0)
+            state = 2;
+    }
+
+    if (state == 1) {
+        pcPosition = &dictWinPosition["fr-sub2"];
+        abPosition = &dictWinPosition["fr-main"];
+        depthPosition = &dictWinPosition["fr-sub1"];
+    } else if (state == 2) {
+        pcPosition = &dictWinPosition["fr-sub1"];
+        abPosition = &dictWinPosition["fr-sub2"];
+        depthPosition = &dictWinPosition["fr-main"];
+    } else {
+        pcPosition = &dictWinPosition["fr-main"];
+        abPosition = &dictWinPosition["fr-sub1"];
+        depthPosition = &dictWinPosition["fr-sub2"];
+    }
+
+    if (ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
+        LOG(INFO) << "Right Arrow";
+    }
+
     displayDepth = true;
     displayAB = true;
     synchronizeVideo();
