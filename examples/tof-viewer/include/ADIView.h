@@ -43,6 +43,8 @@ class ADIView {
 		*/
     ~ADIView();
 
+    void cleanUp();
+
     /**
 		* @brief Not implemented. Code under development
 		*/
@@ -80,7 +82,7 @@ class ADIView {
     int frameHeight = 0;
     int frameWidth = 0;
     int m_waitKeyBarrier;
-    int numOfThreads = 2;
+    int numOfThreads = 3;
     std::mutex m_frameCapturedMutex;
     bool m_depthFrameAvailable;
     bool m_abFrameAvailable;
@@ -164,7 +166,6 @@ class ADIView {
 
     uint16_t *video_data;
     unsigned int video_texture = 0;
-    bool needsInit = true;
     const char *vertexShaderSource;
     const char *fragmentShaderSource;
     int shaderProgram;

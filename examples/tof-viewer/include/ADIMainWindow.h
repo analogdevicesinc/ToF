@@ -398,17 +398,7 @@ class ADIMainWindow {
 		*/
     void CameraStop();
 
-    /**
-		* @brief Sets the threads to get both
-		*        AB and Depth images
-		*/
-    void synchronizeDepthABVideo();
-
-    /**
-		* @brief Sets the thread to get
-		*        Point Cloud image
-		*/
-    void synchronizePointCloudVideo();
+    void synchronizeVideo();
 
     /**
 		* @brief Displays pixel information while mouse hovers over
@@ -439,6 +429,7 @@ class ADIMainWindow {
 		*/
     void DisplayInfoWindow(ImGuiWindowFlags overlayFlags);
     bool DisplayFrameWindow(ImVec2 &displayUpdate, ImVec2 &size);
+    void DisplayControlWindow(ImGuiWindowFlags overlayFlags);
 
     /**
 		* @brief Displays AB Window
@@ -497,6 +488,10 @@ class ADIMainWindow {
 		* @brief Common pre-display for GUI windows
 		*/
     bool displayDataWindow(ImVec2 &displayUpdate, ImVec2 &size);
+
+    void DrawColoredLabel(const char *fmt, ...);
+    void DrawBarLabel(const char *fmt, ...);
+    void NewLine(float spacing);
 
     // The type of movement that a mouse movement should be interpreted as (if any)
     //
@@ -613,7 +608,19 @@ class ADIMainWindow {
     uint32_t rotationangledegrees = INITIALDEG;
     const float offsetfromtop = OFFSETFROMTOPOFGUI;
     const float offsetfromleft = OFFSETFROMLEFT;
-    std::unordered_map<std::string, std::array<float, 4>> dictWinPosition;
+
+    struct Rect {
+        float x;
+        float y;
+        float width;
+        float height;
+    };
+    std::unordered_map<std::string, Rect> dictWinPosition;
+    float windowCalcX(Rect w, float buffer = 0.0f) { return w.x + w.width + buffer; }
+    float windowCalcY(Rect w, float buffer = 0.0f) { return w.y + w.height + buffer; }
+    Rect *pcPosition;
+    Rect *abPosition;
+    Rect *depthPosition;
     std::shared_ptr<adiviewer::ADIView> view = nullptr;
     AppLog my_log;
 

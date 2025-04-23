@@ -70,6 +70,17 @@ static void glfw_error_callback(int error, const char *description) {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
+void ADIView::cleanUp() {
+    m_capturedFrame = nullptr;
+    ab_video_data = nullptr;
+    depth_video_data = nullptr;
+    pointCloud_video_data = nullptr;
+    if (ab_video_data_8bit != nullptr) {
+        delete[] ab_video_data_8bit;
+        ab_video_data_8bit = nullptr;
+    }
+}
+
 void ADIView::setABMaxRange(std::string value) {
     uint16_t base = 13; // Cap at 8191
 
@@ -152,11 +163,6 @@ void ADIView::_displayAbImage() {
             ab_video_data_8bit[bgrSize++] = (uint8_t)(pix);
         }
 
-        // Create a OpenGL texture identifier
-        if (needsInit) {
-            needsInit = false;
-        }
-
         {
             std::unique_lock<std::mutex> lock(mtx);
             data_ready = true;
@@ -169,7 +175,7 @@ void ADIView::_displayAbImage() {
 
         std::unique_lock<std::mutex> imshow_lock(m_imshowMutex);
         m_waitKeyBarrier += 1;
-        if (m_waitKeyBarrier == /*2*/ numOfThreads) {
+        if (m_waitKeyBarrier == numOfThreads) {
             imshow_lock.unlock();
             m_barrierCv.notify_one();
         }
@@ -247,7 +253,7 @@ void ADIView::_displayDepthImage() {
 
         std::unique_lock<std::mutex> imshow_lock(m_imshowMutex);
         m_waitKeyBarrier += 1;
-        if (m_waitKeyBarrier == /*2*/ numOfThreads) {
+        if (m_waitKeyBarrier == numOfThreads) {
             imshow_lock.unlock();
             m_barrierCv.notify_one();
         }
@@ -344,10 +350,6 @@ void ADIView::_displayPointCloudImage() {
 
         vertexArraySize =
             pointcloudTableSize * sizeof(float) * 3; //Adding RGB component
-        // Create a OpenGL texture identifier
-        if (needsInit) {
-            needsInit = false;
-        }
 
         data_ready = false;
         lock.unlock();

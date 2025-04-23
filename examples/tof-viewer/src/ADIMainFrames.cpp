@@ -37,36 +37,7 @@ bool ADIMainWindow::DisplayFrameWindow(ImVec2 &displayUpdate, ImVec2 &size) {
     return true;
 }
 
-void ADIMainWindow::synchronizeDepthABVideo() {
-
-    view->m_capturedFrame = view->m_ctrl->getFrame();
-
-    aditof::FrameDetails frameDetails;
-    view->m_capturedFrame->getDetails(frameDetails);
-    std::unique_lock<std::mutex> lock(view->m_frameCapturedMutex);
-
-    view->m_abFrameAvailable = true;
-    view->m_depthFrameAvailable = true;
-    view->numOfThreads = 2;
-
-    view->frameHeight = frameDetails.height;
-    view->frameWidth = frameDetails.width;
-
-    lock.unlock();
-    view->m_frameCapturedCv.notify_all();
-    view->m_ctrl->requestFrame();
-
-    /*********************************/
-    std::unique_lock<std::mutex> imshow_lock(view->m_imshowMutex);
-    view->m_barrierCv.wait(imshow_lock, [&]() {
-        return view->m_waitKeyBarrier == view->numOfThreads; /*2*/
-        ;
-    });
-    view->m_waitKeyBarrier = 0;
-    /*********************************/
-}
-
-void ADIMainWindow::synchronizePointCloudVideo() {
+void ADIMainWindow::synchronizeVideo() {
     view->m_capturedFrame = view->m_ctrl->getFrame();
 
     aditof::FrameDetails frameDetails;
@@ -175,34 +146,33 @@ void ADIMainWindow::DisplayActiveBrightnessWindow(
     if (DisplayFrameWindow(displayABDimensions, size) == false)
         return;
 
-    dictWinPosition["ab"] = std::array<float, 4>(
-        {offsetfromleft,
-         dictWinPosition["info"][1] + dictWinPosition["info"][3], size.x,
-         size.y});
-    setWindowPosition(dictWinPosition["ab"][0], dictWinPosition["ab"][1]);
-    setWindowSize(dictWinPosition["ab"][2] + 40,
-                  dictWinPosition["ab"][3] + 130);
+    setWindowPosition(abPosition->x, abPosition->y);
+    setWindowSize(abPosition->width, abPosition->height);
 
     if (ImGui::Begin("Active Brightness Window", nullptr, overlayFlags)) {
 
-        bool logImage = view->getLogImage();
-        bool autoScale = view->getAutoScale();
-
-        ImGui::SameLine();
-        ImGui::Checkbox("Auto-scale", &autoScale);
-
-        if (!autoScale && logImage) {
-            logImage = false;
-        } else if (autoScale) {
-            ImGui::SameLine();
-            ImGui::Checkbox("Log Image", &logImage);
-        }
-        view->setLogImage(logImage);
-        view->setAutoScale(autoScale);
-
         tofImagePosY = ImGui::GetCursorPosY();
 
-        CaptureABVideo();
+        if (view->ab_video_data_8bit != nullptr) {
+            glBindTexture(GL_TEXTURE_2D, ab_video_texture);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, view->frameWidth,
+                         view->frameHeight, 0, GL_BGR, GL_UNSIGNED_BYTE,
+                         view->ab_video_data_8bit);
+            glad_glGenerateMipmap(GL_TEXTURE_2D);
+            //delete view->ab_video_data_8bit; // DO NOT UNCOMMENT YET;
+
+            ImVec2 _displayABDimensions = displayABDimensions;
+
+            if (rotationangledegrees == 90 || rotationangledegrees == 270) {
+                std::swap(_displayABDimensions.x, _displayABDimensions.y);
+            }
+
+            ImageRotated((ImTextureID)ab_video_texture,
+                         ImVec2(abPosition->width, abPosition->height),
+                         ImVec2(_displayABDimensions.x, _displayABDimensions.y),
+                         rotationangleradians);
+        }
+
         ImVec2 hoveredImagePixel = InvalidHoveredPixel;
         GetHoveredImagePix(hoveredImagePixel, ImGui::GetCursorScreenPos(),
                            ImGui::GetIO().MousePos, displayABDimensions);
@@ -212,28 +182,6 @@ void ADIMainWindow::DisplayActiveBrightnessWindow(
     }
 
     ImGui::End();
-}
-
-void ADIMainWindow::CaptureABVideo() {
-    if (view->ab_video_data_8bit != nullptr) {
-        glBindTexture(GL_TEXTURE_2D, ab_video_texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, view->frameWidth,
-                     view->frameHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                     view->ab_video_data_8bit);
-        glad_glGenerateMipmap(GL_TEXTURE_2D);
-        //delete view->ab_video_data_8bit;
-
-        ImVec2 _displayABDimensions = displayABDimensions;
-
-        if (rotationangledegrees == 90 || rotationangledegrees == 270) {
-            std::swap(_displayABDimensions.x, _displayABDimensions.y);
-        }
-
-        ImageRotated((ImTextureID)ab_video_texture,
-                     ImVec2(dictWinPosition["ab"][2], dictWinPosition["ab"][3]),
-                     ImVec2(_displayABDimensions.x, _displayABDimensions.y),
-                     rotationangleradians);
-    }
 }
 
 //*******************************************
@@ -269,20 +217,8 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
     sourceDepthImageDimensions = {(float)(view->frameWidth),
                                   (float)(view->frameHeight)};
 
-    if (displayAB)
-        dictWinPosition["depth"] = std::array<float, 4>(
-            {dictWinPosition["ab"][0] + dictWinPosition["ab"][2],
-             dictWinPosition["info"][1] + dictWinPosition["info"][3], size.x,
-             size.y});
-    else
-        dictWinPosition["depth"] = std::array<float, 4>(
-            {dictWinPosition["pc"][0] + dictWinPosition["pc"][2],
-             dictWinPosition["info"][1] + dictWinPosition["info"][3], size.x,
-             size.y});
-    setWindowPosition(dictWinPosition["depth"][0] + 40,
-                      dictWinPosition["depth"][1]);
-    setWindowSize(dictWinPosition["depth"][2] + 40,
-                  dictWinPosition["depth"][3] + 130);
+    setWindowPosition(depthPosition->x, depthPosition->y);
+    setWindowSize(depthPosition->width, depthPosition->height);
 
     std::string title = "Depth Window";
     if (ImGui::Begin(title.c_str(), nullptr, overlayFlags)) {
@@ -298,7 +234,27 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
             tofImagePosY = ImGui::GetCursorPosY();
         }
 
-        CaptureDepthVideo();
+        if (view->depth_video_data_8bit != nullptr) {
+            glBindTexture(GL_TEXTURE_2D, depth_video_texture);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, view->frameWidth,
+                         view->frameHeight, 0, GL_BGR, GL_UNSIGNED_BYTE,
+                         view->depth_video_data_8bit);
+            glad_glGenerateMipmap(GL_TEXTURE_2D);
+            delete view->depth_video_data_8bit;
+
+            ImVec2 _displayDepthDimensions = displayDepthDimensions;
+
+            if (rotationangledegrees == 90 || rotationangledegrees == 270) {
+                std::swap(_displayDepthDimensions.x, _displayDepthDimensions.y);
+            }
+
+            ImageRotated(
+                (ImTextureID)depth_video_texture,
+                ImVec2(depthPosition->width, depthPosition->height),
+                ImVec2(_displayDepthDimensions.x, _displayDepthDimensions.y),
+                rotationangleradians);
+        }
+
         ImVec2 hoveredImagePixel = InvalidHoveredPixel;
         GetHoveredImagePix(hoveredImagePixel, ImGui::GetCursorScreenPos(),
                            ImGui::GetIO().MousePos, displayDepthDimensions);
@@ -308,29 +264,6 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
     }
 
     ImGui::End();
-}
-
-void ADIMainWindow::CaptureDepthVideo() {
-    if (view->depth_video_data_8bit != nullptr) {
-        glBindTexture(GL_TEXTURE_2D, depth_video_texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, view->frameWidth,
-                     view->frameHeight, 0, GL_BGR, GL_UNSIGNED_BYTE,
-                     view->depth_video_data_8bit);
-        glad_glGenerateMipmap(GL_TEXTURE_2D);
-        delete view->depth_video_data_8bit;
-
-        ImVec2 _displayDepthDimensions = displayDepthDimensions;
-
-        if (rotationangledegrees == 90 || rotationangledegrees == 270) {
-            std::swap(_displayDepthDimensions.x, _displayDepthDimensions.y);
-        }
-
-        ImageRotated(
-            (ImTextureID)depth_video_texture,
-            ImVec2(dictWinPosition["depth"][2], dictWinPosition["depth"][3]),
-            ImVec2(_displayDepthDimensions.x, _displayDepthDimensions.y),
-            rotationangleradians);
-    }
 }
 
 //*******************************************
@@ -350,14 +283,8 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
     sourcePointCloudImageDimensions = {(float)(view->frameWidth),
                                        (float)(view->frameHeight)};
 
-    dictWinPosition["pc"] = std::array<float, 4>(
-        {offsetfromleft,
-         dictWinPosition["info"][1] + dictWinPosition["info"][3], size.x,
-         size.y});
-
-    setWindowPosition(dictWinPosition["pc"][0], dictWinPosition["pc"][1]);
-    setWindowSize(dictWinPosition["pc"][2] + 40,
-                  dictWinPosition["pc"][3] + 130);
+    setWindowPosition(pcPosition->x, pcPosition->y);
+    setWindowSize(pcPosition->width, pcPosition->height);
 
     if (ImGui::Begin("Point Cloud Window", nullptr, overlayFlags)) {
 
@@ -365,7 +292,54 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
             ImGui::SetCursorPosY(tofImagePosY);
         }
 
-        CapturePointCloudVideo();
+        processInputs(window);
+
+        preparePointCloudVertices(view->vertexBufferObject,
+                                    view->vertexArrayObject);
+
+        glad_glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glPointSize(pointSize);
+
+        // draw our Image
+        glUseProgram(view->pcShader.Id());
+        mat4x4_perspective(m_projection, radians(fov),
+                            (float)view->frameWidth /
+                                (float)view->frameHeight,
+                            0.1f, 100.0f);
+        glUniformMatrix4fv(view->projectionIndex, 1, GL_FALSE,
+                            &m_projection[0][0]);
+
+        //Look-At function[ x, y, z] = (cameraPos, cameraPos + cameraFront, cameraUp);
+        vec3_add(cameraPos_Front, cameraPos, cameraFront);
+        mat4x4_look_at(m_view, cameraPos, cameraPos_Front, cameraUp);
+        glUniformMatrix4fv(view->viewIndex, 1, GL_FALSE, &m_view[0][0]);
+        glUniformMatrix4fv(view->modelIndex, 1, GL_FALSE, &m_model[0][0]);
+
+        glBindVertexArray(
+            view->vertexArrayObject); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+        glDrawArrays(GL_POINTS, 0,
+                        static_cast<GLsizei>(view->vertexArraySize));
+        glBindVertexArray(0);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDisable(GL_DEPTH_TEST);
+
+        ImVec2 _displayPointCloudDimensions = displayPointCloudDimensions;
+
+        if (rotationangledegrees == 90 || rotationangledegrees == 270) {
+            std::swap(_displayPointCloudDimensions.x,
+                        _displayPointCloudDimensions.y);
+        }
+
+        ImageRotated((ImTextureID)pointCloud_video_texture,
+                        ImVec2(pcPosition->width, pcPosition->height),
+                        ImVec2(_displayPointCloudDimensions.x,
+                            _displayPointCloudDimensions.y),
+                        rotationangleradians);
+        glDeleteVertexArrays(1, &view->vertexArrayObject);
+        glDeleteBuffers(1, &view->vertexBufferObject);
     }
     ImGui::End();
 }
@@ -473,55 +447,6 @@ void ADIMainWindow::initOpenGLPointCloudTexture() {
                                 GL_TEXTURE_2D,
                            pointCloud_video_texture, 0);
     glad_glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-void ADIMainWindow::CapturePointCloudVideo() {
-
-    processInputs(window);
-
-    preparePointCloudVertices(view->vertexBufferObject,
-                              view->vertexArrayObject);
-
-    glad_glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glPointSize(pointSize);
-
-    // draw our Image
-    glUseProgram(view->pcShader.Id());
-    mat4x4_perspective(m_projection, radians(fov),
-                       (float)view->frameWidth / (float)view->frameHeight, 0.1f,
-                       100.0f);
-    glUniformMatrix4fv(view->projectionIndex, 1, GL_FALSE, &m_projection[0][0]);
-
-    //Look-At function[ x, y, z] = (cameraPos, cameraPos + cameraFront, cameraUp);
-    vec3_add(cameraPos_Front, cameraPos, cameraFront);
-    mat4x4_look_at(m_view, cameraPos, cameraPos_Front, cameraUp);
-    glUniformMatrix4fv(view->viewIndex, 1, GL_FALSE, &m_view[0][0]);
-    glUniformMatrix4fv(view->modelIndex, 1, GL_FALSE, &m_model[0][0]);
-
-    glBindVertexArray(
-        view->vertexArrayObject); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(view->vertexArraySize));
-    glBindVertexArray(0);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glDisable(GL_DEPTH_TEST);
-
-    ImVec2 _displayPointCloudDimensions = displayPointCloudDimensions;
-
-    if (rotationangledegrees == 90 || rotationangledegrees == 270) {
-        std::swap(_displayPointCloudDimensions.x,
-                  _displayPointCloudDimensions.y);
-    }
-
-    ImageRotated(
-        (ImTextureID)pointCloud_video_texture,
-        ImVec2(dictWinPosition["pc"][2], dictWinPosition["pc"][3]),
-        ImVec2(_displayPointCloudDimensions.x, _displayPointCloudDimensions.y),
-        rotationangleradians);
-    glDeleteVertexArrays(1, &view->vertexArrayObject);
-    glDeleteBuffers(1, &view->vertexBufferObject);
 }
 
 static inline ImVec2 operator+(const ImVec2 &lhs, const ImVec2 &rhs) {

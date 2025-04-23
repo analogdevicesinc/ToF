@@ -12,35 +12,6 @@ using namespace adiMainWindow;
 #include <cstdarg> // for va_list
 #include <imgui.h>
 
-void DrawColoredLabel(const char *fmt, ...) {
-    // Format the text
-    char buf[512];
-    va_list args;
-    va_start(args, fmt);
-    vsnprintf(buf, sizeof(buf), fmt, args);
-    va_end(args);
-    ImVec4 box_color = ImVec4(0.2f, 0.6f, 0.9f, 1.0f); // RGBa
-
-    // Get draw list and cursor position
-    ImVec2 textPos = ImGui::GetCursorScreenPos();
-    ImVec2 textSize = ImGui::CalcTextSize(buf);
-    float padding = 2.0f;
-
-    // Draw background box
-    ImDrawList *drawList = ImGui::GetWindowDrawList();
-    drawList->AddRectFilled(ImVec2(textPos.x - padding, textPos.y - padding),
-                            ImVec2(textPos.x + textSize.x + padding,
-                                   textPos.y + textSize.y + padding),
-                            ImGui::ColorConvertFloat4ToU32(box_color),
-                            4.0f // optional: corner radius
-    );
-
-    // Draw the text on top
-    ImGui::SetCursorScreenPos(textPos);
-    ImGui::TextUnformatted(buf);
-}
-
-
 void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
     using namespace aditof;
     static bool show_ini_window = false;
@@ -56,18 +27,8 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
         setTempWinPositionOnce = false;
     }
 
-    float info_width = 900.0f;
-    float info_height = (_isHighDPI) ? 205.0f : 180.0f;
-
-    if (displayAB)
-        dictWinPosition["info"] = std::array<float, 4>(
-            {offsetfromleft, offsetfromtop, info_width, info_height});
-    else
-        dictWinPosition["info"] = std::array<float, 4>(
-            {offsetfromleft, offsetfromtop, info_width, info_height});
-
-    setWindowPosition(dictWinPosition["info"][0], dictWinPosition["info"][1]);
-    setWindowSize(dictWinPosition["info"][2], dictWinPosition["info"][3]);
+    setWindowPosition(dictWinPosition["info"].x, dictWinPosition["info"].y);
+    setWindowSize(dictWinPosition["info"].width, dictWinPosition["info"].height);
 
     if (ImGui::Begin("Information Window", nullptr,
                      overlayFlags | ImGuiWindowFlags_NoTitleBar)) {
@@ -138,98 +99,6 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
                     DrawColoredLabel("%iC, %iC", laserTemp, sensorTemp);
                 }
             }
-        }
-
-        //ImGui::NewLine();
-        ImGui::Text(" Rotate: ");
-        ImGui::SameLine();
-        bool rotate = ImGui::Button("+");
-        ImGui::SameLine();
-        if (rotate) {
-            rotationangleradians += M_PI / 2;
-            rotationangledegrees += 90;
-            if (rotationangledegrees >= 360) {
-                rotationangleradians = 0;
-                rotationangledegrees = 0;
-            }
-        }
-        ImGui::Text("%i", rotationangledegrees);
-        ImGui::Text(" Point Cloud Control: ");
-        ImGui::SameLine();
-        if (ImGuiExtensions::ADIButton("Reset", true)) {
-            pointCloudReset();
-        }
-        ImGui::SameLine();
-        ImGui::SliderInt("", &pointSize, 1, 10,
-                                      "Point Size: %d px");
-
-        // "Stop" button
-        ImGuiExtensions::ButtonColorChanger colorChangerStop(customColorStop,
-                                                             isPlaying);
-        if (isPlaying && !isRecording) {
-            ImGui::Text(" View Options:");
-            ImGui::SameLine();
-            ImGuiExtensions::ADIRadioButton("Depth with Active Brightness",
-                                            &viewSelection, 0);
-            ImGui::SameLine();
-            ImGuiExtensions::ADIRadioButton("Depth with Point Cloud",
-                                            &viewSelection, 1);
-            if (ImGuiExtensions::ADIButton("Stop Streaming", isPlaying)) {
-                isPlaying = false;
-                isPlayRecorded = false;
-                m_fps_frameRecvd = 0;
-                CameraStop();
-                if (isRecording) {
-                    view->m_ctrl->stopRecording();
-                    isRecording = false;
-                }
-            }
-        }
-        if (isRecording) {
-            ImGui::Text(" View Options:");
-            ImGui::SameLine();
-            ImGuiExtensions::ADIRadioButton("Active Brightness and Depth",
-                                            &viewSelection, 0);
-            ImGui::SameLine();
-            ImGuiExtensions::ADIRadioButton("Point Cloud and Depth",
-                                            &viewSelection, 1);
-            if (ImGuiExtensions::ADIButton("Stop Recording", isPlaying)) {
-                isPlaying = false;
-                isPlayRecorded = false;
-                m_fps_frameRecvd = 0;
-                CameraStop();
-                if (isRecording) {
-                    view->m_ctrl->stopRecording();
-                    isRecording = false;
-                }
-            }
-        }
-        if (isPlayRecorded) {
-            ImGui::SameLine();
-            if (view != nullptr &&
-                view->m_ctrl->m_recorder->getStopPlayback()) {
-                stopPlayback();
-                view->m_ctrl->m_recorder->setStopPlayback(false);
-            }
-
-            { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
-                ImGuiExtensions::ButtonColorChanger colorChangerStopPB(
-                    customColorStop, isPlayRecorded);
-                if (ImGuiExtensions::ADIButton("Close Recording",
-                                               isPlayRecorded)) {
-                    stopPlayback();
-                }
-            }
-
-            uint32_t totalFrames =
-                view->m_ctrl->m_recorder->getNumberOfFrames();
-
-            rawSeeker = view->m_ctrl->m_recorder->getPlaybackFrameNumber();
-
-            ImGui::SliderInt("Frame #", &rawSeeker, 0,
-                                          totalFrames - 1, "%d");
-
-            view->m_ctrl->m_recorder->setPlaybackFrameNumber(rawSeeker);
         }
     }
 

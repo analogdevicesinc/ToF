@@ -249,7 +249,7 @@ bool ADIMainWindow::startImGUI(const ADIViewerArgs &args) {
     // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
     // Enable Gamepad Controls
 
-    if (args.HighDpi) {
+    if (args.HighDpi && 0) {
         dpiScaleFactor = HIGHDPISCALAR;
         _isHighDPI = true;
     } else {
@@ -257,6 +257,38 @@ bool ADIMainWindow::startImGUI(const ADIViewerArgs &args) {
         _isHighDPI = false;
     }
     setDpi();
+
+    dictWinPosition["info"].x = 5.0f;
+    dictWinPosition["info"].y = 25.0f;
+    dictWinPosition["info"].width = 200.0f;
+    dictWinPosition["info"].height = 200.0f;
+
+    dictWinPosition["control"].x = dictWinPosition["info"].x;
+    dictWinPosition["control"].y = windowCalcY(dictWinPosition["info"], 10.0f);
+    dictWinPosition["control"].width = dictWinPosition["info"].width;
+    dictWinPosition["control"].height = 300.0f;
+
+    dictWinPosition["fr-main"].x =
+        windowCalcX(dictWinPosition["info"], 10.0f);
+    dictWinPosition["fr-main"].y = dictWinPosition["info"].y;
+    dictWinPosition["fr-main"].width = 640.0f;
+    dictWinPosition["fr-main"].height = 640.0f;
+
+    dictWinPosition["fr-sub1"].x =
+        windowCalcX(dictWinPosition["fr-main"], 10.0f);
+    dictWinPosition["fr-sub1"].y = dictWinPosition["fr-main"].y;
+    dictWinPosition["fr-sub1"].width = 256.0f;
+    dictWinPosition["fr-sub1"].height = 256.0f;
+
+    dictWinPosition["fr-sub2"].x = dictWinPosition["fr-sub1"].x;
+    dictWinPosition["fr-sub2"].y =
+        windowCalcY(dictWinPosition["fr-sub1"], 10.0f);
+    dictWinPosition["fr-sub2"].width = 256.0f;
+    dictWinPosition["fr-sub2"].height = 256.0f;
+
+    pcPosition = &dictWinPosition["fr-main"];
+    abPosition = &dictWinPosition["fr-sub1"];
+    depthPosition = &dictWinPosition["fr-sub2"];
 
     // Setup Dear ImGui style
     //ImGui::StyleColorsDark();
@@ -664,15 +696,6 @@ void ADIMainWindow::showDeviceMenu() {
                     "", "Select Mode", ImGuiSelectableFlags_None,
                     m_cameraModesDropDown, &modeSelection, true);
 
-                ImGui::NewLine();
-                ImGui::Text("View Options:");
-                ImGuiExtensions::ADIRadioButton("Active Brightness and Depth",
-                                                &viewSelection, 0);
-                ImGuiExtensions::ADIRadioButton("Point Cloud and Depth",
-                                                &viewSelection, 1);
-                ImGui::NewLine();
-                ImGui::Text("Video:");
-
                 { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
                     ImGuiExtensions::ButtonColorChanger colorChangerPlay(
                         customColorPlay, !isPlaying);
@@ -790,15 +813,9 @@ void ADIMainWindow::PlayRecorded() {
 
     displayDepth = true;
     pointCloudEnable = true;
-    if (viewSelection == 0) {
-        displayAB = true;
-        displayPointCloud = false;
-        synchronizeDepthABVideo();
-    } else {
-        displayAB = false;
-        displayPointCloud = true;
-        synchronizePointCloudVideo();
-    }
+    displayAB = true;
+    displayPointCloud = true;
+    synchronizeVideo();
 
     if (displayAB) {
         DisplayActiveBrightnessWindow(overlayFlags);
@@ -810,6 +827,7 @@ void ADIMainWindow::PlayRecorded() {
         DisplayPointCloudWindow(overlayFlags);
     }
     DisplayInfoWindow(overlayFlags);
+    DisplayControlWindow(overlayFlags);
 }
 
 void ADIMainWindow::showIniWindow(bool *p_open) {
@@ -1051,3 +1069,60 @@ void ADIMainWindow::iniParamWarn(std::string variable, std::string validVal) {
     ImGui::Text("Invalid %s value.", variable.c_str());
     ImGui::Text(validVal.c_str());
 }
+
+void ADIMainWindow::DrawColoredLabel(const char *fmt, ...) {
+    // Format the text
+    char buf[512];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+    ImVec4 box_color = ImVec4(0.2f, 0.6f, 0.9f, 1.0f); // RGBa
+
+    // Get draw list and cursor position
+    ImVec2 textPos = ImGui::GetCursorScreenPos();
+    ImVec2 textSize = ImGui::CalcTextSize(buf);
+    float padding = 2.0f;
+
+    // Draw background box
+    ImDrawList *drawList = ImGui::GetWindowDrawList();
+    drawList->AddRectFilled(ImVec2(textPos.x - padding, textPos.y - padding),
+                            ImVec2(textPos.x + textSize.x + padding,
+                                   textPos.y + textSize.y + padding),
+                            ImGui::ColorConvertFloat4ToU32(box_color),
+                            4.0f // optional: corner radius
+    );
+
+    // Draw the text on top
+    ImGui::SetCursorScreenPos(textPos);
+    ImGui::TextUnformatted(buf);
+}
+
+void ADIMainWindow::DrawBarLabel(const char *fmt, ...) {
+
+    char buf[512];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+
+    ImGui::PushStyleColor(
+        ImGuiCol_ChildBg,
+        IM_COL32(60, 60, 60, 255)); // Optional: dark bar background
+
+    float textHeight = ImGui::GetTextLineHeight();
+    ImGui::BeginChild(buf, ImVec2(0, textHeight * 1.1f), false);
+
+    // Center the text
+    float windowWidth = ImGui::GetWindowSize().x;
+    float textWidth = ImGui::CalcTextSize(buf).x;
+    ImGui::SetCursorPosX((windowWidth - textWidth) *
+                         0.5f); // center horizontally
+    ImGui::Text(buf);
+
+    ImGui::EndChild();
+
+    ImGui::PopStyleColor(); // Reset bar color
+}
+
+void ADIMainWindow::NewLine(float spacing) { ImGui::Dummy(ImVec2(0.0f, spacing)); }

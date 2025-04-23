@@ -201,26 +201,14 @@ void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
         }
     }
 
-    switch (viewSelect) {
-    case 0: //Depth and AB
-        displayAB = true;
-        displayDepth = true; 
-        synchronizeDepthABVideo();
-        DisplayActiveBrightnessWindow(overlayFlags);
-        DisplayDepthWindow(overlayFlags);
-        DisplayInfoWindow(overlayFlags);
-        break;
-    case 1: //Depth and Point Cloud Window
-        displayDepth = true;
-        displayAB = false;
-        synchronizePointCloudVideo();
-        DisplayPointCloudWindow(overlayFlags);
-        DisplayDepthWindow(overlayFlags);
-        DisplayInfoWindow(overlayFlags);
-        break;
-    default:
-        break;
-    }
+    displayDepth = true;
+    displayAB = true;
+    synchronizeVideo();
+    DisplayPointCloudWindow(overlayFlags);
+    DisplayActiveBrightnessWindow(overlayFlags);
+    DisplayDepthWindow(overlayFlags);
+    DisplayInfoWindow(overlayFlags);
+    DisplayControlWindow(overlayFlags);
 }
 
 void ADIMainWindow::CameraStop() {
@@ -236,10 +224,7 @@ void ADIMainWindow::CameraStop() {
             view->m_ctrl->StopCapture();
             view->m_ctrl->panicStop = false;
         }
-        view->m_capturedFrame = nullptr;
-        view->ab_video_data = nullptr;
-        view->depth_video_data = nullptr;
-        view->pointCloud_video_data = nullptr;
+        view->cleanUp();
     }
     if (isRecording) {
         view->m_ctrl->stopRecording();
