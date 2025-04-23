@@ -337,14 +337,18 @@ void ADIView::_displayPointCloudImage() {
 
                 hsvColorMap((pointCloud_video_data[i + 2]), maxRange, minRange,
                             fRed, fGreen, fBlue);
-
-                normalized_vertices[bgrSize++] = 
-                    (float)ab_video_data_8bit[cntr++] / 255.0f;
-                normalized_vertices[bgrSize++] =
-                    (float)ab_video_data_8bit[cntr++] / 255.0f;
-                normalized_vertices[bgrSize++] =
-                    (float)ab_video_data_8bit[cntr++] / 255.0f;
-
+                if (m_pccolour == 1) {
+                    normalized_vertices[bgrSize++] =
+                        (float)ab_video_data_8bit[cntr++] / 255.0f;
+                    normalized_vertices[bgrSize++] =
+                        (float)ab_video_data_8bit[cntr++] / 255.0f;
+                    normalized_vertices[bgrSize++] =
+                        (float)ab_video_data_8bit[cntr++] / 255.0f;
+                } else {
+                    normalized_vertices[bgrSize++] = fRed;
+                    normalized_vertices[bgrSize++] = fGreen;
+                    normalized_vertices[bgrSize++] = fBlue;
+                }
             }
         }
 

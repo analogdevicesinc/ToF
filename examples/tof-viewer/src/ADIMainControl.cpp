@@ -74,6 +74,19 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
 
         NewLine(5.0f);
 
+        static uint32_t selected;
+
+        ImGui::RadioButton("Depth Colour", selected == 0);
+        if (ImGui::IsItemClicked())
+            selected = 0;
+        ImGui::RadioButton("AB Colour", selected == 1);
+        if (ImGui::IsItemClicked())
+            selected = 1;
+
+        view->setPointCloudColour(selected);
+
+        NewLine(5.0f);
+
         DrawBarLabel("Active Brightness");
         NewLine(5.0f);
         bool logImage = view->getLogImage();

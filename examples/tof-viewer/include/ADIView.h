@@ -75,6 +75,8 @@ class ADIView {
     void setUserABMinState(bool value) { m_minABPixelValueSet = value; }
     bool getUserABMinState() { return m_minABPixelValueSet; }
 
+    void setPointCloudColour(uint32_t colour) { m_pccolour = colour; }
+
     std::shared_ptr<adicontroller::ADIController> m_ctrl;
     std::shared_ptr<aditof::Frame> m_capturedFrame = nullptr;
     std::condition_variable m_barrierCv;
@@ -89,6 +91,7 @@ class ADIView {
     bool m_pointCloudFrameAvailable;
     bool m_stopWorkersFlag = false;
     bool m_saveBinaryFormat = false;
+    uint32_t m_pccolour = 0;
 
     std::thread m_depthImageWorker;
     std::thread m_abImageWorker;

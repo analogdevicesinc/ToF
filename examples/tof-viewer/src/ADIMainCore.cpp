@@ -166,7 +166,7 @@ ADIMainWindow::~ADIMainWindow() {
     }
 
     // imGUI disposing
-    ImGui::GetIO().IniFilename = NULL;
+    //ImGui::GetIO().IniFilename = NULL;
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
@@ -266,7 +266,7 @@ bool ADIMainWindow::startImGUI(const ADIViewerArgs &args) {
     dictWinPosition["control"].x = dictWinPosition["info"].x;
     dictWinPosition["control"].y = windowCalcY(dictWinPosition["info"], 10.0f);
     dictWinPosition["control"].width = dictWinPosition["info"].width;
-    dictWinPosition["control"].height = 300.0f;
+    dictWinPosition["control"].height = 400.0f;
 
     dictWinPosition["fr-main"].x =
         windowCalcX(dictWinPosition["info"], 10.0f);
