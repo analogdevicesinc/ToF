@@ -38,6 +38,9 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
             m_focusedOnce = true;
         }
 
+        DrawBarLabel("Control Window");
+        NewLine(5.0f);
+
         if (ImGuiExtensions::ADIButton("Stop Streaming", isPlaying)) {
             isPlaying = false;
             isPlayRecorded = false;
@@ -48,6 +51,7 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
                 isRecording = false;
             }
         }
+        NewLine(5.0f);
 
         DrawBarLabel("Rotate");
         NewLine(5.0f);

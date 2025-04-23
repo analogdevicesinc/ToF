@@ -403,7 +403,7 @@ class ADIMainWindow {
     /**
 		* @brief Displays pixel information while mouse hovers over
 		*/
-    void RenderInfoPane(ImVec2 hoveredImagePixel, uint16_t *currentImage,
+    void RenderFrameHoverInfo(ImVec2 hoveredImagePixel, uint16_t *currentImage,
                         int imageWidth, bool isHovered,
                         ADI_Image_Format_t format, std::string units);
 

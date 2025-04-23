@@ -16,6 +16,71 @@ using namespace adiMainWindow;
 //* Section: Generic
 //*******************************************
 
+void ADIMainWindow::RenderFrameHoverInfo(ImVec2 hoveredImagePixel,
+                                         uint16_t *currentImage, int imageWidth,
+                                         bool isHovered,
+                                         ADI_Image_Format_t format,
+                                         std::string units) {
+    if (static_cast<int>(hoveredImagePixel.x) ==
+            static_cast<int>(InvalidHoveredPixel.x) &&
+        static_cast<int>(hoveredImagePixel.y) ==
+            static_cast<int>(InvalidHoveredPixel.y)) {
+        return;
+    }
+
+    ImGuiWindowFlags overlayFlags2 =
+        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar |
+        ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
+        ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing |
+        ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoScrollbar;
+
+    ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos(), ImGuiCond_Always);
+    ImGui::SetNextWindowBgAlpha(0.3f); // Transparent background
+    uint16_t pixelValue = 0;
+
+    if (format == ADI_Image_Format_t::ADI_IMAGE_FORMAT_DEPTH16) {
+
+        ImGui::Begin("dd", nullptr, overlayFlags2);
+
+        if (hoveredImagePixel.x >= 0 && hoveredImagePixel.y >= 0) {
+            pixelValue =
+                currentImage[((int)hoveredImagePixel.y * (imageWidth)) +
+                             int(hoveredImagePixel
+                                     .x)]; //153280 is pixel value linear
+
+            if (isHovered || ImGui::IsWindowHovered()) {
+                ImGui::Text("Current pixel: %d, %d", int(hoveredImagePixel.x),
+                            int(hoveredImagePixel.y));
+                ImGui::Text("Current pixel value: %d %s", pixelValue,
+                            units.c_str());
+                //ImGui::Text("Temperature: %d %s", view->temperature_c, " C");//Not ready to implement yet.
+            } else {
+                ImGui::Text("Hover over the image to get pixel value");
+            }
+        }
+        ImGui::End();
+    } else if (format == ADI_Image_Format_t::ADI_IMAGE_FORMAT_AB16) {
+        ImGui::Begin("dd", nullptr, overlayFlags2);
+
+        if (hoveredImagePixel.x >= 0 && hoveredImagePixel.y >= 0) {
+            pixelValue =
+                currentImage[((int)hoveredImagePixel.y * (imageWidth)) +
+                             int(hoveredImagePixel
+                                     .x)]; //153280 is pixel value linear
+
+            if (isHovered || ImGui::IsWindowHovered()) {
+                ImGui::Text("Current pixel: %d, %d", int(hoveredImagePixel.x),
+                            int(hoveredImagePixel.y));
+                ImGui::Text("Current pixel value: %d %s", pixelValue,
+                            units.c_str());
+            } else {
+                ImGui::Text("Hover over the image to get pixel value");
+            }
+        }
+        ImGui::End();
+    }
+}
+
 bool ADIMainWindow::DisplayFrameWindow(ImVec2 &displayUpdate, ImVec2 &size) {
 
     if ((float)view->frameWidth == 0.0 && (float)(view->frameHeight == 0.0)) {
@@ -176,7 +241,8 @@ void ADIMainWindow::DisplayActiveBrightnessWindow(
         ImVec2 hoveredImagePixel = InvalidHoveredPixel;
         GetHoveredImagePix(hoveredImagePixel, ImGui::GetCursorScreenPos(),
                            ImGui::GetIO().MousePos, displayABDimensions);
-        RenderInfoPane(hoveredImagePixel, view->ab_video_data, view->frameWidth,
+        RenderFrameHoverInfo(hoveredImagePixel, view->ab_video_data,
+                             view->frameWidth,
                        ImGui::IsWindowHovered(),
                        ADI_Image_Format_t::ADI_IMAGE_FORMAT_AB16, "mm");
     }
@@ -258,7 +324,7 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
         ImVec2 hoveredImagePixel = InvalidHoveredPixel;
         GetHoveredImagePix(hoveredImagePixel, ImGui::GetCursorScreenPos(),
                            ImGui::GetIO().MousePos, displayDepthDimensions);
-        RenderInfoPane(hoveredImagePixel, view->depth_video_data,
+        RenderFrameHoverInfo(hoveredImagePixel, view->depth_video_data,
                        view->frameWidth, ImGui::IsWindowHovered(),
                        ADI_Image_Format_t::ADI_IMAGE_FORMAT_DEPTH16, "mm");
     }
