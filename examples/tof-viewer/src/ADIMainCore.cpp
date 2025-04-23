@@ -260,7 +260,7 @@ bool ADIMainWindow::startImGUI(const ADIViewerArgs &args) {
 
     dictWinPosition["info"].x = 5.0f;
     dictWinPosition["info"].y = 25.0f;
-    dictWinPosition["info"].width = 250.0f;
+    dictWinPosition["info"].width = 300.0f;
     dictWinPosition["info"].height = 200.0f;
 
     dictWinPosition["control"].x = dictWinPosition["info"].x;
@@ -435,7 +435,7 @@ void ADIMainWindow::showMainMenu() {
     }
 
     if (ImGui::BeginMainMenuBar()) {
-        if (ImGui::BeginMenu("Open")) {
+        if (ImGui::BeginMenu("?")) {
             showDeviceMenu();
             ImGui::Separator();
             if (ImGui::MenuItem("Exit")) {

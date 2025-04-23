@@ -428,7 +428,8 @@ class ADIMainWindow {
 		* @brief Displays the Information Window
 		*/
     void DisplayInfoWindow(ImGuiWindowFlags overlayFlags);
-    bool DisplayFrameWindow(ImVec2 &displayUpdate, ImVec2 &size);
+    bool DisplayFrameWindow(ImVec2 windowSize, ImVec2 &displayUpdate,
+                            ImVec2 &size);
     void DisplayControlWindow(ImGuiWindowFlags overlayFlags);
 
     /**
@@ -555,6 +556,7 @@ class ADIMainWindow {
     std::vector<uint8_t> _cameraModes;
     std::vector<std::pair<int, uint8_t>> m_cameraModes;
     std::vector<std::pair<int, std::string>> m_cameraModesDropDown;
+    std::unordered_map<uint16_t, std::string> m_cameraModesLookup;
 
     ImVec2 sourceDepthImageDimensions;
     ImVec2 displayDepthDimensions;

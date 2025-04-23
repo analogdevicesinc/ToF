@@ -1,4 +1,5 @@
 #include <glad/gl.h>
+#include <cmath>
 #include "ADIMainWindow.h"
 #include "ADIImGUIExtensions.h"
 
@@ -81,14 +82,18 @@ void ADIMainWindow::RenderFrameHoverInfo(ImVec2 hoveredImagePixel,
     }
 }
 
-bool ADIMainWindow::DisplayFrameWindow(ImVec2 &displayUpdate, ImVec2 &size) {
+bool ADIMainWindow::DisplayFrameWindow(ImVec2 windowSize, ImVec2 &displayUpdate,
+                                       ImVec2 &size) {
 
-    if ((float)view->frameWidth == 0.0 && (float)(view->frameHeight == 0.0)) {
-        return false;
-    }
+    //if ((float)view->frameWidth == 0.0 && (float)(view->frameHeight == 0.0)) {
+    //    return false;
+    //}
 
-    size.x = view->frameWidth * imagescale;
-    size.y = view->frameHeight * imagescale;
+    float autoscale = std::fmin((windowSize.x / view->frameWidth),
+                               (windowSize.y / view->frameHeight));
+
+    size.x = view->frameWidth * autoscale;
+    size.y = view->frameHeight * autoscale;
 
     if (rotationangledegrees == 90 || rotationangledegrees == 270) {
         std::swap(size.x, size.y);
@@ -208,7 +213,8 @@ void ADIMainWindow::DisplayActiveBrightnessWindow(
 
     ImVec2 size;
 
-    if (DisplayFrameWindow(displayABDimensions, size) == false)
+    if (DisplayFrameWindow(ImVec2(abPosition->width, abPosition->height),
+                           displayABDimensions, size) == false)
         return;
 
     setWindowPosition(abPosition->x, abPosition->y);
@@ -216,7 +222,7 @@ void ADIMainWindow::DisplayActiveBrightnessWindow(
 
     if (ImGui::Begin("Active Brightness Window", nullptr, overlayFlags)) {
 
-        tofImagePosY = ImGui::GetCursorPosY();
+        ImGui::SetCursorPos(ImVec2(0, 0));
 
         if (view->ab_video_data_8bit != nullptr) {
             glBindTexture(GL_TEXTURE_2D, ab_video_texture);
@@ -224,7 +230,6 @@ void ADIMainWindow::DisplayActiveBrightnessWindow(
                          view->frameHeight, 0, GL_BGR, GL_UNSIGNED_BYTE,
                          view->ab_video_data_8bit);
             glad_glGenerateMipmap(GL_TEXTURE_2D);
-            //delete view->ab_video_data_8bit; // DO NOT UNCOMMENT YET;
 
             ImVec2 _displayABDimensions = displayABDimensions;
 
@@ -273,7 +278,8 @@ void ADIMainWindow::initOpenGLDepthTexture() {
 void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
     ImVec2 size;
 
-    if (DisplayFrameWindow(displayDepthDimensions, size) == false)
+    if (DisplayFrameWindow(ImVec2(depthPosition->width, depthPosition->height),
+                           displayDepthDimensions, size) == false)
         return;
 
     if ((float)view->frameWidth == 0.0 && (float)(view->frameHeight == 0.0)) {
@@ -289,16 +295,7 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
     std::string title = "Depth Window";
     if (ImGui::Begin(title.c_str(), nullptr, overlayFlags)) {
 
-        if (!m_focusedOnce) {
-            ImGui::SetWindowFocus();
-            m_focusedOnce = true;
-        }
-
-        if (tofImagePosY != -1.0f) {
-            ImGui::SetCursorPosY(tofImagePosY);
-        } else {
-            tofImagePosY = ImGui::GetCursorPosY();
-        }
+        ImGui::SetCursorPos(ImVec2(0, 0));
 
         if (view->depth_video_data_8bit != nullptr) {
             glBindTexture(GL_TEXTURE_2D, depth_video_texture);
@@ -339,7 +336,8 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
 void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
     ImVec2 size;
 
-    if (DisplayFrameWindow(displayPointCloudDimensions, size) == false)
+    if (DisplayFrameWindow(ImVec2(pcPosition->width, pcPosition->height),
+                           displayPointCloudDimensions, size) == false)
         return;
 
     if ((float)view->frameWidth == 0.0 && (float)(view->frameHeight == 0.0)) {
@@ -354,9 +352,7 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
 
     if (ImGui::Begin("Point Cloud Window", nullptr, overlayFlags)) {
 
-        if (tofImagePosY != -1.0f) {
-            ImGui::SetCursorPosY(tofImagePosY);
-        }
+        ImGui::SetCursorPos(ImVec2(0, 0));
 
         processInputs(window);
 

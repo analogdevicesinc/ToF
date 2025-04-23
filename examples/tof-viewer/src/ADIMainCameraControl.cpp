@@ -52,6 +52,7 @@ void ADIMainWindow::InitCamera() {
     m_camerasList.clear();
     _cameraModes.clear();
     m_cameraModesDropDown.clear();
+    m_cameraModesLookup.clear();
 
     aditof::Status status = aditof::Status::OK;
     auto camera = getActiveCamera(); //already initialized on constructor
@@ -84,15 +85,15 @@ void ADIMainWindow::InitCamera() {
         sensor->getModeDetails(_cameraModes.at(i), modeDetails);
 
         std::string s = std::to_string(_cameraModes.at(i));
-        s = s + " (W: " + std::to_string(modeDetails.baseResolutionWidth) +
-            " H: " + std::to_string(modeDetails.baseResolutionHeight) + ") ";
+        s = s + ":" + std::to_string(modeDetails.baseResolutionWidth) +
+            "x" + std::to_string(modeDetails.baseResolutionHeight) + ",";
         if (!modeDetails.isPCM) {
-            s = s +
-                "Frequencies: " + std::to_string(modeDetails.numberOfPhases);
+            s = s + std::to_string(modeDetails.numberOfPhases) + " Phases";
         } else {
             s = s + "PCM";
         }
         m_cameraModesDropDown.emplace_back(modeDetails.modeNumber, s);
+        m_cameraModesLookup[modeDetails.modeNumber] = s;
     }
 
     for (int i = 0; i < _cameraModes.size(); i++) {

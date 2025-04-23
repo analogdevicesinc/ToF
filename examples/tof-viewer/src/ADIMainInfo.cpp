@@ -60,10 +60,21 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
         for (int i = 0; i < m_cameraIp.length(); i++)
             formattedIP += toupper(m_cameraIp[i]);
 
+        const char *col1Text = "Laser Temp (C)";
+        const float padding = 20.0f; // Optional extra space
+        float col1Width = ImGui::CalcTextSize(col1Text).x + padding;
+
         DrawBarLabel("Information Window");
         NewLine(5.0f);
 
-        if (ImGui::BeginTable("MyTable", 2)) {
+        if (ImGui::BeginTable("Information Table", 2)) {
+            ImGui::TableSetupColumn(
+                "Type", ImGuiTableColumnFlags_WidthFixed, col1Width);
+            ImGui::TableSetupColumn("Value",
+                                    ImGuiTableColumnFlags_WidthStretch);
+
+            ImGui::TableHeadersRow();
+
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Camera");
@@ -74,7 +85,8 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Mode");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%i", camera_mode);
+            std::string s = m_cameraModesLookup[static_cast<uint16_t>(camera_mode)]; 
+            ImGui::Text(s.c_str());
 
             if (m_fps_expectedFPS) {
                 ImGui::TableNextRow();
