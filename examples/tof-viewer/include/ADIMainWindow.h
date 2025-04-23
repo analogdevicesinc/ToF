@@ -428,7 +428,7 @@ class ADIMainWindow {
 		* @brief Displays the Information Window
 		*/
     void DisplayInfoWindow(ImGuiWindowFlags overlayFlags);
-    bool DisplayFrameWindow(ImVec2 windowSize, ImVec2 &displayUpdate,
+    float DisplayFrameWindow(ImVec2 windowSize, ImVec2 &displayUpdate,
                             ImVec2 &size);
     void DisplayControlWindow(ImGuiWindowFlags overlayFlags);
 
@@ -620,9 +620,10 @@ class ADIMainWindow {
     std::unordered_map<std::string, Rect> dictWinPosition;
     float windowCalcX(Rect w, float buffer = 0.0f) { return w.x + w.width + buffer; }
     float windowCalcY(Rect w, float buffer = 0.0f) { return w.y + w.height + buffer; }
-    Rect *pcPosition;
-    Rect *abPosition;
-    Rect *depthPosition;
+    Rect *m_pcPosition;
+    Rect *m_abPosition;
+    Rect *m_depthPosition;
+    int16_t m_frameWindowPosState;
     std::shared_ptr<adiviewer::ADIView> view = nullptr;
     AppLog my_log;
 

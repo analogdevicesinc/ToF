@@ -82,15 +82,13 @@ void ADIMainWindow::RenderFrameHoverInfo(ImVec2 hoveredImagePixel,
     }
 }
 
-bool ADIMainWindow::DisplayFrameWindow(ImVec2 windowSize, ImVec2 &displayUpdate,
+float ADIMainWindow::DisplayFrameWindow(ImVec2 windowSize, ImVec2 &displayUpdate,
                                        ImVec2 &size) {
-
-    //if ((float)view->frameWidth == 0.0 && (float)(view->frameHeight == 0.0)) {
-    //    return false;
-    //}
 
     float autoscale = std::fmin((windowSize.x / view->frameWidth),
                                (windowSize.y / view->frameHeight));
+
+    LOG(INFO) << autoscale;
 
     size.x = view->frameWidth * autoscale;
     size.y = view->frameHeight * autoscale;
@@ -104,7 +102,7 @@ bool ADIMainWindow::DisplayFrameWindow(ImVec2 windowSize, ImVec2 &displayUpdate,
     size.x /= dpiScaleFactor;
     size.y /= dpiScaleFactor;
 
-    return true;
+    return autoscale;
 }
 
 void ADIMainWindow::synchronizeVideo() {
@@ -213,12 +211,12 @@ void ADIMainWindow::DisplayActiveBrightnessWindow(
 
     ImVec2 size;
 
-    if (DisplayFrameWindow(ImVec2(abPosition->width, abPosition->height),
-                           displayABDimensions, size) == false)
-        return;
+    auto imageScale =
+        DisplayFrameWindow(ImVec2(m_abPosition->width, m_abPosition->height),
+                           displayABDimensions, size);
 
-    setWindowPosition(abPosition->x, abPosition->y);
-    setWindowSize(abPosition->width, abPosition->height);
+    setWindowPosition(m_abPosition->x, m_abPosition->y);
+    setWindowSize(m_abPosition->width, m_abPosition->height);
 
     if (ImGui::Begin("Active Brightness Window", nullptr, overlayFlags)) {
 
@@ -238,7 +236,7 @@ void ADIMainWindow::DisplayActiveBrightnessWindow(
             }
 
             ImageRotated((ImTextureID)ab_video_texture,
-                         ImVec2(abPosition->width, abPosition->height),
+                         ImVec2(m_abPosition->width, m_abPosition->height),
                          ImVec2(_displayABDimensions.x, _displayABDimensions.y),
                          rotationangleradians);
         }
@@ -247,7 +245,7 @@ void ADIMainWindow::DisplayActiveBrightnessWindow(
         GetHoveredImagePix(hoveredImagePixel, ImGui::GetCursorScreenPos(),
                            ImGui::GetIO().MousePos, displayABDimensions);
         RenderFrameHoverInfo(hoveredImagePixel, view->ab_video_data,
-                             view->frameWidth,
+                             view->frameWidth * imageScale,
                        ImGui::IsWindowHovered(),
                        ADI_Image_Format_t::ADI_IMAGE_FORMAT_AB16, "mm");
     }
@@ -278,19 +276,12 @@ void ADIMainWindow::initOpenGLDepthTexture() {
 void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
     ImVec2 size;
 
-    if (DisplayFrameWindow(ImVec2(depthPosition->width, depthPosition->height),
-                           displayDepthDimensions, size) == false)
-        return;
+    auto imageScale = DisplayFrameWindow(
+        ImVec2(m_depthPosition->width, m_depthPosition->height),
+        displayDepthDimensions, size);
 
-    if ((float)view->frameWidth == 0.0 && (float)(view->frameHeight == 0.0)) {
-        return;
-    }
-
-    sourceDepthImageDimensions = {(float)(view->frameWidth),
-                                  (float)(view->frameHeight)};
-
-    setWindowPosition(depthPosition->x, depthPosition->y);
-    setWindowSize(depthPosition->width, depthPosition->height);
+    setWindowPosition(m_depthPosition->x, m_depthPosition->y);
+    setWindowSize(m_depthPosition->width, m_depthPosition->height);
 
     std::string title = "Depth Window";
     if (ImGui::Begin(title.c_str(), nullptr, overlayFlags)) {
@@ -313,7 +304,7 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
 
             ImageRotated(
                 (ImTextureID)depth_video_texture,
-                ImVec2(depthPosition->width, depthPosition->height),
+                ImVec2(m_depthPosition->width, m_depthPosition->height),
                 ImVec2(_displayDepthDimensions.x, _displayDepthDimensions.y),
                 rotationangleradians);
         }
@@ -322,7 +313,7 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
         GetHoveredImagePix(hoveredImagePixel, ImGui::GetCursorScreenPos(),
                            ImGui::GetIO().MousePos, displayDepthDimensions);
         RenderFrameHoverInfo(hoveredImagePixel, view->depth_video_data,
-                       view->frameWidth, ImGui::IsWindowHovered(),
+            view->frameWidth * imageScale, ImGui::IsWindowHovered(),
                        ADI_Image_Format_t::ADI_IMAGE_FORMAT_DEPTH16, "mm");
     }
 
@@ -336,19 +327,12 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
 void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
     ImVec2 size;
 
-    if (DisplayFrameWindow(ImVec2(pcPosition->width, pcPosition->height),
-                           displayPointCloudDimensions, size) == false)
-        return;
+    auto imageScale =
+        DisplayFrameWindow(ImVec2(m_pcPosition->width, m_pcPosition->height),
+                           displayPointCloudDimensions, size);
 
-    if ((float)view->frameWidth == 0.0 && (float)(view->frameHeight == 0.0)) {
-        return;
-    }
-
-    sourcePointCloudImageDimensions = {(float)(view->frameWidth),
-                                       (float)(view->frameHeight)};
-
-    setWindowPosition(pcPosition->x, pcPosition->y);
-    setWindowSize(pcPosition->width, pcPosition->height);
+    setWindowPosition(m_pcPosition->x, m_pcPosition->y);
+    setWindowSize(m_pcPosition->width, m_pcPosition->height);
 
     if (ImGui::Begin("Point Cloud Window", nullptr, overlayFlags)) {
 
@@ -396,7 +380,7 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
         }
 
         ImageRotated((ImTextureID)pointCloud_video_texture,
-                        ImVec2(pcPosition->width, pcPosition->height),
+                        ImVec2(m_pcPosition->width, m_pcPosition->height),
                         ImVec2(_displayPointCloudDimensions.x,
                             _displayPointCloudDimensions.y),
                         rotationangleradians);

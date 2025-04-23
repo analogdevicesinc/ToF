@@ -202,34 +202,29 @@ void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
         }
     }
 
-    static int16_t state = 0;
     if (ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
-        state++;
-        if (state > 2)
-            state = 0;
+        m_frameWindowPosState++;
+        if (m_frameWindowPosState > 2)
+            m_frameWindowPosState = 0;
     }
     if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) {
-        state--;
-        if (state < 0)
-            state = 2;
+        m_frameWindowPosState--;
+        if (m_frameWindowPosState < 0)
+            m_frameWindowPosState = 2;
     }
 
-    if (state == 1) {
-        pcPosition = &dictWinPosition["fr-sub2"];
-        abPosition = &dictWinPosition["fr-main"];
-        depthPosition = &dictWinPosition["fr-sub1"];
-    } else if (state == 2) {
-        pcPosition = &dictWinPosition["fr-sub1"];
-        abPosition = &dictWinPosition["fr-sub2"];
-        depthPosition = &dictWinPosition["fr-main"];
+    if (m_frameWindowPosState == 1) {
+        m_pcPosition = &dictWinPosition["fr-sub2"];
+        m_abPosition = &dictWinPosition["fr-main"];
+        m_depthPosition = &dictWinPosition["fr-sub1"];
+    } else if (m_frameWindowPosState == 2) {
+        m_pcPosition = &dictWinPosition["fr-sub1"];
+        m_abPosition = &dictWinPosition["fr-sub2"];
+        m_depthPosition = &dictWinPosition["fr-main"];
     } else {
-        pcPosition = &dictWinPosition["fr-main"];
-        abPosition = &dictWinPosition["fr-sub1"];
-        depthPosition = &dictWinPosition["fr-sub2"];
-    }
-
-    if (ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
-        LOG(INFO) << "Right Arrow";
+        m_pcPosition = &dictWinPosition["fr-main"];
+        m_abPosition = &dictWinPosition["fr-sub1"];
+        m_depthPosition = &dictWinPosition["fr-sub2"];
     }
 
     displayDepth = true;

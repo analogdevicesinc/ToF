@@ -23,7 +23,6 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
     if (setTempWinPositionOnce) {
         rotationangleradians = 0;
         rotationangledegrees = 0;
-        imagescale = (_isHighDPI) ? 1.0f : 0.5f;
         setTempWinPositionOnce = false;
     }
 

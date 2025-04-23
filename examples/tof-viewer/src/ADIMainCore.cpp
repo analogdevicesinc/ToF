@@ -286,9 +286,9 @@ bool ADIMainWindow::startImGUI(const ADIViewerArgs &args) {
     dictWinPosition["fr-sub2"].width = 256.0f;
     dictWinPosition["fr-sub2"].height = 256.0f;
 
-    pcPosition = &dictWinPosition["fr-main"];
-    abPosition = &dictWinPosition["fr-sub1"];
-    depthPosition = &dictWinPosition["fr-sub2"];
+    m_pcPosition = &dictWinPosition["fr-main"];
+    m_abPosition = &dictWinPosition["fr-sub1"];
+    m_depthPosition = &dictWinPosition["fr-sub2"];
 
     // Setup Dear ImGui style
     //ImGui::StyleColorsDark();
@@ -701,6 +701,7 @@ void ADIMainWindow::showDeviceMenu() {
                         customColorPlay, !isPlaying);
                     if (ImGuiExtensions::ADIButton(
                             "Play", !isPlaying && !isPlayRecorded)) {
+                        m_frameWindowPosState = 0;
                         viewSelectionChanged = viewSelection;
                         isPlaying = true;
                         ini_params.clear();
