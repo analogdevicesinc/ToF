@@ -411,19 +411,6 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
             ImGui::Text("(%0.2f, %0.2f, %0.2f)", cameraPos[0], cameraPos[1],
                         cameraPos[2]);
 
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Camera Front");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("(%0.2f, %0.2f, %0.2f)", cameraFront[0], cameraFront[1],
-                        cameraFront[2]);
-
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Camera Up");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("(%0.2f, %0.2f, %0.2f)", cameraUp[0], cameraUp[1], cameraUp[2]);
-
             ImGui::EndTable();
         }
     }
@@ -578,36 +565,21 @@ void ADIMainWindow::ImageRotated(ImTextureID tex_id, ImVec2 center, ImVec2 size,
 }
 
 void ADIMainWindow::pointCloudReset() {
-    m_view[0][0] = 1.0f; m_view[0][1] = 0.0f; m_view[0][2] = 0.0f; m_view[0][3] = 0.0f;
-    m_view[1][0] = 0.0f; m_view[1][1] = 1.0f; m_view[1][2] = 0.0f; m_view[1][3] = 0.0f;
-    m_view[2][0] = 0.0f; m_view[2][1] = 0.0f; m_view[2][2] = 0.0f; m_view[2][3] = 1.0f;
-    m_view[3][0] = -0.0213157870;
-    m_view[3][1] = -0.00631578919;
-    m_view[3][2] = -3.0f;
-    m_view[3][3] = 1.0f;
 
-    m_projection[0][0] = 14.3006659f;
-    m_projection[0][1] = 0.0f;
-    m_projection[0][2] = 0.0f;
-    m_projection[0][3] = 0.0f;
+    const mat4x4 m_view_default =
+    { {1.0f, 0.0f, 0.0f, 0.0f},
+      {0.0f, 1.0f, 0.0f, 0.0f},
+      {0.0f, 0.0f, 0.0f, 1.0f},
+      {-0.0213157870, -0.00631578919, -3.0f, 1.0f} };
 
-    m_projection[1][0] = 0.0f;
-    m_projection[1][1] = 14.3006659f;
-    m_projection[1][2] = 0.0f;
-    m_projection[1][3] = 0.0f;
+    const mat4x4 m_projection_default = 
+    { {14.3006659f, 0.0f, 0.0f, 0.0f},
+      {0.0f, 14.3006659f, 0.0f, 0.0f},
+      {0.0f, 0.0f, -1.00200200f, -1.0f},
+      {0.0f, 0.0f, -0.200200200f, 0.0f} };
 
-    m_projection[2][0] = 0.0f;
-    m_projection[2][1] = 0.0f;
-    m_projection[2][2] = -1.00200200;
-    m_projection[2][3] = -1.0f;
-
-    m_projection[3][0] = 0.0f;
-    m_projection[3][1] = 0.0f;
-    m_projection[3][2] = -0.200200200;
-    m_projection[3][3] = 0.0f;
-
-    //mat4x4_identity(m_view);
-    //mat4x4_identity(m_projection);
+    memcpy(m_view, m_view_default, sizeof(m_view));
+    memcpy(m_projection, m_projection_default, sizeof(m_projection));
     mat4x4_identity(m_model);
     deltaTime = 0.1;
     fov = 8.0f;
