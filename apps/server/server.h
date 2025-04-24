@@ -35,7 +35,7 @@
 
 #define RX_BUFFER_BYTES (20996420)
 
-#define FRAME_TIMEOUT 500
+#define FRAME_TIMEOUT 200
 
 enum api_Values {
     API_NOT_DEFINED,
