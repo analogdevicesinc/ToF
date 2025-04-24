@@ -124,7 +124,7 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
                     ImGui::TableSetColumnIndex(0);
                     ImGui::Text("Laser Temp");
                     ImGui::TableSetColumnIndex(1);
-                    ImGui::Text("%i ", laserTemp);
+                    ImGui::Text("%i C", laserTemp);
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);

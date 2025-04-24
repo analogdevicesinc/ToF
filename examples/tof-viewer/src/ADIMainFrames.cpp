@@ -384,12 +384,55 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
                         rotationangleradians);
         glDeleteVertexArrays(1, &view->vertexArrayObject);
         glDeleteBuffers(1, &view->vertexBufferObject);
+
+
+        const char *col1Text = "Camera Pos";
+        const float padding = 20.0f; // Optional extra space
+        float col1Width = ImGui::CalcTextSize(col1Text).x + padding;
+
+        if (ImGui::BeginTable("Information Table", 2)) {
+            ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed,
+                                    col1Width);
+            ImGui::TableSetupColumn("Value",
+                                    ImGuiTableColumnFlags_WidthStretch);
+
+            ImGui::TableHeadersRow();
+
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("FoV");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%0.2f", fov);
+
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Camera Pos");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("(%0.2f, %0.2f, %0.2f)", cameraPos[0], cameraPos[1],
+                        cameraPos[2]);
+
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Camera Front");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("(%0.2f, %0.2f, %0.2f)", cameraFront[0], cameraFront[1],
+                        cameraFront[2]);
+
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Camera Up");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("(%0.2f, %0.2f, %0.2f)", cameraUp[0], cameraUp[1], cameraUp[2]);
+
+            ImGui::EndTable();
+        }
     }
     ImGui::End();
 }
 
 void ADIMainWindow::preparePointCloudVertices(unsigned int &vbo,
                                               unsigned int &vao) {
+
     glGenVertexArrays(1, &vao);
     //Initialize Point Cloud Image
     glGenBuffers(1, &vbo);
@@ -535,20 +578,45 @@ void ADIMainWindow::ImageRotated(ImTextureID tex_id, ImVec2 center, ImVec2 size,
 }
 
 void ADIMainWindow::pointCloudReset() {
-    mat4x4_identity(m_view);
-    mat4x4_identity(m_projection);
+    m_view[0][0] = 1.0f; m_view[0][1] = 0.0f; m_view[0][2] = 0.0f; m_view[0][3] = 0.0f;
+    m_view[1][0] = 0.0f; m_view[1][1] = 1.0f; m_view[1][2] = 0.0f; m_view[1][3] = 0.0f;
+    m_view[2][0] = 0.0f; m_view[2][1] = 0.0f; m_view[2][2] = 0.0f; m_view[2][3] = 1.0f;
+    m_view[3][0] = -0.0213157870;
+    m_view[3][1] = -0.00631578919;
+    m_view[3][2] = -3.0f;
+    m_view[3][3] = 1.0f;
+
+    m_projection[0][0] = 14.3006659f;
+    m_projection[0][1] = 0.0f;
+    m_projection[0][2] = 0.0f;
+    m_projection[0][3] = 0.0f;
+
+    m_projection[1][0] = 0.0f;
+    m_projection[1][1] = 14.3006659f;
+    m_projection[1][2] = 0.0f;
+    m_projection[1][3] = 0.0f;
+
+    m_projection[2][0] = 0.0f;
+    m_projection[2][1] = 0.0f;
+    m_projection[2][2] = -1.00200200;
+    m_projection[2][3] = -1.0f;
+
+    m_projection[3][0] = 0.0f;
+    m_projection[3][1] = 0.0f;
+    m_projection[3][2] = -0.200200200;
+    m_projection[3][3] = 0.0f;
+
+    //mat4x4_identity(m_view);
+    //mat4x4_identity(m_projection);
     mat4x4_identity(m_model);
-    deltaTime = 0;
-    lastFrame = 0;
+    deltaTime = 0.1;
     fov = 8.0f;
-    yaw = -90.0f;
-    pitch = 0.0f;
     view->Max_X = 6000.0;
     view->Max_Y = 6000.0;
     view->Max_Z = 6000.0;
 
-    cameraPos[0] = 0.0f;
-    cameraPos[1] = 0.0f;
+    cameraPos[0] = 0.0213157870f;
+    cameraPos[1] = 0.00631578919f;
     cameraPos[2] = 3.0f;
     cameraFront[0] = 0.0;
     cameraFront[1] = 0.0;
@@ -645,26 +713,26 @@ void ADIMainWindow::processInputs(GLFWwindow *window) {
         }
     }
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    if (ImGui::IsKeyPressed(ImGuiKey_W)) {
         vec3 aux = {0.0, 0.0, 0.0};
         vec3_scale(aux, cameraFront, cameraSpeed);
         vec3_add(cameraPos, cameraPos, aux);
     }
 
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    if (ImGui::IsKeyPressed(ImGuiKey_S)) {
         vec3 aux = {0.0, 0.0, 0.0};
         vec3_scale(aux, cameraFront, cameraSpeed);
         vec3_sub(cameraPos, cameraPos, aux);
     }
 
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+    if (ImGui::IsKeyPressed(ImGuiKey_A)) {
         vec3 aux = {0.0, 0.0, 0.0};
         vec3_mul_cross(aux, cameraFront, cameraUp);
         vec3_norm(aux, aux);
         vec3_scale(aux, aux, cameraSpeed);
         vec3_sub(cameraPos, cameraPos, aux);
     }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+    if (ImGui::IsKeyPressed(ImGuiKey_D)) {
         vec3 aux = {0.0, 0.0, 0.0};
         vec3_mul_cross(aux, cameraFront, cameraUp);
         vec3_norm(aux, aux);

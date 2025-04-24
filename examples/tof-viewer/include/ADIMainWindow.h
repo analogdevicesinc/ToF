@@ -511,14 +511,11 @@ class ADIMainWindow {
     vec3 cameraFront = {0.0f, 0.0f, -1.0f};
     vec3 cameraUp = {0.0f, 1.0f, 0.0f};
     vec3 cameraPos_Front;
-    float deltaTime = 0;
-    float lastFrame = 0;
+    float deltaTime = 0.1;
     float fov = 8.0f; //field of view angle in degrees.
     // yaw is initialized to -90.0 degrees since a yaw of 0.0
     //results in a direction vector pointing to the right so
     //we initially rotate a bit to the left.
-    float yaw = -90.0f;
-    float pitch = 0.0f;
     bool firstMouse = true;
     float lastX = 1280.0f;
     float lastY = 720.0;

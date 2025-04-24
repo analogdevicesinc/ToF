@@ -7,10 +7,40 @@
 #include <aditof/log.h>
 #endif
 
+inline ImVec2 operator+(const ImVec2 &a, const ImVec2 &b) {
+    return ImVec2(a.x + b.x, a.y + b.y);
+}
+inline ImVec2 operator*(const ImVec2 &v, float f) {
+    return ImVec2(v.x * f, v.y * f);
+}
+
 using namespace adiMainWindow;
 
 #include <cstdarg> // for va_list
 #include <imgui.h>
+
+auto DrawIconButton =
+    [](const char *id,
+       std::function<void(ImDrawList *, ImVec2, ImVec2)> drawIcon) -> bool {
+    ImVec2 size(40, 40);
+    ImVec2 pos = ImGui::GetCursorScreenPos();
+    ImDrawList *drawList = ImGui::GetWindowDrawList();
+
+    bool pressed = ImGui::InvisibleButton(id, size);
+    ImVec2 min = pos;
+    ImVec2 max = ImVec2(pos.x + size.x, pos.y + size.y);
+
+    // Draw background if hovered or held
+    ImU32 bgColor = IM_COL32(60, 60, 60, 255);
+    if (ImGui::IsItemHovered())
+        bgColor = IM_COL32(100, 100, 100, 255);
+    if (ImGui::IsItemActive())
+        bgColor = IM_COL32(150, 150, 150, 255);
+    drawList->AddRectFilled(min, max, bgColor, 4.0f);
+
+    drawIcon(drawList, min, max);
+    return pressed;
+};
 
 void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
     using namespace aditof;
@@ -37,7 +67,26 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
             m_focusedOnce = true;
         }
 
-        if (ImGuiExtensions::ADIButton("Stop Streaming", isPlaying)) {
+        if (DrawIconButton("Play", [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
+                ImVec2 center = (min + max) * 0.5f;
+                float w = max.x - min.x, h = max.y - min.y;
+                ImVec2 p1(center.x - w * 0.2f, center.y - h * 0.3f);
+                ImVec2 p2(center.x - w * 0.2f, center.y + h * 0.3f);
+                ImVec2 p3(center.x + w * 0.3f, center.y);
+                dl->AddTriangleFilled(p1, p2, p3, IM_COL32_WHITE);
+            })) {
+            // TODO
+        }
+
+        ImGui::SameLine(0.0f, 10.0f);
+
+        if (DrawIconButton("Stop", [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
+                ImVec2 center = (min + max) * 0.5f;
+                float side = (max.x - min.x) * 0.4f;
+                ImVec2 pMin(center.x - side * 0.5f, center.y - side * 0.5f);
+                ImVec2 pMax(center.x + side * 0.5f, center.y + side * 0.5f);
+                dl->AddRectFilled(pMin, pMax, IM_COL32_WHITE);
+            })) {
             isPlaying = false;
             isPlayRecorded = false;
             m_fps_frameRecvd = 0;
@@ -47,6 +96,31 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
                 isRecording = false;
             }
         }
+
+        ImGui::SameLine(0.0f, 10.0f);
+
+        if (DrawIconButton("Pause", [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
+                ImVec2 center = (min + max) * 0.5f;
+                float w = max.x - min.x;
+                float h = max.y - min.y;
+                float barWidth = w * 0.1f;
+                float barHeight = h * 0.5f;
+                float spacing = w * 0.1f;
+
+                ImVec2 bar1Min(center.x - spacing - barWidth,
+                               center.y - barHeight * 0.5f);
+                ImVec2 bar1Max(center.x - spacing, center.y + barHeight * 0.5f);
+                ImVec2 bar2Min(center.x + spacing, center.y - barHeight * 0.5f);
+                ImVec2 bar2Max(center.x + spacing + barWidth,
+                               center.y + barHeight * 0.5f);
+
+                dl->AddRectFilled(bar1Min, bar1Max, IM_COL32_WHITE);
+                dl->AddRectFilled(bar2Min, bar2Max, IM_COL32_WHITE);
+            })) {
+
+            // TODO
+        }
+
         NewLine(5.0f);
 
         DrawBarLabel("Rotate");
