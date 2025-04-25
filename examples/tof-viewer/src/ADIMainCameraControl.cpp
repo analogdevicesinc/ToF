@@ -38,24 +38,24 @@ extern std::map<std::string, std::string> last_ini_params;
 extern bool use_modified_ini_params;
 
 void ADIMainWindow::InitCamera() {
-    if (view != NULL) { //Reset current imager
+    if (m_view_instance != NULL) { //Reset current imager
         LOG(INFO) << "Imager is reseting.";
-        view.reset();
+        m_view_instance.reset();
         LOG(INFO) << "Reset successful.";
     }
 
     std::string version = aditof::getApiVersion();
     LOG(INFO) << "Preparing camera. Please wait...\n";
-    view = std::make_shared<adiviewer::ADIView>(
-        std::make_shared<adicontroller::ADIController>(m_camerasList),
+    m_view_instance = std::make_shared<adiviewer::ADIView>(
+        std::make_shared<adicontroller::ADIController>(m_cameras_list),
         "ToFViewer " + version);
-    m_camerasList.clear();
+    m_cameras_list.clear();
     _cameraModes.clear();
     m_cameraModesDropDown.clear();
     m_cameraModesLookup.clear();
 
     aditof::Status status = aditof::Status::OK;
-    auto camera = getActiveCamera(); //already initialized on constructor
+    auto camera = GetActiveCamera(); //already initialized on constructor
 
     if (!camera) {
         LOG(ERROR) << "No cameras found!";
@@ -107,7 +107,7 @@ void ADIMainWindow::PrepareCamera(uint8_t mode) {
     aditof::Status status = aditof::Status::OK;
     std::vector<aditof::FrameDetails> frameTypes;
 
-    status = getActiveCamera()->setMode(mode);
+    status = GetActiveCamera()->setMode(mode);
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Could not set camera mode!";
         return;
@@ -116,7 +116,7 @@ void ADIMainWindow::PrepareCamera(uint8_t mode) {
     if (mode == last_mode) {
         if (!modified_ini_params.empty()) {
             if (use_modified_ini_params) {
-                status = getActiveCamera()->setFrameProcessParams(
+                status = GetActiveCamera()->setFrameProcessParams(
                     modified_ini_params);
                 if (status != aditof::Status::OK) {
                     LOG(ERROR) << "Could not set ini params";
@@ -137,23 +137,19 @@ void ADIMainWindow::PrepareCamera(uint8_t mode) {
     }
 
     aditof::CameraDetails camDetails;
-    status = getActiveCamera()->getDetails(camDetails);
+    status = GetActiveCamera()->getDetails(camDetails);
     int totalCaptures = camDetails.frameType.totalCaptures;
 
-    status = getActiveCamera()->adsd3500GetFrameRate(m_fps_expectedFPS);
+    status = GetActiveCamera()->adsd3500GetFrameRate(m_fps_expected);
 
-    aditof::FrameDetails tmp = view->m_ctrl->m_recorder->getFrameDetails();
-    tmp.totalCaptures = totalCaptures;
-    view->m_ctrl->m_recorder->setFrameDetails(tmp);
-
-    if (!view->getUserABMaxState()) {
+    if (!m_view_instance->getUserABMaxState()) {
         std::string value;
-        getActiveCamera()->getSensor()->getControl("abBits", value);
-        view->setABMaxRange(value);
+        GetActiveCamera()->getSensor()->getControl("abBits", value);
+        m_view_instance->setABMaxRange(value);
     }
 
     // Program the camera with cfg passed, set the mode by writing to 0x200 and start the camera
-    status = getActiveCamera()->start();
+    status = GetActiveCamera()->start();
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Could not start camera!";
         return;
@@ -161,7 +157,7 @@ void ADIMainWindow::PrepareCamera(uint8_t mode) {
 
     LOG(INFO) << "Camera ready.";
     m_cameraWorkerDone = true;
-    tofImagePosY = -1.0f;
+    m_tof_image_pos_y = -1.0f;
 }
 
 void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
@@ -174,61 +170,59 @@ void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
 
     const bool imageIsHovered = ImGui::IsItemHovered();
 
-    if (view->m_ctrl->hasCamera()) {
+    if (m_view_instance->m_ctrl->hasCamera()) {
         // Mode switch or starup
-        if (modeSelectChanged != modeSelect || captureSeparateEnabled ||
-            !isPlaying) {
-            if (modeSelectChanged != modeSelect) {
-                view->m_ctrl->StopCapture();
+        if (m_mode_select_changed != modeSelect || m_capture_separate_enabled ||
+            !m_is_playing) {
+            if (m_mode_select_changed != modeSelect) {
+                m_view_instance->m_ctrl->StopCapture();
             }
 
             PrepareCamera(modeSelect);
-            openGLCleanUp();
-            initOpenGLABTexture();
-            initOpenGLDepthTexture();
-            initOpenGLPointCloudTexture();
+            OpenGLCleanUp();
+            InitOpenGLABTexture();
+            InitOpenGLDepthTexture();
+            InitOpenGLPointCloudTexture();
 
-            view->m_ctrl->StartCapture();
-            view->m_ctrl->requestFrame();
-            captureSeparateEnabled = false;
-            modeSelectChanged = modeSelect;
+            m_view_instance->m_ctrl->StartCapture();
+            m_view_instance->m_ctrl->requestFrame();
+            m_capture_separate_enabled = false;
+            m_mode_select_changed = modeSelect;
 
-        } else if (viewSelectionChanged != viewSelect) {
-            viewSelectionChanged = viewSelect;
-            openGLCleanUp();
-            initOpenGLABTexture();
-            initOpenGLDepthTexture();
-            initOpenGLPointCloudTexture();
+        } else if (m_view_selection_changed != viewSelect) {
+            m_view_selection_changed = viewSelect;
+            OpenGLCleanUp();
+            InitOpenGLABTexture();
+            InitOpenGLDepthTexture();
+            InitOpenGLPointCloudTexture();
         }
     }
 
     if (ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
-        m_frameWindowPosState++;
-        if (m_frameWindowPosState > 2)
-            m_frameWindowPosState = 0;
+        m_frame_window_position_state++;
+        if (m_frame_window_position_state > 2)
+            m_frame_window_position_state = 0;
     }
     if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) {
-        m_frameWindowPosState--;
-        if (m_frameWindowPosState < 0)
-            m_frameWindowPosState = 2;
+        m_frame_window_position_state--;
+        if (m_frame_window_position_state < 0)
+            m_frame_window_position_state = 2;
     }
 
-    if (m_frameWindowPosState == 1) {
-        m_pcPosition = &dictWinPosition["fr-sub2"];
-        m_abPosition = &dictWinPosition["fr-main"];
-        m_depthPosition = &dictWinPosition["fr-sub1"];
-    } else if (m_frameWindowPosState == 2) {
-        m_pcPosition = &dictWinPosition["fr-sub1"];
-        m_abPosition = &dictWinPosition["fr-sub2"];
-        m_depthPosition = &dictWinPosition["fr-main"];
+    if (m_frame_window_position_state == 1) {
+        m_pc_position = &m_dict_win_position["fr-sub2"];
+        m_ab_position = &m_dict_win_position["fr-main"];
+        m_depth_position = &m_dict_win_position["fr-sub1"];
+    } else if (m_frame_window_position_state == 2) {
+        m_pc_position = &m_dict_win_position["fr-sub1"];
+        m_ab_position = &m_dict_win_position["fr-sub2"];
+        m_depth_position = &m_dict_win_position["fr-main"];
     } else {
-        m_pcPosition = &dictWinPosition["fr-main"];
-        m_abPosition = &dictWinPosition["fr-sub1"];
-        m_depthPosition = &dictWinPosition["fr-sub2"];
+        m_pc_position = &m_dict_win_position["fr-main"];
+        m_ab_position = &m_dict_win_position["fr-sub1"];
+        m_depth_position = &m_dict_win_position["fr-sub2"];
     }
 
-    displayDepth = true;
-    displayAB = true;
     synchronizeVideo();
     DisplayPointCloudWindow(overlayFlags);
     DisplayActiveBrightnessWindow(overlayFlags);
@@ -238,29 +232,23 @@ void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
 }
 
 void ADIMainWindow::CameraStop() {
-    m_focusedOnce = false;
-    captureSeparateEnabled = true;
-    captureBlendedEnabled = true;
-    setABWinPositionOnce = true;
-    setDepthWinPositionOnce = true;
-    setPointCloudPositionOnce = true;
-    setPointCloudPositionOnce = true;
-    if (view) {
-        if (view->m_ctrl) {
-            view->m_ctrl->StopCapture();
-            view->m_ctrl->panicStop = false;
+    m_focused_once = false;
+    m_capture_separate_enabled = true;
+    m_set_ab_win_position_once = true;
+    m_set_depth_win_position_once = true;
+    m_set_point_cloud_position_once = true;
+    m_set_point_cloud_position_once = true;
+    if (m_view_instance) {
+        if (m_view_instance->m_ctrl) {
+            m_view_instance->m_ctrl->StopCapture();
+            m_view_instance->m_ctrl->panicStop = false;
         }
-        view->cleanUp();
+        m_view_instance->cleanUp();
     }
-    if (isRecording) {
-        view->m_ctrl->stopRecording();
-        isRecording = false;
-    }
-    openGLCleanUp();
-    isPlaying = false;
-    isPlayRecorded = false;
-    m_fps_firstFrame = 0;
-    m_fps_frameRecvd = 0;
+    OpenGLCleanUp();
+    m_is_playing = false;
+    m_fps_first_frame_number = 0;
+    m_fps_frame_received = 0;
 }
 
 void ADIMainWindow::RefreshDevices() {
@@ -271,30 +259,30 @@ void ADIMainWindow::RefreshDevices() {
         initCameraWorker.join();
     }
 
-    m_selectedDevice = -1;
-    m_connectedDevices.clear();
+    m_selected_device_index = -1;
+    m_connected_devices.clear();
     m_configFiles.clear();
-    m_camerasList.clear();
+    m_cameras_list.clear();
 
     aditof::Status status;
-    status = m_system.getCameraList(m_camerasList);
-    for (size_t ix = 0; ix < m_camerasList.size(); ++ix) {
-        m_connectedDevices.emplace_back(ix, "ToF Camera " + std::to_string(ix));
+    status = m_system.getCameraList(m_cameras_list);
+    for (size_t ix = 0; ix < m_cameras_list.size(); ++ix) {
+        m_connected_devices.emplace_back(ix, "ToF Camera " + std::to_string(ix));
     }
 
-    if (!m_skipNetworkCameras) {
+    if (!m_skip_network_cameras) {
         // Add network camera
-        m_system.getCameraList(m_camerasList, m_cameraIp + m_ipSuffix);
-        if (m_camerasList.size() > 0) {
-            uint32_t index = static_cast<uint32_t>(m_connectedDevices.size());
-            m_connectedDevices.emplace_back(index, "ToF Camera" +
+        m_system.getCameraList(m_cameras_list, m_cameraIp + m_ip_suffix);
+        if (m_cameras_list.size() > 0) {
+            uint32_t index = static_cast<uint32_t>(m_connected_devices.size());
+            m_connected_devices.emplace_back(index, "ToF Camera" +
                                                        std::to_string(index));
         }
     }
 
-    if (!m_connectedDevices.empty()) {
+    if (!m_connected_devices.empty()) {
         //Search for configuration files with .json extension
-        configSelection = -1;
+        m_config_selection = -1;
         fs::path _currPath = fs::current_path();
         std::vector<std::string> files;
         getFilesList(_currPath.string(), "*.json", files, false);
@@ -303,20 +291,20 @@ void ADIMainWindow::RefreshDevices() {
             m_configFiles.emplace_back(fileCnt, files[fileCnt]);
         }
 
-        if (!m_configFiles.empty() && configSelection == -1) {
-            configSelection = 0;
+        if (!m_configFiles.empty() && m_config_selection == -1) {
+            m_config_selection = 0;
         }
     }
 }
 
-void ADIMainWindow::handleInterruptCallback() {
+void ADIMainWindow::HandleInterruptCallback() {
     aditof::SensorInterruptCallback cb = [this](aditof::Adsd3500Status status) {
         LOG(WARNING) << "status: " << status;
         ImGui::Begin("Interrupt");
         ImGui::Text("%i", status);
     };
     aditof::Status ret_status = aditof::Status::OK;
-    auto camera = getActiveCamera();
+    auto camera = GetActiveCamera();
     if (!camera) {
         return;
     }

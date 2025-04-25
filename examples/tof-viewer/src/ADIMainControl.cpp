@@ -46,25 +46,26 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
     using namespace aditof;
     static bool show_ini_window = false;
 
-    if ((float)view->frameWidth == 0.0 && (float)(view->frameHeight == 0.0)) {
+    if ((float)m_view_instance->frameWidth == 0.0 &&
+        (float)(m_view_instance->frameHeight == 0.0)) {
         return;
     }
 
-    if (setTempWinPositionOnce) {
+    if (m_set_temp_win_position_once) {
         rotationangleradians = 0;
         rotationangledegrees = 0;
-        setTempWinPositionOnce = false;
+        m_set_temp_win_position_once = false;
     }
 
-    setWindowPosition(dictWinPosition["control"].x, dictWinPosition["control"].y);
-    setWindowSize(dictWinPosition["control"].width, dictWinPosition["control"].height);
+    SetWindowPosition(m_dict_win_position["control"].x, m_dict_win_position["control"].y);
+    SetWindowSize(m_dict_win_position["control"].width, m_dict_win_position["control"].height);
 
     if (ImGui::Begin("Control Window", nullptr,
                      overlayFlags)) {
 
-        if (!m_focusedOnce) {
+        if (!m_focused_once) {
             ImGui::SetWindowFocus();
-            m_focusedOnce = true;
+            m_focused_once = true;
         }
 
         if (DrawIconButton("Play", [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
@@ -87,14 +88,9 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
                 ImVec2 pMax(center.x + side * 0.5f, center.y + side * 0.5f);
                 dl->AddRectFilled(pMin, pMax, IM_COL32_WHITE);
             })) {
-            isPlaying = false;
-            isPlayRecorded = false;
-            m_fps_frameRecvd = 0;
+            m_is_playing = false;
+            m_fps_frame_received = 0;
             CameraStop();
-            if (isRecording) {
-                view->m_ctrl->stopRecording();
-                isRecording = false;
-            }
         }
 
         ImGui::SameLine(0.0f, 10.0f);
@@ -141,10 +137,10 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
         DrawBarLabel("Point Cloud");
         NewLine(5.0f);
         if (ImGuiExtensions::ADIButton("Reset", true)) {
-            pointCloudReset();
+            PointCloudReset();
         }
         NewLine(5.0f);
-        ImGui::SliderInt("", &pointSize, 1, 10, "Point Size: %d px");
+        ImGui::SliderInt("", &m_point_size, 1, 10, "Point Size: %d px");
 
         NewLine(5.0f);
 
@@ -157,14 +153,14 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
         if (ImGui::IsItemClicked())
             selected = 1;
 
-        view->setPointCloudColour(selected);
+        m_view_instance->setPointCloudColour(selected);
 
         NewLine(5.0f);
 
         DrawBarLabel("Active Brightness");
         NewLine(5.0f);
-        bool logImage = view->getLogImage();
-        bool autoScale = view->getAutoScale();
+        bool logImage = m_view_instance->getLogImage();
+        bool autoScale = m_view_instance->getAutoScale();
 
         ImGui::Checkbox("Auto-scale", &autoScale);
         if (autoScale == false) {
@@ -180,8 +176,8 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
             ImGui::EndDisabled();
         }
 
-        view->setLogImage(logImage);
-        view->setAutoScale(autoScale);
+        m_view_instance->setLogImage(logImage);
+        m_view_instance->setAutoScale(autoScale);
         NewLine(5.0f);
     }
 

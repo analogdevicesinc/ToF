@@ -37,9 +37,9 @@ struct ADIViewerArgs {
 /**
 * @brief Logging Information
 * @Usage:
-*  static ExampleAppLog my_log;
-*  my_log.AddLog("Hello %d world\n", 123);
-*  my_log.Draw("title");
+*  static ExampleAppLog m_log;
+*  m_log.AddLog("Hello %d world\n", 123);
+*  m_log.Draw("title");
 */
 struct AppLog {
     ImGuiTextBuffer Buf;
@@ -199,6 +199,15 @@ struct AppLog {
     }
 };
 
+struct Rect {
+    float x;
+    float y;
+    float width;
+    float height;
+};
+
+enum class MouseMovementType { None, Rotation, Translation };
+
 namespace adiMainWindow {
 
 class ADIMainWindow {
@@ -217,30 +226,30 @@ class ADIMainWindow {
 		* @brief Start Main GUI window.
 		*        Using Dear ImGUIr
 		*/
-    bool startImGUI(const ADIViewerArgs &args);
+    bool StartImGUI(const ADIViewerArgs &args);
 
     /**
 		* @brief Render Main Window after a successful imGUI setup
 		*/
-    void render();
+    void Render();
 
   private:
     /**
 		* @brief Modify Screen DPI
 		*/
-    void setDpi();
+    void SetDpi();
 
     /**
 		* @brief Stops Playback
 		*/
-    void stopPlayback();
+    void StopPlayback();
 
     /**
 		* @brief Deletes all buffers and
 		*        frees up memory
 		*/
   
-    void openGLCleanUp();
+    void OpenGLCleanUp();
 
     /**
 		* @brief Virtual Sphere
@@ -278,31 +287,29 @@ class ADIMainWindow {
 		* @brief Create the necessary OpenGL vertex attributes and buffers based on
 		* 		 current vertices extracted from XYZ data
 		*/
-    void preparePointCloudVertices(unsigned int &vbo, unsigned int &vao);
+    void PreparePointCloudVertices(unsigned int &vbo, unsigned int &vao);
 
     /**
 		* @brief Resets to camera default position, as well as vertex point size
 		*/
-    void pointCloudReset();
+    void PointCloudReset();
 
     /**
 		* @brief Process keyboard and mouse
 		*        inputs to move Point Cloud
 		*        image
 		*/
-    void processInputs(GLFWwindow *window);
+    void ProcessInputs(GLFWwindow *window);
 
-    void handleInterruptCallback();
+    void HandleInterruptCallback();
 
     /**
 		* @brief Main Menu
 		*/
-    void showMainMenu();
+    void ShowMainMenu();
 
-    void showRecordMenu();
-
-    void showLoadAdsdParamsMenu();
-    void showSaveAdsdParamsMenu();
+    void ShowLoadAdsdParamsMenu();
+    void ShowSaveAdsdParamsMenu();
 
     /**
 		* @brief	Open Device menu will give you the information of
@@ -312,19 +319,19 @@ class ADIMainWindow {
 		*			"wait" for a new plug-and-play device and
 		*			refresh options
 		*/
-    void showDeviceMenu();
+    void ShowDeviceMenu();
 
     /**
      * @brief Show the Analog Devices, Inc log
     */
-    void showLogoWindow();
+    void ShowLogoWindow();
 
     /**
 		* @brief Displays Log information
 		*/
-    void showLogWindow(bool *p_open);
+    void ShowLogWindow(bool *p_open);
 
-    void showIniWindow(bool *p_open);
+    void ShowIniWindow(bool *p_open);
 
     /**
 		* @brief Will poll the USB interface to look
@@ -346,16 +353,6 @@ class ADIMainWindow {
 		*						- Blended Depth with AB
 		*/
     void CameraPlay(int modeSelect, int viewSelect);
-
-    /**
-		* @brief Playback recorded video
-		*/
-    void PlayRecorded();
-
-    /**
-		* @brief Displays Playback menu
-		*/
-    void showPlaybackMenu();
 
     /**
 		* @brief Initializes OpenGL and AB + Depth settings
@@ -380,18 +377,18 @@ class ADIMainWindow {
     /**
 		* @brief Initializes OpenGL for AB texture
 		*/
-    void initOpenGLABTexture();
+    void InitOpenGLABTexture();
 
     /**
 		* @brief Initializes OpenGL for Depth texture
 		*/
-    void initOpenGLDepthTexture();
+    void InitOpenGLDepthTexture();
 
     /**
 		* @brief Initializes OpenGL for Point
 		*        Cloud texture
 		*/
-    void initOpenGLPointCloudTexture();
+    void InitOpenGLPointCloudTexture();
 
     /**
 		* @brief Stops playing CCD Camera
@@ -450,85 +447,65 @@ class ADIMainWindow {
     /**
      * @brief Computes streaming fps
     */
-    void computeFPS(int &fps);
+    void ComputeFPS(int &fps);
 
     /**
      * @brief print out warning message in popup window if ini param is out of valid range
     */
-    void iniParamWarn(std::string variable, std::string validVal);
+    void IniParamWarn(std::string variable, std::string validVal);
 
     void CustomizeMenus();
 
     /**
      * @brief Return the current selected camera object
     */
-    std::shared_ptr<aditof::Camera> getActiveCamera();
+    std::shared_ptr<aditof::Camera> GetActiveCamera();
 
     /**
 	* @brief Set any window a specific position
 	*/
-    void setWindowPosition(float x, float y);
+    void SetWindowPosition(float x, float y);
 
     /**
 		* @brief Convert degrees into radians
 		*/
-    float radians(float degrees);
+    float Radians(float degrees);
 
     /**
 		* @brief Set any window a specific size
 		*/
-    void setWindowSize(float width, float height);
+    void SetWindowSize(float width, float height);
 
     /**
 		* @brief Creates a Depth color bar that gives
 		*        a brief idea of mapped distance
 		*/
-    void createColorBar(ImVec2 position, ImVec2 size);
+    void CreateColorBar(ImVec2 position, ImVec2 size);
 
     /**
 		* @brief Common pre-display for GUI windows
 		*/
-    bool displayDataWindow(ImVec2 &displayUpdate, ImVec2 &size);
+    bool DisplayDataWindow(ImVec2 &displayUpdate, ImVec2 &size);
 
     void DrawColoredLabel(const char *fmt, ...);
     void DrawBarLabel(const char *fmt, ...);
     void NewLine(float spacing);
-    void showStartWizard();
+    void ShowStartWizard();
+    float WindowCalcX(Rect w, float buffer = 0.0f) {
+        return w.x + w.width + buffer;
+    }
+    float WindowCalcY(Rect w, float buffer = 0.0f) {
+        return w.y + w.height + buffer;
+    }
 
     // The type of movement that a mouse movement should be interpreted as (if any)
     //
-    enum class MouseMovementType { None, Rotation, Translation };
-    AppLog *getLog() { return &my_log; }
+    AppLog *GetLog() { return &m_log; }
+
+    // Constants
     const std::string INIT_LOG_WARNING =
         "WARNING: Logging before InitGoogleLogging() is written to "
         "STDERR\n";
-    int32_t recordingSeconds = 5; //Default value
-    //Point Cloud
-    mat4x4 m_view;
-    mat4x4 m_projection;
-    mat4x4 m_model;
-    vec3 cameraPos = {0.0f, 0.0f, 3.0f};
-    vec3 cameraFront = {0.0f, 0.0f, -1.0f};
-    vec3 cameraUp = {0.0f, 1.0f, 0.0f};
-    vec3 cameraPos_Front;
-    float deltaTime = 0.1;
-    float fov = 8.0f; //field of view angle in degrees.
-    // yaw is initialized to -90.0 degrees since a yaw of 0.0
-    //results in a direction vector pointing to the right so
-    //we initially rotate a bit to the left.
-    bool firstMouse = true;
-    float lastX = 1280.0f;
-    float lastY = 720.0;
-    float TranslationSensitivity = 0.03f;
-    int pointSize = 1;
-    unsigned int framebuffer;
-    bool mouseDown = false;
-    bool m_saveBinaryFormatTmp = false;
-    float tofImagePosY;
-    bool _isHighDPI = false;
-    float dpiScaleFactor = HIGHDPISCALAR;
-    std::thread initCameraWorker;
-    bool m_cameraWorkerDone = false;
     const int32_t MAX_RECORD_TIME = 60;
     const float OFFSETFROMTOPOFGUI = 38;
     const float OFFSETFROMLEFT = 38;
@@ -536,107 +513,104 @@ class ADIMainWindow {
     const uint32_t INITIALDEG = 0;
     const float NORMALDPISCALAR = 1.0f;
     const float HIGHDPISCALAR = 2.0f;
+    const float offsetfromtop = OFFSETFROMTOPOFGUI;
+    const float offsetfromleft = OFFSETFROMLEFT;
     const std::string DEFAULT_TOOLS_CONFIG_FILENAME = "tof-tools.config";
+    const float m_custom_color_play = 0.4f;
+    const float m_custom_color_stop = 0.0f;
+    const float m_custom_color_save = 0.3f;
+    const float m_custom_color_open = 0.2f;
+    const float m_custom_color_pause = 0.1f;
+    const ImVec2 m_invalid_hovered_pixel = ImVec2(-1, -1);
+
+    //Point Cloud
+    mat4x4 m_view_mat;
+    mat4x4 m_projection_mat;
+    mat4x4 m_model_mat;
+    vec3 m_camera_position_vec = {0.0f, 0.0f, 3.0f};
+    vec3 m_camera_front_vec = {0.0f, 0.0f, -1.0f};
+    vec3 m_camera_up_vec = {0.0f, 1.0f, 0.0f};
+    vec3 m_camera_position_front_vec;
+    float m_delta_time = 0.1;
+    float m_field_of_view = 8.0f;
+    float m_translation_sensitivity = 0.03f;
+    int32_t m_point_size = 1;
+    uint32_t m_gl_framebuffer;
+    bool m_mouse_down = false;
+    bool m_saveBinaryFormatTmp = false;
+    float m_tof_image_pos_y;
+    bool m_is_high_dpi = false;
+    float m_dpi_scale_factor = HIGHDPISCALAR;
+    std::thread initCameraWorker;
+    bool m_cameraWorkerDone = false;
     aditof::System m_system;
-    std::vector<std::shared_ptr<aditof::Camera>> m_camerasList;
-
-    bool m_focusedOnce = false;
-
-    bool m_skipNetworkCameras;
+    std::vector<std::shared_ptr<aditof::Camera>> m_cameras_list;
+    bool m_focused_once = false;
+    bool m_skip_network_cameras;
     std::string m_cameraIp;
     std::vector<std::pair<int, std::string>> m_configFiles;
-    int configSelection = 0;
-
-    bool _usesExternalModeDefinition = false;
-    bool captureSeparateEnabled = true;
-    bool captureBlendedEnabled = true;
-    const ImVec2 InvalidHoveredPixel = ImVec2(-1, -1);
+    int32_t m_config_selection = 0;
+    bool m_uses_external_mode_definition = false;
+    bool m_capture_separate_enabled = true;
     std::vector<uint8_t> _cameraModes;
     std::vector<std::pair<int, uint8_t>> m_cameraModes;
     std::vector<std::pair<int, std::string>> m_cameraModesDropDown;
     std::unordered_map<uint16_t, std::string> m_cameraModesLookup;
 
-    ImVec2 sourceDepthImageDimensions;
-    ImVec2 displayDepthDimensions;
-    ImVec2 sourceABImageDimensions;
-    ImVec2 displayABDimensions;
-    ImVec2 sourcePointCloudImageDimensions;
-    ImVec2 displayPointCloudDimensions;
+    ImVec2 m_source_depth_image_dimensions;
+    ImVec2 m_display_depth_dimensions;
+    ImVec2 m_source_ab_image_dimensions;
+    ImVec2 m_display_ab_dimensions;
+    ImVec2 m_source_point_cloud_image_dimensions;
+    ImVec2 m_display_point_cloud_dimensions;
     //imGUI
     GLFWwindow *window;
-    int mainWindowHeight;
-    int mainWindowWidth;
-    bool showABWindow = false;
-    bool showDepthWindow = false;
-    int modeSelection = 0;
-    int modeSelectChanged = 0; //flag when changed
-    bool isPlaying = false;
-    bool isRecording = false;
-    bool isPlayRecorded = false;
-    bool isPlayRecordPaused = false;
-    int viewSelection = 0;
-    int viewSelectionChanged = 0; //flag when changed
-    bool cameraOptionsTreeEnabled = true;
-    bool pointCloudEnable = true;
-    float imagescale = 1.0f;
+    int32_t m_main_window_height;
+    int32_t m_main_window_width;
+    int32_t m_mode_selection = 0;
+    int32_t m_mode_select_changed = 0; //flag when changed
+    bool m_is_playing = false;
+    int32_t m_view_selection = 0;
+    int32_t m_view_selection_changed = 0; //flag when changed
+    float m_image_scale = 1.0f;
     const float imagesizemax = 516.0f;
-    unsigned int ab_video_texture = 0;
-    unsigned int depth_video_texture = 0;
-    unsigned int pointCloud_video_texture = 0;
-    bool setTempWinPositionOnce = true;
-    bool setABWinPositionOnce = true;
-    bool setDepthWinPositionOnce = true;
-    bool setLogWinPositionOnce = true;
-    bool setPointCloudPositionOnce = true;
-    bool _isOpenDevice;
-    float customColorPlay = 0.4f;
-    float customColorStop = 0.0f;
-    float customColorSave = 0.3f;
-    float customColorOpen = 0.2f;
-    float customColorPause = 0.1f;
-    bool displayAB = true;
-    bool displayDepth = true;
-    bool displayPointCloud = false;
-    bool displayTemp = true;
-    int32_t rawSeeker = 0;
+    uint32_t m_gl_ab_video_texture = 0;
+    uint32_t m_gl_depth_video_texture = 0;
+    uint32_t m_gl_pointcloud_video_texture = 0;
+    bool m_set_temp_win_position_once = true;
+    bool m_set_ab_win_position_once = true;
+    bool m_set_depth_win_position_once = true;
+    bool m_set_log_win_position_once = true;
+    bool m_set_point_cloud_position_once = true;
+    bool m_is_open_device;
 
     //Logging
-    char buffer[1024];
-    FILE *stream;
-    FILE *input;
+    char m_buffer[1024];
+    FILE *m_file_stream;
+    FILE *m_file_input;
     float rotationangleradians = INITIALRAD;
     uint32_t rotationangledegrees = INITIALDEG;
-    const float offsetfromtop = OFFSETFROMTOPOFGUI;
-    const float offsetfromleft = OFFSETFROMLEFT;
 
-    struct Rect {
-        float x;
-        float y;
-        float width;
-        float height;
-    };
-    std::unordered_map<std::string, Rect> dictWinPosition;
-    float windowCalcX(Rect w, float buffer = 0.0f) { return w.x + w.width + buffer; }
-    float windowCalcY(Rect w, float buffer = 0.0f) { return w.y + w.height + buffer; }
-    Rect *m_pcPosition;
-    Rect *m_abPosition;
-    Rect *m_depthPosition;
-    int16_t m_frameWindowPosState;
-    std::shared_ptr<adiviewer::ADIView> view = nullptr;
-    AppLog my_log;
+    std::unordered_map<std::string, Rect> m_dict_win_position;
+    Rect *m_pc_position;
+    Rect *m_ab_position;
+    Rect *m_depth_position;
+    int16_t m_frame_window_position_state;
+    std::shared_ptr<adiviewer::ADIView> m_view_instance = nullptr;
+    AppLog m_log;
 
-    bool m_callbackInitialized = false;
-    bool m_netLinkTest = false;
-    std::string m_ipSuffix;
+    bool m_callback_initialized = false;
+    bool m_network_link_test = false;
+    std::string m_ip_suffix;
 
-    int32_t frameCounter = 0;
+    int32_t m_frame_counter = 0;
     int32_t m_fps = 0;
-    uint16_t m_fps_expectedFPS = 0;
-    uint32_t m_fps_firstFrame = 0;
-    uint32_t m_fps_frameRecvd = 0;
+    uint16_t m_fps_expected = 0;
+    uint32_t m_fps_first_frame_number = 0;
+    uint32_t m_fps_frame_received = 0;
     std::chrono::time_point<std::chrono::system_clock> m_fps_startTime;
-    int m_selectedDevice = -1;
-    std::vector<std::pair<int, std::string>> m_connectedDevices;
+    int32_t m_selected_device_index = -1;
+    std::vector<std::pair<int, std::string>> m_connected_devices;
 };
 } // namespace adiMainWindow
 #endif //ADIMAINWINDOW_H

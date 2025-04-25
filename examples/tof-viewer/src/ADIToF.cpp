@@ -84,8 +84,8 @@ int main(int argc, char **argv) {
     ADIViewerArgs args;
 
     ProcessArgs(argc, argv, args);
-    if (view->startImGUI(args)) {
-        view->render();
+    if (view->StartImGUI(args)) {
+        view->Render();
     }
     return 0;
 }

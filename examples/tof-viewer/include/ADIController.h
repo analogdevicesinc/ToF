@@ -17,7 +17,6 @@
 #include <aditof/frame.h>
 #include <aditof/system.h>
 
-#include "ADIToFRecorder.h"
 #include "safequeue.h"
 
 namespace adicontroller {
@@ -157,7 +156,6 @@ class ADIController {
     int getCameraInUse() const;
 
     std::vector<std::shared_ptr<aditof::Camera>> m_cameras;
-    std::unique_ptr<ADIToFRecorder> m_recorder;
     bool m_saveBinaryFormat;
     bool panicStop = false;
     size_t panicCount = 0;

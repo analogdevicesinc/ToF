@@ -10,19 +10,19 @@
 
 using namespace adiMainWindow;
 
-void ADIMainWindow::showLogWindow(bool *p_open) {
-    setWindowSize(mainWindowWidth / dpiScaleFactor, 235.0f);
-    setWindowPosition(0, mainWindowHeight / dpiScaleFactor - 235.0f);
+void ADIMainWindow::ShowLogWindow(bool *p_open) {
+    SetWindowSize(m_main_window_width / m_dpi_scale_factor, 235.0f);
+    SetWindowPosition(0, m_main_window_height / m_dpi_scale_factor - 235.0f);
     ImGuiWindowFlags windowFlags =
         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
-    my_log.Draw("Camera: Log", p_open, windowFlags);
+    m_log.Draw("Camera: Log", p_open, windowFlags);
 
 #ifdef __linux__
     fseek(input, ftell(input), SEEK_SET);
 #endif
 
-    while (fgets(buffer, 512, input)) {
-        if (buffer != INIT_LOG_WARNING)
-            my_log.AddLog(buffer, nullptr);
+    while (fgets(m_buffer, 512, m_file_input)) {
+        if (m_buffer != INIT_LOG_WARNING)
+            m_log.AddLog(m_buffer, nullptr);
     }
 }

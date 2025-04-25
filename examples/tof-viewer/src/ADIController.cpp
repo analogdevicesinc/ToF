@@ -19,7 +19,6 @@ ADIController::ADIController(
     std::vector<std::shared_ptr<aditof::Camera>> camerasList)
     : m_cameraInUse(-1), m_frameRequested(false) {
 
-    m_recorder = std::make_unique<ADIToFRecorder>();
     m_cameras = camerasList;
     if (m_cameras.size()) {
         // Use the first camera that is found
@@ -74,57 +73,15 @@ void ADIController::setMode(const uint8_t &mode) {
     camera->setMode(mode);
 }
 
-void ADIController::startRecording(const std::string &fileName,
-                                   unsigned int height, unsigned int width,
-                                   unsigned int seconds) {
-
-    if (m_recorder != nullptr) {
-        m_recorder = std::make_unique<ADIToFRecorder>();
-    }
-    m_recorder->setSaveBinaryFormat(this->m_saveBinaryFormat);
-    m_recorder->startRecording(fileName, height, width, seconds);
-}
-
-void ADIController::stopRecording() { m_recorder->stopRecording(); }
-
-int ADIController::startPlayback(const std::string &fileName) {
-    return m_recorder->startPlayback(fileName);
-}
-
-void ADIController::stopPlayback() { m_recorder->stopPlayback(); }
-
-bool ADIController::playbackFinished() const {
-    return m_recorder->isPlaybackFinished();
-}
-
-bool ADIController::recordingFinished() const {
-    return m_recorder->isRecordingFinished();
-}
-
-bool ADIController::playbackPaused() const {
-    return m_recorder->getPlaybackPaused();
-}
-
-void ADIController::pausePlayback(bool paused) const {
-    m_recorder->setPlaybackPaused(paused);
-}
-
 std::shared_ptr<aditof::Frame> ADIController::getFrame() {
-    if (m_recorder->isPlaybackEnabled()) {
-        return m_recorder->readNewFrame();
-    }
     return m_queue.dequeue();
 }
 
 void ADIController::requestFrame() {
-    if (m_recorder->isPlaybackEnabled()) {
-        m_recorder->requestFrame();
-    } else {
-        std::unique_lock<std::mutex> lock(m_requestMutex);
-        m_frameRequested = true;
-        lock.unlock();
-        m_requestCv.notify_one();
-    }
+    std::unique_lock<std::mutex> lock(m_requestMutex);
+    m_frameRequested = true;
+    lock.unlock();
+    m_requestCv.notify_one();
 }
 
 bool ADIController::hasCamera() const { return !m_cameras.empty(); }
@@ -152,10 +109,6 @@ void ADIController::captureFrames() {
             panicCount++;
             LOG(INFO) << "Trying to request frame... ";
             continue;
-        }
-
-        if (m_recorder->isRecordingEnabled()) {
-            m_recorder->recordNewFrame(frame);
         }
 
         m_queue.enqueue(frame);

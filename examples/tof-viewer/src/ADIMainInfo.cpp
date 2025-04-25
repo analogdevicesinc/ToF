@@ -16,36 +16,37 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
     using namespace aditof;
     static bool show_ini_window = false;
 
-    if ((float)view->frameWidth == 0.0 && (float)(view->frameHeight == 0.0)) {
+    if ((float)m_view_instance->frameWidth == 0.0 &&
+        (float)(m_view_instance->frameHeight == 0.0)) {
         return;
     }
 
-    auto camera = getActiveCamera();
+    auto camera = GetActiveCamera();
     if (!camera) {
         LOG(ERROR) << "No camera found";
         return;
     }
 
-    auto frame = view->m_capturedFrame;
+    auto frame = m_view_instance->m_capturedFrame;
     if (!frame) {
         LOG(ERROR) << "No frame received";
         return;
     }
 
-    m_fps_frameRecvd++;
+    m_fps_frame_received++;
 
     CameraDetails cameraDetails;
     camera->getDetails(cameraDetails);
     uint8_t camera_mode = cameraDetails.mode;
 
-    if (setTempWinPositionOnce) {
+    if (m_set_temp_win_position_once) {
         rotationangleradians = 0;
         rotationangledegrees = 0;
-        setTempWinPositionOnce = false;
+        m_set_temp_win_position_once = false;
     }
 
-    setWindowPosition(dictWinPosition["info"].x, dictWinPosition["info"].y);
-    setWindowSize(dictWinPosition["info"].width, dictWinPosition["info"].height);
+    SetWindowPosition(m_dict_win_position["info"].x, m_dict_win_position["info"].y);
+    SetWindowSize(m_dict_win_position["info"].width, m_dict_win_position["info"].height);
 
     if (ImGui::Begin("Information Window", nullptr,
                      overlayFlags)) {
@@ -79,12 +80,12 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
             std::string s = m_cameraModesLookup[static_cast<uint16_t>(camera_mode)]; 
             ImGui::Text(s.c_str());
 
-            if (m_fps_expectedFPS) {
+            if (m_fps_expected) {
                 ImGui::TableNextRow();
                 ImGui::TableSetColumnIndex(0);
                 ImGui::Text("Expected fps");
                 ImGui::TableSetColumnIndex(1);
-                ImGui::Text("%i", m_fps_expectedFPS);
+                ImGui::Text("%i", m_fps_expected);
             }
 
             ImGui::TableNextRow();
@@ -100,19 +101,19 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
                     LOG(ERROR) << "Failed to get frame metadata.";
                 } else {
                     uint32_t frameNum = metadata.frameNumber;
-                    if (m_fps_firstFrame == 0) {
-                        m_fps_firstFrame = frameNum;
+                    if (m_fps_first_frame_number == 0) {
+                        m_fps_first_frame_number = frameNum;
                     }
                     int32_t sensorTemp = (metadata.sensorTemperature);
                     int32_t laserTemp = (metadata.laserTemperature);
-                    uint32_t totalFrames = frameNum - m_fps_firstFrame + 1;
-                    uint32_t framesLost = totalFrames - m_fps_frameRecvd;
+                    uint32_t totalFrames = frameNum - m_fps_first_frame_number + 1;
+                    uint32_t framesLost = totalFrames - m_fps_frame_received;
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
                     ImGui::Text("Frames Received");
                     ImGui::TableSetColumnIndex(1);
-                    ImGui::Text("%i", m_fps_frameRecvd);
+                    ImGui::Text("%i", m_fps_frame_received);
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
@@ -141,14 +142,14 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
     ImGui::End();
 }
 
-void ADIMainWindow::computeFPS(int &fps) {
-    frameCounter++;
+void ADIMainWindow::ComputeFPS(int &fps) {
+    m_frame_counter++;
     auto currentTime = std::chrono::system_clock::now();
 
     std::chrono::duration<double> elapsed = currentTime - m_fps_startTime;
     if (elapsed.count() >= 2) {
-        fps = frameCounter / (int)elapsed.count();
-        frameCounter = 0;
+        fps = m_frame_counter / (int)elapsed.count();
+        m_frame_counter = 0;
         m_fps_startTime = currentTime;
     }
 }
