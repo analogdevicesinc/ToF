@@ -156,9 +156,9 @@ class ADIController {
     int getCameraInUse() const;
 
     std::vector<std::shared_ptr<aditof::Camera>> m_cameras;
-    bool m_saveBinaryFormat;
     bool panicStop = false;
     size_t panicCount = 0;
+    int m_cameraInUse;
 
   private:
     /**
@@ -167,7 +167,6 @@ class ADIController {
     void captureFrames();
 
   private:
-    int m_cameraInUse;
     std::thread m_workerThread;
     std::atomic<bool> m_stopFlag;
     SafeQueue<std::shared_ptr<aditof::Frame>> m_queue;
