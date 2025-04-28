@@ -8,7 +8,6 @@
 GLOG_INSTALL_DIR="$PWD/installed/glog"
 PROTOBUF_INSTALL_DIR="$PWD/installed/protobuf"
 LIBZMQ_INSTALL_DIR="$PWD/installed/libzmq"
-CPPZMQ_INSTALL_DIR="$PWD/installed/cppzmq"
 OPENCV_INSTALL_DIR="$PWD/installed/opencv"
 
 if [[ "${OPENCV}" == "" ]]; then
