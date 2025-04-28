@@ -206,7 +206,7 @@ build_and_install_cppzmq() {
     EXTRA_CMAKE_OPTIONS=$3
     LIB_BUILD_DIR=${REPO_DIR}/build_4_9_0
 
-    mkdir -p ${INSTALL_DIR}
+    
     mkdir -p ${LIB_BUILD_DIR}
     
     pushd ${LIB_BUILD_DIR}
