@@ -1,0 +1,207 @@
+From ba91e5d63e5984b8c630e6fe86b5a3bcf05c6cc1 Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Tue, 29 Apr 2025 16:32:14 +0530
+Subject: [PATCH] drivers: media: i2c: nv_adsd3500.c: set the default gpio
+ state as interrupt trigger
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ drivers/media/i2c/adsd3500_regs.h |  3 ++
+ drivers/media/i2c/nv_adsd3500.c   | 74 ++++++++++---------------------
+ 2 files changed, 27 insertions(+), 50 deletions(-)
+
+diff --git a/drivers/media/i2c/adsd3500_regs.h b/drivers/media/i2c/adsd3500_regs.h
+index 6e7a0801..29eee39e 100644
+--- a/drivers/media/i2c/adsd3500_regs.h
++++ b/drivers/media/i2c/adsd3500_regs.h
+@@ -51,6 +51,9 @@
+ #define GET_FRAMERATE_CMD                   0x0023
+ #define ENABLE_FSYNC_TRIGGER		    0x0025
+ 
++#define FSYNC_STOP			    0x0000
++#define FSYNC_START			    0x0001
++#define FSYNC_HIZ			    0x0002
+ 
+ #define READ_REGISTER_CMD                   0xFFFF
+ #define WRITE_REGISTER_CMD                  0xFFFF
+diff --git a/drivers/media/i2c/nv_adsd3500.c b/drivers/media/i2c/nv_adsd3500.c
+index f992b507..c57610d6 100644
+--- a/drivers/media/i2c/nv_adsd3500.c
++++ b/drivers/media/i2c/nv_adsd3500.c
+@@ -87,12 +87,11 @@ struct adsd3500 {
+ #define V4L2_CID_ADSD3500_CONFIDENCE_BITS (V4L2_CID_USER_ADITOF_BASE + 4)
+ #define V4L2_CID_ADSD3500_AB_AVG (V4L2_CID_USER_ADITOF_BASE + 5)
+ #define V4L2_CID_ADSD3500_DEPTH_EN (V4L2_CID_USER_ADITOF_BASE + 6)
+-#define V4L2_CID_ADSD3500_SYNC_MODE (V4L2_CID_USER_ADITOF_BASE + 7)
+-#define V4L2_CID_ADSD3500_FSYNC_TRIGGER (V4L2_CID_USER_ADITOF_BASE + 8)
++#define V4L2_CID_ADSD3500_FSYNC_TRIGGER (V4L2_CID_USER_ADITOF_BASE + 7)
+ 
+ ssize_t debug_read(struct file *file, char __user *buff, size_t count, loff_t *offset);
+ ssize_t debug_write(struct file *file, const char __user *buff, size_t count, loff_t *offset);
+-static int adsd3500_sync_mode(struct adsd3500 *adsd3500, s32 val);
++static int adsd3500_set_fsync_trigger(struct adsd3500 *adsd3500, s32 val);
+ 
+ static const struct reg_sequence adsd3500_powerup_setting[] = {
+ };
+@@ -400,28 +399,6 @@ static const struct regmap_config adsd3500_regmap_config = {
+ 	.readable_reg = adsd3500_regmap_accessible_reg,
+ };
+ 
+-static int adsd3500_set_fsync_trigger(struct adsd3500 *adsd3500, s32 val)
+-{
+-	int ret;
+-
+-	if(adsd3500->pwm_fsync == NULL){
+-		dev_warn(adsd3500->dev, "Failed to get the pwm device\n");
+-		return -ENODEV;
+-	}
+-
+-	if(adsd3500->curr_sync_mode == PWM_TRIGGER){
+-		dev_info(adsd3500->dev, "Entered: %s value = %d\n",__func__, val);
+-		ret = regmap_write(adsd3500->regmap, ENABLE_FSYNC_TRIGGER, val);
+-		if (ret < 0){
+-			dev_err(adsd3500->dev, "Write of ENABLE_FSYNC_TRIGGER command failed.\n");
+-			return ret;
+-		}
+-	}
+-
+-	return ret;
+-}
+-
+-
+ static int _adsd3500_power_on(struct camera_common_data *s_data)
+ {
+ 	struct adsd3500 *adsd3500 = (struct adsd3500 *)s_data->priv;
+@@ -589,9 +566,6 @@ static int adsd3500_s_ctrl(struct v4l2_ctrl *ctrl)
+ 	case V4L2_CID_ADSD3500_CONFIDENCE_BITS:
+ 		ret = adsd3500_bpp_config(adsd3500, ctrl);
+ 		break;
+-	case V4L2_CID_ADSD3500_SYNC_MODE:
+-		ret = adsd3500_sync_mode(adsd3500, ctrl->val);
+-		break;
+ 	case V4L2_CID_ADSD3500_FSYNC_TRIGGER:
+ 		ret = adsd3500_set_fsync_trigger(adsd3500, ctrl->val);
+ 		break;
+@@ -705,16 +679,6 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
+ 		.max		= 2,
+ 		.qmenu_int	= nr_bits_qmenu,
+ 	},
+-	{
+-		.ops    	= &adsd3500_ctrl_ops,
+-		.id     	= V4L2_CID_ADSD3500_SYNC_MODE,
+-		.name   	= "Sync Mode",
+-		.type   	= V4L2_CTRL_TYPE_INTEGER,
+-		.def    	= 0,
+-		.min    	= 0,
+-		.max    	= 2,
+-		.step   	= 1,
+-	},
+ 	{
+ 		.ops            = &adsd3500_ctrl_ops,
+ 		.id             = V4L2_CID_ADSD3500_FSYNC_TRIGGER,
+@@ -722,7 +686,7 @@ static const struct v4l2_ctrl_config adsd3500_ctrls[] = {
+ 		.type           = V4L2_CTRL_TYPE_INTEGER,
+ 		.def            = 0,
+ 		.min            = 0,
+-		.max            = 2,
++		.max            = 1,
+ 		.step           = 1,
+ 	},
+ 	{
+@@ -952,7 +916,7 @@ static int adsd3500_configure_interrupt(struct adsd3500 *adsd3500){
+ 
+ }
+ 
+-static int adsd3500_sync_mode(struct adsd3500 *adsd3500, s32 val){
++static int adsd3500_set_fsync_trigger(struct adsd3500 *adsd3500, s32 val){
+ 
+ 	struct device *dev = adsd3500->dev;
+ 	struct i2c_client *client = adsd3500->i2c_client;
+@@ -982,17 +946,31 @@ static int adsd3500_sync_mode(struct adsd3500 *adsd3500, s32 val){
+ 		if(ret){
+ 			dev_err(&client->dev, "Failed to change the PWM state\n");
+ 		}
++
++		ret = regmap_write(adsd3500->regmap, ENABLE_FSYNC_TRIGGER, FSYNC_HIZ);
++		if (ret < 0){
++			dev_err(adsd3500->dev, "Write of ENABLE_FSYNC_TRIGGER command failed.\n");
++		}
+ 	}
+ 	else if(adsd3500->curr_sync_mode == INTR_TRIGGER){
+ 		dev_info(dev, "Enable interrupt trigger\n");
+ 		pwm_init_state(adsd3500->pwm_fsync, &state);
+ 		state.polarity = PWM_POLARITY_INVERSED;
++
+ 		ret = pwm_apply_state(adsd3500->pwm_fsync, &state);
+ 		if(ret) {
+ 			dev_err(&client->dev, "Failed to change the PWM state\n");
+ 		}
++
+ 		ret = adsd3500_configure_interrupt(adsd3500);
++		if(ret < 0){
++			return ret;
++		}
+ 
++		ret = regmap_write(adsd3500->regmap, ENABLE_FSYNC_TRIGGER, FSYNC_START);
++		if (ret < 0){
++			dev_err(adsd3500->dev, "Write of ENABLE_FSYNC_TRIGGER command failed.\n");
++		}
+ 	}
+ 	else{
+ 		dev_err(dev, "Invalid sync mode %d\n", adsd3500->curr_sync_mode);
+@@ -1050,9 +1028,12 @@ static int adsd3500_ctrls_init(struct adsd3500 *priv)
+ 		goto error;
+ 	}
+ 
+-		//Initialize by default to 4 (RAW12, 12 bpp)
++	//Initialize by default to 4 (RAW12, 12 bpp)
+ 	v4l2_ctrl_s_ctrl(priv->ctrls[5], 4);
+ 
++	//Initialize by default to interrupt trigger
++	v4l2_ctrl_s_ctrl(priv->ctrls[8], INTR_TRIGGER);
++
+ 	return 0;
+ 
+ error:
+@@ -1196,7 +1177,6 @@ static int adsd3500_probe(struct i2c_client *client,
+ {
+ 	struct camera_common_data *common_data;
+ 	struct adsd3500 *priv;
+-	unsigned int read_val;
+ 	int ret;
+ 
+ 	dev_info(&client->dev, "probing adsd3500 v4l2 sensor\n");
+@@ -1262,12 +1242,6 @@ static int adsd3500_probe(struct i2c_client *client,
+ 	priv->current_config.nr_mipi_lanes = common_data->numlanes;
+ 	dev_dbg(&client->dev, "Lanes nr: %u\n", priv->current_config.nr_mipi_lanes);
+ 
+-	ret = regmap_read(priv->regmap, GET_CHIP_ID_CMD, &read_val);
+-	if (ret < 0) {
+-		dev_err(&client->dev, "Read of Chip ID register failed.\n");
+-		//return ret;
+-	}
+-
+ 	v4l2_i2c_subdev_init(priv->sd, client, &adsd3500_subdev_ops);
+ 
+ 	ret= adsd3500_debugfs_init(priv);
+@@ -1278,7 +1252,7 @@ static int adsd3500_probe(struct i2c_client *client,
+ 
+ 	ret = adsd3500_ctrls_init(priv);
+ 	if (ret < 0){
+-		dev_err(&client->dev, "Failed to initialze v4l2 ctrls\n");
++		dev_err(&client->dev, "Failed to initialize v4l2 ctrls\n");
+ 		return ret;
+ 	}
+ 
+@@ -1306,7 +1280,7 @@ static int adsd3500_probe(struct i2c_client *client,
+ 	return -ENOTSUPP;
+ #endif
+ 
+-	dev_info(&client->dev, "Detected ADSD3500 sensor\n");
++	dev_info(&client->dev, "probe ADSD3500 success\n");
+ 
+ 	return 0;
+ }
+-- 
+2.25.1
+
