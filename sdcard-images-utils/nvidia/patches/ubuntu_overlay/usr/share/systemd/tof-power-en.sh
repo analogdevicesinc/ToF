@@ -1,9 +1,9 @@
 #!/bin/bash
 
-BOARD=$(strings /proc/device-tree/model)
+MODULE=$(strings /proc/device-tree/tegra-camera-platform/modules/module0/badge)
 
-if [[ $BOARD == "NVIDIA Jetson Orin Nano Engineering Reference Developer Kit Super" ]]; then
-	echo "Model: $BOARD" 
+if [[ $MODULE == "adi_adsd3500_adsd3100" ]]; then
+	echo "Module name: $MODULE"
 	echo "export CAM0_PWDN and set direction as output"
 
 	# VAUX_DAC_EN
