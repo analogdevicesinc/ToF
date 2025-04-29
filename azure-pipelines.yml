@@ -99,7 +99,9 @@ jobs:
       
     displayName: "Install Dependencies"
 
-  - script: ./ci/azure/run_build.sh
+  - script: |
+      if [[ "${DOCKER}" != "" ]]; then sudo sysctl kernel.randomize_va_space=0; fi
+      ./ci/azure/run_build.sh
     displayName: "Build"
 
 - job: WindowsBuild
