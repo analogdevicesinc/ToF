@@ -342,7 +342,7 @@ class ADIMainWindow {
     /**
 		* @brief Initialize CMOS Camera
 		*/
-    void InitCamera();
+    void InitCamera(std::string filePath);
 
     /**
 		* @brief				Will Play ADI CCD depending on
@@ -603,6 +603,7 @@ class ADIMainWindow {
     bool m_network_link_test = false;
     std::string m_ip_suffix;
 
+    bool m_off_line = false;
     int32_t m_frame_counter = 0;
     int32_t m_fps = 0;
     uint16_t m_fps_expected = 0;

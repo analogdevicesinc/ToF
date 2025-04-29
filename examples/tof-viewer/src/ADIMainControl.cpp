@@ -33,7 +33,7 @@ bool DrawIconButton(const char *id,
     if (ImGui::IsItemActive())
         bgColor = IM_COL32(180, 0, 0, 255);
     else if (ImGui::IsItemHovered())
-        bgColor = IM_COL32(255, 0, 0, 255);
+        bgColor = IM_COL32(255, 165, 0, 255);
 
     drawList->AddRectFilled(min, max, bgColor, 4.0f);
 
@@ -128,31 +128,38 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
 
         ImGui::SameLine(0.0f, 10.0f);
 
-        if (!recordingActive) {
-            if (DrawIconButton(
-                    "Pause", [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
-                        ImVec2 center = (min + max) * 0.5f;
-                        float w = max.x - min.x;
-                        float h = max.y - min.y;
-                        float barWidth = w * 0.1f;
-                        float barHeight = h * 0.5f;
-                        float spacing = w * 0.1f;
+        if (recordingActive) {
+            ImGui::BeginDisabled();
+        }
 
-                        ImVec2 bar1Min(center.x - spacing - barWidth,
-                                       center.y - barHeight * 0.5f);
-                        ImVec2 bar1Max(center.x - spacing,
-                                       center.y + barHeight * 0.5f);
-                        ImVec2 bar2Min(center.x + spacing,
-                                       center.y - barHeight * 0.5f);
-                        ImVec2 bar2Max(center.x + spacing + barWidth,
-                                       center.y + barHeight * 0.5f);
+        if (DrawIconButton(
+                "Pause", [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
+                    ImVec2 center = (min + max) * 0.5f;
+                    float w = max.x - min.x;
+                    float h = max.y - min.y;
+                    float barWidth = w * 0.1f;
+                    float barHeight = h * 0.5f;
+                    float spacing = w * 0.1f;
 
-                        dl->AddRectFilled(bar1Min, bar1Max, IM_COL32_WHITE);
-                        dl->AddRectFilled(bar2Min, bar2Max, IM_COL32_WHITE);
-                    })) {
+                    ImVec2 bar1Min(center.x - spacing - barWidth,
+                                    center.y - barHeight * 0.5f);
+                    ImVec2 bar1Max(center.x - spacing,
+                                    center.y + barHeight * 0.5f);
+                    ImVec2 bar2Min(center.x + spacing,
+                                    center.y - barHeight * 0.5f);
+                    ImVec2 bar2Max(center.x + spacing + barWidth,
+                                    center.y + barHeight * 0.5f);
 
-                // TODO
-            }
+                    dl->AddRectFilled(bar1Min, bar1Max, IM_COL32_WHITE);
+                    dl->AddRectFilled(bar2Min, bar2Max, IM_COL32_WHITE);
+                },(!recordingActive) ? IM_COL32(60, 60, 60, 255)
+                : IM_COL32(0, 0, 0, 255))) {
+
+            // TODO
+        }
+
+        if (recordingActive) {
+            ImGui::EndDisabled();
         }
 
         NewLine(5.0f);

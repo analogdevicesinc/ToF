@@ -23,7 +23,7 @@ ADIController::ADIController(
     if (m_cameras.size()) {
         // Use the first camera that is found
         m_cameraInUse = 0;
-        //auto camera = m_cameras[static_cast<unsigned int>(m_cameraInUse)];
+        auto camera = m_cameras[static_cast<unsigned int>(m_cameraInUse)];
         m_framePtr = std::make_shared<aditof::Frame>();
     } else {
         LOG(WARNING) << "No cameras found!";
@@ -98,7 +98,8 @@ void ADIController::captureFrames() {
 
         auto camera = m_cameras[static_cast<unsigned int>(m_cameraInUse)];
         auto frame = std::make_shared<aditof::Frame>();
-        aditof::Status status = camera->requestFrame(frame.get());
+        auto fg = frame.get();
+        aditof::Status status = camera->requestFrame(fg);
         if (status != aditof::Status::OK) {
             if (panicCount >= 7) {
                 panicStop = true;

@@ -837,7 +837,7 @@ void ADIMainWindow::ShowStartWizard() {
 
     ImGuiIO &io = ImGui::GetIO(); // Get the display size
     ImVec2 center = ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.2f);
-    ImVec2 window_size = ImVec2(400, 300); // Your window size
+    ImVec2 window_size = ImVec2(400, 320); // Your window size
 
     // Offset to truly center it
     ImVec2 window_pos = ImVec2(center.x - window_size.x * 0.5f,
@@ -849,84 +849,136 @@ void ADIMainWindow::ShowStartWizard() {
 
     ImGui::Begin("Camera Selection Wizard", nullptr, ImGuiWindowFlags_NoResize);
 
-    ImGuiExtensions::ADIComboBox(
-        "Device", "(No available devices)", ImGuiComboFlags_None,
-        m_connected_devices, &m_selected_device_index, m_is_open_device);
-    //If a device is found, then set the first one found
-    if (!m_connected_devices.empty() && m_selected_device_index == -1) {
-        m_selected_device_index = 0;
-        m_is_open_device = true;
-    }
+    static uint32_t selected = 1;
 
-    ImGui::NewLine();
-    bool _noConnected = m_connected_devices.empty();
-    if (ImGuiExtensions::ADIButton("Refresh", _noConnected)) {
-        m_is_open_device = false;
-        m_cameraWorkerDone = false;
-        RefreshDevices();
-    }
-
+    ImGui::RadioButton("Saved Stream", selected == 0);
+    if (ImGui::IsItemClicked())
+        selected = 0;
     ImGui::SameLine();
+    ImGui::RadioButton("Live Camera", selected == 1);
+    if (ImGui::IsItemClicked())
+        selected = 1;
 
-    const bool openAvailable = !m_connected_devices.empty();
-    { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
-        ImGuiExtensions::ButtonColorChanger colorChanger(
-            ImGuiExtensions::ButtonColor::Green, openAvailable);
-        if (ImGuiExtensions::ADIButton("Open", m_is_open_device) &&
-            0 <= m_selected_device_index) {
-
-            m_is_open_device = false;
-            initCameraWorker = std::thread(
-                std::bind(&ADIMainWindow::InitCamera, this));
-        }
-    }
-
-    ImGui::SameLine();
-    if (ImGuiExtensions::ADIButton("Close", !m_is_open_device)) {
-        StopPlayback();
-        CameraStop();
-        m_cameraWorkerDone = false;
-        m_callback_initialized = false;
-        m_cameraModes.clear();
-        _cameraModes.clear();
-        if (initCameraWorker.joinable()) {
-            initCameraWorker.join();
-        }
-        m_view_instance.reset();
-        RefreshDevices();
-    }
     ImGui::NewLine();
 
-    if (ImGuiExtensions::ADICheckbox("Max FPS Network Test (Debug)",
-                                        &m_network_link_test, m_is_open_device)) {
-        if (m_network_link_test) {
-            m_ip_suffix = ":netlinktest";
-        } else {
-            m_ip_suffix.clear();
-        }
-        RefreshDevices();
-    }
-    ImGui::NewLine();
+    if (selected == 0) {
+        m_off_line = true;
+        const bool openAvailable = !m_connected_devices.empty();
+        { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
+            static std::string fileName;
+            ImGuiExtensions::ButtonColorChanger colorChanger(
+                ImGuiExtensions::ButtonColor::Green, openAvailable);
+            if (ImGuiExtensions::ADIButton("Open")) {
+                
+                int FilterIndex = 0;
+                std::string fs = openADIFileName(
+                    "ADI ToF Config Files\0*.adcam\0", nullptr, FilterIndex);
+                LOG(INFO) << "Load File selected: " << fs;
 
-    if (m_cameraWorkerDone) {
-        m_is_open_device = false;
-        if (!m_is_playing) {
-            ImGui::NewLine();
-            DrawBarLabel("Mode Selection");
-            ImGui::NewLine();
-            ImGuiExtensions::ADIComboBox(
-                "", "Select Mode", ImGuiSelectableFlags_None,
-                m_cameraModesDropDown, &m_mode_selection, true);
+                if (!fs.empty()) {
 
-            ImGuiExtensions::ButtonColorChanger colorChangerPlay(
-                m_custom_color_play, !m_is_playing);
-            ImGui::NewLine();
-            if (ImGuiExtensions::ADIButton(
-                    "Start", !m_is_playing)) {
+                    RefreshDevices();
+
+                    m_is_open_device = false;
+                    m_selected_device_index = 0;
+                    fileName = fs;
+                    initCameraWorker =
+                        std::thread([this, fs]() { InitCamera(fs); });
+                }
+            }
+            ImGui::SameLine();
+            if (ImGuiExtensions::ADIButton("Play", !m_is_open_device)) {
                 m_frame_window_position_state = 0;
                 m_view_selection_changed = m_view_selection;
                 m_is_playing = true;
                 ini_params.clear();
+            }
+            ImGui::NewLine();
+            ImGui::Text("File selected: %s", fileName.c_str());
+        }
+
+    } else {
+        m_off_line = false;
+        ImGuiExtensions::ADIComboBox(
+            "Camera", "(No available devices)", ImGuiComboFlags_None,
+            m_connected_devices, &m_selected_device_index, m_is_open_device);
+        //If a device is found, then set the first one found
+        if (!m_connected_devices.empty() && m_selected_device_index == -1) {
+            m_selected_device_index = 0;
+            m_is_open_device = true;
+        }
+
+        ImGui::NewLine();
+        bool _noConnected = m_connected_devices.empty();
+        if (ImGuiExtensions::ADIButton("Refresh", _noConnected)) {
+            m_is_open_device = false;
+            m_cameraWorkerDone = false;
+            RefreshDevices();
+        }
+
+        ImGui::SameLine();
+
+        const bool openAvailable = !m_connected_devices.empty();
+        { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
+            ImGuiExtensions::ButtonColorChanger colorChanger(
+                ImGuiExtensions::ButtonColor::Green, openAvailable);
+            if (ImGuiExtensions::ADIButton("Open", m_is_open_device) &&
+                0 <= m_selected_device_index) {
+
+                m_is_open_device = false;
+                std::string fs;
+                initCameraWorker =
+                    std::thread([this, fs]() { InitCamera(fs); });
+            }
+        }
+
+        ImGui::SameLine();
+        if (ImGuiExtensions::ADIButton("Close", !m_is_open_device)) {
+            StopPlayback();
+            CameraStop();
+            m_cameraWorkerDone = false;
+            m_callback_initialized = false;
+            m_cameraModes.clear();
+            _cameraModes.clear();
+            if (initCameraWorker.joinable()) {
+                initCameraWorker.join();
+            }
+            m_view_instance.reset();
+            RefreshDevices();
+        }
+        ImGui::NewLine();
+
+        if (ImGuiExtensions::ADICheckbox("Max FPS Network Test (Debug)",
+                                         &m_network_link_test,
+                                         m_is_open_device)) {
+            if (m_network_link_test) {
+                m_ip_suffix = ":netlinktest";
+            } else {
+                m_ip_suffix.clear();
+            }
+            RefreshDevices();
+        }
+        ImGui::NewLine();
+
+        if (m_cameraWorkerDone) {
+            m_is_open_device = false;
+            if (!m_is_playing) {
+                ImGui::NewLine();
+                DrawBarLabel("Mode Selection");
+                ImGui::NewLine();
+                ImGuiExtensions::ADIComboBox(
+                    "", "Select Mode", ImGuiSelectableFlags_None,
+                    m_cameraModesDropDown, &m_mode_selection, true);
+
+                ImGuiExtensions::ButtonColorChanger colorChangerPlay(
+                    m_custom_color_play, !m_is_playing);
+                ImGui::NewLine();
+                if (ImGuiExtensions::ADIButton("Start", !m_is_playing)) {
+                    m_frame_window_position_state = 0;
+                    m_view_selection_changed = m_view_selection;
+                    m_is_playing = true;
+                    ini_params.clear();
+                }
             }
         }
     }

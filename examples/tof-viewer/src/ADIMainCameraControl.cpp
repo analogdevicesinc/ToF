@@ -37,7 +37,7 @@ extern std::map<std::string, std::string> modified_ini_params;
 extern std::map<std::string, std::string> last_ini_params;
 extern bool use_modified_ini_params;
 
-void ADIMainWindow::InitCamera() {
+void ADIMainWindow::InitCamera(std::string filePath) {
     if (m_view_instance != NULL) { //Reset current imager
         LOG(INFO) << "Imager is reseting.";
         m_view_instance.reset();
@@ -62,44 +62,50 @@ void ADIMainWindow::InitCamera() {
         return;
     }
 
+    camera->setOffLine(m_off_line);
     status = camera->initialize("");
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
         return;
     }
 
-    aditof::CameraDetails cameraDetails;
-    camera->getDetails(cameraDetails);
+    if (m_off_line == false) {
 
-    LOG(INFO) << "SD card image version: " << cameraDetails.sdCardImageVersion;
-    LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
-    LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
+        aditof::CameraDetails cameraDetails;
+        camera->getDetails(cameraDetails);
 
-    camera->getAvailableModes(_cameraModes);
-    sort(_cameraModes.begin(), _cameraModes.end());
+        LOG(INFO) << "SD card image version: "
+                  << cameraDetails.sdCardImageVersion;
+        LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
+        LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
 
-    for (int i = 0; i < _cameraModes.size(); ++i) {
-        aditof::DepthSensorModeDetails modeDetails;
+        camera->getAvailableModes(_cameraModes);
+        sort(_cameraModes.begin(), _cameraModes.end());
 
-        auto sensor = camera->getSensor();
-        sensor->getModeDetails(_cameraModes.at(i), modeDetails);
+        for (int i = 0; i < _cameraModes.size(); ++i) {
+            aditof::DepthSensorModeDetails modeDetails;
 
-        std::string s = std::to_string(_cameraModes.at(i));
-        s = s + ":" + std::to_string(modeDetails.baseResolutionWidth) +
-            "x" + std::to_string(modeDetails.baseResolutionHeight) + ",";
-        if (!modeDetails.isPCM) {
-            s = s + std::to_string(modeDetails.numberOfPhases) + " Phases";
-        } else {
-            s = s + "PCM";
+            auto sensor = camera->getSensor();
+            sensor->getModeDetails(_cameraModes.at(i), modeDetails);
+
+            std::string s = std::to_string(_cameraModes.at(i));
+            s = s + ":" + std::to_string(modeDetails.baseResolutionWidth) +
+                "x" + std::to_string(modeDetails.baseResolutionHeight) + ",";
+            if (!modeDetails.isPCM) {
+                s = s + std::to_string(modeDetails.numberOfPhases) + " Phases";
+            } else {
+                s = s + "PCM";
+            }
+            m_cameraModesDropDown.emplace_back(modeDetails.modeNumber, s);
+            m_cameraModesLookup[modeDetails.modeNumber] = s;
         }
-        m_cameraModesDropDown.emplace_back(modeDetails.modeNumber, s);
-        m_cameraModesLookup[modeDetails.modeNumber] = s;
-    }
 
-    for (int i = 0; i < _cameraModes.size(); i++) {
-        m_cameraModes.emplace_back(i, _cameraModes.at(i));
+        for (int i = 0; i < _cameraModes.size(); i++) {
+            m_cameraModes.emplace_back(i, _cameraModes.at(i));
+        }
+    } else {
+        camera->startPlayback(filePath);
     }
-
     m_cameraWorkerDone = true;
 }
 
@@ -252,6 +258,7 @@ void ADIMainWindow::CameraStop() {
 }
 
 void ADIMainWindow::RefreshDevices() {
+
     m_cameraWorkerDone = false;
     m_cameraModes.clear();
     _cameraModes.clear();
@@ -265,18 +272,23 @@ void ADIMainWindow::RefreshDevices() {
     m_cameras_list.clear();
 
     aditof::Status status;
-    status = m_system.getCameraList(m_cameras_list);
-    for (size_t ix = 0; ix < m_cameras_list.size(); ++ix) {
-        m_connected_devices.emplace_back(ix, "ToF Camera " + std::to_string(ix));
-    }
+    if (m_off_line) {
+        status = m_system.getCameraList(m_cameras_list);
+        for (size_t ix = 0; ix < m_cameras_list.size(); ++ix) {
+            m_connected_devices.emplace_back(ix, "ToF Camera " +
+                                                     std::to_string(ix));
+        }
+    } else {
 
-    if (!m_skip_network_cameras) {
-        // Add network camera
-        m_system.getCameraList(m_cameras_list, m_cameraIp + m_ip_suffix);
-        if (m_cameras_list.size() > 0) {
-            uint32_t index = static_cast<uint32_t>(m_connected_devices.size());
-            m_connected_devices.emplace_back(index, "ToF Camera" +
-                                                       std::to_string(index));
+        if (!m_skip_network_cameras) {
+            // Add network camera
+            m_system.getCameraList(m_cameras_list, m_cameraIp + m_ip_suffix);
+            if (m_cameras_list.size() > 0) {
+                uint32_t index =
+                    static_cast<uint32_t>(m_connected_devices.size());
+                m_connected_devices.emplace_back(
+                    index, "ToF Camera" + std::to_string(index));
+            }
         }
     }
 
