@@ -1,0 +1,36 @@
+From 95f4c9eb7af72b8f2500799f40988db1689eff56 Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Tue, 29 Apr 2025 12:50:21 +0530
+Subject: [PATCH] drivers: media: i2c: nv_adsd3500.c: set one pwm time period
+ delay
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ drivers/media/i2c/nv_adsd3500.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/i2c/nv_adsd3500.c b/drivers/media/i2c/nv_adsd3500.c
+index 95233645..f992b507 100644
+--- a/drivers/media/i2c/nv_adsd3500.c
++++ b/drivers/media/i2c/nv_adsd3500.c
+@@ -838,7 +838,7 @@ static int adsd3500_stop_streaming(struct adsd3500 *adsd3500)
+ 
+ 	if(adsd3500->pwm_fsync != NULL && adsd3500->curr_sync_mode == PWM_TRIGGER){
+ 		pwm_disable(adsd3500->pwm_fsync);
+-		return ret;
++		msleep(1000 / adsd3500->framerate);
+ 	}
+ 
+ 	ret = regmap_write(adsd3500->regmap, STREAM_OFF_CMD, STREAM_OFF_VAL);
+@@ -1250,7 +1250,7 @@ static int adsd3500_probe(struct i2c_client *client,
+ 	priv->sd->dev = &client->dev;
+ 	priv->sd->fwnode = dev_fwnode(priv->dev);
+ 	priv->s_data->dev = &client->dev;
+-	priv->framerate = 10;
++	priv->framerate = ADSD3500_DEFAULT_FPS;
+ 	mutex_init(&priv->lock);
+ 
+ 	ret = camera_common_initialize(common_data, "adsd3500");
+-- 
+2.25.1
+
