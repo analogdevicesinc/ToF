@@ -63,6 +63,7 @@ ADIView::~ADIView() {
 
     if (ab_video_data_8bit != nullptr) {
         delete [] ab_video_data_8bit;
+        ab_video_data_8bit = nullptr;
     }
 }
 
@@ -75,6 +76,7 @@ void ADIView::cleanUp() {
     ab_video_data = nullptr;
     depth_video_data = nullptr;
     pointCloud_video_data = nullptr;
+
     if (ab_video_data_8bit != nullptr) {
         delete[] ab_video_data_8bit;
         ab_video_data_8bit = nullptr;

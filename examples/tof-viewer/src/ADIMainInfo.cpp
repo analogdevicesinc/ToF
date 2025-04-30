@@ -33,7 +33,11 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
         return;
     }
 
-    m_fps_frame_received++;
+    if (!m_off_line) {
+        m_fps_frame_received++;
+    } else {
+        m_fps_frame_received = m_off_line_index;
+    }
 
     CameraDetails cameraDetails;
     camera->getDetails(cameraDetails);
@@ -71,7 +75,11 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Camera");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text(formattedIP.c_str());
+            if (m_off_line) {
+                ImGui::Text("Offline");
+            } else {
+                ImGui::Text(formattedIP.c_str());
+            }
 
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
@@ -114,6 +122,7 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
                     ImGui::Text("Frames Received");
                     ImGui::TableSetColumnIndex(1);
                     ImGui::Text("%i", m_fps_frame_received);
+
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);

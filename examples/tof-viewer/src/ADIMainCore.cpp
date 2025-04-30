@@ -884,12 +884,14 @@ void ADIMainWindow::ShowStartWizard() {
                     m_is_open_device = false;
                     m_selected_device_index = 0;
                     fileName = fs;
+                    m_off_line_index = 0;
                     initCameraWorker =
                         std::thread([this, fs]() { InitCamera(fs); });
                 }
             }
             ImGui::SameLine();
             if (ImGuiExtensions::ADIButton("Play", !m_is_open_device)) {
+                m_off_line_index = 0;
                 m_frame_window_position_state = 0;
                 m_view_selection_changed = m_view_selection;
                 m_is_playing = true;

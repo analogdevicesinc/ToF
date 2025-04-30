@@ -22,7 +22,7 @@ using namespace adiMainWindow;
 bool DrawIconButton(const char *id,
                     std::function<void(ImDrawList *, ImVec2, ImVec2)> drawIcon,
                     ImU32 bgColor = IM_COL32(60, 60, 60, 255)) {
-    ImVec2 size(40, 40);
+    ImVec2 size(30, 30);
     ImVec2 pos = ImGui::GetCursorScreenPos();
     ImDrawList *drawList = ImGui::GetWindowDrawList();
 
@@ -121,7 +121,8 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
 
         }  else {
 
-            static uint32_t index = 0;
+            uint32_t max_frame_count;
+            GetActiveCamera()->getSensor()->getFrameCount(max_frame_count);
 
             if (DrawIconButton(
                     "JumpToStart",
@@ -152,7 +153,7 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
                     },
                     IM_COL32(60, 60, 60, 255))) {
 
-                // TODO
+                m_off_line_index = 0;
 
             }
 
@@ -179,12 +180,13 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
                     },
                     IM_COL32(50, 50, 50, 255))) {
 
-                // TODO
-
+                if (m_off_line_index > 0) {
+                    m_off_line_index--;
+                }
             }
 
             ImGui::SameLine(0.0f, 10.0f);
-
+#if 0
             if (DrawIconButton(
                      "Play", [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
                 ImVec2 center = (min + max) * 0.5f;
@@ -227,6 +229,7 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
 
                 // TODO
             }
+#endif //0 
 
             ImGui::SameLine(0.0f, 10.0f);
             
@@ -250,9 +253,10 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
                         dl->AddTriangleFilled(p1, p2, p3, IM_COL32_WHITE);
                     },
                     IM_COL32(50, 50, 50, 255))) {
-                
-                m_view_instance->m_ctrl->requestFrame(index);
-                index++;
+
+                if (m_off_line_index < max_frame_count) { // TODO: FIXME
+                    m_off_line_index++;
+                }
             }
 
             ImGui::SameLine(0.0f, 10.0f);
@@ -286,9 +290,27 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
                     },
                     IM_COL32(60, 60, 60, 255))) {
 
-                // TODO
-
+                m_off_line_index = max_frame_count - 1;
             }
+
+            ImGui::SameLine(0.0f, 10.0f);
+
+            if (DrawIconButton("Stop", [](ImDrawList *dl, ImVec2 min,
+                                          ImVec2 max) {
+                    ImVec2 center = (min + max) * 0.5f;
+                    float side = (max.x - min.x) * 0.4f;
+                    ImVec2 pMin(center.x - side * 0.5f, center.y - side * 0.5f);
+                    ImVec2 pMax(center.x + side * 0.5f, center.y + side * 0.5f);
+                    dl->AddRectFilled(pMin, pMax, IM_COL32_WHITE);
+                })) {
+                m_off_line_index = 0;
+                m_is_playing = false;
+                m_fps_frame_received = 0;
+                CameraStop();
+            }
+
+            NewLine(5.0f);
+            ImGui::SliderInt("offline_frame_number", (int *)&m_off_line_index, 0, max_frame_count - 1,"#: %d");
         }
 
         NewLine(5.0f);
@@ -314,7 +336,7 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
             PointCloudReset();
         }
         NewLine(5.0f);
-        ImGui::SliderInt("", &m_point_size, 1, 10, "Point Size: %d px");
+        ImGui::SliderInt("point_size", &m_point_size, 1, 10, "Point Size: %d px");
 
         NewLine(5.0f);
 
