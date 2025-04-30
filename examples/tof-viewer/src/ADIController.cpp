@@ -44,8 +44,7 @@ void ADIController::StartCapture() {
     }
 
     m_stopFlag = false;
-    m_workerThread =
-        std::thread(std::bind(&ADIController::captureFrames, this));
+    m_workerThread = std::thread([this]() { captureFrames(); });
 }
 
 void ADIController::StopCapture() {
@@ -115,6 +114,24 @@ void ADIController::captureFrames() {
         m_queue.enqueue(frame);
         m_frameRequested = false;
     }
+}
+
+aditof::Status ADIController::requestFrame(uint32_t index) {
+
+    if (m_stopFlag.load()) { 
+        return aditof::Status::GENERIC_ERROR; 
+    }
+
+    std::unique_lock<std::mutex> lock(m_requestMutex);
+    m_requestCv.wait(lock, [&] { return m_frameRequested || m_stopFlag; });
+
+    auto camera = m_cameras[static_cast<unsigned int>(m_cameraInUse)];
+    auto frame = std::make_shared<aditof::Frame>();
+    auto fg = frame.get();
+    aditof::Status status = camera->requestFrame(fg, index);
+
+    m_queue.enqueue(frame);
+    m_frameRequested = false;
 }
 
 int ADIController::getCameraInUse() const { return m_cameraInUse; }

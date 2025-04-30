@@ -119,8 +119,15 @@ void ADIMainWindow::synchronizeVideo() {
     m_view_instance->frameWidth = frameDetails.width;
 
     lock.unlock();
+
     m_view_instance->m_frameCapturedCv.notify_all();
-    m_view_instance->m_ctrl->requestFrame();
+
+    if (!m_off_line) {
+        m_view_instance->m_ctrl->requestFrame();
+    } else {
+        m_view_instance->m_ctrl->requestFrame();
+        m_view_instance->m_ctrl->requestFrame(1);
+    }
 
     /*********************************/
     std::unique_lock<std::mutex> imshow_lock(m_view_instance->m_imshowMutex);

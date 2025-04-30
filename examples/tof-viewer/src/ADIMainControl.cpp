@@ -59,15 +59,133 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
     SetWindowPosition(m_dict_win_position["control"].x, m_dict_win_position["control"].y);
     SetWindowSize(m_dict_win_position["control"].width, m_dict_win_position["control"].height);
 
-    if (ImGui::Begin("Control Window", nullptr,
-                     overlayFlags)) {
+    if (ImGui::Begin("Control Window", nullptr, overlayFlags)) {
 
         if (!m_focused_once) {
             ImGui::SetWindowFocus();
             m_focused_once = true;
         }
 
-       /*if (DrawIconButton(
+        if (!m_off_line) {
+
+            static std::string filePath = "";
+            static bool recordingActive = false;
+            if (DrawIconButton(
+                    "Record",
+                    [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
+                        ImVec2 center =
+                            ImVec2((min.x + max.x) * 0.5f, (min.y + max.y) * 0.5f);
+                        float radius = (max.x - min.x) * 0.2f;
+
+                        // Draw a white circle in the center for the record icon
+                        dl->AddCircleFilled(center, radius, IM_COL32_WHITE);
+                    },
+                    (!recordingActive) ? IM_COL32(200, 0, 0, 255)
+                                       : IM_COL32(0, 200, 0, 255))) {
+
+                if (!recordingActive) {
+                    aditof::Status status =
+                        GetActiveCamera()->startRecording(filePath);
+                    if (status == aditof::Status::OK) {
+                        recordingActive = true;
+                        LOG(INFO) << "Recording to " << filePath.c_str();
+                    } else {
+                        LOG(INFO) << "Unable to start recording.";
+                        filePath = "";
+                        recordingActive = false;
+                    }
+                } else {
+                    aditof::Status status = GetActiveCamera()->stopRecording();
+                    LOG(INFO) << "Recording stopped.";
+                    filePath = "";
+                    recordingActive = false;
+                }
+            }
+
+            ImGui::SameLine(0.0f, 10.0f);
+
+            if (DrawIconButton("Stop", [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
+                    ImVec2 center = (min + max) * 0.5f;
+                    float side = (max.x - min.x) * 0.4f;
+                    ImVec2 pMin(center.x - side * 0.5f, center.y - side * 0.5f);
+                    ImVec2 pMax(center.x + side * 0.5f, center.y + side * 0.5f);
+                    dl->AddRectFilled(pMin, pMax, IM_COL32_WHITE);
+                })) {
+                m_is_playing = false;
+                m_fps_frame_received = 0;
+                filePath = "";
+                CameraStop();
+            }
+
+            ImGui::SameLine(0.0f, 10.0f);
+
+        }  else {
+
+            static uint32_t index = 0;
+
+            if (DrawIconButton(
+                    "JumpToStart",
+                    [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
+                        ImVec2 center = (min + max) * 0.5f;
+                        float w = max.x - min.x;
+                        float h = max.y - min.y;
+
+                        float arrowW = w * 0.2f;
+                        float arrowH = h * 0.35f;
+                        float spacing = w * 0.05f;
+
+                        // Triangle
+                        ImVec2 p1(center.x + spacing + arrowW * 0.5f,
+                                  center.y - arrowH);
+                        ImVec2 p2(center.x + spacing + arrowW * 0.5f,
+                                  center.y + arrowH);
+                        ImVec2 p3(center.x + spacing - arrowW * 0.5f, center.y);
+
+                        dl->AddTriangleFilled(p1, p2, p3, IM_COL32_WHITE);
+
+                        // Bar (vertical line to the left of triangle)
+                        float barX = center.x - spacing - arrowW * 0.5f;
+                        dl->AddRectFilled(
+                            ImVec2(barX - 1.0f, center.y - arrowH),
+                            ImVec2(barX + 1.0f, center.y + arrowH),
+                            IM_COL32_WHITE);
+                    },
+                    IM_COL32(60, 60, 60, 255))) {
+
+                // TODO
+
+            }
+
+            ImGui::SameLine(0.0f, 10.0f);
+
+            if (DrawIconButton(
+                    "LeftArrow",
+                    [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
+                        ImVec2 center = (min + max) * 0.5f;
+                        float w = max.x - min.x;
+                        float h = max.y - min.y;
+
+                        float arrowW = w * 0.25f;
+                        float arrowH = h * 0.3f;
+
+                        ImVec2 p1(center.x + arrowW * 0.5f,
+                                  center.y - arrowH); // tip top
+                        ImVec2 p2(center.x + arrowW * 0.5f,
+                                  center.y + arrowH); // tip bottom
+                        ImVec2 p3(center.x - arrowW * 0.5f,
+                                  center.y); // back center
+
+                        dl->AddTriangleFilled(p1, p2, p3, IM_COL32_WHITE);
+                    },
+                    IM_COL32(50, 50, 50, 255))) {
+
+                // TODO
+
+            }
+
+            ImGui::SameLine(0.0f, 10.0f);
+
+            if (DrawIconButton(
                      "Play", [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
                 ImVec2 center = (min + max) * 0.5f;
                 float w = max.x - min.x, h = max.y - min.y;
@@ -76,90 +194,101 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
                 ImVec2 p3(center.x + w * 0.3f, center.y);
                 dl->AddTriangleFilled(p1, p2, p3, IM_COL32_WHITE);
             })) {
-            // TODO
-        }*/
 
-        static std::string filePath = "";
-        static bool recordingActive = false;
-        if (DrawIconButton("Record", [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
-                    ImVec2 center =
-                        ImVec2((min.x + max.x) * 0.5f, (min.y + max.y) * 0.5f);
-                    float radius = (max.x - min.x) * 0.2f;
+                // TODO: Play button
 
-                    // Draw a white circle in the center for the record icon
-                    dl->AddCircleFilled(center, radius, IM_COL32_WHITE);
-                },
-                (!recordingActive)?IM_COL32(200, 0, 0, 255) : IM_COL32(0, 200, 0, 255))) {
-            
-            if (!recordingActive) {
-                aditof::Status status =
-                    GetActiveCamera()->startRecording(filePath);
-                if (status == aditof::Status::OK) {
-                    recordingActive = true;
-                    LOG(INFO) << "Recording to " << filePath.c_str();
-                } else {
-                    LOG(INFO) << "Unable to start recording.";
-                    filePath = "";
-                    recordingActive = false;
-                }
-            } else {
-                aditof::Status status =
-                    GetActiveCamera()->stopRecording();
-                LOG(INFO) << "Recording stopped.";
-                filePath = "";
-                recordingActive = false;
             }
-        }
 
-        ImGui::SameLine(0.0f, 10.0f);
+            ImGui::SameLine(0.0f, 10.0f);
 
-        if (DrawIconButton("Stop", [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
-                ImVec2 center = (min + max) * 0.5f;
-                float side = (max.x - min.x) * 0.4f;
-                ImVec2 pMin(center.x - side * 0.5f, center.y - side * 0.5f);
-                ImVec2 pMax(center.x + side * 0.5f, center.y + side * 0.5f);
-                dl->AddRectFilled(pMin, pMax, IM_COL32_WHITE);
-            })) {
-            m_is_playing = false;
-            m_fps_frame_received = 0;
-            filePath = "";
-            CameraStop();
-        }
+            if (DrawIconButton(
+                    "Pause",
+                    [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
+                        ImVec2 center = (min + max) * 0.5f;
+                        float w = max.x - min.x;
+                        float h = max.y - min.y;
+                        float barWidth = w * 0.1f;
+                        float barHeight = h * 0.5f;
+                        float spacing = w * 0.1f;
 
-        ImGui::SameLine(0.0f, 10.0f);
+                        ImVec2 bar1Min(center.x - spacing - barWidth,
+                                       center.y - barHeight * 0.5f);
+                        ImVec2 bar1Max(center.x - spacing,
+                                       center.y + barHeight * 0.5f);
+                        ImVec2 bar2Min(center.x + spacing,
+                                       center.y - barHeight * 0.5f);
+                        ImVec2 bar2Max(center.x + spacing + barWidth,
+                                       center.y + barHeight * 0.5f);
 
-        if (recordingActive) {
-            ImGui::BeginDisabled();
-        }
+                        dl->AddRectFilled(bar1Min, bar1Max, IM_COL32_WHITE);
+                        dl->AddRectFilled(bar2Min, bar2Max, IM_COL32_WHITE);
+                    },
+                    IM_COL32(60, 60, 60, 255))) {
 
-        if (DrawIconButton(
-                "Pause", [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
-                    ImVec2 center = (min + max) * 0.5f;
-                    float w = max.x - min.x;
-                    float h = max.y - min.y;
-                    float barWidth = w * 0.1f;
-                    float barHeight = h * 0.5f;
-                    float spacing = w * 0.1f;
+                // TODO
+            }
 
-                    ImVec2 bar1Min(center.x - spacing - barWidth,
-                                    center.y - barHeight * 0.5f);
-                    ImVec2 bar1Max(center.x - spacing,
-                                    center.y + barHeight * 0.5f);
-                    ImVec2 bar2Min(center.x + spacing,
-                                    center.y - barHeight * 0.5f);
-                    ImVec2 bar2Max(center.x + spacing + barWidth,
-                                    center.y + barHeight * 0.5f);
+            ImGui::SameLine(0.0f, 10.0f);
+            
+            if (DrawIconButton(
+                    "RightArrow",
+                    [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
+                        ImVec2 center = (min + max) * 0.5f;
+                        float w = max.x - min.x;
+                        float h = max.y - min.y;
 
-                    dl->AddRectFilled(bar1Min, bar1Max, IM_COL32_WHITE);
-                    dl->AddRectFilled(bar2Min, bar2Max, IM_COL32_WHITE);
-                },(!recordingActive) ? IM_COL32(60, 60, 60, 255)
-                : IM_COL32(0, 0, 0, 255))) {
+                        float arrowW = w * 0.25f;
+                        float arrowH = h * 0.3f;
 
-            // TODO
-        }
+                        ImVec2 p1(center.x - arrowW * 0.5f,
+                                  center.y - arrowH); // tip top
+                        ImVec2 p2(center.x - arrowW * 0.5f,
+                                  center.y + arrowH); // tip bottom
+                        ImVec2 p3(center.x + arrowW * 0.5f,
+                                  center.y); // back center
 
-        if (recordingActive) {
-            ImGui::EndDisabled();
+                        dl->AddTriangleFilled(p1, p2, p3, IM_COL32_WHITE);
+                    },
+                    IM_COL32(50, 50, 50, 255))) {
+                
+                m_view_instance->m_ctrl->requestFrame(index);
+                index++;
+            }
+
+            ImGui::SameLine(0.0f, 10.0f);
+
+            if (DrawIconButton(
+                    "JumpToEnd",
+                    [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
+                        ImVec2 center = (min + max) * 0.5f;
+                        float w = max.x - min.x;
+                        float h = max.y - min.y;
+
+                        float arrowW = w * 0.2f;
+                        float arrowH = h * 0.35f;
+                        float spacing = w * 0.05f;
+
+                        // Triangle
+                        ImVec2 p1(center.x - spacing - arrowW * 0.5f,
+                                  center.y - arrowH);
+                        ImVec2 p2(center.x - spacing - arrowW * 0.5f,
+                                  center.y + arrowH);
+                        ImVec2 p3(center.x - spacing + arrowW * 0.5f, center.y);
+
+                        dl->AddTriangleFilled(p1, p2, p3, IM_COL32_WHITE);
+
+                        // Bar (vertical line to the right of triangle)
+                        float barX = center.x + spacing + arrowW * 0.5f;
+                        dl->AddRectFilled(
+                            ImVec2(barX - 1.0f, center.y - arrowH),
+                            ImVec2(barX + 1.0f, center.y + arrowH),
+                            IM_COL32_WHITE);
+                    },
+                    IM_COL32(60, 60, 60, 255))) {
+
+                // TODO
+
+            }
         }
 
         NewLine(5.0f);

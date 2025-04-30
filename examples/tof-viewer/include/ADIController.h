@@ -43,6 +43,8 @@ class ADIController {
 		*/
     void StopCapture();
 
+    aditof::Status requestFrame(uint32_t index);
+
     /**
 		* @brief			  Set the camera index for active camera
 		* @param cameraIndex	Index of camera in SDK system camera list

@@ -176,6 +176,10 @@ void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
 
     const bool imageIsHovered = ImGui::IsItemHovered();
 
+    if (m_view_instance == nullptr) {
+        return;
+    }
+
     if (m_view_instance->m_ctrl->hasCamera()) {
         // Mode switch or starup
         if (m_mode_select_changed != modeSelect || m_capture_separate_enabled ||
@@ -190,8 +194,14 @@ void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
             InitOpenGLDepthTexture();
             InitOpenGLPointCloudTexture();
 
-            m_view_instance->m_ctrl->StartCapture();
-            m_view_instance->m_ctrl->requestFrame();
+            if (!m_off_line) {
+                m_view_instance->m_ctrl->StartCapture();
+                m_view_instance->m_ctrl->requestFrame();
+            }
+            else {
+                m_view_instance->m_ctrl->requestFrame();
+                m_view_instance->m_ctrl->requestFrame(0);
+            }
             m_capture_separate_enabled = false;
             m_mode_select_changed = modeSelect;
 
