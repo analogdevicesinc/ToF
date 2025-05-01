@@ -153,7 +153,7 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
                     },
                     IM_COL32(60, 60, 60, 255))) {
 
-                m_off_line_index = 0;
+                m_off_line_frame_index = 0;
 
             }
 
@@ -180,8 +180,8 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
                     },
                     IM_COL32(50, 50, 50, 255))) {
 
-                if (m_off_line_index > 0) {
-                    m_off_line_index--;
+                if (m_off_line_frame_index > 0) {
+                    m_off_line_frame_index--;
                 }
             }
 
@@ -254,8 +254,8 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
                     },
                     IM_COL32(50, 50, 50, 255))) {
 
-                if (m_off_line_index < max_frame_count) { // TODO: FIXME
-                    m_off_line_index++;
+                if (m_off_line_frame_index < max_frame_count) { // TODO: FIXME
+                    m_off_line_frame_index++;
                 }
             }
 
@@ -290,7 +290,7 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
                     },
                     IM_COL32(60, 60, 60, 255))) {
 
-                m_off_line_index = max_frame_count - 1;
+                m_off_line_frame_index = max_frame_count - 1;
             }
 
             ImGui::SameLine(0.0f, 10.0f);
@@ -303,14 +303,14 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
                     ImVec2 pMax(center.x + side * 0.5f, center.y + side * 0.5f);
                     dl->AddRectFilled(pMin, pMax, IM_COL32_WHITE);
                 })) {
-                m_off_line_index = 0;
+                m_off_line_frame_index = 0;
                 m_is_playing = false;
                 m_fps_frame_received = 0;
                 CameraStop();
             }
 
             NewLine(5.0f);
-            ImGui::SliderInt("offline_frame_number", (int *)&m_off_line_index, 0, max_frame_count - 1,"#: %d");
+            ImGui::SliderInt("offline_frame_number", (int *)&m_off_line_frame_index, 0, max_frame_count - 1,"#: %d");
         }
 
         NewLine(5.0f);

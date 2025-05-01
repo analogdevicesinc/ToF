@@ -126,7 +126,7 @@ void ADIMainWindow::synchronizeVideo() {
         m_view_instance->m_ctrl->requestFrame();
     } else {
         m_view_instance->m_ctrl->requestFrame();
-        m_view_instance->m_ctrl->requestFrame(m_off_line_index);
+        m_view_instance->m_ctrl->requestFrame(m_off_line_frame_index);
     }
 
     /*********************************/

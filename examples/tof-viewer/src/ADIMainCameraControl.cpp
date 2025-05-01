@@ -200,7 +200,7 @@ void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
             }
             else {
                 m_view_instance->m_ctrl->requestFrame();
-                m_view_instance->m_ctrl->requestFrame(m_off_line_index);
+                m_view_instance->m_ctrl->requestFrame(m_off_line_frame_index);
             }
             m_capture_separate_enabled = false;
             m_mode_select_changed = modeSelect;

@@ -604,7 +604,7 @@ class ADIMainWindow {
     std::string m_ip_suffix;
 
     bool m_off_line = false;
-    uint32_t m_off_line_index = 0;
+    uint32_t m_off_line_frame_index = 0;
     int32_t m_frame_counter = 0;
     int32_t m_fps = 0;
     uint16_t m_fps_expected = 0;

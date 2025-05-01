@@ -6,9 +6,8 @@
 /********************************************************************************/
 #include "ADIOpenFile.h"
 
-std::string customFilter = std::string("Bin Files (*.bin)\0*.bin*\0 All "
-                                       "Files (*.*)\0*.*\0",
-                                       72);
+const char filter[] = "Bin Files (*.bin)\0*.bin*\0All Files (*.*)\0*.*\0";
+std::string customFilter(filter, sizeof(filter));
 std::vector<std::string> customFilters = {"bin"};
 
 #ifdef _WIN32

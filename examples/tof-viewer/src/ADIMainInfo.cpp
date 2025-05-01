@@ -36,7 +36,7 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
     if (!m_off_line) {
         m_fps_frame_received++;
     } else {
-        m_fps_frame_received = m_off_line_index;
+        m_fps_frame_received = m_off_line_frame_index;
     }
 
     CameraDetails cameraDetails;
