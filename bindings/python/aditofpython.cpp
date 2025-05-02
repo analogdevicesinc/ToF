@@ -345,7 +345,8 @@ PYBIND11_MODULE(aditofpython, m) {
                 return camera.setFrameProcessParams(cppParams);
             },
             py::arg("params"))
-        .def("requestFrame", &aditof::Camera::requestFrame, py::arg("frame"))
+        .def("requestFrame", &aditof::Camera::requestFrame, py::arg("frame"),
+             py::arg("index") = 0, "Request a frame by index (default = 0)")
         .def("getDetails", &aditof::Camera::getDetails, py::arg("details"))
         .def(
             "getAvailableControls",
