@@ -299,7 +299,7 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
                          m_view_instance->frameHeight, 0, GL_BGR, GL_UNSIGNED_BYTE,
                          m_view_instance->depth_video_data_8bit);
             glad_glGenerateMipmap(GL_TEXTURE_2D);
-            delete m_view_instance->depth_video_data_8bit;
+            //delete m_view_instance->depth_video_data_8bit;
 
             ImVec2 _displayDepthDimensions = m_display_depth_dimensions;
 

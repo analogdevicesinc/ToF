@@ -37,6 +37,7 @@ ADIView::ADIView(std::shared_ptr<ADIController> ctrl, const std::string &name)
     //Create AB and Depth independent threads
 
     ab_video_data_8bit = nullptr;
+    depth_video_data_8bit = nullptr;
 
     m_depthImageWorker =
         std::thread(std::bind(&ADIView::_displayDepthImage, this));
@@ -65,6 +66,16 @@ ADIView::~ADIView() {
         delete [] ab_video_data_8bit;
         ab_video_data_8bit = nullptr;
     }
+
+    if (depth_video_data_8bit != nullptr) {
+        delete[] depth_video_data_8bit;
+        depth_video_data_8bit = nullptr;
+    }
+
+    if (normalized_vertices != nullptr) {
+        delete[] normalized_vertices;
+        normalized_vertices = nullptr;
+    }
 }
 
 static void glfw_error_callback(int error, const char *description) {
@@ -80,6 +91,16 @@ void ADIView::cleanUp() {
     if (ab_video_data_8bit != nullptr) {
         delete[] ab_video_data_8bit;
         ab_video_data_8bit = nullptr;
+    }
+
+    if (depth_video_data_8bit != nullptr) {
+        delete[] depth_video_data_8bit;
+        depth_video_data_8bit = nullptr;
+    }
+
+    if (normalized_vertices != nullptr) {
+        delete[] normalized_vertices;
+        normalized_vertices = nullptr;
     }
 }
 
@@ -219,8 +240,11 @@ void ADIView::_displayDepthImage() {
         constexpr uint8_t PixelMax = std::numeric_limits<uint8_t>::max();
         size_t imageSize = frameHeight * frameWidth;
         size_t bgrSize = 0;
-        depth_video_data_8bit =
-            new uint8_t[frameHeight * frameWidth * 3]; //Multiplied by BGR
+
+        if (depth_video_data_8bit == nullptr) {
+            depth_video_data_8bit =
+                new uint8_t[frameHeight * frameWidth * 3]; //Multiplied by BGR
+        }
 
         float fRed = 0.f;
         float fGreen = 0.f;
