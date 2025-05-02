@@ -408,7 +408,8 @@ class ADIMainWindow {
 		* @brief Returns the hovered pixel value
 		*/
     void GetHoveredImagePix(ImVec2 &hoveredImagePixel, ImVec2 imageStartPos,
-                            ImVec2 mousePos, ImVec2 displayDimensions);
+                            ImVec2 mousePos,
+                            ImVec2 display_depth_dimensions, ImVec2 source_depth_image_dimensions);
 
     /**
 		* @brief Returns current application path
