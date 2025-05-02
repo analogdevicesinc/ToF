@@ -62,7 +62,6 @@ void ADIMainWindow::InitCamera(std::string filePath) {
         return;
     }
 
-    camera->setOffLine(m_off_line);
     status = camera->initialize("");
     if (status != aditof::Status::OK) {
         LOG(ERROR) << "Could not initialize camera!";
