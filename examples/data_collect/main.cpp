@@ -8,7 +8,7 @@
 #include <aditof/camera.h>
 #include <aditof/depth_sensor_interface.h>
 #include <aditof/frame.h>
-#include <aditof/frame_handler.h>
+//#include <aditof/frame_handler.h>
 #include <aditof/system.h>
 #include <aditof/version.h>
 #include <chrono>
@@ -437,16 +437,12 @@ int main(int argc, char *argv[]) {
         } while (warmup_time >= elapsed_time);
     }
 
-    FrameHandler frameSaver;
-    frameSaver.storeFramesToSingleFile(saveToSingleFile);
-    frameSaver.setOutputFilePath(folder_path);
+    std::string savedPath;
+    camera->startRecording(savedPath);
 
-    //drop first frame
-    status = camera->requestFrame(&frame);
-    if (status != Status::OK) {
-        LOG(ERROR) << "Could not request frame!";
-        return 0;
-    }
+    //FrameHandler frameSaver;
+    //frameSaver.storeFramesToSingleFile(saveToSingleFile);
+    //frameSaver.setOutputFilePath(folder_path);
 
     LOG(INFO) << "Requesting " << n_frames << " frames!";
     auto start_time = std::chrono::high_resolution_clock::now();
@@ -456,17 +452,18 @@ int main(int argc, char *argv[]) {
         status = camera->requestFrame(&frame);
         if (status != Status::OK) {
             LOG(ERROR) << "Could not request frame!";
+            LOG(ERROR) << "See " << savedPath;
             return 0;
         }
         if (useNetLinkTest) {
             continue;
         }
 
-        if (!samethread) {
-            frameSaver.saveFrameToFileMultithread(frame);
-        } else {
-            frameSaver.saveFrameToFile(frame);
-        }
+        //if (!samethread) {
+        //    frameSaver.saveFrameToFileMultithread(frame);
+        //} else {
+        //    frameSaver.saveFrameToFile(frame);
+        //}
     } // End of for Loop
 
     auto end_time = std::chrono::high_resolution_clock::now();
@@ -480,5 +477,8 @@ int main(int argc, char *argv[]) {
     if (status != Status::OK) {
         LOG(INFO) << "Error stopping camera!";
     }
+
+    LOG(INFO) << "Created: " << savedPath;
+
     return 0;
 }
