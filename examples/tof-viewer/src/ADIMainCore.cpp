@@ -258,7 +258,7 @@ bool ADIMainWindow::StartImGUI(const ADIViewerArgs &args) {
     m_dict_win_position["control"].x = m_dict_win_position["info"].x;
     m_dict_win_position["control"].y = WindowCalcY(m_dict_win_position["info"], 10.0f);
     m_dict_win_position["control"].width = m_dict_win_position["info"].width;
-    m_dict_win_position["control"].height = 400.0f;
+    m_dict_win_position["control"].height = 420.0f;
 
     m_dict_win_position["fr-main"].x =
         WindowCalcX(m_dict_win_position["info"], 10.0f);
@@ -426,10 +426,6 @@ void ADIMainWindow::ShowMainMenu() {
         ShowLogWindow(&show_app_log);
     }
 
-    if (show_ini_window && m_is_playing) {
-        ShowIniWindow(&show_ini_window);
-    }
-
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("?")) {
             if (ImGui::MenuItem("Exit")) {
@@ -440,16 +436,16 @@ void ADIMainWindow::ShowMainMenu() {
         if (ImGui::BeginMenu("Tools")) {
 
             ImGui::MenuItem("Debug Log", nullptr, &show_app_log);
-            ImGui::MenuItem("Ini Params", nullptr, &show_ini_window,
-                            m_cameraWorkerDone && m_is_playing);
-            ImGui::Separator();
-            if (ImGui::MenuItem("Load Configuration", nullptr, false,
-                                m_cameraWorkerDone && !m_is_playing)) {
-                ShowLoadAdsdParamsMenu();
-            }
-            if (ImGui::MenuItem("Save Configuration", nullptr, false,
-                                m_cameraWorkerDone)) {
-                ShowSaveAdsdParamsMenu();
+			if (!m_off_line) {			
+                ImGui::Separator();
+                if (ImGui::MenuItem("Load Configuration", nullptr, false,
+                                    m_cameraWorkerDone && !m_is_playing)) {
+                    ShowLoadAdsdParamsMenu();
+                }
+                if (ImGui::MenuItem("Save Configuration", nullptr, false,
+                                    m_cameraWorkerDone)) {
+                    ShowSaveAdsdParamsMenu();
+                }
             }
             ImGui::EndMenu();
         }

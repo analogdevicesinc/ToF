@@ -1,5 +1,6 @@
 #include "ADIImGUIExtensions.h"
 #include "ADIMainWindow.h"
+#include "imgui_toggle.h"
 
 #ifdef USE_GLOG
 #include <glog/logging.h>
@@ -336,7 +337,7 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
             PointCloudReset();
         }
         NewLine(5.0f);
-        ImGui::SliderInt("point_size", &m_point_size, 1, 10, "Point Size: %d px");
+        ImGui::SliderInt("Point Size", &m_point_size, 1, 10, "Point Size: %d px");
 
         NewLine(5.0f);
 
@@ -375,6 +376,13 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
         m_view_instance->setLogImage(logImage);
         m_view_instance->setAutoScale(autoScale);
         NewLine(5.0f);
+
+        DrawBarLabel("Configuration Parameters");
+        NewLine(5.0f);
+        ImGui::Toggle("Show Ini Window", &show_ini_window);
+        if (show_ini_window && m_is_playing) {
+            ShowIniWindow(&show_ini_window);
+        }
     }
 
     ImGui::End();

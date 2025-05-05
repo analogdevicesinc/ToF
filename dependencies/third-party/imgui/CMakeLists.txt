@@ -4,6 +4,7 @@ if (NOT TARGET imgui)
 	
     set(imguiextern_SOURCE_DIR imgui)
 	set(gladextern_SOURCE_DIR glad)
+    set(imguitoggleextern_SOURCE_DIR imgui_toggle)
     add_library(imgui STATIC
                 ${imguiextern_SOURCE_DIR}/imgui.cpp
                 ${imguiextern_SOURCE_DIR}/imgui_draw.cpp
@@ -11,6 +12,10 @@ if (NOT TARGET imgui)
 				${imguiextern_SOURCE_DIR}/imgui_tables.cpp
                 ${imguiextern_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
                 ${imguiextern_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+                ${imguitoggleextern_SOURCE_DIR}/imgui_toggle.cpp
+				${imguitoggleextern_SOURCE_DIR}/imgui_toggle_palette.cpp
+				${imguitoggleextern_SOURCE_DIR}/imgui_toggle_presets.cpp
+				${imguitoggleextern_SOURCE_DIR}/imgui_toggle_renderer.cpp
 				${gladextern_SOURCE_DIR}/src/gl.c
     )
 	
@@ -20,6 +25,7 @@ if (NOT TARGET imgui)
         ${imguiextern_SOURCE_DIR}
 		${imguiextern_SOURCE_DIR}/examples/libs/glfw/include
         ${imguiextern_SOURCE_DIR}/backends
+		${imguitoggleextern_SOURCE_DIR}
 		${gladextern_SOURCE_DIR}/include
     )
 	

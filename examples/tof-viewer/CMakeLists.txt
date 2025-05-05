@@ -26,6 +26,7 @@ endif()
 add_subdirectory("${CMAKE_SOURCE_DIR}/dependencies/third-party/imgui/glfw" "${CMAKE_BINARY_DIR}/glfw")
 
 set(IMGUI_SOURCE_DIR ${CMAKE_SOURCE_DIR}/dependencies/third-party/imgui)
+set(IMGUI_TOGGLE_SOURCE_DIR ${CMAKE_SOURCE_DIR}/dependencies/third-party/imgui/imgui_toggle)
 set(ADIToF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 file(GLOB ADIToF_SOURCES CONFIGURE_DEPENDS "${ADIToF_SOURCE_DIR}/*.cpp")
@@ -72,6 +73,7 @@ target_include_directories(ADIToFGUI PUBLIC
 						"${IMGUI_SOURCE_DIR}/src/examples/libs/glfw/include"
 						"${IMGUI_SOURCE_DIR}/src/examples"
 						"${IMGUI_SOURCE_DIR}/src"
+						"${IMGUI_TOGGLE_SOURCE_DIR}"
 						"${PROJECT_SOURCE_DIR}/src"
 				)
 
