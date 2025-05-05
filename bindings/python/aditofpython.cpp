@@ -293,6 +293,20 @@ PYBIND11_MODULE(aditofpython, m) {
              py::arg("configFilepath") = "")
         .def("start", &aditof::Camera::start)
         .def("stop", &aditof::Camera::stop)
+        .def("startRecording",
+            &aditof::Camera::startRecording,
+            py::arg("file_path"),
+            "Start recording to the given file path.")
+        .def("stopRecording",
+            &aditof::Camera::stopRecording,
+            "Stop recording.")
+        .def("startPlayback",
+            &aditof::Camera::startPlayback,
+            py::arg("file_path"),
+            "Start playback from the given file path.")
+        .def("stopPlayback",
+            &aditof::Camera::stopPlayback,
+            "Stop playback.")
         .def(
             "getAvailableControls",
             [](const aditof::Camera &camera, py::list modes) {
