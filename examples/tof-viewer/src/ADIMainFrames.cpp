@@ -1,7 +1,9 @@
 #include <glad/gl.h>
 #include <cmath>
+#include <numeric>
 #include "ADIMainWindow.h"
 #include "ADIImGUIExtensions.h"
+#include "implot.h"
 
 #ifdef USE_GLOG
 #include <glog/logging.h>
@@ -12,6 +14,8 @@
 #include <GLFW/glfw3.h>
 
 using namespace adiMainWindow;
+
+static std::vector<float> depth_line_values;
 
 //*******************************************
 //* Section: Generic
@@ -186,6 +190,29 @@ void ADIMainWindow::synchronizeVideo() {
     /*********************************/
 }
 
+void ADIMainWindow::DepthLinePlot(ImGuiWindowFlags overlayFlags) {
+
+	if (depth_line_values.size() == 0) {
+		return;
+	}
+
+    SetWindowPosition(m_dict_win_position["plotA"].x, m_dict_win_position["plotA"].y);
+    SetWindowSize(m_dict_win_position["plotA"].width, m_dict_win_position["plotA"].height);
+
+    if (ImGui::Begin("Depth Pixel Plot", nullptr, overlayFlags | ImGuiWindowFlags_NoTitleBar)) {
+        ImPlot::SetNextAxesToFit();
+        if (ImPlot::BeginPlot("Line Depth Values")) {
+
+            std::vector<float> x(depth_line_values.size());
+
+            std::iota(x.begin(), x.end(), 0);
+            ImPlot::PlotLine("Depth over Line", x.data(), depth_line_values.data(), depth_line_values.size());
+            ImPlot::EndPlot();
+        }
+        ImGui::End();
+    }
+}
+
 //*******************************************
 //* Section: Handling of AB Window 
 //*******************************************
@@ -259,6 +286,7 @@ void ADIMainWindow::DisplayActiveBrightnessWindow(
 //*******************************************
 
 void ADIMainWindow::InitOpenGLDepthTexture() {
+    depth_line_values.clear();
     /********************************************/
     //Depth Texture
     GLuint depth_texture;
@@ -272,6 +300,25 @@ void ADIMainWindow::InitOpenGLDepthTexture() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     m_gl_depth_video_texture = depth_texture;
     /*************************************************/
+}
+
+static std::vector<ImVec2> GetLinePixels(int x0, int y0, int x1, int y1) {
+    std::vector<ImVec2> points;
+
+    int dx = abs(x1 - x0), dy = abs(y1 - y0);
+    int sx = (x0 < x1) ? 1 : -1;
+    int sy = (y0 < y1) ? 1 : -1;
+    int err = dx - dy;
+
+    while (true) {
+        points.emplace_back(x0, y0);
+        if (x0 == x1 && y0 == y1) break;
+        int e2 = 2 * err;
+        if (e2 > -dy) { err -= dy; x0 += sx; }
+        if (e2 < dx) { err += dx; y0 += sy; }
+    }
+
+    return points;
 }
 
 void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
@@ -312,6 +359,62 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
                 ImVec2(m_depth_position->width, m_depth_position->height),
                 ImVec2(_displayDepthDimensions.x, _displayDepthDimensions.y),
                 rotationangleradians);
+        }
+
+		std::vector<ImVec2> depth_line_points;
+
+        static std::vector<std::pair<float, float>> depthLine;
+        if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
+            ImVec2 mousePos = ImGui::GetMousePos();
+            if (depthLine.size() >= 2) {
+                depthLine.clear();
+                depth_line_points.clear();
+            } else {
+                depthLine.push_back({ mousePos.x, mousePos.y });
+            }
+        }
+
+		if (depthLine.size() == 1) {
+            ImVec2 mousePos = ImGui::GetMousePos();
+			ImVec2 start = ImVec2(depthLine[0].first, depthLine[0].second);
+			ImVec2 end = ImVec2(mousePos.x, mousePos.y);
+			ImGui::GetWindowDrawList()->AddLine(start, end, IM_COL32(255, 0, 0, 255), 2.0f);
+		} else if (depthLine.size() >= 2) {
+            ImVec2 start;
+            ImVec2 end;
+
+            if (depthLine[0].first < depthLine[1].first) {
+                start = ImVec2(depthLine[0].first, depthLine[0].second);
+                end = ImVec2(depthLine[1].first, depthLine[1].second);
+            }
+            else {
+                end = ImVec2(depthLine[0].first, depthLine[0].second);
+                start = ImVec2(depthLine[1].first, depthLine[1].second);
+            }
+
+            ImGui::GetWindowDrawList()->AddLine(start, end, IM_COL32(255, 0, 0, 255), 2.0f);
+
+            ImVec2 _start = m_invalid_hovered_pixel;
+			ImVec2 _end = m_invalid_hovered_pixel; 
+
+            GetHoveredImagePix(_start, ImGui::GetCursorScreenPos(),
+                start, m_display_depth_dimensions, m_source_depth_image_dimensions);
+
+            GetHoveredImagePix(_end, ImGui::GetCursorScreenPos(),
+                end, m_display_depth_dimensions, m_source_depth_image_dimensions);
+
+            depth_line_points = GetLinePixels(_start.x, _start.y, _end.x, _end.y);
+
+            depth_line_values.clear();
+			for (const auto& point : depth_line_points) {
+                uint32_t offset = m_view_instance->frameWidth * point.y + point.x;
+                float depth = m_view_instance->depth_video_data[offset];
+
+                if (depth == 0 && offset > 0)
+                    depth = m_view_instance->depth_video_data[offset - 1];
+
+				depth_line_values.emplace_back(depth);
+			}
         }
 
         ImVec2 hoveredImagePixel = m_invalid_hovered_pixel;

@@ -16,6 +16,8 @@
 #include "backends\imgui_impl_glfw.h"
 #include "backends\imgui_impl_opengl3.h"
 #include "backends\imgui_impl_opengl3_loader.h"
+#include "imgui_toggle.h"
+#include "implot.h"
 #include <GLFW/glfw3.h>
 #include <aditof/system.h>
 #include <linmath.h>
@@ -363,6 +365,8 @@ class ADIMainWindow {
 		* @brief Renders Depth OpenGL images
 		*/
     void CaptureDepthVideo();
+
+    void DepthLinePlot(ImGuiWindowFlags overlayFlags);
 
     /**
 		* @brief Renders AB OpenGL images

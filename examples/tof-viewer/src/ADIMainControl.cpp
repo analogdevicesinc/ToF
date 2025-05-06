@@ -1,6 +1,5 @@
 #include "ADIImGUIExtensions.h"
 #include "ADIMainWindow.h"
-#include "imgui_toggle.h"
 
 #ifdef USE_GLOG
 #include <glog/logging.h>

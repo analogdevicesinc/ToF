@@ -244,6 +244,7 @@ void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
     DisplayDepthWindow(overlayFlags);
     DisplayInfoWindow(overlayFlags);
     DisplayControlWindow(overlayFlags);
+    DepthLinePlot(overlayFlags);
 }
 
 void ADIMainWindow::CameraStop() {

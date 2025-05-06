@@ -317,7 +317,7 @@ void ADIView::_displayPointCloudImage() {
 
         //Size is [XX, YY, ZZ] x Width x Height
         size_t frameSize = frameHeight * frameWidth * 3;
-        if (pointcloudTableSize != frameSize) {
+        if (normalized_vertices == nullptr || pointcloudTableSize != frameSize) {
             if (normalized_vertices) {
                 delete[] normalized_vertices;
             }

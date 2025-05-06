@@ -161,6 +161,7 @@ ADIMainWindow::~ADIMainWindow() {
     //ImGui::GetIO().IniFilename = NULL;
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
+    ImPlot::DestroyContext();
     ImGui::DestroyContext();
 
     glfwDestroyWindow(window);
@@ -232,6 +233,7 @@ bool ADIMainWindow::StartImGUI(const ADIViewerArgs &args) {
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImPlot::CreateContext(); // ← REQUIRED for ImPlot
     ImGuiIO &io = ImGui::GetIO();
     (void)io;
     io.ConfigFlags |=
@@ -277,6 +279,11 @@ bool ADIMainWindow::StartImGUI(const ADIViewerArgs &args) {
         WindowCalcY(m_dict_win_position["fr-sub1"], 10.0f);
     m_dict_win_position["fr-sub2"].width = 256.0f;
     m_dict_win_position["fr-sub2"].height = 256.0f;
+
+    m_dict_win_position["plotA"].x = m_dict_win_position["fr-main"].x;
+    m_dict_win_position["plotA"].y = WindowCalcY(m_dict_win_position["fr-main"], 10.0f);
+    m_dict_win_position["plotA"].width = m_dict_win_position["fr-main"].width;
+    m_dict_win_position["plotA"].height = 315.0f;
 
     m_pc_position = &m_dict_win_position["fr-main"];
     m_ab_position = &m_dict_win_position["fr-sub1"];
@@ -419,7 +426,7 @@ void ADIMainWindow::Render() {
 }
 
 void ADIMainWindow::ShowMainMenu() {
-    static bool show_app_log = true;
+    static bool show_app_log = false;
     static bool show_ini_window = false;
 
     if (show_app_log) {
@@ -833,9 +840,10 @@ void ADIMainWindow::NewLine(float spacing) { ImGui::Dummy(ImVec2(0.0f, spacing))
 
 void ADIMainWindow::ShowStartWizard() {
 
+    static uint32_t wizard_height = 350;
     ImGuiIO &io = ImGui::GetIO(); // Get the display size
-    ImVec2 center = ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.2f);
-    ImVec2 window_size = ImVec2(400, 320); // Your window size
+    ImVec2 center = ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f);
+    ImVec2 window_size = ImVec2(400, wizard_height); // Your window size
 
     // Offset to truly center it
     ImVec2 window_pos = ImVec2(center.x - window_size.x * 0.5f,
@@ -886,7 +894,8 @@ void ADIMainWindow::ShowStartWizard() {
                 }
             }
             ImGui::SameLine();
-            if (ImGuiExtensions::ADIButton("Play", !m_is_open_device)) {
+            if (ImGuiExtensions::ADIButton("Start", !m_is_open_device)) {
+
                 m_off_line_frame_index = 0;
                 m_frame_window_position_state = 0;
                 m_view_selection_changed = m_view_selection;
@@ -966,18 +975,97 @@ void ADIMainWindow::ShowStartWizard() {
                 ImGui::NewLine();
                 DrawBarLabel("Mode Selection");
                 ImGui::NewLine();
-                ImGuiExtensions::ADIComboBox(
-                    "", "Select Mode", ImGuiSelectableFlags_None,
-                    m_cameraModesDropDown, &m_mode_selection, true);
 
-                ImGuiExtensions::ButtonColorChanger colorChangerPlay(
-                    m_custom_color_play, !m_is_playing);
-                ImGui::NewLine();
-                if (ImGuiExtensions::ADIButton("Start", !m_is_playing)) {
-                    m_frame_window_position_state = 0;
-                    m_view_selection_changed = m_view_selection;
-                    m_is_playing = true;
-                    ini_params.clear();
+                static bool show_dynamic_mode_switich = false;
+
+                ImGui::Toggle(!show_dynamic_mode_switich?"Switch to Dynamic Mode": "Switch to Standard Mode",
+                              &show_dynamic_mode_switich);
+
+                if (show_dynamic_mode_switich) {
+                    wizard_height = 600;
+
+                    // TODO: Add non-Crosby repeat count
+
+                    static int32_t mode_selections[] = {1, 1, 1, 1, 1, 1, 1, 1};
+                    static int32_t mode_repeat[] = { 1, 1, 1, 1, 1, 1, 1, 1 };
+
+                    for (int32_t idx = 0; idx < 8; idx++) {
+                        ImGui::SetNextItemWidth(180 * m_dpi_scale_factor);
+
+						std::string slot = "Slot " + std::to_string(idx + 1) + " mode";
+
+                        ImGuiExtensions::ADIComboBox(
+                            slot.c_str(), "Select Mode", ImGuiSelectableFlags_None,
+                            m_cameraModesDropDown, &mode_selections[idx], true);
+
+                        ImGui::SameLine();
+
+
+                        std::string repeat = "Repeat " + std::to_string(idx + 1);
+                        ImGui::SetNextItemWidth(60 * m_dpi_scale_factor);
+                        if (ImGui::BeginCombo(repeat.c_str(), std::to_string(mode_repeat[idx]).c_str())) {
+                            for (int i = 0; i <= 15; ++i) {
+                                bool isSelected = (mode_repeat[idx] == i);
+                                if (ImGui::Selectable(std::to_string(i).c_str(), isSelected))
+                                    mode_repeat[idx] = i;
+
+                                if (isSelected)
+                                    ImGui::SetItemDefaultFocus();
+                            }
+                            ImGui::EndCombo();
+                        }
+                    }
+
+                    ImGuiExtensions::ButtonColorChanger colorChangerPlay(
+                        m_custom_color_play, !m_is_playing);
+
+                    ImGui::NewLine();
+                    if (ImGuiExtensions::ADIButton("Start", !m_is_playing)) {
+
+                        std::vector<std::pair<uint8_t, uint8_t>> seqence;
+
+                        seqence.push_back(std::make_pair(mode_selections[0], mode_repeat[0]));
+                        seqence.push_back(std::make_pair(mode_selections[1], mode_repeat[1]));
+                        seqence.push_back(std::make_pair(mode_selections[2], mode_repeat[2]));
+                        seqence.push_back(std::make_pair(mode_selections[3], mode_repeat[3]));
+                        seqence.push_back(std::make_pair(mode_selections[4], mode_repeat[4]));
+                        seqence.push_back(std::make_pair(mode_selections[5], mode_repeat[5]));
+                        seqence.push_back(std::make_pair(mode_selections[6], mode_repeat[6]));
+                        seqence.push_back(std::make_pair(mode_selections[7], mode_repeat[7]));
+
+                        auto camera = GetActiveCamera();
+
+                        camera->adsd3500setEnableDynamicModeSwitching(true);
+                        camera->adsds3500setDynamicModeSwitchingSequence(seqence);
+
+                        m_frame_window_position_state = 0;
+                        m_view_selection_changed = m_view_selection;
+                        m_is_playing = true;
+                        ini_params.clear();
+                    }
+                }
+                else {
+					wizard_height = 350;
+
+                    ImGuiExtensions::ADIComboBox(
+                        "", "Select Mode", ImGuiSelectableFlags_None,
+                        m_cameraModesDropDown, &m_mode_selection, true);
+
+                    ImGuiExtensions::ButtonColorChanger colorChangerPlay(
+                        m_custom_color_play, !m_is_playing);
+
+                    ImGui::NewLine();
+                    if (ImGuiExtensions::ADIButton("Start", !m_is_playing)) {
+
+                        auto camera = GetActiveCamera();
+
+                        camera->adsd3500setEnableDynamicModeSwitching(false);
+
+                        m_frame_window_position_state = 0;
+                        m_view_selection_changed = m_view_selection;
+                        m_is_playing = true;
+                        ini_params.clear();
+                    }
                 }
             }
         }
