@@ -26,4 +26,6 @@ if( WIN32 )
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${protobuf_BINARY_DIR}/$<CONFIG> ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>
         )
     endif()
+
+    set_target_properties(first-frame PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$(ProjectDir)\\$(Configuration)")
 endif()

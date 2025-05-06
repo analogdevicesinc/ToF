@@ -46,6 +46,8 @@ if ( WIN32 )
    else ()
       set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--stack,4194304")
    endif()
+
+   set_target_properties(data_collect PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "$(ProjectDir)\\$(Configuration)")
 endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE aditof command_parser)
