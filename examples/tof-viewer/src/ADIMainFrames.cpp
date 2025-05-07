@@ -22,19 +22,24 @@ static std::vector<float> depth_line_values;
 //*******************************************
 
 void ADIMainWindow::RenderFrameHoverInfo(ImVec2 hoveredImagePixel,
-                                         uint16_t *currentImage, 
-                                         int imageWidth,
-                                         bool isHovered,
-                                         ADI_Image_Format_t format,
-                                         std::string units) {
+    uint16_t* currentImage,
+    int imageWidth,
+    bool isHovered,
+    ADI_Image_Format_t format,
+    std::string units) {
 
     if (static_cast<int>(hoveredImagePixel.x) ==
-            static_cast<int>(m_invalid_hovered_pixel.x) &&
+        static_cast<int>(m_invalid_hovered_pixel.x) &&
         static_cast<int>(hoveredImagePixel.y) ==
-            static_cast<int>(m_invalid_hovered_pixel.y)) {
+        static_cast<int>(m_invalid_hovered_pixel.y)) {
         return;
     }
 
+    if (hoveredImagePixel.x < 0 || hoveredImagePixel.y < 0)
+        return;
+
+    uint16_t pixelValue = currentImage[((int)hoveredImagePixel.y * (imageWidth)) + int(hoveredImagePixel.x)]; //153280 is pixel value linear
+    std::string imageType = "Unknown";
     ImGuiWindowFlags overlayFlags2 =
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar |
         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize |
@@ -43,41 +48,21 @@ void ADIMainWindow::RenderFrameHoverInfo(ImVec2 hoveredImagePixel,
 
     ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos(), ImGuiCond_Always);
     ImGui::SetNextWindowBgAlpha(0.3f); // Transparent background
-    uint16_t pixelValue = 0;
+    ImGui::Begin("hover", nullptr, overlayFlags2);
 
     if (format == ADI_Image_Format_t::ADI_IMAGE_FORMAT_DEPTH16) {
-
-        ImGui::Begin("hover_depth", nullptr, overlayFlags2);
-
-        if (hoveredImagePixel.x >= 0 && hoveredImagePixel.y >= 0) {
-            pixelValue = currentImage[((int)hoveredImagePixel.y * (imageWidth)) + int(hoveredImagePixel.x)]; //153280 is pixel value linear
-
-            if (isHovered || ImGui::IsWindowHovered()) {
-                ImGui::Text("Depth Image");
-                ImGui::Text("Current pixel: %d, %d", int(hoveredImagePixel.x), int(hoveredImagePixel.y));
-                ImGui::Text("Current pixel value: %d %s", pixelValue, units.c_str());
-            } else {
-                ImGui::Text("Hover over the image to get pixel value");
-            }
-        }
-        ImGui::End();
+        imageType = "Depth";
     } else if (format == ADI_Image_Format_t::ADI_IMAGE_FORMAT_AB16) {
-
-        ImGui::Begin("hover_ab", nullptr, overlayFlags2);
-
-        if (hoveredImagePixel.x >= 0 && hoveredImagePixel.y >= 0) {
-            pixelValue = currentImage[((int)hoveredImagePixel.y * (imageWidth)) + int(hoveredImagePixel.x)]; //153280 is pixel value linear
-
-            if (isHovered || ImGui::IsWindowHovered()) {
-                ImGui::Text("AB Image");
-                ImGui::Text("Current pixel: %d, %d", int(hoveredImagePixel.x), int(hoveredImagePixel.y));
-                ImGui::Text("Current pixel value: %d %s", pixelValue, units.c_str());
-            } else {
-                ImGui::Text("Hover over the image to get pixel value");
-            }
-        }
-        ImGui::End();
+        imageType = "AB";
     }
+
+    if (isHovered || ImGui::IsWindowHovered()) {
+        ImGui::Text("%s: %d, %d, %d %s", imageType.c_str(), int(hoveredImagePixel.x), int(hoveredImagePixel.y), pixelValue, units.c_str());
+    }
+    else {
+        ImGui::Text("Hover over the image to get pixel value");
+    }
+    ImGui::End();
 }
 
 void ADIMainWindow::GetHoveredImagePix(ImVec2& hoveredImagePixel,
