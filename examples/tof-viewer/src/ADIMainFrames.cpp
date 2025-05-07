@@ -524,7 +524,7 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
         memcpy(projMatrix, glm::value_ptr(proj), sizeof(float) * 16);
 
         memcpy(viewMatrix, m_model_mat, sizeof(float) * 16);
-        ImOGuizmo::SetRect(m_pc_position->x + 50.0f, m_pc_position->y + 50.0f, 100.0f);
+        ImOGuizmo::SetRect(m_pc_position->x + 5.0f, m_pc_position->y + 15.0f, 50.0f);
         ImOGuizmo::DrawGizmo(viewMatrix, projMatrix, 10.0f);
     }
     ImGui::End();
