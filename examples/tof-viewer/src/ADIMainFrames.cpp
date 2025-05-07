@@ -262,10 +262,10 @@ void ADIMainWindow::DisplayActiveBrightnessWindow(
         GetHoveredImagePix(hoveredImagePixel, ImGui::GetCursorScreenPos(),
             ImGui::GetIO().MousePos, m_display_ab_dimensions, m_source_depth_image_dimensions);
 		RenderFrameHoverInfo(hoveredImagePixel, 
-            m_view_instance->depth_video_data, // Use the depth values when hovering over the AB image
+            m_view_instance->ab_video_data,
             m_view_instance->frameWidth,
             ImGui::IsWindowHovered(),
-            ADI_Image_Format_t::ADI_IMAGE_FORMAT_AB16, "mm");
+            ADI_Image_Format_t::ADI_IMAGE_FORMAT_AB16, "Intensity");
     }
 
     ImGui::End();
