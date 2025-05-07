@@ -6,6 +6,9 @@ cmake_minimum_required(VERSION 3.10)
 # set the project name
 project(ADIToFGUI)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 option(ENBABLE_PASSIVE_IR "Allow passive IR (PCM) mode" OFF)
 
 configure_file(ADIToFConfig.h.in ADIToFConfig.h)
@@ -28,6 +31,8 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/dependencies/third-party/imgui/glfw" "${CM
 set(IMGUI_SOURCE_DIR ${CMAKE_SOURCE_DIR}/dependencies/third-party/imgui)
 set(IMGUI_TOGGLE_SOURCE_DIR ${CMAKE_SOURCE_DIR}/dependencies/third-party/imgui/imgui_toggle)
 set(IMPLOT_SOURCE_DIR ${CMAKE_SOURCE_DIR}/dependencies/third-party/imgui/implot)
+set(IMOGUIZMO_SOURCE_DIR ${CMAKE_SOURCE_DIR}/dependencies/third-party/imgui/imoguizmo)
+set(GLM_SOURCE_DIR ${CMAKE_SOURCE_DIR}/dependencies/third-party/imgui/glm)
 set(ADIToF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 file(GLOB ADIToF_SOURCES CONFIGURE_DEPENDS "${ADIToF_SOURCE_DIR}/*.cpp")
@@ -76,6 +81,8 @@ target_include_directories(ADIToFGUI PUBLIC
 						"${IMGUI_SOURCE_DIR}/src"
 						"${IMGUI_TOGGLE_SOURCE_DIR}"
 						"${IMPLOT_SOURCE_DIR}"
+						"${IMOGUIZMO_SOURCE_DIR}"
+						"${GLM_SOURCE_DIR}"
 						"${PROJECT_SOURCE_DIR}/src"
 				)
 

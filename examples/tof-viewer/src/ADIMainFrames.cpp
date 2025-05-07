@@ -4,6 +4,7 @@
 #include "ADIMainWindow.h"
 #include "ADIImGUIExtensions.h"
 #include "implot.h"
+#include "imoguizmo.hpp"
 
 #ifdef USE_GLOG
 #include <glog/logging.h>
@@ -12,6 +13,10 @@
 #endif
 
 #include <GLFW/glfw3.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 using namespace adiMainWindow;
 
@@ -487,7 +492,7 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
         const char *col1Text = "Camera Pos";
         const float padding = 20.0f; // Optional extra space
         float col1Width = ImGui::CalcTextSize(col1Text).x + padding;
-
+#if 0
         if (ImGui::BeginTable("Information Table", 2)) {
             ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed,
                                     col1Width);
@@ -511,6 +516,16 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
 
             ImGui::EndTable();
         }
+#endif
+        float viewMatrix[16];
+        float projMatrix[16];
+
+        glm::mat4 proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 1000.0f);
+        memcpy(projMatrix, glm::value_ptr(proj), sizeof(float) * 16);
+
+        memcpy(viewMatrix, m_model_mat, sizeof(float) * 16);
+        ImOGuizmo::SetRect(m_pc_position->x + 50.0f, m_pc_position->y + 50.0f, 100.0f);
+        ImOGuizmo::DrawGizmo(viewMatrix, projMatrix, 10.0f);
     }
     ImGui::End();
 }
