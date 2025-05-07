@@ -31,12 +31,6 @@ namespace fs = ghc::filesystem;
 
 using namespace adiMainWindow;
 
-extern uint8_t last_mode;
-extern std::map<std::string, std::string> ini_params;
-extern std::map<std::string, std::string> modified_ini_params;
-extern std::map<std::string, std::string> last_ini_params;
-extern bool use_modified_ini_params;
-
 void ADIMainWindow::InitCamera(std::string filePath) {
     if (m_view_instance != NULL) { //Reset current imager
         LOG(INFO) << "Imager is reseting.";
@@ -118,27 +112,27 @@ void ADIMainWindow::PrepareCamera(uint8_t mode) {
         return;
     }
 
-    if (mode == last_mode) {
-        if (!modified_ini_params.empty()) {
-            if (use_modified_ini_params) {
+    if (mode == m_last_mode) {
+        if (!m_modified_ini_params.empty()) {
+            if (m_use_modified_ini_params) {
                 status = GetActiveCamera()->setFrameProcessParams(
-                    modified_ini_params);
+                    m_modified_ini_params);
                 if (status != aditof::Status::OK) {
                     LOG(ERROR) << "Could not set ini params";
                 } else {
                     LOG(INFO) << "Using user defined ini parameters.";
-                    use_modified_ini_params = false;
-                    modified_ini_params.clear();
-                    last_ini_params.clear();
+                    m_use_modified_ini_params = false;
+                    m_modified_ini_params.clear();
+                    m_last_ini_params.clear();
                 }
             }
         }
     } else {
-        use_modified_ini_params = false;
-        ini_params.clear();
-        modified_ini_params.clear();
-        last_ini_params.clear();
-        last_mode = mode;
+        m_use_modified_ini_params = false;
+        m_ini_params.clear();
+        m_modified_ini_params.clear();
+        m_last_ini_params.clear();
+        m_last_mode = mode;
     }
 
     aditof::CameraDetails camDetails;

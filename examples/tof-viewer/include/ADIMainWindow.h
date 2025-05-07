@@ -618,6 +618,13 @@ class ADIMainWindow {
     std::chrono::time_point<std::chrono::system_clock> m_fps_startTime;
     int32_t m_selected_device_index = -1;
     std::vector<std::pair<int, std::string>> m_connected_devices;
+
+    uint8_t m_last_mode = -1;
+
+    std::map<std::string, std::string> m_ini_params;
+    std::map<std::string, std::string> m_modified_ini_params;
+    std::map<std::string, std::string> m_last_ini_params;
+    bool m_use_modified_ini_params;
 };
 } // namespace adiMainWindow
 #endif //ADIMAINWINDOW_H
