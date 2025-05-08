@@ -437,6 +437,7 @@ void ADIMainWindow::ShowMainMenu() {
             if (ImGui::MenuItem("Help")) {
                 // TODO: Show help
             }
+            ImGui::MenuItem("Debug Log", nullptr, &show_app_log);
             ImGui::Separator();
             if (ImGui::MenuItem("Exit")) {
                 glfwSetWindowShouldClose(window, true);
