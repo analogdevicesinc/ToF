@@ -625,6 +625,9 @@ class ADIMainWindow {
     std::map<std::string, std::string> m_modified_ini_params;
     std::map<std::string, std::string> m_last_ini_params;
     bool m_use_modified_ini_params;
+
+    std::vector<float> m_depth_line_values;
+    std::vector<std::pair<float, float>> m_depthLine;
 };
 } // namespace adiMainWindow
 #endif //ADIMAINWINDOW_H

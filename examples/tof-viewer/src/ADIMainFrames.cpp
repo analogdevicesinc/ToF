@@ -20,8 +20,6 @@
 
 using namespace adiMainWindow;
 
-static std::vector<float> depth_line_values;
-
 //*******************************************
 //* Section: Generic
 //*******************************************
@@ -182,7 +180,7 @@ void ADIMainWindow::synchronizeVideo() {
 
 void ADIMainWindow::DepthLinePlot(ImGuiWindowFlags overlayFlags) {
 
-	if (depth_line_values.size() == 0) {
+	if (m_depth_line_values.size() == 0) {
 		return;
 	}
 
@@ -193,10 +191,10 @@ void ADIMainWindow::DepthLinePlot(ImGuiWindowFlags overlayFlags) {
         ImPlot::SetNextAxesToFit();
         if (ImPlot::BeginPlot("Line Depth Values")) {
 
-            std::vector<float> x(depth_line_values.size());
+            std::vector<float> x(m_depth_line_values.size());
 
             std::iota(x.begin(), x.end(), 0);
-            ImPlot::PlotLine("Depth over Line", x.data(), depth_line_values.data(), depth_line_values.size());
+            ImPlot::PlotLine("Depth over Line", x.data(), m_depth_line_values.data(), m_depth_line_values.size());
             ImPlot::EndPlot();
         }
         ImGui::End();
@@ -276,7 +274,7 @@ void ADIMainWindow::DisplayActiveBrightnessWindow(
 //*******************************************
 
 void ADIMainWindow::InitOpenGLDepthTexture() {
-    depth_line_values.clear();
+    m_depth_line_values.clear();
     /********************************************/
     //Depth Texture
     GLuint depth_texture;
@@ -353,33 +351,32 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
 
 		std::vector<ImVec2> depth_line_points;
 
-        static std::vector<std::pair<float, float>> depthLine;
         if (ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right)) {
             ImVec2 mousePos = ImGui::GetMousePos();
-            if (depthLine.size() >= 2) {
-                depthLine.clear();
+            if (m_depthLine.size() >= 2) {
+                m_depthLine.clear();
                 depth_line_points.clear();
             } else {
-                depthLine.push_back({ mousePos.x, mousePos.y });
+                m_depthLine.push_back({ mousePos.x, mousePos.y });
             }
         }
 
-		if (depthLine.size() == 1) {
+		if (m_depthLine.size() == 1) {
             ImVec2 mousePos = ImGui::GetMousePos();
-			ImVec2 start = ImVec2(depthLine[0].first, depthLine[0].second);
+			ImVec2 start = ImVec2(m_depthLine[0].first, m_depthLine[0].second);
 			ImVec2 end = ImVec2(mousePos.x, mousePos.y);
 			ImGui::GetWindowDrawList()->AddLine(start, end, IM_COL32(255, 0, 0, 255), 2.0f);
-		} else if (depthLine.size() >= 2) {
+		} else if (m_depthLine.size() >= 2) {
             ImVec2 start;
             ImVec2 end;
 
-            if (depthLine[0].first < depthLine[1].first) {
-                start = ImVec2(depthLine[0].first, depthLine[0].second);
-                end = ImVec2(depthLine[1].first, depthLine[1].second);
+            if (m_depthLine[0].first < m_depthLine[1].first) {
+                start = ImVec2(m_depthLine[0].first, m_depthLine[0].second);
+                end = ImVec2(m_depthLine[1].first, m_depthLine[1].second);
             }
             else {
-                end = ImVec2(depthLine[0].first, depthLine[0].second);
-                start = ImVec2(depthLine[1].first, depthLine[1].second);
+                end = ImVec2(m_depthLine[0].first, m_depthLine[0].second);
+                start = ImVec2(m_depthLine[1].first, m_depthLine[1].second);
             }
 
             ImGui::GetWindowDrawList()->AddLine(start, end, IM_COL32(255, 0, 0, 255), 2.0f);
@@ -395,7 +392,7 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
 
             depth_line_points = GetLinePixels(_start.x, _start.y, _end.x, _end.y);
 
-            depth_line_values.clear();
+            m_depth_line_values.clear();
 			for (const auto& point : depth_line_points) {
                 uint32_t offset = m_view_instance->frameWidth * point.y + point.x;
                 float depth = m_view_instance->depth_video_data[offset];
@@ -403,7 +400,7 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
                 if (depth == 0 && offset > 0)
                     depth = m_view_instance->depth_video_data[offset - 1];
 
-				depth_line_values.emplace_back(depth);
+                m_depth_line_values.emplace_back(depth);
 			}
         }
 
@@ -488,44 +485,15 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
         glDeleteVertexArrays(1, &m_view_instance->vertexArrayObject);
         glDeleteBuffers(1, &m_view_instance->vertexBufferObject);
 
-
-        const char *col1Text = "Camera Pos";
-        const float padding = 20.0f; // Optional extra space
-        float col1Width = ImGui::CalcTextSize(col1Text).x + padding;
-#if 0
-        if (ImGui::BeginTable("Information Table", 2)) {
-            ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed,
-                                    col1Width);
-            ImGui::TableSetupColumn("Value",
-                                    ImGuiTableColumnFlags_WidthStretch);
-
-            ImGui::TableHeadersRow();
-
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("FoV");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%0.2f", m_field_of_view);
-
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::Text("Camera Pos");
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("(%0.2f, %0.2f, %0.2f)", m_camera_position_vec[0], m_camera_position_vec[1],
-                        m_camera_position_vec[2]);
-
-            ImGui::EndTable();
-        }
-#endif
-        float viewMatrix[16];
+        float modelMatrix[16];
         float projMatrix[16];
 
         glm::mat4 proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 1000.0f);
         memcpy(projMatrix, glm::value_ptr(proj), sizeof(float) * 16);
 
-        memcpy(viewMatrix, m_model_mat, sizeof(float) * 16);
+        memcpy(modelMatrix, m_model_mat, sizeof(float) * 16);
         ImOGuizmo::SetRect(m_pc_position->x + 5.0f, m_pc_position->y + 15.0f, 50.0f);
-        ImOGuizmo::DrawGizmo(viewMatrix, projMatrix, 10.0f);
+        ImOGuizmo::DrawGizmo(modelMatrix, projMatrix, 10.0f);
     }
     ImGui::End();
 }
@@ -798,32 +766,34 @@ void ADIMainWindow::ProcessInputs(GLFWwindow *window) {
         }
     }
 
-    if (ImGui::IsKeyPressed(ImGuiKey_W)) {
-        vec3 aux = {0.0, 0.0, 0.0};
+#if 0 // Remove for now using only the mouse for movements
+    if (ImGui::IsKeyPressed(ImGuiKey_UpArrow)) {
+        vec3 aux = { 0.0, 0.0, 0.0 };
         vec3_scale(aux, m_camera_front_vec, cameraSpeed);
         vec3_add(m_camera_position_vec, m_camera_position_vec, aux);
     }
 
-    if (ImGui::IsKeyPressed(ImGuiKey_S)) {
-        vec3 aux = {0.0, 0.0, 0.0};
+    if (ImGui::IsKeyPressed(ImGuiKey_DownArrow)) {
+        vec3 aux = { 0.0, 0.0, 0.0 };
         vec3_scale(aux, m_camera_front_vec, cameraSpeed);
         vec3_sub(m_camera_position_vec, m_camera_position_vec, aux);
     }
 
-    if (ImGui::IsKeyPressed(ImGuiKey_A)) {
-        vec3 aux = {0.0, 0.0, 0.0};
+    if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) {
+        vec3 aux = { 0.0, 0.0, 0.0 };
         vec3_mul_cross(aux, m_camera_front_vec, m_camera_up_vec);
         vec3_norm(aux, aux);
         vec3_scale(aux, aux, cameraSpeed);
         vec3_sub(m_camera_position_vec, m_camera_position_vec, aux);
     }
-    if (ImGui::IsKeyPressed(ImGuiKey_D)) {
-        vec3 aux = {0.0, 0.0, 0.0};
+    if (ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
+        vec3 aux = { 0.0, 0.0, 0.0 };
         vec3_mul_cross(aux, m_camera_front_vec, m_camera_up_vec);
         vec3_norm(aux, aux);
         vec3_scale(aux, aux, cameraSpeed);
         vec3_add(m_camera_position_vec, m_camera_position_vec, aux);
     }
+#endif 
 }
 
 void ADIMainWindow::GetArcballRotation(quat rotation,

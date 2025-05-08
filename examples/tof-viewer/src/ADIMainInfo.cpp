@@ -144,6 +144,19 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
                 }
             }
 
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Point Cloud FoV");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%0.2f", m_field_of_view);
+
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Point Cloud Camera PoS");
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("(%0.2f, %0.2f, %0.2f)", m_camera_position_vec[0], m_camera_position_vec[1],
+                m_camera_position_vec[2]);
+
             ImGui::EndTable();
         }
     }

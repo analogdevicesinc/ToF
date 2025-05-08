@@ -200,7 +200,11 @@ bool ADIMainWindow::StartImGUI(const ADIViewerArgs &args) {
 
     // Create window with graphics context
     glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
-    window = glfwCreateWindow(1280, 1024, _title.c_str(), NULL, NULL);
+
+    m_dict_win_position["main"].width = 1580.0f;
+    m_dict_win_position["main"].height = 1080.0f;
+
+    window = glfwCreateWindow(m_dict_win_position["main"].width, m_dict_win_position["main"].height, _title.c_str(), NULL, NULL);
 
     if (window == NULL) {
         return false;
@@ -250,15 +254,15 @@ bool ADIMainWindow::StartImGUI(const ADIViewerArgs &args) {
     m_dict_win_position["info"].x = 5.0f;
     m_dict_win_position["info"].y = 25.0f;
     m_dict_win_position["info"].width = 300.0f;
-    m_dict_win_position["info"].height = 200.0f;
+    m_dict_win_position["info"].height = 750.0f;
 
-    m_dict_win_position["control"].x = m_dict_win_position["info"].x;
-    m_dict_win_position["control"].y = WindowCalcY(m_dict_win_position["info"], 10.0f);
+    m_dict_win_position["control"].x = m_dict_win_position["info"].width + 10;
+    m_dict_win_position["control"].y = m_dict_win_position["info"].y;
     m_dict_win_position["control"].width = m_dict_win_position["info"].width;
-    m_dict_win_position["control"].height = 720.0f;
+    m_dict_win_position["control"].height = m_dict_win_position["info"].height;
 
     m_dict_win_position["fr-main"].x =
-        WindowCalcX(m_dict_win_position["info"], 10.0f);
+        WindowCalcX(m_dict_win_position["control"], 10.0f);
     m_dict_win_position["fr-main"].y = m_dict_win_position["info"].y;
     m_dict_win_position["fr-main"].width = 640.0f;
     m_dict_win_position["fr-main"].height = 640.0f;
@@ -430,24 +434,12 @@ void ADIMainWindow::ShowMainMenu() {
 
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("?")) {
+            if (ImGui::MenuItem("Help")) {
+                // TODO: Show help
+            }
+            ImGui::Separator();
             if (ImGui::MenuItem("Exit")) {
                 glfwSetWindowShouldClose(window, true);
-            }
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Tools")) {
-
-            ImGui::MenuItem("Debug Log", nullptr, &show_app_log);
-			if (!m_off_line) {			
-                ImGui::Separator();
-                if (ImGui::MenuItem("Load Configuration", nullptr, false,
-                                    m_cameraWorkerDone && !m_is_playing)) {
-                    ShowLoadAdsdParamsMenu();
-                }
-                if (ImGui::MenuItem("Save Configuration", nullptr, false,
-                                    m_cameraWorkerDone)) {
-                    ShowSaveAdsdParamsMenu();
-                }
             }
             ImGui::EndMenu();
         }
@@ -603,7 +595,7 @@ void ADIMainWindow::ShowStartWizard() {
     static uint32_t wizard_height = 350;
     ImGuiIO &io = ImGui::GetIO(); // Get the display size
     ImVec2 center = ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f);
-    ImVec2 window_size = ImVec2(400, wizard_height); // Your window size
+    ImVec2 window_size = ImVec2(450, wizard_height); // Your window size
 
     // Offset to truly center it
     ImVec2 window_pos = ImVec2(center.x - window_size.x * 0.5f,
@@ -732,17 +724,33 @@ void ADIMainWindow::ShowStartWizard() {
         if (m_cameraWorkerDone) {
             m_is_open_device = false;
             if (!m_is_playing) {
+
+                DrawBarLabel("Mode Selection");
+
+                ImGui::NewLine();
+
+                if (ImGuiExtensions::ADIButton("Load Config", !m_is_playing)) {
+
+                    ShowLoadAdsdParamsMenu();
+                }
+
+                //ImGui::SameLine();
+
+                //if (ImGuiExtensions::ADIButton("Save Config", !m_is_playing)) {
+                //    ShowSaveAdsdParamsMenu();
+                //}
+
                 ImGui::NewLine();
                 DrawBarLabel("Mode Selection");
                 ImGui::NewLine();
 
-                static bool show_dynamic_mode_switich = false;
+                static bool show_dynamic_mode_switch = false;
 
-                ImGui::Toggle(!show_dynamic_mode_switich?"Switch to Dynamic Mode": "Switch to Standard Mode",
-                              &show_dynamic_mode_switich);
+                ImGui::Toggle(!show_dynamic_mode_switch ?"Switch to Dynamic Mode": "Switch to Standard Mode",
+                              & show_dynamic_mode_switch);
 
-                if (show_dynamic_mode_switich) {
-                    wizard_height = 600;
+                if (show_dynamic_mode_switch) {
+                    wizard_height = 550;
 
                     // TODO: Add non-Crosby repeat count
 
@@ -805,7 +813,7 @@ void ADIMainWindow::ShowStartWizard() {
                     }
                 }
                 else {
-					wizard_height = 350;
+					wizard_height = 400;
 
                     ImGuiExtensions::ADIComboBox(
                         "", "Select Mode", ImGuiSelectableFlags_None,

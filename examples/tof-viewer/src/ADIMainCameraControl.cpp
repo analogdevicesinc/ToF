@@ -207,29 +207,39 @@ void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
         }
     }
 
-    if (ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
-        m_frame_window_position_state++;
-        if (m_frame_window_position_state > 2)
-            m_frame_window_position_state = 0;
-    }
-    if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) {
-        m_frame_window_position_state--;
-        if (m_frame_window_position_state < 0)
-            m_frame_window_position_state = 2;
-    }
+   
+    ImGuiIO& io = ImGui::GetIO();
+    if (io.KeyShift) {
+        if (ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
+            m_depth_line_values.clear();
+            m_depthLine.clear();
+            m_frame_window_position_state++;
+            if (m_frame_window_position_state > 2)
+                m_frame_window_position_state = 0;
+        }
+        if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) {
+            m_depth_line_values.clear();
+            m_depthLine.clear();
+            m_frame_window_position_state--;
+            if (m_frame_window_position_state < 0)
+                m_frame_window_position_state = 2;
+        }
 
-    if (m_frame_window_position_state == 1) {
-        m_pc_position = &m_dict_win_position["fr-sub2"];
-        m_ab_position = &m_dict_win_position["fr-main"];
-        m_depth_position = &m_dict_win_position["fr-sub1"];
-    } else if (m_frame_window_position_state == 2) {
-        m_pc_position = &m_dict_win_position["fr-sub1"];
-        m_ab_position = &m_dict_win_position["fr-sub2"];
-        m_depth_position = &m_dict_win_position["fr-main"];
-    } else {
-        m_pc_position = &m_dict_win_position["fr-main"];
-        m_ab_position = &m_dict_win_position["fr-sub1"];
-        m_depth_position = &m_dict_win_position["fr-sub2"];
+        if (m_frame_window_position_state == 1) {
+            m_pc_position = &m_dict_win_position["fr-sub2"];
+            m_ab_position = &m_dict_win_position["fr-main"];
+            m_depth_position = &m_dict_win_position["fr-sub1"];
+        }
+        else if (m_frame_window_position_state == 2) {
+            m_pc_position = &m_dict_win_position["fr-sub1"];
+            m_ab_position = &m_dict_win_position["fr-sub2"];
+            m_depth_position = &m_dict_win_position["fr-main"];
+        }
+        else {
+            m_pc_position = &m_dict_win_position["fr-main"];
+            m_ab_position = &m_dict_win_position["fr-sub1"];
+            m_depth_position = &m_dict_win_position["fr-sub2"];
+        }
     }
 
     synchronizeVideo();

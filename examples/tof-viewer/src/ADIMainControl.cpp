@@ -68,6 +68,24 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
 
         if (!m_off_line) {
 
+            DrawBarLabel("Configuration");
+            
+            NewLine(5.0f);
+
+            if (ImGuiExtensions::ADIButton("Load Config", true)) {
+                ShowLoadAdsdParamsMenu();
+            }
+
+            ImGui::SameLine(0.0f, 10.0f);
+
+            if (ImGuiExtensions::ADIButton("Save Config", true)) {
+                ShowSaveAdsdParamsMenu();
+            }
+            NewLine(5.0f);
+            NewLine(5.0f);
+
+            DrawBarLabel("Control");
+
             static std::string filePath = "";
             static bool recordingActive = false;
             if (DrawIconButton(
@@ -564,7 +582,7 @@ void ADIMainWindow::ShowIniWindow(bool* p_open) {
         }
         IniParamWarn("jblfABThreshold", "Valid value: [0 - 131071]");
     }
-    ImGui::Checkbox("Metadata Over AB", &metadata);
+    //ImGui::Checkbox("Metadata Over AB", &metadata);
 
     // modify ini params
     m_modified_ini_params["abThreshMin"] = std::to_string(abThreshMin);
