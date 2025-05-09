@@ -496,6 +496,7 @@ class ADIMainWindow {
     void DrawBarLabel(const char *fmt, ...);
     void NewLine(float spacing);
     void ShowStartWizard();
+    int32_t SaveTextureAsJPEG(GLuint textureID, int width, int height, const char* filename);
     float WindowCalcX(Rect w, float buffer = 0.0f) {
         return w.x + w.width + buffer;
     }
@@ -628,6 +629,13 @@ class ADIMainWindow {
 
     std::vector<float> m_depth_line_values;
     std::vector<std::pair<float, float>> m_depthLine;
+    bool m_flash_main_window = false;
+    std::mutex m_snapshot_mutex;
+    std::map<std::string, std::string> m_snapshot = { 
+        {"pc", ""},
+        {"ab", ""},
+        {"depth", ""}
+    };
 };
 } // namespace adiMainWindow
 #endif //ADIMAINWINDOW_H

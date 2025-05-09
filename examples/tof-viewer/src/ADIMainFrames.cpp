@@ -1,22 +1,23 @@
 #include <glad/gl.h>
 #include <cmath>
 #include <numeric>
+
 #include "ADIMainWindow.h"
 #include "ADIImGUIExtensions.h"
 #include "implot.h"
 #include "imoguizmo.hpp"
+#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <../glfw/deps/stb_image_write.h>
 
 #ifdef USE_GLOG
 #include <glog/logging.h>
 #else
 #include <aditof/log.h>
 #endif
-
-#include <GLFW/glfw3.h>
-
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 using namespace adiMainWindow;
 
@@ -178,6 +179,16 @@ void ADIMainWindow::synchronizeVideo() {
     /*********************************/
 }
 
+int32_t ADIMainWindow::SaveTextureAsJPEG(GLuint textureID, int width, int height, const char* filename) {
+    glBindTexture(GL_TEXTURE_2D, textureID);
+
+    std::vector<unsigned char> pixels(width * height * 3); // RGB only
+
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+
+    return stbi_write_jpg(filename, width, height, 3, pixels.data(), 90);
+}
+
 void ADIMainWindow::DepthLinePlot(ImGuiWindowFlags overlayFlags) {
 
 	if (m_depth_line_values.size() == 0) {
@@ -243,6 +254,15 @@ void ADIMainWindow::DisplayActiveBrightnessWindow(
                          m_view_instance->frameHeight, 0, GL_BGR, GL_UNSIGNED_BYTE,
                          m_view_instance->ab_video_data_8bit);
             glad_glGenerateMipmap(GL_TEXTURE_2D);
+
+            std::lock_guard<std::mutex> lock(m_snapshot_mutex);
+			if (m_snapshot["ab"].length() != 0) {
+				SaveTextureAsJPEG(m_gl_ab_video_texture, m_view_instance->frameWidth, m_view_instance->frameHeight, m_snapshot["ab"].c_str());
+                m_snapshot["ab"] = "";
+				if (m_snapshot["ab"].length() == 0 && m_snapshot["depth"].length() == 0 && m_snapshot["pc"].length() == 0) {
+					m_flash_main_window = true;
+				}
+			}
 
             ImVec2 _displayABDimensions = m_display_ab_dimensions;
 
@@ -335,6 +355,15 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
                          m_view_instance->depth_video_data_8bit);
             glad_glGenerateMipmap(GL_TEXTURE_2D);
             //delete m_view_instance->depth_video_data_8bit;
+
+            std::lock_guard<std::mutex> lock(m_snapshot_mutex);
+            if (m_snapshot["depth"].length() != 0) {
+				SaveTextureAsJPEG(m_gl_depth_video_texture, m_view_instance->frameWidth, m_view_instance->frameHeight, m_snapshot["depth"].c_str());
+                m_snapshot["depth"] = "";
+                if (m_snapshot["ab"].length() == 0 && m_snapshot["depth"].length() == 0 && m_snapshot["pc"].length() == 0) {
+                    m_flash_main_window = true;
+                }
+            }
 
             ImVec2 _displayDepthDimensions = m_display_depth_dimensions;
 
@@ -432,6 +461,9 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
     SetWindowPosition(m_pc_position->x, m_pc_position->y);
     SetWindowSize(m_pc_position->width, m_pc_position->height);
 
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+
     if (ImGui::Begin("Point Cloud Window", nullptr, overlayFlags)) {
 
         ImGui::SetCursorPos(ImVec2(0, 0));
@@ -468,7 +500,16 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
         glBindVertexArray(0);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glDisable(GL_DEPTH_TEST);
+
+        std::lock_guard<std::mutex> lock(m_snapshot_mutex);
+        if (m_snapshot["pc"].length() != 0) {
+            m_snapshot["pc"] = "";
+            //TODO: save point cloud
+            if (m_snapshot["ab"].length() == 0 && m_snapshot["depth"].length() == 0 && m_snapshot["pc"].length() == 0) {
+                m_flash_main_window = true;
+            }
+        }
+        
 
         ImVec2 _displayPointCloudDimensions = m_display_point_cloud_dimensions;
 
@@ -496,6 +537,7 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
         ImOGuizmo::DrawGizmo(modelMatrix, projMatrix, 10.0f);
     }
     ImGui::End();
+    glDisable(GL_DEPTH_TEST);
 }
 
 void ADIMainWindow::PreparePointCloudVertices(unsigned int &vbo,

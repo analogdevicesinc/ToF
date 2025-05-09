@@ -7,6 +7,20 @@
 #include <aditof/log.h>
 #endif
 
+#include <cstdarg> // for va_list
+#include <imgui.h>
+#include <iomanip>
+#include <ctime>
+#include <cstdlib>
+#include <random>
+#include <sys/stat.h>
+#include <sys/types.h>
+#ifdef _WIN32
+#include <direct.h>
+#endif
+
+using namespace adiMainWindow;
+
 inline ImVec2 operator+(const ImVec2 &a, const ImVec2 &b) {
     return ImVec2(a.x + b.x, a.y + b.y);
 }
@@ -14,12 +28,48 @@ inline ImVec2 operator*(const ImVec2 &v, float f) {
     return ImVec2(v.x * f, v.y * f);
 }
 
-using namespace adiMainWindow;
+static bool folderExists(const std::string& path) {
+    struct stat info;
+    return (stat(path.c_str(), &info) == 0 && (info.st_mode & S_IFDIR));
+}
 
-#include <cstdarg> // for va_list
-#include <imgui.h>
+static bool createFolder(const std::string& path) {
+#ifdef _WIN32
+    return _mkdir(path.c_str()) == 0 || errno == EEXIST;
+#else
+    return mkdir(path.c_str(), 0755) == 0 || errno == EEXIST;
+#endif
+}
 
-bool DrawIconButton(const char *id,
+static std::string viewerGenerateFileName(const std::string& prefix, const std::string& extension) {
+    // Get current UTC time
+    std::time_t now = std::time(nullptr);
+    std::tm utc_tm;
+#ifdef _WIN32
+    gmtime_s(&utc_tm, &now); // Windows
+#else
+    gmtime_r(&now, &utc_tm); // Linux/macOS
+#endif
+
+    std::ostringstream oss;
+
+    // Format time: YYYYMMDD_HHMMSS
+    oss << prefix;
+    oss << std::put_time(&utc_tm, "%Y%m%d_%H%M%S");
+
+    // Generate random 8-digit hex
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<uint32_t> dis(0, 0xFFFFFFFF);
+    uint32_t randNum = dis(gen);
+    oss << "_" << std::hex << std::setw(8) << std::setfill('0') << randNum;
+
+    oss << extension;
+
+    return oss.str();
+}
+
+static bool DrawIconButton(const char *id,
                     std::function<void(ImDrawList *, ImVec2, ImVec2)> drawIcon,
                     ImU32 bgColor = IM_COL32(60, 60, 60, 255)) {
     ImVec2 size(30, 30);
@@ -39,6 +89,56 @@ bool DrawIconButton(const char *id,
 
     drawIcon(drawList, min, max);
     return pressed;
+}
+
+static bool cameraButton(std::map<std::string, std::string> &snapshot) {
+    if (DrawIconButton(
+        "Camera",
+        [](ImDrawList* dl, ImVec2 min, ImVec2 max) {
+            ImVec2 center = (min + max) * 0.5f;
+            float w = max.x - min.x;
+            float h = max.y - min.y;
+
+            // Camera body
+            ImVec2 topLeft(center.x - w * 0.3f, center.y - h * 0.25f);
+            ImVec2 bottomRight(center.x + w * 0.3f, center.y + h * 0.25f);
+            dl->AddRectFilled(topLeft, bottomRight, IM_COL32_WHITE, 3.0f);
+
+            // Lens circle
+            ImVec2 lensCenter = center;
+            float lensRadius = h * 0.1f;
+            dl->AddCircleFilled(lensCenter, lensRadius, IM_COL32(50, 50, 50, 255));
+
+            // Viewfinder bump
+            ImVec2 bumpTL(center.x - w * 0.15f, center.y - h * 0.35f);
+            ImVec2 bumpBR(center.x - w * 0.05f, center.y - h * 0.25f);
+            dl->AddRectFilled(bumpTL, bumpBR, IM_COL32_WHITE, 2.0f);
+        },
+        IM_COL32(80, 80, 80, 255))) {
+
+		const char *folder_path = "./captures/";
+
+        if (!folderExists(folder_path)) {
+            if (!createFolder(folder_path)) {
+                LOG(ERROR) << "Failed to create folder for recordings: "
+                    << folder_path;
+
+                snapshot["pc"] = "";
+                snapshot["ab"] = "";
+                snapshot["depth"] = "";
+
+                return false;
+            }
+        }
+
+        std::string base_filename = folder_path + viewerGenerateFileName("aditof_", "");
+        snapshot["pc"] = base_filename + "_pc.ply";
+        snapshot["ab"] = base_filename + "_ab.jpg";
+        snapshot["depth"] = base_filename + "_depth.jpg";
+
+        return true;
+    }
+    return false;
 }
 
 void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
@@ -88,6 +188,12 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
 
             static std::string filePath = "";
             static bool recordingActive = false;
+
+            std::lock_guard<std::mutex> lock(m_snapshot_mutex);
+            cameraButton(m_snapshot);
+
+            ImGui::SameLine(0.0f, 10.0f);
+
             if (DrawIconButton(
                     "Record",
                     [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
@@ -141,6 +247,13 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
 
             uint32_t max_frame_count;
             GetActiveCamera()->getSensor()->getFrameCount(max_frame_count);
+
+            DrawBarLabel("Control");
+
+            std::lock_guard<std::mutex> lock(m_snapshot_mutex);
+            cameraButton(m_snapshot);
+
+            ImGui::SameLine(0.0f, 10.0f);
 
             if (DrawIconButton(
                     "JumpToStart",

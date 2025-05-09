@@ -355,7 +355,6 @@ std::shared_ptr<aditof::Camera> ADIMainWindow::GetActiveCamera() {
 }
 
 void ADIMainWindow::Render() {
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f); //Main Window Color
     // Main imGUI loop
     while (!glfwWindowShouldClose(window)) {
         // Poll and handle events (inputs, window resize, etc.)
@@ -412,12 +411,37 @@ void ADIMainWindow::Render() {
 
         /***************************************************/
         // Rendering
+        static bool flashWindow = false;
+        static float flashTimer = 0.0f;
+        static const float flashDuration = 0.2f; // seconds
+        ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.00f, 1.00f);
+
+        if (m_flash_main_window) {
+            flashWindow = true;
+            flashTimer = flashDuration;
+			m_flash_main_window = false;
+        }
+
+        float deltaTime = ImGui::GetIO().DeltaTime;
+        if (flashWindow) {
+            flashTimer -= deltaTime;
+            if (flashTimer <= 0.0f) {
+                flashWindow = false;
+            }
+        }
+
+        if (flashWindow) {
+            clear_color = ImVec4(1.0f, 1.0f, 1.0f, 1.00f);
+        }
+        else {
+            clear_color = ImVec4(0.0f, 0.0f, 0.00f, 1.00f);
+        }
+
         ImGui::Render();
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
         glViewport(0, 0, display_w, display_h);
-        /*glClearColor(clear_color.x, clear_color.y, clear_color.z,
-					 clear_color.w);*/
+        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
@@ -656,7 +680,11 @@ void ADIMainWindow::ShowStartWizard() {
                 m_ini_params.clear();
             }
             ImGui::NewLine();
-            ImGui::Text("File selected: %s", fileName.c_str());
+            ImGui::Text("File selected");
+            ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + 400); // Wrap at 400px
+            ImGui::TextWrapped("  %s", fileName.c_str());
+            ImGui::PopTextWrapPos();
+            ImGui::NewLine();
         }
 
     } else {
