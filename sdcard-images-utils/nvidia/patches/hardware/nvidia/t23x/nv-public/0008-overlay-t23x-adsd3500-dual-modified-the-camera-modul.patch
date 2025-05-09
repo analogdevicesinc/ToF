@@ -1,0 +1,26 @@
+From 7f3a23dfa897c0333791171ede8b3322fe947eca Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Fri, 9 May 2025 11:49:59 +0530
+Subject: [PATCH] overlay: t23x: adsd3500-dual: modified the camera module name
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ overlay/tegra234-p3767-camera-p3768-dual-adsd3500-adsd3100.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/overlay/tegra234-p3767-camera-p3768-dual-adsd3500-adsd3100.dts b/overlay/tegra234-p3767-camera-p3768-dual-adsd3500-adsd3100.dts
+index d30547d..b4194f0 100644
+--- a/overlay/tegra234-p3767-camera-p3768-dual-adsd3500-adsd3100.dts
++++ b/overlay/tegra234-p3767-camera-p3768-dual-adsd3500-adsd3100.dts
+@@ -77,7 +77,7 @@
+ 				*/
+ 				modules {
+ 					cam_module0: module0 {
+-						badge = "adi_adsd3500_bottom";
++						badge = "adi_dual_adsd3500_adsd3100";
+ 						position = "bottom";
+ 						orientation = "0";
+ 						cam_module0_drivernode0: drivernode0 {
+-- 
+2.25.1
+
