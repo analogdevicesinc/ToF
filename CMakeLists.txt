@@ -29,7 +29,6 @@ option(WITH_GLOG_DEPENDENCY "Build with GLOG dependency to be used for logging?"
 option(WITH_COMMAND_LINE_TOOLS "Build with command line tools?" ON)
 option(CI_BUILD "Build for CI" OFF)
 option(WITH_SUBMODULES "Use submodules to build the library" ON)
-option(SEND_ASYNC "Send the frames asynchronously" OFF) # for faster frame-rate
 
 ######################### Target based Options ################################
 option(NXP "Set to ON when building on NXP" OFF)
@@ -113,13 +112,6 @@ endif()
 
 if (WITH_NETWORK)
         add_definitions(-DHAS_NETWORK)
-endif()
-
-if (SEND_ASYNC) 
-        message("Building Server App to send frames Asynchronously to the Host.")
-        add_definitions(-DSEND_ASYNC)
-else()
-        message("Building Server App to send frames Synchronously to the Host.")
 endif()
 
 set(RESOURCES_DIR "${CMAKE_BINARY_DIR}/resources")
