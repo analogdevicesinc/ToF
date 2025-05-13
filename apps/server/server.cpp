@@ -121,6 +121,12 @@ std::thread stream_thread;
 static std::unique_ptr<zmq::context_t> context;
 static std::unique_ptr<zmq::socket_t> server_cmd;
 static std::unique_ptr<zmq::socket_t> monitor_socket;
+bool send_async = false;
+
+struct clientData {
+    bool hasFragments;
+    std::vector<char> data;
+};
 
 void close_zmq_connection() {
     if (server_socket) {
@@ -575,9 +581,9 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                                   sizeof(max_send_frames));
         server_socket->bind("tcp://*:5555");
         LOG(INFO) << "ZMQ server socket connection established.";
-#ifdef SEND_ASYNC
-        start_stream_thread(); // Start the stream_frame thread .
-#endif
+        if (send_async == true) {
+            start_stream_thread(); // Start the stream_frame thread .
+        }
 
         buff_send.set_status(static_cast<::payload::Status>(status));
         break;
@@ -587,9 +593,9 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         aditof::Status status = camDepthSensor->stop();
         buff_send.set_status(static_cast<::payload::Status>(status));
 
-#ifdef SEND_ASYNC
-        stop_stream_thread();
-#endif
+        if (send_async == true) {
+            stop_stream_thread();
+        }
 
         close_zmq_connection();
 
@@ -1018,6 +1024,13 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         break;
     }
 
+    case RECV_ASYNC: {
+        send_async = true;
+        buff_send.set_message("send_async");
+
+        break;
+    }
+
     default: {
         std::string msgErr = "Function not found";
         std::cout << msgErr << "\n";
@@ -1061,4 +1074,5 @@ void Initialize() {
     s_map_api_Values["SetDepthComputeParam"] = SET_DEPTH_COMPUTE_PARAM;
     s_map_api_Values["GetIniArray"] = GET_INI_ARRAY;
     s_map_api_Values["ServerConnect"] = SERVER_CONNECT;
+    s_map_api_Values["RecvAsync"] = RECV_ASYNC;
 }
