@@ -29,6 +29,7 @@ option(WITH_GLOG_DEPENDENCY "Build with GLOG dependency to be used for logging?"
 option(WITH_COMMAND_LINE_TOOLS "Build with command line tools?" ON)
 option(CI_BUILD "Build for CI" OFF)
 option(WITH_SUBMODULES "Use submodules to build the library" ON)
+set(SOM_TYPE "Single" CACHE STRING "Which SoM SDK is building for?")
 
 ######################### Target based Options ################################
 option(NXP "Set to ON when building on NXP" OFF)
@@ -112,6 +113,14 @@ endif()
 
 if (WITH_NETWORK)
         add_definitions(-DHAS_NETWORK)
+endif()
+
+if(SOM_TYPE STREQUAL "Dual")
+        message("Building for Dual pulsatrix")
+        add_definitions(-DDUAL)
+else()
+        message("Building for Single pulsatrix")
+        add_definitions(-DSINGLE)
 endif()
 
 set(RESOURCES_DIR "${CMAKE_BINARY_DIR}/resources")
