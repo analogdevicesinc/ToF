@@ -30,6 +30,9 @@
 using namespace adiviewer;
 using namespace adicontroller;
 
+std::atomic<bool> clean_up(false);
+//#define MULTI_THREAD
+
 ADIView::ADIView(std::shared_ptr<ADIController> ctrl, const std::string &name)
     : m_ctrl(ctrl), m_viewName(name), m_depthFrameAvailable(false),
       m_center(true), m_waitKeyBarrier(0), m_distanceVal(0),
@@ -38,15 +41,11 @@ ADIView::ADIView(std::shared_ptr<ADIController> ctrl, const std::string &name)
 
     ab_video_data_8bit = nullptr;
     depth_video_data_8bit = nullptr;
-
-    m_depthImageWorker =
-        std::thread(std::bind(&ADIView::_displayDepthImage, this));
     m_abImageWorker = std::thread(std::bind(&ADIView::_displayAbImage, this));
-
-
-    //Create a Point Cloud independent thread
-    m_pointCloudImageWorker =
-        std::thread(std::bind(&ADIView::_displayPointCloudImage, this));
+#ifdef MULTI_THREAD
+    m_depthImageWorker = std::thread(std::bind(&ADIView::_displayDepthImage, this));
+    m_pointCloudImageWorker = std::thread(std::bind(&ADIView::_displayPointCloudImage, this));
+#endif
 }
 
 ADIView::~ADIView() {
@@ -58,9 +57,11 @@ ADIView::~ADIView() {
     m_stopWorkersFlag = true;
     lock.unlock();
     m_frameCapturedCv.notify_all();
-    m_depthImageWorker.join();
     m_abImageWorker.join();
+#ifdef MULTI_THREAD
+    m_depthImageWorker.join();
     m_pointCloudImageWorker.join();
+#endif
 
     if (ab_video_data_8bit != nullptr) {
         delete [] ab_video_data_8bit;
@@ -83,25 +84,8 @@ static void glfw_error_callback(int error, const char *description) {
 }
 
 void ADIView::cleanUp() {
-    m_capturedFrame = nullptr;
-    ab_video_data = nullptr;
-    depth_video_data = nullptr;
-    pointCloud_video_data = nullptr;
 
-    if (ab_video_data_8bit != nullptr) {
-        delete[] ab_video_data_8bit;
-        ab_video_data_8bit = nullptr;
-    }
-
-    if (depth_video_data_8bit != nullptr) {
-        delete[] depth_video_data_8bit;
-        depth_video_data_8bit = nullptr;
-    }
-
-    if (normalized_vertices != nullptr) {
-        delete[] normalized_vertices;
-        normalized_vertices = nullptr;
-    }
+	clean_up = true;
 }
 
 void ADIView::setABMaxRange(std::string value) {
@@ -128,6 +112,30 @@ bool data_ready = false;
 
 void ADIView::_displayAbImage() {
     while (!m_stopWorkersFlag) {
+
+        if (clean_up) {
+            m_capturedFrame = nullptr;
+            ab_video_data = nullptr;
+            depth_video_data = nullptr;
+            pointCloud_video_data = nullptr;
+
+            if (ab_video_data_8bit != nullptr) {
+                delete[] ab_video_data_8bit;
+                ab_video_data_8bit = nullptr;
+            }
+
+            if (depth_video_data_8bit != nullptr) {
+                delete[] depth_video_data_8bit;
+                depth_video_data_8bit = nullptr;
+            }
+
+            if (normalized_vertices != nullptr) {
+                delete[] normalized_vertices;
+                normalized_vertices = nullptr;
+            }
+			clean_up = false;
+        }
+
         {
             std::unique_lock<std::mutex> lock(m_frameCapturedMutex);
             m_frameCapturedCv.wait(lock, [&]() {
@@ -185,7 +193,8 @@ void ADIView::_displayAbImage() {
             ab_video_data_8bit[bgrSize++] = (uint8_t)(pix);
             ab_video_data_8bit[bgrSize++] = (uint8_t)(pix);
         }
-
+        
+#ifdef MULTI_THREAD
         {
             std::unique_lock<std::mutex> lock(mtx);
             data_ready = true;
@@ -195,9 +204,17 @@ void ADIView::_displayAbImage() {
             std::unique_lock<std::mutex> lock(mtx);
             cv.wait(lock, [] { return !data_ready; });
         }
+        std::unique_lock<std::mutex> imshow_lock(m_imshowMutex);
+
+        m_waitKeyBarrier += 1;
+#else
+        _displayDepthImage();
+        _displayPointCloudImage();
 
         std::unique_lock<std::mutex> imshow_lock(m_imshowMutex);
-        m_waitKeyBarrier += 1;
+
+        m_waitKeyBarrier = 3;
+#endif
         if (m_waitKeyBarrier == numOfThreads) {
             imshow_lock.unlock();
             m_barrierCv.notify_one();
@@ -208,6 +225,7 @@ void ADIView::_displayAbImage() {
 }
 
 void ADIView::_displayDepthImage() {
+#ifdef MULTI_THREAD
     while (!m_stopWorkersFlag) {
         {
             std::unique_lock<std::mutex> lock(m_frameCapturedMutex);
@@ -227,7 +245,7 @@ void ADIView::_displayDepthImage() {
 
             lock.unlock(); // Lock is no longer needed
         }
-
+#endif
         uint16_t *data;
         m_capturedFrame->getData("depth", &depth_video_data);
 
@@ -276,7 +294,7 @@ void ADIView::_displayDepthImage() {
                 redErase = static_cast<uint8_t>(fRed * PixelMax);
             }
         }
-
+#ifdef MULTI_THREAD
         std::unique_lock<std::mutex> imshow_lock(m_imshowMutex);
         m_waitKeyBarrier += 1;
         if (m_waitKeyBarrier == numOfThreads) {
@@ -284,10 +302,12 @@ void ADIView::_displayDepthImage() {
             m_barrierCv.notify_one();
         }
     }
+#endif
 }
 
 void ADIView::_displayPointCloudImage() {
-    while (!m_stopWorkersFlag) {
+#ifdef MULTI_THREAD
+    while (!m_stopWorkersFlag)  {
         {
             std::unique_lock<std::mutex> lock(m_frameCapturedMutex);
             m_frameCapturedCv.wait(lock, [&]() {
@@ -305,7 +325,7 @@ void ADIView::_displayPointCloudImage() {
 
             lock.unlock(); // Lock is no longer needed
         }
-
+#endif
         //Get XYZ table
         m_capturedFrame->getData("xyz", &pointCloud_video_data);
         aditof::FrameDataDetails frameXyzDetails;
@@ -333,10 +353,10 @@ void ADIView::_displayPointCloudImage() {
         size_t cntr = 0;
 
         constexpr uint8_t PixelMax = std::numeric_limits<uint8_t>::max();
-
+#ifdef MULTI_THREAD
         std::unique_lock<std::mutex> lock(mtx);
         cv.wait(lock, [this] { return data_ready || this->m_stopWorkersFlag; });
-
+#endif
         //1) convert the buffer from uint16 to float
         //2) normalize between [-1.0, 1.0]
         //3) X and Y ranges between [-32768, 32767] or [FFFF, 7FFF]. Z axis is [0, 7FFF]
@@ -382,6 +402,7 @@ void ADIView::_displayPointCloudImage() {
             pointcloudTableSize * sizeof(float) * 3; //Adding RGB component
 
         data_ready = false;
+#ifdef MULTI_THREAD
         lock.unlock();
         cv.notify_one(); // Wake up producer
 
@@ -392,6 +413,7 @@ void ADIView::_displayPointCloudImage() {
             m_barrierCv.notify_one();
         }
     }
+#endif
 }
 
 void ADIView::hsvColorMap(uint16_t video_data, int max, int min, float &fRed,
