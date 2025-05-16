@@ -470,12 +470,6 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
         ImGui::Text("%i", rotationangledegrees);
         NewLine(5.0f);
 
-        static int32_t fr_avg;
-        static int32_t prev_fr_avg = fr_avg;
-        if (EntryInt32_t("Frame Averaging", fr_avg, 0, 100)) {
-            // Call the SDK
-        }
-
         DrawBarLabel("Point Cloud");
         NewLine(5.0f);
         if (ImGuiExtensions::ADIButton("Reset", true)) {
