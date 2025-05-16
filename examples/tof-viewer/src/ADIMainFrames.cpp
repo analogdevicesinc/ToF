@@ -21,6 +21,8 @@
 
 using namespace adiMainWindow;
 
+static std::atomic<int> save_counter(0);
+
 //*******************************************
 //* Section: Generic
 //*******************************************
@@ -179,7 +181,7 @@ void ADIMainWindow::synchronizeVideo() {
     /*********************************/
 }
 
-int32_t ADIMainWindow::SaveTextureAsJPEG(GLuint textureID, int width, int height, const char* filename) {
+int32_t ADIMainWindow::SaveTextureAsJPEG(const char* filename, GLuint textureID, int width, int height) {
     glBindTexture(GL_TEXTURE_2D, textureID);
 
     std::vector<unsigned char> pixels(width * height * 3); // RGB only
@@ -187,6 +189,35 @@ int32_t ADIMainWindow::SaveTextureAsJPEG(GLuint textureID, int width, int height
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
 
     return stbi_write_jpg(filename, width, height, 3, pixels.data(), 90);
+}
+
+#include <fstream>
+#include <string>
+#include <stdexcept>
+
+void ADIMainWindow::SavePointCloudPLYBinary(const char* filename, const float* points, size_t num_points) {
+    std::ofstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        LOG(ERROR) << "Failed to open file: " << filename;
+        return;
+    }
+
+    // Write the PLY header
+    std::string header =
+        "ply\n"
+        "format binary_little_endian 1.0\n"
+        "element vertex " + std::to_string(num_points) + "\n"
+        "property float x\n"
+        "property float y\n"
+        "property float z\n"
+        "end_header\n";
+
+    file.write(header.c_str(), header.size());
+
+    // Write binary float data: 3 floats per point
+    file.write(reinterpret_cast<const char*>(points), num_points * 3 * sizeof(float));
+
+    file.close();
 }
 
 void ADIMainWindow::DepthLinePlot(ImGuiWindowFlags overlayFlags) {
@@ -212,6 +243,28 @@ void ADIMainWindow::DepthLinePlot(ImGuiWindowFlags overlayFlags) {
     }
 }
 
+bool ADIMainWindow::SaveAllFramesUpdate() {
+    if (m_off_line && m_offline_save_all_frames) {
+        uint32_t max_frame_count;
+        GetActiveCamera()->getSensor()->getFrameCount(max_frame_count);
+        if (m_off_line_frame_index < max_frame_count) {
+            // FIXME: This is incorrect.
+            save_counter++;
+            if (save_counter > 4) {
+                m_off_line_frame_index++;
+				save_counter = 0;
+			}
+            return false;
+        } else {
+			m_offline_save_all_frames = false;
+            m_off_line_frame_index = 0;
+            save_counter = 0;
+            return true;
+        }
+    }
+    return true; // Should never get here since this use case should never occur
+}
+
 //*******************************************
 //* Section: Handling of AB Window 
 //*******************************************
@@ -230,6 +283,40 @@ void ADIMainWindow::InitOpenGLABTexture() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     m_gl_ab_video_texture = ab_texture;
     /*************************************************/
+}
+
+void ADIMainWindow::SaveMetaAsTxt(const char* filename, std::shared_ptr<aditof::Frame> frame) {
+	aditof::Status status = aditof::Status::OK;
+
+    aditof::Metadata metadata;
+    status = frame->getMetadataStruct(metadata);
+
+    std::ofstream out(filename);
+    if (!out.is_open()) {
+        std::cerr << "Failed to open file for writing: " << filename << "\n";
+        return;
+    }
+
+    out << "width: " << metadata.width << " pixels" << '\n';
+    out << "height: " << metadata.height << " pixels" << '\n';
+    out << "outputConfiguration: " << static_cast<int>(metadata.outputConfiguration) << '\n';
+    out << "bitsInDepth: " << static_cast<int>(metadata.bitsInDepth) << '\n';
+    out << "bitsInAb: " << static_cast<int>(metadata.bitsInAb) << '\n';
+    out << "bitsInConfidence: " << static_cast<int>(metadata.bitsInConfidence) << '\n';
+    out << "invalidPhaseValue: " << metadata.invalidPhaseValue << '\n';
+    out << "frequencyIndex: " << static_cast<int>(metadata.frequencyIndex) << '\n';
+    out << "abFrequencyIndex: " << static_cast<int>(metadata.abFrequencyIndex) << '\n';
+    out << "frameNumber: " << metadata.frameNumber << '\n';
+    out << "imagerMode: " << static_cast<int>(metadata.imagerMode) << '\n';
+    out << "numberOfPhases: " << static_cast<int>(metadata.numberOfPhases) << '\n';
+    out << "numberOfFrequencies: " << static_cast<int>(metadata.numberOfFrequencies) << '\n';
+    out << "xyzEnabled: " << static_cast<int>(metadata.xyzEnabled) << '\n';
+    out << "elapsedTimeFractionalValue: " << metadata.elapsedTimeFractionalValue << '\n';
+    out << "elapsedTimeSecondsValue: " << metadata.elapsedTimeSecondsValue << '\n';
+    out << "sensorTemperature: " << metadata.sensorTemperature << " C" << '\n';
+    out << "laserTemperature: " << metadata.laserTemperature << " C" << '\n';
+
+    out.close();
 }
 
 void ADIMainWindow::DisplayActiveBrightnessWindow(
@@ -257,9 +344,21 @@ void ADIMainWindow::DisplayActiveBrightnessWindow(
 
             std::lock_guard<std::mutex> lock(m_snapshot_mutex);
 			if (m_snapshot["ab"].length() != 0) {
-				SaveTextureAsJPEG(m_gl_ab_video_texture, m_view_instance->frameWidth, m_view_instance->frameHeight, m_snapshot["ab"].c_str());
-                m_snapshot["ab"] = "";
-				if (m_snapshot["ab"].length() == 0 && m_snapshot["depth"].length() == 0 && m_snapshot["pc"].length() == 0) {
+
+                aditof::Metadata metadata;
+                aditof::Status status = m_view_instance->m_capturedFrame->getMetadataStruct(metadata);
+				std::string ab_filename = m_snapshot["ab"] + "_" + std::to_string(metadata.frameNumber) + "_ab.jpg";
+                std::string meta_filename = m_snapshot["meta"] + "_" + std::to_string(metadata.frameNumber) + "_metadata.txt";
+
+				SaveTextureAsJPEG(ab_filename.c_str(), m_gl_ab_video_texture, m_view_instance->frameWidth, m_view_instance->frameHeight);
+                SaveMetaAsTxt(meta_filename.c_str(), m_view_instance->m_capturedFrame);
+
+                if (SaveAllFramesUpdate()) {
+                    m_snapshot["ab"] = "";
+                    m_snapshot["meta"] = "";
+                }
+
+				if (m_snapshot["meta"].length() == 0 && m_snapshot["ab"].length() == 0 && m_snapshot["depth"].length() == 0 && m_snapshot["pc"].length() == 0) {
 					m_flash_main_window = true;
 				}
 			}
@@ -358,9 +457,18 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
 
             std::lock_guard<std::mutex> lock(m_snapshot_mutex);
             if (m_snapshot["depth"].length() != 0) {
-				SaveTextureAsJPEG(m_gl_depth_video_texture, m_view_instance->frameWidth, m_view_instance->frameHeight, m_snapshot["depth"].c_str());
-                m_snapshot["depth"] = "";
-                if (m_snapshot["ab"].length() == 0 && m_snapshot["depth"].length() == 0 && m_snapshot["pc"].length() == 0) {
+
+                aditof::Metadata metadata;
+                aditof::Status status = m_view_instance->m_capturedFrame->getMetadataStruct(metadata);
+                std::string depth_filename = m_snapshot["depth"] + "_" + std::to_string(metadata.frameNumber) + "_depth.jpg";
+
+				SaveTextureAsJPEG(depth_filename.c_str(), m_gl_depth_video_texture, m_view_instance->frameWidth, m_view_instance->frameHeight);
+
+                if (SaveAllFramesUpdate()) {
+                    m_snapshot["depth"] = "";
+                }
+
+                if (m_snapshot["meta"].length() == 0 && m_snapshot["ab"].length() == 0 && m_snapshot["depth"].length() == 0 && m_snapshot["pc"].length() == 0) {
                     m_flash_main_window = true;
                 }
             }
@@ -503,9 +611,17 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
 
         std::lock_guard<std::mutex> lock(m_snapshot_mutex);
         if (m_snapshot["pc"].length() != 0) {
-            m_snapshot["pc"] = "";
-            //TODO: save point cloud
-            if (m_snapshot["ab"].length() == 0 && m_snapshot["depth"].length() == 0 && m_snapshot["pc"].length() == 0) {
+            aditof::Metadata metadata;
+            aditof::Status status = m_view_instance->m_capturedFrame->getMetadataStruct(metadata);
+            std::string pc_filename = m_snapshot["pc"] + "_" + std::to_string(metadata.frameNumber) + "_pointcloud.ply";
+
+            SavePointCloudPLYBinary(pc_filename.c_str(), m_view_instance->normalized_vertices, m_view_instance->frameWidth * m_view_instance->frameHeight);
+
+            if (SaveAllFramesUpdate()) {
+                m_snapshot["pc"] = "";
+            }
+
+            if (m_snapshot["meta"].length() == 0 && m_snapshot["ab"].length() == 0 && m_snapshot["depth"].length() == 0 && m_snapshot["pc"].length() == 0) {
                 m_flash_main_window = true;
             }
         }

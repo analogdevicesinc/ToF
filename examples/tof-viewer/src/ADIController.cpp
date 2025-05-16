@@ -119,7 +119,9 @@ void ADIController::captureFrames() {
 aditof::Status ADIController::requestFrame(uint32_t index) {
 
     if (m_stopFlag.load()) { 
-        return aditof::Status::GENERIC_ERROR; 
+        //PRB25
+		//LOG(ERROR) << "Camera is stopped, cannot request frame.";
+        //return aditof::Status::GENERIC_ERROR; 
     }
 
     std::unique_lock<std::mutex> lock(m_requestMutex);

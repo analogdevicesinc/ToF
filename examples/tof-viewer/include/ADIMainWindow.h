@@ -458,6 +458,7 @@ class ADIMainWindow {
      * @brief print out warning message in popup window if ini param is out of valid range
     */
     void IniParamWarn(std::string variable, std::string validVal);
+    bool EntryInt32_t(const char* label, int32_t& input, const int32_t min, const int32_t max);
 
     void CustomizeMenus();
 
@@ -496,7 +497,11 @@ class ADIMainWindow {
     void DrawBarLabel(const char *fmt, ...);
     void NewLine(float spacing);
     void ShowStartWizard();
-    int32_t SaveTextureAsJPEG(GLuint textureID, int width, int height, const char* filename);
+    bool SaveAllFramesUpdate();
+    bool cameraButton(std::map<std::string, std::string>& snapshot);
+    int32_t SaveTextureAsJPEG(const char* filename, GLuint textureID, int width, int height);
+    void SavePointCloudPLYBinary(const char* filename, const float* points, size_t num_points);
+    void SaveMetaAsTxt(const char* filename, std::shared_ptr<aditof::Frame> frame);
     float WindowCalcX(Rect w, float buffer = 0.0f) {
         return w.x + w.width + buffer;
     }
@@ -588,7 +593,7 @@ class ADIMainWindow {
     bool m_set_depth_win_position_once = true;
     bool m_set_log_win_position_once = true;
     bool m_set_point_cloud_position_once = true;
-    bool m_is_open_device;
+    bool m_is_open_device = false;
 
     //Logging
     char m_buffer[1024];
@@ -624,9 +629,9 @@ class ADIMainWindow {
 
     std::map<std::string, std::string> m_ini_params;
     std::map<std::string, std::string> m_modified_ini_params;
-    std::map<std::string, std::string> m_last_ini_params;
     bool m_use_modified_ini_params;
 
+    bool m_offline_save_all_frames;
     std::vector<float> m_depth_line_values;
     std::vector<std::pair<float, float>> m_depthLine;
     bool m_flash_main_window = false;
@@ -634,8 +639,10 @@ class ADIMainWindow {
     std::map<std::string, std::string> m_snapshot = { 
         {"pc", ""},
         {"ab", ""},
-        {"depth", ""}
+        {"depth", ""},
+        {"meta", "" }
     };
+    int32_t m_user_frame_rate = 10;
 };
 } // namespace adiMainWindow
 #endif //ADIMAINWINDOW_H

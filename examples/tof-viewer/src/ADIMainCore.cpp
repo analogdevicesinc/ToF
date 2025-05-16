@@ -550,14 +550,6 @@ void ADIMainWindow::ShowSaveAdsdParamsMenu() {
     }
 }
 
-void ADIMainWindow::StopPlayback() {
-    m_is_playing = false;
-    m_is_open_device = true;
-    CameraStop();
-    //view.reset();
-    LOG(INFO) << "Stream has been stopped.";
-}
-
 void ADIMainWindow::DrawColoredLabel(const char *fmt, ...) {
     // Format the text
     char buf[512];
@@ -633,6 +625,7 @@ void ADIMainWindow::ShowStartWizard() {
     ImGui::Begin("Camera Selection Wizard", nullptr, ImGuiWindowFlags_NoResize);
 
     static uint32_t selected = 1;
+    uint32_t state_change_check = selected;
 
     ImGui::RadioButton("Saved Stream", selected == 0);
     if (ImGui::IsItemClicked())
@@ -642,11 +635,18 @@ void ADIMainWindow::ShowStartWizard() {
     if (ImGui::IsItemClicked())
         selected = 1;
 
+    if (selected == 1 && selected != state_change_check) {
+        if (m_is_open_device) {
+        }
+    }
+
     ImGui::NewLine();
 
     if (selected == 0) {
+#pragma region WizardOffline
         m_off_line = true;
         const bool openAvailable = !m_connected_devices.empty();
+
         { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
             static std::string fileName;
             ImGuiExtensions::ButtonColorChanger colorChanger(
@@ -662,6 +662,8 @@ void ADIMainWindow::ShowStartWizard() {
 
                     RefreshDevices();
 
+                    //m_is_open_device = true;
+                    m_is_playing = false;
                     m_is_open_device = false;
                     m_selected_device_index = 0;
                     fileName = fs;
@@ -671,23 +673,40 @@ void ADIMainWindow::ShowStartWizard() {
                 }
             }
             ImGui::SameLine();
-            if (ImGuiExtensions::ADIButton("Start", !m_is_open_device)) {
+            if (ImGuiExtensions::ADIButton("Start", m_is_open_device)) {
 
-                m_off_line_frame_index = 0;
-                m_frame_window_position_state = 0;
-                m_view_selection_changed = m_view_selection;
-                m_is_playing = true;
-                m_ini_params.clear();
+                // Deallocate frame memory such that it can be reallocated for the 
+                //  correct frame size in case there was a change in mode.
+                m_view_instance->cleanUp();
+
+                // PRB25 
+                auto camera = GetActiveCamera(); //already initialized on constructor
+                if (camera != nullptr) {
+
+                    camera->startPlayback(fileName);
+
+                    m_off_line_frame_index = 0;
+                    m_frame_window_position_state = 0;
+                    m_view_selection_changed = m_view_selection;
+                    m_is_playing = true;
+                    m_ini_params.clear();
+                }
+                else {
+                    LOG(ERROR) << "Camera not initialized!";
+                    return;
+                }
             }
-            ImGui::NewLine();
+            NewLine(5.0f);
             ImGui::Text("File selected");
             ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + 400); // Wrap at 400px
             ImGui::TextWrapped("  %s", fileName.c_str());
             ImGui::PopTextWrapPos();
-            ImGui::NewLine();
+            NewLine(5.0f);
         }
-
-    } else {
+#pragma endregion // WizardOffline
+    }
+    else {
+#pragma region WizardOnline
         m_off_line = false;
         ImGuiExtensions::ADIComboBox(
             "Camera", "(No available devices)", ImGuiComboFlags_None,
@@ -695,12 +714,12 @@ void ADIMainWindow::ShowStartWizard() {
         //If a device is found, then set the first one found
         if (!m_connected_devices.empty() && m_selected_device_index == -1) {
             m_selected_device_index = 0;
-            m_is_open_device = true;
+            //m_is_open_device = true;
         }
 
-        ImGui::NewLine();
+        NewLine(5.0f);
         bool _noConnected = m_connected_devices.empty();
-        if (ImGuiExtensions::ADIButton("Refresh", _noConnected)) {
+        if (ImGuiExtensions::ADIButton("Refresh", !m_is_open_device)) {
             m_is_open_device = false;
             m_cameraWorkerDone = false;
             RefreshDevices();
@@ -712,10 +731,10 @@ void ADIMainWindow::ShowStartWizard() {
         { // Use block to control the moment when ImGuiExtensions::ButtonColorChanger gets destroyed
             ImGuiExtensions::ButtonColorChanger colorChanger(
                 ImGuiExtensions::ButtonColor::Green, openAvailable);
-            if (ImGuiExtensions::ADIButton("Open", m_is_open_device) &&
+            if (ImGuiExtensions::ADIButton("Open", !m_is_open_device) &&
                 0 <= m_selected_device_index) {
 
-                m_is_open_device = false;
+                m_is_open_device = true;
                 std::string fs;
                 initCameraWorker =
                     std::thread([this, fs]() { InitCamera(fs); });
@@ -723,40 +742,42 @@ void ADIMainWindow::ShowStartWizard() {
         }
 
         ImGui::SameLine();
-        if (ImGuiExtensions::ADIButton("Close", !m_is_open_device)) {
-            StopPlayback();
+        if (ImGuiExtensions::ADIButton("Close", m_is_open_device)) {
             CameraStop();
-            m_cameraWorkerDone = false;
-            m_callback_initialized = false;
-            m_cameraModes.clear();
-            _cameraModes.clear();
             if (initCameraWorker.joinable()) {
                 initCameraWorker.join();
+                m_cameraModes.clear();
+                _cameraModes.clear();
             }
+            m_view_instance->cleanUp();
             m_view_instance.reset();
+            m_callback_initialized = false;
+            m_cameraWorkerDone = false;
+            m_is_open_device = false;
             RefreshDevices();
         }
-        ImGui::NewLine();
+        NewLine(5.0f);
 
         if (ImGuiExtensions::ADICheckbox("Max FPS Network Test (Debug)",
-                                         &m_network_link_test,
-                                         m_is_open_device)) {
+            &m_network_link_test,
+            m_is_open_device)) {
             if (m_network_link_test) {
                 m_ip_suffix = ":netlinktest";
-            } else {
+            }
+            else {
                 m_ip_suffix.clear();
             }
             RefreshDevices();
         }
-        ImGui::NewLine();
+        NewLine(5.0f);
 
         if (m_cameraWorkerDone) {
-            m_is_open_device = false;
+            //m_is_open_device = false;
             if (!m_is_playing) {
 
                 DrawBarLabel("Mode Selection");
 
-                ImGui::NewLine();
+                NewLine(5.0f);
 
                 if (ImGuiExtensions::ADIButton("Load Config", !m_is_playing)) {
 
@@ -769,27 +790,29 @@ void ADIMainWindow::ShowStartWizard() {
                 //    ShowSaveAdsdParamsMenu();
                 //}
 
-                ImGui::NewLine();
+                NewLine(5.0f);
                 DrawBarLabel("Mode Selection");
-                ImGui::NewLine();
+                NewLine(5.0f);
 
                 static bool show_dynamic_mode_switch = false;
+                ImGui::SliderInt("Frame Rate", &m_user_frame_rate, 1, 30, "%d fps");
 
-                ImGui::Toggle(!show_dynamic_mode_switch ?"Switch to Dynamic Mode": "Switch to Standard Mode",
-                              & show_dynamic_mode_switch);
+                ImGui::Toggle(!show_dynamic_mode_switch ? "Switch to Dynamic Mode" : "Switch to Standard Mode",
+                    &show_dynamic_mode_switch);
 
                 if (show_dynamic_mode_switch) {
+#pragma region WizardOnlineDynamicMode
                     wizard_height = 550;
 
                     // TODO: Add non-Crosby repeat count
 
-                    static int32_t mode_selections[] = {1, 1, 1, 1, 1, 1, 1, 1};
+                    static int32_t mode_selections[] = { 1, 1, 1, 1, 1, 1, 1, 1 };
                     static int32_t mode_repeat[] = { 1, 1, 1, 1, 1, 1, 1, 1 };
 
                     for (int32_t idx = 0; idx < 8; idx++) {
                         ImGui::SetNextItemWidth(180 * m_dpi_scale_factor);
 
-						std::string slot = "Slot " + std::to_string(idx + 1) + " mode";
+                        std::string slot = "Slot " + std::to_string(idx + 1) + " mode";
 
                         ImGuiExtensions::ADIComboBox(
                             slot.c_str(), "Select Mode", ImGuiSelectableFlags_None,
@@ -816,7 +839,7 @@ void ADIMainWindow::ShowStartWizard() {
                     ImGuiExtensions::ButtonColorChanger colorChangerPlay(
                         m_custom_color_play, !m_is_playing);
 
-                    ImGui::NewLine();
+                    NewLine(5.0f);
                     if (ImGuiExtensions::ADIButton("Start", !m_is_playing)) {
 
                         std::vector<std::pair<uint8_t, uint8_t>> seqence;
@@ -830,6 +853,9 @@ void ADIMainWindow::ShowStartWizard() {
                         seqence.push_back(std::make_pair(mode_selections[6], mode_repeat[6]));
                         seqence.push_back(std::make_pair(mode_selections[7], mode_repeat[7]));
 
+                        // Deallocate frame memory such that it can be reallocated for the 
+                        //  correct frame size in case there was a change in mode.
+                        m_view_instance->cleanUp();
                         auto camera = GetActiveCamera();
 
                         camera->adsd3500setEnableDynamicModeSwitching(true);
@@ -840,9 +866,11 @@ void ADIMainWindow::ShowStartWizard() {
                         m_is_playing = true;
                         m_ini_params.clear();
                     }
+#pragma endregion // WizardOnlineDynamicMode
                 }
                 else {
-					wizard_height = 400;
+#pragma region WizardOnlineStandardMode
+                    wizard_height = 400;
 
                     ImGuiExtensions::ADIComboBox(
                         "", "Select Mode", ImGuiSelectableFlags_None,
@@ -851,9 +879,13 @@ void ADIMainWindow::ShowStartWizard() {
                     ImGuiExtensions::ButtonColorChanger colorChangerPlay(
                         m_custom_color_play, !m_is_playing);
 
-                    ImGui::NewLine();
+                    NewLine(5.0f);
+
                     if (ImGuiExtensions::ADIButton("Start", !m_is_playing)) {
 
+                        // Deallocate frame memory such that it can be reallocated for the 
+                        //  correct frame size in case there was a change in mode.
+                        m_view_instance->cleanUp();
                         auto camera = GetActiveCamera();
 
                         camera->adsd3500setEnableDynamicModeSwitching(false);
@@ -864,8 +896,10 @@ void ADIMainWindow::ShowStartWizard() {
                         m_ini_params.clear();
                     }
                 }
+#pragma endregion // WizardOnlineStandardMode
             }
         }
+#pragma endregion // WizardOnline
     }
     ImGui::End();
 }
