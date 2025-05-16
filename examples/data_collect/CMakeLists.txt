@@ -14,9 +14,11 @@ if (NOT WIN32)
     endif()
 endif()
 
-add_custom_command( TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_BINARY_DIR}/libaditof/sdk/" $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
-)
+if( WIN32 )
+    add_custom_command( TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:aditof> $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
+    )
+endif()
 
 if ( WIN32 )
    if (MSVC)
