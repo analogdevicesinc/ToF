@@ -95,7 +95,6 @@ bool ADIController::requestFrame() {
     std::unique_lock<std::mutex> lock(m_requestMutex, std::try_to_lock);
 
     if (!lock.owns_lock()) {
-        LOG(INFO) << "Cannot lock mutex";
         return false;
     }
 
