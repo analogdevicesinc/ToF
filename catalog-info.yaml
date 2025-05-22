@@ -1,0 +1,42 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  title: ADI ToF ADTF3175D Source 6.1.0
+  name: adi-tof-adtf3175d-source-6.1.0
+  version: 6.1.0
+  description: >-
+    The ToF Eval Kit SDK provides a key software layer for the Time-of-Flight
+    eval kit platform. The SDK provides an interface between the driver and the
+    user application. This allows the user to easily work with the ADI ToF
+    solution.
+
+
+    The SDK is cross platform. Using Cmake, it can target Windows, embedded
+    Linux and Desktop Linux. Where Windows builds using Visual Studio and Linux
+    builds use GCC.
+  classification: software
+  license:
+    - ADI
+  links: []
+  tags:
+    - c++
+    - python
+    - linux
+    - windows
+    - visual-studio
+    - gcc
+    - video
+    - nvidia
+    - nxp
+    - rpi
+  annotations:
+    backstage.io/source-location: url:https://github.com/analogdevicesinc/ToF/tree/dev-6.1.0
+    hub.blackduck/project-name: oa_ADTF3175D-Eval-Kit
+    hub.blackduck/project-version: zmq_integration
+spec:
+  type: source
+  lifecycle: execution
+  owner: group:default/tof-sw-team
+  dependsOn:
+    - component:default/adi-tof-sdk-6.1.0
+  subcomponentOf: component:default/adi-tof-adtf3175d-source-main

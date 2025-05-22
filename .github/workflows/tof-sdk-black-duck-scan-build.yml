@@ -1,0 +1,98 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# Black Duck Security Action allows you to integrate Static Analysis Security Testing (SAST) and Software Composition Analysis (SCA) into your CI/CD pipelines.
+# For more information about configuring your workflow,
+# read our documentation at https://github.com/blackduck-inc/black-duck-security-scan
+
+name: TOF SDK CI Black Duck security scan and Build
+
+
+on:
+  push:
+  workflow_dispatch: # Manual trigger
+  pull_request:
+    branches:
+      - main
+      - dev-6.1.0
+
+permissions:
+  id-token: write
+  contents: read
+  
+jobs:
+  build_project:
+    runs-on: [tof_sdk]
+    steps:
+      - name: Generate a GitHub App Token
+        id: generate-github-app-token
+        uses: adi-innersource/shared-actions/generate-github-token@v1
+        with:
+          app-id: ${{ secrets.TOKEN_GENERATOR_APP_ID }}
+          private-key: ${{ secrets.TOKEN_GENERATOR_APP_PRIVATE_KEY }}
+          organization: ${{ github.repository_owner }}
+          repositories: |
+            tofi-fallout
+            tofi-utilities
+
+      - name: Checkout with submodules
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.generate-github-app-token.outputs.access-token }}
+          submodules: recursive
+          
+      - name: Cleanup Workspace
+        shell: powershell
+        run: git clean -xdf 
+
+      - name: Build project
+        shell: powershell
+        id: build
+        run: |
+          echo "Setting up environment variables..."
+          $root = "${{ github.workspace }}"
+          echo "Starting build for project 1..."
+          cd scripts/windows
+          ./setup_project.bat
+
+
+  perform-scan:
+    name: Scan sources for policy compliance
+    needs: build_project
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Run policy compliance scan
+        uses: adi-innersource/shared-actions/policy-scan@policy-scan-v2
+        env:
+          BLACKDUCK_AUTH_TOKEN: ${{ secrets.BLACKDUCK_AUTH_TOKEN }} ## required
+          CLOUDSMITH_OSPO_USER: ${{ secrets.CLOUDSMITH_OSPO_USER }} ## required
+        with:
+          exclude-paths: |
+            ./scripts
+            ./tools
+            ./sdcard-images-utils
+                  
+
+  policy-collateral:
+    name: Generate policy collateral
+    needs: perform-scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Run generate OSPO Compliance documentation
+        uses: adi-innersource/shared-actions/policy-collateral@policy-collateral-v2
+        env:
+          BLACKDUCK_AUTH_TOKEN: ${{  secrets.BLACKDUCK_AUTH_TOKEN }}
+          AWS_REGION: ${{ secrets.PROD_LICENSE_AWS_REGION }}
+          AWS_S3_BUCKET: ${{ secrets.PROD_LICENSE_AWS_BUCKET_NAME }}
+          AWS_DEPLOY_ROLE: ${{ secrets.PROD_AWS_DEPLOY_ROLE }}
+          CLOUDSMITH_OSPO_USER: ${{ secrets.CLOUDSMITH_OSPO_USER }}
