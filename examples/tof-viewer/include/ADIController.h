@@ -43,7 +43,7 @@ class ADIController {
 		*/
     void StopCapture();
 
-    aditof::Status requestFrame(uint32_t index);
+    aditof::Status requestFrameOffline(uint32_t index);
 
     /**
 		* @brief			  Set the camera index for active camera
@@ -127,7 +127,7 @@ class ADIController {
     /**
 		* @brief Requesting the SDK for a frame.
 		*/
-    void requestFrame();
+    bool requestFrame();
 
     /**
 		* @brief Flag indicating the existance of any

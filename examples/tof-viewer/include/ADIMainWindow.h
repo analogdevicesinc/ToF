@@ -643,6 +643,7 @@ class ADIMainWindow {
         {"meta", "" }
     };
     int32_t m_user_frame_rate = 10;
+    std::atomic<bool> m_offline_change_frame;
 };
 } // namespace adiMainWindow
 #endif //ADIMAINWINDOW_H

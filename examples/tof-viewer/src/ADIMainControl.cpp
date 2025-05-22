@@ -250,7 +250,7 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
 
             ImGui::SameLine(0.0f, 10.0f);
 
-        }  else {
+        }  else { // Offline
 
             uint32_t max_frame_count;
             GetActiveCamera()->getSensor()->getFrameCount(max_frame_count);
@@ -293,6 +293,7 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
                     },
                     IM_COL32(60, 60, 60, 255))) {
 
+                m_offline_change_frame = true;
                 m_off_line_frame_index = 0;
 
             }
@@ -322,6 +323,7 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
 
                 if (m_off_line_frame_index > 0) {
                     m_off_line_frame_index--;
+                    m_offline_change_frame = true;
                 }
             }
 
@@ -396,6 +398,7 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
 
                 if (m_off_line_frame_index < max_frame_count) { // TODO: FIXME
                     m_off_line_frame_index++;
+                    m_offline_change_frame = true;
                 }
             }
 
@@ -431,6 +434,7 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
                     IM_COL32(60, 60, 60, 255))) {
 
                 m_off_line_frame_index = max_frame_count - 1;
+                m_offline_change_frame = true;
             }
 
             ImGui::SameLine(0.0f, 10.0f);

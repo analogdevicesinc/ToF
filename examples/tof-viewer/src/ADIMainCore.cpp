@@ -683,6 +683,7 @@ void ADIMainWindow::ShowStartWizard() {
                 auto camera = GetActiveCamera(); //already initialized on constructor
                 if (camera != nullptr) {
 
+                    m_offline_change_frame = true;
                     camera->startPlayback(fileName);
 
                     m_off_line_frame_index = 0;
@@ -696,12 +697,14 @@ void ADIMainWindow::ShowStartWizard() {
                     return;
                 }
             }
-            NewLine(5.0f);
-            ImGui::Text("File selected");
-            ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + 400); // Wrap at 400px
-            ImGui::TextWrapped("  %s", fileName.c_str());
-            ImGui::PopTextWrapPos();
-            NewLine(5.0f);
+            if (m_is_open_device) {
+                NewLine(5.0f);
+                ImGui::Text("File selected");
+                ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + 400); // Wrap at 400px
+                ImGui::TextWrapped("  %s", fileName.c_str());
+                ImGui::PopTextWrapPos();
+                NewLine(5.0f);
+            }
         }
 #pragma endregion // WizardOffline
     }

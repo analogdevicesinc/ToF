@@ -168,8 +168,11 @@ void ADIMainWindow::synchronizeVideo() {
     if (!m_off_line) {
         m_view_instance->m_ctrl->requestFrame();
     } else {
-        m_view_instance->m_ctrl->requestFrame();
-        m_view_instance->m_ctrl->requestFrame(m_off_line_frame_index);
+        if (m_offline_change_frame) {
+            m_view_instance->m_ctrl->requestFrame();
+            m_view_instance->m_ctrl->requestFrameOffline(m_off_line_frame_index);
+			m_offline_change_frame = false;
+        }
     }
 
     /*********************************/
@@ -569,8 +572,6 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
     SetWindowPosition(m_pc_position->x, m_pc_position->y);
     SetWindowSize(m_pc_position->width, m_pc_position->height);
 
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
 
     if (ImGui::Begin("Point Cloud Window", nullptr, overlayFlags)) {
 
@@ -583,7 +584,9 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
 
         glad_glBindFramebuffer(GL_FRAMEBUFFER, m_gl_framebuffer);
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear whole main window
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
         glPointSize(m_point_size);
 
         // draw our Image
@@ -651,13 +654,18 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
         memcpy(modelMatrix, m_model_mat, sizeof(float) * 16);
         ImOGuizmo::SetRect(m_pc_position->x + 5.0f, m_pc_position->y + 15.0f, 50.0f);
         ImOGuizmo::DrawGizmo(modelMatrix, projMatrix, 10.0f);
+        glDisable(GL_DEPTH_TEST);
     }
     ImGui::End();
-    glDisable(GL_DEPTH_TEST);
+   
 }
 
 void ADIMainWindow::PreparePointCloudVertices(unsigned int &vbo,
                                               unsigned int &vao) {
+
+	if (m_view_instance->normalized_vertices == nullptr) {
+		return;
+	}
 
     glGenVertexArrays(1, &vao);
     //Initialize Point Cloud Image
@@ -692,7 +700,7 @@ void ADIMainWindow::PreparePointCloudVertices(unsigned int &vbo,
 
 void ADIMainWindow::InitOpenGLPointCloudTexture() {
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_PROGRAM_POINT_SIZE); //Enable point size feature
+    glDisable(GL_PROGRAM_POINT_SIZE); // Use the point size from "glPointSize()"
 
     constexpr char const pointCloudVertexShader[] =
         R"(

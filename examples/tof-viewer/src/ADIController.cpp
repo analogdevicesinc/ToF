@@ -73,14 +73,36 @@ void ADIController::setMode(const uint8_t &mode) {
 }
 
 std::shared_ptr<aditof::Frame> ADIController::getFrame() {
-    return m_queue.dequeue();
+    static std::shared_ptr<aditof::Frame> lastFrame = nullptr;
+    static std::shared_ptr<aditof::Frame> frame;
+
+    // Why do this?
+	// The GUI is driven by frames being avaialble in the queue.
+    // The last frame is resent until a frame becomes avaialble.
+    // This keeps the GUI moving.
+	if (m_queue.empty() && lastFrame != nullptr) {
+		return lastFrame;
+	}
+
+    frame = m_queue.dequeue();
+
+    lastFrame = frame;
+
+    return frame;
 }
 
-void ADIController::requestFrame() {
-    std::unique_lock<std::mutex> lock(m_requestMutex);
+bool ADIController::requestFrame() {
+    std::unique_lock<std::mutex> lock(m_requestMutex, std::try_to_lock);
+
+    if (!lock.owns_lock()) {
+        LOG(INFO) << "Cannot lock mutex";
+        return false;
+    }
+
     m_frameRequested = true;
     lock.unlock();
     m_requestCv.notify_one();
+    return true;
 }
 
 bool ADIController::hasCamera() const { return !m_cameras.empty(); }
@@ -116,7 +138,7 @@ void ADIController::captureFrames() {
     }
 }
 
-aditof::Status ADIController::requestFrame(uint32_t index) {
+aditof::Status ADIController::requestFrameOffline(uint32_t index) {
 
     if (m_stopFlag.load()) { 
         //PRB25

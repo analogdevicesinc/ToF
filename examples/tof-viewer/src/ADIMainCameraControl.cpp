@@ -118,10 +118,12 @@ void ADIMainWindow::PrepareCamera(uint8_t mode) {
         return;
     }
 
-    status = GetActiveCamera()->adsd3500SetFrameRate(m_user_frame_rate);
-    if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Could not set user frame rate!";
-        return;
+    if (!m_off_line) {
+        status = GetActiveCamera()->adsd3500SetFrameRate(m_user_frame_rate);
+        if (status != aditof::Status::OK) {
+            LOG(ERROR) << "Could not set user frame rate!";
+            return;
+        }
     }
 
     if (mode == m_last_mode) {
@@ -201,9 +203,12 @@ void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
                 m_view_instance->m_ctrl->StartCapture();
                 m_view_instance->m_ctrl->requestFrame();
             }
-            else {
-                m_view_instance->m_ctrl->requestFrame();
-                m_view_instance->m_ctrl->requestFrame(m_off_line_frame_index);
+            else { // Offline: Always get the first frame
+                if (m_offline_change_frame) {
+                    m_view_instance->m_ctrl->requestFrame();
+                    m_view_instance->m_ctrl->requestFrameOffline(m_off_line_frame_index);
+                    m_offline_change_frame = false;
+                }
             }
             m_capture_separate_enabled = false;
             m_mode_select_changed = modeSelect;
@@ -253,7 +258,7 @@ void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
     }
 
     synchronizeVideo();
-    DisplayPointCloudWindow(overlayFlags);
+    DisplayPointCloudWindow(overlayFlags); // PRB26 - a crash is happening in here with offline playback.
     DisplayActiveBrightnessWindow(overlayFlags);
     DisplayDepthWindow(overlayFlags);
     DisplayInfoWindow(overlayFlags);

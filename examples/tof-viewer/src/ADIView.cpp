@@ -106,9 +106,10 @@ void ADIView::setABMaxRange(std::string value) {
     m_maxABPixelValue = (1 << base) - 1;
 }
 
-std::mutex mtx;
-std::condition_variable cv;
-bool data_ready = false;
+#ifdef MULTI_THREAD
+static std::mutex mtx;
+static std::condition_variable cv;
+#endif
 
 void ADIView::_displayAbImage() {
     while (!m_stopWorkersFlag) {
@@ -401,7 +402,6 @@ void ADIView::_displayPointCloudImage() {
         vertexArraySize =
             pointcloudTableSize * sizeof(float) * 3; //Adding RGB component
 
-        data_ready = false;
 #ifdef MULTI_THREAD
         lock.unlock();
         cv.notify_one(); // Wake up producer
