@@ -38,7 +38,7 @@ jobs:
             tofi-utilities
 
       - name: Checkout with submodules
-        uses: actions/checkout@v4
+        uses: analogdevicesinc/checkout@v4
         with:
           token: ${{ steps.generate-github-app-token.outputs.access-token }}
           submodules: recursive
@@ -65,7 +65,7 @@ jobs:
     steps:
       - name: Checkout
         id: checkout
-        uses: actions/checkout@v4
+        uses: analogdevicesinc/checkout@v4
 
       - name: Run policy compliance scan
         uses: analogdevicesinc/shared-actions/policy-scan@policy-scan-v2
@@ -86,7 +86,7 @@ jobs:
     steps:
       - name: Checkout
         id: checkout
-        uses: actions/checkout@v4
+        uses: analogdevicesinc/checkout@v4
 
       - name: Run generate OSPO Compliance documentation
         uses: analogdevicesinc/shared-actions/policy-scan@policy-scan-v2
