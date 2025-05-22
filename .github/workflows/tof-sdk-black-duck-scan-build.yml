@@ -28,7 +28,7 @@ jobs:
     steps:
       - name: Generate a GitHub App Token
         id: generate-github-app-token
-        uses: nalogdevicesinc/shared-actions/generate-github-token@v1
+        uses: analogdevicesinc/shared-actions/generate-github-token@v1
         with:
           app-id: ${{ secrets.TOKEN_GENERATOR_APP_ID }}
           private-key: ${{ secrets.TOKEN_GENERATOR_APP_PRIVATE_KEY }}
