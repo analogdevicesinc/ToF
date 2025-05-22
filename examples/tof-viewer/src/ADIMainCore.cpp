@@ -382,7 +382,7 @@ void ADIMainWindow::Render() {
         ShowMainMenu();
         if (m_is_playing) {
             CameraPlay(m_mode_selection, m_view_selection);
-            ComputeFPS(m_fps);
+            m_view_instance->m_ctrl->getFrameRate(m_fps);
             if (m_view_instance != nullptr) {
                 if (m_view_instance->m_ctrl->panicStop) {
                     CameraStop();

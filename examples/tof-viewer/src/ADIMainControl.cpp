@@ -650,7 +650,6 @@ void ADIMainWindow::ShowIniWindow(bool* p_open) {
     if (ImGui::Button("Modify")) {
         // stop streaming
         m_is_playing = false;
-        m_fps_first_frame_number = 0;
         m_fps_frame_received = 0;
         CameraStop();
 

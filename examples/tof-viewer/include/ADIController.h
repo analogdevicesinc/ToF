@@ -16,6 +16,7 @@
 #include <aditof/depth_sensor_interface.h>
 #include <aditof/frame.h>
 #include <aditof/system.h>
+#include <chrono>
 
 #include "safequeue.h"
 
@@ -157,6 +158,9 @@ class ADIController {
     */
     int getCameraInUse() const;
 
+	aditof::Status getFrameRate(uint32_t& fps);
+	aditof::Status getFramesReceived(uint32_t& frames_recevied);
+
     std::vector<std::shared_ptr<aditof::Camera>> m_cameras;
     bool panicStop = false;
     size_t panicCount = 0;
@@ -177,6 +181,9 @@ class ADIController {
     std::condition_variable m_requestCv;
     bool m_frameRequested;
     std::shared_ptr<aditof::Frame> m_framePtr;
+    float m_framerate = 0;
+    uint32_t m_frame_counter;
+    std::chrono::time_point<std::chrono::system_clock> m_fps_startTime;
 };
 } // namespace adicontroller
 #endif

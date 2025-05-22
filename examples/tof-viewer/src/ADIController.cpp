@@ -12,6 +12,7 @@
 #endif
 #include <iostream>
 #include <memory>
+#include <chrono>
 
 using namespace adicontroller;
 
@@ -43,6 +44,8 @@ void ADIController::StartCapture() {
         return;
     }
 
+    m_fps_startTime = std::chrono::system_clock::now();
+    m_frame_counter = 0;
     m_stopFlag = false;
     m_workerThread = std::thread([this]() { captureFrames(); });
 }
@@ -132,9 +135,37 @@ void ADIController::captureFrames() {
             continue;
         }
 
+        m_frame_counter++;
+        static uint32_t local_frame_counter;
+
+        if (m_frame_counter == 0) {
+            local_frame_counter = 0;
+        }
+
+        local_frame_counter++;
+        auto currentTime = std::chrono::system_clock::now();
+        std::chrono::duration<double> elapsed = currentTime - m_fps_startTime;
+        if (elapsed.count() >= 2) {
+            m_framerate = static_cast<float>(local_frame_counter) / static_cast<float>(elapsed.count());
+            local_frame_counter = 0;
+            m_fps_startTime = currentTime;
+        }
+
         m_queue.enqueue(frame);
         m_frameRequested = false;
     }
+}
+
+aditof::Status ADIController::getFrameRate(uint32_t &fps) {
+    fps = static_cast<uint32_t>(std::round(m_framerate));
+
+	return aditof::Status::OK;
+}
+
+aditof::Status ADIController::getFramesReceived(uint32_t& frames_recevied) {
+    frames_recevied = static_cast<uint32_t>(m_frame_counter);
+
+    return aditof::Status::OK;
 }
 
 aditof::Status ADIController::requestFrameOffline(uint32_t index) {
@@ -152,6 +183,8 @@ aditof::Status ADIController::requestFrameOffline(uint32_t index) {
     auto frame = std::make_shared<aditof::Frame>();
     auto fg = frame.get();
     aditof::Status status = camera->requestFrame(fg, index);
+
+    m_frame_counter++;
 
     m_queue.enqueue(frame);
     m_frameRequested = false;

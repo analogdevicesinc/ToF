@@ -257,13 +257,14 @@ void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
         }
     }
 
-    synchronizeVideo();
-    DisplayPointCloudWindow(overlayFlags); // PRB26 - a crash is happening in here with offline playback.
-    DisplayActiveBrightnessWindow(overlayFlags);
-    DisplayDepthWindow(overlayFlags);
-    DisplayInfoWindow(overlayFlags);
-    DisplayControlWindow(overlayFlags);
-    DepthLinePlot(overlayFlags);
+    if (synchronizeVideo() >= 0) {
+        DisplayPointCloudWindow(overlayFlags); // PRB26 - a crash is happening in here with offline playback.
+        DisplayActiveBrightnessWindow(overlayFlags);
+        DisplayDepthWindow(overlayFlags);
+        DisplayInfoWindow(overlayFlags);
+        DisplayControlWindow(overlayFlags);
+        DepthLinePlot(overlayFlags);
+    }
 }
 
 void ADIMainWindow::CameraStop() {
@@ -285,7 +286,6 @@ void ADIMainWindow::CameraStop() {
     m_set_depth_win_position_once = true;
     m_set_point_cloud_position_once = true;
     m_is_playing = false;
-    m_fps_first_frame_number = 0;
     m_fps_frame_received = 0;
     m_off_line_frame_index = 0;
 }

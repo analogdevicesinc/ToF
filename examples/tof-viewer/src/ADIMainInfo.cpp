@@ -33,12 +33,6 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
         return;
     }
 
-    if (!m_off_line) {
-        m_fps_frame_received++;
-    } else {
-        m_fps_frame_received = m_off_line_frame_index;
-    }
-
     CameraDetails cameraDetails;
     camera->getDetails(cameraDetails);
     uint8_t camera_mode = cameraDetails.mode;
@@ -109,26 +103,35 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
                     LOG(ERROR) << "Failed to get frame metadata.";
                 } else {
                     uint32_t frameNum = metadata.frameNumber;
-                    if (m_fps_first_frame_number == 0) {
-                        m_fps_first_frame_number = frameNum;
-                    }
                     int32_t sensorTemp = (metadata.sensorTemperature);
                     int32_t laserTemp = (metadata.laserTemperature);
-                    uint32_t totalFrames = frameNum - m_fps_first_frame_number + 1;
-                    uint32_t framesLost = totalFrames - m_fps_frame_received;
+
+                    static uint32_t prev_frame_number = -1;
+					static uint32_t frames_lost = 0;
+                    static uint32_t current_frame_number = 0;
+
+                    prev_frame_number = current_frame_number;
+                    current_frame_number = metadata.frameNumber;
+
+                    if (current_frame_number - prev_frame_number > 1) {
+                        frames_lost += (current_frame_number - prev_frame_number - 1);
+                    }
+
+                    uint32_t frame_received;
+                    m_view_instance->m_ctrl->getFramesReceived(frame_received);
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
                     ImGui::Text("Frames Received");
                     ImGui::TableSetColumnIndex(1);
-                    ImGui::Text("%i", m_fps_frame_received);
+                    ImGui::Text("%i", frame_received);
 
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
                     ImGui::Text("Frames Lost");
                     ImGui::TableSetColumnIndex(1);
-                    ImGui::Text("%i", framesLost);
+                    ImGui::Text("%i", frames_lost);
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
@@ -162,16 +165,4 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
     }
 
     ImGui::End();
-}
-
-void ADIMainWindow::ComputeFPS(int &fps) {
-    m_frame_counter++;
-    auto currentTime = std::chrono::system_clock::now();
-
-    std::chrono::duration<double> elapsed = currentTime - m_fps_startTime;
-    if (elapsed.count() >= 2) {
-        fps = m_frame_counter / (int)elapsed.count();
-        m_frame_counter = 0;
-        m_fps_startTime = currentTime;
-    }
 }

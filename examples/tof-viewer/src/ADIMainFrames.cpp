@@ -19,6 +19,10 @@
 #include <aditof/log.h>
 #endif
 
+#undef NDEBUG
+#include <cassert>
+
+
 using namespace adiMainWindow;
 
 static std::atomic<int> save_counter(0);
@@ -146,8 +150,12 @@ float ADIMainWindow::DisplayFrameWindow(ImVec2 windowSize, ImVec2 &displayUpdate
     return autoscale;
 }
 
-void ADIMainWindow::synchronizeVideo() {
+int32_t ADIMainWindow::synchronizeVideo() {
     m_view_instance->m_capturedFrame = m_view_instance->m_ctrl->getFrame();
+
+    if (m_view_instance->m_capturedFrame == nullptr) {
+        return -1;
+    }
 
     aditof::FrameDetails frameDetails;
     m_view_instance->m_capturedFrame->getDetails(frameDetails);
@@ -182,6 +190,8 @@ void ADIMainWindow::synchronizeVideo() {
     });
     m_view_instance->m_waitKeyBarrier = 0;
     /*********************************/
+
+    return 0;
 }
 
 int32_t ADIMainWindow::SaveTextureAsJPEG(const char* filename, GLuint textureID, int width, int height) {
@@ -562,142 +572,6 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
 //* Section: Handling of Point Cloud Window
 //*******************************************
 
-void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
-    ImVec2 size;
-
-    auto imageScale =
-        DisplayFrameWindow(ImVec2(m_pc_position->width, m_pc_position->height),
-                           m_display_point_cloud_dimensions, size);
-
-    SetWindowPosition(m_pc_position->x, m_pc_position->y);
-    SetWindowSize(m_pc_position->width, m_pc_position->height);
-
-
-    if (ImGui::Begin("Point Cloud Window", nullptr, overlayFlags)) {
-
-        ImGui::SetCursorPos(ImVec2(0, 0));
-
-        ProcessInputs(window);
-
-        PreparePointCloudVertices(m_view_instance->vertexBufferObject,
-                                  m_view_instance->vertexArrayObject);
-
-        glad_glBindFramebuffer(GL_FRAMEBUFFER, m_gl_framebuffer);
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear whole main window
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
-        glPointSize(m_point_size);
-
-        // draw our Image
-        glUseProgram(m_view_instance->pcShader.Id());
-        mat4x4_perspective(m_projection_mat, Radians(m_field_of_view),
-                           (float)m_view_instance->frameWidth /
-                               (float)m_view_instance->frameHeight,
-                            0.1f, 100.0f);
-        glUniformMatrix4fv(m_view_instance->projectionIndex, 1, GL_FALSE,
-                            &m_projection_mat[0][0]);
-
-        //Look-At function[ x, y, z] = (m_camera_position_vec, m_camera_position_vec + m_camera_front_vec, m_camera_up_vec);
-        vec3_add(m_camera_position_front_vec, m_camera_position_vec, m_camera_front_vec);
-        mat4x4_look_at(m_view_mat, m_camera_position_vec, m_camera_position_front_vec, m_camera_up_vec);
-        glUniformMatrix4fv(m_view_instance->viewIndex, 1, GL_FALSE, &m_view_mat[0][0]);
-        glUniformMatrix4fv(m_view_instance->modelIndex, 1, GL_FALSE, &m_model_mat[0][0]);
-
-        glBindVertexArray(
-            m_view_instance->vertexArrayObject); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-        glDrawArrays(GL_POINTS, 0,
-                     static_cast<GLsizei>(m_view_instance->vertexArraySize));
-        glBindVertexArray(0);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        std::lock_guard<std::mutex> lock(m_snapshot_mutex);
-        if (m_snapshot["pc"].length() != 0) {
-            aditof::Metadata metadata;
-            aditof::Status status = m_view_instance->m_capturedFrame->getMetadataStruct(metadata);
-            std::string pc_filename = m_snapshot["pc"] + "_" + std::to_string(metadata.frameNumber) + "_pointcloud.ply";
-
-            SavePointCloudPLYBinary(pc_filename.c_str(), m_view_instance->normalized_vertices, m_view_instance->frameWidth * m_view_instance->frameHeight);
-
-            if (SaveAllFramesUpdate()) {
-                m_snapshot["pc"] = "";
-            }
-
-            if (m_snapshot["meta"].length() == 0 && m_snapshot["ab"].length() == 0 && m_snapshot["depth"].length() == 0 && m_snapshot["pc"].length() == 0) {
-                m_flash_main_window = true;
-            }
-        }
-        
-
-        ImVec2 _displayPointCloudDimensions = m_display_point_cloud_dimensions;
-
-        if (rotationangledegrees == 90 || rotationangledegrees == 270) {
-            std::swap(_displayPointCloudDimensions.x,
-                        _displayPointCloudDimensions.y);
-        }
-
-        ImageRotated((ImTextureID)m_gl_pointcloud_video_texture,
-                        ImVec2(m_pc_position->width, m_pc_position->height),
-                        ImVec2(_displayPointCloudDimensions.x,
-                            _displayPointCloudDimensions.y),
-                        rotationangleradians);
-        glDeleteVertexArrays(1, &m_view_instance->vertexArrayObject);
-        glDeleteBuffers(1, &m_view_instance->vertexBufferObject);
-
-        float modelMatrix[16];
-        float projMatrix[16];
-
-        glm::mat4 proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 1000.0f);
-        memcpy(projMatrix, glm::value_ptr(proj), sizeof(float) * 16);
-
-        memcpy(modelMatrix, m_model_mat, sizeof(float) * 16);
-        ImOGuizmo::SetRect(m_pc_position->x + 5.0f, m_pc_position->y + 15.0f, 50.0f);
-        ImOGuizmo::DrawGizmo(modelMatrix, projMatrix, 10.0f);
-        glDisable(GL_DEPTH_TEST);
-    }
-    ImGui::End();
-   
-}
-
-void ADIMainWindow::PreparePointCloudVertices(unsigned int &vbo,
-                                              unsigned int &vao) {
-
-	if (m_view_instance->normalized_vertices == nullptr) {
-		return;
-	}
-
-    glGenVertexArrays(1, &vao);
-    //Initialize Point Cloud Image
-    glGenBuffers(1, &vbo);
-
-    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
-    glBindVertexArray(vao);
-    //Bind Point Cloud Image
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    //Pass on Image buffer here:
-    glBufferData(GL_ARRAY_BUFFER, m_view_instance->vertexArraySize,
-                 m_view_instance->normalized_vertices,
-                 GL_DYNAMIC_DRAW);
-
-    //Image
-    glVertexAttribPointer(
-        0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
-        (void *)0); //Our image buffer got bigger: [X, Y, Z, R, G, B]
-    glEnableVertexAttribArray(0); //Enable [X, Y, Z]
-
-    //Point Cloud Color
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
-                          (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1); //Enable [R, G, B]
-
-    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
-    glBindVertexArray(0);
-}
-
 void ADIMainWindow::InitOpenGLPointCloudTexture() {
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_PROGRAM_POINT_SIZE); // Use the point size from "glPointSize()"
@@ -737,7 +611,7 @@ void ADIMainWindow::InitOpenGLPointCloudTexture() {
         GL_VERTEX_SHADER,
         pointCloudVertexShader); //Our vertices (whole image)
     adiviewer::ADIShader fragmentShader(GL_FRAGMENT_SHADER,
-                                        pointCloudFragmentShader); //Color map
+        pointCloudFragmentShader); //Color map
     m_view_instance->pcShader.CreateProgram();
     m_view_instance->pcShader.AttachShader(std::move(vertexShader));
     m_view_instance->pcShader.AttachShader(std::move(fragmentShader));
@@ -761,13 +635,156 @@ void ADIMainWindow::InitOpenGLPointCloudTexture() {
     glGenTextures(1, &m_gl_pointcloud_video_texture);
     glBindTexture(GL_TEXTURE_2D, m_gl_pointcloud_video_texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_main_window_width, m_main_window_height, 0,
-                 GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glad_glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                GL_TEXTURE_2D,
-                           m_gl_pointcloud_video_texture, 0);
+        GL_TEXTURE_2D,
+        m_gl_pointcloud_video_texture, 0);
     glad_glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
+    ImVec2 size;
+
+    auto imageScale =
+        DisplayFrameWindow(ImVec2(m_pc_position->width, m_pc_position->height),
+                           m_display_point_cloud_dimensions, size);
+
+    SetWindowPosition(m_pc_position->x, m_pc_position->y);
+    SetWindowSize(m_pc_position->width, m_pc_position->height);
+
+
+    if (ImGui::Begin("Point Cloud Window", nullptr, overlayFlags)) {
+
+        ImGui::SetCursorPos(ImVec2(0, 0));
+
+        ProcessInputs(window);
+
+        if (PreparePointCloudVertices(m_view_instance->vertexBufferObject,
+            m_view_instance->vertexArrayObject) >= 0) {
+
+            glad_glBindFramebuffer(GL_FRAMEBUFFER, m_gl_framebuffer);
+
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear whole main window
+            glEnable(GL_DEPTH_TEST);
+            glDepthFunc(GL_LESS);
+            glPointSize(m_point_size);
+
+            // draw our Image
+            glUseProgram(m_view_instance->pcShader.Id());
+            mat4x4_perspective(m_projection_mat, Radians(m_field_of_view),
+                (float)m_view_instance->frameWidth /
+                (float)m_view_instance->frameHeight,
+                0.1f, 100.0f);
+            glUniformMatrix4fv(m_view_instance->projectionIndex, 1, GL_FALSE,
+                &m_projection_mat[0][0]);
+
+            //Look-At function[ x, y, z] = (m_camera_position_vec, m_camera_position_vec + m_camera_front_vec, m_camera_up_vec);
+            vec3_add(m_camera_position_front_vec, m_camera_position_vec, m_camera_front_vec);
+            mat4x4_look_at(m_view_mat, m_camera_position_vec, m_camera_position_front_vec, m_camera_up_vec);
+            glUniformMatrix4fv(m_view_instance->viewIndex, 1, GL_FALSE, &m_view_mat[0][0]);
+            glUniformMatrix4fv(m_view_instance->modelIndex, 1, GL_FALSE, &m_model_mat[0][0]);
+
+            glBindVertexArray(
+                m_view_instance->vertexArrayObject); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+            glDrawArrays(GL_POINTS, 0,
+                static_cast<GLsizei>(m_view_instance->vertexArraySize));
+            glBindVertexArray(0);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+            std::lock_guard<std::mutex> lock(m_snapshot_mutex);
+            if (m_snapshot["pc"].length() != 0) {
+                aditof::Metadata metadata;
+                aditof::Status status = m_view_instance->m_capturedFrame->getMetadataStruct(metadata);
+                std::string pc_filename = m_snapshot["pc"] + "_" + std::to_string(metadata.frameNumber) + "_pointcloud.ply";
+
+                SavePointCloudPLYBinary(pc_filename.c_str(), m_view_instance->normalized_vertices, m_view_instance->frameWidth * m_view_instance->frameHeight);
+
+                if (SaveAllFramesUpdate()) {
+                    m_snapshot["pc"] = "";
+                }
+
+                if (m_snapshot["meta"].length() == 0 && m_snapshot["ab"].length() == 0 && m_snapshot["depth"].length() == 0 && m_snapshot["pc"].length() == 0) {
+                    m_flash_main_window = true;
+                }
+            }
+
+
+            ImVec2 _displayPointCloudDimensions = m_display_point_cloud_dimensions;
+
+            if (rotationangledegrees == 90 || rotationangledegrees == 270) {
+                std::swap(_displayPointCloudDimensions.x,
+                    _displayPointCloudDimensions.y);
+            }
+
+            ImageRotated((ImTextureID)m_gl_pointcloud_video_texture,
+                ImVec2(m_pc_position->width, m_pc_position->height),
+                ImVec2(_displayPointCloudDimensions.x,
+                    _displayPointCloudDimensions.y),
+                rotationangleradians);
+            glDeleteVertexArrays(1, &m_view_instance->vertexArrayObject);
+            glDeleteBuffers(1, &m_view_instance->vertexBufferObject);
+
+            float modelMatrix[16];
+            float projMatrix[16];
+
+            glm::mat4 proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 1000.0f);
+            memcpy(projMatrix, glm::value_ptr(proj), sizeof(float) * 16);
+
+            memcpy(modelMatrix, m_model_mat, sizeof(float) * 16);
+            ImOGuizmo::SetRect(m_pc_position->x + 5.0f, m_pc_position->y + 15.0f, 50.0f);
+            ImOGuizmo::DrawGizmo(modelMatrix, projMatrix, 10.0f);
+            glDisable(GL_DEPTH_TEST);
+        }
+    }
+    ImGui::End();
+   
+}
+
+int32_t ADIMainWindow::PreparePointCloudVertices(GLuint &vbo, GLuint&vao) {
+
+	if (m_view_instance->normalized_vertices == nullptr) {
+		return -1;
+	}
+
+    if (m_view_instance->vertexArraySize == 0) {
+        return -2;
+    }
+    
+    glGenVertexArrays(1, &vao); // Here is where m_view_instance->vertexArraySize goes to 0;
+    //Initialize Point Cloud Image
+    glGenBuffers(1, &vbo);
+    // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+    glBindVertexArray(vao);
+    //Bind Point Cloud Image
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    //Pass on Image buffer here:
+    glBufferData(GL_ARRAY_BUFFER, m_view_instance->vertexArraySize,
+                 m_view_instance->normalized_vertices,
+                 GL_STREAM_DRAW);
+
+    assert(m_view_instance->vertexArraySize != 0);
+
+    //Image
+    glVertexAttribPointer(
+        0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+        (void *)0); //Our image buffer got bigger: [X, Y, Z, R, G, B]
+    glEnableVertexAttribArray(0); //Enable [X, Y, Z]
+
+    //Point Cloud Color
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                          (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1); //Enable [R, G, B]
+
+    // note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
+    // VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
+    glBindVertexArray(0);
+
+    return 0;
 }
 
 static inline ImVec2 operator+(const ImVec2 &lhs, const ImVec2 &rhs) {

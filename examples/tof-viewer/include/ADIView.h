@@ -81,10 +81,10 @@ class ADIView {
     std::shared_ptr<aditof::Frame> m_capturedFrame = nullptr;
     std::condition_variable m_barrierCv;
     std::mutex m_imshowMutex;
-    int frameHeight = 0;
-    int frameWidth = 0;
-    int m_waitKeyBarrier;
-    int numOfThreads = 3;
+    uint32_t frameHeight = 0;
+    uint32_t frameWidth = 0;
+    int32_t m_waitKeyBarrier;
+    uint32_t numOfThreads = 3;
     std::mutex m_frameCapturedMutex;
     bool m_depthFrameAvailable;
     bool m_abFrameAvailable;
@@ -105,11 +105,11 @@ class ADIView {
     float *normalized_vertices = nullptr;
     size_t pointcloudTableSize = 0;
 
-    unsigned short temperature_c;
-    unsigned short time_stamp;
+    uint16_t temperature_c;
+    uint16_t time_stamp;
     double m_blendValue = 0.5;
-    int maxRange = 5000;
-    int minRange = 0;
+    int32_t maxRange = 5000;
+    int32_t minRange = 0;
     /**************/
     //OpenCV  here
     /**
@@ -118,13 +118,13 @@ class ADIView {
     void startCamera();
 
     //Point Cloud
-    unsigned int viewIndex;
-    unsigned int modelIndex;
-    unsigned int projectionIndex;
-    unsigned int vertexArrayObject;
-    unsigned int vertexBufferObject; //Image Buffer
+    uint32_t viewIndex;
+    uint32_t modelIndex;
+    uint32_t projectionIndex;
+    GLuint vertexArrayObject;
+    GLuint vertexBufferObject; //Image Buffer
     adiviewer::Program pcShader;
-    size_t vertexArraySize = 0;
+    uint32_t vertexArraySize = 0;
     float Max_Z = 6000.0;
     float Min_Z = 0.0;
     float Max_Y = 6000.0;
@@ -168,7 +168,6 @@ class ADIView {
     bool beginDisplayPointCloudImage = false;
 
     uint16_t *video_data;
-    unsigned int video_texture = 0;
     const char *vertexShaderSource;
     const char *fragmentShaderSource;
     int shaderProgram;

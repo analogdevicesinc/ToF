@@ -289,7 +289,7 @@ class ADIMainWindow {
 		* @brief Create the necessary OpenGL vertex attributes and buffers based on
 		* 		 current vertices extracted from XYZ data
 		*/
-    void PreparePointCloudVertices(unsigned int &vbo, unsigned int &vao);
+    int32_t PreparePointCloudVertices(GLuint &vbo, GLuint&vao);
 
     /**
 		* @brief Resets to camera default position, as well as vertex point size
@@ -399,7 +399,7 @@ class ADIMainWindow {
 		*/
     void CameraStop();
 
-    void synchronizeVideo();
+    int32_t synchronizeVideo();
 
     /**
 		* @brief Displays pixel information while mouse hovers over
@@ -448,11 +448,6 @@ class ADIMainWindow {
 		* @brief Displays Point Cloud Window
 		*/
     void DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags);
-
-    /**
-     * @brief Computes streaming fps
-    */
-    void ComputeFPS(int &fps);
 
     /**
      * @brief print out warning message in popup window if ini param is out of valid range
@@ -617,11 +612,9 @@ class ADIMainWindow {
     bool m_off_line = false;
     uint32_t m_off_line_frame_index = 0;
     int32_t m_frame_counter = 0;
-    int32_t m_fps = 0;
+    uint32_t m_fps = 0;
     uint16_t m_fps_expected = 0;
-    uint32_t m_fps_first_frame_number = 0;
     uint32_t m_fps_frame_received = 0;
-    std::chrono::time_point<std::chrono::system_clock> m_fps_startTime;
     int32_t m_selected_device_index = -1;
     std::vector<std::pair<int, std::string>> m_connected_devices;
 
