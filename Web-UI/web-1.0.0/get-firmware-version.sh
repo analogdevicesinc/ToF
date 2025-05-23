@@ -22,13 +22,6 @@ COMMAND="./ctrl_app infile.txt > out.txt"
 # Run the command
 eval $COMMAND
 
-# # Check if the command was successful
-# if [ $? -eq 0 ]; then
-#     echo "Command executed successfully."
-# else
-#     echo "Command execution failed."
-#     exit 3
-# fi
 
 FILE_PATH="out.txt"
 
