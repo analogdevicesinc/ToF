@@ -4,36 +4,95 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Analog Devices Time of Flight</title>
-    <link rel="stylesheet" href="../static/doc.css" />
     <link rel="stylesheet" href="../static/styles.css" />
+    <link rel="stylesheet" href="../static/doc.css" />
     <link rel="stylesheet" href="../static/github-markdown.css" />
-    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
-    <script src="{{url_for('static',filename='marked.min.js')}}"></script>
-    <script src="{{url_for('static',filename='scripts.js')}}"></script>
+    <link
+      rel="stylesheet"
+      href="../static/node_modules/@adi-ctx/harmonic-core-components/dist/harmonic-core-components/harmonic-core-components.css"
+    />
+    <script
+      type="module"
+      src="../static/node_modules/@adi-ctx/harmonic-core-components/dist/harmonic-core-components/harmonic-core-components.esm.js"
+    ></script>
   </head>
-  <body
-    onload="runScript();">
-  <header class="navigation_header">
-    <!-- logo -->
-    <div class="logo_container">
-        <div class="logo_image">
-          <a href="{{ url_for('index') }}" target="_blank"><img src="{{ url_for('static', filename='logos/ADI_logo.png') }}" alt="logos"></a>
-        </div>
-    
-        <div class="verticle_line"></div>
-    
-        <h2 class="logo_title">Analog Devices Time of Flight</h2>
-    </div>
-    <!-- navigation -->
-    <nav>
-        <ul class="nav_container">
-          <li class="nav_link {% if active_page == 'home' %}active{% endif %}" ><a href="{{ url_for('index') }}">Home</a></li>
-          <li class="nav_link {% if active_page == 'ADSD3500' %}active{% endif %}" ><a href="{{ url_for('ADSD3500') }}" >Update</a></li>
-          <li class="nav_link {% if active_page == 'system' %}active{% endif %}" ><a href="{{ url_for('system') }}" >System</a></li>
-          <li class="nav_link {% if active_page == 'document' %}active{% endif %}" ><a href="{{ url_for('document') }}" >Document</a></li>
-        </ul>
-    </nav>
-</header>
+  <body>
+    <header class="navigation_header">
+      <div class="backdrop">
+        <hmc-nav-bar size="md">
+          <hmc-button
+            id="left-cta"
+            slot="left-actions"
+            kind="ghost"
+            size="sm"
+            icon-only=""
+          >
+            <hmc-icon name="menu-m" size="md"> </hmc-icon
+          ></hmc-button>
+          <div slot="logo" class="logo">
+            <svg viewBox="0 0 78 24" fill="none">
+              <path
+                d="M-0.00140381 23.9997V-0.000305176H24.3568V23.9997H-0.00140381ZM5.01288 3.73469V20.9547L20.2853 12.1527L5.01288 3.73469Z"
+                fill="currentColor"
+              ></path>
+              <path
+                d="M60.1876 23.9997H50.7774V0.0566998H60.2458C67.2591 0.0566998 71.4682 5.4987 71.4682 12.4287C71.4682 19.3587 67.7274 23.9997 60.1876 23.9997ZM59.7805 4.1247H55.9203V20.2767H60.0713C65.5662 20.2767 66.3835 15.6957 66.3254 12.2007C66.3254 9.4497 64.9815 4.1247 59.7805 4.1247Z"
+                fill="currentColor"
+              ></path>
+              <path
+                d="M46.1175 23.9997L44.2471 18.6717H35.2471L33.6124 23.9997H28.7022L36.943 -0.000305176H41.9114L51.1471 23.9997H46.1175ZM42.5359 13.8027L39.4563 5.03969L36.7563 13.8027L36.5359 15.2907H42.7594L42.5359 13.8027Z"
+                fill="currentColor"
+              ></path>
+              <path
+                d="M78.0009 23.9997H72.7999V-0.000305176H78.0009V23.9997Z"
+                fill="currentColor"
+              ></path>
+            </svg>
+
+            <span class="name"
+              >Analog Devices Time of Flight<span> </span
+            ></span>
+          </div>
+          <hmc-nav-link
+            id="link1"
+            size="md"
+            href="{{url_for('index')}}"
+            aria-label=""
+            title=""
+          >
+            Home</hmc-nav-link
+          >
+          <hmc-nav-link
+            id="link2"
+            size="md"
+            href="{{url_for('ADSD3500')}}"
+            aria-label=""
+            title=""
+          >
+            Update</hmc-nav-link
+          >
+          <hmc-nav-link
+            id="link3"
+            size="md"
+            href="{{url_for('system')}}"
+            aria-label=""
+            title=""
+          >
+            System</hmc-nav-link
+          >
+          <hmc-nav-link
+            id="link4"
+            link-active=""
+            size="md"
+            href="{{url_for('document')}}"
+            aria-label=""
+            title=""
+          >
+            Document</hmc-nav-link
+          >
+        </hmc-nav-bar>
+      </div>
+    </header>
 
     <!-- Overlay for blocking interactions -->
     <div id="overlay" class="overlay" style="display: none">
@@ -44,32 +103,61 @@
     </div>
 
     <main class="main">
-
       <!-- a sidebar consists of table of contents -->
-       <div class="sidebar">
-       <aside class="table_of_content">
-          
-        <!-- main-menu -->
+      <div class="sidebar">
+        <aside class="table_of_content">
+          <!-- main-menu -->
           <ul class="main_menu">
-            <li class="menu_sub_heading"> <a href="#FAQ">FAQ</a></li>
-            <li class="menu_sub_heading"> <a href="#evalkit-readme-content">Eval Kit</a></li>
-            <li class="menu_sub_heading"> <a href="#webinterface">Web Interface</a></li>
+            <li class="menu_sub_heading"><a href="#FAQ">FAQ</a></li>
+            <li class="menu_sub_heading">
+              <a href="#evalkit-readme-content">Eval Kit</a>
+            </li>
+            <li class="menu_sub_heading">
+              <a href="#webinterface">Web Interface</a>
+            </li>
           </ul>
-       </aside>
+        </aside>
 
-       <aside class="ref_links">
-        <h3 class="link_heading"> Important Links</h3>
-          
+        <aside class="ref_links">
+          <h3 class="link_heading">Important Links</h3>
+
           <ul class="link_menu">
-            <li class="link_bar"> <a href="https://github.com/analogdevicesinc/ToF" target="_blank"> <img src="{{ url_for('static', filename='logos/github.png') }}" alt="github page"><span>ToF Eval Kit</span> </a></li>
-            <li class="link_bar"> <a href="https://github.com/analogdevicesinc/libaditof/tree/main" target="_blank"> <img src="{{ url_for('static', filename='logos/github.png') }}" alt="github page"><span>libaditof</span></a></li>
-            <li class="link_bar"> <a href="https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175d-nxz" target="_blank"> <img src="{{ url_for('static', filename='logos/analog-devices-logo.png') }}" alt="Analog devices logo"><span>Analog Devices WiKi</span></a></li>
+            <li class="link_bar">
+              <a href="https://github.com/analogdevicesinc/ToF" target="_blank">
+                <img
+                  src="{{ url_for('static', filename='logos/github.png') }}"
+                  alt="github page"
+                /><span>ToF Eval Kit</span>
+              </a>
+            </li>
+            <li class="link_bar">
+              <a
+                href="https://github.com/analogdevicesinc/libaditof/tree/main"
+                target="_blank"
+              >
+                <img
+                  src="{{ url_for('static', filename='logos/github.png') }}"
+                  alt="github page"
+                /><span>libaditof</span></a
+              >
+            </li>
+            <li class="link_bar">
+              <a
+                href="https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175d-nxz"
+                target="_blank"
+              >
+                <img
+                  src="{{ url_for('static', filename='logos/analog-devices-logo.png') }}"
+                  alt="Analog devices logo"
+                /><span>Analog Devices WiKi</span></a
+              >
+            </li>
           </ul>
-       </aside>
+        </aside>
       </div>
 
-       <!-- main content of the documentation page -->
-    <section id="FAQ" class="markdown-body active">
+      <!-- main content of the documentation page -->
+      <section id="FAQ" class="markdown-body active">
         <h2>FAQ</h2>
         <p>Q1. Ask some sample query</p>
         <p>Ans. here is the answer</p>
@@ -87,17 +175,27 @@
         <p>Ans. here is the answer</p>
         <p>Q4. Ask some sample query</p>
         <p>Ans. here is the answer</p>
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Rerum ipsum, dolores, assumenda dignissimos eveniet maxime non repellat et nobis amet id voluptatem. Provident, ipsa temporibus. Consequatur facere ab modi cum! Lorem ipsum dolor sit amet, consectetur adipisicing elit. Pariatur laudantium, dolorum saepe qui at excepturi repudiandae aliquid reiciendis, cum, iure veniam delectus recusandae consectetur tempore nesciunt dolorem ex distinctio vel.</p>
-    </section>
+        <p>
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Rerum ipsum,
+          dolores, assumenda dignissimos eveniet maxime non repellat et nobis
+          amet id voluptatem. Provident, ipsa temporibus. Consequatur facere ab
+          modi cum! Lorem ipsum dolor sit amet, consectetur adipisicing elit.
+          Pariatur laudantium, dolorum saepe qui at excepturi repudiandae
+          aliquid reiciendis, cum, iure veniam delectus recusandae consectetur
+          tempore nesciunt dolorem ex distinctio vel.
+        </p>
+      </section>
 
-    <section id="evalkit-readme-content" class="markdown-body hidden"></section>
+      <section
+        id="evalkit-readme-content"
+        class="markdown-body hidden"
+      ></section>
 
-    <section id="webinterface" class="markdown-body hidden">
+      <section id="webinterface" class="markdown-body hidden">
         <h2>Web Interface</h2>
         <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit.</p>
         <!-- Add more content as needed -->
       </section>
-
     </main>
 
     <footer>
@@ -106,5 +204,8 @@
         registered trademarks are the property of their respective owners.
       </p>
     </footer>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script src="{{url_for('static',filename='doc.js')}}"></script>
+    <script src="{{url_for('static',filename='marked.min.js')}}"></script>
   </body>
 </html>
