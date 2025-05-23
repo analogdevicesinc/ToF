@@ -161,9 +161,7 @@ int32_t ADIMainWindow::synchronizeVideo() {
     m_view_instance->m_capturedFrame->getDetails(frameDetails);
     std::unique_lock<std::mutex> lock(m_view_instance->m_frameCapturedMutex);
 
-    m_view_instance->m_depthFrameAvailable = true;
-    m_view_instance->m_abFrameAvailable = true;
-    m_view_instance->m_pointCloudFrameAvailable = true;
+    m_view_instance->m_frameAvailable = true;
     m_view_instance->numOfThreads = 3;
 
     m_view_instance->frameHeight = frameDetails.height;

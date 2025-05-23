@@ -86,9 +86,7 @@ class ADIView {
     int32_t m_waitKeyBarrier;
     uint32_t numOfThreads = 3;
     std::mutex m_frameCapturedMutex;
-    bool m_depthFrameAvailable;
-    bool m_abFrameAvailable;
-    bool m_pointCloudFrameAvailable;
+    bool m_frameAvailable;
     bool m_stopWorkersFlag = false;
     bool m_saveBinaryFormat = false;
     uint32_t m_pccolour = 0;
@@ -131,6 +129,7 @@ class ADIView {
     float Max_X = 6000.0;
 
   private:
+    void prepareImages();
     /**
 		* @brief Creates Depth buffer data
 		*/
