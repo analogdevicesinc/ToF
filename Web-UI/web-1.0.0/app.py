@@ -611,10 +611,13 @@ def events():
             process.stdin.write('analog\n')
             process.stdin.flush()
             for line in iter(process.stdout.readline, ''):
-                # print(f"Output: {line.strip()}")
                 yield f"data: {line}\n\n"
+            
             process.stdout.close()
             process.wait()
+            # Get return code
+            return_code = process.returncode
+            yield f"data: __EXIT_CODE__:{return_code}\n\n"
         except subprocess.CalledProcessError as e:
             print(f"Error: {e.output}")
             yield f"data: Error: {e.output}\n\n"
@@ -680,6 +683,40 @@ def changePermissionEvents():
         return jsonify({'output': stdout})
     except subprocess.CalledProcessError as e:
         return jsonify({'error': str(e)}), 500
+
+# NetWork change
+@app.route("/Change-Network", methods=["POST"])
+def change_network():
+    data = request.get_json()
+    value = data.get('value')
+    app.config['VALUE'] = value  
+    return '', 204 
+
+@app.route("/Change-Network-GET")
+def change_network_get():
+    user_choice = app.config.get('VALUE', 'unknown')
+
+    if user_choice not in ["windows", "ubuntu", "check"]:
+        return jsonify({"error": "Invalid value. Use 'windows', 'ubuntu', or 'check'."}), 400
+
+    try:
+        curr_version = get_workspace().get_json().get('workspace')
+        command = ["sudo", "./network-mode-switch.sh", curr_version, user_choice]
+
+        # Run the shell script
+        result = subprocess.run(command, capture_output=True, text=True)
+
+        if result.returncode == 0:
+            print(result.stdout.strip())
+            return jsonify({"message": result.stdout.strip()}), 200
+        else:
+            return jsonify({
+                "error": "Script execution failed",
+                "details": result.stderr.strip()
+            }), 500
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # NVM Read
     
