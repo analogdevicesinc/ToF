@@ -102,23 +102,13 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
                 if (status != Status::OK) {
                     LOG(ERROR) << "Failed to get frame metadata.";
                 } else {
-                    uint32_t frameNum = metadata.frameNumber;
                     int32_t sensorTemp = (metadata.sensorTemperature);
                     int32_t laserTemp = (metadata.laserTemperature);
 
-                    static uint32_t prev_frame_number = -1;
-					static uint32_t frames_lost = 0;
-                    static uint32_t current_frame_number = 0;
-
-                    prev_frame_number = current_frame_number;
-                    current_frame_number = metadata.frameNumber;
-
-                    if (current_frame_number - prev_frame_number > 1) {
-                        frames_lost += (current_frame_number - prev_frame_number - 1);
-                    }
-
                     uint32_t frame_received;
                     m_view_instance->m_ctrl->getFramesReceived(frame_received);
+                    uint32_t frames_lost;
+                    m_view_instance->m_ctrl->getFramesLost(frames_lost);
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);

@@ -37,7 +37,7 @@ class ADIController {
     /**
 		* @brief	Start capture thread
 		*/
-    void StartCapture();
+    void StartCapture(const uint32_t frameRate);
 
     /**
 		* @brief	Stops capture thread
@@ -159,8 +159,10 @@ class ADIController {
     int getCameraInUse() const;
 
 	aditof::Status getFrameRate(uint32_t& fps);
-	aditof::Status getFramesReceived(uint32_t& frames_recevied);
-
+	aditof::Status getFramesReceived(uint32_t& framesRecevied);
+    aditof::Status setPreviewRate(uint32_t frameRate, uint32_t previewRate = 1);
+    aditof::Status getFramesLost(uint32_t& framesLost);
+    
     std::vector<std::shared_ptr<aditof::Camera>> m_cameras;
     bool panicStop = false;
     size_t panicCount = 0;
@@ -171,6 +173,8 @@ class ADIController {
 		* @brief Sets a thread while capturing camera frames.
 		*/
     void captureFrames();
+    void ADIController::calculateFrameLoss(const uint32_t frameNumber, uint32_t& prevFrameNumber, uint32_t& currentFrameNumber);
+    bool shouldDropFrame(uint32_t frameNum);
 
   private:
     std::thread m_workerThread;
@@ -184,6 +188,11 @@ class ADIController {
     float m_framerate = 0;
     uint32_t m_frame_counter;
     std::chrono::time_point<std::chrono::system_clock> m_fps_startTime;
+    uint32_t m_preview_rate;
+    uint32_t m_frame_rate;
+    uint32_t m_frames_lost = 0;
+    uint32_t m_prev_frame_number = -1;
+    uint32_t m_current_frame_number = 0;
 };
 } // namespace adicontroller
 #endif

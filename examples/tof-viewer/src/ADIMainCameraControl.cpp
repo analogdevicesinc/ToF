@@ -200,7 +200,7 @@ void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
             InitOpenGLPointCloudTexture();
 
             if (!m_off_line) {
-                m_view_instance->m_ctrl->StartCapture();
+                m_view_instance->m_ctrl->StartCapture(m_fps_expected);
                 m_view_instance->m_ctrl->requestFrame();
             }
             else { // Offline: Always get the first frame

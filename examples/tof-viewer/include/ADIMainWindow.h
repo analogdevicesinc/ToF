@@ -528,6 +528,7 @@ class ADIMainWindow {
     const float m_custom_color_open = 0.2f;
     const float m_custom_color_pause = 0.1f;
     const ImVec2 m_invalid_hovered_pixel = ImVec2(-1, -1);
+    const uint32_t PREVIEW_FRAME_RATE = 3;
 
     //Point Cloud
     mat4x4 m_view_mat;

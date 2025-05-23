@@ -668,7 +668,6 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear whole main window
             glEnable(GL_DEPTH_TEST);
-            glDepthFunc(GL_LESS);
             glPointSize(m_point_size);
 
             // draw our Image
@@ -691,7 +690,7 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
             glDrawArrays(GL_POINTS, 0,
                 static_cast<GLsizei>(m_view_instance->vertexArraySize));
             glBindVertexArray(0);
-
+            glUseProgram(0);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
             std::lock_guard<std::mutex> lock(m_snapshot_mutex);
@@ -736,7 +735,7 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
             memcpy(modelMatrix, m_model_mat, sizeof(float) * 16);
             ImOGuizmo::SetRect(m_pc_position->x + 5.0f, m_pc_position->y + 15.0f, 50.0f);
             ImOGuizmo::DrawGizmo(modelMatrix, projMatrix, 10.0f);
-            glDisable(GL_DEPTH_TEST);
+            //glDisable(GL_DEPTH_TEST);
         }
     }
     ImGui::End();

@@ -214,21 +214,29 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
                                        : IM_COL32(0, 200, 0, 255))) {
 
                 if (!recordingActive) {
+
                     aditof::Status status =
                         GetActiveCamera()->startRecording(filePath);
                     if (status == aditof::Status::OK) {
+                        m_view_instance->m_ctrl->setPreviewRate(m_fps, PREVIEW_FRAME_RATE);
                         recordingActive = true;
                         LOG(INFO) << "Recording to " << filePath.c_str();
                     } else {
-                        LOG(INFO) << "Unable to start recording.";
+                        m_view_instance->m_ctrl->setPreviewRate(m_fps, m_fps);
+                        LOG(ERROR) << "Unable to start recording.";
                         filePath = "";
                         recordingActive = false;
                     }
                 } else {
                     aditof::Status status = GetActiveCamera()->stopRecording();
-                    LOG(INFO) << "Recording stopped.";
-                    filePath = "";
-                    recordingActive = false;
+                    if (status == aditof::Status::OK) {
+                        LOG(INFO) << "Recording stopped.";
+                        filePath = "";
+                        recordingActive = false;
+                        m_view_instance->m_ctrl->setPreviewRate(m_fps, m_fps);
+                    } else {
+						LOG(ERROR) << "Unable to stop recording.";
+                    }
                 }
             }
 
@@ -244,6 +252,7 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
                 m_is_playing = false;
                 m_fps_frame_received = 0;
                 filePath = "";
+                // QUERY: Is it necessary to stop a recording if one is on going?
                 CameraStop();
                 return;
             }
