@@ -291,7 +291,6 @@ chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace
 #copy executables to bin folder
 mkdir /home/${USERNAME}/Workspace/bin
 cp /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/data_collect /home/${USERNAME}/Workspace/bin
-cp /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/*.so* /home/${USERNAME}/Workspace/bin
 cp /home/${USERNAME}/Workspace/ToF/build/examples/first-frame/first-frame /home/${USERNAME}/Workspace/bin
 mv /home/${USERNAME}/Workspace/ToF/sdcard-images-utils/nxp/patches/ubuntu_overlay/step1/usr/share/systemd/*.sh /home/${USERNAME}/Workspace/bin
 
