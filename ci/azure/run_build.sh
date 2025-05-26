@@ -24,7 +24,7 @@ build_default() {
 
     pushd ${BUILD_DIR}
     pwd
-    cmake ${DEFAULT_CMAKE_FLAGS} ${EXTRA_CMAKE_FLAGS} -DCMAKE_PREFIX_PATH="${DEPS_DIR}/installed/glog;${DEPS_DIR}/installed/protobuf;${DEPS_DIR}/installed/websockets;${DEPS_DIR}/installed/Open3D;${DEPS_DIR}/installed/opencv" .. 
+    cmake ${DEFAULT_CMAKE_FLAGS} ${EXTRA_CMAKE_FLAGS} -DCMAKE_PREFIX_PATH="${DEPS_DIR}/installed/glog;${DEPS_DIR}/installed/protobuf;${DEPS_DIR}/installed/libzmq;${DEPS_DIR}/installed/Open3D;${DEPS_DIR}/installed/opencv" .. 
     make -j${NUM_JOBS}
     popd
 }

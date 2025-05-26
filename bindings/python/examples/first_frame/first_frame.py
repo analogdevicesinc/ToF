@@ -133,11 +133,11 @@ image_ab = np.array(frame.getData("ab"), copy=False)
 # Get the confidence frame
 image_conf = np.array(frame.getData("conf"), copy=False)
 
-if (frameDataDetails.width != 1024 and frameDataDetails.height != 1024):
+if ((frameDataDetails.width != 1024 and frameDataDetails.height != 1024)):
     image_conf2 = image_conf.flatten()
     count = 0
-    final_conf = np.zeros(512*512*4)
-    for i in range(512*256):
+    final_conf = np.zeros(frameDataDetails.width*frameDataDetails.height*4)
+    for i in range(frameDataDetails.width*(frameDataDetails.height // 2)):
         packed_float = struct.pack('f', image_conf2[i])
 
     # Unpack the bytes into four uint8 values

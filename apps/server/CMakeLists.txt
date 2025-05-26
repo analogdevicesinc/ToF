@@ -19,13 +19,6 @@ else()
 target_link_libraries(${PROJECT_NAME} PUBLIC libprotobuf)
 endif()
 
-# Websockets
-if(NOT WITH_SUBMODULES AND NOT EXISTS "${LIBADITOF_SUBMODULE_PATH}/libwebsockets/.git")
-        find_package(Libwebsockets REQUIRED)
-else()
-    target_link_libraries(${PROJECT_NAME} PUBLIC websockets_shared)
-endif()
-
 # Generating protobuf files
 set(NET_PROTO_HRDS "${CMAKE_BINARY_DIR}/buffer.pb.h")
     set(NET_PROTO_SRCS "${CMAKE_BINARY_DIR}/buffer.pb.cc")
@@ -37,6 +30,20 @@ set(NET_PROTO_HRDS "${CMAKE_BINARY_DIR}/buffer.pb.h")
             ${CMAKE_BINARY_DIR}
     )
 target_link_libraries(${PROJECT_NAME} PRIVATE aditof)
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/libaditof/libwebsockets/include)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 11)
+# ZMQ
+set(CPPZMQ_INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../libaditof/cppzmq")
+set(LIBZMQ_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../libaditof/libzmq/include")
+
+# Check if submodule exists, and build the library
+if(NOT WITH_SUBMODULES AND NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../libaditof/libzmq/.git")
+    find_package(ZeroMQ REQUIRED)
+    include_directories(${ZeroMQ_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${ZeroMQ_LIBRARIES})
+else()
+    target_include_directories(${PROJECT_NAME} PRIVATE ${CPPZMQ_INSTALL_DIR} ${LIBZMQ_INCLUDE_DIR})
+    target_link_libraries(${PROJECT_NAME} PUBLIC libzmq-static)
+endif()
+
+
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 14)

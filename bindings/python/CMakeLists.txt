@@ -18,23 +18,6 @@ function(PopulateforPython targetdir)
             COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_OUTPUT_NAME}" "${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/"
         )
     endif()
-    if( WIN32 )
-        if (WITH_NETWORK)
-            add_custom_command(TARGET aditofpython POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory ${libwebsockets_BINARY_DIR}/bin/$<CONFIG> ${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>
-            )
-        endif()
-        if (WITH_GLOG_DEPENDENCY)
-            add_custom_command(TARGET aditofpython POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory ${glog_BINARY_DIR}/$<CONFIG> ${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>
-            )
-        endif()
-        if (WITH_PROTOBUF_DEPENDENCY)
-            add_custom_command(TARGET aditofpython POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory ${protobuf_BINARY_DIR}/$<CONFIG> ${CMAKE_CURRENT_BINARY_DIR}/${targetdir}/$<CONFIG>
-            )
-        endif()
-    endif()
 
 
 endfunction()

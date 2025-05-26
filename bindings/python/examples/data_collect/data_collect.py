@@ -76,6 +76,8 @@ if __name__ == '__main__':
                         choices=imager_configurations)  
     parser.add_argument('-scf', type=str, help='Save current configuration to json file', 
                         metavar='<save-configuration-file>')  
+    parser.add_argument('-lcf', type=str, help='Load custom configuration to json file', 
+                        metavar='<load-configuration-file>')  
     args = parser.parse_args()
 
     print ("SDK version: ", tof.getApiVersion(),"| branch: ", tof.getBranchVersion(), 
@@ -101,6 +103,13 @@ if __name__ == '__main__':
         if not saveConfigFileName.endswith(".json"):
             saveConfigFileName = saveConfigFileName + ".json"
         saveconfigurationFile = True 
+
+    loadconfigurationFile = False
+    loadConfigFileName = args.lcf
+    if(loadConfigFileName):
+        if not loadConfigFileName.endswith(".json"):
+            loadConfigFileName = loadConfigFileName + ".json"
+        loadconfigurationFile = True 
 
     print ("Output folder: ", args.folder)
     print ("Mode: ", args.mode )
@@ -156,7 +165,13 @@ if __name__ == '__main__':
         else:
             print("Current configuration info saved to file ", saveConfigFileName)
 
-    
+    if loadconfigurationFile:
+        status = camera1.loadDepthParamsFromJsonFile(loadConfigFileName, int(args.mode))
+        if status != tof.Status.Ok:
+            print("Could not load configuration info from ", loadConfigFileName)
+        else:
+            print("Current configuration loaded from ", loadConfigFileName)
+
     cam_details = tof.CameraDetails()
     status = camera1.getDetails(cam_details)
     print('camera1.getDetails()', status)
@@ -165,7 +180,6 @@ if __name__ == '__main__':
     print ("Kernel version: ", cam_details.kernelVersion)
     print ("U-Boot version: ", cam_details.uBootVersion)
 
-    
     if (args.firmware):
         if not os.path.isfile(args.firmware):
             sys.exit(f"{args.firmware} does not exists")
