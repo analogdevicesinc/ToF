@@ -463,7 +463,9 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
             }
 
             NewLine(5.0f);
-            ImGui::SliderInt("Frame #", (int *)&m_off_line_frame_index, 0, max_frame_count - 1,"#: %d");
+            if (ImGui::SliderInt("Frame #", (int*)&m_off_line_frame_index, 0, max_frame_count - 1, "#: %d")) {
+				m_offline_change_frame = true;
+            }
         }
 
         NewLine(5.0f);
