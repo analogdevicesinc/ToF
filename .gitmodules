@@ -6,3 +6,6 @@
 	path = bindings/python/pybind11
 	url = https://github.com/pybind/pybind11
 	branch = v2.11
+[submodule "ToF-drivers"]
+	path = ToF-drivers
+	url = https://github.com/analogdevicesinc/ToF-drivers
