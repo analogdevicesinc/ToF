@@ -91,9 +91,7 @@ class ADIView {
     bool m_saveBinaryFormat = false;
     uint32_t m_pccolour = 0;
 
-    std::thread m_depthImageWorker;
-    std::thread m_abImageWorker;
-    std::thread m_pointCloudImageWorker;
+    std::thread m_prepareImages;
     std::condition_variable m_frameCapturedCv;
     uint16_t *ab_video_data;
     uint16_t *depth_video_data;

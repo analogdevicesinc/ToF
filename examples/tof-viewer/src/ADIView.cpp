@@ -46,7 +46,7 @@ ADIView::ADIView(std::shared_ptr<ADIController> ctrl, const std::string &name)
 
     ab_video_data_8bit = nullptr;
     depth_video_data_8bit = nullptr;
-    m_abImageWorker = std::thread(std::bind(&ADIView::prepareImages, this));
+    m_prepareImages = std::thread(std::bind(&ADIView::prepareImages, this));
 }
 
 ADIView::~ADIView() {
@@ -58,7 +58,7 @@ ADIView::~ADIView() {
     m_stopWorkersFlag = true;
     lock.unlock();
     m_frameCapturedCv.notify_all();
-    m_abImageWorker.join();
+    m_prepareImages.join();
 
     if (ab_video_data_8bit != nullptr) {
         delete [] ab_video_data_8bit;
@@ -139,7 +139,7 @@ void ADIView::prepareImages() {
 
         auto end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> duration = end - start;
-        LOG(INFO) << "Processing time: " << duration.count() << " ms";
+        //LOG(INFO) << "Processing time: " << duration.count() << " ms";
 
         std::unique_lock<std::mutex> imshow_lock(m_imshowMutex);
 
