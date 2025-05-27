@@ -138,6 +138,7 @@ bool ADIMainWindow::cameraButton(std::map<std::string, std::string> &snapshot) {
         snapshot["ab"] = base_filename;
         snapshot["depth"] = base_filename;
         snapshot["meta"] = base_filename;
+        snapshot["conf"] = base_filename;
 
         if (m_off_line && m_offline_save_all_frames) {
             m_off_line_frame_index = 0;

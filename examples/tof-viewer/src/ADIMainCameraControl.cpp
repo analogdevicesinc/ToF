@@ -258,7 +258,7 @@ void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
     }
 
     if (synchronizeVideo() >= 0) {
-        DisplayPointCloudWindow(overlayFlags); // PRB26 - a crash is happening in here with offline playback.
+        DisplayPointCloudWindow(overlayFlags);
         DisplayActiveBrightnessWindow(overlayFlags);
         DisplayDepthWindow(overlayFlags);
         DisplayInfoWindow(overlayFlags);

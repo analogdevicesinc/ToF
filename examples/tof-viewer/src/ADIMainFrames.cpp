@@ -1,6 +1,9 @@
 #include <glad/gl.h>
 #include <cmath>
 #include <numeric>
+#include <fstream>
+#include <string>
+#include <stdexcept>
 
 #include "ADIMainWindow.h"
 #include "ADIImGUIExtensions.h"
@@ -192,19 +195,60 @@ int32_t ADIMainWindow::synchronizeVideo() {
     return 0;
 }
 
-int32_t ADIMainWindow::SaveTextureAsJPEG(const char* filename, GLuint textureID, int width, int height) {
+int32_t ADIMainWindow::SaveTextureAsJPEG(const char* filename, GLuint textureID, uint32_t width, uint32_t height) {
     glBindTexture(GL_TEXTURE_2D, textureID);
 
     std::vector<unsigned char> pixels(width * height * 3); // RGB only
 
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
 
-    return stbi_write_jpg(filename, width, height, 3, pixels.data(), 90);
+    return stbi_write_jpg(filename, width, height, 3, pixels.data(), 100);
 }
 
-#include <fstream>
-#include <string>
-#include <stdexcept>
+int32_t ADIMainWindow::SaveConfidenceAsJPEG(const char* filename, const std::shared_ptr<aditof::Frame> frame, uint32_t width, uint32_t height) {
+
+    if (frame == nullptr) {
+        return false;
+    }
+
+    std::vector<uint8_t> img_8bit(width * height);
+
+    if (width == 1024 && height == 1024) {
+
+        float* confFrame;
+        frame->getData("conf", (uint16_t **) &confFrame);
+
+        auto minmax = std::minmax_element(confFrame, confFrame + width * height);
+        float min_val = *minmax.first;
+        float max_val = *minmax.second;
+
+        // Avoid divide by zero
+        float range = (max_val == min_val) ? 1.0f : (max_val - min_val);
+
+        for (int i = 0; i < width * height; ++i) {
+            float norm = (confFrame[i] - min_val) / range; // [0,1]
+            img_8bit[i] = static_cast<uint8_t>(norm * 255.0f + 0.5f);
+        }
+    } else {
+
+        uint16_t* confFrame;
+        frame->getData("conf", &confFrame);
+
+        auto minmax = std::minmax_element(confFrame, confFrame + width * height);
+        uint16_t min_val = *minmax.first;
+        uint16_t max_val = *minmax.second;
+        float range = (max_val == min_val) ? 1.0f : static_cast<float>(max_val - min_val);
+
+        for (int i = 0; i < width * height; ++i) {
+            float norm = static_cast<float>(confFrame[i] - min_val) / range; // [0,1]
+            img_8bit[i] = static_cast<uint8_t>(norm * 255.0f + 0.5f);
+        }
+    }
+
+    stbi_write_jpg(filename, width, height, 1, img_8bit.data(), 100);
+
+    return 0;
+}
 
 void ADIMainWindow::SavePointCloudPLYBinary(const char* filename, const float* points, size_t num_points) {
     std::ofstream file(filename, std::ios::binary);
@@ -369,7 +413,7 @@ void ADIMainWindow::DisplayActiveBrightnessWindow(
                     m_snapshot["meta"] = "";
                 }
 
-				if (m_snapshot["meta"].length() == 0 && m_snapshot["ab"].length() == 0 && m_snapshot["depth"].length() == 0 && m_snapshot["pc"].length() == 0) {
+				if (m_snapshot["meta"].length() == 0 && m_snapshot["ab"].length() == 0 && m_snapshot["depth"].length() == 0 && m_snapshot["pc"].length() == 0 && m_snapshot["conf"].length() == 0) {
 					m_flash_main_window = true;
 				}
 			}
@@ -472,14 +516,17 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
                 aditof::Metadata metadata;
                 aditof::Status status = m_view_instance->m_capturedFrame->getMetadataStruct(metadata);
                 std::string depth_filename = m_snapshot["depth"] + "_" + std::to_string(metadata.frameNumber) + "_depth.jpg";
+                std::string conf_filename = m_snapshot["conf"] + "_" + std::to_string(metadata.frameNumber) + "_conf.jpg";
 
 				SaveTextureAsJPEG(depth_filename.c_str(), m_gl_depth_video_texture, m_view_instance->frameWidth, m_view_instance->frameHeight);
+                SaveConfidenceAsJPEG(conf_filename.c_str(), m_view_instance->m_capturedFrame, m_view_instance->frameWidth, m_view_instance->frameHeight);
 
                 if (SaveAllFramesUpdate()) {
                     m_snapshot["depth"] = "";
+                    m_snapshot["conf"] = "";
                 }
 
-                if (m_snapshot["meta"].length() == 0 && m_snapshot["ab"].length() == 0 && m_snapshot["depth"].length() == 0 && m_snapshot["pc"].length() == 0) {
+                if (m_snapshot["meta"].length() == 0 && m_snapshot["ab"].length() == 0 && m_snapshot["depth"].length() == 0 && m_snapshot["pc"].length() == 0 && m_snapshot["conf"].length() == 0) {
                     m_flash_main_window = true;
                 }
             }
@@ -703,7 +750,7 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
                     m_snapshot["pc"] = "";
                 }
 
-                if (m_snapshot["meta"].length() == 0 && m_snapshot["ab"].length() == 0 && m_snapshot["depth"].length() == 0 && m_snapshot["pc"].length() == 0) {
+                if (m_snapshot["meta"].length() == 0 && m_snapshot["ab"].length() == 0 && m_snapshot["depth"].length() == 0 && m_snapshot["pc"].length() == 0 && m_snapshot["conf"].length() == 0) {
                     m_flash_main_window = true;
                 }
             }
