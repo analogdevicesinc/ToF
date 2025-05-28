@@ -619,7 +619,7 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
 
 void ADIMainWindow::InitOpenGLPointCloudTexture() {
     glEnable(GL_DEPTH_TEST);
-    glDisable(GL_PROGRAM_POINT_SIZE); // Use the point size from "glPointSize()"
+    glEnable(GL_PROGRAM_POINT_SIZE); // Use the point size from "glPointSize()"
 
     constexpr char const pointCloudVertexShader[] =
         R"(
@@ -630,13 +630,20 @@ void ADIMainWindow::InitOpenGLPointCloudTexture() {
 				uniform mat4 model;
 				uniform mat4 view;
 				uniform mat4 projection;
+                uniform float uPointSize;
 
 				out vec4 color_based_on_position;
 
 				void main()
 				{
+                    if (length(aPos) < 0.0001) {
+                        gl_PointSize = 10.0;
+                        color_based_on_position = vec4(1.0, 1.0, 1.0, 1.0);
+                    } else {
+                        gl_PointSize = 2.0;
+                        color_based_on_position = vec4(hsvColor, 1.0);
+                    }
 					gl_Position = projection * view * model * vec4(aPos, 1.0);
-					color_based_on_position = vec4(hsvColor, 1.0);
 				}
 				)";
 
@@ -665,8 +672,8 @@ void ADIMainWindow::InitOpenGLPointCloudTexture() {
     //Get the model, view, and projection index
     m_view_instance->modelIndex = glGetUniformLocation(m_view_instance->pcShader.Id(), "model");
     m_view_instance->viewIndex = glGetUniformLocation(m_view_instance->pcShader.Id(), "view");
-    m_view_instance->projectionIndex =
-        glGetUniformLocation(m_view_instance->pcShader.Id(), "projection");
+    m_view_instance->projectionIndex = glGetUniformLocation(m_view_instance->pcShader.Id(), "projection");
+    m_view_instance->m_pointSizeIndex = glGetUniformLocation(m_view_instance->pcShader.Id(), "uPointSize");
 
     //Initialize Model, View, and Projection Matrices to Identity
     mat4x4_identity(m_view_mat);
@@ -713,7 +720,7 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear whole main window
             glEnable(GL_DEPTH_TEST);
-            glPointSize(m_point_size);
+            glUniform1f(m_view_instance->m_pointSizeIndex, m_point_size);
 
             // draw our Image
             glUseProgram(m_view_instance->pcShader.Id());
@@ -805,7 +812,8 @@ int32_t ADIMainWindow::PreparePointCloudVertices(GLuint &vbo, GLuint&vao) {
     //Bind Point Cloud Image
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     //Pass on Image buffer here:
-    glBufferData(GL_ARRAY_BUFFER, m_view_instance->vertexArraySize,
+    glBufferData(GL_ARRAY_BUFFER, 
+                 m_view_instance->vertexArraySize,
                  m_view_instance->normalized_vertices,
                  GL_STREAM_DRAW);
 

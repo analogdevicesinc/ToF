@@ -278,7 +278,7 @@ void ADIView::_displayDepthImage() {
 
 void ADIView::_displayPointCloudImage() {
     //Get XYZ table
-    m_capturedFrame->getData("xyz", &pointCloud_video_data);
+    m_capturedFrame->getData("xyz", (uint16_t **) & pointCloud_video_data);
     aditof::FrameDataDetails frameXyzDetails;
     frameXyzDetails.height = 0;
     frameXyzDetails.width = 0;
@@ -294,7 +294,7 @@ void ADIView::_displayPointCloudImage() {
         }
         pointcloudTableSize = frameSize;
         normalized_vertices =
-            new float[pointcloudTableSize * 3]; //Adding RGB components
+            new float[(pointcloudTableSize+1) * 3]; //Adding RGB components
     }
 
     float fRed = 0.f;
@@ -310,44 +310,46 @@ void ADIView::_displayPointCloudImage() {
     //2) normalize between [-1.0, 1.0]
     //3) X and Y ranges between [-32768, 32767] or [FFFF, 7FFF]. Z axis is [0, 7FFF]
 
-    for (int i = 0; i < pointcloudTableSize; i += 3) {
+    for (uint32_t i = 0; i < pointcloudTableSize; i += 3) {
             
         //XYZ
-        normalized_vertices[bgrSize++] =
-            (((int16_t)pointCloud_video_data[i])) / (Max_X);
-        normalized_vertices[bgrSize++] =
-            (((int16_t)pointCloud_video_data[i + 1])) / ((Max_Y)); 
-        normalized_vertices[bgrSize++] =
-            (((int16_t)pointCloud_video_data[i + 2])) / ((Max_Z));
+        normalized_vertices[bgrSize++] = static_cast<float>(pointCloud_video_data[i]) / Max_X;
+        normalized_vertices[bgrSize++] = static_cast<float>(pointCloud_video_data[i + 1]) / Max_Y;
+        normalized_vertices[bgrSize++] = static_cast<float>(pointCloud_video_data[i + 2]) / Max_Z;
 
         //RGB
         if ((int16_t)pointCloud_video_data[i + 2] == 0) {
-
-            normalized_vertices[bgrSize++] = 0.0; //R = 0.0
-            normalized_vertices[bgrSize++] = 0.0; //G = 0.0
-            normalized_vertices[bgrSize++] = 0.0; //B = 0.0
-            cntr += 3;
-
-        } else {
+            fRed = fGreen = fBlue = 0.0f;
             if (m_pccolour == 1) {
-                normalized_vertices[bgrSize++] =
-                    (float)ab_video_data_8bit[cntr++] / 255.0f;
-                normalized_vertices[bgrSize++] =
-                    (float)ab_video_data_8bit[cntr++] / 255.0f;
-                normalized_vertices[bgrSize++] =
-                    (float)ab_video_data_8bit[cntr++] / 255.0f;
+                cntr += 3; // For 'm_pccolour == 1' case.
+            }
+        } else {
+            if (m_pccolour == 2) {
+				fRed = fGreen = fBlue = 1.0f; //Default RGB values
+            } else if (m_pccolour == 1) {
+                fRed   = (float)ab_video_data_8bit[cntr] / 255.0f;
+                fGreen = (float)ab_video_data_8bit[cntr + 1] / 255.0f;
+                fBlue  = (float)ab_video_data_8bit[cntr + 2] / 255.0f;
+                cntr += 3;
             } else {
                 hsvColorMap((pointCloud_video_data[i + 2]), maxRange, minRange,
                     fRed, fGreen, fBlue);
-                normalized_vertices[bgrSize++] = fRed;
-                normalized_vertices[bgrSize++] = fGreen;
-                normalized_vertices[bgrSize++] = fBlue;
             }
         }
+        normalized_vertices[bgrSize++] = fRed;
+        normalized_vertices[bgrSize++] = fGreen;
+        normalized_vertices[bgrSize++] = fBlue;
     }
 
+    normalized_vertices[bgrSize++] = 0.0f; // X
+    normalized_vertices[bgrSize++] = 0.0f; // Y
+    normalized_vertices[bgrSize++] = 0.0f; // Z
+    normalized_vertices[bgrSize++] = 1.0f; // R
+    normalized_vertices[bgrSize++] = 1.0f; // G
+    normalized_vertices[bgrSize++] = 1.0f; // 
+
     vertexArraySize =
-        pointcloudTableSize * sizeof(float) * 3; //Adding RGB component
+        (pointcloudTableSize+1) * sizeof(float) * 3; //Adding RGB component
 }
 
 void ADIView::hsvColorMap(uint16_t video_data, int max, int min, float &fRed,

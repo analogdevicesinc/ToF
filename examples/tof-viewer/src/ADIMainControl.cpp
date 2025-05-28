@@ -504,6 +504,9 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
         ImGui::RadioButton("AB Colour", selected == 1);
         if (ImGui::IsItemClicked())
             selected = 1;
+        ImGui::RadioButton("Solid Colour", selected == 2);
+        if (ImGui::IsItemClicked())
+            selected = 2;
 
         m_view_instance->setPointCloudColour(selected);
 

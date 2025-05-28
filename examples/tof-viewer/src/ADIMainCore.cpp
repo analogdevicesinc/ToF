@@ -193,6 +193,7 @@ bool ADIMainWindow::StartImGUI(const ADIViewerArgs &args) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+
     // only glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // 3.0+ only
+    glfwWindowHint(GLFW_DEPTH_BITS, 24);
 
     std::string version = aditof::getApiVersion();
     std::string _title = "Analog Devices, Inc. Time of Flight Main Window v" +

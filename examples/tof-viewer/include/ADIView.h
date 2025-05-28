@@ -95,7 +95,7 @@ class ADIView {
     std::condition_variable m_frameCapturedCv;
     uint16_t *ab_video_data;
     uint16_t *depth_video_data;
-    uint16_t *pointCloud_video_data;
+    int16_t *pointCloud_video_data;
     uint8_t *ab_video_data_8bit;
     uint8_t *depth_video_data_8bit;
     float *normalized_vertices = nullptr;
@@ -114,9 +114,10 @@ class ADIView {
     void startCamera();
 
     //Point Cloud
-    uint32_t viewIndex;
-    uint32_t modelIndex;
-    uint32_t projectionIndex;
+    GLint viewIndex;
+    GLint modelIndex;
+    GLint projectionIndex;
+    GLint m_pointSizeIndex;
     GLuint vertexArrayObject;
     GLuint vertexBufferObject; //Image Buffer
     adiviewer::Program pcShader;
