@@ -320,6 +320,47 @@ bool ADIMainWindow::SaveAllFramesUpdate() {
     return true; // Should never get here since this use case should never occur
 }
 
+static inline ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs) {
+    return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y);
+}
+
+static inline ImVec2 operator/(const ImVec2& lhs, const float rhs) {
+    return ImVec2(lhs.x / rhs, lhs.y / rhs);
+}
+
+static inline ImVec2 operator*(const ImVec2& lhs, const float rhs) {
+    return ImVec2(lhs.x * rhs, lhs.y * rhs);
+}
+
+ImVec2 ADIMainWindow::ImRotate(const ImVec2& v, float cos_a, float sin_a) {
+    return ImVec2(v.x * cos_a - v.y * sin_a, v.x * sin_a + v.y * cos_a);
+}
+
+void ADIMainWindow::ImageRotated(ImTextureID tex_id, ImVec2 center, ImVec2 size,
+    float angle) {
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    ImVec2 _center =
+        ((center * m_dpi_scale_factor) / 2.0f) + ImGui::GetCursorScreenPos();
+    ImVec2 _size = size;
+    float cos_a = cosf(angle);
+    float sin_a = sinf(angle);
+    ImVec2 pos[4] = {
+        _center +
+            ImRotate(ImVec2(-_size.x * 0.5f, -_size.y * 0.5f), cos_a, sin_a),
+        _center +
+            ImRotate(ImVec2(_size.x * 0.5f, -_size.y * 0.5f), cos_a, sin_a),
+        _center +
+            ImRotate(ImVec2(_size.x * 0.5f, +_size.y * 0.5f), cos_a, sin_a),
+        _center +
+            ImRotate(ImVec2(-_size.x * 0.5f, +_size.y * 0.5f), cos_a, sin_a) };
+    ImVec2 uvs[4] = { ImVec2(0.0f, 0.0f), ImVec2(1.0f, 0.0f), ImVec2(1.0f, 1.0f),
+                     ImVec2(0.0f, 1.0f) };
+
+    draw_list->AddImageQuad(tex_id, pos[0], pos[1], pos[2], pos[3], uvs[0],
+        uvs[1], uvs[2], uvs[3], IM_COL32_WHITE);
+}
+
 //*******************************************
 //* Section: Handling of AB Window 
 //*******************************************
@@ -619,7 +660,7 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
 
 void ADIMainWindow::InitOpenGLPointCloudTexture() {
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_PROGRAM_POINT_SIZE); // Use the point size from "glPointSize()"
+    glEnable(GL_PROGRAM_POINT_SIZE);
 
     constexpr char const pointCloudVertexShader[] =
         R"(
@@ -640,7 +681,7 @@ void ADIMainWindow::InitOpenGLPointCloudTexture() {
                         gl_PointSize = 10.0;
                         color_based_on_position = vec4(1.0, 1.0, 1.0, 1.0);
                     } else {
-                        gl_PointSize = 2.0;
+                        gl_PointSize = uPointSize;
                         color_based_on_position = vec4(hsvColor, 1.0);
                     }
 					gl_Position = projection * view * model * vec4(aPos, 1.0);
@@ -720,10 +761,10 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear whole main window
             glEnable(GL_DEPTH_TEST);
-            glUniform1f(m_view_instance->m_pointSizeIndex, m_point_size);
 
             // draw our Image
             glUseProgram(m_view_instance->pcShader.Id());
+            glUniform1f(m_view_instance->m_pointSizeIndex, m_point_size);
             mat4x4_perspective(m_projection_mat, Radians(m_field_of_view),
                 (float)m_view_instance->frameWidth /
                 (float)m_view_instance->frameHeight,
@@ -837,47 +878,6 @@ int32_t ADIMainWindow::PreparePointCloudVertices(GLuint &vbo, GLuint&vao) {
     glBindVertexArray(0);
 
     return 0;
-}
-
-static inline ImVec2 operator+(const ImVec2 &lhs, const ImVec2 &rhs) {
-    return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y);
-}
-
-static inline ImVec2 operator/(const ImVec2 &lhs, const float rhs) {
-    return ImVec2(lhs.x / rhs, lhs.y / rhs);
-}
-
-static inline ImVec2 operator*(const ImVec2 &lhs, const float rhs) {
-    return ImVec2(lhs.x * rhs, lhs.y * rhs);
-}
-
-ImVec2 ADIMainWindow::ImRotate(const ImVec2 &v, float cos_a, float sin_a) {
-    return ImVec2(v.x * cos_a - v.y * sin_a, v.x * sin_a + v.y * cos_a);
-}
-
-void ADIMainWindow::ImageRotated(ImTextureID tex_id, ImVec2 center, ImVec2 size,
-                                 float angle) {
-    ImDrawList *draw_list = ImGui::GetWindowDrawList();
-
-    ImVec2 _center =
-        ((center * m_dpi_scale_factor) / 2.0f) + ImGui::GetCursorScreenPos();
-    ImVec2 _size = size;
-    float cos_a = cosf(angle);
-    float sin_a = sinf(angle);
-    ImVec2 pos[4] = {
-        _center +
-            ImRotate(ImVec2(-_size.x * 0.5f, -_size.y * 0.5f), cos_a, sin_a),
-        _center +
-            ImRotate(ImVec2(_size.x * 0.5f, -_size.y * 0.5f), cos_a, sin_a),
-        _center +
-            ImRotate(ImVec2(_size.x * 0.5f, +_size.y * 0.5f), cos_a, sin_a),
-        _center +
-            ImRotate(ImVec2(-_size.x * 0.5f, +_size.y * 0.5f), cos_a, sin_a)};
-    ImVec2 uvs[4] = {ImVec2(0.0f, 0.0f), ImVec2(1.0f, 0.0f), ImVec2(1.0f, 1.0f),
-                     ImVec2(0.0f, 1.0f)};
-
-    draw_list->AddImageQuad(tex_id, pos[0], pos[1], pos[2], pos[3], uvs[0],
-                            uvs[1], uvs[2], uvs[3], IM_COL32_WHITE);
 }
 
 void ADIMainWindow::PointCloudReset() {
