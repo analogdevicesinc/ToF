@@ -658,7 +658,15 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                     width_tmp * height_tmp * aditofModeDetail.numberOfPhases;
 
             } else {
+#ifdef DUAL
+                if (mode == 1 || mode == 0) {
+                    processedFrameSize = width_tmp * height_tmp * 2;
+                } else {
+                    processedFrameSize = width_tmp * height_tmp * 4;
+                }
+#else
                 processedFrameSize = width_tmp * height_tmp * 4;
+#endif
             }
 
             if (buff_frame_to_send != nullptr) {
