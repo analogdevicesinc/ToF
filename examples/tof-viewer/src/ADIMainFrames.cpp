@@ -913,21 +913,62 @@ float ADIMainWindow::Radians(float degrees) {
 }
 
 void ADIMainWindow::ProcessInputs(GLFWwindow *window) {
+
+    ImGuiIO& io = ImGui::GetIO(); //Get mouse events
     //Sensitivity
     const float maxFov = 45.0f;
     float cameraSpeed = 2.5f * m_delta_time;
-
-    ImGuiIO &io = ImGui::GetIO(); //Get mouse events
-
+    float dRoll = 0.0f;
+    float dPitch = 0.0f;
+    float dYaw = 0.0f;
+    bool update = false;
+    
     if (ImGui::IsWindowHovered()) {
-        if (io.MouseWheel) //Use mouse wheel to scroll up/down for zoom in/zoom out
-        {
-            m_field_of_view -= (float)io.MouseWheel;
-            if (m_field_of_view < 1.0f) {
-                m_field_of_view = 1.0f;
+        if (io.MouseWheel) {
+            if (ImGui::GetIO().KeyAlt && ImGui::GetIO().KeyCtrl) {
+
+                dRoll -= (float)io.MouseWheel / 10.0f;
+                update = true;
+
             }
-            if (m_field_of_view > maxFov) {
-                m_field_of_view = maxFov;
+            else if (ImGui::GetIO().KeyCtrl) {
+
+                dPitch -= (float)io.MouseWheel / 10.0f;
+                update = true;
+
+            }
+            else if (ImGui::GetIO().KeyAlt) {
+
+                dYaw -= (float)io.MouseWheel / 10.0f;
+                update = true;
+
+            }
+            else {
+
+                m_field_of_view -= (float)io.MouseWheel;
+                if (m_field_of_view < 1.0f) {
+                    m_field_of_view = 1.0f;
+                }
+                if (m_field_of_view > maxFov) {
+                    m_field_of_view = maxFov;
+                }
+            }
+
+            if (update) {
+                glm::mat4 incr =
+                    glm::rotate(glm::mat4(1.0f), dYaw, glm::vec3(0, 1, 0))   // Yaw (Y axis)
+                    * glm::rotate(glm::mat4(1.0f), dPitch, glm::vec3(1, 0, 0))   // Pitch (X axis)
+                    * glm::rotate(glm::mat4(1.0f), dRoll, glm::vec3(0, 0, 1));  // Roll (Z axis)
+
+                mat4x4 incr_tmp;
+
+                for (int col = 0; col < 4; ++col)
+                    for (int row = 0; row < 4; ++row)
+                        incr_tmp[col][row] = incr[col][row];
+
+                MatrixMultiply(m_model_mat, incr_tmp, m_model_mat);
+
+                return;
             }
         }
     }
@@ -992,35 +1033,6 @@ void ADIMainWindow::ProcessInputs(GLFWwindow *window) {
             }
         }
     }
-
-#if 0 // Remove for now using only the mouse for movements
-    if (ImGui::IsKeyPressed(ImGuiKey_UpArrow)) {
-        vec3 aux = { 0.0, 0.0, 0.0 };
-        vec3_scale(aux, m_camera_front_vec, cameraSpeed);
-        vec3_add(m_camera_position_vec, m_camera_position_vec, aux);
-    }
-
-    if (ImGui::IsKeyPressed(ImGuiKey_DownArrow)) {
-        vec3 aux = { 0.0, 0.0, 0.0 };
-        vec3_scale(aux, m_camera_front_vec, cameraSpeed);
-        vec3_sub(m_camera_position_vec, m_camera_position_vec, aux);
-    }
-
-    if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) {
-        vec3 aux = { 0.0, 0.0, 0.0 };
-        vec3_mul_cross(aux, m_camera_front_vec, m_camera_up_vec);
-        vec3_norm(aux, aux);
-        vec3_scale(aux, aux, cameraSpeed);
-        vec3_sub(m_camera_position_vec, m_camera_position_vec, aux);
-    }
-    if (ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
-        vec3 aux = { 0.0, 0.0, 0.0 };
-        vec3_mul_cross(aux, m_camera_front_vec, m_camera_up_vec);
-        vec3_norm(aux, aux);
-        vec3_scale(aux, aux, cameraSpeed);
-        vec3_add(m_camera_position_vec, m_camera_position_vec, aux);
-    }
-#endif 
 }
 
 void ADIMainWindow::GetArcballRotation(quat rotation,
