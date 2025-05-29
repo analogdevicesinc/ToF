@@ -493,7 +493,7 @@ class ADIMainWindow {
     void NewLine(float spacing);
     void ShowStartWizard();
     bool SaveAllFramesUpdate();
-    bool cameraButton(std::map<std::string, std::string>& snapshot);
+    bool cameraButton(std::string& baseFileName);
     int32_t SaveTextureAsJPEG(const char* filename, GLuint textureID, uint32_t width, uint32_t height);
     int32_t SaveConfidenceAsJPEG(const char* filename, const std::shared_ptr<aditof::Frame> frame, uint32_t width, uint32_t height);
     void SavePointCloudPLYBinary(const char* filename, const float* points, size_t num_points);
@@ -630,16 +630,9 @@ class ADIMainWindow {
     std::vector<float> m_depth_line_values;
     std::vector<std::pair<float, float>> m_depthLine;
     bool m_flash_main_window = false;
-    std::mutex m_snapshot_mutex;
-    std::map<std::string, std::string> m_snapshot = { 
-        {"pc", ""},
-        {"ab", ""},
-        {"depth", ""},
-        {"meta", "" },
-        {"conf", "" }
-    };
     int32_t m_user_frame_rate = 10;
     std::atomic<bool> m_offline_change_frame;
+	std::string m_base_file_name;
 };
 } // namespace adiMainWindow
 #endif //ADIMAINWINDOW_H

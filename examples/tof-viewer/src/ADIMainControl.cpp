@@ -92,7 +92,7 @@ static bool DrawIconButton(const char *id,
     return pressed;
 }
 
-bool ADIMainWindow::cameraButton(std::map<std::string, std::string> &snapshot) {
+bool ADIMainWindow::cameraButton(std::string &baseFileName) {
     if (DrawIconButton(
         "Camera",
         [](ImDrawList* dl, ImVec2 min, ImVec2 max) {
@@ -124,21 +124,14 @@ bool ADIMainWindow::cameraButton(std::map<std::string, std::string> &snapshot) {
                 LOG(ERROR) << "Failed to create folder for recordings: "
                     << folder_path;
 
-                snapshot["pc"] = "";
-                snapshot["ab"] = "";
-                snapshot["depth"] = "";
-                snapshot["meta"] = "";
+				baseFileName = "";
 
                 return false;
             }
         }
 
         std::string base_filename = folder_path + viewerGenerateFileName("aditof_", "");
-        snapshot["pc"] = base_filename;
-        snapshot["ab"] = base_filename;
-        snapshot["depth"] = base_filename;
-        snapshot["meta"] = base_filename;
-        snapshot["conf"] = base_filename;
+        baseFileName = base_filename;
 
         if (m_off_line && m_offline_save_all_frames) {
             m_off_line_frame_index = 0;
@@ -196,8 +189,7 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
             static std::string filePath = "";
             static bool recordingActive = false;
 
-            std::lock_guard<std::mutex> lock(m_snapshot_mutex);
-            cameraButton(m_snapshot);
+            cameraButton(m_base_file_name);
 
             ImGui::SameLine(0.0f, 10.0f);
 
@@ -269,8 +261,7 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
 
             ImGui::Toggle("Save All Frames", &m_offline_save_all_frames);
 			ImGui::NewLine();
-            std::lock_guard<std::mutex> lock(m_snapshot_mutex);
-            cameraButton(m_snapshot);
+            cameraButton(m_base_file_name);
 
             ImGui::SameLine(0.0f, 10.0f);
 
