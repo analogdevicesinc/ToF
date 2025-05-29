@@ -129,7 +129,7 @@ def execute_post_script_route():
 def execute_post_script():
     """Run the specified script and return its output or error, excluding the first line."""
     try:
-        result = subprocess.run(['./switch-workspace.sh ~'], capture_output=True, text=True, shell=True)
+        result = subprocess.run(['./switch-workspace.sh /home/analog'], capture_output=True, text=True, shell=True)
         if result.returncode != 0:
             error_message = f"Script error: {result.stderr.strip()}"
             logging.error(error_message)
@@ -323,7 +323,7 @@ def switch_workspace():
 
     try:
         # Run the switch-workspace script with the selected entry
-        result = subprocess.run(['./switch-workspace.sh', '~', entry],
+        result = subprocess.run(['./switch-workspace.sh', '/home/analog', entry],
                                 capture_output=True, text=True, check=True)
         
         # Check if there’s an error
@@ -567,7 +567,7 @@ def execute_list_firware():
 
 def list_firmware_versions():
     try:
-        result = subprocess.run(['./list-firmware-version.sh ~'], capture_output=True, text=True, shell=True)
+        result = subprocess.run(['./list-firmware-version.sh /home/analog'], capture_output=True, text=True, shell=True)
         if result.returncode != 0:
             error_message = f"Script error: {result.stderr.strip()}"
             logging.error(error_message)
