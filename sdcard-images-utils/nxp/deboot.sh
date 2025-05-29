@@ -217,6 +217,7 @@ groupadd gpio
 usermod -a -G sudo,video,disk,i2c,gpio ${USERNAME}
 echo -e "${PASSWORD}\n${PASSWORD}\n" | passwd ${USERNAME}
 
+
 # overwrite apt source list
 rm -f /etc/apt/sources.list
 echo deb     ${DISTRO_MIRROR} ${DISTRO_CODE}          main universe >> /etc/apt/sources.list
@@ -367,10 +368,30 @@ sudo ln -s /home/${USERNAME}/Workspace/services/network-gadget.service /usr/lib/
 sudo ln -s /home/${USERNAME}/Workspace/services/usb-gadget.service /usr/lib/systemd/system/usb-gadget.service
 
 #copy the driver build in modules folder
-mkdir /home/${USERNAME}/Workspace/module
-mv /usr/lib/modules/5.10.72-adi-00067-*/kernel/drivers/media/i2c/adsd3500.ko /home/${USERNAME}/Workspace/module
-sudo ln -s /home/${USERNAME}/Workspace/module/adsd3500.ko /usr/lib/modules/5.10.72-adi-00067-*/kernel/drivers/media/i2c/adsd3500.ko
-chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/module
+KERNEL_DIR=$(ls -d /usr/lib/modules/5.10.72-* | head -n 1)
+
+# Ensure the kernel directory exists
+if [ -z "$KERNEL_DIR" ]; then
+    echo "Kernel directory not found!"
+    exit 1
+fi
+
+# Create destination directory
+mkdir -p /home/${USERNAME}/Workspace/module
+
+# Move the kernel module
+if [ -f "$KERNEL_DIR/kernel/drivers/media/i2c/adsd3500.ko" ]; then
+    mv "$KERNEL_DIR/kernel/drivers/media/i2c/adsd3500.ko" /home/${USERNAME}/Workspace/module/
+else
+    echo "Module adsd3500.ko not found in kernel directory!"
+    exit 1
+fi
+
+# Create symbolic link (requires sudo)
+sudo ln -sf /home/${USERNAME}/Workspace/module/adsd3500.ko "$KERNEL_DIR/kernel/drivers/media/i2c/adsd3500.ko"
+
+# Set ownership
+sudo chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/module
 
 EOF
      sudo mv web_ui_setup.sh ${ROOTFS_TMP}/tmp
@@ -386,8 +407,8 @@ function main() {
   
   cd ${OUTPUT_DIR}
   
-  # create 5GB ext4 image
-  dd if=/dev/zero of=rootfs.ext4 bs=1M count=5000
+  # create 8GB ext4 image
+  dd if=/dev/zero of=rootfs.ext4 bs=1M count=8000
   mkdir -p ${ROOTFS_TMP}
   mkfs.ext4 rootfs.ext4
   sudo mount -o loop -o barrier=0 rootfs.ext4 ${ROOTFS_TMP}
