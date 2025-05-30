@@ -319,8 +319,8 @@ void ADIMainWindow::OpenGLCleanUp() {
     glDeleteTextures(1, &m_gl_ab_video_texture);
     glDeleteTextures(1, &m_gl_depth_video_texture);
     glDeleteTextures(1, &m_gl_pointcloud_video_texture);
-	glDeleteTextures(1, &m_gl_pc_colourTex);
-    glDeleteTextures(1, &m_gl_pc_depthTex);
+	//glDeleteTextures(1, &m_gl_pc_colourTex); // TODO: Find out why deleting this causes issues.
+    //glDeleteTextures(1, &m_gl_pc_depthTex);  // TODO: Find out why deleting this causes issues.
     glDeleteVertexArrays(1, &m_view_instance->vertexArrayObject);
     glDeleteBuffers(1, &m_view_instance->vertexBufferObject);
     glDeleteProgram(m_view_instance->pcShader.Id());
