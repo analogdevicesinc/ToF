@@ -145,8 +145,7 @@ if %answer_yes%==0 (
 echo The permission is provided 
 ::create the missing folders
 
-if not exist "%build_dire%" (
-    md "%build_dire%"
+if not exist "%build_dire%" md "%build_dire%"
 echo If Folder not present created else not created
 
 ::init and update of libaditof submodule
