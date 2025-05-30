@@ -514,7 +514,7 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
 //*******************************************
 
 void ADIMainWindow::InitOpenGLPointCloudTexture() {
-    glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_DEPTH_TEST);
     glEnable(GL_PROGRAM_POINT_SIZE);
 
     constexpr char const pointCloudVertexShader[] =
@@ -577,19 +577,35 @@ void ADIMainWindow::InitOpenGLPointCloudTexture() {
     mat4x4_identity(m_model_mat);
 
     //Create Frame Buffers to be able to display on the Point Cloud Window.
-    glad_glGenFramebuffers(1, &m_gl_framebuffer);
-    glad_glBindFramebuffer(GL_FRAMEBUFFER, m_gl_framebuffer);
+    glGenFramebuffers(1, &m_gl_pc_colourTex);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_gl_pc_colourTex);
     // create a color attachment texture
     glGenTextures(1, &m_gl_pointcloud_video_texture);
     glBindTexture(GL_TEXTURE_2D, m_gl_pointcloud_video_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_main_window_width, m_main_window_height, 0,
-        GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_main_window_width, m_main_window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glad_glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-        GL_TEXTURE_2D,
-        m_gl_pointcloud_video_texture, 0);
-    glad_glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_gl_pointcloud_video_texture, 0);
+
+    glGenTextures(1, &m_gl_pc_depthTex);
+    glBindTexture(GL_TEXTURE_2D, m_gl_pc_depthTex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, m_main_window_width, m_main_window_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_gl_pc_depthTex, 0);
+
+    GLenum drawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
+    glDrawBuffers(1, drawBuffers);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cerr << "FBO incomplete!\n";
+        return;
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
@@ -612,21 +628,21 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
         if (PreparePointCloudVertices(m_view_instance->vertexBufferObject,
             m_view_instance->vertexArrayObject) >= 0) {
 
-            glad_glBindFramebuffer(GL_FRAMEBUFFER, m_gl_framebuffer);
-
-            //glViewport((int)m_pc_position->x, m_pc_position->y, (int)m_pc_position->width, (int)m_pc_position->height);
-            glEnable(GL_DEPTH_TEST);
+            glBindFramebuffer(GL_FRAMEBUFFER, m_gl_pc_colourTex);
+            
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear whole main window
+            glEnable(GL_DEPTH_TEST);
+
+            int depthBits = 0;
+            glGetIntegerv(GL_DEPTH_BITS, &depthBits);
+			LOG(INFO) << "Depth Bits: " << depthBits;
 
             // draw our Image
             glUseProgram(m_view_instance->pcShader.Id());
+
             glUniform1f(m_view_instance->m_pointSizeIndex, m_point_size);
-            mat4x4_perspective(m_projection_mat, Radians(m_field_of_view),
-                (float)m_view_instance->frameWidth /
-                (float)m_view_instance->frameHeight,
-                0.1f, 100.0f);
-            glUniformMatrix4fv(m_view_instance->projectionIndex, 1, GL_FALSE,
-                &m_projection_mat[0][0]);
+            mat4x4_perspective(m_projection_mat, Radians(m_field_of_view), (float)m_view_instance->frameWidth / (float)m_view_instance->frameHeight, 0.1f, 100.0f);
+            glUniformMatrix4fv(m_view_instance->projectionIndex, 1, GL_FALSE, &m_projection_mat[0][0]);
 
             //Look-At function[ x, y, z] = (m_camera_position_vec, m_camera_position_vec + m_camera_front_vec, m_camera_up_vec);
             vec3_add(m_camera_position_front_vec, m_camera_position_vec, m_camera_front_vec);
@@ -634,11 +650,10 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
             glUniformMatrix4fv(m_view_instance->viewIndex, 1, GL_FALSE, &m_view_mat[0][0]);
             glUniformMatrix4fv(m_view_instance->modelIndex, 1, GL_FALSE, &m_model_mat[0][0]);
 
-            glBindVertexArray(
-                m_view_instance->vertexArrayObject); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-            glDrawArrays(GL_POINTS, 0,
-                static_cast<GLsizei>(m_view_instance->vertexArraySize));
+            glBindVertexArray(m_view_instance->vertexArrayObject); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+            glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(m_view_instance->vertexArraySize));
             glBindVertexArray(0);
+
             glUseProgram(0);
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -666,7 +681,7 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
             memcpy(modelMatrix, m_model_mat, sizeof(float) * 16);
             ImOGuizmo::SetRect(m_pc_position->x + 5.0f, m_pc_position->y + 15.0f, 50.0f);
             ImOGuizmo::DrawGizmo(modelMatrix, projMatrix, 10.0f);
-            //glDisable(GL_DEPTH_TEST);
+            glDisable(GL_DEPTH_TEST);
         }
     }
     ImGui::End();
@@ -773,23 +788,20 @@ void ADIMainWindow::ProcessInputs(GLFWwindow *window) {
         if (io.MouseWheel) {
             if (ImGui::GetIO().KeyAlt && ImGui::GetIO().KeyCtrl) {
 
-                dRoll -= (float)io.MouseWheel / 10.0f;
+                dRoll = -(float)io.MouseWheel / 10.0f;
                 update = true;
 
-            }
-            else if (ImGui::GetIO().KeyCtrl) {
+            } else if (ImGui::GetIO().KeyCtrl) {
 
-                dPitch -= (float)io.MouseWheel / 10.0f;
+                dPitch = -(float)io.MouseWheel / 10.0f;
                 update = true;
 
-            }
-            else if (ImGui::GetIO().KeyAlt) {
+            } else if (ImGui::GetIO().KeyAlt) {
 
-                dYaw -= (float)io.MouseWheel / 10.0f;
+                dYaw = -(float)io.MouseWheel / 10.0f;
                 update = true;
 
-            }
-            else {
+            } else {
 
                 m_field_of_view -= (float)io.MouseWheel;
                 if (m_field_of_view < 1.0f) {
@@ -806,13 +818,13 @@ void ADIMainWindow::ProcessInputs(GLFWwindow *window) {
                     * glm::rotate(glm::mat4(1.0f), dPitch, glm::vec3(1, 0, 0))   // Pitch (X axis)
                     * glm::rotate(glm::mat4(1.0f), dRoll, glm::vec3(0, 0, 1));  // Roll (Z axis)
 
-                mat4x4 incr_tmp;
+                mat4x4 incr_mat4x4;
 
                 for (int col = 0; col < 4; ++col)
                     for (int row = 0; row < 4; ++row)
-                        incr_tmp[col][row] = incr[col][row];
+                        incr_mat4x4[col][row] = incr[col][row];
 
-                MatrixMultiply(m_model_mat, incr_tmp, m_model_mat);
+                MatrixMultiply(m_model_mat, incr_mat4x4, m_model_mat);
 
                 return;
             }

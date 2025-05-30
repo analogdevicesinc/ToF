@@ -187,7 +187,7 @@ static void glfw_error_callback(int error, const char *description) {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-bool ADIMainWindow::StartImGUI(const ADIViewerArgs &args) {
+bool ADIMainWindow::StartImGUI(const ADIViewerArgs& args) {
     // Setup window
     glfwSetErrorCallback(glfw_error_callback); //Error Management
     if (!glfwInit()) {
@@ -196,7 +196,7 @@ bool ADIMainWindow::StartImGUI(const ADIViewerArgs &args) {
 
     // Decide GL+GLSL versions
     // GL 3.0 + GLSL 130
-    const char *glsl_version = "#version 130";
+    const char* glsl_version = "#version 130";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+
@@ -205,7 +205,7 @@ bool ADIMainWindow::StartImGUI(const ADIViewerArgs &args) {
 
     std::string version = aditof::getApiVersion();
     std::string _title = "Analog Devices, Inc. Time of Flight Main Window v" +
-                         version; //Default name
+        version; //Default name
 
     // Create window with graphics context
     glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
@@ -220,6 +220,7 @@ bool ADIMainWindow::StartImGUI(const ADIViewerArgs &args) {
     }
 
     glfwMakeContextCurrent(window);
+
     glfwSwapInterval(1); // Enable vsync
 
     // Initialize OpenGL loader
@@ -318,6 +319,8 @@ void ADIMainWindow::OpenGLCleanUp() {
     glDeleteTextures(1, &m_gl_ab_video_texture);
     glDeleteTextures(1, &m_gl_depth_video_texture);
     glDeleteTextures(1, &m_gl_pointcloud_video_texture);
+	glDeleteTextures(1, &m_gl_pc_colourTex);
+    glDeleteTextures(1, &m_gl_pc_depthTex);
     glDeleteVertexArrays(1, &m_view_instance->vertexArrayObject);
     glDeleteBuffers(1, &m_view_instance->vertexBufferObject);
     glDeleteProgram(m_view_instance->pcShader.Id());

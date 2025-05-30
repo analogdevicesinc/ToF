@@ -545,7 +545,8 @@ class ADIMainWindow {
     float m_field_of_view = 8.0f;
     float m_translation_sensitivity = 0.03f;
     int32_t m_point_size = 1;
-    uint32_t m_gl_framebuffer;
+    GLuint m_gl_pc_colourTex;
+    GLuint m_gl_pc_depthTex;
     bool m_mouse_down = false;
     bool m_saveBinaryFormatTmp = false;
     float m_tof_image_pos_y;
