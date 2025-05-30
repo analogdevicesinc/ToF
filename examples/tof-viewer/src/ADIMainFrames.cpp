@@ -514,7 +514,6 @@ void ADIMainWindow::DisplayDepthWindow(ImGuiWindowFlags overlayFlags) {
 //*******************************************
 
 void ADIMainWindow::InitOpenGLPointCloudTexture() {
-    //glEnable(GL_DEPTH_TEST);
     glEnable(GL_PROGRAM_POINT_SIZE);
 
     constexpr char const pointCloudVertexShader[] =
@@ -532,14 +531,16 @@ void ADIMainWindow::InitOpenGLPointCloudTexture() {
 
 				void main()
 				{
-                    if (length(aPos) < 0.0001) {
+                    vec3 flippedPos = aPos;
+                    flippedPos.x = -flippedPos.x; // Flip horizontally
+                    if (length(flippedPos) < 0.0001) {
                         gl_PointSize = 10.0;
                         color_based_on_position = vec4(1.0, 1.0, 1.0, 1.0);
                     } else {
                         gl_PointSize = uPointSize;
                         color_based_on_position = vec4(hsvColor, 1.0);
                     }
-					gl_Position = projection * view * model * vec4(aPos, 1.0);
+					gl_Position = projection * view * model * vec4(flippedPos, 1.0);
 				}
 				)";
 
@@ -606,6 +607,7 @@ void ADIMainWindow::InitOpenGLPointCloudTexture() {
         return;
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    PointCloudReset();
 }
 
 void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
@@ -632,10 +634,6 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
             
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear whole main window
             glEnable(GL_DEPTH_TEST);
-
-            int depthBits = 0;
-            glGetIntegerv(GL_DEPTH_BITS, &depthBits);
-			LOG(INFO) << "Depth Bits: " << depthBits;
 
             // draw our Image
             glUseProgram(m_view_instance->pcShader.Id());
@@ -742,16 +740,23 @@ void ADIMainWindow::PointCloudReset() {
       {-0.0213157870, -0.00631578919, -3.0f, 1.0f} };
 
     const mat4x4 m_projection_default = 
-    { {14.3006659f, 0.0f, 0.0f, 0.0f},
-      {0.0f, 14.3006659f, 0.0f, 0.0f},
-      {0.0f, 0.0f, -1.00200200f, -1.0f},
-      {0.0f, 0.0f, -0.200200200f, 0.0f} };
+    { {9.51436424, 0.00000000, 0.00000000, 0.00000000},
+      {0.00000000, 9.51436424, 0.00000000, 0.00000000},
+      {0.00000000, 0.00000000, -1.00200200, -1.00000000},
+      {0.00000000, 0.00000000, -0.200200200, 0.00000000} };
+
+    const mat4x4 m_model_default =
+    { {-0.989992976, 0.0140884947, -0.140415087, 0.00000000},
+      {0.00000000, 0.995004535, 0.0998334810, 0.00000000},
+      {0.141119987, 0.0988343805, -0.985047400, 0.00000000},
+      {0.00000000, 0.00000000, 0.00000000, 1.00000000} };
 
     memcpy(m_view_mat, m_view_default, sizeof(m_view_mat));
     memcpy(m_projection_mat, m_projection_default, sizeof(m_projection_mat));
-    mat4x4_identity(m_model_mat);
+    memcpy(m_model_mat, m_model_default, sizeof(m_model_mat));
+    
     m_delta_time = 0.1;
-    m_field_of_view = 8.0f;
+    m_field_of_view = 12.0f;
     m_view_instance->Max_X = 6000.0;
     m_view_instance->Max_Y = 6000.0;
     m_view_instance->Max_Z = 6000.0;
