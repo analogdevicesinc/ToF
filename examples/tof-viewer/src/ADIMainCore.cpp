@@ -27,6 +27,10 @@
 #include <aditof/system.h>
 #include <cJSON.h>
 
+#include "roboto-bold.h"
+#include "roboto-regular.h"
+#include "roboto-semicondensed-bold.h"
+
 #if defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
 #include <direct.h>
 #include "psapi.h"
@@ -63,6 +67,10 @@ using namespace adiMainWindow;
 
 // TODO: These need to move to the class and not be global
 char saveConfigurationPath[512] = "currentconfiguration.json";
+
+extern ImFont* g_font_regular;
+extern ImFont* g_font_bold;
+extern ImFont* g_font_bold_large;
 
 ADIMainWindow::ADIMainWindow() : m_skip_network_cameras(true) {
     /********************/
@@ -316,6 +324,29 @@ void ADIMainWindow::OpenGLCleanUp() {
     m_view_instance->pcShader.RemoveShaders();
 }
 
+ImFont * ADIMainWindow::LoadFont(const unsigned char *ext_font, const unsigned int ext_font_len, const float size) {
+    ImFont *font;
+    bool isFontLoaded = false;
+    unsigned char* buffer = new(std::nothrow) unsigned char[ext_font_len];
+    if (buffer == nullptr) {
+        LOG(ERROR) << "Failed to allocate memory for Roboto Regular font!";
+    }
+    else {
+        std::memcpy(buffer, ext_font, ext_font_len);
+        font = ImGui::GetIO().Fonts->AddFontFromMemoryTTF(buffer, ext_font_len, size * m_dpi_scale_factor);
+        if (!font) {
+            LOG(ERROR) << "Failed to load font!";
+            delete[] buffer; // Clean up memory if font loading fails
+        }
+        isFontLoaded = true;
+    }
+    if (!isFontLoaded) {
+        font = ImGui::GetIO().FontDefault;
+    }
+
+    return font;
+}
+
 void ADIMainWindow::SetDpi() {
     ImGui::GetStyle().ScaleAllSizes(m_dpi_scale_factor);
 
@@ -325,6 +356,10 @@ void ADIMainWindow::SetDpi() {
     constexpr float defaultFontSize = 13.0f;
     fontConfig.SizePixels = defaultFontSize * m_dpi_scale_factor;
     ImGui::GetIO().Fonts->AddFontDefault(&fontConfig);
+
+    g_font_regular = LoadFont(Roboto_Regular_ttf, Roboto_Regular_ttf_len, 12.0f);
+    g_font_bold = LoadFont(Roboto_Bold_ttf, Roboto_Bold_ttf_len, 12.0f);
+    g_font_bold_large = LoadFont(Roboto_Bold_ttf, Roboto_Bold_ttf_len, 18.0f);
 
     glfwGetWindowSize(window, &m_main_window_width, &m_main_window_height);
     m_main_window_width = static_cast<int>(m_main_window_width * m_dpi_scale_factor);
@@ -357,6 +392,7 @@ std::shared_ptr<aditof::Camera> ADIMainWindow::GetActiveCamera() {
 
 void ADIMainWindow::Render() {
     // Main imGUI loop
+
     while (!glfwWindowShouldClose(window)) {
         // Poll and handle events (inputs, window resize, etc.)
         // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to
@@ -381,6 +417,7 @@ void ADIMainWindow::Render() {
         /***************************************************/
         //Create windows here:
         ShowMainMenu();
+        DisplayHelp();
         if (m_is_playing) {
             CameraPlay(m_mode_selection, m_view_selection);
             m_view_instance->m_ctrl->getFrameRate(m_fps);
@@ -452,15 +489,21 @@ void ADIMainWindow::Render() {
 void ADIMainWindow::ShowMainMenu() {
     static bool show_app_log = false;
     static bool show_ini_window = false;
+    static bool show_help_window = false;
 
     if (show_app_log) {
         ShowLogWindow(&show_app_log);
     }
 
+    if (show_help_window) {
+        ImGui::OpenPopup("Help Window");
+        show_help_window = false;
+    }
+
     if (ImGui::BeginMainMenuBar()) {
         if (ImGui::BeginMenu("?")) {
             if (ImGui::MenuItem("Help")) {
-                // TODO: Show help
+                show_help_window = true;
             }
             ImGui::MenuItem("Debug Log", nullptr, &show_app_log);
             ImGui::Separator();
@@ -610,18 +653,9 @@ void ADIMainWindow::NewLine(float spacing) { ImGui::Dummy(ImVec2(0.0f, spacing))
 
 void ADIMainWindow::ShowStartWizard() {
 
-    static uint32_t wizard_height = 350;
-    ImGuiIO &io = ImGui::GetIO(); // Get the display size
-    ImVec2 center = ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f);
-    ImVec2 window_size = ImVec2(450, wizard_height); // Your window size
-
-    // Offset to truly center it
-    ImVec2 window_pos = ImVec2(center.x - window_size.x * 0.5f,
-                               center.y - window_size.y * 0.5f);
-
-    // Set position and size before Begin()
-    ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always);
-    ImGui::SetNextWindowSize(window_size, ImGuiCond_Always);
+    static float wizard_height = 350.0f;
+    
+    centreWindow(450.0f * m_dpi_scale_factor, wizard_height * m_dpi_scale_factor);
 
     ImGui::Begin("Camera Selection Wizard", nullptr, ImGuiWindowFlags_NoResize);
 
@@ -906,4 +940,19 @@ void ADIMainWindow::ShowStartWizard() {
 #pragma endregion // WizardOnline
     }
     ImGui::End();
+}
+
+void ADIMainWindow::centreWindow(float width, float height) {
+
+    ImGuiIO& io = ImGui::GetIO(); // Get the display size
+    ImVec2 center = ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f);
+    ImVec2 window_size = ImVec2(width, height); // Your window size
+
+    // Offset to truly center it
+    ImVec2 window_pos = ImVec2(center.x - window_size.x * 0.5f,
+        center.y - window_size.y * 0.5f);
+
+    // Set position and size before Begin()
+    ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always);
+    ImGui::SetNextWindowSize(window_size, ImGuiCond_Always);
 }

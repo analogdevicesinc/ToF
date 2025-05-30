@@ -487,7 +487,7 @@ class ADIMainWindow {
 		* @brief Common pre-display for GUI windows
 		*/
     bool DisplayDataWindow(ImVec2 &displayUpdate, ImVec2 &size);
-
+    void DisplayHelp();
     void DrawColoredLabel(const char *fmt, ...);
     void DrawBarLabel(const char *fmt, ...);
     void NewLine(float spacing);
@@ -498,6 +498,8 @@ class ADIMainWindow {
     int32_t SaveConfidenceAsJPEG(const char* filename, const std::shared_ptr<aditof::Frame> frame, uint32_t width, uint32_t height);
     void SavePointCloudPLYBinary(const char* filename, const float* points, size_t num_points);
     void SaveMetaAsTxt(const char* filename, std::shared_ptr<aditof::Frame> frame);
+    ImFont* LoadFont(const unsigned char* ext_font, const unsigned int ext_font_len, const float size);
+    void centreWindow(float width, float height);
     float WindowCalcX(Rect w, float buffer = 0.0f) {
         return w.x + w.width + buffer;
     }

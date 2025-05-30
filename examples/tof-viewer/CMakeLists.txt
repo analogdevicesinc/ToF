@@ -34,6 +34,8 @@ set(IMPLOT_SOURCE_DIR ${CMAKE_SOURCE_DIR}/dependencies/third-party/imgui/implot)
 set(IMOGUIZMO_SOURCE_DIR ${CMAKE_SOURCE_DIR}/dependencies/third-party/imgui/imoguizmo)
 set(GLM_SOURCE_DIR ${CMAKE_SOURCE_DIR}/dependencies/third-party/imgui/glm)
 set(ADIToF_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(IMGUIMD__SOURCE_DIR ${CMAKE_SOURCE_DIR}/dependencies/third-party/imgui/imgui_md)
+set(M4DC_SOURCE_DIR ${CMAKE_SOURCE_DIR}/dependencies/third-party/imgui/m4dc)
 
 file(GLOB ADIToF_SOURCES CONFIGURE_DEPENDS "${ADIToF_SOURCE_DIR}/*.cpp")
 
@@ -84,6 +86,8 @@ target_include_directories(ADIToFGUI PUBLIC
 						"${IMOGUIZMO_SOURCE_DIR}"
 						"${GLM_SOURCE_DIR}"
 						"${PROJECT_SOURCE_DIR}/src"
+						"${IMGUIMD__SOURCE_DIR}"
+						"${M4DC_SOURCE_DIR}/src"
 				)
 
 target_include_directories(ADIToFGUI PUBLIC
@@ -99,7 +103,8 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/tof-tools.config $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${LIBADITOF_SUBMODULE_PATH}/sdk/src/cameras/itof-camera/config/config_adsd3500_adsd3100.json $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${LIBADITOF_SUBMODULE_PATH}/sdk/src/cameras/itof-camera/config/config_adsd3500_adsd3030.json $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
-    COMMENT "Copying cfgs and libs to build examples for tof-viewer."
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/doc/tof-viewer.md $<TARGET_FILE_DIR:${PROJECT_NAME}>/.
+    COMMENT "Copying docs, cfgs and libs to build examples for tof-viewer."
 	)
 
 if(WIN32)
