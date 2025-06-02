@@ -31,9 +31,11 @@
  */
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl.h>
-#include <libwebsockets.h>
+#include <zmq.hpp>
 
 #define RX_BUFFER_BYTES (20996420)
+
+#define FRAME_TIMEOUT 200
 
 enum api_Values {
     API_NOT_DEFINED,
@@ -62,16 +64,15 @@ enum api_Values {
     GET_DEPTH_COMPUTE_PARAM,
     SET_DEPTH_COMPUTE_PARAM,
     SET_SENSOR_CONFIGURATION,
-    GET_INI_ARRAY
+    GET_INI_ARRAY,
+    SERVER_CONNECT,
+    RECV_ASYNC
 };
 
 enum protocols { PROTOCOL_EXAMPLE, PROTOCOL_COUNT };
 
 class Network {
   public:
-    struct lws_context *context;
     Network();
-    static int callback_function(struct lws *wsi,
-                                 enum lws_callback_reasons reason, void *user,
-                                 void *in, size_t len);
+    static int callback_function(const zmq_event_t &event);
 };

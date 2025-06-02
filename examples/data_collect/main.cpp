@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
     std::map<std::string, struct Argument> command_map = {
         {"-h", {"--help", false, "", "", false}},
         {"-f", {"--f", false, "", ".", true}},
-        {"-n", {"--n", false, "", "1", true}},
+        {"-n", {"--n", false, "", "0", true}},
         {"-m", {"--m", false, "", "0", true}},
         {"-wt", {"--wt", false, "", "0", true}},
         {"-ip", {"--ip", false, "", "", true}},
@@ -96,13 +96,19 @@ int main(int argc, char *argv[]) {
         {"-s", {"--split", false, "", "", false}},
         {"-t", {"--netlinktest", false, "", "", false}},
         {"-st", {"--singlethread", false, "", "", false}},
-        {"-ic", {"--ic", false, "", "", false}},
-        {"-scf", {"--scf", false, "", "", false}},
-        {"-lcf", {"--lcf", false, "", "", false}}};
+        {"-ic", {"--ic", false, "", "", true}},
+        {"-scf", {"--scf", false, "", "", true}},
+        {"-lcf", {"--lcf", false, "", "", true}}};
 
     CommandParser command;
     std::string arg_error;
+
     command.parseArguments(argc, argv, command_map);
+
+    if (argc == 1) {
+        std::cout << kUsagePublic << std::endl;
+        return 0;
+    }
 
     int result = command.checkArgumentExist(command_map, arg_error);
     if (result != 0) {
@@ -113,7 +119,7 @@ int main(int argc, char *argv[]) {
 
     result = command.helpMenu();
     if (result == 1) {
-        LOG(INFO) << kUsagePublic;
+        std::cout << kUsagePublic << std::endl;
         return 0;
     } else if (result == -1) {
         LOG(ERROR) << "Usage of argument -h/--help"
@@ -406,6 +412,11 @@ int main(int argc, char *argv[]) {
         if (status != Status::OK) {
             LOG(INFO) << "Failed to store CCB to " << ccbFilePath;
         }
+    }
+
+    if (n_frames == 0) {
+        LOG(INFO) << n_frames << " frames requested, exiting." << std::endl;
+        return -1;
     }
 
     // Program the camera with cfg passed, set the mode by writing to 0x200 and start the camera
