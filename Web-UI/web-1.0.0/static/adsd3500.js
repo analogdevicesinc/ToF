@@ -81,10 +81,8 @@ async function runScript() {
     noChange.text = `No Change`;
     outputElement.add(noChange);
 
-    console.log("List refreshed with new data:", outputLines);
-
     await updateListbox();
-    await update_version();
+    await update_version(selected_mode);
     await loadCurrentFirmware();
   } catch (error) {
     console.error("Error running script to refresh list:", error);
@@ -92,7 +90,7 @@ async function runScript() {
   }
 }
 
-async function update_version() {
+async function update_version(selected_mode = "Not set") {
   const OpreationMode = document.getElementById("op_mode");
   const CurrentWorkspace = document.getElementById("current_workspace");
   let sdk_response = await fetch("/get-workspace");
@@ -140,6 +138,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const applyButton = document.getElementById("apply");
   const outputElement = document.getElementById("output");
   const firmwareSelect = document.getElementById("firmware_version");
+  const operatingMode = document.getElementById("ros_mode");
 
   applyButton.addEventListener("click", () => {
     // change the workspace
@@ -148,6 +147,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (selectedVersion !== "No Change") {
       switchWorkspace();
     }
+
+    // chage the oprating mode
+    const selectedOpratingVersion = operatingMode.value;
+    console.log(`Selected Operating mode: ${selectedOpratingVersion}`);
+    if (selectedVersion !== "No Change") {
+      update_version(selectedOpratingVersion);
+    }
+
 
     // flash the firmware
     const selectedFirmwareVersion = firmwareSelect.value;
@@ -161,29 +168,30 @@ document.addEventListener("DOMContentLoaded", async () => {
 // ********************************************************* for Select Mode of Operation **************************************************************************************/
 
 // Example list of workspace versions
-const mode_of_operation = ["ROS-1", "ROS-2", "legacy"];
-const selected_mode = "ROS-2";
+const mode_of_operation = ["Legacy", "ROS-1", "ROS-2", "No Change"];
+let selected_mode = "Not Set"; // Use 'let' so it can be updated
 
-// Populate the select element with versions
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   const selectElement = document.getElementById("ros_mode");
 
+  // Populate the select element
   mode_of_operation.forEach((version) => {
     const option = document.createElement("option");
-    option.value = `${version}`;
-    option.innerHTML = `${version}`;
+    option.value = version;
+    option.textContent = version;
     if (version === selected_mode) {
       option.selected = true;
     }
     selectElement.appendChild(option);
   });
 
-  // Event listener for changing the workspace version
-  selectElement.addEventListener("change", (event) => {
-    const selectedVersion = event.target.value;
-    console.log(`Selected Mode of Operation: ${selectedVersion}`);
+  // Add change event listener to update selected_mode
+  selectElement.addEventListener("change", () => {
+    selected_mode = selectElement.value || "not set";
+    console.log("Selected mode:", selected_mode);
   });
 });
+
 
 // ******************************************************** for firmware update  **************************************************************************************/
 // Function to get current firmware version
