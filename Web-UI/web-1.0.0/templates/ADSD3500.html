@@ -1,216 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Analog Devices Time of Flight</title>
-    <link rel="stylesheet" href="../static/styles.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Barlow:wght@600&family=Inter:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="../static/node_modules/@adi-ctx/harmonic-core-components/dist/harmonic-core-components/harmonic-core-components.css"
-    />
-    <script
-      type="module"
-      src="../static/node_modules/@adi-ctx/harmonic-core-components/dist/harmonic-core-components/harmonic-core-components.esm.js"
-    ></script>
-  </head>
-  <body onload="runScript();">
-    <header class="navigation_header">
-      <div class="backdrop">
-        <hmc-nav-bar size="md">
-          <hmc-button
-            id="left-cta"
-            slot="left-actions"
-            kind="ghost"
-            size="sm"
-            icon-only=""
-          >
-            <hmc-icon name="menu-m" size="md"> </hmc-icon
-          ></hmc-button>
-          <div slot="logo" class="logo">
-            <svg viewBox="0 0 78 24" fill="none">
-              <path
-                d="M-0.00140381 23.9997V-0.000305176H24.3568V23.9997H-0.00140381ZM5.01288 3.73469V20.9547L20.2853 12.1527L5.01288 3.73469Z"
-                fill="currentColor"
-              ></path>
-              <path
-                d="M60.1876 23.9997H50.7774V0.0566998H60.2458C67.2591 0.0566998 71.4682 5.4987 71.4682 12.4287C71.4682 19.3587 67.7274 23.9997 60.1876 23.9997ZM59.7805 4.1247H55.9203V20.2767H60.0713C65.5662 20.2767 66.3835 15.6957 66.3254 12.2007C66.3254 9.4497 64.9815 4.1247 59.7805 4.1247Z"
-                fill="currentColor"
-              ></path>
-              <path
-                d="M46.1175 23.9997L44.2471 18.6717H35.2471L33.6124 23.9997H28.7022L36.943 -0.000305176H41.9114L51.1471 23.9997H46.1175ZM42.5359 13.8027L39.4563 5.03969L36.7563 13.8027L36.5359 15.2907H42.7594L42.5359 13.8027Z"
-                fill="currentColor"
-              ></path>
-              <path
-                d="M78.0009 23.9997H72.7999V-0.000305176H78.0009V23.9997Z"
-                fill="currentColor"
-              ></path>
-            </svg>
 
-            <span class="name"
-              >Analog Devices Time of Flight<span> </span
-            ></span>
-          </div>
-          <hmc-nav-link
-            id="link1"
-            size="md"
-            href="{{url_for('index')}}"
-            aria-label=""
-            title=""
-          >
-            Home</hmc-nav-link
-          >
-          <hmc-nav-link
-            id="link2"
-            link-active=""
-            size="md"
-            href="{{url_for('ADSD3500')}}"
-            aria-label=""
-            title=""
-          >
-            Update</hmc-nav-link
-          >
-          <hmc-nav-link
-            id="link3"
-            size="md"
-            href="{{url_for('system')}}"
-            aria-label=""
-            title=""
-          >
-            System</hmc-nav-link
-          >
-          <hmc-nav-link
-            id="link4"
-            size="md"
-            href="{{url_for('document')}}"
-            aria-label=""
-            title=""
-          >
-            Document</hmc-nav-link
-          >
-        </hmc-nav-bar>
-      </div>
-    </header>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analog Devices Time of Flight</title>
+  <link rel="stylesheet" href="../static/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600&family=Inter:wght@400;500;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet"
+    href="../static/node_modules/@adi-ctx/harmonic-core-components/dist/harmonic-core-components/harmonic-core-components.css" />
+  <script type="module"
+    src="../static/node_modules/@adi-ctx/harmonic-core-components/dist/harmonic-core-components/harmonic-core-components.esm.js"></script>
+</head>
 
-    <!-- Overlay for blocking interactions -->
-    <div id="overlay" class="overlay" style="display: none">
-      <div class="overlay-content">
-        <div class="spinner"></div>
-        <p id="overlay-text">Processing, please wait...</p>
-      </div>
+<body onload="runScript();">
+  <header class="navigation_header">
+    <div class="backdrop">
+      <hmc-nav-bar size="md">
+        <hmc-button id="left-cta" slot="left-actions" kind="ghost" size="sm" icon-only="">
+          <hmc-icon name="menu-m" size="md"> </hmc-icon></hmc-button>
+        <div slot="logo" class="logo">
+          <svg viewBox="0 0 78 24" fill="none">
+            <path
+              d="M-0.00140381 23.9997V-0.000305176H24.3568V23.9997H-0.00140381ZM5.01288 3.73469V20.9547L20.2853 12.1527L5.01288 3.73469Z"
+              fill="currentColor"></path>
+            <path
+              d="M60.1876 23.9997H50.7774V0.0566998H60.2458C67.2591 0.0566998 71.4682 5.4987 71.4682 12.4287C71.4682 19.3587 67.7274 23.9997 60.1876 23.9997ZM59.7805 4.1247H55.9203V20.2767H60.0713C65.5662 20.2767 66.3835 15.6957 66.3254 12.2007C66.3254 9.4497 64.9815 4.1247 59.7805 4.1247Z"
+              fill="currentColor"></path>
+            <path
+              d="M46.1175 23.9997L44.2471 18.6717H35.2471L33.6124 23.9997H28.7022L36.943 -0.000305176H41.9114L51.1471 23.9997H46.1175ZM42.5359 13.8027L39.4563 5.03969L36.7563 13.8027L36.5359 15.2907H42.7594L42.5359 13.8027Z"
+              fill="currentColor"></path>
+            <path d="M78.0009 23.9997H72.7999V-0.000305176H78.0009V23.9997Z" fill="currentColor"></path>
+          </svg>
+
+          <span class="name">Analog Devices Time of Flight<span> </span></span>
+        </div>
+        <hmc-nav-link id="link1" size="md" href="{{url_for('index')}}" aria-label="" title="">
+          Home</hmc-nav-link>
+        <hmc-nav-link id="link2" link-active="" size="md" href="{{url_for('ADSD3500')}}" aria-label="" title="">
+          Update</hmc-nav-link>
+        <hmc-nav-link id="link3" size="md" href="{{url_for('system')}}" aria-label="" title="">
+          System</hmc-nav-link>
+        <hmc-nav-link id="link4" size="md" href="{{url_for('document')}}" aria-label="" title="">
+          Document</hmc-nav-link>
+      </hmc-nav-bar>
+    </div>
+  </header>
+
+  <!-- Overlay for blocking interactions -->
+  <div id="overlay" class="overlay" style="display: none">
+    <div class="overlay-content">
+      <div class="spinner"></div>
+      <p id="overlay-text">Processing, please wait...</p>
+    </div>
+  </div>
+
+  <section class="adsd3500_section">
+    <div class="version_info">
+      <hmc-card density="high">
+        <hmc-container-header slot="card-header" density="high" heading="Current Version Information"
+          subtitle=""></hmc-container-header>
+        <table>
+          <tbody>
+            <tr>
+              <td class="la sm">SDK version:</td>
+              <td class="la sm" id="current_workspace"></td>
+            </tr>
+            <tr>
+              <td class="la sm">Operating Mode:</td>
+              <td class="la sm" id="op_mode"></td>
+            </tr>
+            <tr>
+              <td class="la sm">ADSD3500 Firmware version:</td>
+              <div class="version_container">
+                <td class="la sm" id="firm_version"></td>
+                <!-- <div id="firm_version_warning"></div> -->
+              </div>
+            </tr>
+          </tbody>
+        </table>
+        <div class="version_btn">
+          <hmc-button size="sm" kind="primary" onclick="runScript()">Refresh</hmc-button>
+        </div>
+      </hmc-card>
     </div>
 
-    <section class="adsd3500_section">
-      <div class="version_info">
-        <hmc-card density="high">
-          <hmc-container-header
-            slot="card-header"
-            density="high"
-            heading="Current Version Information"
-            subtitle=""
-          ></hmc-container-header>
-          <table>
-            <tbody>
-              <tr>
-                <td class="la sm">SDK version:</td>
-                <td class="la sm" id="current_workspace"></td>
-              </tr>
-              <tr>
-                <td class="la sm">Operation Mode:</td>
-                <td class="la sm" id="op_mode"></td>
-              </tr>
-              <tr>
-                <td class="la sm">ADSD3500 Firmware version:</td>
-                <div class="version_container">
-                  <td class="la sm" id="firm_version"></td>
-                  <!-- <div id="firm_version_warning"></div> -->
-                </div>
-              </tr>
-            </tbody>
-          </table>
-          <div class="version_btn">
-            <hmc-button size="sm" kind="secondry" onclick="runScript()"
-              >Refresh</hmc-button
-            >
-          </div>
-        </hmc-card>
-      </div>
+    <div class="ToF_configuration">
+      <hmc-card density="high">
+        <hmc-container-header slot="card-header" density="high" heading="Configure" subtitle=""></hmc-container-header>
+        <table>
+          <tbody>
+            <tr>
+              <td class="la sm">Select Version:</td>
+              <td class="la sm"><select id="output" size="1"></select></td>
+            </tr>
+            <tr>
+              <td class="la sm">Operating Mode:</td>
+              <td class="la sm"><select id="ros_mode" size="1"></select></td>
+            </tr>
+            <tr>
+              <td class="la sm">ADSD3500 Firmware version:</td>
+              <td class="la sm">
+                <select id="firmware_version" size="1"></select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
 
-      <div class="ToF_configuration">
-        <hmc-card density="high">
-          <hmc-container-header
-            slot="card-header"
-            density="high"
-            heading="Configure"
-            subtitle=""
-          ></hmc-container-header>
-          <table>
-            <tbody>
-              <tr>
-                <td class="la sm">Select Version:</td>
-                <td class="la sm"><select id="output" size="1"></select></td>
-              </tr>
-              <tr>
-                <td class="la sm">Operation Mode:</td>
-                <td class="la sm"><select id="ros_mode" size="1"></select></td>
-              </tr>
-              <tr>
-                <td class="la sm">ADSD3500 Firmware version:</td>
-                <td class="la sm">
-                  <select id="firmware_version" size="1"></select>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="config_btn">
+          <hmc-button size="sm" kind="primary" id="apply">Apply</hmc-button>
+        </div>
 
-          <div class="config_btn">
-            <hmc-button size="sm" kind="primary" id="apply">Apply</hmc-button>
-          </div>
+        <hmc-modal id="terminal_modal" density="medium" overlay-dismiss="false">
+          <pre id="terminal_output"></pre>
+        </hmc-modal>
+      </hmc-card>
+    </div>
 
-          <hmc-modal
-            id="terminal_modal"
-            density="medium"
-            overlay-dismiss="false"
-          >
-            <pre id="terminal_output"></pre>
-          </hmc-modal>
-        </hmc-card>
-      </div>
+    <!-- Upload Section -->
+    <div class="upload_section">
+      <input type="file" id="fileInput" />
+      <hmc-button size="sm" kind="primary" onclick="uploadFileInChunks()">Upload</hmc-button>
 
-      <!-- Upload Section -->
-      <div class="upload_section">
-        <input type="file" id="fileInput" />
-        <hmc-button size="sm" kind="primary" onclick="uploadFileInChunks()"
-          >Upload</hmc-button
-        >
+      <hmc-progress-bar value="0" max-value="100" status="info" show-percentage="true" size="sm" label=""
+        id="progressBar">
+      </hmc-progress-bar>
+    </div>
+  </section>
 
-        <hmc-progress-bar
-          value="0"
-          max-value="100"
-          status="info"
-          show-percentage="true"
-          size="sm"
-          label=""
-          id="progressBar"
-        >
-        </hmc-progress-bar>
-      </div>
-    </section>
+  <footer>
+    <p class="copyright">
+      &copy; 2025 Analog Devices, Inc. All rights reserved. Trademarks and
+      registered trademarks are the property of their respective owners.
+    </p>
+  </footer>
+  <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+  <script src="{{url_for('static',filename='marked.min.js')}}"></script>
+  <script src="{{url_for('static',filename='adsd3500.js')}}"></script>
+</body>
 
-    <footer>
-      <p class="copyright">
-        &copy; 2025 Analog Devices, Inc. All rights reserved. Trademarks and
-        registered trademarks are the property of their respective owners.
-      </p>
-    </footer>
-    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
-    <script src="{{url_for('static',filename='marked.min.js')}}"></script>
-    <script src="{{url_for('static',filename='adsd3500.js')}}"></script>
-  </body>
 </html>
