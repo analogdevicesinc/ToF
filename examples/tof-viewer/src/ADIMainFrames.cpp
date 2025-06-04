@@ -780,6 +780,29 @@ float ADIMainWindow::Radians(float degrees) {
     return radians;
 }
 
+void ADIMainWindow::GetYawPitchRoll(float& yaw, float& pitch, float& roll) {
+    // Extract rotation matrix (upper-left 3x3)
+    float r00 = m_model_mat[0][0], r01 = m_model_mat[0][1], r02 = m_model_mat[0][2];
+    float r10 = m_model_mat[1][0], r11 = m_model_mat[1][1], r12 = m_model_mat[1][2];
+    float r20 = m_model_mat[2][0], r21 = m_model_mat[2][1], r22 = m_model_mat[2][2];
+
+    // Assuming rotation order is yaw (Y), pitch (X), roll (Z):
+    // Yaw (around Y): atan2(r02, r22)
+    // Pitch (around X): asin(-r12)
+    // Roll (around Z): atan2(r10, r11)
+
+    pitch = std::asin(-r12);
+    yaw = std::atan2(r02, r22);
+    roll = std::atan2(r10, r11);
+
+    // Convert to degrees
+    const float rad2deg = 180.0f / 3.14159265358979323846f;
+    yaw *= rad2deg;
+    pitch *= rad2deg;
+    roll *= rad2deg;
+}
+
+
 void ADIMainWindow::ProcessInputs(GLFWwindow *window) {
 
     ImGuiIO& io = ImGui::GetIO(); //Get mouse events

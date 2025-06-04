@@ -166,7 +166,7 @@ void ADIController::captureFrames() {
         local_frame_counter++;
         auto currentTime = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed = currentTime - m_fps_startTime;
-        if (elapsed.count() >= 2) {
+        if (elapsed.count() >= 5) {
             m_framerate = static_cast<float>(local_frame_counter) / static_cast<float>(elapsed.count());
             local_frame_counter = 0;
             m_fps_startTime = currentTime;

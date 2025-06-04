@@ -511,6 +511,7 @@ class ADIMainWindow {
     bool m_isWorking = false;
 	bool getIsWorking() const { return m_isWorking; }
 	void setIsWorking(bool isWorking) { m_isWorking = isWorking; }
+    void GetYawPitchRoll(float& yaw, float& pitch, float& roll);
 
     // The type of movement that a mouse movement should be interpreted as (if any)
     //

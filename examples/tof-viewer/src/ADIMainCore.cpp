@@ -191,6 +191,7 @@ bool ADIMainWindow::StartImGUI(const ADIViewerArgs& args) {
     // Setup window
     glfwSetErrorCallback(glfw_error_callback); //Error Management
     if (!glfwInit()) {
+        __debugbreak();
         return false;
     }
 
@@ -216,6 +217,7 @@ bool ADIMainWindow::StartImGUI(const ADIViewerArgs& args) {
     window = glfwCreateWindow(m_dict_win_position["main"].width, m_dict_win_position["main"].height, _title.c_str(), NULL, NULL);
 
     if (window == NULL) {
+        __debugbreak();
         return false;
     }
 
@@ -235,6 +237,7 @@ bool ADIMainWindow::StartImGUI(const ADIViewerArgs& args) {
                       // is likely to requires some form of initialization.
 #endif
     if (err) {
+        __debugbreak();
         fprintf(stderr, "Failed to initialize OpenGL loader!\n");
         return false;
     }
@@ -662,11 +665,11 @@ void ADIMainWindow::NewLine(float spacing) { ImGui::Dummy(ImVec2(0.0f, spacing))
 
 void ADIMainWindow::ShowStartWizard() {
 
-    static float wizard_height = 350.0f;
+    static float wizard_height = 360.0f;
     
     centreWindow(450.0f * m_dpi_scale_factor, wizard_height * m_dpi_scale_factor);
 
-    ImGui::Begin("Camera Selection Wizard", nullptr, ImGuiWindowFlags_NoResize);
+    ImGui::Begin("Camera Selection Wizard", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
 
     static uint32_t selected = 1;
     uint32_t state_change_check = selected;
@@ -688,6 +691,11 @@ void ADIMainWindow::ShowStartWizard() {
 
     if (selected == 0) {
 #pragma region WizardOffline
+        if (wizard_height < 300)
+            wizard_height += 20;
+        else if (wizard_height > 300)
+            wizard_height -= 20;
+
         m_off_line = true;
         const bool openAvailable = !m_connected_devices.empty();
 
@@ -847,7 +855,10 @@ void ADIMainWindow::ShowStartWizard() {
 
                 if (show_dynamic_mode_switch) {
 #pragma region WizardOnlineDynamicMode
-                    wizard_height = 550;
+                    if (wizard_height < 540)
+                        wizard_height += 20;
+                    else if (wizard_height > 540)
+                        wizard_height -= 20;
 
                     // TODO: Add non-Crosby repeat count
 
@@ -915,7 +926,10 @@ void ADIMainWindow::ShowStartWizard() {
                 }
                 else {
 #pragma region WizardOnlineStandardMode
-                    wizard_height = 620;
+                    if (wizard_height < 620)
+                        wizard_height += 20;
+					else if (wizard_height > 620)
+						wizard_height -= 20;
 
                     if (ImGuiExtensions::ADIComboBox(
                         "", "Select Mode", ImGuiSelectableFlags_None,
