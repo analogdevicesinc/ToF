@@ -117,7 +117,7 @@ void ADIMainWindow::PrepareCamera(uint8_t mode) {
         LOG(ERROR) << "Could not set camera mode!";
         return;
     }
-
+#if 0 //Andre
     if (!m_off_line) {
         status = GetActiveCamera()->adsd3500SetFrameRate(m_user_frame_rate);
         if (status != aditof::Status::OK) {
@@ -125,12 +125,12 @@ void ADIMainWindow::PrepareCamera(uint8_t mode) {
             return;
         }
     }
-
+#endif 
     if (mode == m_last_mode) {
         if (!m_modified_ini_params.empty()) {
             if (m_use_modified_ini_params) {
                 status = GetActiveCamera()->setFrameProcessParams(
-                    m_modified_ini_params);
+                    m_modified_ini_params, mode);
                 if (status != aditof::Status::OK) {
                     LOG(ERROR) << "Could not set ini params";
                 } else {
@@ -222,48 +222,114 @@ void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
         }
     }
 
-   
-    ImGuiIO& io = ImGui::GetIO();
-    if (io.KeyShift) {
-        if (ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
-            m_depth_line_values.clear();
-            m_depthLine.clear();
-            m_frame_window_position_state++;
-            if (m_frame_window_position_state > 2)
-                m_frame_window_position_state = 0;
-        }
-        if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) {
-            m_depth_line_values.clear();
-            m_depthLine.clear();
-            m_frame_window_position_state--;
-            if (m_frame_window_position_state < 0)
-                m_frame_window_position_state = 2;
-        }
+    std::shared_ptr<aditof::Frame> frame;
+    if (synchronizeVideo(frame) >= 0) {
+        if (frame != nullptr) {
 
-        if (m_frame_window_position_state == 1) {
-            m_pc_position = &m_dict_win_position["fr-sub2"];
-            m_ab_position = &m_dict_win_position["fr-main"];
-            m_depth_position = &m_dict_win_position["fr-sub1"];
-        }
-        else if (m_frame_window_position_state == 2) {
-            m_pc_position = &m_dict_win_position["fr-sub1"];
-            m_ab_position = &m_dict_win_position["fr-sub2"];
-            m_depth_position = &m_dict_win_position["fr-main"];
-        }
-        else {
-            m_pc_position = &m_dict_win_position["fr-main"];
-            m_ab_position = &m_dict_win_position["fr-sub1"];
-            m_depth_position = &m_dict_win_position["fr-sub2"];
-        }
-    }
+            bool haveAB = frame->haveDataType("ab");
+            bool haveDepth = frame->haveDataType("depth");
+            bool haveXYZ = frame->haveDataType("xyz");
 
-    if (synchronizeVideo() >= 0) {
-        DisplayPointCloudWindow(overlayFlags);
-        DisplayActiveBrightnessWindow(overlayFlags);
-        DisplayDepthWindow(overlayFlags);
-        DisplayInfoWindow(overlayFlags);
-        DisplayControlWindow(overlayFlags);
-        DepthLinePlot(overlayFlags);
+            uint32_t numberAvailableDataTypes = 0;
+
+            numberAvailableDataTypes += haveAB ? 1 : 0;
+            numberAvailableDataTypes += haveDepth ? 1 : 0;
+            numberAvailableDataTypes += haveXYZ ? 1 : 0;
+
+            ImGuiIO& io = ImGui::GetIO();
+            if (io.KeyShift) {
+                
+                if (ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
+                    m_depth_line_values.clear();
+                    m_depthLine.clear();
+                    m_frame_window_position_state++;
+                    if (m_frame_window_position_state > numberAvailableDataTypes)
+                        m_frame_window_position_state = 0;
+                }
+
+                if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) {
+                    m_depth_line_values.clear();
+                    m_depthLine.clear();
+                    m_frame_window_position_state--;
+                    if (m_frame_window_position_state < 0)
+                        m_frame_window_position_state = numberAvailableDataTypes;
+                }
+            }
+
+            if (numberAvailableDataTypes == 3) {
+                if (m_frame_window_position_state == 0) {
+                    m_xyz_position = &m_dict_win_position["fr-main"];
+                    m_ab_position = &m_dict_win_position["fr-sub1"];
+                    m_depth_position = &m_dict_win_position["fr-sub2"];
+                }
+                else if (m_frame_window_position_state == 1) {
+                    m_xyz_position = &m_dict_win_position["fr-sub2"];
+                    m_ab_position = &m_dict_win_position["fr-main"];
+                    m_depth_position = &m_dict_win_position["fr-sub1"];
+                }
+                else if (m_frame_window_position_state == 2) {
+                    m_xyz_position = &m_dict_win_position["fr-sub1"];
+                    m_ab_position = &m_dict_win_position["fr-sub2"];
+                    m_depth_position = &m_dict_win_position["fr-main"];
+                }
+            } else if (numberAvailableDataTypes == 2) {
+
+                if (!haveAB) {
+
+					if (m_frame_window_position_state == 0) {
+						m_xyz_position = &m_dict_win_position["fr-main"];
+						m_depth_position = &m_dict_win_position["fr-sub1"];
+					}
+					else {
+						m_xyz_position = &m_dict_win_position["fr-sub1"];
+						m_depth_position = &m_dict_win_position["fr-main"];
+					}
+                } else if (!haveDepth) {
+
+                    if (m_frame_window_position_state == 0) {
+                        m_xyz_position = &m_dict_win_position["fr-main"];
+                        m_ab_position = &m_dict_win_position["fr-sub1"];
+                    }
+                    else {
+                        m_xyz_position = &m_dict_win_position["fr-sub1"];
+                        m_ab_position = &m_dict_win_position["fr-main"];
+                    }
+                } else if (!haveXYZ) {
+
+                    if (m_frame_window_position_state == 0) {
+                        m_depth_position = &m_dict_win_position["fr-main"];
+                        m_ab_position = &m_dict_win_position["fr-sub1"];
+                    }
+                    else {
+                        m_depth_position = &m_dict_win_position["fr-sub1"];
+                        m_ab_position = &m_dict_win_position["fr-main"];
+                    }
+                }
+            } else {
+                if (haveDepth) {
+                    m_depth_position = &m_dict_win_position["fr-main"];
+                } else if (haveAB) {
+                    m_ab_position = &m_dict_win_position["fr-main"];
+                } else if (haveXYZ) {
+                    m_xyz_position = &m_dict_win_position["fr-main"];
+                }
+            }
+
+            if (haveXYZ) {
+                DisplayPointCloudWindow(overlayFlags);
+            }
+            if (haveAB) {
+                DisplayActiveBrightnessWindow(overlayFlags);
+            }
+            if (haveDepth) {
+                DisplayDepthWindow(overlayFlags);
+            }
+            DisplayInfoWindow(overlayFlags);
+            DisplayControlWindow(overlayFlags, haveAB, haveDepth, haveXYZ);
+            if (haveDepth) {
+                DepthLinePlot(overlayFlags);
+            }
+        }
     }
 }
 

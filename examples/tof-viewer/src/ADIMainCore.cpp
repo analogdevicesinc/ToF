@@ -264,7 +264,7 @@ bool ADIMainWindow::StartImGUI(const ADIViewerArgs& args) {
     m_dict_win_position["info"].x = 5.0f;
     m_dict_win_position["info"].y = 25.0f;
     m_dict_win_position["info"].width = 300.0f;
-    m_dict_win_position["info"].height = 750.0f;
+    m_dict_win_position["info"].height = 800.0f;
 
     m_dict_win_position["control"].x = m_dict_win_position["info"].width + 10;
     m_dict_win_position["control"].y = m_dict_win_position["info"].y;
@@ -294,7 +294,7 @@ bool ADIMainWindow::StartImGUI(const ADIViewerArgs& args) {
     m_dict_win_position["plotA"].width = m_dict_win_position["fr-main"].width;
     m_dict_win_position["plotA"].height = 315.0f;
 
-    m_pc_position = &m_dict_win_position["fr-main"];
+    m_xyz_position = &m_dict_win_position["fr-main"];
     m_ab_position = &m_dict_win_position["fr-sub1"];
     m_depth_position = &m_dict_win_position["fr-sub2"];
 
@@ -448,6 +448,10 @@ void ADIMainWindow::Render() {
         else {
             // Show Start Wizard
             ShowStartWizard();
+        }
+
+        if (getIsWorking()) {
+			Spinner("Working...", 10.0f, 2.0f, IM_COL32(255, 255, 255, 255));
         }
 
         /***************************************************/
@@ -711,7 +715,7 @@ void ADIMainWindow::ShowStartWizard() {
                 }
             }
             ImGui::SameLine();
-            if (ImGuiExtensions::ADIButton("Start", m_is_open_device)) {
+            if (ImGuiExtensions::ADIButton("Start Streaming", m_is_open_device)) {
 
                 // Deallocate frame memory such that it can be reallocated for the 
                 //  correct frame size in case there was a change in mode.
@@ -836,8 +840,6 @@ void ADIMainWindow::ShowStartWizard() {
                 NewLine(5.0f);
 
                 static bool show_dynamic_mode_switch = false;
-                ImGui::SliderInt("Frame Rate", &m_user_frame_rate, 1, 30, "%d fps");
-
                 ImGui::Toggle(!show_dynamic_mode_switch ? "Switch to Dynamic Mode" : "Switch to Standard Mode",
                     &show_dynamic_mode_switch);
 
@@ -881,7 +883,7 @@ void ADIMainWindow::ShowStartWizard() {
                         m_custom_color_play, !m_is_playing);
 
                     NewLine(5.0f);
-                    if (ImGuiExtensions::ADIButton("Start", !m_is_playing)) {
+                    if (ImGuiExtensions::ADIButton("Start Streaming", !m_is_playing)) {
 
                         std::vector<std::pair<uint8_t, uint8_t>> seqence;
 
@@ -911,28 +913,47 @@ void ADIMainWindow::ShowStartWizard() {
                 }
                 else {
 #pragma region WizardOnlineStandardMode
-                    wizard_height = 400;
+                    wizard_height = 620;
 
-                    ImGuiExtensions::ADIComboBox(
+                    if (ImGuiExtensions::ADIComboBox(
                         "", "Select Mode", ImGuiSelectableFlags_None,
-                        m_cameraModesDropDown, &m_mode_selection, true);
+                        m_cameraModesDropDown, &m_mode_selection, true)) {
+						m_ini_params.clear();
+                    }
 
                     ImGuiExtensions::ButtonColorChanger colorChangerPlay(
                         m_custom_color_play, !m_is_playing);
 
                     NewLine(5.0f);
 
-                    if (ImGuiExtensions::ADIButton("Start", !m_is_playing)) {
+                    ShowIniWindow(false);
+                    if (ImGuiExtensions::ADIButton("Reset Parameters", m_is_open_device)) {
+                        auto camera = GetActiveCamera();
+                        if (camera) {
+                            camera->resetDepthProcessParams();
+							m_ini_params.clear();
+                        }
+                    }
+
+                    NewLine(5.0f);
+
+                    if (ImGuiExtensions::ADIButton("Start Streaming", !m_is_playing)) {
 
                         // Deallocate frame memory such that it can be reallocated for the 
                         //  correct frame size in case there was a change in mode.
-                        m_view_instance->cleanUp();
-                        auto camera = GetActiveCamera();
+                        if (m_view_instance) {
+                            m_view_instance->cleanUp();
+                        }
 
-                        camera->adsd3500setEnableDynamicModeSwitching(false);
+                        auto camera = GetActiveCamera();
+                        if (camera) {
+                            camera->adsd3500setEnableDynamicModeSwitching(false);
+                        }
 
                         m_frame_window_position_state = 0;
                         m_view_selection_changed = m_view_selection;
+                        m_last_mode = m_mode_selection;   // Force use of ini parameters
+                        m_use_modified_ini_params = true; // Force use of ini parameters
                         m_is_playing = true;
                         m_ini_params.clear();
                     }
@@ -958,4 +979,30 @@ void ADIMainWindow::centreWindow(float width, float height) {
     // Set position and size before Begin()
     ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always);
     ImGui::SetNextWindowSize(window_size, ImGuiCond_Always);
+}
+
+// Minimal spinner function for ImGui (circle dots)
+void ADIMainWindow::Spinner(const char* label, float radius, int thickness, ImU32 color) {
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+    if (window->SkipItems)
+        return;
+    ImGuiContext& g = *ImGui::GetCurrentContext();
+    const ImGuiID id = window->GetID(label);
+
+    ImVec2 pos = ImGui::GetCursorScreenPos();
+    float t = (float)g.Time;
+    int num_segments = 30;
+    float angle_min = IM_PI * 2.0f * (t * 0.8f);
+    float angle_max = IM_PI * 2.0f * ((t * 0.8f) + 1.0f);
+
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    draw_list->PathClear();
+    for (int i = 0; i < num_segments; i++) {
+        float a = angle_min + ((float)i / (float)num_segments) * (angle_max - angle_min);
+        draw_list->PathLineTo(ImVec2(
+            pos.x + radius + cosf(a) * radius,
+            pos.y + radius + sinf(a) * radius));
+    }
+    draw_list->PathStroke(color, 0, thickness);
+    ImGui::Dummy(ImVec2((radius + thickness) * 2, (radius + thickness) * 2));
 }

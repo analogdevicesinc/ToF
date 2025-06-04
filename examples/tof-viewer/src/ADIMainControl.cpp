@@ -142,7 +142,7 @@ bool ADIMainWindow::cameraButton(std::string &baseFileName) {
     return false;
 }
 
-void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
+void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags, bool haveAB, bool haveDepth, bool haveXYZ) {
     using namespace aditof;
 
     if ((float)m_view_instance->frameWidth == 0.0 &&
@@ -169,7 +169,7 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
         if (!m_off_line) {
 
             DrawBarLabel("Configuration");
-            
+
             NewLine(5.0f);
 
             if (ImGuiExtensions::ADIButton("Load Config", true)) {
@@ -194,17 +194,17 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
             ImGui::SameLine(0.0f, 10.0f);
 
             if (DrawIconButton(
-                    "Record",
-                    [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
-                        ImVec2 center =
-                            ImVec2((min.x + max.x) * 0.5f, (min.y + max.y) * 0.5f);
-                        float radius = (max.x - min.x) * 0.2f;
+                "Record",
+                [](ImDrawList* dl, ImVec2 min, ImVec2 max) {
+                    ImVec2 center =
+                        ImVec2((min.x + max.x) * 0.5f, (min.y + max.y) * 0.5f);
+                    float radius = (max.x - min.x) * 0.2f;
 
-                        // Draw a white circle in the center for the record icon
-                        dl->AddCircleFilled(center, radius, IM_COL32_WHITE);
-                    },
-                    (!recordingActive) ? IM_COL32(200, 0, 0, 255)
-                                       : IM_COL32(0, 200, 0, 255))) {
+                    // Draw a white circle in the center for the record icon
+                    dl->AddCircleFilled(center, radius, IM_COL32_WHITE);
+                },
+                (!recordingActive) ? IM_COL32(200, 0, 0, 255)
+                : IM_COL32(0, 200, 0, 255))) {
 
                 if (!recordingActive) {
 
@@ -214,33 +214,36 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
                         m_view_instance->m_ctrl->setPreviewRate(m_fps, PREVIEW_FRAME_RATE);
                         recordingActive = true;
                         LOG(INFO) << "Recording to " << filePath.c_str();
-                    } else {
+                    }
+                    else {
                         m_view_instance->m_ctrl->setPreviewRate(m_fps, m_fps);
                         LOG(ERROR) << "Unable to start recording.";
                         filePath = "";
                         recordingActive = false;
                     }
-                } else {
+                }
+                else {
                     aditof::Status status = GetActiveCamera()->stopRecording();
                     if (status == aditof::Status::OK) {
                         LOG(INFO) << "Recording stopped.";
                         filePath = "";
                         recordingActive = false;
                         m_view_instance->m_ctrl->setPreviewRate(m_fps, m_fps);
-                    } else {
-						LOG(ERROR) << "Unable to stop recording.";
+                    }
+                    else {
+                        LOG(ERROR) << "Unable to stop recording.";
                     }
                 }
             }
 
             ImGui::SameLine(0.0f, 10.0f);
 
-            if (DrawIconButton("Stop", [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
-                    ImVec2 center = (min + max) * 0.5f;
-                    float side = (max.x - min.x) * 0.4f;
-                    ImVec2 pMin(center.x - side * 0.5f, center.y - side * 0.5f);
-                    ImVec2 pMax(center.x + side * 0.5f, center.y + side * 0.5f);
-                    dl->AddRectFilled(pMin, pMax, IM_COL32_WHITE);
+            if (DrawIconButton("Stop", [](ImDrawList* dl, ImVec2 min, ImVec2 max) {
+                ImVec2 center = (min + max) * 0.5f;
+                float side = (max.x - min.x) * 0.4f;
+                ImVec2 pMin(center.x - side * 0.5f, center.y - side * 0.5f);
+                ImVec2 pMax(center.x + side * 0.5f, center.y + side * 0.5f);
+                dl->AddRectFilled(pMin, pMax, IM_COL32_WHITE);
                 })) {
                 m_is_playing = false;
                 m_fps_frame_received = 0;
@@ -252,7 +255,8 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
 
             ImGui::SameLine(0.0f, 10.0f);
 
-        }  else { // Offline
+        }
+        else { // Offline
 
             uint32_t max_frame_count;
             GetActiveCamera()->getSensor()->getFrameCount(max_frame_count);
@@ -260,39 +264,39 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
             DrawBarLabel("Control");
 
             ImGui::Toggle("Save All Frames", &m_offline_save_all_frames);
-			ImGui::NewLine();
+            ImGui::NewLine();
             cameraButton(m_base_file_name);
 
             ImGui::SameLine(0.0f, 10.0f);
 
             if (DrawIconButton(
-                    "JumpToStart",
-                    [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
-                        ImVec2 center = (min + max) * 0.5f;
-                        float w = max.x - min.x;
-                        float h = max.y - min.y;
+                "JumpToStart",
+                [](ImDrawList* dl, ImVec2 min, ImVec2 max) {
+                    ImVec2 center = (min + max) * 0.5f;
+                    float w = max.x - min.x;
+                    float h = max.y - min.y;
 
-                        float arrowW = w * 0.2f;
-                        float arrowH = h * 0.35f;
-                        float spacing = w * 0.05f;
+                    float arrowW = w * 0.2f;
+                    float arrowH = h * 0.35f;
+                    float spacing = w * 0.05f;
 
-                        // Triangle
-                        ImVec2 p1(center.x + spacing + arrowW * 0.5f,
-                                  center.y - arrowH);
-                        ImVec2 p2(center.x + spacing + arrowW * 0.5f,
-                                  center.y + arrowH);
-                        ImVec2 p3(center.x + spacing - arrowW * 0.5f, center.y);
+                    // Triangle
+                    ImVec2 p1(center.x + spacing + arrowW * 0.5f,
+                        center.y - arrowH);
+                    ImVec2 p2(center.x + spacing + arrowW * 0.5f,
+                        center.y + arrowH);
+                    ImVec2 p3(center.x + spacing - arrowW * 0.5f, center.y);
 
-                        dl->AddTriangleFilled(p1, p2, p3, IM_COL32_WHITE);
+                    dl->AddTriangleFilled(p1, p2, p3, IM_COL32_WHITE);
 
-                        // Bar (vertical line to the left of triangle)
-                        float barX = center.x - spacing - arrowW * 0.5f;
-                        dl->AddRectFilled(
-                            ImVec2(barX - 1.0f, center.y - arrowH),
-                            ImVec2(barX + 1.0f, center.y + arrowH),
-                            IM_COL32_WHITE);
-                    },
-                    IM_COL32(60, 60, 60, 255))) {
+                    // Bar (vertical line to the left of triangle)
+                    float barX = center.x - spacing - arrowW * 0.5f;
+                    dl->AddRectFilled(
+                        ImVec2(barX - 1.0f, center.y - arrowH),
+                        ImVec2(barX + 1.0f, center.y + arrowH),
+                        IM_COL32_WHITE);
+                },
+                IM_COL32(60, 60, 60, 255))) {
 
                 m_offline_change_frame = true;
                 m_off_line_frame_index = 0;
@@ -302,25 +306,25 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
             ImGui::SameLine(0.0f, 10.0f);
 
             if (DrawIconButton(
-                    "LeftArrow",
-                    [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
-                        ImVec2 center = (min + max) * 0.5f;
-                        float w = max.x - min.x;
-                        float h = max.y - min.y;
+                "LeftArrow",
+                [](ImDrawList* dl, ImVec2 min, ImVec2 max) {
+                    ImVec2 center = (min + max) * 0.5f;
+                    float w = max.x - min.x;
+                    float h = max.y - min.y;
 
-                        float arrowW = w * 0.25f;
-                        float arrowH = h * 0.3f;
+                    float arrowW = w * 0.25f;
+                    float arrowH = h * 0.3f;
 
-                        ImVec2 p1(center.x + arrowW * 0.5f,
-                                  center.y - arrowH); // tip top
-                        ImVec2 p2(center.x + arrowW * 0.5f,
-                                  center.y + arrowH); // tip bottom
-                        ImVec2 p3(center.x - arrowW * 0.5f,
-                                  center.y); // back center
+                    ImVec2 p1(center.x + arrowW * 0.5f,
+                        center.y - arrowH); // tip top
+                    ImVec2 p2(center.x + arrowW * 0.5f,
+                        center.y + arrowH); // tip bottom
+                    ImVec2 p3(center.x - arrowW * 0.5f,
+                        center.y); // back center
 
-                        dl->AddTriangleFilled(p1, p2, p3, IM_COL32_WHITE);
-                    },
-                    IM_COL32(50, 50, 50, 255))) {
+                    dl->AddTriangleFilled(p1, p2, p3, IM_COL32_WHITE);
+                },
+                IM_COL32(50, 50, 50, 255))) {
 
                 if (m_off_line_frame_index > 0) {
                     m_off_line_frame_index--;
@@ -331,14 +335,14 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
             ImGui::SameLine(0.0f, 10.0f);
 #if 0
             if (DrawIconButton(
-                     "Play", [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
-                ImVec2 center = (min + max) * 0.5f;
-                float w = max.x - min.x, h = max.y - min.y;
-                ImVec2 p1(center.x - w * 0.2f, center.y - h * 0.3f);
-                ImVec2 p2(center.x - w * 0.2f, center.y + h * 0.3f);
-                ImVec2 p3(center.x + w * 0.3f, center.y);
-                dl->AddTriangleFilled(p1, p2, p3, IM_COL32_WHITE);
-            })) {
+                "Play", [](ImDrawList* dl, ImVec2 min, ImVec2 max) {
+                    ImVec2 center = (min + max) * 0.5f;
+                    float w = max.x - min.x, h = max.y - min.y;
+                    ImVec2 p1(center.x - w * 0.2f, center.y - h * 0.3f);
+                    ImVec2 p2(center.x - w * 0.2f, center.y + h * 0.3f);
+                    ImVec2 p3(center.x + w * 0.3f, center.y);
+                    dl->AddTriangleFilled(p1, p2, p3, IM_COL32_WHITE);
+                })) {
 
                 // TODO: Play button
 
@@ -347,55 +351,55 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
             ImGui::SameLine(0.0f, 10.0f);
 
             if (DrawIconButton(
-                    "Pause",
-                    [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
-                        ImVec2 center = (min + max) * 0.5f;
-                        float w = max.x - min.x;
-                        float h = max.y - min.y;
-                        float barWidth = w * 0.1f;
-                        float barHeight = h * 0.5f;
-                        float spacing = w * 0.1f;
+                "Pause",
+                [](ImDrawList* dl, ImVec2 min, ImVec2 max) {
+                    ImVec2 center = (min + max) * 0.5f;
+                    float w = max.x - min.x;
+                    float h = max.y - min.y;
+                    float barWidth = w * 0.1f;
+                    float barHeight = h * 0.5f;
+                    float spacing = w * 0.1f;
 
-                        ImVec2 bar1Min(center.x - spacing - barWidth,
-                                       center.y - barHeight * 0.5f);
-                        ImVec2 bar1Max(center.x - spacing,
-                                       center.y + barHeight * 0.5f);
-                        ImVec2 bar2Min(center.x + spacing,
-                                       center.y - barHeight * 0.5f);
-                        ImVec2 bar2Max(center.x + spacing + barWidth,
-                                       center.y + barHeight * 0.5f);
+                    ImVec2 bar1Min(center.x - spacing - barWidth,
+                        center.y - barHeight * 0.5f);
+                    ImVec2 bar1Max(center.x - spacing,
+                        center.y + barHeight * 0.5f);
+                    ImVec2 bar2Min(center.x + spacing,
+                        center.y - barHeight * 0.5f);
+                    ImVec2 bar2Max(center.x + spacing + barWidth,
+                        center.y + barHeight * 0.5f);
 
-                        dl->AddRectFilled(bar1Min, bar1Max, IM_COL32_WHITE);
-                        dl->AddRectFilled(bar2Min, bar2Max, IM_COL32_WHITE);
-                    },
-                    IM_COL32(60, 60, 60, 255))) {
+                    dl->AddRectFilled(bar1Min, bar1Max, IM_COL32_WHITE);
+                    dl->AddRectFilled(bar2Min, bar2Max, IM_COL32_WHITE);
+                },
+                IM_COL32(60, 60, 60, 255))) {
 
                 // TODO
             }
 #endif //0 
 
             ImGui::SameLine(0.0f, 10.0f);
-            
+
             if (DrawIconButton(
-                    "RightArrow",
-                    [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
-                        ImVec2 center = (min + max) * 0.5f;
-                        float w = max.x - min.x;
-                        float h = max.y - min.y;
+                "RightArrow",
+                [](ImDrawList* dl, ImVec2 min, ImVec2 max) {
+                    ImVec2 center = (min + max) * 0.5f;
+                    float w = max.x - min.x;
+                    float h = max.y - min.y;
 
-                        float arrowW = w * 0.25f;
-                        float arrowH = h * 0.3f;
+                    float arrowW = w * 0.25f;
+                    float arrowH = h * 0.3f;
 
-                        ImVec2 p1(center.x - arrowW * 0.5f,
-                                  center.y - arrowH); // tip top
-                        ImVec2 p2(center.x - arrowW * 0.5f,
-                                  center.y + arrowH); // tip bottom
-                        ImVec2 p3(center.x + arrowW * 0.5f,
-                                  center.y); // back center
+                    ImVec2 p1(center.x - arrowW * 0.5f,
+                        center.y - arrowH); // tip top
+                    ImVec2 p2(center.x - arrowW * 0.5f,
+                        center.y + arrowH); // tip bottom
+                    ImVec2 p3(center.x + arrowW * 0.5f,
+                        center.y); // back center
 
-                        dl->AddTriangleFilled(p1, p2, p3, IM_COL32_WHITE);
-                    },
-                    IM_COL32(50, 50, 50, 255))) {
+                    dl->AddTriangleFilled(p1, p2, p3, IM_COL32_WHITE);
+                },
+                IM_COL32(50, 50, 50, 255))) {
 
                 if (m_off_line_frame_index < max_frame_count) { // TODO: FIXME
                     m_off_line_frame_index++;
@@ -406,33 +410,33 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
             ImGui::SameLine(0.0f, 10.0f);
 
             if (DrawIconButton(
-                    "JumpToEnd",
-                    [](ImDrawList *dl, ImVec2 min, ImVec2 max) {
-                        ImVec2 center = (min + max) * 0.5f;
-                        float w = max.x - min.x;
-                        float h = max.y - min.y;
+                "JumpToEnd",
+                [](ImDrawList* dl, ImVec2 min, ImVec2 max) {
+                    ImVec2 center = (min + max) * 0.5f;
+                    float w = max.x - min.x;
+                    float h = max.y - min.y;
 
-                        float arrowW = w * 0.2f;
-                        float arrowH = h * 0.35f;
-                        float spacing = w * 0.05f;
+                    float arrowW = w * 0.2f;
+                    float arrowH = h * 0.35f;
+                    float spacing = w * 0.05f;
 
-                        // Triangle
-                        ImVec2 p1(center.x - spacing - arrowW * 0.5f,
-                                  center.y - arrowH);
-                        ImVec2 p2(center.x - spacing - arrowW * 0.5f,
-                                  center.y + arrowH);
-                        ImVec2 p3(center.x - spacing + arrowW * 0.5f, center.y);
+                    // Triangle
+                    ImVec2 p1(center.x - spacing - arrowW * 0.5f,
+                        center.y - arrowH);
+                    ImVec2 p2(center.x - spacing - arrowW * 0.5f,
+                        center.y + arrowH);
+                    ImVec2 p3(center.x - spacing + arrowW * 0.5f, center.y);
 
-                        dl->AddTriangleFilled(p1, p2, p3, IM_COL32_WHITE);
+                    dl->AddTriangleFilled(p1, p2, p3, IM_COL32_WHITE);
 
-                        // Bar (vertical line to the right of triangle)
-                        float barX = center.x + spacing + arrowW * 0.5f;
-                        dl->AddRectFilled(
-                            ImVec2(barX - 1.0f, center.y - arrowH),
-                            ImVec2(barX + 1.0f, center.y + arrowH),
-                            IM_COL32_WHITE);
-                    },
-                    IM_COL32(60, 60, 60, 255))) {
+                    // Bar (vertical line to the right of triangle)
+                    float barX = center.x + spacing + arrowW * 0.5f;
+                    dl->AddRectFilled(
+                        ImVec2(barX - 1.0f, center.y - arrowH),
+                        ImVec2(barX + 1.0f, center.y + arrowH),
+                        IM_COL32_WHITE);
+                },
+                IM_COL32(60, 60, 60, 255))) {
 
                 m_off_line_frame_index = max_frame_count - 1;
                 m_offline_change_frame = true;
@@ -440,8 +444,8 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
 
             ImGui::SameLine(0.0f, 10.0f);
 
-            if (DrawIconButton("Stop", [](ImDrawList *dl, ImVec2 min,
-                                          ImVec2 max) {
+            if (DrawIconButton("Stop", [](ImDrawList* dl, ImVec2 min,
+                ImVec2 max) {
                     ImVec2 center = (min + max) * 0.5f;
                     float side = (max.x - min.x) * 0.4f;
                     ImVec2 pMin(center.x - side * 0.5f, center.y - side * 0.5f);
@@ -456,7 +460,7 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
 
             NewLine(5.0f);
             if (ImGui::SliderInt("Frame #", (int*)&m_off_line_frame_index, 0, max_frame_count - 1, "#: %d")) {
-				m_offline_change_frame = true;
+                m_offline_change_frame = true;
             }
         }
 
@@ -477,54 +481,63 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags) {
         ImGui::Text("%i", rotationangledegrees);
         NewLine(5.0f);
 
-        DrawBarLabel("Point Cloud");
-        NewLine(5.0f);
-        if (ImGuiExtensions::ADIButton("Reset", true)) {
-            PointCloudReset();
-        }
-        NewLine(5.0f);
-        ImGui::SliderInt("Point Size", &m_point_size, 1, 10, "Point Size: %d px");
+        if (haveXYZ) {
+            DrawBarLabel("Point Cloud");
+            NewLine(5.0f);
+            if (ImGuiExtensions::ADIButton("Reset", true)) {
+                PointCloudReset();
+            }
+            NewLine(5.0f);
+            ImGui::SliderInt("Point Size", &m_point_size, 1, 10, "Point Size: %d px");
 
-        NewLine(5.0f);
-
-        static uint32_t selected;
-
-        ImGui::RadioButton("Depth Colour", selected == 0);
-        if (ImGui::IsItemClicked())
-            selected = 0;
-        ImGui::RadioButton("AB Colour", selected == 1);
-        if (ImGui::IsItemClicked())
-            selected = 1;
-        ImGui::RadioButton("Solid Colour", selected == 2);
-        if (ImGui::IsItemClicked())
-            selected = 2;
-
-        m_view_instance->setPointCloudColour(selected);
-
-        NewLine(5.0f);
-
-        DrawBarLabel("Active Brightness");
-        NewLine(5.0f);
-        bool logImage = m_view_instance->getLogImage();
-        bool autoScale = m_view_instance->getAutoScale();
-
-        ImGui::Checkbox("Auto-scale", &autoScale);
-        if (autoScale == false) {
-            logImage = false;
+            NewLine(5.0f);
         }
 
-        NewLine(5.0f);
-        if (autoScale == false) {
-            ImGui::BeginDisabled();
-        }
-        ImGui::Checkbox("Log Image", &logImage);
-        if (autoScale == false) {
-            ImGui::EndDisabled();
+        if (haveXYZ) {
+
+            static uint32_t selected;
+
+            ImGui::RadioButton("Depth Colour", selected == 0);
+            if (ImGui::IsItemClicked())
+                selected = 0;
+            if (haveAB) {
+                ImGui::RadioButton("AB Colour", selected == 1);
+                if (ImGui::IsItemClicked())
+                    selected = 1;
+            }
+            ImGui::RadioButton("Solid Colour", selected == 2);
+            if (ImGui::IsItemClicked())
+                selected = 2;
+
+            m_view_instance->setPointCloudColour(selected);
+
+            NewLine(5.0f);
         }
 
-        m_view_instance->setLogImage(logImage);
-        m_view_instance->setAutoScale(autoScale);
-        NewLine(5.0f);
+        if (haveAB) {
+            DrawBarLabel("Active Brightness");
+            NewLine(5.0f);
+            bool logImage = m_view_instance->getLogImage();
+            bool autoScale = m_view_instance->getAutoScale();
+
+            ImGui::Checkbox("Auto-scale", &autoScale);
+            if (autoScale == false) {
+                logImage = false;
+            }
+
+            NewLine(5.0f);
+            if (autoScale == false) {
+                ImGui::BeginDisabled();
+            }
+            ImGui::Checkbox("Log Image", &logImage);
+            if (autoScale == false) {
+                ImGui::EndDisabled();
+            }
+
+            m_view_instance->setLogImage(logImage);
+            m_view_instance->setAutoScale(autoScale);
+            NewLine(5.0f);
+        }
 
         if (!m_off_line) {
             DrawBarLabel("Configuration Parameters");
@@ -566,7 +579,7 @@ bool ADIMainWindow::EntryInt32_t(const char* label, int32_t& input, const int32_
     return previous != input;
 }
 
-void ADIMainWindow::ShowIniWindow(bool* p_open) {
+void ADIMainWindow::ShowIniWindow(bool showModify) {
     aditof::Status status;
 
     static int32_t abThreshMin = 0;
@@ -581,9 +594,10 @@ void ADIMainWindow::ShowIniWindow(bool* p_open) {
     static int32_t jblfABThreshold = 0;
     static int32_t headerSize = 0;
     static bool metadata = false;
+    static int32_t fps = 0;
 
-    if (m_is_playing && m_ini_params.empty()) {
-        status = GetActiveCamera()->getFrameProcessParams(m_ini_params);
+    if (m_ini_params.empty()) {
+        status = GetActiveCamera()->getDepthParamtersMap(m_mode_selection, m_ini_params);
         if (status != aditof::Status::OK) {
             LOG(ERROR) << "Could not get ini params";
         }
@@ -592,28 +606,15 @@ void ADIMainWindow::ShowIniWindow(bool* p_open) {
             confThresh = std::stof(m_ini_params["confThresh"]);
             radialThreshMin = std::stof(m_ini_params["radialThreshMin"]);
             radialThreshMax = std::stof(m_ini_params["radialThreshMax"]);
-            if (static_cast<int>(
-                std::round(std::stof(m_ini_params["jblfApplyFlag"]))) == 1) {
-                jblfApplyFlag = true;
-            }
-            else {
-                jblfApplyFlag = false;
-            }
-
-            jblfWindowSize = static_cast<int>(
-                std::round(std::stof(m_ini_params["jblfWindowSize"])));
+            jblfApplyFlag = (static_cast<int>(std::round(std::stof(m_ini_params["jblfApplyFlag"]))) == 1);
+            jblfWindowSize = static_cast<int>(std::round(std::stof(m_ini_params["jblfWindowSize"])));
             jblfGaussianSigma = std::stof(m_ini_params["jblfGaussianSigma"]);
             jblfExponentialTerm = std::stof(m_ini_params["jblfExponentialTerm"]);
             jblfMaxEdge = std::stof(m_ini_params["jblfMaxEdge"]);
             jblfABThreshold = std::stof(m_ini_params["jblfABThreshold"]);
-            headerSize = static_cast<int>(
-                std::round(std::stof(m_ini_params["headerSize"])));
-            if (headerSize == 128) {
-                metadata = true;
-            }
-            else {
-                metadata = false;
-            }
+            headerSize = static_cast<int>(std::round(std::stof(m_ini_params["headerSize"])));
+            metadata = (headerSize == 128);
+            fps = static_cast<int>(std::round(std::stof(m_ini_params["fps"])));
         }
     }
 
@@ -629,6 +630,7 @@ void ADIMainWindow::ShowIniWindow(bool* p_open) {
     EntryInt32_t("jblfExponentialTerm", jblfExponentialTerm, 0, 255);
     EntryInt32_t("jblfMaxEdge", jblfMaxEdge, 0, 64);
     EntryInt32_t("jblfABThreshold", jblfABThreshold, 0, 131071);
+    EntryInt32_t("fps", fps, 0, 60);
 
     // modify ini params
 	m_modified_ini_params["abSumThresh"] = std::to_string(1.0f); // Unused, but needed for now.
@@ -652,17 +654,28 @@ void ADIMainWindow::ShowIniWindow(bool* p_open) {
     m_modified_ini_params["jblfMaxEdge"] = std::to_string(jblfMaxEdge);
     m_modified_ini_params["jblfABThreshold"] =
         std::to_string(jblfABThreshold);
+    m_modified_ini_params["fps"] = std::to_string(fps);
 
-    if (ImGui::Button("Modify")) {
-        // stop streaming
-        m_is_playing = false;
-        m_fps_frame_received = 0;
-        CameraStop();
+    if (showModify) {
+        if (ImGuiExtensions::ADIButton("Reset Parameters", m_is_open_device)) {
+            auto camera = GetActiveCamera();
+            if (camera) {
+                camera->resetDepthProcessParams();
+                m_ini_params.clear();
+            }
+        }
 
-        m_use_modified_ini_params = true;
+        if (ImGui::Button("Modify")) {
+            // stop streaming
+            m_is_playing = false;
+            m_fps_frame_received = 0;
+            CameraStop();
 
-        // restart streaming
-        m_view_selection_changed = m_view_selection;
-        m_is_playing = true;
+            m_use_modified_ini_params = true;
+
+            // restart streaming
+            m_view_selection_changed = m_view_selection;
+            m_is_playing = true;
+        }
     }
 }

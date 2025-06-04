@@ -333,7 +333,7 @@ class ADIMainWindow {
 		*/
     void ShowLogWindow(bool *p_open);
 
-    void ShowIniWindow(bool *p_open);
+    void ShowIniWindow(bool showModify = true);
 
     /**
 		* @brief Will poll the USB interface to look
@@ -399,7 +399,7 @@ class ADIMainWindow {
 		*/
     void CameraStop();
 
-    int32_t synchronizeVideo();
+    int32_t synchronizeVideo(std::shared_ptr<aditof::Frame>& frame);
 
     /**
 		* @brief Displays pixel information while mouse hovers over
@@ -432,7 +432,7 @@ class ADIMainWindow {
     void DisplayInfoWindow(ImGuiWindowFlags overlayFlags);
     float DisplayFrameWindow(ImVec2 windowSize, ImVec2 &displayUpdate,
                             ImVec2 &size);
-    void DisplayControlWindow(ImGuiWindowFlags overlayFlags);
+    void DisplayControlWindow(ImGuiWindowFlags overlayFlags, bool haveAB, bool haveDepth, bool haveXYZ);
 
     /**
 		* @brief Displays AB Window
@@ -506,6 +506,11 @@ class ADIMainWindow {
     float WindowCalcY(Rect w, float buffer = 0.0f) {
         return w.y + w.height + buffer;
     }
+    void Spinner(const char* label, float radius, int thickness, ImU32 color);
+
+    bool m_isWorking = false;
+	bool getIsWorking() const { return m_isWorking; }
+	void setIsWorking(bool isWorking) { m_isWorking = isWorking; }
 
     // The type of movement that a mouse movement should be interpreted as (if any)
     //
@@ -603,7 +608,7 @@ class ADIMainWindow {
     uint32_t rotationangledegrees = INITIALDEG;
 
     std::unordered_map<std::string, Rect> m_dict_win_position;
-    Rect *m_pc_position;
+    Rect *m_xyz_position;
     Rect *m_ab_position;
     Rect *m_depth_position;
     int16_t m_frame_window_position_state;
@@ -633,7 +638,7 @@ class ADIMainWindow {
     std::vector<float> m_depth_line_values;
     std::vector<std::pair<float, float>> m_depthLine;
     bool m_flash_main_window = false;
-    int32_t m_user_frame_rate = 10;
+    int32_t m_user_frame_rate = 0;
     std::atomic<bool> m_offline_change_frame;
 	std::string m_base_file_name;
 };

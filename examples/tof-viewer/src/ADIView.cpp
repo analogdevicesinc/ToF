@@ -183,6 +183,10 @@ void ADIView::_displayAbImage() {
 
     m_capturedFrame->getData("ab", &ab_video_data);
 
+	if (ab_video_data == nullptr) {
+		return;
+	}
+
     aditof::FrameDataDetails frameAbDetails;
     frameAbDetails.height = 0;
     frameAbDetails.width = 0;
@@ -228,6 +232,10 @@ void ADIView::_displayAbImage() {
 void ADIView::_displayDepthImage() {
     uint16_t *data;
     m_capturedFrame->getData("depth", &depth_video_data);
+
+    if (depth_video_data == nullptr) {
+        return;
+    }
 
     aditof::FrameDataDetails frameDepthDetails;
     m_capturedFrame->getDataDetails("depth", frameDepthDetails);
@@ -279,6 +287,11 @@ void ADIView::_displayDepthImage() {
 void ADIView::_displayPointCloudImage() {
     //Get XYZ table
     m_capturedFrame->getData("xyz", (uint16_t **) & pointCloud_video_data);
+
+    if (pointCloud_video_data == nullptr) {
+        return;
+    }
+
     aditof::FrameDataDetails frameXyzDetails;
     frameXyzDetails.height = 0;
     frameXyzDetails.width = 0;
@@ -310,6 +323,8 @@ void ADIView::_displayPointCloudImage() {
     //2) normalize between [-1.0, 1.0]
     //3) X and Y ranges between [-32768, 32767] or [FFFF, 7FFF]. Z axis is [0, 7FFF]
 
+    bool haveAb = m_capturedFrame->haveDataType("ab");
+
     for (uint32_t i = 0; i < pointcloudTableSize; i += 3) {
             
         //XYZ
@@ -326,7 +341,7 @@ void ADIView::_displayPointCloudImage() {
         } else {
             if (m_pccolour == 2) {
 				fRed = fGreen = fBlue = 1.0f; //Default RGB values
-            } else if (m_pccolour == 1) {
+            } else if (m_pccolour == 1 && haveAb) {
                 fRed   = (float)ab_video_data_8bit[cntr] / 255.0f;
                 fGreen = (float)ab_video_data_8bit[cntr + 1] / 255.0f;
                 fBlue  = (float)ab_video_data_8bit[cntr + 2] / 255.0f;

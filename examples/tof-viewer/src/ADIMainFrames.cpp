@@ -149,12 +149,14 @@ float ADIMainWindow::DisplayFrameWindow(ImVec2 windowSize, ImVec2 &displayUpdate
     return autoscale;
 }
 
-int32_t ADIMainWindow::synchronizeVideo() {
+int32_t ADIMainWindow::synchronizeVideo(std::shared_ptr<aditof::Frame>& frame) {
     m_view_instance->m_capturedFrame = m_view_instance->m_ctrl->getFrame();
 
     if (m_view_instance->m_capturedFrame == nullptr) {
         return -1;
     }
+
+    frame = m_view_instance->m_capturedFrame;
 
     aditof::FrameDetails frameDetails;
     m_view_instance->m_capturedFrame->getDetails(frameDetails);
@@ -614,11 +616,11 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
     ImVec2 size;
 
     auto imageScale =
-        DisplayFrameWindow(ImVec2(m_pc_position->width, m_pc_position->height),
+        DisplayFrameWindow(ImVec2(m_xyz_position->width, m_xyz_position->height),
                            m_display_point_cloud_dimensions, size);
 
-    SetWindowPosition(m_pc_position->x, m_pc_position->y);
-    SetWindowSize(m_pc_position->width, m_pc_position->height);
+    SetWindowPosition(m_xyz_position->x, m_xyz_position->y);
+    SetWindowSize(m_xyz_position->width, m_xyz_position->height);
 
 
     if (ImGui::Begin("Point Cloud Window", nullptr, overlayFlags)) {
@@ -663,7 +665,7 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
             }
 
             ImageRotated((ImTextureID)m_gl_pointcloud_video_texture,
-                ImVec2(m_pc_position->width, m_pc_position->height),
+                ImVec2(m_xyz_position->width, m_xyz_position->height),
                 ImVec2(_displayPointCloudDimensions.x,
                     _displayPointCloudDimensions.y),
                 rotationangleradians);
@@ -677,7 +679,7 @@ void ADIMainWindow::DisplayPointCloudWindow(ImGuiWindowFlags overlayFlags) {
             memcpy(projMatrix, glm::value_ptr(proj), sizeof(float) * 16);
 
             memcpy(modelMatrix, m_model_mat, sizeof(float) * 16);
-            ImOGuizmo::SetRect(m_pc_position->x + 5.0f, m_pc_position->y + 15.0f, 50.0f);
+            ImOGuizmo::SetRect(m_xyz_position->x + 5.0f, m_xyz_position->y + 15.0f, 50.0f);
             ImOGuizmo::DrawGizmo(modelMatrix, projMatrix, 10.0f);
             glDisable(GL_DEPTH_TEST);
         }

@@ -187,6 +187,10 @@ void ADIController::captureFrames() {
 }
 
 bool ADIController::shouldDropFrame(uint32_t frameNum) {
+    if (m_frame_rate == 0) {
+        m_frame_rate = 10; // Prevent error, fake frame rate.
+        LOG(ERROR) << "m_frame_rate == 0 -> Using a default frame rate of " << m_frame_rate;
+    }
     uint32_t out_idx_this = (frameNum * m_preview_rate) / m_frame_rate;
     uint32_t out_idx_next = ((frameNum + 1) * m_preview_rate) / m_frame_rate;
     return (out_idx_this == out_idx_next);
