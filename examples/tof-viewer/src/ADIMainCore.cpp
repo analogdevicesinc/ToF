@@ -556,6 +556,8 @@ void ADIMainWindow::ShowLoadAdsdParamsMenu() {
         } else {
             LOG(INFO) << "Current configuration info from file "
                       << loadconfigurationFileValue;
+
+            m_ini_params.clear();
         }
     }
 }
