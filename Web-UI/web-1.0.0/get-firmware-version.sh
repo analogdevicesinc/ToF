@@ -17,6 +17,7 @@ WORKSPACE_VERSION="$1"
 
 # Construct the command with the extracted firmware version
 cd /home/analog/Workspace-$WORKSPACE_VERSION/Tools/ctrl_app
+[ -f out.txt ] && rm -f out.txt
 COMMAND="./ctrl_app infile.txt > out.txt"
 
 # Run the command
