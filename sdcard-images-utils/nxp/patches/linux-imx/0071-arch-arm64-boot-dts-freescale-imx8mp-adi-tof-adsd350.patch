@@ -1,0 +1,55 @@
+From 9bd198e3dffdf88ddd7e0ab7f44233150597b746 Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Thu, 5 Jun 2025 14:10:39 +0530
+Subject: [PATCH] arch: arm64: boot: dts: freescale:
+ imx8mp-adi-tof-adsd3500-dual.dts: set the I2C clock speed to 1 MHz
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030.dts      | 2 +-
+ arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500-dual.dts | 2 +-
+ arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500.dts      | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030.dts b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030.dts
+index f32c4ed9ffa1..d48e8181f47d 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030.dts
+@@ -394,7 +394,7 @@ ldo5: LDO5 {
+ };
+ 
+ &i2c2 {
+-	clock-frequency = <100000>;
++	clock-frequency = <1000000>;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_i2c2>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500-dual.dts b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500-dual.dts
+index f6b43db29d69..ca1ee43f817b 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500-dual.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500-dual.dts
+@@ -331,7 +331,7 @@ ldo5: LDO5 {
+ };
+ 
+ &i2c2 {
+-	clock-frequency = <100000>;
++	clock-frequency = <1000000>;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_i2c2>;
+ 	status = "okay";
+diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500.dts b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500.dts
+index fc17ba631724..c69bdceb1974 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500.dts
+@@ -388,7 +388,7 @@ ldo5: LDO5 {
+ };
+ 
+ &i2c2 {
+-	clock-frequency = <100000>;
++	clock-frequency = <1000000>;
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_i2c2>;
+ 	status = "okay";
+-- 
+2.28.0
+
