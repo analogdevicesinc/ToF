@@ -262,6 +262,7 @@ case "$1" in
 		"NXP i.MX8MPlus ADI TOF carrier + ADSD3500")
 			#create_uvc configs/c.1 uvc.0
 			create_rndis configs/c.1 rndis.0
+			#create_ecm configs/c.1 ecm.0
 			create_msd configs/c.1 mass_storage.0 /dev/mmcblk1p1
 			;;
 
