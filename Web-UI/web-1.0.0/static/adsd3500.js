@@ -97,7 +97,7 @@ async function update_version(selected_mode = "Not set") {
   let sdk_data = await sdk_response.json();
 
   CurrentWorkspace.innerHTML = sdk_data.workspace;
-  OpreationMode.innerHTML = selected_mode;
+  OpreationMode.innerHTML = "Not set";
 }
 
 async function switchWorkspace() {
@@ -200,7 +200,7 @@ const terminalOutput = document.getElementById("terminal_output");
 
 async function loadCurrentFirmware() {
   const firmwareVersion = document.getElementById("firm_version");
-  const firmwareVersionWarn = document.getElementById("firm_version_warning");
+  const firmwareVersionWarn = document.getElementById("device_info");
   let this_firmware = 0;
   try {
     const response = await fetch("/current_firmware");
@@ -211,18 +211,19 @@ async function loadCurrentFirmware() {
     console.error("Error loading current firmware:", error);
   }
 
-  //   //  check the compatible version
-  //   try {
-  //     const response = await fetch("/check_firmware");
-  //     const data = await response.json();
-  //     if (this_firmware !== data.version) {
-  //       firmwareVersionWarn.innerHTML = `Warning! Version : ${data.version} is recommended.`;
-  //     } else {
-  //       firmwareVersionWarn.innerHTML = ``;
-  //     }
-  //   } catch (error) {
-  //     console.error("Error loading current firmware:", error);
-  //   }
+  //  check the compatible version
+  try {
+    const response = await fetch("/check_firmware");
+    const data = await response.json();
+    if (this_firmware !== data.version) {
+      firmwareVersionWarn.style.color = "red";
+      firmwareVersionWarn.textContent = `Warning! Firmware Version : ${data.version} is recommended.`;
+    } else {
+      firmwareVersionWarn.innerHTML = ``;
+    }
+  } catch (error) {
+    console.error("Error loading current firmware:", error);
+  }
 }
 
 let isfirmwareflashing = false;

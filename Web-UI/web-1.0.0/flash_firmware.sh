@@ -5,7 +5,7 @@
 # Description
 #  - copies the current firmware in Workspace-<version>/Tools/Firmware_update_utility
 #  - Runs the code to flash the firmware.
-#  Usages : ./flash_firmware.sh <workspace> <firmware-version>
+#  Usages : ./flash_firmware.sh <firmware-version>
 
 # Exit Codes:
 # 0: Success
@@ -18,20 +18,20 @@
 
 
 # Check if the correct number of arguments are provided
-if [ "$#" -ne 2 ]; then
-    echo "Usage: sudo $0 <workspace> <firmware_version>"
+if [ "$#" -ne 1 ]; then
+    echo "Usage: sudo $0 <firmware_version>"
     exit 1
 fi
 
-WORKSPACE=$1
-FIRMWARE_VERSION=$2
+
+FIRMWARE_VERSION=$1
 
 BASE_DIRECTORY="/home/analog"
 
 # Define the source and destination paths
 SOURCE_DIR="$BASE_DIRECTORY/ADSD3500-firmware-$FIRMWARE_VERSION"
-DEST_DIR="$BASE_DIRECTORY/Workspace-$WORKSPACE/Tools/Firmware_update_utility"
-CTRL_APP_DIR="$BASE_DIRECTORY/Workspace-$WORKSPACE/Tools/ctrl_app"
+DEST_DIR="$BASE_DIRECTORY/Workspace/Tools/Firmware_update_utility"
+CTRL_APP_DIR="$BASE_DIRECTORY/Workspace/Tools/ctrl_app"
 
 # Check if the source directory exists
 if [ ! -d "$SOURCE_DIR" ]; then
@@ -54,13 +54,18 @@ eval $COMMAND
 
 # Read the status register 
 cd $CTRL_APP_DIR
-COMMAND="./ctrl_app  /home/analog/web-1.0.0/status.txt > /home/analog/web-1.0.0/get_status.txt"
+
+# Remove the file if it exists
+if [ -f /home/analog/web-1.0.0/get_status.txt ]; then
+    rm -f /home/analog/web-1.0.0/get_status.txt
+fi
+COMMAND="./ctrl_app  /home/analog/web/status.txt > /home/analog/web/get_status.txt"
 eval $COMMAND
 
-output=$(tail -n 1 /home/analog/web-1.0.0/get_status.txt | xargs)
+output=$(tail -n 1 /home/analog/web/get_status.txt | xargs)
 
 
-if [ "$output" == "00 0E" ]; then
+if [ "$output" == "00 00" ]; then
     echo "Firmware flash successful !"
     # Define the target Workspace directory based on user input
     TARGET_FOLDER="$BASE_DIRECTORY/ADSD3500-firmware-$FIRMWARE_VERSION"

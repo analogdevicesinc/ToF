@@ -1,312 +1,218 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Analog Devices Time of Flight</title>
-    <link rel="stylesheet" href="../static/styles.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Barlow:wght@600&family=Inter:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="../static/node_modules/@adi-ctx/harmonic-core-components/dist/harmonic-core-components/harmonic-core-components.css"
-    />
-    <script
-      type="module"
-      src="../static/node_modules/@adi-ctx/harmonic-core-components/dist/harmonic-core-components/harmonic-core-components.esm.js"
-    ></script>
-  </head>
-  <body>
-    <header class="navigation_header">
-      <div class="backdrop">
-        <hmc-nav-bar size="md">
-          <hmc-hmc-button
-            id="left-cta"
-            slot="left-actions"
-            kind="ghost"
-            size="sm"
-            icon-only=""
-          >
-            <hmc-icon name="menu-m" size="md"> </hmc-icon
-          ></hmc-hmc-button>
-          <div slot="logo" class="logo">
-            <svg viewBox="0 0 78 24" fill="none">
-              <path
-                d="M-0.00140381 23.9997V-0.000305176H24.3568V23.9997H-0.00140381ZM5.01288 3.73469V20.9547L20.2853 12.1527L5.01288 3.73469Z"
-                fill="currentColor"
-              ></path>
-              <path
-                d="M60.1876 23.9997H50.7774V0.0566998H60.2458C67.2591 0.0566998 71.4682 5.4987 71.4682 12.4287C71.4682 19.3587 67.7274 23.9997 60.1876 23.9997ZM59.7805 4.1247H55.9203V20.2767H60.0713C65.5662 20.2767 66.3835 15.6957 66.3254 12.2007C66.3254 9.4497 64.9815 4.1247 59.7805 4.1247Z"
-                fill="currentColor"
-              ></path>
-              <path
-                d="M46.1175 23.9997L44.2471 18.6717H35.2471L33.6124 23.9997H28.7022L36.943 -0.000305176H41.9114L51.1471 23.9997H46.1175ZM42.5359 13.8027L39.4563 5.03969L36.7563 13.8027L36.5359 15.2907H42.7594L42.5359 13.8027Z"
-                fill="currentColor"
-              ></path>
-              <path
-                d="M78.0009 23.9997H72.7999V-0.000305176H78.0009V23.9997Z"
-                fill="currentColor"
-              ></path>
-            </svg>
 
-            <span class="name"
-              >Analog Devices Time of Flight<span> </span
-            ></span>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analog Devices Time of Flight</title>
+  <link rel="stylesheet" href="../static/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600&family=Inter:wght@400;500;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet"
+    href="../static/node_modules/@adi-ctx/harmonic-core-components/dist/harmonic-core-components/harmonic-core-components.css" />
+  <script type="module"
+    src="../static/node_modules/@adi-ctx/harmonic-core-components/dist/harmonic-core-components/harmonic-core-components.esm.js"></script>
+</head>
+
+<body>
+  <header class="navigation_header">
+    <div class="backdrop">
+      <hmc-nav-bar size="md">
+        <hmc-hmc-button id="left-cta" slot="left-actions" kind="ghost" size="sm" icon-only="">
+          <hmc-icon name="menu-m" size="md"> </hmc-icon></hmc-hmc-button>
+        <div slot="logo" class="logo">
+          <svg viewBox="0 0 78 24" fill="none">
+            <path
+              d="M-0.00140381 23.9997V-0.000305176H24.3568V23.9997H-0.00140381ZM5.01288 3.73469V20.9547L20.2853 12.1527L5.01288 3.73469Z"
+              fill="currentColor"></path>
+            <path
+              d="M60.1876 23.9997H50.7774V0.0566998H60.2458C67.2591 0.0566998 71.4682 5.4987 71.4682 12.4287C71.4682 19.3587 67.7274 23.9997 60.1876 23.9997ZM59.7805 4.1247H55.9203V20.2767H60.0713C65.5662 20.2767 66.3835 15.6957 66.3254 12.2007C66.3254 9.4497 64.9815 4.1247 59.7805 4.1247Z"
+              fill="currentColor"></path>
+            <path
+              d="M46.1175 23.9997L44.2471 18.6717H35.2471L33.6124 23.9997H28.7022L36.943 -0.000305176H41.9114L51.1471 23.9997H46.1175ZM42.5359 13.8027L39.4563 5.03969L36.7563 13.8027L36.5359 15.2907H42.7594L42.5359 13.8027Z"
+              fill="currentColor"></path>
+            <path d="M78.0009 23.9997H72.7999V-0.000305176H78.0009V23.9997Z" fill="currentColor"></path>
+          </svg>
+
+          <span class="name">Analog Devices Time of Flight<span> </span></span>
+        </div>
+        <hmc-nav-link id="link1" size="md" href="{{url_for('index')}}" aria-label="" title="">
+          Home</hmc-nav-link>
+        <hmc-nav-link id="link2" size="md" href="{{url_for('ADSD3500')}}" aria-label="" title="">
+          Update</hmc-nav-link>
+        <hmc-nav-link id="link3" link-active="" size="md" href="{{url_for('system')}}" aria-label="" title="">
+          System</hmc-nav-link>
+        <hmc-nav-link id="link4" size="md" href="{{url_for('document')}}" aria-label="" title="">
+          Document</hmc-nav-link>
+      </hmc-nav-bar>
+    </div>
+  </header>
+
+  <!-- Overlay for blocking interactions -->
+  <div id="overlay" class="overlay" style="display: none">
+    <div class="overlay-content">
+      <div class="spinner"></div>
+      <p id="overlay-text">Processing, please wait...</p>
+    </div>
+  </div>
+
+  <section id="system" class="system_section">
+    <!-- Device Control Section -->
+    <div class="device_control">
+      <hmc-card density="high">
+        <hmc-container-header slot="card-header" density="high" heading="Device Control"
+          subtitle=""></hmc-container-header>
+
+
+        <select id="device_ctrl_method" size="1" title="Select a device control method" onchange="updatetitle()">
+          <option value="" disabled selected>Select --</option>
+          <option value="restart">Restart</option>
+          <option value="powerOff">Power Off</option>
+          <option value="modifyPermission">Modify Permission</option>
+          <option value="checkPermission">Check Permission</option>
+          <option value="networkSwitch">Network Switch</option>
+          <option value="nvmRead">NVM Read</option>
+          <option value="ccbRead">CCB Read</option>
+        </select>
+        <div class="device_info" id="device_info">
+          Select an option.
+        </div>
+        <div class="device_control_btn">
+          <hmc-button size="sm" onclick="applyDeviceControl()">Apply</hmc-button>
+        </div>
+
+        <hmc-modal id="network-overlay" density="small" overlay-dismiss="false">
+          <div class="network-overlay-content" id="network-overlay-content">
           </div>
-          <hmc-nav-link
-            id="link1"
-            size="md"
-            href="{{url_for('index')}}"
-            aria-label=""
-            title=""
-          >
-            Home</hmc-nav-link
-          >
-          <hmc-nav-link
-            id="link2"
-            size="md"
-            href="{{url_for('ADSD3500')}}"
-            aria-label=""
-            title=""
-          >
-            Update</hmc-nav-link
-          >
-          <hmc-nav-link
-            id="link3"
-            link-active=""
-            size="md"
-            href="{{url_for('system')}}"
-            aria-label=""
-            title=""
-          >
-            System</hmc-nav-link
-          >
-          <hmc-nav-link
-            id="link4"
-            size="md"
-            href="{{url_for('document')}}"
-            aria-label=""
-            title=""
-          >
-            Document</hmc-nav-link
-          >
-        </hmc-nav-bar>
-      </div>
-    </header>
+        </hmc-modal>
+        <hmc-modal id="permission-overlay" density="small" overlay-dismiss="false">
+          <div class="permission-overlay-content" id="permission-overlay-content">
+          </div>
+        </hmc-modal>
 
-    <!-- Overlay for blocking interactions -->
-    <div id="overlay" class="overlay" style="display: none">
-      <div class="overlay-content">
-        <div class="spinner"></div>
-        <p id="overlay-text">Processing, please wait...</p>
-      </div>
+
+
+        <hmc-modal id="read_tools_overlay_nvm" density="medium" overlay-dismiss="false">
+          <div class="read_tools_popup">
+            <label for="NVM_file-name">NVM File Name</label>
+            <input type="text" id="NVM_file-name" />
+            <span class="suggestion">e.g. backup_nvm.nvm</span>
+
+            <hmc-button size="sm" onclick="runNVMScript()">Run</hmc-button>
+          </div>
+        </hmc-modal>
+
+        <hmc-modal id="terminal_modal" density="medium" overlay-dismiss="false">
+          <pre id="terminal_output"></pre>
+        </hmc-modal>
+
+        <hmc-modal id="read_tools_overlay_ccb" density="medium" overlay-dismiss="false">
+          <div class="read_tools_popup">
+            <label for="CCB_file-name">File Name:</label>
+            <input type="text" id="CCB_file-name" />
+            <span class="suggestion">e.g., configuration.ccb</span>
+            <hmc-button size="sm" onclick="runCCBScript()">Run</hmc-button>
+          </div>
+        </hmc-modal>
+
+
+      </hmc-card>
     </div>
 
-    <section id="system" class="system_section">
-      <!-- Device Control Section -->
-      <div class="device_control">
-        <hmc-card density="high">
-          <hmc-container-header
-            slot="card-header"
-            density="high"
-            heading="Device Control"
-            subtitle=""
-          ></hmc-container-header>
-          <div class="device_control_btn">
-            <hmc-button size="sm" onclick="startRebootCountdown()"
-              >Restart</hmc-button
-            >
-            <hmc-button size="sm" onclick="startPowerDownCountdown()"
-              >Power Off</hmc-button
-            >
-            <hmc-button size="sm" onclick="modifyPermission()"
-              >Modify Permission</hmc-button
-            >
-            <hmc-button size="sm" onclick="showPermissionOverlay()"
-              >Check Permission</hmc-button
-            >
-            <hmc-button size="sm" onclick="changeToECM()"
-              >Network Switch</hmc-button
-            >
-            <hmc-modal
-              id="network-overlay"
-              density="small"
-              overlay-dismiss="false"
-            >
-              <div
-                class="network-overlay-content"
-                id="network-overlay-content"
-              >
-                <!-- Content will be loaded here -->
-              </div>
-            </hmc-modal>
-            <hmc-modal
-              id="permission-overlay"
-              density="small"
-              overlay-dismiss="false"
-            >
-              <div
-                class="permission-overlay-content"
-                id="permission-overlay-content"
-              >
-                <!-- Content will be loaded here -->
-              </div>
-            </hmc-modal>
-          </div>
+    <!-- Date and Time Section -->
+    <div class="date_n_time">
+      <hmc-card density="high">
+        <hmc-container-header slot="card-header" density="high" heading="Date and Time"
+          subtitle=""></hmc-container-header>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col" class="la sm"></th>
+              <th scope="col" class="la sm">Date</th>
+              <th scope="col" class="la sm">Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="la sm">Eval kit</td>
+              <td class="la sm" id="evalDate"></td>
+              <td class="la sm" id="evalTime"></td>
+            </tr>
+            <tr>
+              <td class="la sm">Browser</td>
+              <td class="la sm" id="browserDate"></td>
+              <td class="la sm" id="browserTime"></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="date_n_time_btn">
+          <hmc-button size="sm" onclick="updateDisplayedTimes()">Refresh</hmc-button>
+          <hmc-button size="sm" onclick="setServerTime()">Sync</hmc-button>
+        </div>
+      </hmc-card>
+    </div>
 
-          <div class="read_tools_btn">
-            <hmc-button size="sm" onclick="NVMRead()">NVM Read</hmc-button>
-            <hmc-button size="sm" onclick="CCBRead()">CCB Read</hmc-button>
-
-            <hmc-modal
-              id="read_tools_overlay_nvm"
-              density="medium"
-              overlay-dismiss="false"
-            >
-              <div class="read_tools_popup">
-                <label for="NVM_file-name">NVM File Name</label>
-                <input type="text" id="NVM_file-name" />
-                <span class="suggestion">e.g. backup_nvm.bin</span>
-
-                <hmc-button size="sm" onclick="runNVMScript()">Run</hmc-button>
-              </div>
-            </hmc-modal>
-
-            <hmc-modal
-              id="terminal_modal"
-              density="medium"
-              overlay-dismiss="false"
-            >
-              <pre id="terminal_output"></pre>
-            </hmc-modal>
-
-            <hmc-modal
-              id="read_tools_overlay_ccb"
-              density="medium"
-              overlay-dismiss="false"
-            >
-              <div class="read_tools_popup">
-                <label for="CCB_file-name">File Name:</label>
-                <input type="text" id="CCB_file-name" />
-                <span class="suggestion">e.g., configuration.ccb</span>
-                <hmc-button size="sm" onclick="runCCBScript()">Run</hmc-button>
-              </div>
-            </hmc-modal>
-          </div>
-        </hmc-card>
-      </div>
-
-      <!-- Date and Time Section -->
-      <div class="date_n_time">
-        <hmc-card density="high">
-          <hmc-container-header
-            slot="card-header"
-            density="high"
-            heading="Date and Time"
-            subtitle=""
-          ></hmc-container-header>
+    <!-- Wifi Setup -->
+    <div class="Network">
+      <hmc-card density="high">
+        <hmc-container-header slot="card-header" density="high" heading="Network" subtitle=""></hmc-container-header>
+        <div class="Network_content">
           <table>
-            <thead>
-              <tr>
-                <th scope="col" class="la sm"></th>
-                <th scope="col" class="la sm">Date</th>
-                <th scope="col" class="la sm">Time</th>
-              </tr>
-            </thead>
             <tbody>
               <tr>
-                <td class="la sm">Eval kit</td>
-                <td class="la sm" id="evalDate"></td>
-                <td class="la sm" id="evalTime"></td>
+                <td class="la sm">USB IP</td>
+                <td class="la sm">10.43.0.1</td>
               </tr>
               <tr>
-                <td class="la sm">Browser</td>
-                <td class="la sm" id="browserDate"></td>
-                <td class="la sm" id="browserTime"></td>
+                <td class="la sm">WiFi IP</td>
+                <td class="la sm">Not Set</td>
+              </tr>
+              <tr>
+                <td class="la sm">LAN IP</td>
+                <td class="la sm">Not Set</td>
+              </tr>
+              <tr>
+                <td class="la sm">SSID</td>
+                <td id="wifi_username" class="la sm"></td>
+              </tr>
+              <tr>
+                <td class="la sm">Status</td>
+                <td id="network_status" class="la sm"></td>
               </tr>
             </tbody>
           </table>
-          <div class="date_n_time_btn">
-            <hmc-button size="sm" onclick="updateDisplayedTimes()"
-              >Refresh</hmc-button
-            >
-            <hmc-button size="sm" onclick="setServerTime()">Sync</hmc-button>
+        </div>
+        <div class="setupwifi_btn">
+          <hmc-button size="sm" onclick="WifiRefresh()">Refresh</hmc-button>
+          <hmc-button size="sm" onclick="showWifiSetupForm()">Setup WiFi</hmc-button>
+        </div>
+        <hmc-modal id="wifisetup_modal" density="medium" overlay-dismiss="false">
+          <div class="wifi_setup_section">
+            <h3>WiFi Credentials</h3>
+            <label for="username">SSID:</label>
+            <input type="text" id="username" name="username" /><br />
+            <label for="password">passphrase:</label>
+            <input type="password" id="password" name="password" /><br />
+            <i>Warning : This process will reboot the system.</i>
+            <hmc-button onclick="setupWifi()">Submit</hmc-button>
           </div>
-        </hmc-card>
-      </div>
+        </hmc-modal>
+      </hmc-card>
+    </div>
+    <div id="wifiStatus"></div>
+  </section>
 
-      <!-- Wifi Setup -->
-      <div class="Network">
-        <hmc-card density="high">
-          <hmc-container-header
-            slot="card-header"
-            density="high"
-            heading="Network"
-            subtitle=""
-          ></hmc-container-header>
-          <div class="Network_content">
-            <table>
-              <tbody>
-                <tr>
-                  <td class="la sm">USB IP</td>
-                  <td class="la sm">10.43.0.1</td>
-                </tr>
-                <tr>
-                  <td class="la sm">WiFi IP</td>
-                  <td class="la sm">Not Set</td>
-                </tr>
-                <tr>
-                  <td class="la sm">LAN IP</td>
-                  <td class="la sm">Not Set</td>
-                </tr>
-                <tr>
-                  <td class="la sm">Current User</td>
-                  <td id="wifi_username" class="la sm"></td>
-                </tr>
-                <tr>
-                  <td class="la sm">Status</td>
-                  <td id="network_status" class="la sm"></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="setupwifi_btn">
-            <hmc-button size="sm" onclick="WifiRefresh()">Refresh</hmc-button>
-            <hmc-button size="sm" onclick="showWifiSetupForm()"
-              >Setup WiFi</hmc-button
-            >
-          </div>
-          <hmc-modal
-            id="wifisetup_modal"
-            density="medium"
-            overlay-dismiss="false"
-          >
-            <div class="wifi_setup_section">
-              <h3>WiFi Credentials</h3>
-              <label for="username">Username:</label>
-              <input type="text" id="username" name="username" /><br />
-              <label for="password">Password:</label>
-              <input type="password" id="password" name="password" /><br />
-              <hmc-button onclick="setupWifi()">Submit</hmc-button>
-            </div>
-          </hmc-modal>
-        </hmc-card>
-      </div>
-      <div id="wifiStatus"></div>
-    </section>
+  <footer>
+    <p class="copyright">
+      &copy; 2025 Analog Devices, Inc. All rights reserved. Trademarks and
+      registered trademarks are the property of their respective owners.
+    </p>
+  </footer>
+  <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+  <script src="{{url_for('static',filename='marked.min.js')}}"></script>
+  <script src="{{url_for('static',filename='system.js')}}"></script>
+</body>
 
-    <footer>
-      <p class="copyright">
-        &copy; 2025 Analog Devices, Inc. All rights reserved. Trademarks and
-        registered trademarks are the property of their respective owners.
-      </p>
-    </footer>
-    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
-    <script src="{{url_for('static',filename='marked.min.js')}}"></script>
-    <script src="{{url_for('static',filename='system.js')}}"></script>
-  </body>
 </html>
