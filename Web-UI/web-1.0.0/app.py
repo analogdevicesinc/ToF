@@ -1,17 +1,9 @@
 from flask import Flask, render_template, request, jsonify, Response,stream_with_context,send_from_directory
 import os
 import json
-import subprocess
-import threading
-import hashlib
-import shutil
 import logging
 import time
-from threading import Thread
 from datetime import datetime, timedelta
-from pytz import timezone
-import pytz
-from dateutil import parser
 
 app = Flask(__name__)
 
@@ -33,6 +25,7 @@ app.logger.addHandler(file_handler)
 
 @app.route('/get-workspace', methods=['GET'])
 def get_workspace():
+    import subprocess
     try:
         # Run the shell script and get the output
         result = subprocess.check_output(['./get-workspace.sh', '/home/analog']).decode('utf-8').strip()
@@ -41,22 +34,18 @@ def get_workspace():
         # Handle errors if the script fails to execute
         return jsonify({"error": str(e)}), 500
 
-def calculate_combined_md5(version_file_path, specified_file_path):
-    """Calculate the combined MD5 checksum of two files."""
-    hash_md5 = hashlib.md5()
-    
-    with open(version_file_path, "rb") as vf:
-        for chunk in iter(lambda: vf.read(4096), b""):
-            hash_md5.update(chunk)
-    
-    with open(specified_file_path, "rb") as sf:
-        for chunk in iter(lambda: sf.read(4096), b""):
-            hash_md5.update(chunk)
-    
-    return hash_md5.hexdigest()
+def calculate_sha256(file_path):
+    import hashlib
+    """Calculate the SHA-256 checksum of a file."""
+    sha256_hash = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(chunk)
+    return sha256_hash.hexdigest().upper()
 
 def validate_and_process_unzipped_files(unzip_dir):
-    """Validate the contents of the unzipped directory, move it if necessary, and run the post-process script."""
+    import subprocess
+    import shutil
     access = app.config.get('RO_ACCESS', 'unknown')
     try:
         json_file_path = os.path.join(unzip_dir, "info.json")
@@ -66,52 +55,57 @@ def validate_and_process_unzipped_files(unzip_dir):
         with open(json_file_path, "r") as json_file:
             json_data = json.load(json_file)
 
-        # this is for only one directory I need to change it for as many directory as I want
-        # for firmware update
+        # === Firmware Validation ===
         firmware_file = json_data.get("firmware", "")
+        expected_firmware_sha = json_data.get("firmware_sha256", "")
         firmware_file_path = os.path.join(unzip_dir, firmware_file)
+
         if not os.path.exists(firmware_file_path):
-            return False, f"Validation failed: Specified container file {firmware_file} is missing."
+            return False, f"Validation failed: Specified firmware file {firmware_file} is missing."
+
+        actual_firmware_sha = calculate_sha256(firmware_file_path)
+        if actual_firmware_sha != expected_firmware_sha:
+            return False, f"SHA-256 mismatch for firmware: expected {expected_firmware_sha}, got {actual_firmware_sha}"
 
         firmware_extract_dir = os.path.join(unzip_dir, os.path.splitext(firmware_file)[0])
         subprocess.run(['unzip', '-o', firmware_file_path, '-d', firmware_extract_dir], check=True)
 
-        if (access['message'] == False):
-            target_dir = os.path.join(DESTINATION_DIR_RW, os.path.basename(firmware_extract_dir))
-            if os.path.exists(target_dir):
-                return False, f"Error: Directory {os.path.basename(firmware_extract_dir)} already exists in {DESTINATION_DIR_RW}."
-        else:
-            target_dir = os.path.join(DESTINATION_DIR_RO, os.path.basename(firmware_extract_dir))
-            if os.path.exists(target_dir):
-                return False, f"Error: Directory {os.path.basename(firmware_extract_dir)} already exists in {DESTINATION_DIR_RO}."
+        target_dir = os.path.join(
+            DESTINATION_DIR_RW if access['message'] == False else DESTINATION_DIR_RO,
+            os.path.basename(firmware_extract_dir)
+        )
+        if os.path.exists(target_dir):
+            return False, f"Error: Directory {os.path.basename(firmware_extract_dir)} already exists in {target_dir}."
 
         shutil.move(firmware_extract_dir, target_dir)
-        logging.info(f"Directory moved to {target_dir}")
+        logging.info(f"Firmware directory moved to {target_dir}")
 
-
-        # for SDK update
+        # === SDK Validation ===
         SDK_file = json_data.get("SDK", "")
+        expected_sdk_sha = json_data.get("SDK_sha256", "")
         SDK_file_path = os.path.join(unzip_dir, SDK_file)
+
         if not os.path.exists(SDK_file_path):
-            return False, f"Validation failed: Specified container file {SDK_file} is missing."
+            return False, f"Validation failed: Specified SDK file {SDK_file} is missing."
+
+        actual_sdk_sha = calculate_sha256(SDK_file_path)
+        if actual_sdk_sha != expected_sdk_sha:
+            return False, f"SHA-256 mismatch for SDK: expected {expected_sdk_sha}, got {actual_sdk_sha}"
 
         SDK_extract_dir = os.path.join(unzip_dir, os.path.splitext(SDK_file)[0])
         subprocess.run(['unzip', '-o', SDK_file_path, '-d', SDK_extract_dir], check=True)
 
-        if (access['message'] == False):
-            target_dir = os.path.join(DESTINATION_DIR_RW, os.path.basename(SDK_extract_dir))
-            if os.path.exists(target_dir):
-                return False, f"Error: Directory {os.path.basename(SDK_extract_dir)} already exists in {DESTINATION_DIR_RW}."
-        else:
-            target_dir = os.path.join(DESTINATION_DIR_RO, os.path.basename(SDK_extract_dir))
-            if os.path.exists(target_dir):
-                return False, f"Error: Directory {os.path.basename(SDK_extract_dir)} already exists in {DESTINATION_DIR_RO}."
+        target_dir = os.path.join(
+            DESTINATION_DIR_RW if access['message'] == False else DESTINATION_DIR_RO,
+            os.path.basename(SDK_extract_dir)
+        )
+        if os.path.exists(target_dir):
+            return False, f"Error: Directory {os.path.basename(SDK_extract_dir)} already exists in {target_dir}."
 
         shutil.move(SDK_extract_dir, target_dir)
-        logging.info(f"Directory moved to {target_dir}")
+        logging.info(f"SDK directory moved to {target_dir}")
 
-        # script_output = execute_post_script()
-        return True, f"Validation and move successful. Directory moved to {target_dir}"
+        return True, f"Validation and move successful. Directories moved to {target_dir}"
 
     except subprocess.CalledProcessError as e:
         logging.error(f"Subprocess error during unzipping: {str(e)}")
@@ -127,6 +121,7 @@ def execute_post_script_route():
     return jsonify(output.splitlines())  # Send output as a list of lines
 
 def execute_post_script():
+    import subprocess
     """Run the specified script and return its output or error, excluding the first line."""
     try:
         result = subprocess.run(['./switch-workspace.sh /home/analog'], capture_output=True, text=True, shell=True)
@@ -142,6 +137,7 @@ def execute_post_script():
         return error_message
 
 def clean_up():
+    import shutil
     """Clean up temporary files and directories, and mark the process as done."""
     try:
         if os.path.exists(FINAL_FILE_PATH):
@@ -159,6 +155,7 @@ def clean_up():
         logging.error(f"Error during cleanup: {str(e)}")
 
 def unzip_in_background(zip_path, extract_to):
+    import subprocess
     """Unzips the file in a background thread, validates it, moves it if necessary, and runs a script."""
     logging.info("Unzip process started.")
 
@@ -197,6 +194,7 @@ def unzip_in_background(zip_path, extract_to):
         logging.error(f"Failed to write final status: {e}")
 
 def start_background_unzip(zip_path, extract_to):
+    import threading
     """Start the unzip process in a new thread."""
     thread = threading.Thread(target=unzip_in_background, args=(zip_path, extract_to))
     thread.start()
@@ -219,7 +217,7 @@ def ADSD3500():
 
 @app.route('/upload-chunk', methods=['POST'])
 def upload_chunk():
-
+    import subprocess
     r_access = None    
     # First check the file Read/Write access 
     command = ['sudo', '-S', './change-permission.sh','view']
@@ -315,6 +313,7 @@ def ro_access():
 
 @app.route('/switch-workspace', methods=['POST'])
 def switch_workspace():
+    import subprocess
     data = request.get_json()
     entry = data.get("entry")
 
@@ -338,21 +337,23 @@ def switch_workspace():
         return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
 
 def reboot_async():
+    import subprocess
     time.sleep(1)  # Optional: Delay for better handling
     subprocess.run(['sudo', '/sbin/reboot'], check=True)
 
 # Route for rebooting the system
 @app.route('/reboot-system', methods=['POST'])
 def reboot_system():
-    try:
-        subprocess.run(["sudo", "reboot"], check=True)
-        return jsonify({"message": "Reboot initiated successfully."}), 200
-    except subprocess.CalledProcessError:
-        return jsonify({"error": "Failed to reboot the system."}), 500
+    import subprocess
+    def generate():
+        yield '{"message": "Reboot initiated successfully."}'
+        subprocess.Popen(["sudo", "reboot"])
+    return Response(generate(), mimetype='application/json')
 
 # Route for powering down the system
 @app.route('/power-down-system', methods=['POST'])
 def power_down_system():
+    import subprocess
     try:
         subprocess.run(["sudo", "poweroff"], check=True)
         return jsonify({"message": "Power down initiated successfully."}), 200
@@ -365,6 +366,7 @@ def status():
 
 @app.route('/run-service-backup-nvm', methods=['POST'])
 def run_service():
+    import subprocess
     try:
         # Restart the service
         subprocess.run(
@@ -431,46 +433,45 @@ def read_ini():
 
 @app.route('/server-time', methods=['GET'])
 def server_time():
+    import pytz
     server_time_utc = datetime.now(pytz.utc).strftime("%Y-%m-%d %H:%M:%S")
     app.logger.info(f"Server time: {server_time_utc}")
     return jsonify({"server_time_utc": server_time_utc})
 
 @app.route('/set-server-time', methods=['POST'])
 def set_server_time():
+    import pytz
+    import subprocess
+    from dateutil import parser
     data = request.json
-    browser_time_str = data.get('browser_time')  # Full ISO format including local timezone
+    browser_time_str = data.get('browser_time')
     time_zone_name = data.get('time_zone_name')
-    app.logger.info(f"Received browser time: {browser_time_str} (Timezone: {time_zone_name})")
+    # app.logger.info(f"Received browser time: {browser_time_str} (Timezone: {time_zone_name})")
 
     try:
-        # Parse the browser time including its timezone
+        # Set the server's time zone dynamically
+        subprocess.run(['sudo', 'timedatectl', 'set-timezone', time_zone_name], check=True)
+
+        # Parse and convert time
         browser_time = parser.parse(browser_time_str)
-        app.logger.info(f"Parsed browser time: {browser_time}")
-
-        # Convert to the received timezone
-        local_time = browser_time
-        app.logger.info(f"Local time: {local_time}")
-
-
-        # Get the timezone object
         local_timezone = pytz.timezone(time_zone_name)
+        local_time = browser_time.astimezone(local_timezone)
+        print(f'local time is {local_time}')
+        timezone_abbr = local_time.tzname()
+        native_time = local_time.replace(tzinfo=None)
 
-        # Get the timezone abbreviation
-        timezone_abbr = local_time.astimezone(local_timezone).tzname()
-
-        # Format the server time for the `date` command
-        server_time_str = local_time.strftime("%Y-%m-%d %I:%M:%S %p")
-
-        # Append the timezone abbreviation
+        # Format time for `date` command
+        server_time_str = native_time.strftime("%Y-%m-%d %H:%M:%S ")
         if timezone_abbr:
             server_time_str += f" {timezone_abbr}"
 
-        app.logger.info(f"Formatted server time for `date` command: {server_time_str}")
+        # app.logger.info(f"Formatted server time for `date` command: {server_time_str}")
 
-        ## Set the server time
+        # Set the server time
         subprocess.run(['sudo', 'date', '-s', server_time_str], check=True)
 
-        return jsonify({"message": "Server time updated successfully"}), 200
+        return jsonify({"message": "Server time and time zone updated successfully"}), 200
+
     except Exception as e:
         app.logger.error(f"Error setting server time: {e}")
         return jsonify({"error": str(e)}), 500
@@ -479,6 +480,7 @@ def set_server_time():
 
 @app.route('/get-username')
 def getUserName():
+    import subprocess
     try:
         command = ['sudo','-S','./get-ssid.sh']
 
@@ -496,6 +498,7 @@ def getUserName():
 
 @app.route('/setup-wifi', methods=['POST'])
 def setup_wifi():
+    import subprocess
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
@@ -520,7 +523,7 @@ def setup_wifi():
 
 @app.route('/network-status')
 def ping_host():
-
+    import subprocess
     try:
         command = ['ping', '-c', '1', '8.8.8.8']
 
@@ -539,6 +542,7 @@ def ping_host():
 
 @app.route('/firmware_versions', methods=['GET'])
 def firmware_versions():
+    import subprocess
     try:
         result = subprocess.check_output(['./get-firmware.sh', '/home/analog']).decode('utf-8').strip()
         versions = result.split('\n')
@@ -548,7 +552,7 @@ def firmware_versions():
 
 @app.route('/check_firmware')
 def check_firmware():
-
+    import subprocess
     try:
         current_workspace = get_workspace().get_json().get('workspace')
         command = ['./check-firmware-version.sh',current_workspace]
@@ -566,6 +570,7 @@ def execute_list_firware():
     return jsonify(output.splitlines())
 
 def list_firmware_versions():
+    import subprocess
     try:
         result = subprocess.run(['./list-firmware-version.sh /home/analog'], capture_output=True, text=True, shell=True)
         if result.returncode != 0:
@@ -578,6 +583,7 @@ def list_firmware_versions():
 
 @app.route('/current_firmware', methods=['GET'])
 def current_firmware():
+    import subprocess
     try:
         curr_version = get_workspace().get_json().get('workspace')
         result = subprocess.check_output(['./get-firmware-version.sh', curr_version]).decode('utf-8').strip()
@@ -597,12 +603,13 @@ def run_shell_script():
 
 @app.route('/events')
 def events():
+    import subprocess
     version = app.config.get('VERSION', 'unknown')
 
     def generate():
         try:
             curr_version = get_workspace().get_json().get('workspace')
-            command = ['sudo', '-S', './flash_firmware.sh', curr_version, version]
+            command = ['sudo', '-S', './flash_firmware.sh', version]
 
             # Create the subprocess and pass the password to stdin
             process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -668,6 +675,7 @@ def changePermission():
 
 @app.route('/Change-Permission-Events')
 def changePermissionEvents():
+    import subprocess
     value = app.config.get('VALUE', 'unknown')
 
     try:
@@ -694,6 +702,7 @@ def change_network():
 
 @app.route("/Change-Network-GET")
 def change_network_get():
+    import subprocess
     user_choice = app.config.get('VALUE', 'unknown')
 
     if user_choice not in ["windows", "ubuntu", "check"]:
@@ -726,6 +735,7 @@ def run_script():
     script  = app.config.get('SCRIPT','unknown')
 
     def generate():
+        import subprocess
         try:
             curr_version = get_workspace().get_json().get('workspace')
             command = ['sudo', '-S', script, curr_version, version]
@@ -764,7 +774,15 @@ def download_file():
     data = request.get_json()
     file_name = data.get('filename')
     path = data.get('path')
+    app.config['fileName'] = file_name
+    app.config['path'] = path
+    return '', 204
 
+@app.route('/download-event')
+def download_file_get():
+
+    file_name = app.config['fileName'] 
+    path = app.config['path']
     curr_version = get_workspace().get_json().get('workspace')
 
     download_path = f'/home/analog/Workspace-{curr_version}/{path}'
@@ -783,6 +801,7 @@ def download_file():
         # Ensure the file is deleted after sending
         if os.path.exists(file_path):
             os.remove(file_path)
+        
     
 if __name__ == '__main__':
     app.run(debug=True, port = 5001)  # Enable debug mode for detailed logs
