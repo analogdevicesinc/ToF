@@ -1,5 +1,6 @@
 build/
-
+sdcard-images-utils/nxp/ROS/
+sdcard-images-utils/nxp/Firmware/
 sdk/include/aditof/version.h
 
 *deps/

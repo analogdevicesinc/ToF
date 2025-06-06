@@ -268,7 +268,7 @@ if [ -n ${BRANCH} ]; then
 	popd
 fi
 pushd ToF
-git submodule update --init
+git submodule update --init --recursive
 popd
 if [ -n ${LIBADITOF_BRANCH} ]; then
 	echo "Checkout to Branch: ${LIBADITOF_BRANCH}"
@@ -340,13 +340,19 @@ function create_ui_setup(){
 
 pushd /home/${USERNAME}
 
+sudo mv /tmp/ros_temp/* /home/${USERNAME}/Workspace
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/catkin_ws
 
+sudo mv Workspace/ToF/Web-UI/requirements/ /home/${USERNAME}/
 sudo mv Workspace/ToF/Web-UI/web-1.0.0/ /home/${USERNAME}/
+
 sudo  ln -s  /home/${USERNAME}/web-1.0.0 web
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/web
-sudo mkdir ADSD3500-firmware-0.0.0
-chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/ADSD3500-firmware-0.0.0
-sudo ln -s /home/${USERNAME}/ADSD3500-firmware-0.0.0 ADSD3500-firmware
+
+sudo mkdir ADSD3500-firmware-5.2.5
+sudo mv /tmp/fw_temp/* ADSD3500-firmware-5.2.5/
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/ADSD3500-firmware-5.2.5
+sudo ln -s /home/${USERNAME}/ADSD3500-firmware-5.2.5 ADSD3500-firmware
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/ADSD3500-firmware
 sudo mv Workspace/  Workspace-6.0.0
 sudo ln -s /home/${USERNAME}/Workspace-6.0.0 Workspace
@@ -372,8 +378,14 @@ mkdir /home/${USERNAME}/Workspace/module
 mv /usr/lib/modules/5.10.72-*/kernel/drivers/media/i2c/adsd3500.ko /home/${USERNAME}/Workspace/module
 sudo ln -s /home/${USERNAME}/Workspace/module/adsd3500.ko /usr/lib/modules/5.10.72-*/kernel/drivers/media/i2c/
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/module
+rm -rf /tmp/ros_temp
+rm -rf /tmp/fw_temp
 
 EOF
+     mkdir -p ${ROOTFS_TMP}/tmp/ros_temp
+     mkdir -p ${ROOTFS_TMP}/tmp/fw_temp
+     sudo cp -r ${SCRIPT_DIR}/ROS/* ${ROOTFS_TMP}/tmp/ros_temp/ &&  echo "ROS1 copied successfully" >> ${SCRIPT_DIR}/ROS/log.txt
+     sudo cp -r ${SCRIPT_DIR}/Firmware/* ${ROOTFS_TMP}/tmp/fw_temp/ &&  echo "Firmware copied successfully" >> ${SCRIPT_DIR}/Firmware/log.txt
      sudo mv web_ui_setup.sh ${ROOTFS_TMP}/tmp
      sudo chmod +x ${ROOTFS_TMP}/tmp/web_ui_setup.sh
      sudo chroot ${ROOTFS_TMP} /tmp/web_ui_setup.sh
@@ -398,6 +410,8 @@ function main() {
   # debootstrap 1st
   sudo debootstrap --arch=${TARGET_ARCH} --include="${INCLUDE_LIST}" --foreign ${DISTRO_CODE} ${ROOTFS_TMP} ${DISTRO_MIRROR}
   # copy libs to ${SCRIPT_DIR}/build/ubuntu/rootfs_tmp/home/temp(Make sure to add a path to .so files here)
+
+  
   # debootstrap 2nd
   sudo chroot ${ROOTFS_TMP} /debootstrap/debootstrap --second-stage
 
@@ -405,10 +419,8 @@ function main() {
 
   # for web-ui
   create_ui_setup
-
-  uninstall_qemu
   
-  	
+  uninstall_qemu
   #Adding rsz script to .bashrc
   sudo cat ${ROOTFS_TMP}/home/bashrc_extension >> ${ROOTFS_TMP}/home/${USERNAME}/.bashrc
   sudo cat ${ROOTFS_TMP}/home/${USERNAME}/.bashrc >> ${SCRIPT_DIR}/build/log_rc.txt
