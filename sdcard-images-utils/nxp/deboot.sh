@@ -343,7 +343,7 @@ pushd /home/${USERNAME}
 sudo mv /tmp/ros_temp/* /home/${USERNAME}/Workspace
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/catkin_ws
 
-sudo mv Workspace/ToF/Web-UI/requirements/ /home/${USERNAME}/
+sudo mv Workspace/ToF/Web-UI/requirements/ /home/${USERNAME}/Workspace
 sudo mv Workspace/ToF/Web-UI/web-1.0.0/ /home/${USERNAME}/
 
 sudo  ln -s  /home/${USERNAME}/web-1.0.0 web
