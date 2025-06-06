@@ -81,22 +81,7 @@ void ADIController::setMode(const uint8_t &mode) {
 }
 
 std::shared_ptr<aditof::Frame> ADIController::getFrame() {
-    static std::shared_ptr<aditof::Frame> lastFrame = nullptr;
-    static std::shared_ptr<aditof::Frame> frame;
-
-    // Why do this?
-	// The GUI is driven by frames being avaialble in the queue.
-    // The last frame is resent until a frame becomes avaialble.
-    // This keeps the GUI moving.
-	if (m_queue.empty() && lastFrame != nullptr) {
-		return lastFrame;
-	}
-
-    frame = m_queue.dequeue();
-
-    lastFrame = frame;
-
-    return frame;
+    return m_queue.empty()? nullptr : m_queue.dequeue();
 }
 
 bool ADIController::requestFrame() {

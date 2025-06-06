@@ -185,6 +185,7 @@ void ADIMainWindow::CustomizeMenus() {
 
 static void glfw_error_callback(int error, const char *description) {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+    __debugbreak();
 }
 
 bool ADIMainWindow::StartImGUI(const ADIViewerArgs& args) {
@@ -217,7 +218,7 @@ bool ADIMainWindow::StartImGUI(const ADIViewerArgs& args) {
     window = glfwCreateWindow(m_dict_win_position["main"].width, m_dict_win_position["main"].height, _title.c_str(), NULL, NULL);
 
     if (window == NULL) {
-        __debugbreak();
+        __debugbreak(); //FIXME: Why does the previous call fail sometimes?
         return false;
     }
 
@@ -830,30 +831,20 @@ void ADIMainWindow::ShowStartWizard() {
             //m_is_open_device = false;
             if (!m_is_playing) {
 
+                NewLine(5.0f);
+
                 DrawBarLabel("Mode Selection");
 
-                NewLine(5.0f);
-
-                if (ImGuiExtensions::ADIButton("Load Config", !m_is_playing)) {
-
-                    ShowLoadAdsdParamsMenu();
-                }
-
-                //ImGui::SameLine();
-
-                //if (ImGuiExtensions::ADIButton("Save Config", !m_is_playing)) {
-                //    ShowSaveAdsdParamsMenu();
-                //}
-
-                NewLine(5.0f);
-                DrawBarLabel("Mode Selection");
-                NewLine(5.0f);
+                NewLine(10.0f);
 
                 static bool show_dynamic_mode_switch = false;
+#ifdef ENABLE_DYNAMIC_MODE_SWITCHING
                 ImGui::Toggle(!show_dynamic_mode_switch ? "Switch to Dynamic Mode" : "Switch to Standard Mode",
                     &show_dynamic_mode_switch);
+#endif //ENABLE_DYNAMIC_MODE_SWITCHING
 
                 if (show_dynamic_mode_switch) {
+#ifdef ENABLE_DYNAMIC_MODE_SWITCHING
 #pragma region WizardOnlineDynamicMode
                     if (wizard_height < 540)
                         wizard_height += 20;
@@ -923,12 +914,12 @@ void ADIMainWindow::ShowStartWizard() {
                         m_ini_params.clear();
                     }
 #pragma endregion // WizardOnlineDynamicMode
-                }
-                else {
+#endif //ENABLE_DYNAMIC_MODE_SWITCHING
+                } else {
 #pragma region WizardOnlineStandardMode
-                    if (wizard_height < 620)
+                    if (wizard_height < 580)
                         wizard_height += 20;
-					else if (wizard_height > 620)
+					else if (wizard_height > 580)
 						wizard_height -= 20;
 
                     if (ImGuiExtensions::ADIComboBox(
@@ -937,21 +928,7 @@ void ADIMainWindow::ShowStartWizard() {
 						m_ini_params.clear();
                     }
 
-                    ImGuiExtensions::ButtonColorChanger colorChangerPlay(
-                        m_custom_color_play, !m_is_playing);
-
-                    NewLine(5.0f);
-
-                    ShowIniWindow(false);
-                    if (ImGuiExtensions::ADIButton("Reset Parameters", m_is_open_device)) {
-                        auto camera = GetActiveCamera();
-                        if (camera) {
-                            camera->resetDepthProcessParams();
-							m_ini_params.clear();
-                        }
-                    }
-
-                    NewLine(5.0f);
+					ImGui::SameLine();
 
                     if (ImGuiExtensions::ADIButton("Start Streaming", !m_is_playing)) {
 
@@ -973,6 +950,35 @@ void ADIMainWindow::ShowStartWizard() {
                         m_is_playing = true;
                         m_ini_params.clear();
                     }
+
+                    NewLine(5.0f);
+
+                    DrawBarLabel("Configuration");
+
+                    NewLine(5.0f);
+
+                    //Change colour to green
+                    ImGuiExtensions::ButtonColorChanger colorChangerPlay(m_custom_color_play, !m_is_playing);
+
+                    if (ImGuiExtensions::ADIButton("Load Config", !m_is_playing)) {
+
+                        ShowLoadAdsdParamsMenu();
+                    }
+
+					ImGui::SameLine();
+
+                    if (ImGuiExtensions::ADIButton("Reset Parameters", m_is_open_device)) {
+                        auto camera = GetActiveCamera();
+                        if (camera) {
+                            camera->resetDepthProcessParams();
+                            m_ini_params.clear();
+                        }
+                    }
+
+                    NewLine(5.0f);
+
+                    ShowIniWindow(false);
+
                 }
 #pragma endregion // WizardOnlineStandardMode
             }

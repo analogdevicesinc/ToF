@@ -150,7 +150,10 @@ float ADIMainWindow::DisplayFrameWindow(ImVec2 windowSize, ImVec2 &displayUpdate
 }
 
 int32_t ADIMainWindow::synchronizeVideo(std::shared_ptr<aditof::Frame>& frame) {
-    m_view_instance->m_capturedFrame = m_view_instance->m_ctrl->getFrame();
+    auto tmpFrame = m_view_instance->m_ctrl->getFrame();
+	if (tmpFrame != nullptr) {
+        m_view_instance->m_capturedFrame = tmpFrame;
+	}
 
     if (m_view_instance->m_capturedFrame == nullptr) {
         return -1;
@@ -162,45 +165,49 @@ int32_t ADIMainWindow::synchronizeVideo(std::shared_ptr<aditof::Frame>& frame) {
     m_view_instance->m_capturedFrame->getDetails(frameDetails);
     std::unique_lock<std::mutex> lock(m_view_instance->m_frameCapturedMutex);
 
-    m_view_instance->m_frameAvailable = true;
-    m_view_instance->numOfThreads = 3;
+    if (tmpFrame != nullptr) {
+        m_view_instance->m_frameAvailable = true;
+        m_view_instance->numOfThreads = 3;
 
-    m_view_instance->frameHeight = frameDetails.height;
-    m_view_instance->frameWidth = frameDetails.width;
+        m_view_instance->frameHeight = frameDetails.height;
+        m_view_instance->frameWidth = frameDetails.width;
 
-    lock.unlock();
+        lock.unlock();
 
-    m_view_instance->m_frameCapturedCv.notify_all();
+        m_view_instance->m_frameCapturedCv.notify_all();
 
-    if (!m_off_line) {
-        m_view_instance->m_ctrl->requestFrame();
-    } else {
-        if (m_offline_change_frame) {
+        if (!m_off_line) {
             m_view_instance->m_ctrl->requestFrame();
-            m_view_instance->m_ctrl->requestFrameOffline(m_off_line_frame_index);
-            m_offline_change_frame = false;
         }
-    }
+        else {
+            if (m_offline_change_frame) {
+                m_view_instance->m_ctrl->requestFrame();
+                m_view_instance->m_ctrl->requestFrameOffline(m_off_line_frame_index);
+                m_offline_change_frame = false;
+            }
+        }
 
-    /*********************************/
-    std::unique_lock<std::mutex> imshow_lock(m_view_instance->m_imshowMutex);
-    m_view_instance->m_barrierCv.wait(imshow_lock, [&]() {
-        return m_view_instance->m_waitKeyBarrier == m_view_instance->numOfThreads;
-    });
-    m_view_instance->m_waitKeyBarrier = 0;
-    /*********************************/
+        /*********************************/
+        std::unique_lock<std::mutex> imshow_lock(m_view_instance->m_imshowMutex);
+        m_view_instance->m_barrierCv.wait(imshow_lock, [&]() {
+            return m_view_instance->m_waitKeyBarrier == m_view_instance->numOfThreads;
+            });
+        m_view_instance->m_waitKeyBarrier = 0;
+        /*********************************/
 
-    if (!m_base_file_name.empty()) {
-        aditof::FrameHandler fh;
-        aditof::Frame* frame = m_view_instance->m_capturedFrame.get();
-        fh.SnapShotFrames(m_base_file_name.c_str(), frame, m_view_instance->ab_video_data_8bit, m_view_instance->depth_video_data_8bit);
-        if (m_offline_save_all_frames) {
-            m_offline_change_frame = true;
-            if (SaveAllFramesUpdate()) {
+        if (!m_base_file_name.empty()) {
+            aditof::FrameHandler fh;
+            aditof::Frame* frame = m_view_instance->m_capturedFrame.get();
+            fh.SnapShotFrames(m_base_file_name.c_str(), frame, m_view_instance->ab_video_data_8bit, m_view_instance->depth_video_data_8bit);
+            if (m_offline_save_all_frames) {
+                m_offline_change_frame = true;
+                if (SaveAllFramesUpdate()) {
+                    m_base_file_name = "";
+                }
+            }
+            else {
                 m_base_file_name = "";
             }
-        } else {
-            m_base_file_name = ""; 
         }
     }
 
