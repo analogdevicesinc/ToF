@@ -917,9 +917,9 @@ void ADIMainWindow::ShowStartWizard() {
 #endif //ENABLE_DYNAMIC_MODE_SWITCHING
                 } else {
 #pragma region WizardOnlineStandardMode
-                    if (wizard_height < 580)
+                    if (wizard_height < 620)
                         wizard_height += 20;
-					else if (wizard_height > 580)
+					else if (wizard_height > 620)
 						wizard_height -= 20;
 
                     if (ImGuiExtensions::ADIComboBox(
@@ -928,7 +928,35 @@ void ADIMainWindow::ShowStartWizard() {
 						m_ini_params.clear();
                     }
 
+                    NewLine(5.0f);
+
+                    DrawBarLabel("Configuration");
+
+                    NewLine(5.0f);
+
+                    if (ImGuiExtensions::ADIButton("Load Config", !m_is_playing)) {
+
+                        ShowLoadAdsdParamsMenu();
+                    }
+
 					ImGui::SameLine();
+
+                    if (ImGuiExtensions::ADIButton("Reset Parameters", m_is_open_device)) {
+                        auto camera = GetActiveCamera();
+                        if (camera) {
+                            camera->resetDepthProcessParams();
+                            m_ini_params.clear();
+                        }
+                    }
+
+                    NewLine(5.0f);
+
+                    ShowIniWindow(false);
+
+                    NewLine(15.0f);
+
+                    //Change colour to green
+                    ImGuiExtensions::ButtonColorChanger colorChangerPlay(m_custom_color_play, !m_is_playing);
 
                     if (ImGuiExtensions::ADIButton("Start Streaming", !m_is_playing)) {
 
@@ -950,34 +978,6 @@ void ADIMainWindow::ShowStartWizard() {
                         m_is_playing = true;
                         m_ini_params.clear();
                     }
-
-                    NewLine(5.0f);
-
-                    DrawBarLabel("Configuration");
-
-                    NewLine(5.0f);
-
-                    //Change colour to green
-                    ImGuiExtensions::ButtonColorChanger colorChangerPlay(m_custom_color_play, !m_is_playing);
-
-                    if (ImGuiExtensions::ADIButton("Load Config", !m_is_playing)) {
-
-                        ShowLoadAdsdParamsMenu();
-                    }
-
-					ImGui::SameLine();
-
-                    if (ImGuiExtensions::ADIButton("Reset Parameters", m_is_open_device)) {
-                        auto camera = GetActiveCamera();
-                        if (camera) {
-                            camera->resetDepthProcessParams();
-                            m_ini_params.clear();
-                        }
-                    }
-
-                    NewLine(5.0f);
-
-                    ShowIniWindow(false);
 
                 }
 #pragma endregion // WizardOnlineStandardMode
