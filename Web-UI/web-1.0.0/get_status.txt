@@ -1,3 +1,2 @@
 Burst Control app version: 1.0.0
-Failed to set ctrl with id 9968097
-00 02 
+00 00 

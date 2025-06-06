@@ -33,9 +33,7 @@ async function setServerTime() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        browser_time: browserTime.toLocaleString("en-US", {
-          timeZone: "Asia/Kolkata",
-        }),
+        browser_time: browserTime.toLocaleString("en-US"),
         time_zone_name: timeZoneName,
       }),
     });
@@ -93,7 +91,7 @@ function initiateReboot() {
 
   document.querySelector(
     ".overlay-content"
-  ).innerHTML = `<div class="spinner"></div><p>System is rebooting. Reconnecting soon...</p>`;
+  ).innerHTML = `<div class="spinner"></div><p>System is rebooting. Reload this page after restart ...</p>`;
   pollServerReconnect();
 }
 
@@ -202,8 +200,8 @@ async function modifyPermission() {
 
     const userConfirmed = confirm(
       "Do you agree to " +
-        data.output +
-        "? If you agree, the system will restart to apply these changes."
+      data.output +
+      "? If you agree, the system will restart to apply these changes."
     );
     if (userConfirmed) {
       startRebootCountdown();
@@ -335,12 +333,19 @@ function showPopUp_NVM(message) {
 }
 
 async function runNVMScript() {
-  const fileName = document.getElementById("NVM_file-name").value;
+  let fileName = document.getElementById("NVM_file-name").value;
   document
     .getElementById("read_tools_overlay_nvm")
     .setAttribute("open", "false");
   const path = "Tools/host_boot_tools/NVM_Utils";
   const script = "./nvm-read.sh";
+
+  if (fileName.endsWith(".nvm")) {
+    fileName = fileName.split(".nvm")[0];
+    fileName += ".nvm";
+  } else {
+    fileName += ".nvm";
+  }
 
   const response = await fetch("/run_shell_script", {
     method: "POST",
@@ -391,13 +396,34 @@ async function download_button(path, filename) {
       body: JSON.stringify({ path, filename }),
     });
 
-    if (response.ok) {
+    if (!response.ok) {
+      console.error("Failed to execute the script");
+      return;
+    }
+
+    const newEvent = await fetch("/download-event");
+
+
+    if (newEvent.ok) {
       // Create and append the download button
       const downloadButton = document.createElement("button");
       downloadButton.style.marginTop = "1.5rem";
       downloadButton.innerText = "Download";
+
       downloadButton.onclick = async () => {
-        const blob = await response.blob();
+        // Check Content-Type
+        // const contentType = newEvent.headers.get("Content-Type");
+        // const expectedType = "application/octet-stream"; // or a custom type like "application/x-nvm"
+
+
+
+        // if ((contentType && !contentType.includes("octet-stream") && !contentType.includes("nvm"))) {
+        //   alert("The file does not appear to be a valid .nvm file.");
+        //   return;
+        // }
+
+        // Proceed with download
+        const blob = await newEvent.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -407,9 +433,11 @@ async function download_button(path, filename) {
         a.remove();
         window.URL.revokeObjectURL(url);
       };
+
       document.getElementById("terminal_output").appendChild(downloadButton);
+
     } else {
-      const errorData = await response.json();
+      const errorData = await newEvent.json();
       console.error("Download failed:", errorData.error);
     }
   } catch (error) {
@@ -439,12 +467,19 @@ async function CCBRead() {
 }
 
 async function runCCBScript() {
-  const fileName = document.getElementById("CCB_file-name").value;
+  let fileName = document.getElementById("CCB_file-name").value;
   document
     .getElementById("read_tools_overlay_ccb")
     .setAttribute("open", "false");
   const path = "Tools/host_boot_tools/NVM_Utils";
   const script = "./ccb-read.sh";
+
+  if (fileName.endsWith(".ccb")) {
+    fileName = fileName.split(".ccb")[0];
+    fileName += ".ccb";
+  } else {
+    fileName += ".ccb";
+  }
 
   const response = await fetch("/run_shell_script", {
     method: "POST",
@@ -587,7 +622,7 @@ async function setupWifi() {
 
 // ********************************************* change to ecm ************************************************** /
 
-async function changeToECM() {
+async function changeNetwork() {
   let osType;
 
   const platform = navigator.platform.toLowerCase();
@@ -638,4 +673,75 @@ async function changeToECM() {
   } catch (error) {
     console.error("Fetch error:", error);
   }
+}
+
+// ********************************* choose the function based on selected value (Device Control) *************************** /
+
+function applyDeviceControl() {
+
+  const selectValue = document.getElementById("device_ctrl_method").value;
+
+  switch (selectValue) {
+    case "restart":
+      startRebootCountdown();
+      break;
+    case "powerOff":
+      startPowerDownCountdown();
+      break;
+    case "modifyPermission":
+      modifyPermission();
+      break;
+    case "checkPermission":
+      showPermissionOverlay();
+      break;
+    case "networkSwitch":
+      changeNetwork();
+      break;
+    case "nvmRead":
+      NVMRead();
+      break;
+    case "ccbRead":
+      CCBRead();
+      break;
+    default:
+      console.log("Invalid Choice");
+      break;
+  }
+
+}
+
+// *********************************** show the text suggestion **********************/
+function updatetitle() {
+  const select = document.getElementById("device_ctrl_method");
+  const selectedValue = select.value;
+
+  let message = ""
+  switch (selectedValue) {
+    case "restart":
+      message = `Reboots the System.`
+      break;
+    case "powerOff":
+      message = `Power down the System.`
+      break;
+    case "modifyPermission":
+      message = `It toggles the RW/RO permission, check permission before toggling.`
+      break;
+    case "checkPermission":
+      message = `Check for RW/RO permission.`
+      break;
+    case "networkSwitch":
+      message = `Swich the Network based on Operating System (Windows/Ubuntu).`
+      break;
+    case "nvmRead":
+      message = `Reads the NVM.`
+      break;
+    case "ccbRead":
+      message = `Reads the CCB.`
+      break;
+    default:
+      console.log("Invalid Choice");
+      break;
+  }
+
+  document.getElementById("device_info").textContent = message;
 }

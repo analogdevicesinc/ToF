@@ -125,7 +125,7 @@ if %generator%=="Visual Studio 14 2015 Win64" (
 
 if %set_generator%==0 (
    set /a opt=1
-   set generator="Visual Studio 16 2019"
+   set generator="Visual Studio 17 2022"
    set opencv_vs=16
    )
 if %opt%==0 (
@@ -155,7 +155,7 @@ popd
 
 ::build the project with the selected options
 pushd %build_dire%
-cmake -G %generator% -DWITH_PYTHON=on %source_dir% -DCMAKE_BUILD_TYPE=%config_type%
+cmake -G %generator% -DWITH_PYTHON=on -DRECV_ASYNC=off %source_dir% -DCMAKE_BUILD_TYPE=%config_type%
 cmake --build . --config %config_type% -j %threads%
 popd
 EXIT /B %ERRORLEVEL%

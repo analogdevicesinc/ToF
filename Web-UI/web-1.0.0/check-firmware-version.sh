@@ -15,7 +15,7 @@ fi
 WORKSPACE_VERSION="$1"
 
 # Path to the text file
-FILE_PATH="/home/analog/Workspace-$WORKSPACE_VERSION/requirements.txt"
+FILE_PATH="/home/analog/Workspace/requirements/fm_version_requirements.txt"
 
 # Read the firmware version from the file
 FIRMWARE_VERSION=$(grep -oP 'firmware_version=\K[^\s]+' "$FILE_PATH")
