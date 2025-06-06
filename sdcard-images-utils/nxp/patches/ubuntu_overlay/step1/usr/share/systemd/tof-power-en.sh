@@ -347,6 +347,7 @@ if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier ADSD3500-SPI + ADSD3030" ]]; the
 	modprobe adsd3500-spi
 fi
 
+<<<<<<< HEAD
 
 if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier ADSD3500-DUAL + ADSD3100" ]]; then
 
@@ -419,6 +420,8 @@ if [[ $BOARD == "NXP i.MX8MPlus ADI TOF carrier ADSD3500-DUAL + ADSD3100" ]]; th
         exit 0
 fi
 
+=======
+>>>>>>> d57ec6cc (updated the missing files)
 # Deassert ADC reset - will pop on /dev/i2c1 address 0x10
 echo 132 > /sys/class/gpio/export
 echo out > /sys/class/gpio/gpio132/direction
