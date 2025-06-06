@@ -50,8 +50,8 @@ using namespace aditof;
 int main(int argc, char *argv[]);
 #endif
 
-static const char kUsagePublic[] =
-    R"(Data Collect v6.1.0
+const char kUsagePublic[] =
+    R"(
     Usage:
       data_collect 
       data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [-s | --split] [-t | --netlinktest] [--ic <imager-configuration>] [-scf <save-configuration-file>] [-lcf <load-configuration-file>]
@@ -104,8 +104,10 @@ int main(int argc, char *argv[]) {
 
     command.parseArguments(argc, argv, command_map);
 
+    std::string version = aditof::getApiVersion();
+
     if (argc == 1) {
-        std::cout << kUsagePublic << std::endl;
+        std::cout << argv[0] << "\nv" << version << "\n" << kUsagePublic << std::endl;
         return 0;
     }
 
