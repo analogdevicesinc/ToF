@@ -8,13 +8,13 @@
 #include <aditof/camera.h>
 #include <aditof/depth_sensor_interface.h>
 #include <aditof/frame.h>
-//#include <aditof/frame_handler.h>
 #include <aditof/system.h>
 #include <aditof/version.h>
 #include <chrono>
 #include <command_parser.h>
 #include <ctime>
 #include <fstream>
+#include <cmath>
 
 #ifdef USE_GLOG
 #include <glog/logging.h>
@@ -37,6 +37,9 @@
 #include <sys/stat.h>
 #endif
 
+// Test cases
+//#define TEST_FRAME_LOSS
+
 enum : uint16_t {
     MAX_FILE_PATH_SIZE = 512,
 };
@@ -48,7 +51,7 @@ int main(int argc, char *argv[]);
 #endif
 
 static const char kUsagePublic[] =
-    R"(Data Collect.
+    R"(Data Collect v6.1.0
     Usage:
       data_collect 
       data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [-s | --split] [-t | --netlinktest] [--ic <imager-configuration>] [-scf <save-configuration-file>] [-lcf <load-configuration-file>]
@@ -56,16 +59,14 @@ static const char kUsagePublic[] =
 
     Options:
       -h --help          Show this screen.
-      --f <folder>       Output folder (max name 512) [default: ./]
       --n <ncapture>     Capture frame num. [default: 1]
       --m <mode>         Mode to capture data in. [default: 0]
       --wt <warmup>      Warmup Time (sec) [default: 0]
+      --fr <framerate>   Frame rate to capture data in. [default: 10]
       --ccb <FILE>       The path to store CCB content
       --ip <ip>          Camera IP
       --fw <firmware>    Adsd3500 fw file
-      --split            Save each frame into a separate file (Debug)
       --netlinktest      Puts server on target in test mode (Debug)
-      --singlethread     Store the frame to file using same tread
       --ic <imager-configuration>   Select imager configuration: standard, standard-raw,
                          custom, custom-raw. By default is standard.
       --scf <save-configuration-file>    Save current configuration to json file
@@ -86,16 +87,14 @@ static const char kUsagePublic[] =
 int main(int argc, char *argv[]) {
     std::map<std::string, struct Argument> command_map = {
         {"-h", {"--help", false, "", "", false}},
-        {"-f", {"--f", false, "", ".", true}},
         {"-n", {"--n", false, "", "0", true}},
         {"-m", {"--m", false, "", "0", true}},
         {"-wt", {"--wt", false, "", "0", true}},
+		{"-fr", {"--fr", false, "", "10", true}},
         {"-ip", {"--ip", false, "", "", true}},
         {"-fw", {"--fw", false, "", "", true}},
         {"-ccb", {"--ccb", false, "", "", true}},
-        {"-s", {"--split", false, "", "", false}},
         {"-t", {"--netlinktest", false, "", "", false}},
-        {"-st", {"--singlethread", false, "", "", false}},
         {"-ic", {"--ic", false, "", "", true}},
         {"-scf", {"--scf", false, "", "", true}},
         {"-lcf", {"--lcf", false, "", "", true}}};
@@ -151,7 +150,6 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    char folder_path[MAX_FILE_PATH_SIZE]; // Path to store the depth frames
     char json_file_path
         [MAX_FILE_PATH_SIZE]; // Get the .json file from command line
 
@@ -159,6 +157,7 @@ int main(int argc, char *argv[]) {
     uint32_t n_frames = 0;
     uint8_t mode = 0;
     uint32_t warmup_time = 0;
+	uint16_t frame_rate = 10; // Default frame rate
     std::string ip;
     std::string firmware;
     std::string configuration = "standard";
@@ -178,38 +177,6 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "Error copying the json file path!";
         return 0;
     }
-
-    // Parsing output folder
-    err = snprintf(folder_path, sizeof(folder_path), "%s",
-                   command_map["-f"].value.c_str());
-
-    if (err < 0) {
-        LOG(ERROR) << "Error copying the output folder path!";
-        return 0;
-    }
-#ifdef _WIN32
-    // Create folder if not created already
-    char dir_path[MAX_PATH];
-    if (GetFullPathName(folder_path, MAX_PATH, &dir_path[0], NULL) == 0) {
-        LOG(ERROR) << "Error Unable to get directory. Error:" << GetLastError();
-        return 0;
-    }
-
-    if (!(CreateDirectory(dir_path, NULL))) {
-        if (ERROR_ALREADY_EXISTS != GetLastError()) {
-            LOG(ERROR) << "Error creating directory. Error:", GetLastError();
-            return 0;
-        }
-    }
-
-#else
-    err = mkdir(folder_path, 0777);
-
-    if (err < 0) {
-        LOG(ERROR) << "Unable to create directory";
-        return 0;
-    }
-#endif
 
     // Parsing number of frames
     n_frames = std::stoi(command_map["-n"].value);
@@ -236,22 +203,18 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    //Frame rate
+    if (!command_map["-fr"].value.empty()) {
+        frame_rate = std::stoi(command_map["-fr"].value);
+        if (frame_rate < 1 || frame_rate > 50) {
+            LOG(ERROR) << "Invalid frame rate input!";
+        }
+    }
+
     //Parsing CCB path
     std::string ccbFilePath;
     if (!command_map["-ccb"].value.empty()) {
         ccbFilePath = command_map["-ccb"].value;
-    }
-
-    //Parsing split option
-    bool saveToSingleFile = true;
-    if (!command_map["-s"].value.empty()) {
-        saveToSingleFile = false;
-    }
-
-    //Parsing single thread option
-    bool samethread = 0;
-    if (!command_map["-st"].value.empty()) {
-        samethread = true;
     }
 
     //Parsing netLinkTest option
@@ -282,9 +245,9 @@ int main(int argc, char *argv[]) {
         strcpy(json_file_path, "");
     }
 
-    LOG(INFO) << "Output folder: " << folder_path;
     LOG(INFO) << "Mode: " << command_map["-m"].value;
     LOG(INFO) << "Number of frames: " << n_frames;
+    LOG(INFO) << "Frame rate: " << frame_rate;
     LOG(INFO) << "Json file: " << json_file_path;
     LOG(INFO) << "Warm Up Time is: " << warmup_time << " seconds";
     LOG(INFO) << "Configuration is: " << configuration;
@@ -419,6 +382,12 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+	status = camera->adsd3500SetFrameRate(frame_rate);
+    if (status != Status::OK) {
+        LOG(ERROR) << "Could not set frame rate!";
+        return 0;
+    }
+
     // Program the camera with cfg passed, set the mode by writing to 0x200 and start the camera
     status = camera->start();
     if (status != Status::OK) {
@@ -448,40 +417,77 @@ int main(int argc, char *argv[]) {
         } while (warmup_time >= elapsed_time);
     }
 
-    std::string savedPath;
-    camera->startRecording(savedPath);
-
-    //FrameHandler frameSaver;
-    //frameSaver.storeFramesToSingleFile(saveToSingleFile);
-    //frameSaver.setOutputFilePath(folder_path);
+	std::string filePath;
+    if (!useNetLinkTest) {
+        status = camera->startRecording(filePath);
+        if (status != Status::OK) {
+            LOG(ERROR) << "Could not start recording!";
+            return 0;
+        }
+    }
 
     LOG(INFO) << "Requesting " << n_frames << " frames!";
+
+    uint32_t frameTotal = 0;
+	uint32_t frameLossCount = 0;
+    int32_t frameNumber = 0;
+
     auto start_time = std::chrono::high_resolution_clock::now();
-    // Request the frames for the respective mode
+
     for (uint32_t loopcount = 0; loopcount < n_frames; loopcount++) {
 
         status = camera->requestFrame(&frame);
         if (status != Status::OK) {
-            LOG(ERROR) << "Could not request frame!";
-            LOG(ERROR) << "See " << savedPath;
-            return 0;
-        }
-        if (useNetLinkTest) {
-            continue;
+            LOG(ERROR) << "Could not request frame, aborting!";
+            break;
         }
 
-        //if (!samethread) {
-        //    frameSaver.saveFrameToFileMultithread(frame);
-        //} else {
-        //    frameSaver.saveFrameToFile(frame);
-        //}
+        frameTotal++;
+
+        if (!useNetLinkTest) {
+
+            // Check metadata for frame loss
+            Metadata metadata;
+            status = frame.getMetadataStruct(metadata);
+            if (status != Status::OK) {
+                LOG(ERROR) << "Could not get frame metadata, aborting!";
+                break;
+            }
+
+            bool forceLoss = false;
+#ifdef TEST_FRAME_LOSS
+			if (metadata.frameNumber == 4 || 
+                metadata.frameNumber >= 7 &&
+                metadata.frameNumber <= 11) {
+				LOG(INFO) << "Simulating losing frame 4 and 7 thru 11.";
+                frameTotal--;
+				forceLoss = true;
+			}
+#endif //TEST_FRAME_LOSS
+
+            // Note, frame 0 is always dropped, therefore we don't need to worry about it.
+
+			if (metadata.frameNumber != frameNumber + 1 || forceLoss) {
+				LOG(WARNING) << "Frame loss detected! Expected frame number: "
+					<< frameNumber + 1
+					<< ", received frame number: "
+					<< metadata.frameNumber;
+				frameLossCount++;
+            }
+            frameNumber = metadata.frameNumber;
+
+        }
     } // End of for Loop
 
     auto end_time = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> total_time = end_time - start_time;
-    if (total_time.count() > 0.0) {
-        double measured_fps = (double)n_frames / total_time.count();
-        LOG(INFO) << "Measured FPS: " << measured_fps;
+
+    if (!useNetLinkTest) {
+
+        status = camera->stopRecording();
+        if (status != Status::OK) {
+            LOG(ERROR) << "Could not stop recordings!";
+            return 0;
+        }
     }
 
     status = camera->stop();
@@ -489,7 +495,19 @@ int main(int argc, char *argv[]) {
         LOG(INFO) << "Error stopping camera!";
     }
 
-    LOG(INFO) << "Created: " << savedPath;
+    if (!useNetLinkTest) {
+        LOG(INFO) << "Frames saved to: " << filePath;
+		LOG(INFO) << "Frame loss count: " << frameLossCount << " of " << frameTotal;
+    }
+    else {
+        LOG(INFO) << "Frames saved to: Netlink test mode enabled, no frames saved.";
+    }
+
+    std::chrono::duration<double> total_time = end_time - start_time;
+    if (total_time.count() > 0.0) {
+        double measured_fps = (double)n_frames / total_time.count();
+        LOG(INFO) << "Measured frame rate: ~" << std::round(measured_fps) << " fps";
+    }
 
     return 0;
 }
