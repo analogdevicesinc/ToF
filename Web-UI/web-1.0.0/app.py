@@ -450,22 +450,19 @@ def set_server_time():
 
     try:
         # Set the server's time zone dynamically
-        subprocess.run(['sudo', 'timedatectl', 'set-timezone', time_zone_name], check=True)
+        # subprocess.run(['sudo', 'timedatectl', 'set-timezone', time_zone_name], check=True)
 
         # Parse and convert time
         browser_time = parser.parse(browser_time_str)
         local_timezone = pytz.timezone(time_zone_name)
         local_time = browser_time.astimezone(local_timezone)
-        print(f'local time is {local_time}')
         timezone_abbr = local_time.tzname()
         native_time = local_time.replace(tzinfo=None)
 
         # Format time for `date` command
-        server_time_str = native_time.strftime("%Y-%m-%d %H:%M:%S ")
+        server_time_str = browser_time.strftime("%Y-%m-%d %H:%M:%S ")
         if timezone_abbr:
             server_time_str += f" {timezone_abbr}"
-
-        # app.logger.info(f"Formatted server time for `date` command: {server_time_str}")
 
         # Set the server time
         subprocess.run(['sudo', 'date', '-s', server_time_str], check=True)
