@@ -219,7 +219,7 @@ async function loadCurrentFirmware() {
       firmwareVersionWarn.style.color = "red";
       firmwareVersionWarn.textContent = `Warning! Firmware Version : ${data.version} is recommended.`;
     } else {
-      firmwareVersionWarn.innerHTML = ``;
+      firmwareVersionWarn.textContent = `Refresh to get latest version info`;
     }
   } catch (error) {
     console.error("Error loading current firmware:", error);

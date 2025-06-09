@@ -620,6 +620,24 @@ async function setupWifi() {
   hideOverlay();
 }
 
+async function reset_adsd3500() {
+  showOverlay("Resetting ADSD3500...");
+  try {
+    const response = await fetch("/adsd3500-reset", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      }
+    });
+    const result = await response.json();
+    showOverlay(result.message);
+    await delay(1000);
+  } catch (error) {
+    showOverlay("Error in Resetting");
+    await delay(1000);
+  }
+  hideOverlay();
+}
 // ********************************************* change to ecm ************************************************** /
 
 async function changeNetwork() {
@@ -675,6 +693,91 @@ async function changeNetwork() {
   }
 }
 
+// ********************************** list ui version *********************************************************************** /
+async function loadCurrentUI() {
+  const uiVersion = document.getElementById("ui_version");
+  try {
+    const response = await fetch("/current_ui");
+    const data = await response.json();
+    uiVersion.textContent = `Current version : ${data.current_val}`;
+  } catch (error) {
+    console.error("Error loading current firmware:", error);
+  }
+}
+
+
+document.addEventListener("DOMContentLoaded", async () => {
+  const firmwareSelect = document.getElementById("ui-overlay-content");
+
+  // Function to read firmware versions from a directory
+  async function loadUIVersions() {
+    try {
+      const response = await fetch("/list_ui_versions");
+      if (!response.ok) {
+        throw new Error("Failed to execute post script");
+      }
+      const data = await response.json();
+      data.forEach((version) => {
+        const option = document.createElement("option");
+        option.text = version;
+        firmwareSelect.appendChild(option);
+      });
+
+      const notSelected = document.createElement("option");
+      notSelected.text = `No Change`;
+      firmwareSelect.appendChild(notSelected);
+    } catch (error) {
+      console.error("Error loading firmware versions:", error);
+    }
+  }
+
+  await loadUIVersions();
+  await loadCurrentUI();
+});
+
+async function change_UI() {
+  const selectElement = document.getElementById('ui-overlay-content');
+  const version = selectElement.options[selectElement.selectedIndex].text;
+  try {
+    const response = await fetch("/change-ui", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ value: version }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to execute post script");
+    }
+
+    const output = await response.json();
+    if (output.result === 0) {
+      console.log("successfully changed the ui");
+      await loadCurrentUI();
+    } else if (output.result === 9) {
+      console.log("No change");
+    } else {
+      console.error("Error switching UI:", output.result);
+    }
+
+  } catch (error) {
+    console.error("Error running script to refresh list:", error);
+  }
+}
+
+async function openUImodal() {
+  const uiOverlay = document.getElementById("ui-overlay");
+  uiOverlay.setAttribute("open", "true");
+
+  // Close the overlay when clicking outside of it
+  window.onclick = function (event) {
+    if (event.target == uiOverlay) {
+      uiOverlay.setAttribute("open", "false");
+    }
+  };
+}
+
 // ********************************* choose the function based on selected value (Device Control) *************************** /
 
 function applyDeviceControl() {
@@ -702,6 +805,12 @@ function applyDeviceControl() {
       break;
     case "ccbRead":
       CCBRead();
+      break;
+    case "adsd3500Reset":
+      reset_adsd3500();
+      break;
+    case "changeUI":
+      openUImodal();
       break;
     default:
       console.log("Invalid Choice");
@@ -737,6 +846,12 @@ function updatetitle() {
       break;
     case "ccbRead":
       message = `Reads the CCB.`
+      break;
+    case "adsd3500Reset":
+      message = `Resets the ADSD3500.`
+      break;
+    case "changeUI":
+      message = `Changes UI based on version.`
       break;
     default:
       console.log("Invalid Choice");
