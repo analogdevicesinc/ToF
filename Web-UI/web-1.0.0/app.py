@@ -46,7 +46,10 @@ def calculate_sha256(file_path):
 def validate_and_process_unzipped_files(unzip_dir):
     import subprocess
     import shutil
+
     access = app.config.get('RO_ACCESS', 'unknown')
+    missing_files = []
+
     try:
         json_file_path = os.path.join(unzip_dir, "info.json")
         if not os.path.exists(json_file_path):
@@ -58,54 +61,86 @@ def validate_and_process_unzipped_files(unzip_dir):
         # === Firmware Validation ===
         firmware_file = json_data.get("firmware", "")
         expected_firmware_sha = json_data.get("firmware_sha256", "")
-        firmware_file_path = os.path.join(unzip_dir, firmware_file)
+        if firmware_file and  expected_firmware_sha:
+            # proceed with firmware update
+            firmware_file_path = os.path.join(unzip_dir, firmware_file)
 
-        if not os.path.exists(firmware_file_path):
-            return False, f"Validation failed: Specified firmware file {firmware_file} is missing."
+            actual_firmware_sha = calculate_sha256(firmware_file_path)
+            if actual_firmware_sha != expected_firmware_sha:
+                return False, f"SHA-256 mismatch for firmware: expected {expected_firmware_sha}, got {actual_firmware_sha}"
 
-        actual_firmware_sha = calculate_sha256(firmware_file_path)
-        if actual_firmware_sha != expected_firmware_sha:
-            return False, f"SHA-256 mismatch for firmware: expected {expected_firmware_sha}, got {actual_firmware_sha}"
+            firmware_extract_dir = os.path.join(unzip_dir, os.path.splitext(firmware_file)[0])
+            subprocess.run(['unzip', '-o', firmware_file_path, '-d', firmware_extract_dir], check=True)
 
-        firmware_extract_dir = os.path.join(unzip_dir, os.path.splitext(firmware_file)[0])
-        subprocess.run(['unzip', '-o', firmware_file_path, '-d', firmware_extract_dir], check=True)
+            target_dir = os.path.join(
+                DESTINATION_DIR_RW if access['message'] == False else DESTINATION_DIR_RO,
+                os.path.basename(firmware_extract_dir)
+            )
+            if os.path.exists(target_dir):
+                return False, f"Error: Directory {os.path.basename(firmware_extract_dir)} already exists in {target_dir}."
 
-        target_dir = os.path.join(
-            DESTINATION_DIR_RW if access['message'] == False else DESTINATION_DIR_RO,
-            os.path.basename(firmware_extract_dir)
-        )
-        if os.path.exists(target_dir):
-            return False, f"Error: Directory {os.path.basename(firmware_extract_dir)} already exists in {target_dir}."
-
-        shutil.move(firmware_extract_dir, target_dir)
-        logging.info(f"Firmware directory moved to {target_dir}")
+            shutil.move(firmware_extract_dir, target_dir)
+            logging.info(f"Firmware directory moved to {target_dir}")
+        else:
+            missing_files.append("Firmware")
 
         # === SDK Validation ===
         SDK_file = json_data.get("SDK", "")
         expected_sdk_sha = json_data.get("SDK_sha256", "")
-        SDK_file_path = os.path.join(unzip_dir, SDK_file)
+        if SDK_file and expected_sdk_sha:
+            SDK_file_path = os.path.join(unzip_dir, SDK_file)
 
-        if not os.path.exists(SDK_file_path):
-            return False, f"Validation failed: Specified SDK file {SDK_file} is missing."
+            if not os.path.exists(SDK_file_path):
+                missing_files.append(SDK_file)
+            else:
+                actual_sdk_sha = calculate_sha256(SDK_file_path)
+                if actual_sdk_sha != expected_sdk_sha:
+                    return False, f"SHA-256 mismatch for SDK: expected {expected_sdk_sha}, got {actual_sdk_sha}"
 
-        actual_sdk_sha = calculate_sha256(SDK_file_path)
-        if actual_sdk_sha != expected_sdk_sha:
-            return False, f"SHA-256 mismatch for SDK: expected {expected_sdk_sha}, got {actual_sdk_sha}"
+                SDK_extract_dir = os.path.join(unzip_dir, os.path.splitext(SDK_file)[0])
+                subprocess.run(['unzip', '-o', SDK_file_path, '-d', SDK_extract_dir], check=True)
 
-        SDK_extract_dir = os.path.join(unzip_dir, os.path.splitext(SDK_file)[0])
-        subprocess.run(['unzip', '-o', SDK_file_path, '-d', SDK_extract_dir], check=True)
+                target_dir = os.path.join(
+                    DESTINATION_DIR_RW if access['message'] == False else DESTINATION_DIR_RO,
+                    os.path.basename(SDK_extract_dir)
+                )
+                if os.path.exists(target_dir):
+                    return False, f"Error: Directory {os.path.basename(SDK_extract_dir)} already exists in {target_dir}."
 
-        target_dir = os.path.join(
-            DESTINATION_DIR_RW if access['message'] == False else DESTINATION_DIR_RO,
-            os.path.basename(SDK_extract_dir)
-        )
-        if os.path.exists(target_dir):
-            return False, f"Error: Directory {os.path.basename(SDK_extract_dir)} already exists in {target_dir}."
+                shutil.move(SDK_extract_dir, target_dir)
+                logging.info(f"SDK directory moved to {target_dir}")
+        else:
+            missing_files.append("SDK")
 
-        shutil.move(SDK_extract_dir, target_dir)
-        logging.info(f"SDK directory moved to {target_dir}")
+        # === Web_UI Validation ===
+        Web_UI_file = json_data.get("Web_UI", "")
+        expected_Web_UI_sha = json_data.get("Web_UI_sha256", "")
+        if Web_UI_file and expected_Web_UI_sha:
+            Web_UI_file_path = os.path.join(unzip_dir, Web_UI_file)
 
-        return True, f"Validation and move successful. Directories moved to {target_dir}"
+            actual_web_UI_sha = calculate_sha256(Web_UI_file_path)
+            if actual_web_UI_sha != expected_Web_UI_sha:
+                return False, f"SHA-256 mismatch for Web-UI: expected {expected_Web_UI_sha}, got {actual_web_UI_sha}"
+
+            Web_UI_extract_dir = os.path.join(unzip_dir, os.path.splitext(Web_UI_file)[0])
+            subprocess.run(['unzip', '-o', Web_UI_file_path, '-d', Web_UI_extract_dir], check=True)
+
+            target_dir = os.path.join(
+                DESTINATION_DIR_RW if access['message'] == False else DESTINATION_DIR_RO,
+                os.path.basename(Web_UI_extract_dir)
+            )
+            if os.path.exists(target_dir):
+                return False, f"Error: Directory {os.path.basename(Web_UI_extract_dir)} already exists in {target_dir}."
+
+            shutil.move(Web_UI_extract_dir, target_dir)
+            logging.info(f"Web-UI directory moved to {target_dir}")
+        else:
+            missing_files.append("Web-UI")
+
+        if missing_files:
+            return False, f"Upload Successful!\nThe following files are missing: {', '.join(missing_files)}"
+
+        return True, "Validation and move successful."
 
     except subprocess.CalledProcessError as e:
         logging.error(f"Subprocess error during unzipping: {str(e)}")
@@ -113,6 +148,7 @@ def validate_and_process_unzipped_files(unzip_dir):
     except Exception as e:
         logging.error(f"Validation error: {str(e)}")
         return False, f"Validation or move error: {str(e)}"
+
 
 @app.route('/execute-post-script', methods=['GET'])
 def execute_post_script_route():
@@ -511,10 +547,29 @@ def setup_wifi():
         user_pass = 'analog\n'
         
         result = subprocess.run(command, capture_output=True, text=True,input=user_pass)
+        return jsonify(message='WiFi setup successful. System is Rebooting.')
+    except Exception as e:
+        return jsonify(message='Error setting up WiFi: ' + str(e)), 500
+
+@app.route('/adsd3500-reset', methods=['POST'])
+def adsd3500_reset():
+    import subprocess
+
+    try:
+        current_workspace = get_workspace().get_json().get('workspace')
+        
+        script_path = f'/home/analog/Workspace-{current_workspace}/Tools/adi-adsd3500-reset.sh'
+
+        # Define the command and password
+        command = ['sudo', '-S', script_path]
+
+        user_pass = 'analog\n'
+        
+        result = subprocess.run(command, capture_output=True, text=True,input=user_pass)
         if result.returncode == 0:
-            return jsonify(message='WiFi setup successful')
+            return jsonify(message='Reset Done.')
         else:
-            return jsonify(message='WiFi setup failed: ' + result.stderr), 500
+            return jsonify(message='Error while Resetting'), 500
     except Exception as e:
         return jsonify(message='Error setting up WiFi: ' + str(e)), 500
 
@@ -578,6 +633,25 @@ def list_firmware_versions():
     except subprocess.CalledProcessError as e:
         return jsonify({'error': str(e)}), 500
 
+# list the web-ui version
+@app.route('/list_ui_versions')
+def execute_list_ui():
+
+    output = list_ui_versions()
+    return jsonify(output.splitlines())
+
+def list_ui_versions():
+    import subprocess
+    try:
+        result = subprocess.run(['./list-ui-version.sh /home/analog'], capture_output=True, text=True, shell=True)
+        if result.returncode != 0:
+            error_message = f"Script error: {result.stderr.strip()}"
+            logging.error(error_message)
+            return error_message
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/current_firmware', methods=['GET'])
 def current_firmware():
     import subprocess
@@ -587,7 +661,42 @@ def current_firmware():
         return jsonify({'current_firmware': result})
     except subprocess.CalledProcessError as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/current_ui', methods=['GET'])
+def current_ui():
+    import subprocess
+    try:
+        # Run the shell script and get the output
+        result = subprocess.check_output(['./get-ui-version.sh', '/home/analog']).decode('utf-8').strip()
+        return jsonify({"current_val": result})
+    except subprocess.CalledProcessError as e:
+        # Handle errors if the script fails to execute
+        return jsonify({"error": str(e)}), 500
     
+
+# change ui
+@app.route('/change-ui', methods=['POST'])
+def change_ui():
+    import subprocess
+    data = request.get_json()
+    version = data.get('value')
+
+    try:
+        if (version.lower() != 'no change'):
+            command = ['sudo', '-S', './switch-UI.sh','/home/analog', version]  
+
+            # Create the subprocess and pass the password to stdin
+            process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+            # Send the password to the subprocess and capture the output
+            stdout, stderr = process.communicate(input='analog\n')
+
+            # Return the output as a JSON response
+            return jsonify({'result': process.returncode})
+        else:
+            return jsonify({'result' : 9})
+    except subprocess.CalledProcessError as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/run_shell_script', methods=['POST'])
 def run_shell_script():
