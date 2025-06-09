@@ -70,11 +70,13 @@
           <option value="" disabled selected>Select --</option>
           <option value="restart">Restart</option>
           <option value="powerOff">Power Off</option>
+          <option value="adsd3500Reset">Reset</option>
           <option value="modifyPermission">Modify Permission</option>
           <option value="checkPermission">Check Permission</option>
           <option value="networkSwitch">Network Switch</option>
           <option value="nvmRead">NVM Read</option>
           <option value="ccbRead">CCB Read</option>
+          <option value="changeUI">Change UI</option>
         </select>
         <div class="device_info" id="device_info">
           Select an option.
@@ -82,6 +84,14 @@
         <div class="device_control_btn">
           <hmc-button size="sm" onclick="applyDeviceControl()">Apply</hmc-button>
         </div>
+
+        <hmc-modal id="ui-overlay" density="small" overlay-dismiss="false">
+          <div class="ui-content">
+            <pre id="ui_version"></pre>
+            <select size="1" id="ui-overlay-content"></select>
+            <hmc-button size="sm" onclick="change_UI()">Apply</hmc-button>
+          </div>
+        </hmc-modal>
 
         <hmc-modal id="network-overlay" density="small" overlay-dismiss="false">
           <div class="network-overlay-content" id="network-overlay-content">
