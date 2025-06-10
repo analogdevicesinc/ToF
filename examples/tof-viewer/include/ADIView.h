@@ -12,12 +12,35 @@
 #include <fstream>
 #include <stdio.h>
 
+#include <iostream>
+#include <deque>
+#include <chrono>
+#include <numeric>
+
 #include "ADIController.h"
 #include "imgui.h"
 #include "backends\imgui_impl_glfw.h"
 #include "backends\imgui_impl_opengl3.h"
 #include <ADIShader.h>
 #include <aditof/frame.h>
+
+#ifdef __ARM_NEON or __ARM_NEON__
+
+// TODO ARM NEON
+
+#else
+
+#define AB_SIMD /* Much faster, so leave this active */
+#define DEPTH_SIMD /* Much faster, so leave this active */
+//#define PC_SIMD
+
+#endif //__ARM_NEON or __ARM_NEON__
+
+#if defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
+//#define AB_TIME
+//#define DEPTH_TIME
+//#define PC_TIME
+#endif //defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
 
 namespace adiviewer {
 struct ImageDimensions {
@@ -86,12 +109,16 @@ class ADIView {
     int32_t m_waitKeyBarrier;
     uint32_t numOfThreads = 3;
     std::mutex m_frameCapturedMutex;
-    bool m_frameAvailable;
+    bool m_abFrameAvailable;
+    bool m_depthFrameAvailable;
+    bool m_pcFrameAvailable;
     bool m_stopWorkersFlag = false;
     bool m_saveBinaryFormat = false;
     uint32_t m_pccolour = 0;
 
-    std::thread m_prepareImages;
+    std::thread m_depthImageWorker;
+    std::thread m_abImageWorker;
+    std::thread m_pointCloudImageWorker;
     std::condition_variable m_frameCapturedCv;
     uint16_t *ab_video_data;
     uint16_t *depth_video_data;
@@ -132,17 +159,35 @@ class ADIView {
     /**
 		* @brief Creates Depth buffer data
 		*/
+#ifdef DEPTH_SIMD
+    void _displayDepthImage_SIMD();
+#else //DEPTH_SIMD
     void _displayDepthImage();
+#endif //DEPTH_SIMD
 
     /**
 		* @brief Creates AB buffer data
 		*/
+#ifdef AB_SIMD
+    void _displayAbImage_SIMD();
+    void normalizeABBuffer_SIMD(uint16_t* abBuffer, uint16_t abWidth,
+        uint16_t abHeight, bool advanceScaling,
+        bool useLogScaling);
+#else //AB_SIMD
     void _displayAbImage();
+    void normalizeABBuffer(uint16_t* abBuffer, uint16_t abWidth,
+        uint16_t abHeight, bool advanceScaling,
+        bool useLogScaling);
+#endif //AB_SIMD
 
     /**
 		* @brief Creates a Point Cloud buffer data
 		*/
+#ifdef PC_SIMD
+    void _displayPointCloudImage_SIMD();
+#else //PC_SIMD
     void _displayPointCloudImage();
+#endif //PC_SIMD
 
     /**
 		* @brief Returns RGB components in
@@ -150,6 +195,9 @@ class ADIView {
 		*/
     void hsvColorMap(uint16_t video_data, int max, int min, float &fRed,
                      float &fGreen, float &fBlue);
+
+    void ColorConvertHSVtoRGB(float h, float s, float v, float& out_r, float& out_g, float& out_b);
+   
 
     std::string m_viewName;
     bool m_center;
@@ -176,6 +224,31 @@ class ADIView {
     bool m_logImage = true;
     bool m_capABWidth = false;
     bool m_autoScale = true;
+
+    std::mutex ab_data_ready_mtx;
+    std::condition_variable ab_data_ready_cv;
+    bool ab_data_ready = false;
+
+    const size_t N = 50;
+
+    // Call this before your function
+    auto startTimer() {
+		return std::chrono::high_resolution_clock::now();
+    }
+
+    // Call this after your function; updates 'times' and returns running average in ms
+    double endTimerAndUpdate(std::chrono::time_point<std::chrono::high_resolution_clock> timerStart, std::deque<long long> *times) {
+        auto end = std::chrono::high_resolution_clock::now();
+        long long duration;
+    
+        duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - timerStart).count();
+        
+        times->push_back(duration);
+        if (times->size() > N) times->pop_front();
+
+        double sum = std::accumulate(times->begin(), times->end(), 0.0);
+        return sum / times->size() / 1e6; // Average in milliseconds
+    }
 };
 } //namespace adiviewer
 

@@ -226,6 +226,15 @@ void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
     if (synchronizeVideo(frame) >= 0) {
         if (frame != nullptr) {
 
+            bool diverging = false;
+            aditof::Metadata* metadata;
+            aditof::Status status = frame->getData("metadata", (uint16_t**)&metadata);
+            if (status == aditof::Status::OK && metadata != nullptr) {
+				diverging = m_view_instance->m_ctrl->OutputDeltaTime(metadata->frameNumber);
+
+				//LOG(INFO) << "Diverging: " << diverging;
+            }
+
             bool haveAB = frame->haveDataType("ab");
             bool haveDepth = frame->haveDataType("depth");
             bool haveXYZ = frame->haveDataType("xyz");
@@ -324,7 +333,7 @@ void ADIMainWindow::CameraPlay(int modeSelect, int viewSelect) {
             if (haveDepth) {
                 DisplayDepthWindow(overlayFlags);
             }
-            DisplayInfoWindow(overlayFlags);
+            DisplayInfoWindow(overlayFlags, diverging);
             DisplayControlWindow(overlayFlags, haveAB, haveDepth, haveXYZ);
             if (haveDepth) {
                 DepthLinePlot(overlayFlags);

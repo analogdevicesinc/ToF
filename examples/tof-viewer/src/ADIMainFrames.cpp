@@ -166,7 +166,9 @@ int32_t ADIMainWindow::synchronizeVideo(std::shared_ptr<aditof::Frame>& frame) {
     std::unique_lock<std::mutex> lock(m_view_instance->m_frameCapturedMutex);
 
     if (tmpFrame != nullptr) {
-        m_view_instance->m_frameAvailable = true;
+        m_view_instance->m_pcFrameAvailable = true;
+        m_view_instance->m_abFrameAvailable = true;
+        m_view_instance->m_depthFrameAvailable = true;
         m_view_instance->numOfThreads = 3;
 
         m_view_instance->frameHeight = frameDetails.height;

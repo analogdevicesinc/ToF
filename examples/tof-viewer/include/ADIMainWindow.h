@@ -429,7 +429,7 @@ class ADIMainWindow {
     /**
 		* @brief Displays the Information Window
 		*/
-    void DisplayInfoWindow(ImGuiWindowFlags overlayFlags);
+    void DisplayInfoWindow(ImGuiWindowFlags overlayFlags, bool diverging);
     float DisplayFrameWindow(ImVec2 windowSize, ImVec2 &displayUpdate,
                             ImVec2 &size);
     void DisplayControlWindow(ImGuiWindowFlags overlayFlags, bool haveAB, bool haveDepth, bool haveXYZ);

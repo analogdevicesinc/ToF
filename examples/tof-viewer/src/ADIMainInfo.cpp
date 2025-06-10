@@ -12,7 +12,7 @@ using namespace adiMainWindow;
 #include <cstdarg> // for va_list
 #include <imgui.h>
 
-void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
+void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags, bool diverging) {
     using namespace aditof;
     static bool show_ini_window = false;
 
@@ -96,6 +96,19 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
             ImGui::TableSetColumnIndex(1);
             ImGui::Text("%i", m_fps);
 
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Frame Rate Warning");
+            ImGui::TableSetColumnIndex(1);
+            if (diverging) {
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255)); // RGBA for red
+            }
+            else {
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 255, 0, 255)); // RGBA for green
+            }
+            ImGui::Text("%s", diverging ? "Too High" : "Good");
+            ImGui::PopStyleColor();
+
             if (camera_mode != 4) { // 4 - pcm-native
                 Metadata metadata;
                 Status status = frame->getMetadataStruct(metadata);
@@ -114,8 +127,7 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags) {
                     ImGui::TableSetColumnIndex(0);
                     ImGui::Text("Frames Received");
                     ImGui::TableSetColumnIndex(1);
-                    ImGui::Text("%i", frame_received);
-
+                    ImGui::Text("%i", frame_received);;
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);

@@ -13,8 +13,59 @@
 #include <iostream>
 #include <memory>
 #include <chrono>
+#include <unordered_map>
 
 using namespace adicontroller;
+
+#include <deque>
+#include <cstddef>
+class TrendWindow {
+public:
+    TrendWindow(size_t windowSize = 20) : maxSize(windowSize) {}
+
+    void add(double value) {
+        if (window.size() == maxSize) {
+            window.pop_front();
+        }
+        window.push_back(value);
+    }
+
+    // Computes the slope of best-fit line (linear regression)
+    // Returns 0 if not enough points
+    double calculate_slope() const {
+        if (window.size() < maxSize) return 0.0;
+
+        size_t n = window.size();
+        double sumX = 0.0, sumY = 0.0, sumXY = 0.0, sumXX = 0.0;
+        for (size_t i = 0; i < n; ++i) {
+            sumX += i;
+            sumY += window[i];
+            sumXY += i * window[i];
+            sumXX += i * i;
+        }
+        double denom = n * sumXX - sumX * sumX;
+        if (denom == 0.0) return 0.0; // Avoid division by zero
+
+        double m = (n * sumXY - sumX * sumY) / denom;
+        return m;
+    }
+
+    // Helper to check if the trend is increasing
+    bool isIncreasing(double threshold, double &slope) const {
+        slope = calculate_slope();
+        return slope > threshold;
+    }
+
+    void clear() {
+        window.clear();
+    }
+
+private:
+    size_t maxSize;
+    std::deque<double> window;
+};
+
+static TrendWindow iw(100);
 
 ADIController::ADIController(
     std::vector<std::shared_ptr<aditof::Camera>> camerasList)
@@ -43,6 +94,9 @@ void ADIController::StartCapture(const uint32_t frameRate) {
     if (m_cameraInUse == -1) {
         return;
     }
+
+    m_rxTimeLookUp.clear();
+    iw.clear();
 
     m_fps_startTime = std::chrono::system_clock::now();
     m_frame_counter = 0;
@@ -160,6 +214,7 @@ void ADIController::captureFrames() {
         aditof::Metadata* metadata;
         status = frame->getData("metadata", (uint16_t**)&metadata);
         if (status == aditof::Status::OK && metadata != nullptr) {
+            m_rxTimeLookUp[metadata->frameNumber] = std::chrono::high_resolution_clock::now();
             calculateFrameLoss(metadata->frameNumber, m_prev_frame_number, m_current_frame_number);
         }
 
@@ -169,6 +224,24 @@ void ADIController::captureFrames() {
         
         m_frameRequested = false;
     }
+}
+
+bool ADIController::OutputDeltaTime(uint32_t frameNumber) {
+    auto it = m_rxTimeLookUp.find(frameNumber);
+    if (it != m_rxTimeLookUp.end()) {
+        long long duration;
+
+        duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - m_rxTimeLookUp[frameNumber]).count();
+        m_rxTimeLookUp.erase(frameNumber);
+        iw.add(duration);
+
+        double slope;
+
+        bool ret = iw.isIncreasing(0.1, slope);
+
+        return ret;
+    }
+    return false;
 }
 
 bool ADIController::shouldDropFrame(uint32_t frameNum) {
