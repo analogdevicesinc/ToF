@@ -349,11 +349,9 @@ sudo mv Workspace/ToF/Web-UI/web-1.0.0/ /home/${USERNAME}/
 sudo  ln -s  /home/${USERNAME}/web-1.0.0 web
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/web
 
-sudo mkdir ADSD3500-firmware-5.2.5
-sudo mv /tmp/fw_temp/* ADSD3500-firmware-5.2.5/
-chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/ADSD3500-firmware-5.2.5
-sudo ln -s /home/${USERNAME}/ADSD3500-firmware-5.2.5 ADSD3500-firmware
-chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/ADSD3500-firmware
+sudo mkdir ADSD3500-firmware-5.3.3
+sudo mv /tmp/fw_temp/* ADSD3500-firmware-5.3.3/
+sudo ln -s /home/${USERNAME}/ADSD3500-firmware-5.3.3 ADSD3500-firmware
 sudo mv Workspace/  Workspace-6.0.0
 sudo ln -s /home/${USERNAME}/Workspace-6.0.0 Workspace
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace
