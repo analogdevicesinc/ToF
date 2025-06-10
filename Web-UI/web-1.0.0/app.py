@@ -833,6 +833,76 @@ def change_network_get():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# get the operating mode
+
+@app.route('/get-op-env', methods=['GET'])
+def get_and_source_ros_version():
+    import subprocess
+    bashrc_path = "/home/analog/.bashrc"
+
+    try:
+        with open(bashrc_path, "r") as file:
+            bashrc_content = file.read()
+
+        if "source /opt/ros/noetic/setup.bash" in bashrc_content:
+            ros_version = "noetic"
+        elif "source /opt/ros/humble/setup.bash" in bashrc_content:
+            ros_version = "humble"
+        else:
+            return jsonify({"status": "Legacy"})
+
+        # Try sourcing the bashrc to confirm it's valid
+        command = ['sudo','-S', f'source {bashrc_path}']
+        proc = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+        if proc.returncode != 0 or "ROS_DISTRO" not in proc.stdout:
+            return jsonify({"status": "Error", "message": "Failed to source ROS environment"}), 500
+
+        return jsonify({"status": "OK"})
+
+    except Exception as e:
+        return jsonify({"status": "Error", "message": str(e)}), 500
+
+
+# change operating mode 
+
+@app.route('/set-ros-version', methods=['POST'])
+def set_ros_version():
+    import subprocess
+    data = request.get_json()
+    version = data.get('version')
+
+    if version not in ['noetic', 'humble','legacy']:
+        return jsonify({'error': 'Invalid version'}), 400
+
+    try:
+        result = subprocess.run(
+            ['./switch_operating_mode.sh', version],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        return jsonify({'message': result.stdout})
+    except subprocess.CalledProcessError as e:
+        return jsonify({'error': e.stderr}), 500
+
+@app.route('/get-ros-version', methods=['GET'])
+def get_ros_version():
+    import subprocess
+    try:
+        result = subprocess.run(
+            ['./switch_operating_mode.sh', 'view'],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        return jsonify({'message': result.stdout})
+    except subprocess.CalledProcessError as e:
+        return jsonify({'error': e.stderr}), 500
+
+
 # NVM Read
     
 @app.route('/run-script')

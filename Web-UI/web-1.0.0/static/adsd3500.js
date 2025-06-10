@@ -33,13 +33,6 @@ async function updateIniListbox() {
     let response = await fetch("/get-workspace");
     let data = await response.json();
 
-    const displayElement = document.getElementById("currentWorkspaceDisplay");
-    if (data.workspace) {
-      displayElement.textContent = "Current Workspace: " + data.workspace;
-    } else {
-      displayElement.textContent = "Current Workspace: Not Selected";
-    }
-
     let listbox = document.getElementById("output");
     for (let i = 0; i < listbox.options.length; i++) {
       if (listbox.options[i].text === data.workspace) {
@@ -51,6 +44,8 @@ async function updateIniListbox() {
     console.error("Error fetching workspace:", error);
   }
 }
+
+let current_mode = "Not Set";
 
 function setStatusMessage(message) {
   document.getElementById("progressBar").setAttribute("label", message);
@@ -82,7 +77,8 @@ async function runScript() {
     outputElement.add(noChange);
 
     await updateListbox();
-    await update_version(selected_mode);
+    await fetchRosVersion();
+    await update_version();
     await loadCurrentFirmware();
   } catch (error) {
     console.error("Error running script to refresh list:", error);
@@ -90,14 +86,14 @@ async function runScript() {
   }
 }
 
-async function update_version(selected_mode = "Not set") {
+async function update_version() {
   const OpreationMode = document.getElementById("op_mode");
   const CurrentWorkspace = document.getElementById("current_workspace");
   let sdk_response = await fetch("/get-workspace");
   let sdk_data = await sdk_response.json();
 
   CurrentWorkspace.innerHTML = sdk_data.workspace;
-  OpreationMode.innerHTML = "Not set";
+  OpreationMode.innerHTML = current_mode;
 }
 
 async function switchWorkspace() {
@@ -152,7 +148,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const selectedOpratingVersion = operatingMode.value;
     console.log(`Selected Operating mode: ${selectedOpratingVersion}`);
     if (selectedVersion !== "No Change") {
-      update_version(selectedOpratingVersion);
+      updateOperatingMode(selectedOpratingVersion);
     }
 
 
@@ -167,10 +163,78 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // ********************************************************* for Select Mode of Operation **************************************************************************************/
 
-// Example list of workspace versions
 const mode_of_operation = ["Legacy", "ROS-1", "ROS-2", "No Change"];
-let selected_mode = "Not Set"; // Use 'let' so it can be updated
 
+const rosVersionMap = {
+  "Legacy": "legacy",
+  "ROS-1": "noetic",
+  "ROS-2": "humble",
+  "No Change": null
+};
+
+async function updateOperatingMode(selected_mode) {
+
+  const rosVersion = rosVersionMap[selected_mode];
+
+  if (rosVersion === null) {
+    console.log("No change requested.");
+    return;
+  }
+
+  try {
+    const response = await fetch("/set-ros-version", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ version: rosVersion })
+    });
+
+    const result = await response.json();
+    if (response.ok) {
+      console.log("Success:", result.message);
+    } else {
+      console.error("Error:", result.error);
+    }
+  } catch (err) {
+    console.error("Request failed:", err);
+  }
+
+  try {
+    const response = await fetch("/get-op-env");
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data.status === "OK") {
+      console.log("ROS environment is active and sourced correctly.");
+    } else if (data.status === "Legacy") {
+      console.log("No ROS version is currently configured (Legacy mode).");
+    } else if (data.status === "Error") {
+      console.error("Error sourcing ROS environment:", data.message);
+    }
+  } catch (error) {
+    console.error("Unable to fetch ROS environment status:", error);
+  }
+};
+
+// fetch ros version
+async function fetchRosVersion() {
+  try {
+    const response = await fetch("/get-ros-version");
+    if (!response.ok) {
+      throw new Error(`HTTP error! status : ${response.error}`)
+    }
+
+    const data = await response.json();
+    console.log(data.message)
+    current_mode = data.message;
+  } catch (error) {
+    console.error("Unable to fetch ROS version:", error);
+  }
+}
+
+// list ROS version
 document.addEventListener("DOMContentLoaded", () => {
   const selectElement = document.getElementById("ros_mode");
 
@@ -179,16 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const option = document.createElement("option");
     option.value = version;
     option.textContent = version;
-    if (version === selected_mode) {
-      option.selected = true;
-    }
     selectElement.appendChild(option);
-  });
-
-  // Add change event listener to update selected_mode
-  selectElement.addEventListener("change", () => {
-    selected_mode = selectElement.value || "not set";
-    console.log("Selected mode:", selected_mode);
   });
 });
 
@@ -343,6 +398,8 @@ async function flashFirmware(option) {
   }
 }
 
+
+// list firmware versions
 document.addEventListener("DOMContentLoaded", async () => {
   const firmwareSelect = document.getElementById("firmware_version");
 
