@@ -391,6 +391,18 @@ td {
   gap: 0.8rem;
 }
 
+.ui-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-left: 2rem;
+}
+
+.ui-content #ui-overlay-content {
+  width: 25%;
+}
+
+
 /* Overlay styling */
 .overlay {
   position: fixed;
