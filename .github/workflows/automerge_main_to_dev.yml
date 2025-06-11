@@ -10,19 +10,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout using local composite action
-        uses: ./.github/actions/checkout
+      - name: Checkout main-github-action-temp
+        uses: actions/checkout@v4
+        with:
+           ref: main-github-action-temp
+           submodules: recursive
+           fetch-depth: 0  # Needed for full history and merging
 
       - name: Configure Git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Fetch target branch
-        run: git fetch origin dev-github-action-temp
-
       - name: Merge main-github-action-temp into dev-github-action-temp
         run: |
+          git fetch origin dev-github-action-temp
           git checkout dev-github-action-temp
           git merge origin/main-github-action-temp --no-edit || echo "Merge conflict - manual resolution required"
           git submodule update --init --recursive
