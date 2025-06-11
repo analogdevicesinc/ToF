@@ -62,7 +62,7 @@ elif [ "$USER_CHOICE" == "ubuntu" ]; then
         cp "$CONFIG_FILE_1" "$TEMP_FILE"
         cp "$CONFIG_FILE_2" "$CONFIG_FILE_1"
         cp "$TEMP_FILE" "$CONFIG_FILE_2"
-        cp "Switched to ECM mode for Ubuntu."
+        echo "Switched to ECM mode for Ubuntu."
         chmod +x "$CONFIG_FILE_1"
     else
         echo "Unable to determine current mode."

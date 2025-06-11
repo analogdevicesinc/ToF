@@ -85,10 +85,11 @@
           <hmc-button size="sm" onclick="applyDeviceControl()">Apply</hmc-button>
         </div>
 
-        <hmc-modal id="ui-overlay" density="small" overlay-dismiss="false">
+        <hmc-modal id="ui-overlay" density="small" overlay-dismiss="true">
           <div class="ui-content">
             <pre id="ui_version"></pre>
             <select size="1" id="ui-overlay-content"></select>
+            <i>Warning : This process will reboot the system.</i>
             <hmc-button size="sm" onclick="change_UI()">Apply</hmc-button>
           </div>
         </hmc-modal>

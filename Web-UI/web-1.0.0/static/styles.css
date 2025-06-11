@@ -1,6 +1,7 @@
 body {
   padding: 0 !important;
   background-color: var(--hmc-color-layout-canvas);
+  overflow: auto;
 }
 
 hmc-nav-bar[size="sm"] #left-cta {

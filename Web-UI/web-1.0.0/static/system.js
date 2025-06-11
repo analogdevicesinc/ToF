@@ -341,9 +341,10 @@ async function runNVMScript() {
   const script = "./nvm-read.sh";
 
   if (fileName.endsWith(".nvm")) {
-    fileName = fileName.split(".nvm")[0];
+    fileName = fileName.split(".")[0];
     fileName += ".nvm";
   } else {
+    fileName = fileName.split(".")[0];
     fileName += ".nvm";
   }
 
@@ -478,6 +479,7 @@ async function runCCBScript() {
     fileName = fileName.split(".ccb")[0];
     fileName += ".ccb";
   } else {
+    fileName = fileName.split(".ccb")[0];
     fileName += ".ccb";
   }
 
@@ -760,7 +762,7 @@ async function change_UI() {
     } else {
       console.error("Error switching UI:", output.result);
     }
-
+    startRebootCountdown();
   } catch (error) {
     console.error("Error running script to refresh list:", error);
   }
@@ -774,6 +776,8 @@ async function openUImodal() {
   window.onclick = function (event) {
     if (event.target == uiOverlay) {
       uiOverlay.setAttribute("open", "false");
+
+      location.reload();
     }
   };
 }
