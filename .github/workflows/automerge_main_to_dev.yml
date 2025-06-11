@@ -23,13 +23,16 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Merge main into dev
+      - name: Force replace dev branch with main branch contents (including submodules)
         run: |
-          git merge origin/main-github-action-temp --no-edit || echo "Merge conflict - manual resolution required"
+          set -e
+          git reset --hard origin/main-github-action-temp
           git submodule update --init --recursive
+          git add .
+          git commit -m "Force sync dev branch with main branch (including submodules)" || echo "No changes to commit"
 
       - name: Push changes to dev
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git dev-github-action-temp
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git dev-github-action-temp --force
