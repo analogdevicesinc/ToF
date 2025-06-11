@@ -1,0 +1,12 @@
+name: 'Checkout Repository'
+
+description: 'Checkout the repository and fetch all branches'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout repository
+      shell: bash
+      run: |
+        git clone "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" .
+        git fetch --all
