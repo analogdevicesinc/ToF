@@ -10,11 +10,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository with submodules
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          submodules: recursive  # Ensures submodules are initialized and updated
+      - name: Checkout using local composite action
+        uses: ./.github/actions/checkout
 
       - name: Configure Git
         run: |
