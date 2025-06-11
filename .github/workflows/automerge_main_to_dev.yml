@@ -10,12 +10,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout main-github-action-temp
-        uses: actions/checkout@v4
-        with:
-           ref: main-github-action-temp
-           submodules: recursive
-           fetch-depth: 0  # Needed for full history and merging
+      - name: Checkout using local composite action
+        uses: ./.github/actions/checkout
 
       - name: Configure Git
         run: |
