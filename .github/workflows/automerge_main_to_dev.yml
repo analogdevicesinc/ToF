@@ -3,7 +3,7 @@ name: Auto Merge main to dev branch (with submodules)
 on:
   push:
     branches:
-      - main-github-action-temp
+      - main
 
 jobs:
   merge:
@@ -14,9 +14,9 @@ jobs:
         run: |
           git init
           git remote add origin https://github.com/${{ github.repository }}.git
-          git fetch origin main-github-action-temp
-          git fetch origin dev-github-action-temp
-          git checkout -b dev-github-action-temp origin/dev-github-action-temp
+          git fetch origin main
+          git fetch origin dev-6.1.0
+          git checkout -b dev-6.1.0 origin/dev-6.1.0
 
       - name: Configure Git
         run: |
@@ -26,7 +26,7 @@ jobs:
       - name: Force replace dev branch with main branch contents (including submodules)
         run: |
           set -e
-          git reset --hard origin/main-github-action-temp
+          git reset --hard origin/main
           git submodule update --init --recursive
           git add .
           git commit -m "Force sync dev branch with main branch (including submodules)" || echo "No changes to commit"
@@ -35,4 +35,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git dev-github-action-temp --force
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git dev-6.1.0 --force
