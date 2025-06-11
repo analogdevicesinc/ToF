@@ -293,11 +293,13 @@ chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace
 mkdir /home/${USERNAME}/Workspace/bin
 cp /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/data_collect /home/${USERNAME}/Workspace/bin
 cp /home/${USERNAME}/Workspace/ToF/build/examples/first-frame/first-frame /home/${USERNAME}/Workspace/bin
-mv /home/${USERNAME}/Workspace/ToF/sdcard-images-utils/nxp/patches/ubuntu_overlay/step1/usr/share/systemd/*.sh /home/${USERNAME}/Workspace/bin
+mv /home/${USERNAME}/Workspace/ToF/sdcard-images-utils/nxp/patches/ubuntu_overlay/step1/usr/share/systemd/* /home/${USERNAME}/Workspace/bin
 
 pushd /home/${USERNAME}/Workspace/bin
 chmod +x ros_install_noetic.sh
 echo "3" | ./ros_install_noetic.sh
+chmod +x install_ros2_dependencies.sh
+./install_ros2_dependencies.sh
 popd
 
 #generate licences file
@@ -397,8 +399,8 @@ function main() {
   
   cd ${OUTPUT_DIR}
   
-  # create 8GB ext4 image
-  dd if=/dev/zero of=rootfs.ext4 bs=1M count=8000
+  # create 10GB ext4 image
+  dd if=/dev/zero of=rootfs.ext4 bs=1M count=10000
   mkdir -p ${ROOTFS_TMP}
   mkfs.ext4 rootfs.ext4
   sudo mount -o loop -o barrier=0 rootfs.ext4 ${ROOTFS_TMP}
