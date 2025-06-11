@@ -1,0 +1,35 @@
+
+name: Auto Merge main to dev (with submodules)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository with submodules
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: recursive  # Ensures submodules are initialized and updated
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch target branch
+        run: git fetch origin dev
+
+      - name: Merge main into dev
+        run: |
+          git checkout dev
+          git merge origin/main --no-edit || echo "Merge conflict - manual resolution required"
+          git submodule update --init --recursive
+          git push origin dev
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
