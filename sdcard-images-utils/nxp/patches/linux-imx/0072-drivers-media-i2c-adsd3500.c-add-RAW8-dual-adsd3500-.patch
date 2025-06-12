@@ -1,0 +1,46 @@
+From 0d977407f9a3b8ab58be4d46a5750ef2a890807a Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Wed, 11 Jun 2025 15:01:41 +0530
+Subject: [PATCH] drivers: media: i2c: adsd3500.c: add RAW8 dual adsd3500 MP
+ resolution
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ drivers/media/i2c/adsd3500.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/drivers/media/i2c/adsd3500.c b/drivers/media/i2c/adsd3500.c
+index 89bc13f58f7f..3d60322c0d36 100644
+--- a/drivers/media/i2c/adsd3500.c
++++ b/drivers/media/i2c/adsd3500.c
+@@ -229,6 +229,13 @@ static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
++	{       /* RAW8 16BPP Phase 12BPP AB ADSD3100 - DUAL MP - (1024x1 1024x4) */
++		.width = 1024,
++		.height = 4096,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
+ 	{	/* RAW8 20BPP ADSD3100 QMP RESOLUTION */
+ 		.width = 1280,
+ 		.height = 512,
+@@ -257,6 +264,13 @@ static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
+ 		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
+ 		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
+ 	},
++	{       /* RAW8 16BPP Phase 12BPP AB ADSD3100 - DUAL MP - (1024x2 1024x2)  */
++		.width = 2048,
++		.height = 2048,
++		.pixel_rate = 488000000,
++		.code = MEDIA_BUS_FMT_SBGGR8_1X8,
++		.link_freq_idx = 0 /* an index in link_freq_tbl[] */
++	},
+ 	{	/* RAW8 36BPP ADSD3100 QMP RESOLUTION */
+ 		.width = 2304,
+ 		.height = 512,
+-- 
+2.28.0
+
