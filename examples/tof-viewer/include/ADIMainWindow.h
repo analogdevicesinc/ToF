@@ -573,7 +573,7 @@ class ADIMainWindow {
     std::vector<std::pair<int, uint8_t>> m_cameraModes;
     std::vector<std::pair<int, std::string>> m_cameraModesDropDown;
     std::unordered_map<uint16_t, std::string> m_cameraModesLookup;
-
+    bool m_recordingActive = false;
     ImVec2 m_source_depth_image_dimensions;
     ImVec2 m_display_depth_dimensions;
     ImVec2 m_source_ab_image_dimensions;
@@ -623,13 +623,13 @@ class ADIMainWindow {
     bool m_off_line = false;
     uint32_t m_off_line_frame_index = 0;
     int32_t m_frame_counter = 0;
-    uint32_t m_fps = 0;
     uint16_t m_fps_expected = 0;
     uint32_t m_fps_frame_received = 0;
     int32_t m_selected_device_index = -1;
     std::vector<std::pair<int, std::string>> m_connected_devices;
 
     uint8_t m_last_mode = -1;
+    bool m_enable_preview = false;
 
     std::map<std::string, std::string> m_ini_params;
     std::map<std::string, std::string> m_modified_ini_params;

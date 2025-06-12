@@ -153,6 +153,13 @@ void ADIMainWindow::PrepareCamera(uint8_t mode) {
 
     status = GetActiveCamera()->adsd3500GetFrameRate(m_fps_expected);
 
+    if (m_enable_preview) {
+        m_view_instance->m_ctrl->setPreviewRate(m_fps_expected, PREVIEW_FRAME_RATE);
+    }
+    else {
+        m_view_instance->m_ctrl->setPreviewRate(m_fps_expected, m_fps_expected);
+    }
+
     if (!m_view_instance->getUserABMaxState()) {
         std::string value;
         GetActiveCamera()->getSensor()->getControl("abBits", value);

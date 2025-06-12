@@ -102,10 +102,8 @@ void ADIController::StartCapture(const uint32_t frameRate) {
     m_frame_counter = 0;
     m_stopFlag = false;
     m_frames_lost = 0;
-    m_preview_rate = 1;
     m_prev_frame_number = -1;
     m_current_frame_number = 0;
-    setPreviewRate(frameRate, frameRate);
     m_workerThread = std::thread([this]() { captureFrames(); });
 }
 
@@ -274,7 +272,7 @@ aditof::Status ADIController::getFramesReceived(uint32_t& framesRecevied) {
 
 aditof::Status ADIController::setPreviewRate(uint32_t frameRate, uint32_t previewRate) {
 
-	m_preview_rate = previewRate;
+ 	m_preview_rate = previewRate;
     m_frame_rate = frameRate;
 
 	return aditof::Status::OK;

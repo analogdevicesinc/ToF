@@ -187,7 +187,6 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags, bool hav
             DrawBarLabel("Control");
 
             static std::string filePath = "";
-            static bool recordingActive = false;
 
             cameraButton(m_base_file_name);
 
@@ -203,23 +202,23 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags, bool hav
                     // Draw a white circle in the center for the record icon
                     dl->AddCircleFilled(center, radius, IM_COL32_WHITE);
                 },
-                (!recordingActive) ? IM_COL32(200, 0, 0, 255)
+                (!m_recordingActive) ? IM_COL32(200, 0, 0, 255)
                 : IM_COL32(0, 200, 0, 255))) {
 
-                if (!recordingActive) {
+                if (!m_recordingActive) {
 
                     aditof::Status status =
                         GetActiveCamera()->startRecording(filePath);
                     if (status == aditof::Status::OK) {
-                        m_view_instance->m_ctrl->setPreviewRate(m_fps, PREVIEW_FRAME_RATE);
-                        recordingActive = true;
+                        m_view_instance->m_ctrl->setPreviewRate(m_fps_expected, PREVIEW_FRAME_RATE);
+                        m_recordingActive = true;
                         LOG(INFO) << "Recording to " << filePath.c_str();
                     }
                     else {
-                        m_view_instance->m_ctrl->setPreviewRate(m_fps, m_fps);
+                        m_view_instance->m_ctrl->setPreviewRate(m_fps_expected, m_fps_expected);
                         LOG(ERROR) << "Unable to start recording.";
                         filePath = "";
-                        recordingActive = false;
+                        m_recordingActive = false;
                     }
                 }
                 else {
@@ -227,8 +226,8 @@ void ADIMainWindow::DisplayControlWindow(ImGuiWindowFlags overlayFlags, bool hav
                     if (status == aditof::Status::OK) {
                         LOG(INFO) << "Recording stopped.";
                         filePath = "";
-                        recordingActive = false;
-                        m_view_instance->m_ctrl->setPreviewRate(m_fps, m_fps);
+                        m_recordingActive = false;
+                        m_view_instance->m_ctrl->setPreviewRate(m_fps_expected, m_fps_expected);
                     }
                     else {
                         LOG(ERROR) << "Unable to stop recording.";

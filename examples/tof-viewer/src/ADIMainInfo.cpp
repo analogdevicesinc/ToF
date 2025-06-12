@@ -77,6 +77,19 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags, bool diverg
 
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
+            ImGui::Text("Preview Mode");
+            ImGui::TableSetColumnIndex(1);
+            if (m_enable_preview) {
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255)); // RGBA for red
+            }
+            else {
+                ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 255, 0, 255)); // RGBA for green
+            }
+            ImGui::Text("%s", m_enable_preview ? "On" : "Off");
+            ImGui::PopStyleColor();
+
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
             ImGui::Text("Mode");
             ImGui::TableSetColumnIndex(1);
             std::string s = m_cameraModesLookup[static_cast<uint16_t>(camera_mode)]; 
@@ -90,11 +103,18 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags, bool diverg
                 ImGui::Text("%i", m_fps_expected);
             }
 
+            static uint32_t fps;
+			m_view_instance->m_ctrl->getFrameRate(fps);
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("Current fps");
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%i", m_fps);
+            if (m_off_line) {
+                ImGui::Text("N/A");
+            }
+            else {
+                ImGui::Text("%i", fps);;
+            }
 
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
@@ -127,13 +147,22 @@ void ADIMainWindow::DisplayInfoWindow(ImGuiWindowFlags overlayFlags, bool diverg
                     ImGui::TableSetColumnIndex(0);
                     ImGui::Text("Frames Received");
                     ImGui::TableSetColumnIndex(1);
-                    ImGui::Text("%i", frame_received);;
+                    if (m_off_line) {
+                        ImGui::Text("N/A");
+                    } else {
+                        ImGui::Text("%i", frame_received);;
+                    }
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);
                     ImGui::Text("Frames Lost");
                     ImGui::TableSetColumnIndex(1);
-                    ImGui::Text("%i", frames_lost);
+                    if (m_off_line) {
+                        ImGui::Text("N/A");
+                    }
+                    else {
+                        ImGui::Text("%i", frames_lost);;
+                    }
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);

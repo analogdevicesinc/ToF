@@ -427,7 +427,6 @@ void ADIMainWindow::Render() {
         DisplayHelp();
         if (m_is_playing) {
             CameraPlay(m_mode_selection, m_view_selection);
-            m_view_instance->m_ctrl->getFrameRate(m_fps);
             if (m_view_instance != nullptr) {
                 if (m_view_instance->m_ctrl->panicStop) {
                     CameraStop();
@@ -917,9 +916,9 @@ void ADIMainWindow::ShowStartWizard() {
 #endif //ENABLE_DYNAMIC_MODE_SWITCHING
                 } else {
 #pragma region WizardOnlineStandardMode
-                    if (wizard_height < 620)
+                    if (wizard_height < 640)
                         wizard_height += 20;
-					else if (wizard_height > 620)
+					else if (wizard_height > 640)
 						wizard_height -= 20;
 
                     if (ImGuiExtensions::ADIComboBox(
@@ -957,6 +956,8 @@ void ADIMainWindow::ShowStartWizard() {
 
                     //Change colour to green
                     ImGuiExtensions::ButtonColorChanger colorChangerPlay(m_custom_color_play, !m_is_playing);
+
+                    ImGui::Toggle(!m_enable_preview ? "Preview Off" : "Preview On", &m_enable_preview);
 
                     if (ImGuiExtensions::ADIButton("Start Streaming", !m_is_playing)) {
 
