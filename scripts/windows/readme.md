@@ -14,11 +14,11 @@ Please use option -h or --help for further reference on how to change the defaul
 
 ## Clone Repo
 
-Choose the branch as needed. In our example below we are using the branch/tag v6.0.0:
-* --branch v6.0.0
+Choose the branch as needed. In our example below we are using the branch/tag v6.1.0:
+* --branch v6.1.0
 
 ```console
-git clone --branch v6.0.0 https://github.com/analogdevicesinc/ToF
+git clone --branch v6.1.0 https://github.com/analogdevicesinc/ToF
 cd ToF
 git submodule update --init --recursive
 ```

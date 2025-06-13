@@ -25,7 +25,7 @@ See [here](../../cmake/readme.md) for details on the cmake options.
 ### Build SDK with examples and in Visual Studio
 - Generate the VisualStudio solution
 ```console
-git clone --branch v5.0.0 https://github.com/analogdevicesinc/ToF
+git clone --branch v6.1.0 https://github.com/analogdevicesinc/ToF
 cd ToF
 git submodule update --init
 mkdir build
