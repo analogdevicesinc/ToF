@@ -5,9 +5,9 @@
 #ifndef ADISHADER_H
 #define ADISHADER_H
 
-#include "backends\imgui_impl_glfw.h"
-#include "backends\imgui_impl_opengl3.h"
-#include "backends\imgui_impl_opengl3_loader.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_opengl3.h"
+#include "backends/imgui_impl_opengl3_loader.h"
 #include <GLFW/glfw3.h>
 #include <fstream>
 #include <iostream>

@@ -175,7 +175,7 @@ class ADIController {
 		* @brief Sets a thread while capturing camera frames.
 		*/
     void captureFrames();
-    void ADIController::calculateFrameLoss(const uint32_t frameNumber, uint32_t& prevFrameNumber, uint32_t& currentFrameNumber);
+    void calculateFrameLoss(const uint32_t frameNumber, uint32_t& prevFrameNumber, uint32_t& currentFrameNumber);
     bool shouldDropFrame(uint32_t frameNum);
     std::unordered_map<uint32_t, std::chrono::time_point<std::chrono::high_resolution_clock>> m_rxTimeLookUp;
 

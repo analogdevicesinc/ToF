@@ -18,7 +18,7 @@ void ADIMainWindow::ShowLogWindow(bool *p_open) {
     m_log.Draw("Camera: Log", p_open, windowFlags);
 
 #ifdef __linux__
-    fseek(input, ftell(input), SEEK_SET);
+    fseek(m_file_input, ftell(m_file_input), SEEK_SET);
 #endif
 
     while (fgets(m_buffer, 512, m_file_input)) {

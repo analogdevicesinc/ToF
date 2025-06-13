@@ -8,8 +8,8 @@
 #ifndef ADIIMGUIEXTENSIONS_H
 #define ADIIMGUIEXTENSIONS_H
 #include "imgui.h"
-#include "backends\imgui_impl_glfw.h"
-#include "backends\imgui_impl_opengl3.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_opengl3.h"
 #include <imgui_internal.h>
 
 // System headers

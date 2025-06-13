@@ -65,9 +65,6 @@ namespace fs = ghc::filesystem;
 
 using namespace adiMainWindow;
 
-// TODO: These need to move to the class and not be global
-char saveConfigurationPath[512] = "currentconfiguration.json";
-
 extern ImFont* g_font_regular;
 extern ImFont* g_font_bold;
 extern ImFont* g_font_bold_large;
@@ -75,8 +72,8 @@ extern ImFont* g_font_bold_large;
 ADIMainWindow::ADIMainWindow() : m_skip_network_cameras(true) {
     /********************/
     struct stat info;
-    char *folderName = "log";
-    if (stat(folderName, &info) != 0) { // If no folder named log is found
+    std::string folderName = "log";
+    if (stat(folderName.c_str(), &info) != 0) { // If no folder named log is found
 #ifdef _WIN32
         if (_mkdir("log")) { // Create local folder where all logs will be filed
 #elif __linux__
@@ -88,7 +85,7 @@ ADIMainWindow::ADIMainWindow() : m_skip_network_cameras(true) {
             LOG(INFO) << "Log folder created with name: " << folderName;
         }
     }
-    char wholeLogPath[30];
+    std::string wholeLogPath;
     char timebuff[100];
     time_t timeNow = time(0);
     struct tm *timeinfo;
@@ -96,20 +93,18 @@ ADIMainWindow::ADIMainWindow() : m_skip_network_cameras(true) {
     timeinfo = localtime(&timeNow);
     strftime(timebuff, sizeof(timebuff), "%Y%m%d_%H%M%S", timeinfo);
     // Concatenate the whole path
-    strcpy_s(wholeLogPath, folderName);
+    wholeLogPath = folderName;
 #ifdef _WIN32
-    strcat_s(wholeLogPath, "\\");
+    wholeLogPath += "\\"; // Ensure the path ends with a slash
 #elif __linux__
-    strcat(wholeLogPath, "/");
+    wholeLogPath += "/"; // Ensure the path ends with a slash
 #endif
-    strcat_s(wholeLogPath, "log_");
-    strcat_s(wholeLogPath, timebuff);
-    strcat_s(wholeLogPath, ".txt");
+    wholeLogPath += "log_" + std::string(timebuff) + ".txt";
 
     /********************/
-    m_file_stream = freopen(wholeLogPath, "w", stderr); // Added missing pointer
+    m_file_stream = freopen(wholeLogPath.c_str(), "w", stderr); // Added missing pointer
     setvbuf(m_file_stream, 0, _IONBF, 0);               // No Buffering
-    m_file_input = fopen(wholeLogPath, "r");
+    m_file_input = fopen(wholeLogPath.c_str(), "r");
 
     //Parse config file for this application
     //Parse config.json
@@ -185,14 +180,12 @@ void ADIMainWindow::CustomizeMenus() {
 
 static void glfw_error_callback(int error, const char *description) {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
-    __debugbreak();
 }
 
 bool ADIMainWindow::StartImGUI(const ADIViewerArgs& args) {
     // Setup window
     glfwSetErrorCallback(glfw_error_callback); //Error Management
     if (!glfwInit()) {
-        __debugbreak();
         return false;
     }
 
@@ -218,7 +211,6 @@ bool ADIMainWindow::StartImGUI(const ADIViewerArgs& args) {
     window = glfwCreateWindow(m_dict_win_position["main"].width, m_dict_win_position["main"].height, _title.c_str(), NULL, NULL);
 
     if (window == NULL) {
-        __debugbreak(); //FIXME: Why does the previous call fail sometimes?
         return false;
     }
 
@@ -238,7 +230,6 @@ bool ADIMainWindow::StartImGUI(const ADIViewerArgs& args) {
                       // is likely to requires some form of initialization.
 #endif
     if (err) {
-        __debugbreak();
         fprintf(stderr, "Failed to initialize OpenGL loader!\n");
         return false;
     }
@@ -600,8 +591,7 @@ void ADIMainWindow::ShowSaveAdsdParamsMenu() {
         } else {
             LOG(INFO) << "Current configuration info saved to file "
                       << saveconfigurationFileValue << std::endl;
-            strcpy_s(saveConfigurationPath,
-                        saveconfigurationFileValue.c_str());
+
         }
     }
 }

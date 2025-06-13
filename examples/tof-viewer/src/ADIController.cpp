@@ -14,6 +14,7 @@
 #include <memory>
 #include <chrono>
 #include <unordered_map>
+#include <cmath>
 
 using namespace adicontroller;
 
@@ -154,7 +155,6 @@ bool ADIController::hasCamera() const { return !m_cameras.empty(); }
 void ADIController::calculateFrameLoss(const uint32_t frameNumber, uint32_t &prevFrameNumber, uint32_t &currentFrameNumber) {
     
     // Do frame loss calculation.
-    uint32_t frameNum = frameNumber;
     prevFrameNumber = currentFrameNumber;
     currentFrameNumber = frameNumber;
 
@@ -304,6 +304,8 @@ aditof::Status ADIController::requestFrameOffline(uint32_t index) {
 
     m_queue.enqueue(frame);
     m_frameRequested = false;
+
+    return aditof::Status::OK;
 }
 
 int ADIController::getCameraInUse() const { return m_cameraInUse; }
