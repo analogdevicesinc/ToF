@@ -1,6 +1,6 @@
 # Linux Host Build Instructions
 
-**Please note, use the applicable tag, when cloning, and release version when getting the latest depth compute library files for the embedded system. As of writing, version 6.0.0 of the release is available as well as tag v6.0.0.**
+**Please note, use the applicable tag, when cloning, and release version when getting the latest depth compute library files for the embedded system. As of writing, version 6.1.0 of the release is available as well as tag v6.1.0.**
 
 ## Building the SDK only
 
@@ -33,15 +33,15 @@ Please note, ensure you are using the intended branch.
 
 See [here](../../cmake/readme.md) for details on the cmake options.
 
-Choose the branch as needed. In our example below we are using the branch/tag v6.0.0:
-* --branch v6.0.0
+Choose the branch as needed. In our example below we are using the branch/tag v6.1.0:
+* --branch v6.1.0
 
 To build:
 * the examples add the CMake option: -DWITH_EXAMPLES=on
 * the documentation add the CMake optionL -DWITH_DOC=on 
 
 ```console
-git clone --branch v6.0.0 https://github.com/analogdevicesinc/ToF
+git clone --branch v6.1.0 https://github.com/analogdevicesinc/ToF
 cd ToF
 git submodule update --init --recursive
 mkdir build && cd build
