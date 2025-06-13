@@ -489,7 +489,6 @@ void ADIMainWindow::Render() {
 
 void ADIMainWindow::ShowMainMenu() {
     static bool show_app_log = false;
-    static bool show_ini_window = false;
     static bool show_help_window = false;
 
     if (show_app_log) {
