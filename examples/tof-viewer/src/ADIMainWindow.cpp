@@ -2046,7 +2046,6 @@ void ADIMainWindow::preparePointCloudVertices(unsigned int &vbo,
 }
 
 void ADIMainWindow::initOpenGLPointCloudTexture() {
-    glEnable(GL_DEPTH_TEST);
     glEnable(GL_PROGRAM_POINT_SIZE); //Enable point size feature
 
     constexpr char const pointCloudVertexShader[] =
@@ -2063,7 +2062,9 @@ void ADIMainWindow::initOpenGLPointCloudTexture() {
 
 				void main()
 				{
-					gl_Position = projection * view * model * vec4(aPos, 1.0);
+                    vec3 flippedPos = aPos;
+                    flippedPos.x = -flippedPos.x; // Flip horizontally
+					gl_Position = projection * view * model * vec4(flippedPos, 1.0);
 					color_based_on_position = vec4(hsvColor, 1.0);
 				}
 				)";
@@ -2112,9 +2113,31 @@ void ADIMainWindow::initOpenGLPointCloudTexture() {
                  GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                            pointCloud_video_texture, 0);
+
+    glGenTextures(1, &m_gl_pc_depthTex);
+    glBindTexture(GL_TEXTURE_2D, m_gl_pc_depthTex);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, mainWindowWidth,
+                 mainWindowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                           m_gl_pc_depthTex, 0);
+
+    GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+    glDrawBuffers(1, drawBuffers);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cerr << "FBO incomplete!\n";
+        return;
+    }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    pointCloudReset();
 }
 
 void ADIMainWindow::synchronizeDepthABVideo() {
@@ -2403,6 +2426,7 @@ void ADIMainWindow::CapturePointCloudVideo() {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
     glPointSize(pointSize);
 
     // draw our Image
@@ -2440,23 +2464,41 @@ void ADIMainWindow::CapturePointCloudVideo() {
         rotationangleradians);
     glDeleteVertexArrays(1, &view->vertexArrayObject);
     glDeleteBuffers(1, &view->vertexBufferObject);
+    glDisable(GL_DEPTH_TEST);
 }
 
 void ADIMainWindow::pointCloudReset() {
-    mat4x4_identity(m_view);
-    mat4x4_identity(m_projection);
-    mat4x4_identity(m_model);
-    deltaTime = 0;
-    lastFrame = 0;
-    fov = 8.0f;
-    yaw = -90.0f;
-    pitch = 0.0f;
+
+    const mat4x4 m_view_default = {
+        {1.0f, 0.0f, 0.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f, 0.0f},
+        {0.0f, 0.0f, 0.0f, 1.0f},
+        {-0.0213157870, -0.00631578919, -3.0f, 1.0f}};
+
+    const mat4x4 m_projection_default = {
+        {9.51436424, 0.00000000, 0.00000000, 0.00000000},
+        {0.00000000, 9.51436424, 0.00000000, 0.00000000},
+        {0.00000000, 0.00000000, -1.00200200, -1.00000000},
+        {0.00000000, 0.00000000, -0.200200200, 0.00000000}};
+
+    const mat4x4 m_model_default = {
+        {-0.989992976, 0.0140884947, -0.140415087, 0.00000000},
+        {0.00000000, 0.995004535, 0.0998334810, 0.00000000},
+        {0.141119987, 0.0988343805, -0.985047400, 0.00000000},
+        {0.00000000, 0.00000000, 0.00000000, 1.00000000}};
+
+    memcpy(m_view, m_view_default, sizeof(m_view));
+    memcpy(m_projection, m_projection_default, sizeof(m_projection));
+    memcpy(m_model, m_model_default, sizeof(m_model));
+
+    deltaTime = 0.1;
+    fov = 12.0f;
     view->Max_X = 6000.0;
     view->Max_Y = 6000.0;
     view->Max_Z = 6000.0;
 
-    cameraPos[0] = 0.0f;
-    cameraPos[1] = 0.0f;
+    cameraPos[0] = 0.0213157870f;
+    cameraPos[1] = 0.00631578919f;
     cameraPos[2] = 3.0f;
     cameraFront[0] = 0.0;
     cameraFront[1] = 0.0;

@@ -626,6 +626,7 @@ class ADIMainWindow {
     unsigned int ab_video_texture = 0;
     unsigned int depth_video_texture = 0;
     unsigned int pointCloud_video_texture = 0;
+    GLuint m_gl_pc_depthTex;
     bool setTempWinPositionOnce = true;
     bool setABWinPositionOnce = true;
     bool setDepthWinPositionOnce = true;
