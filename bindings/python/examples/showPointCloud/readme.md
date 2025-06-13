@@ -1,4 +1,4 @@
-# First frame Example
+# First frame Example (DEPRECATED)
 
 ### Overview
 This example shows how to use Open3d to create and show a pointcloud from aditof frames 
