@@ -590,12 +590,11 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
 
     case STOP: {
-        aditof::Status status = camDepthSensor->stop();
-        buff_send.set_status(static_cast<::payload::Status>(status));
-
         if (send_async == true) {
             stop_stream_thread();
         }
+        aditof::Status status = camDepthSensor->stop();
+        buff_send.set_status(static_cast<::payload::Status>(status));
 
         close_zmq_connection();
 

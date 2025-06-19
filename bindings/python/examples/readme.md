@@ -9,6 +9,4 @@ The examples in this directory provide sample Python applications to demonstrate
 | Directory/File | Description |
 | --------- | ----------- |
 | first_frame | Python example to capture a frame |
-| dnn | Simple object detection example in Python |
-| showPointCloud | Simple Python example of using Open3D to create and show a pointcloud from aditof frames  |
 | streaming | Use PyGame to show depth frames in real-time |
