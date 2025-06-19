@@ -283,6 +283,12 @@ case "$1" in
 			create_msd configs/c.1 mass_storage.0 /dev/mmcblk1p1
 			;;
 
+		"NXP i.MX8MPlus ADI TOF carrier ADSD3500-DUAL + ADSD3100")
+                        #create_uvc configs/c.1 uvc.0
+                        create_rndis configs/c.1 rndis.0
+                        create_msd configs/c.1 mass_storage.0 /dev/mmcblk1p1
+                        ;;
+
 		*)
 			echo "Board model not valid"
 			exit 1

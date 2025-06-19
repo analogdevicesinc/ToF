@@ -1,0 +1,125 @@
+From 8923b171827aceabc03decbe579f9e6395f65185 Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Thu, 12 Jun 2025 11:41:03 +0530
+Subject: [PATCH] arch: arm64: boot: dts: freescale: add pwm-gpio  device tree
+ node
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ .../boot/dts/freescale/imx8mp-adi-tof-adsd3030-spi.dts | 10 ++++++++++
+ .../boot/dts/freescale/imx8mp-adi-tof-adsd3030.dts     | 10 ++++++++++
+ .../boot/dts/freescale/imx8mp-adi-tof-adsd3500-spi.dts |  8 ++++++++
+ .../boot/dts/freescale/imx8mp-adi-tof-adsd3500.dts     |  8 ++++++++
+ 4 files changed, 36 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030-spi.dts b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030-spi.dts
+index 8ee83338df0d..7205ecc77465 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030-spi.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030-spi.dts
+@@ -224,6 +224,14 @@ mpcie {
+ 		status = "okay";
+ 		enable-active-high;
+ 	};
++
++	pwm: pwm-gpio {
++		status = "okay";
++		compatible = "pwm-gpio";
++		#pwm-cells = <2>;
++		pwm-gpios = <&gpio5 28 GPIO_ACTIVE_HIGH>;
++	};
++
+ };
+ 
+ &resmem {
+@@ -459,6 +467,8 @@ adsd3500@0 {
+                 spi-max-frequency = <1000000>;
+                 reset-gpios = <&gpio3 0 GPIO_ACTIVE_LOW>;
+                 interrupt-gpios = <&gpio1 9 GPIO_ACTIVE_LOW>;
++		pwms = <&pwm 0 50000000>;
++		pwm-names = "fsync";
+                 pinctrl-names = "spi", "gpio";
+                 pinctrl-0 = <&pinctrl_adsd3500_spi>;
+                 pinctrl-1 = <&pinctrl_adsd3500_gpio>;
+diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030.dts b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030.dts
+index d48e8181f47d..b8f530997cfc 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3030.dts
+@@ -224,6 +224,14 @@ mpcie {
+ 		status = "okay";
+ 		enable-active-high;
+ 	};
++
++	pwm: pwm-gpio {
++		status = "okay";
++		compatible = "pwm-gpio";
++		#pwm-cells = <2>;
++		pwm-gpios = <&gpio5 28 GPIO_ACTIVE_HIGH>;
++	};
++
+ };
+ 
+ &resmem {
+@@ -404,6 +412,8 @@ adsd3500@38 {
+ 		reg = <0x38>;
+ 		reset-gpios = <&gpio3 0 GPIO_ACTIVE_LOW>;
+ 		interrupt-gpios = <&gpio1 9 GPIO_ACTIVE_LOW>;
++		pwms = <&pwm 0 50000000>;
++		pwm-names = "fsync";
+ 		port {
+ 			adsd3500_ep: endpoint {
+ 				remote-endpoint = <&mipi_csi0_ep>;
+diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500-spi.dts b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500-spi.dts
+index ef5b57918801..902db8065ff0 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500-spi.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500-spi.dts
+@@ -443,6 +443,8 @@ adsd3500@0 {
+                 spi-max-frequency = <1000000>;
+                 reset-gpios = <&gpio3 0 GPIO_ACTIVE_LOW>;
+ 		interrupt-gpios = <&gpio1 9 GPIO_ACTIVE_LOW>;
++		pwms = <&pwm 0 50000000>;
++		pwm-names = "fsync";
+                 pinctrl-names = "spi", "gpio";
+                 pinctrl-0 = <&pinctrl_adsd3500_spi>;
+                 pinctrl-1 = <&pinctrl_adsd3500_gpio>;
+@@ -1180,6 +1182,12 @@ MX8MP_IOMUXC_ECSPI2_MOSI__GPIO5_IO11            0x100 /* MOSI pin as GPIO with p
+ 		>;
+ 	};
+ 
++	pinctrl_fsync: fsync-grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_UART4_RXD__GPIO5_IO28              0x100
++		>;
++	};
++
+ 	pinctrl_ad5593r_rst: ad5593r-rst-grp {
+ 		fsl,pins = <
+ 			MX8MP_IOMUXC_SPDIF_RX__GPIO5_IO04		0x140
+diff --git a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500.dts b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500.dts
+index c69bdceb1974..d13028304445 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mp-adi-tof-adsd3500.dts
+@@ -398,6 +398,8 @@ adsd3500@38 {
+ 		reg = <0x38>;
+ 		reset-gpios = <&gpio3 0 GPIO_ACTIVE_LOW>;
+ 		interrupt-gpios = <&gpio1 9 GPIO_ACTIVE_LOW>;
++		pwms = <&pwm 0 50000000>;
++		pwm-names = "fsync";
+ 		port {
+ 			adsd3500_ep: endpoint {
+ 				remote-endpoint = <&mipi_csi0_ep>;
+@@ -1149,6 +1151,12 @@ MX8MP_IOMUXC_SAI2_TXD0__GPIO4_IO26		0x140
+ 		>;
+ 	};
+ 
++	pinctrl_fsync: fsync-grp {
++		fsl,pins = <
++			MX8MP_IOMUXC_UART4_RXD__GPIO5_IO28              0x100
++		>;
++	};
++
+ 	pinctrl_ad5593r_rst: ad5593r-rst-grp {
+ 		fsl,pins = <
+ 			MX8MP_IOMUXC_SPDIF_RX__GPIO5_IO04		0x140
+-- 
+2.28.0
+
