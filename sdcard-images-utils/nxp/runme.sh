@@ -156,7 +156,7 @@ echo "u-boot		$UBOOT_NXP_REL" >> $ROOTDIR/images/sw-versions
 
 echo "MENU TITLE ADITOF boot options" > $ROOTDIR/images/extlinux.conf
 echo "TIMEOUT 10" >> $ROOTDIR/images/extlinux.conf
-echo "DEFAULT ADSD3500-DUAL+ADSD3100" >> $ROOTDIR/images/extlinux.conf
+echo "DEFAULT ADSD3500+ADSD3100" >> $ROOTDIR/images/extlinux.conf
 echo "label ADSD3100" >> $ROOTDIR/images/extlinux.conf
 echo "        linux ../Image" >> $ROOTDIR/images/extlinux.conf
 echo "        fdt ../imx8mp-adi-tof-noreg.dtb" >> $ROOTDIR/images/extlinux.conf
