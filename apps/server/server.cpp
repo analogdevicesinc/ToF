@@ -417,15 +417,12 @@ void data_transaction() {
 void sigint_handler(int) {
     interrupted = 1;
 
-    LOG(INFO) << __func__ << " in siginit handler";
-
     if (sensors_are_created) {
         cleanup_sensors();
     }
     clientEngagedWithSensors = false;
 
     stop_stream_thread();
-    LOG(INFO) << "stop streaming thread is been done";
     close_zmq_connection();
 
     if (server_cmd) {
