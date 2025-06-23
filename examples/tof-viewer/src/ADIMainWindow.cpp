@@ -177,15 +177,18 @@ ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
                 m_cameraIp = "ip:" + m_cameraIp;
             }
         }
-        
-        const cJSON* json_camera_max_frame_rate =
+
+        const cJSON *json_camera_max_frame_rate =
             cJSON_GetObjectItemCaseSensitive(config_json, "max_frame_rate");
 
         m_max_frame_rate = 0;
         if (cJSON_IsNumber(json_camera_max_frame_rate)) {
-            m_max_frame_rate = static_cast<uint32_t>(json_camera_max_frame_rate->valueint);
+            m_max_frame_rate =
+                static_cast<uint32_t>(json_camera_max_frame_rate->valueint);
             if (m_max_frame_rate == 0 || m_max_frame_rate > MAX_FRAME_RATE) {
-                LOG(WARNING) << "Frame Rate, " << m_max_frame_rate << " too high for Viewer, dropping to " << MAX_FRAME_RATE;
+                LOG(WARNING)
+                    << "Frame Rate, " << m_max_frame_rate
+                    << " too high for Viewer, dropping to " << MAX_FRAME_RATE;
                 m_max_frame_rate = MAX_FRAME_RATE;
             }
         }
@@ -1473,8 +1476,7 @@ void ADIMainWindow::prepareCamera(uint8_t mode) {
         auto status = getActiveCamera()->adsd3500SetFrameRate(m_max_frame_rate);
         if (status != aditof::Status::OK) {
             LOG(ERROR) << "Could not set frame rate!";
-        }
-        else {
+        } else {
             LOG(INFO) << "Frame rate set to: " << m_max_frame_rate;
         }
     }
