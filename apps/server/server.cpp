@@ -149,13 +149,15 @@ void stream_zmq_frame() {
 
         zmq::poll(items, 1, FRAME_TIMEOUT); // Poll with a timeout of 200 ms
 
+        // 1. Wait for frame to be captured on the other thread
+        std::unique_lock<std::mutex> lock(frameMutex);
+        cvGetFrame.wait(
+            lock, []() { return frameCaptured || stop_flag.load() == true; });
+
         if (stop_flag.load()) {
             LOG(INFO) << "stream_frame thread is exiting.";
             break;
         }
-        // 1. Wait for frame to be captured on the other thread
-        std::unique_lock<std::mutex> lock(frameMutex);
-        cvGetFrame.wait(lock, []() { return frameCaptured; });
 
         // 2. Get your hands on the captured frame
         std::swap(buff_frame_to_send, buff_frame_to_be_captured);
@@ -208,14 +210,14 @@ void start_stream_thread() {
 }
 
 void stop_stream_thread() {
-
     if (!running) {
-        return; // If the thread is already stopped, exit the function.
+        return; // If thread is already stopped exit the function.
     }
 
     {
         std::lock_guard<std::mutex> lock(mtx);
         stop_flag.store(true);
+        cvGetFrame.notify_one();
     }
 
     {
@@ -229,8 +231,10 @@ void stop_stream_thread() {
     }
 
     if (stream_thread.joinable()) {
-        stream_thread.join(); // Ensure the thread exits cleanly
+        stream_thread.join(); // Ensure the thread exits cleanly.
     }
+
+    LOG(INFO) << "stream thread stopped.";
 }
 
 aditof::SensorInterruptCallback callback = [](aditof::Adsd3500Status status) {
@@ -257,7 +261,7 @@ static void captureFrameFromHardware() {
         // Send frames to PC via ZMQ socket.
         aditof::Status status =
             camDepthSensor->getFrame((uint16_t *)buff_frame_to_be_captured);
-        if (status == aditof::Status::UNREACHABLE) {
+        if (status != aditof::Status::OK) {
             LOG(INFO) << "The capture_frame thread is stopped. Stopping the "
                          "stream_frame thread";
             break;
@@ -413,12 +417,15 @@ void data_transaction() {
 void sigint_handler(int) {
     interrupted = 1;
 
+    LOG(INFO) << __func__ << " in siginit handler";
+
     if (sensors_are_created) {
         cleanup_sensors();
     }
     clientEngagedWithSensors = false;
 
     stop_stream_thread();
+    LOG(INFO) << "stop streaming thread is been done";
     close_zmq_connection();
 
     if (server_cmd) {
