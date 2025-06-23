@@ -1472,7 +1472,9 @@ void ADIMainWindow::prepareCamera(uint8_t mode) {
     status = getActiveCamera()->getDetails(camDetails);
     int totalCaptures = camDetails.frameType.totalCaptures;
 
-    if (m_max_frame_rate != 0) {
+    status = getActiveCamera()->adsd3500GetFrameRate(expectedFPS);
+
+    if (m_max_frame_rate != 0 && expectedFPS > m_max_frame_rate) {
         auto status = getActiveCamera()->adsd3500SetFrameRate(m_max_frame_rate);
         if (status != aditof::Status::OK) {
             LOG(ERROR) << "Could not set frame rate!";
