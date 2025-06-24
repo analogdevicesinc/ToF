@@ -414,30 +414,7 @@ void data_transaction() {
     }
 }
 
-void sigint_handler(int) {
-    interrupted = 1;
-
-    if (sensors_are_created) {
-        cleanup_sensors();
-    }
-    clientEngagedWithSensors = false;
-
-    stop_stream_thread();
-    close_zmq_connection();
-
-    if (server_cmd) {
-        server_cmd->close();
-        server_cmd.reset();
-    }
-    if (monitor_socket) {
-        monitor_socket->close();
-        monitor_socket.reset();
-    }
-    if (context) {
-        context->close();
-        context.reset();
-    }
-}
+void sigint_handler(int) { interrupted = 1; }
 
 int main(int argc, char *argv[]) {
     signal(SIGINT, sigint_handler);
@@ -469,7 +446,31 @@ int main(int argc, char *argv[]) {
         cleanup_sensors();
     }
 
-    server_event(monitor_socket);
+    while (!interrupted) {
+        server_event(monitor_socket);
+    }
+
+    // Cleanup
+    if (sensors_are_created) {
+        cleanup_sensors();
+    }
+    clientEngagedWithSensors = false;
+
+    stop_stream_thread();
+    close_zmq_connection();
+
+    if (server_cmd) {
+        server_cmd->close();
+        server_cmd.reset();
+    }
+    if (monitor_socket) {
+        monitor_socket->close();
+        monitor_socket.reset();
+    }
+    if (context) {
+        context->close();
+        context.reset();
+    }
 
     return 0;
 }
