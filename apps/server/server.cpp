@@ -88,6 +88,7 @@ static bool Client_Connected = false;
 static bool no_of_client_connected = false;
 bool latest_sent_msg_is_was_buffered = false;
 static std::queue<aditof::Adsd3500Status> adsd3500InterruptsQueue;
+static std::mutex adsd3500InterruptsQueueMutex;
 
 // A test mode that server can be set to. After sending one frame from sensor to host, it will repeat
 // sending the same frame over and over without acquiring any other frame from sensor. This allows
@@ -122,6 +123,7 @@ static std::unique_ptr<zmq::context_t> context;
 static std::unique_ptr<zmq::socket_t> server_cmd;
 static std::unique_ptr<zmq::socket_t> monitor_socket;
 bool send_async = false;
+const auto get_frame_timeout = std::chrono::milliseconds(500);
 
 struct clientData {
     bool hasFragments;
@@ -222,7 +224,12 @@ void stop_stream_thread() {
 
     {
         std::unique_lock<std::mutex> lock(mtx);
-        cv.wait(lock, [] { return running.load() == false; });
+        while (!cv.wait_for(lock, std::chrono::milliseconds(500),
+                            [] { return running.load() == false; })) {
+            // Wait until the thread has stopped
+            LOG(INFO) << "Waiting for stream thread to stop...";
+            continue;
+        }
     }
 
     // Flush the messages
@@ -238,7 +245,10 @@ void stop_stream_thread() {
 }
 
 aditof::SensorInterruptCallback callback = [](aditof::Adsd3500Status status) {
-    adsd3500InterruptsQueue.push(status);
+    {
+        std::lock_guard<std::mutex> lock(adsd3500InterruptsQueueMutex);
+        adsd3500InterruptsQueue.push(status);
+    }
     DLOG(INFO) << "ADSD3500 interrupt occured: status = " << status;
 };
 
@@ -248,8 +258,12 @@ static void captureFrameFromHardware() {
 
         // 1. Wait for the signal to start capturing a new frame
         std::unique_lock<std::mutex> lock(frameMutex);
-        cvGetFrame.wait(
-            lock, [] { return goCaptureFrame || !keepCaptureThreadAlive; });
+        if (!cvGetFrame.wait_for(lock, std::chrono::milliseconds(500), [] {
+                return goCaptureFrame || !keepCaptureThreadAlive;
+            })) {
+            // If the wait times out, check if we should keep the thread alive
+            continue;
+        }
 
         if (!keepCaptureThreadAlive) {
             break;
@@ -259,12 +273,22 @@ static void captureFrameFromHardware() {
         goCaptureFrame = false;
 
         // Send frames to PC via ZMQ socket.
-        aditof::Status status =
-            camDepthSensor->getFrame((uint16_t *)buff_frame_to_be_captured);
-        if (status != aditof::Status::OK) {
-            LOG(INFO) << "The capture_frame thread is stopped. Stopping the "
-                         "stream_frame thread";
-            break;
+        auto getFramefuture = std::async(std::launch::async, [&]() {
+            // Get a new frame from the sensor
+            return camDepthSensor->getFrame(
+                (uint16_t *)buff_frame_to_be_captured);
+        });
+
+        if (getFramefuture.wait_for(get_frame_timeout) ==
+            std::future_status::timeout) {
+            LOG(ERROR) << "Timeout while waiting for frame from sensor.";
+            continue;
+        } else {
+            aditof::Status status = getFramefuture.get();
+            if (status != aditof::Status::OK) {
+                LOG(ERROR) << "Failed to get frame from sensor: " << status;
+                continue;
+            }
         }
 
         // 3. Notify others that there is a new frame available
@@ -289,9 +313,13 @@ static void cleanup_sensors() {
     sensorV4lBufAccess.reset();
     camDepthSensor.reset();
 
-    while (!adsd3500InterruptsQueue.empty()) {
-        adsd3500InterruptsQueue.pop();
+    {
+        std::lock_guard<std::mutex> lock(adsd3500InterruptsQueueMutex);
+        while (!adsd3500InterruptsQueue.empty()) {
+            adsd3500InterruptsQueue.pop();
+        }
     }
+
     sensors_are_created = false;
     clientEngagedWithSensors = false;
 }
@@ -953,9 +981,14 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
 
     case GET_INTERRUPTS: {
-        while (!adsd3500InterruptsQueue.empty()) {
-            buff_send.add_int32_payload((int)adsd3500InterruptsQueue.front());
-            adsd3500InterruptsQueue.pop();
+
+        {
+            std::lock_guard<std::mutex> lock(adsd3500InterruptsQueueMutex);
+            while (!adsd3500InterruptsQueue.empty()) {
+                buff_send.add_int32_payload(
+                    (int)adsd3500InterruptsQueue.front());
+                adsd3500InterruptsQueue.pop();
+            }
         }
 
         buff_send.set_status(
@@ -1053,7 +1086,10 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     }
     } // switch
 
-    buff_send.set_interrupt_occured(!adsd3500InterruptsQueue.empty());
+    {
+        std::lock_guard<std::mutex> lock(adsd3500InterruptsQueueMutex);
+        buff_send.set_interrupt_occured(!adsd3500InterruptsQueue.empty());
+    }
 
     buff_recv.Clear();
 }
