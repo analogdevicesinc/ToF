@@ -269,6 +269,88 @@ void ADIView::setABMaxRange(std::string value) {
     m_maxABPixelValue = (1 << base) - 1;
 }
 
+static void normalizeABBuffer(uint16_t *abBuffer, uint16_t abWidth,
+                              uint16_t abHeight, bool advanceScaling,
+                              bool useLogScaling) {
+
+    size_t imageSize = abHeight * abWidth;
+
+    uint32_t min_value_of_AB_pixel = 0xFFFF;
+    uint32_t max_value_of_AB_pixel = 1;
+
+    if (advanceScaling) {
+
+        for (size_t dummyCtr = 0; dummyCtr < imageSize; ++dummyCtr) {
+            if (abBuffer[dummyCtr] > max_value_of_AB_pixel) {
+                max_value_of_AB_pixel = abBuffer[dummyCtr];
+            }
+            if (abBuffer[dummyCtr] < min_value_of_AB_pixel) {
+                min_value_of_AB_pixel = abBuffer[dummyCtr];
+            }
+        }
+        max_value_of_AB_pixel -= min_value_of_AB_pixel;
+    } else {
+
+        //TODO: This is hard code, but should reflect the number of AB bits
+        //      See https://github.com/analogdevicesinc/ToF/blob/7d63e2d7e0e2bb795f5a55139740b4d5870ad3d6/examples/tof-viewer/src/ADIView.cpp#L254
+        uint32_t m_maxABPixelValue = (1 << 13) - 1;
+        max_value_of_AB_pixel = m_maxABPixelValue;
+        min_value_of_AB_pixel = 0;
+    }
+
+    uint32_t new_max_value_of_AB_pixel = 1;
+    uint32_t new_min_value_of_AB_pixel = 0xFFFF;
+
+#pragma omp parallel for
+    for (size_t dummyCtr = 0; dummyCtr < imageSize; ++dummyCtr) {
+
+        abBuffer[dummyCtr] -= min_value_of_AB_pixel;
+        double pix = abBuffer[dummyCtr] * (255.0 / max_value_of_AB_pixel);
+
+        if (pix < 0.0) {
+            pix = 0.0;
+        }
+        if (pix > 255.0) {
+            pix = 255.0;
+        }
+        abBuffer[dummyCtr] = static_cast<uint8_t>(pix);
+
+        if (abBuffer[dummyCtr] > new_max_value_of_AB_pixel) {
+            new_max_value_of_AB_pixel = abBuffer[dummyCtr];
+        }
+        if (abBuffer[dummyCtr] < new_min_value_of_AB_pixel) {
+            new_min_value_of_AB_pixel = abBuffer[dummyCtr];
+        }
+    }
+
+    if (useLogScaling) {
+
+        max_value_of_AB_pixel = new_max_value_of_AB_pixel;
+        min_value_of_AB_pixel = new_min_value_of_AB_pixel;
+
+        double maxLogVal =
+            log10(1.0 + static_cast<double>(max_value_of_AB_pixel -
+                                            min_value_of_AB_pixel));
+
+#pragma omp parallel for
+        for (size_t dummyCtr = 0; dummyCtr < imageSize; ++dummyCtr) {
+
+            double pix =
+                static_cast<double>(abBuffer[dummyCtr] - min_value_of_AB_pixel);
+            double logPix = log10(1.0 + pix);
+            pix = (logPix / maxLogVal) * 255.0;
+            if (pix < 0.0) {
+                pix = 0.0;
+            }
+            if (pix > 255.0) {
+                pix = 255.0;
+            }
+
+            abBuffer[dummyCtr] = (uint8_t)(pix);
+        }
+    }
+}
+
 void ADIView::_displayAbImage() {
     while (!m_stopWorkersFlag) {
         std::unique_lock<std::mutex> lock(m_frameCapturedMutex);
@@ -285,9 +367,6 @@ void ADIView::_displayAbImage() {
         }
 
         lock.unlock(); // Lock is no longer needed
-
-        auto camera = m_ctrl->m_cameras[static_cast<unsigned int>(
-            m_ctrl->getCameraInUse())];
 
         m_capturedFrame->getData("ab", &ab_video_data);
 
@@ -309,8 +388,8 @@ void ADIView::_displayAbImage() {
         memcpy(_ab_video_data, ab_video_data,
                frameHeight * frameWidth * sizeof(uint16_t));
 
-        camera->normalizeABBuffer(_ab_video_data, frameWidth, frameHeight,
-                                  getAutoScale(), getLogImage());
+        normalizeABBuffer(_ab_video_data, frameWidth, frameHeight,
+                          getAutoScale(), getLogImage());
 
         size_t imageSize = frameHeight * frameWidth;
         size_t bgrSize = 0;
