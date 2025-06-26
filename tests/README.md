@@ -31,8 +31,8 @@ I20250626 14:02:41.432104 49612 main.cpp:399] @@,sdk_stream_test.exe,PASS,LN399,
 The PowerShell script **extract_results.ps1** can be used to extract the results. For example:
 
 ```
-PS $> \extract_results.ps1 -infile .\output.txt -outfile result.csv
-PS $> > more .\result.csv
+PS $> extract_results.ps1 -infile output.txt -outfile result.csv
+PS $> more result.csv
 sdk_stream_test.exe,PASS,LN399,DN:FPS:5.01981:FC:26:TST:1:5000:5:
 sdk_stream_test.exe,PASS,LN399,DN:FPS:31.2389:FC:7:TST:2:200:30:
 ```
