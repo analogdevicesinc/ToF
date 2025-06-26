@@ -88,7 +88,7 @@ static bool Client_Connected = false;
 static bool no_of_client_connected = false;
 bool latest_sent_msg_is_was_buffered = false;
 static std::queue<aditof::Adsd3500Status> adsd3500InterruptsQueue;
-static std::mutex adsd3500InterruptsQueueMutex;
+static std::timed_mutex adsd3500InterruptsQueueMutex;
 
 // A test mode that server can be set to. After sending one frame from sensor to host, it will repeat
 // sending the same frame over and over without acquiring any other frame from sensor. This allows
@@ -115,7 +115,7 @@ uint32_t max_send_frames = 10;
 std::atomic<bool> running(false);
 std::atomic<bool> stop_flag(false);
 std::thread data_transaction_thread;
-std::mutex connection_mtx;
+std::timed_mutex connection_mtx;
 std::mutex mtx;
 std::condition_variable cv;
 std::thread stream_thread;
@@ -123,7 +123,8 @@ static std::unique_ptr<zmq::context_t> context;
 static std::unique_ptr<zmq::socket_t> server_cmd;
 static std::unique_ptr<zmq::socket_t> monitor_socket;
 bool send_async = false;
-const auto get_frame_timeout = std::chrono::milliseconds(500);
+const auto get_frame_timeout =
+    std::chrono::milliseconds(1000); // time to wait for a frame to be captured
 
 struct clientData {
     bool hasFragments;
@@ -153,8 +154,13 @@ void stream_zmq_frame() {
 
         // 1. Wait for frame to be captured on the other thread
         std::unique_lock<std::mutex> lock(frameMutex);
-        cvGetFrame.wait(
-            lock, []() { return frameCaptured || stop_flag.load() == true; });
+        if (!cvGetFrame.wait_for(lock, std::chrono::milliseconds(500), []() {
+                return frameCaptured || stop_flag.load() == true;
+            })) {
+            LOG(WARNING) << "stream_zmq_frame: Timeout waiting for "
+                            "frameCaptured or stop_flag";
+            continue;
+        }
 
         if (stop_flag.load()) {
             LOG(INFO) << "stream_frame thread is exiting.";
@@ -246,8 +252,14 @@ void stop_stream_thread() {
 
 aditof::SensorInterruptCallback callback = [](aditof::Adsd3500Status status) {
     {
-        std::lock_guard<std::mutex> lock(adsd3500InterruptsQueueMutex);
-        adsd3500InterruptsQueue.push(status);
+        if (adsd3500InterruptsQueueMutex.try_lock_for(
+                std::chrono::milliseconds(500))) {
+            adsd3500InterruptsQueue.push(status);
+            adsd3500InterruptsQueueMutex.unlock();
+        } else {
+            LOG(ERROR)
+                << "Unable to lock adsd3500InterruptsQueueMutex for 500 ms";
+        }
     }
     DLOG(INFO) << "ADSD3500 interrupt occured: status = " << status;
 };
@@ -304,7 +316,9 @@ static void cleanup_sensors() {
     // Stop the frame capturing thread
     if (frameCaptureThread.joinable()) {
         keepCaptureThreadAlive = false;
-        { std::lock_guard<std::mutex> lock(frameMutex); }
+        {
+            std::lock_guard<std::mutex> lock(frameMutex);
+        }
         cvGetFrame.notify_one();
         frameCaptureThread.join();
     }
@@ -314,9 +328,15 @@ static void cleanup_sensors() {
     camDepthSensor.reset();
 
     {
-        std::lock_guard<std::mutex> lock(adsd3500InterruptsQueueMutex);
-        while (!adsd3500InterruptsQueue.empty()) {
-            adsd3500InterruptsQueue.pop();
+        if (adsd3500InterruptsQueueMutex.try_lock_for(
+                std::chrono::milliseconds(500))) {
+            while (!adsd3500InterruptsQueue.empty()) {
+                adsd3500InterruptsQueue.pop();
+            }
+            adsd3500InterruptsQueueMutex.unlock();
+        } else {
+            LOG(ERROR)
+                << "Unable to lock adsd3500InterruptsQueueMutex in 500 ms";
         }
     }
 
@@ -373,8 +393,14 @@ int Network::callback_function(const zmq_event_t &event) {
         if (!Client_Connected) {
             std::cout << "Conn Established" << std::endl;
             {
-                std::unique_lock<std::mutex> lock(connection_mtx);
-                Client_Connected = true;
+                if (connection_mtx.try_lock_for(
+                        std::chrono::milliseconds(200))) {
+                    Client_Connected = true;
+                    connection_mtx.unlock();
+                } else {
+                    LOG(ERROR) << "Unable to lock the connection_mtx";
+                    break; // Not able to lock the mutex in 100 ms
+                }
             }
             buff_send.set_message("Connection Allowed");
         } else {
@@ -412,32 +438,37 @@ void data_transaction() {
 
         zmq::message_t request;
 
-        std::unique_lock<std::mutex> lock(connection_mtx);
-        if (Client_Connected) {
-            if (server_cmd->recv(request, zmq::recv_flags::dontwait)) {
-                google::protobuf::io::ArrayInputStream ais(request.data(),
-                                                           request.size());
-                google::protobuf::io::CodedInputStream coded_input(&ais);
-                buff_recv.ParseFromCodedStream(&coded_input);
-                invoke_sdk_api(buff_recv);
+        if (connection_mtx.try_lock_for(std::chrono::milliseconds(200))) {
 
-                // Preparing to send the data
-                unsigned int siz = buff_send.ByteSize();
-                unsigned char *pkt = new unsigned char[siz];
+            if (Client_Connected) {
+                if (server_cmd->recv(request, zmq::recv_flags::dontwait)) {
+                    google::protobuf::io::ArrayInputStream ais(request.data(),
+                                                               request.size());
+                    google::protobuf::io::CodedInputStream coded_input(&ais);
+                    buff_recv.ParseFromCodedStream(&coded_input);
+                    invoke_sdk_api(buff_recv);
 
-                google::protobuf::io::ArrayOutputStream aos(pkt, siz);
-                google::protobuf::io::CodedOutputStream coded_output(&aos);
-                buff_send.SerializeToCodedStream(&coded_output);
+                    // Preparing to send the data
+                    unsigned int siz = buff_send.ByteSize();
+                    unsigned char *pkt = new unsigned char[siz];
 
-                // Create a zmq message
-                zmq::message_t reply(pkt, siz);
-                if (server_cmd->send(reply, zmq::send_flags::none)) {
+                    google::protobuf::io::ArrayOutputStream aos(pkt, siz);
+                    google::protobuf::io::CodedOutputStream coded_output(&aos);
+                    buff_send.SerializeToCodedStream(&coded_output);
+
+                    // Create a zmq message
+                    zmq::message_t reply(pkt, siz);
+                    if (server_cmd->send(reply, zmq::send_flags::none)) {
 #ifdef NW_DEBUG
-                    LOG(INFO) << "Data is sent ";
+                        LOG(INFO) << "Data is sent ";
 #endif
+                    }
+                    delete[] pkt;
                 }
-                delete[] pkt;
             }
+            connection_mtx.unlock();
+        } else {
+            continue; // not able to lock connection mutex in 100 ms try again
         }
     }
 }
@@ -983,11 +1014,17 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     case GET_INTERRUPTS: {
 
         {
-            std::lock_guard<std::mutex> lock(adsd3500InterruptsQueueMutex);
-            while (!adsd3500InterruptsQueue.empty()) {
-                buff_send.add_int32_payload(
-                    (int)adsd3500InterruptsQueue.front());
-                adsd3500InterruptsQueue.pop();
+            if (adsd3500InterruptsQueueMutex.try_lock_for(
+                    std::chrono::milliseconds(500))) {
+                while (!adsd3500InterruptsQueue.empty()) {
+                    buff_send.add_int32_payload(
+                        (int)adsd3500InterruptsQueue.front());
+                    adsd3500InterruptsQueue.pop();
+                }
+                adsd3500InterruptsQueueMutex.unlock();
+            } else {
+                LOG(ERROR)
+                    << "Unable to lock adsd3500InterruptsQueueMutex in 500 ms";
             }
         }
 
@@ -1087,8 +1124,14 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
     } // switch
 
     {
-        std::lock_guard<std::mutex> lock(adsd3500InterruptsQueueMutex);
-        buff_send.set_interrupt_occured(!adsd3500InterruptsQueue.empty());
+        if (adsd3500InterruptsQueueMutex.try_lock_for(
+                std::chrono::milliseconds(500))) {
+            buff_send.set_interrupt_occured(!adsd3500InterruptsQueue.empty());
+            adsd3500InterruptsQueueMutex.unlock();
+        } else {
+            LOG(ERROR)
+                << "Unable to lock adsd3500InterruptsQueueMutex in 500 ms";
+        }
     }
 
     buff_recv.Clear();
