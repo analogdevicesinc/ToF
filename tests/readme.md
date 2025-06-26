@@ -1,7 +1,7 @@
 example log output format:
 @@,sdk_stream_test.exe,PASS,LN399,DN:FPS:31.2389:FC:7:TST:2:200:30:
 
-@@,<executable>,<PASS/FAIL>,LN<Line Number>,<Optional>
+@@,[executable],[PASS/FAIL],LN[Line Number],[Optional]
 
 DN - Description Note
 
