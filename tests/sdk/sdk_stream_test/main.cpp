@@ -57,7 +57,7 @@ static const char kUsagePublic[] =
 
     Options:
       -h --help          Show this screen.
-      --f <ip>           Output folder path
+      --f <folder path>  Output folder path
       --ip <ip>          Camera IP
       --i <test file>    Test definition file
 
@@ -98,6 +98,11 @@ std::vector<std::map<std::string, std::string>> parseCSV(const std::string& file
             }
             ++i;
         }
+        for (uint32_t idx = i; idx < headers.size(); ++idx) {
+            if (row.find(headers[idx]) == row.end()) {
+                row[headers[idx]] = ""; // Fill missing columns with empty string
+            }
+		}
 
         data.push_back(row);
     }
@@ -223,14 +228,14 @@ int main(int argc, char *argv[]) {
     }
 
     if (cameras.empty()) {
-        LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DNCamera not found";
+        LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Camera not found";
         return 0;
     }
 
     auto getField = [](const char *testname, const uint32_t lineNumber, const std::map<std::string, std::string>& row, const std::string& fieldName) -> std::string {
         auto it = row.find(fieldName);
         if (it == row.end()) {
-            LOG(ERROR) << "@@," << testname << ",FAIL" << ",LN" << lineNumber << ",DNError with " << fieldName;
+            LOG(ERROR) << "@@," << testname << ",FAIL" << ",LN" << lineNumber << ",DN:Error with " << fieldName;
             return "";
         }
         return it->second;
@@ -245,14 +250,13 @@ int main(int argc, char *argv[]) {
 
         std::string rtmsStr = getField(argv[0], __LINE__, row, "rtms");
         if (rtmsStr.empty()) { continue; }
-        uint32_t capture_time_milliseconds = std::stoi(rtmsStr);
+        std::chrono::milliseconds capture_time_milliseconds(std::stoi(rtmsStr));
 
         std::string fpsStr = getField(argv[0], __LINE__, row, "fps");
         if (fpsStr.empty()) { continue; }
         uint16_t fps = std::stoi(fpsStr);
 
         std::string cfgStr = getField(argv[0], __LINE__, row, "cfg");
-        if (cfgStr.empty()) { continue; }
 
 		const std::string summary = modeStr + ":" + rtmsStr + ":" + fpsStr + ":" + cfgStr;
 
@@ -260,13 +264,13 @@ int main(int argc, char *argv[]) {
 
         status = camera->initialize(cfgStr);
         if (status != Status::OK) {
-            LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DNCould not initialize camera:" << summary;
+            LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Could not initialize camera:TST:" << summary;
             return 0;
         }
 
         status = camera->setSensorConfiguration(configuration);
         if (status != Status::OK) {
-            LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DNCould not configure camera with " << configuration << ":" << summary;
+            LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Could not configure camera with " << configuration << ":TST:" << summary;
         }
 
         aditof::CameraDetails cameraDetails;
@@ -284,118 +288,127 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
-        // print available modes
-        std::ostringstream modes_ss;
-        modes_ss << "Available Modes: [";
-        for (size_t i = 0; i < availableModes.size(); ++i) {
-            modes_ss << static_cast<unsigned int>(availableModes[i]);
-            if (i < availableModes.size() - 1) {
-                modes_ss << ", ";
-            }
+
+        status = camera->setMode(static_cast<uint8_t>(mode));
+        if (status != Status::OK) {
+            LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Could not set camera mode:TST:" << summary;
+            return 0;
         }
-        modes_ss << "]";
-        LOG(INFO) << modes_ss.str(); // Log the entire constructed string once
 
-        for (int current_mode : availableModes)
-        {
-            mode = current_mode;
-
-            std::shared_ptr<DepthSensorInterface> depthSensor = camera->getSensor();
-
-            depthSensor->adsd3500_reset();
-            std::string sensorName;
-            status = depthSensor->getName(sensorName);
-
-            status = camera->setMode(mode);
-            if (status != Status::OK) {
-                LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DNCould not set camera mode:" << summary;
-                return 0;
-            }
-
-            char time_buffer[128];
-            time_t rawtime;
-            time(&rawtime);
-            struct tm timeinfo;
+        char time_buffer[128];
+        time_t rawtime;
+        time(&rawtime);
+        struct tm timeinfo;
 #ifdef _WIN32
-            localtime_s(&timeinfo, &rawtime);
+        localtime_s(&timeinfo, &rawtime);
 #else
-            localtime_r(&rawtime, &timeinfo);
+        localtime_r(&rawtime, &timeinfo);
 #endif
-            strftime(time_buffer, sizeof(time_buffer), "%Y%m%d%H%M%S", &timeinfo);
+        strftime(time_buffer, sizeof(time_buffer), "%Y%m%d%H%M%S", &timeinfo);
 #if 0
-            camera->setControl("setFPS", std::to_string(setfps));
-            if (status != Status::OK) {
-                LOG(ERROR) << "Error setting camera FPS to " << setfps;
-                return 0;
-            }
+        camera->setControl("setFPS", std::to_string(setfps));
+        if (status != Status::OK) {
+            LOG(ERROR) << "Error setting camera FPS to " << setfps;
+            return 0;
+        }
 #endif
 
-            camera->adsd3500SetFrameRate(fps);
+        camera->adsd3500SetFrameRate(fps);
 
-            // Program the camera with cfg passed, set the mode by writing to 0x200 and start the camera
-            status = camera->start();
-            if (status != Status::OK) {
-                LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DNCould not start camera:" << summary;
-                return 0;
-            }
+        // Program the camera with cfg passed, set the mode by writing to 0x200 and start the camera
+        status = camera->start();
+        if (status != Status::OK) {
+            LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Could not start camera:TST:" << summary;
+            return 0;
+        }
 
-            aditof::Frame frame;
-            FrameDetails fDetails;
+        aditof::Frame frame;
+        FrameDetails fDetails;
 
-            auto warmup_start = std::chrono::steady_clock::now();
+        auto warmup_start = std::chrono::steady_clock::now();
 
-            FrameHandler frameSaver;
-            frameSaver.storeFramesToSingleFile(true);
-            frameSaver.setOutputFilePath(folder_path);
+        FrameHandler frameSaver;
+        frameSaver.storeFramesToSingleFile(true);
+        frameSaver.setOutputFilePath(folder_path);
 
-            //drop first frame
-            status = camera->requestFrame(&frame);
-            if (status != Status::OK) {
-                LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DNCould not request frame:" << summary;
-                return 0;
-            }
+        //drop first frame
+        status = camera->requestFrame(&frame);
+        if (status != Status::OK) {
+            LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Could not request frame:TST:" << summary;
+            return 0;
+        }
 
-            uint32_t frame_count = 0;
-            auto start_time = std::chrono::high_resolution_clock::now();
-            if (capture_time_milliseconds > 0) {
-                LOG(INFO) << "Capturing frames for " << capture_time_milliseconds << " milliseconds in mode " << current_mode << "!";
-                auto capture_duration = std::chrono::duration<double>(capture_time_milliseconds);
-                while (std::chrono::high_resolution_clock::now() - start_time < capture_duration) {
+		Metadata metadata;
 
-                    if ((frame_count % 100) == 0) {
-                        LOG(INFO) << __func__ << ": framecount: " << frame_count;
-                    }
+		status = frame.getMetadataStruct(metadata);
+        if (status != Status::OK) {
+            LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Could not get metadata:TST:" << summary;
+            return 0;
+        }
 
-                    status = camera->requestFrame(&frame);
-                    if (status != Status::OK) {
-                        LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DNCould not request frame:" << summary;
-                        return 0;
-                    }
+        uint32_t frameNumber = metadata.frameNumber;
 
-                    if ((frame_count % 100) == 0) {
-                        frameSaver.saveFrameToFile(frame);
-                    }
+		uint32_t expectNumberOfFrames = (capture_time_milliseconds.count() * fps) / 1000;
 
-                    frame_count++;
+        uint32_t divisor = (expectNumberOfFrames * 20) / 100;
+
+        uint32_t frame_count = 0;
+        auto start_time = std::chrono::high_resolution_clock::now();
+        if (capture_time_milliseconds.count() > 0) {
+            LOG(INFO) << "Capturing frames for " << capture_time_milliseconds.count() << " milliseconds in mode " << mode << "!";
+            auto capture_duration = std::chrono::duration_cast<std::chrono::milliseconds>(capture_time_milliseconds);
+            while (std::chrono::high_resolution_clock::now() - start_time < capture_duration) {
+
+                if ((frame_count % divisor) == 0) {
+                    LOG(INFO) << __func__ << ": framecount: " << frame_count;
                 }
-                n_frames = frame_count;
-            }
-            auto end_time = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double> total_time = end_time - start_time;
-            if (total_time.count() > 0.0) {
-                double measured_fps = (double)n_frames / total_time.count();
-                LOG(INFO) << "@@," << argv[0] << ",PASS" << ",LN" << __LINE__ << ",DNFPS:" << measured_fps << ":" << summary;
-            }
 
-            status = camera->stop();
-            if (status != Status::OK) {
-                LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DNError stopping camera:" << summary;
-            }
+                status = camera->requestFrame(&frame);
+                if (status != Status::OK) {
+                    LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Could not request frame:TST:" << summary;
+                    return 0;
+                }
 
-            for (int i = 5; i > 0; --i) {
-                LOG(INFO) << "\rSleeping for " << i << " seconds...   " << std::flush;
-                std::this_thread::sleep_for(std::chrono::seconds(1));
+                status = frame.getMetadataStruct(metadata);
+                if (status != Status::OK) {
+                    LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Could not get metadata:TST:" << summary;
+                    return 0;
+                }
+
+                if (metadata.frameNumber != frameNumber + 1) {
+                    LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Frame number mismatch expected " << (frameNumber + frame_count)
+                               << " but got " << metadata.frameNumber << ":" << summary;
+                    return 0;
+				}
+
+				frameNumber = metadata.frameNumber;
+
+                if ((frame_count % divisor) == 0) {
+                    frameSaver.saveFrameToFile(frame);
+                }
+
+                frame_count++;
             }
+            n_frames = frame_count;
+        }
+
+        auto end_time = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> total_time = end_time - start_time;
+        if (frame_count > 0) {
+            double measured_fps = (double)n_frames / total_time.count();
+            LOG(INFO) << "@@," << argv[0] << ",PASS" << ",LN" << __LINE__ << ",DN:FPS:" << measured_fps << ":FC:" << frame_count << ":TST:" << summary;
+        } else {
+            LOG(INFO) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:FC:" << frame_count << ":TST:" << summary;
+        }
+
+        status = camera->stop();
+        if (status != Status::OK) {
+            LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DNError stopping camera:TST:" << summary;
+        }
+
+        for (int i = 2; i > 0; --i) {
+            LOG(INFO) << "\rSleeping for " << i << " seconds...   " << std::flush;
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
     return 0;
