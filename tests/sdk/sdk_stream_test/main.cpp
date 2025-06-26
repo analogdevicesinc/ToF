@@ -49,7 +49,7 @@ int main(int argc, char *argv[]);
 #endif
 
 static const char kUsagePublic[] =
-    R"(Data Collect.
+    R"(SDK Stream Test
     Usage:
       data_collect 
       data_collect --i <test file> --f <output older path> [--ip <ip>]
