@@ -27,10 +27,10 @@
 #include <algorithm>
 #include <iostream>
 #include <map>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <vector>
-#include <sstream>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -64,7 +64,8 @@ static const char kUsagePublic[] =
     Note: --m argument supports index (0, 1, etc.) 
 )";
 
-std::vector<std::map<std::string, std::string>> parseCSV(const std::string& filename) {
+std::vector<std::map<std::string, std::string>>
+parseCSV(const std::string &filename) {
     std::ifstream file(filename);
     std::vector<std::map<std::string, std::string>> data;
     std::vector<std::string> headers;
@@ -98,11 +99,13 @@ std::vector<std::map<std::string, std::string>> parseCSV(const std::string& file
             }
             ++i;
         }
-        for (uint32_t idx = i; idx < headers.size(); ++idx) {
+        for (size_t idx = i; idx < static_cast<uint32_t>(headers.size());
+             ++idx) {
             if (row.find(headers[idx]) == row.end()) {
-                row[headers[idx]] = ""; // Fill missing columns with empty string
+                row[headers[idx]] =
+                    ""; // Fill missing columns with empty string
             }
-		}
+        }
 
         data.push_back(row);
     }
@@ -115,7 +118,7 @@ int main(int argc, char *argv[]) {
         {"-h", {"--help", false, "", "", false}},
         {"-f", {"--f", false, "", "", false}},
         {"-ip", {"--ip", false, "", "", true}},
-		{"-i", {"--i", false, "", "", true}}};
+        {"-i", {"--i", false, "", "", true}}};
 
     CommandParser command;
     std::string arg_error;
@@ -133,14 +136,14 @@ int main(int argc, char *argv[]) {
         return 0;
     } else if (result == -1) {
         std::cerr << "Usage of argument -h/--help"
-                   << " is incorrect! Help argument should be used alone!";
+                  << " is incorrect! Help argument should be used alone!";
         return -1;
     }
 
     result = command.checkValue(command_map, arg_error);
     if (result != 0) {
         std::cerr << "Argument: " << command_map[arg_error].long_option
-                   << " doesn't have assigned or default value!";
+                  << " doesn't have assigned or default value!";
         LOG(INFO) << kUsagePublic;
         return -1;
     }
@@ -154,8 +157,8 @@ int main(int argc, char *argv[]) {
     result = command.checkMandatoryPosition(command_map, arg_error);
     if (result != 0) {
         std::cerr << "Mandatory argument " << arg_error
-                   << " is not on its correct position ("
-                   << command_map[arg_error].position << ").";
+                  << " is not on its correct position ("
+                  << command_map[arg_error].position << ").";
         return -1;
     }
 
@@ -228,14 +231,18 @@ int main(int argc, char *argv[]) {
     }
 
     if (cameras.empty()) {
-        LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Camera not found";
+        LOG(ERROR) << "@@," << argv[0] << ",FAIL"
+                   << ",LN" << __LINE__ << ",DN:Camera not found";
         return 0;
     }
 
-    auto getField = [](const char *testname, const uint32_t lineNumber, const std::map<std::string, std::string>& row, const std::string& fieldName) -> std::string {
+    auto getField = [](const char *testname, const uint32_t lineNumber,
+                       const std::map<std::string, std::string> &row,
+                       const std::string &fieldName) -> std::string {
         auto it = row.find(fieldName);
         if (it == row.end()) {
-            LOG(ERROR) << "@@," << testname << ",FAIL" << ",LN" << lineNumber << ",DN:Error with " << fieldName;
+            LOG(ERROR) << "@@," << testname << ",FAIL"
+                       << ",LN" << lineNumber << ",DN:Error with " << fieldName;
             return "";
         }
         return it->second;
@@ -243,40 +250,53 @@ int main(int argc, char *argv[]) {
 
     auto camera = cameras.front();
 
-    for (const auto& row : testVectors) {
+    for (const auto &row : testVectors) {
         std::string modeStr = getField(argv[0], __LINE__, row, "mode");
-        if (modeStr.empty()) {continue;}
-		uint32_t mode = std::stoi(modeStr);
+        if (modeStr.empty()) {
+            continue;
+        }
+        uint32_t mode = std::stoi(modeStr);
 
         std::string rtmsStr = getField(argv[0], __LINE__, row, "rtms");
-        if (rtmsStr.empty()) { continue; }
+        if (rtmsStr.empty()) {
+            continue;
+        }
         std::chrono::milliseconds capture_time_milliseconds(std::stoi(rtmsStr));
 
         std::string fpsStr = getField(argv[0], __LINE__, row, "fps");
-        if (fpsStr.empty()) { continue; }
+        if (fpsStr.empty()) {
+            continue;
+        }
         uint16_t fps = std::stoi(fpsStr);
 
         std::string cfgStr = getField(argv[0], __LINE__, row, "cfg");
 
-		const std::string summary = modeStr + ":" + rtmsStr + ":" + fpsStr + ":" + cfgStr;
+        const std::string summary =
+            modeStr + ":" + rtmsStr + ":" + fpsStr + ":" + cfgStr;
 
-		uint32_t n_frames = 0;
+        uint32_t n_frames = 0;
 
         status = camera->initialize(cfgStr);
         if (status != Status::OK) {
-            LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Could not initialize camera:TST:" << summary;
+            LOG(ERROR) << "@@," << argv[0] << ",FAIL"
+                       << ",LN" << __LINE__
+                       << ",DN:Could not initialize camera:TST:" << summary;
             return 0;
         }
 
         status = camera->setSensorConfiguration(configuration);
         if (status != Status::OK) {
-            LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Could not configure camera with " << configuration << ":TST:" << summary;
+            LOG(ERROR) << "@@," << argv[0] << ",FAIL"
+                       << ",LN" << __LINE__
+                       << ",DN:Could not configure camera with "
+                       << configuration << ":TST:" << summary;
         }
 
         aditof::CameraDetails cameraDetails;
         camera->getDetails(cameraDetails);
 
-        LOG(INFO) << "SD card image version: " << cameraDetails.sdCardImageVersion;
+        LOG(INFO) << "SD card image version: "
+                  << cameraDetails.sdCardImageVersion;
         LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
         LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
 
@@ -288,10 +308,11 @@ int main(int argc, char *argv[]) {
             return 0;
         }
 
-
         status = camera->setMode(static_cast<uint8_t>(mode));
         if (status != Status::OK) {
-            LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Could not set camera mode:TST:" << summary;
+            LOG(ERROR) << "@@," << argv[0] << ",FAIL"
+                       << ",LN" << __LINE__
+                       << ",DN:Could not set camera mode:TST:" << summary;
             return 0;
         }
 
@@ -318,7 +339,9 @@ int main(int argc, char *argv[]) {
         // Program the camera with cfg passed, set the mode by writing to 0x200 and start the camera
         status = camera->start();
         if (status != Status::OK) {
-            LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Could not start camera:TST:" << summary;
+            LOG(ERROR) << "@@," << argv[0] << ",FAIL"
+                       << ",LN" << __LINE__
+                       << ",DN:Could not start camera:TST:" << summary;
             return 0;
         }
 
@@ -334,30 +357,41 @@ int main(int argc, char *argv[]) {
         //drop first frame
         status = camera->requestFrame(&frame);
         if (status != Status::OK) {
-            LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Could not request frame:TST:" << summary;
+            LOG(ERROR) << "@@," << argv[0] << ",FAIL"
+                       << ",LN" << __LINE__
+                       << ",DN:Could not request frame:TST:" << summary;
             return 0;
         }
 
-		Metadata metadata;
+        Metadata metadata;
 
-		status = frame.getMetadataStruct(metadata);
+        status = frame.getMetadataStruct(metadata);
         if (status != Status::OK) {
-            LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Could not get metadata:TST:" << summary;
+            LOG(ERROR) << "@@," << argv[0] << ",FAIL"
+                       << ",LN" << __LINE__
+                       << ",DN:Could not get metadata:TST:" << summary;
             return 0;
         }
 
         uint32_t frameNumber = metadata.frameNumber;
 
-		uint32_t expectNumberOfFrames = (capture_time_milliseconds.count() * fps) / 1000;
+        uint32_t expectNumberOfFrames =
+            (static_cast<uint32_t>(capture_time_milliseconds.count()) * fps) /
+            1000;
 
         uint32_t divisor = (expectNumberOfFrames * 20) / 100;
 
         uint32_t frame_count = 0;
         auto start_time = std::chrono::high_resolution_clock::now();
         if (capture_time_milliseconds.count() > 0) {
-            LOG(INFO) << "Capturing frames for " << capture_time_milliseconds.count() << " milliseconds in mode " << mode << "!";
-            auto capture_duration = std::chrono::duration_cast<std::chrono::milliseconds>(capture_time_milliseconds);
-            while (std::chrono::high_resolution_clock::now() - start_time < capture_duration) {
+            LOG(INFO) << "Capturing frames for "
+                      << capture_time_milliseconds.count()
+                      << " milliseconds in mode " << mode << "!";
+            auto capture_duration =
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                    capture_time_milliseconds);
+            while (std::chrono::high_resolution_clock::now() - start_time <
+                   capture_duration) {
 
                 if ((frame_count % divisor) == 0) {
                     LOG(INFO) << __func__ << ": framecount: " << frame_count;
@@ -365,23 +399,30 @@ int main(int argc, char *argv[]) {
 
                 status = camera->requestFrame(&frame);
                 if (status != Status::OK) {
-                    LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Could not request frame:TST:" << summary;
+                    LOG(ERROR) << "@@," << argv[0] << ",FAIL"
+                               << ",LN" << __LINE__
+                               << ",DN:Could not request frame:TST:" << summary;
                     return 0;
                 }
 
                 status = frame.getMetadataStruct(metadata);
                 if (status != Status::OK) {
-                    LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Could not get metadata:TST:" << summary;
+                    LOG(ERROR) << "@@," << argv[0] << ",FAIL"
+                               << ",LN" << __LINE__
+                               << ",DN:Could not get metadata:TST:" << summary;
                     return 0;
                 }
 
                 if (metadata.frameNumber != frameNumber + 1) {
-                    LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:Frame number mismatch expected " << (frameNumber + frame_count)
-                               << " but got " << metadata.frameNumber << ":" << summary;
+                    LOG(ERROR) << "@@," << argv[0] << ",FAIL"
+                               << ",LN" << __LINE__
+                               << ",DN:Frame number mismatch expected "
+                               << (frameNumber + frame_count) << " but got "
+                               << metadata.frameNumber << ":" << summary;
                     return 0;
-				}
+                }
 
-				frameNumber = metadata.frameNumber;
+                frameNumber = metadata.frameNumber;
 
                 if ((frame_count % divisor) == 0) {
                     frameSaver.saveFrameToFile(frame);
@@ -396,18 +437,25 @@ int main(int argc, char *argv[]) {
         std::chrono::duration<double> total_time = end_time - start_time;
         if (frame_count > 0) {
             double measured_fps = (double)n_frames / total_time.count();
-            LOG(INFO) << "@@," << argv[0] << ",PASS" << ",LN" << __LINE__ << ",DN:FPS:" << measured_fps << ":FC:" << frame_count << ":TST:" << summary;
+            LOG(INFO) << "@@," << argv[0] << ",PASS"
+                      << ",LN" << __LINE__ << ",DN:FPS:" << measured_fps
+                      << ":FC:" << frame_count << ":TST:" << summary;
         } else {
-            LOG(INFO) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DN:FC:" << frame_count << ":TST:" << summary;
+            LOG(INFO) << "@@," << argv[0] << ",FAIL"
+                      << ",LN" << __LINE__ << ",DN:FC:" << frame_count
+                      << ":TST:" << summary;
         }
 
         status = camera->stop();
         if (status != Status::OK) {
-            LOG(ERROR) << "@@," << argv[0] << ",FAIL" << ",LN" << __LINE__ << ",DNError stopping camera:TST:" << summary;
+            LOG(ERROR) << "@@," << argv[0] << ",FAIL"
+                       << ",LN" << __LINE__
+                       << ",DNError stopping camera:TST:" << summary;
         }
 
         for (int i = 2; i > 0; --i) {
-            LOG(INFO) << "\rSleeping for " << i << " seconds...   " << std::flush;
+            LOG(INFO) << "\rSleeping for " << i << " seconds...   "
+                      << std::flush;
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
