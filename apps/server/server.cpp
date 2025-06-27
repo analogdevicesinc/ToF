@@ -316,9 +316,7 @@ static void cleanup_sensors() {
     // Stop the frame capturing thread
     if (frameCaptureThread.joinable()) {
         keepCaptureThreadAlive = false;
-        {
-            std::lock_guard<std::mutex> lock(frameMutex);
-        }
+        { std::lock_guard<std::mutex> lock(frameMutex); }
         cvGetFrame.notify_one();
         frameCaptureThread.join();
     }
@@ -487,7 +485,12 @@ int main(int argc, char *argv[]) {
     context = std::make_unique<zmq::context_t>(2);
     server_cmd = std::make_unique<zmq::socket_t>(*context, ZMQ_REP);
     // Bind the socket
-    server_cmd->bind("tcp://*:5556");
+    try {
+        server_cmd->bind("tcp://*:5556");
+    } catch (const zmq::error_t &e) {
+        LOG(ERROR) << "Failed to bind Server socket : " << e.what();
+        return 0;
+    }
     std::string monitor_endpoint = "inproc://monitor";
     zmq_socket_monitor(server_cmd->handle(), "inproc://monitor", ZMQ_EVENT_ALL);
 
@@ -540,588 +543,604 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
 
     DLOG(INFO) << buff_recv.func_name() << " function";
 
-    switch (s_map_api_Values[buff_recv.func_name()]) {
+    auto it = s_map_api_Values.find(buff_recv.func_name());
 
-    case FIND_SENSORS: {
-        if (!sensors_are_created) {
-            sensorsEnumerator =
-                aditof::SensorEnumeratorFactory::buildTargetSensorEnumerator();
-            if (!sensorsEnumerator) {
-                std::string errMsg =
-                    "Failed to create a target sensor enumerator";
-                LOG(WARNING) << errMsg;
-                buff_send.set_message(errMsg);
-                buff_send.set_status(static_cast<::payload::Status>(
-                    aditof::Status::UNAVAILABLE));
+    if (it != s_map_api_Values.end()) {
+
+        switch (s_map_api_Values[buff_recv.func_name()]) {
+
+        case FIND_SENSORS: {
+            if (!sensors_are_created) {
+                sensorsEnumerator = aditof::SensorEnumeratorFactory::
+                    buildTargetSensorEnumerator();
+                if (!sensorsEnumerator) {
+                    std::string errMsg =
+                        "Failed to create a target sensor enumerator";
+                    LOG(WARNING) << errMsg;
+                    buff_send.set_message(errMsg);
+                    buff_send.set_status(static_cast<::payload::Status>(
+                        aditof::Status::UNAVAILABLE));
+                    break;
+                }
+
+                sensorsEnumerator->searchSensors();
+                sensorsEnumerator->getDepthSensors(depthSensors);
+                sensors_are_created = true;
+            }
+
+            /* Add information about available sensors */
+
+            // Depth sensor
+            if (depthSensors.size() < 1) {
+                buff_send.set_message("No depth sensors are available");
+                buff_send.set_status(::payload::Status::UNREACHABLE);
                 break;
             }
 
-            sensorsEnumerator->searchSensors();
-            sensorsEnumerator->getDepthSensors(depthSensors);
-            sensors_are_created = true;
-        }
+            camDepthSensor = depthSensors.front();
+            auto pbSensorsInfo = buff_send.mutable_sensors_info();
+            sensorV4lBufAccess =
+                std::dynamic_pointer_cast<aditof::V4lBufferAccessInterface>(
+                    camDepthSensor);
 
-        /* Add information about available sensors */
+            std::string name;
+            camDepthSensor->getName(name);
+            auto pbDepthSensorInfo = pbSensorsInfo->mutable_image_sensors();
+            pbDepthSensorInfo->set_name(name);
 
-        // Depth sensor
-        if (depthSensors.size() < 1) {
-            buff_send.set_message("No depth sensors are available");
-            buff_send.set_status(::payload::Status::UNREACHABLE);
-            break;
-        }
+            std::string kernelversion;
+            std::string ubootversion;
+            std::string sdversion;
+            auto cardVersion = buff_send.mutable_card_image_version();
 
-        camDepthSensor = depthSensors.front();
-        auto pbSensorsInfo = buff_send.mutable_sensors_info();
-        sensorV4lBufAccess =
-            std::dynamic_pointer_cast<aditof::V4lBufferAccessInterface>(
-                camDepthSensor);
+            sensorsEnumerator->getKernelVersion(kernelversion);
+            cardVersion->set_kernelversion(kernelversion);
+            sensorsEnumerator->getUbootVersion(ubootversion);
+            cardVersion->set_ubootversion(ubootversion);
+            sensorsEnumerator->getSdVersion(sdversion);
+            cardVersion->set_sdversion(sdversion);
 
-        std::string name;
-        camDepthSensor->getName(name);
-        auto pbDepthSensorInfo = pbSensorsInfo->mutable_image_sensors();
-        pbDepthSensorInfo->set_name(name);
-
-        std::string kernelversion;
-        std::string ubootversion;
-        std::string sdversion;
-        auto cardVersion = buff_send.mutable_card_image_version();
-
-        sensorsEnumerator->getKernelVersion(kernelversion);
-        cardVersion->set_kernelversion(kernelversion);
-        sensorsEnumerator->getUbootVersion(ubootversion);
-        cardVersion->set_ubootversion(ubootversion);
-        sensorsEnumerator->getSdVersion(sdversion);
-        cardVersion->set_sdversion(sdversion);
-
-        // This server is now subscribing for interrupts of ADSD3500
-        aditof::Status registerCbStatus =
-            camDepthSensor->adsd3500_register_interrupt_callback(callback);
-        if (registerCbStatus != aditof::Status::OK) {
-            LOG(WARNING) << "Could not register callback";
-            // TBD: not sure whether to send this error to client or not
-        }
-
-        buff_send.set_status(
-            static_cast<::payload::Status>(aditof::Status::OK));
-        break;
-    }
-
-    case OPEN: {
-        aditof::Status status = camDepthSensor->open();
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        clientEngagedWithSensors = true;
-
-        // At this stage, start the capturing frames thread
-        keepCaptureThreadAlive = true;
-        frameCaptureThread = std::thread(captureFrameFromHardware);
-
-        break;
-    }
-
-    case START: {
-        aditof::Status status = camDepthSensor->start();
-
-        // When in test mode, capture 2 frames. 1st might be corrupt after a ADSD3500 reset.
-        // 2nd frame will be the one sent over and over again by server in test mode.
-        if (sameFrameEndlessRepeat) {
-            for (int i = 0; i < 2; ++i) {
-                status =
-                    camDepthSensor->getFrame((uint16_t *)(buff_frame_to_send));
-                if (status != aditof::Status::OK) {
-                    LOG(ERROR) << "Failed to get frame!";
-                }
-            }
-        } else { // When in normal mode, trigger the capture thread to fetch a frame
-            {
-                std::lock_guard<std::mutex> lock(frameMutex);
-                goCaptureFrame = true;
-            }
-            cvGetFrame.notify_one();
-        }
-        static zmq::context_t zmq_context(1);
-        server_socket = std::make_unique<zmq::socket_t>(zmq_context,
-                                                        zmq::socket_type::push);
-        server_socket->setsockopt(ZMQ_SNDHWM, (int *)&max_send_frames,
-                                  sizeof(max_send_frames));
-        server_socket->bind("tcp://*:5555");
-        LOG(INFO) << "ZMQ server socket connection established.";
-        if (send_async == true) {
-            start_stream_thread(); // Start the stream_frame thread .
-        }
-
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case STOP: {
-        if (send_async == true) {
-            stop_stream_thread();
-        }
-        aditof::Status status = camDepthSensor->stop();
-        buff_send.set_status(static_cast<::payload::Status>(status));
-
-        close_zmq_connection();
-
-        break;
-    }
-
-    case GET_AVAILABLE_MODES: {
-        std::vector<uint8_t> aditofModes;
-        aditof::Status status = camDepthSensor->getAvailableModes(aditofModes);
-        for (auto &modeName : aditofModes) {
-            buff_send.add_int32_payload(modeName);
-        }
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case GET_MODE_DETAILS: {
-        aditof::DepthSensorModeDetails frameDetails;
-        uint8_t modeName = buff_recv.func_int32_param(0);
-        aditof::Status status =
-            camDepthSensor->getModeDetails(modeName, frameDetails);
-        auto protoContent = buff_send.mutable_depth_sensor_mode_details();
-        protoContent->set_mode_number(frameDetails.modeNumber);
-        protoContent->set_pixel_format_index(frameDetails.pixelFormatIndex);
-        protoContent->set_frame_width_in_bytes(frameDetails.frameWidthInBytes);
-        protoContent->set_frame_height_in_bytes(
-            frameDetails.frameHeightInBytes);
-        protoContent->set_base_resolution_width(
-            frameDetails.baseResolutionWidth);
-        protoContent->set_base_resolution_height(
-            frameDetails.baseResolutionHeight);
-        protoContent->set_metadata_size(frameDetails.metadataSize);
-        protoContent->set_is_pcm(frameDetails.isPCM);
-        protoContent->set_number_of_phases(frameDetails.numberOfPhases);
-        for (int i = 0; i < frameDetails.frameContent.size(); i++) {
-            protoContent->add_frame_content(frameDetails.frameContent.at(i));
-        }
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case SET_MODE_BY_INDEX: {
-
-        uint8_t mode = buff_recv.func_int32_param(0);
-
-        aditof::Status status = camDepthSensor->setMode(mode);
-        if (status == aditof::Status::OK) {
-            aditof::DepthSensorModeDetails aditofModeDetail;
-            status = camDepthSensor->getModeDetails(mode, aditofModeDetail);
-            if (status != aditof::Status::OK) {
-                buff_send.set_status(static_cast<::payload::Status>(status));
-                break;
+            // This server is now subscribing for interrupts of ADSD3500
+            aditof::Status registerCbStatus =
+                camDepthSensor->adsd3500_register_interrupt_callback(callback);
+            if (registerCbStatus != aditof::Status::OK) {
+                LOG(WARNING) << "Could not register callback";
+                // TBD: not sure whether to send this error to client or not
             }
 
-            int width_tmp = aditofModeDetail.baseResolutionWidth;
-            int height_tmp = aditofModeDetail.baseResolutionHeight;
-
-            if (aditofModeDetail.isPCM) {
-                processedFrameSize =
-                    width_tmp * height_tmp * aditofModeDetail.numberOfPhases;
-
-            } else {
-#ifdef DUAL
-                if (mode == 1 || mode == 0) {
-                    processedFrameSize = width_tmp * height_tmp * 2;
-                } else {
-                    processedFrameSize = width_tmp * height_tmp * 4;
-                }
-#else
-                processedFrameSize = width_tmp * height_tmp * 4;
-#endif
-            }
-
-            if (buff_frame_to_send != nullptr) {
-                delete[] buff_frame_to_send;
-                buff_frame_to_send = nullptr;
-            }
-
-            buff_frame_to_send =
-                new uint8_t[processedFrameSize * sizeof(uint16_t)];
-
-            if (buff_frame_to_be_captured != nullptr) {
-                delete[] buff_frame_to_be_captured;
-                buff_frame_to_be_captured = nullptr;
-            }
-
-            buff_frame_to_be_captured =
-                new uint8_t[processedFrameSize * sizeof(uint16_t)];
-
-            buff_frame_length = processedFrameSize * 2;
-        }
-
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case SET_MODE: {
-        aditof::DepthSensorModeDetails aditofModeDetail;
-        aditofModeDetail.modeNumber = buff_recv.mode_details().mode_number();
-        aditofModeDetail.pixelFormatIndex =
-            buff_recv.mode_details().pixel_format_index();
-        aditofModeDetail.frameWidthInBytes =
-            buff_recv.mode_details().frame_width_in_bytes();
-        aditofModeDetail.frameHeightInBytes =
-            buff_recv.mode_details().frame_height_in_bytes();
-        aditofModeDetail.baseResolutionWidth =
-            buff_recv.mode_details().base_resolution_width();
-        aditofModeDetail.baseResolutionHeight =
-            buff_recv.mode_details().base_resolution_height();
-        aditofModeDetail.metadataSize =
-            buff_recv.mode_details().metadata_size();
-
-        for (int i = 0; i < buff_recv.mode_details().frame_content_size();
-             i++) {
-            aditofModeDetail.frameContent.emplace_back(
-                buff_recv.mode_details().frame_content(i));
-        }
-
-        aditof::Status status = camDepthSensor->setMode(aditofModeDetail);
-
-        if (status == aditof::Status::OK) {
-            int width_tmp = aditofModeDetail.baseResolutionWidth;
-            int height_tmp = aditofModeDetail.baseResolutionHeight;
-
-            if (aditofModeDetail.isPCM) {
-                processedFrameSize =
-                    width_tmp * height_tmp * aditofModeDetail.numberOfPhases;
-            } else {
-                processedFrameSize = width_tmp * height_tmp * 4;
-            }
-
-            if (buff_frame_to_send != nullptr) {
-                delete[] buff_frame_to_send;
-                buff_frame_to_send = nullptr;
-            }
-
-            buff_frame_to_send =
-                new uint8_t[processedFrameSize * sizeof(uint16_t)];
-
-            if (buff_frame_to_be_captured != nullptr) {
-                delete[] buff_frame_to_be_captured;
-                buff_frame_to_be_captured = nullptr;
-            }
-
-            buff_frame_to_be_captured =
-                new uint8_t[processedFrameSize * sizeof(uint16_t)];
-
-            buff_frame_length = processedFrameSize * 2;
-        }
-
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case GET_FRAME: {
-        if (sameFrameEndlessRepeat) {
-            m_frame_ready = true;
-            zmq::message_t message(buff_frame_length);
-            memcpy(message.data(), buff_frame_to_send, buff_frame_length);
-            server_socket->send(message, zmq::send_flags::none);
             buff_send.set_status(
                 static_cast<::payload::Status>(aditof::Status::OK));
             break;
-        } else {
-            // 1. Wait for frame to be captured on the other thread
-            std::unique_lock<std::mutex> lock(frameMutex);
-            cvGetFrame.wait(lock, []() { return frameCaptured; });
+        }
 
-            // 2. Get your hands on the captured frame
-            std::swap(buff_frame_to_send, buff_frame_to_be_captured);
-            frameCaptured = false;
-            lock.unlock();
+        case OPEN: {
+            aditof::Status status = camDepthSensor->open();
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            clientEngagedWithSensors = true;
 
-            // 3. Trigger the other thread to capture another frame while we do stuff with current frame
-            {
-                std::lock_guard<std::mutex> lock(frameMutex);
-                goCaptureFrame = true;
-            }
-            cvGetFrame.notify_one();
+            // At this stage, start the capturing frames thread
+            keepCaptureThreadAlive = true;
+            frameCaptureThread = std::thread(captureFrameFromHardware);
 
-            // 4. Send current frame over network
-
-            zmq::message_t message(buff_frame_length);
-            memcpy(message.data(), buff_frame_to_send, buff_frame_length);
-            server_socket->send(message, zmq::send_flags::none);
-
-            m_frame_ready = true;
-
-            buff_send.set_status(payload::Status::OK);
             break;
         }
-    }
 
-    case GET_AVAILABLE_CONTROLS: {
-        std::vector<std::string> aditofControls;
+        case START: {
+            aditof::Status status = camDepthSensor->start();
 
-        aditof::Status status =
-            camDepthSensor->getAvailableControls(aditofControls);
-        for (const auto &aditofControl : aditofControls) {
-            buff_send.add_strings_payload(aditofControl);
-        }
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case SET_CONTROL: {
-        std::string controlName = buff_recv.func_strings_param(0);
-        std::string controlValue = buff_recv.func_strings_param(1);
-        aditof::Status status =
-            camDepthSensor->setControl(controlName, controlValue);
-        if (controlName == "netlinktest") {
-            sameFrameEndlessRepeat = controlValue == "1";
-        }
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case GET_CONTROL: {
-        std::string controlName = buff_recv.func_strings_param(0);
-        std::string controlValue;
-        aditof::Status status =
-            camDepthSensor->getControl(controlName, controlValue);
-        buff_send.add_strings_payload(controlValue);
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case SET_SENSOR_CONFIGURATION: {
-        std::string sensorConf = buff_recv.func_strings_param(0);
-        aditof::Status status =
-            camDepthSensor->setSensorConfiguration(sensorConf);
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case INIT_TARGET_DEPTH_COMPUTE: {
-        aditof::Status status = camDepthSensor->initTargetDepthCompute(
-            (uint8_t *)buff_recv.func_bytes_param(0).c_str(),
-            static_cast<uint16_t>(buff_recv.func_int32_param(0)),
-            (uint8_t *)buff_recv.func_bytes_param(1).c_str(),
-            static_cast<uint16_t>(buff_recv.func_int32_param(1)));
-
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case ADSD3500_READ_CMD: {
-        uint16_t cmd = static_cast<uint16_t>(buff_recv.func_int32_param(0));
-        uint16_t data;
-        unsigned int usDelay =
-            static_cast<unsigned int>(buff_recv.func_int32_param(1));
-
-        aditof::Status status =
-            camDepthSensor->adsd3500_read_cmd(cmd, &data, usDelay);
-        if (status == aditof::Status::OK) {
-            buff_send.add_int32_payload(static_cast<::google::int32>(data));
-        }
-
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case ADSD3500_WRITE_CMD: {
-        uint16_t cmd = static_cast<uint16_t>(buff_recv.func_int32_param(0));
-        uint16_t data = static_cast<uint16_t>(buff_recv.func_int32_param(1));
-        uint32_t usDelay = static_cast<uint32_t>(buff_recv.func_int32_param(2));
-
-        aditof::Status status =
-            camDepthSensor->adsd3500_write_cmd(cmd, data, usDelay);
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case ADSD3500_READ_PAYLOAD_CMD: {
-        uint32_t cmd = static_cast<uint32_t>(buff_recv.func_int32_param(0));
-        uint16_t payload_len =
-            static_cast<uint16_t>(buff_recv.func_int32_param(1));
-        uint8_t *data = new uint8_t[payload_len];
-
-        memcpy(data, buff_recv.func_bytes_param(0).c_str(),
-               4 * sizeof(uint8_t));
-        aditof::Status status =
-            camDepthSensor->adsd3500_read_payload_cmd(cmd, data, payload_len);
-        if (status == aditof::Status::OK) {
-            buff_send.add_bytes_payload(data, payload_len);
-        }
-
-        delete[] data;
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case ADSD3500_READ_PAYLOAD: {
-        uint16_t payload_len =
-            static_cast<uint16_t>(buff_recv.func_int32_param(0));
-        uint8_t *data = new uint8_t[payload_len];
-
-        aditof::Status status =
-            camDepthSensor->adsd3500_read_payload(data, payload_len);
-        if (status == aditof::Status::OK) {
-            buff_send.add_bytes_payload(data, payload_len);
-        }
-
-        delete[] data;
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case ADSD3500_WRITE_PAYLOAD_CMD: {
-        uint32_t cmd = static_cast<uint32_t>(buff_recv.func_int32_param(0));
-        uint16_t payload_len =
-            static_cast<uint16_t>(buff_recv.func_int32_param(1));
-        uint8_t *data = new uint8_t[payload_len];
-
-        memcpy(data, buff_recv.func_bytes_param(0).c_str(), payload_len);
-        aditof::Status status =
-            camDepthSensor->adsd3500_write_payload_cmd(cmd, data, payload_len);
-
-        delete[] data;
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case ADSD3500_WRITE_PAYLOAD: {
-        uint16_t payload_len =
-            static_cast<uint16_t>(buff_recv.func_int32_param(0));
-        uint8_t *data = new uint8_t[payload_len];
-
-        memcpy(data, buff_recv.func_bytes_param(0).c_str(), payload_len);
-        aditof::Status status =
-            camDepthSensor->adsd3500_write_payload(data, payload_len);
-
-        delete[] data;
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case ADSD3500_GET_STATUS: {
-        int chipStatus;
-        int imagerStatus;
-
-        aditof::Status status =
-            camDepthSensor->adsd3500_get_status(chipStatus, imagerStatus);
-        if (status == aditof::Status::OK) {
-            buff_send.add_int32_payload(chipStatus);
-            buff_send.add_int32_payload(imagerStatus);
-        }
-
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case GET_INTERRUPTS: {
-
-        {
-            if (adsd3500InterruptsQueueMutex.try_lock_for(
-                    std::chrono::milliseconds(500))) {
-                while (!adsd3500InterruptsQueue.empty()) {
-                    buff_send.add_int32_payload(
-                        (int)adsd3500InterruptsQueue.front());
-                    adsd3500InterruptsQueue.pop();
+            // When in test mode, capture 2 frames. 1st might be corrupt after a ADSD3500 reset.
+            // 2nd frame will be the one sent over and over again by server in test mode.
+            if (sameFrameEndlessRepeat) {
+                for (int i = 0; i < 2; ++i) {
+                    status = camDepthSensor->getFrame(
+                        (uint16_t *)(buff_frame_to_send));
+                    if (status != aditof::Status::OK) {
+                        LOG(ERROR) << "Failed to get frame!";
+                    }
                 }
-                adsd3500InterruptsQueueMutex.unlock();
+            } else { // When in normal mode, trigger the capture thread to fetch a frame
+                {
+                    std::lock_guard<std::mutex> lock(frameMutex);
+                    goCaptureFrame = true;
+                }
+                cvGetFrame.notify_one();
+            }
+            static zmq::context_t zmq_context(1);
+            server_socket = std::make_unique<zmq::socket_t>(
+                zmq_context, zmq::socket_type::push);
+            server_socket->setsockopt(ZMQ_SNDHWM, (int *)&max_send_frames,
+                                      sizeof(max_send_frames));
+            server_socket->bind("tcp://*:5555");
+            LOG(INFO) << "ZMQ server socket connection established.";
+            if (send_async == true) {
+                start_stream_thread(); // Start the stream_frame thread .
+            }
+
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        }
+
+        case STOP: {
+            if (send_async == true) {
+                stop_stream_thread();
+            }
+            aditof::Status status = camDepthSensor->stop();
+            buff_send.set_status(static_cast<::payload::Status>(status));
+
+            close_zmq_connection();
+
+            break;
+        }
+
+        case GET_AVAILABLE_MODES: {
+            std::vector<uint8_t> aditofModes;
+            aditof::Status status =
+                camDepthSensor->getAvailableModes(aditofModes);
+            for (auto &modeName : aditofModes) {
+                buff_send.add_int32_payload(modeName);
+            }
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        }
+
+        case GET_MODE_DETAILS: {
+            aditof::DepthSensorModeDetails frameDetails;
+            uint8_t modeName = buff_recv.func_int32_param(0);
+            aditof::Status status =
+                camDepthSensor->getModeDetails(modeName, frameDetails);
+            auto protoContent = buff_send.mutable_depth_sensor_mode_details();
+            protoContent->set_mode_number(frameDetails.modeNumber);
+            protoContent->set_pixel_format_index(frameDetails.pixelFormatIndex);
+            protoContent->set_frame_width_in_bytes(
+                frameDetails.frameWidthInBytes);
+            protoContent->set_frame_height_in_bytes(
+                frameDetails.frameHeightInBytes);
+            protoContent->set_base_resolution_width(
+                frameDetails.baseResolutionWidth);
+            protoContent->set_base_resolution_height(
+                frameDetails.baseResolutionHeight);
+            protoContent->set_metadata_size(frameDetails.metadataSize);
+            protoContent->set_is_pcm(frameDetails.isPCM);
+            protoContent->set_number_of_phases(frameDetails.numberOfPhases);
+            for (int i = 0; i < frameDetails.frameContent.size(); i++) {
+                protoContent->add_frame_content(
+                    frameDetails.frameContent.at(i));
+            }
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        }
+
+        case SET_MODE_BY_INDEX: {
+
+            uint8_t mode = buff_recv.func_int32_param(0);
+
+            aditof::Status status = camDepthSensor->setMode(mode);
+            if (status == aditof::Status::OK) {
+                aditof::DepthSensorModeDetails aditofModeDetail;
+                status = camDepthSensor->getModeDetails(mode, aditofModeDetail);
+                if (status != aditof::Status::OK) {
+                    buff_send.set_status(
+                        static_cast<::payload::Status>(status));
+                    break;
+                }
+
+                int width_tmp = aditofModeDetail.baseResolutionWidth;
+                int height_tmp = aditofModeDetail.baseResolutionHeight;
+
+                if (aditofModeDetail.isPCM) {
+                    processedFrameSize = width_tmp * height_tmp *
+                                         aditofModeDetail.numberOfPhases;
+
+                } else {
+#ifdef DUAL
+                    if (mode == 1 || mode == 0) {
+                        processedFrameSize = width_tmp * height_tmp * 2;
+                    } else {
+                        processedFrameSize = width_tmp * height_tmp * 4;
+                    }
+#else
+                    processedFrameSize = width_tmp * height_tmp * 4;
+#endif
+                }
+
+                if (buff_frame_to_send != nullptr) {
+                    delete[] buff_frame_to_send;
+                    buff_frame_to_send = nullptr;
+                }
+
+                buff_frame_to_send =
+                    new uint8_t[processedFrameSize * sizeof(uint16_t)];
+
+                if (buff_frame_to_be_captured != nullptr) {
+                    delete[] buff_frame_to_be_captured;
+                    buff_frame_to_be_captured = nullptr;
+                }
+
+                buff_frame_to_be_captured =
+                    new uint8_t[processedFrameSize * sizeof(uint16_t)];
+
+                buff_frame_length = processedFrameSize * 2;
+            }
+
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        }
+
+        case SET_MODE: {
+            aditof::DepthSensorModeDetails aditofModeDetail;
+            aditofModeDetail.modeNumber =
+                buff_recv.mode_details().mode_number();
+            aditofModeDetail.pixelFormatIndex =
+                buff_recv.mode_details().pixel_format_index();
+            aditofModeDetail.frameWidthInBytes =
+                buff_recv.mode_details().frame_width_in_bytes();
+            aditofModeDetail.frameHeightInBytes =
+                buff_recv.mode_details().frame_height_in_bytes();
+            aditofModeDetail.baseResolutionWidth =
+                buff_recv.mode_details().base_resolution_width();
+            aditofModeDetail.baseResolutionHeight =
+                buff_recv.mode_details().base_resolution_height();
+            aditofModeDetail.metadataSize =
+                buff_recv.mode_details().metadata_size();
+
+            for (int i = 0; i < buff_recv.mode_details().frame_content_size();
+                 i++) {
+                aditofModeDetail.frameContent.emplace_back(
+                    buff_recv.mode_details().frame_content(i));
+            }
+
+            aditof::Status status = camDepthSensor->setMode(aditofModeDetail);
+
+            if (status == aditof::Status::OK) {
+                int width_tmp = aditofModeDetail.baseResolutionWidth;
+                int height_tmp = aditofModeDetail.baseResolutionHeight;
+
+                if (aditofModeDetail.isPCM) {
+                    processedFrameSize = width_tmp * height_tmp *
+                                         aditofModeDetail.numberOfPhases;
+                } else {
+                    processedFrameSize = width_tmp * height_tmp * 4;
+                }
+
+                if (buff_frame_to_send != nullptr) {
+                    delete[] buff_frame_to_send;
+                    buff_frame_to_send = nullptr;
+                }
+
+                buff_frame_to_send =
+                    new uint8_t[processedFrameSize * sizeof(uint16_t)];
+
+                if (buff_frame_to_be_captured != nullptr) {
+                    delete[] buff_frame_to_be_captured;
+                    buff_frame_to_be_captured = nullptr;
+                }
+
+                buff_frame_to_be_captured =
+                    new uint8_t[processedFrameSize * sizeof(uint16_t)];
+
+                buff_frame_length = processedFrameSize * 2;
+            }
+
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        }
+
+        case GET_FRAME: {
+            if (sameFrameEndlessRepeat) {
+                m_frame_ready = true;
+                zmq::message_t message(buff_frame_length);
+                memcpy(message.data(), buff_frame_to_send, buff_frame_length);
+                server_socket->send(message, zmq::send_flags::none);
+                buff_send.set_status(
+                    static_cast<::payload::Status>(aditof::Status::OK));
+                break;
             } else {
-                LOG(ERROR)
-                    << "Unable to lock adsd3500InterruptsQueueMutex in 500 ms";
+                // 1. Wait for frame to be captured on the other thread
+                std::unique_lock<std::mutex> lock(frameMutex);
+                cvGetFrame.wait(lock, []() { return frameCaptured; });
+
+                // 2. Get your hands on the captured frame
+                std::swap(buff_frame_to_send, buff_frame_to_be_captured);
+                frameCaptured = false;
+                lock.unlock();
+
+                // 3. Trigger the other thread to capture another frame while we do stuff with current frame
+                {
+                    std::lock_guard<std::mutex> lock(frameMutex);
+                    goCaptureFrame = true;
+                }
+                cvGetFrame.notify_one();
+
+                // 4. Send current frame over network
+
+                zmq::message_t message(buff_frame_length);
+                memcpy(message.data(), buff_frame_to_send, buff_frame_length);
+                server_socket->send(message, zmq::send_flags::none);
+
+                m_frame_ready = true;
+
+                buff_send.set_status(payload::Status::OK);
+                break;
             }
         }
 
-        buff_send.set_status(
-            static_cast<::payload::Status>(aditof::Status::OK));
-        break;
-    }
+        case GET_AVAILABLE_CONTROLS: {
+            std::vector<std::string> aditofControls;
 
-    case HANG_UP: {
-        if (sensors_are_created) {
-            cleanup_sensors();
+            aditof::Status status =
+                camDepthSensor->getAvailableControls(aditofControls);
+            for (const auto &aditofControl : aditofControls) {
+                buff_send.add_strings_payload(aditofControl);
+            }
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
         }
-        clientEngagedWithSensors = false;
 
-        break;
-    }
-
-    case GET_DEPTH_COMPUTE_PARAM: {
-        std::map<std::string, std::string> ini_params;
-        aditof::Status status =
-            camDepthSensor->getDepthComputeParams(ini_params);
-        if (status == aditof::Status::OK) {
-            buff_send.add_strings_payload(ini_params["abThreshMin"]);
-            buff_send.add_strings_payload(ini_params["abSumThresh"]);
-            buff_send.add_strings_payload(ini_params["confThresh"]);
-            buff_send.add_strings_payload(ini_params["radialThreshMin"]);
-            buff_send.add_strings_payload(ini_params["radialThreshMax"]);
-            buff_send.add_strings_payload(ini_params["jblfApplyFlag"]);
-            buff_send.add_strings_payload(ini_params["jblfWindowSize"]);
-            buff_send.add_strings_payload(ini_params["jblfGaussianSigma"]);
-            buff_send.add_strings_payload(ini_params["jblfExponentialTerm"]);
-            buff_send.add_strings_payload(ini_params["jblfMaxEdge"]);
-            buff_send.add_strings_payload(ini_params["jblfABThreshold"]);
-            buff_send.add_strings_payload(ini_params["headerSize"]);
+        case SET_CONTROL: {
+            std::string controlName = buff_recv.func_strings_param(0);
+            std::string controlValue = buff_recv.func_strings_param(1);
+            aditof::Status status =
+                camDepthSensor->setControl(controlName, controlValue);
+            if (controlName == "netlinktest") {
+                sameFrameEndlessRepeat = controlValue == "1";
+            }
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
         }
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
 
-    case SET_DEPTH_COMPUTE_PARAM: {
-        std::map<std::string, std::string> ini_params;
-        ini_params["abThreshMin"] = buff_recv.func_strings_param(0);
-        ini_params["abSumThresh"] = buff_recv.func_strings_param(1);
-        ini_params["confThresh"] = buff_recv.func_strings_param(2);
-        ini_params["radialThreshMin"] = buff_recv.func_strings_param(3);
-        ini_params["radialThreshMax"] = buff_recv.func_strings_param(4);
-        ini_params["jblfApplyFlag"] = buff_recv.func_strings_param(5);
-        ini_params["jblfWindowSize"] = buff_recv.func_strings_param(6);
-        ini_params["jblfGaussianSigma"] = buff_recv.func_strings_param(7);
-        ini_params["jblfExponentialTerm"] = buff_recv.func_strings_param(8);
-        ini_params["jblfMaxEdge"] = buff_recv.func_strings_param(9);
-        ini_params["jblfABThreshold"] = buff_recv.func_strings_param(10);
-
-        aditof::Status status =
-            camDepthSensor->setDepthComputeParams(ini_params);
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-
-    case GET_INI_ARRAY: {
-        int mode = buff_recv.func_int32_param(0);
-        std::string iniStr;
-
-        aditof::Status status =
-            camDepthSensor->getIniParamsArrayForMode(mode, iniStr);
-
-        if (status == aditof::Status::OK) {
-            buff_send.add_strings_payload(iniStr);
+        case GET_CONTROL: {
+            std::string controlName = buff_recv.func_strings_param(0);
+            std::string controlValue;
+            aditof::Status status =
+                camDepthSensor->getControl(controlName, controlValue);
+            buff_send.add_strings_payload(controlValue);
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
         }
-        buff_send.set_status(static_cast<::payload::Status>(status));
-        break;
-    }
-    case SERVER_CONNECT: {
-        if (!no_of_client_connected) {
-            buff_send.set_message("Connection Allowed");
-        } else {
-            buff_send.set_message("Only 1 client connection allowed");
+
+        case SET_SENSOR_CONFIGURATION: {
+            std::string sensorConf = buff_recv.func_strings_param(0);
+            aditof::Status status =
+                camDepthSensor->setSensorConfiguration(sensorConf);
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
         }
-        break;
+
+        case INIT_TARGET_DEPTH_COMPUTE: {
+            aditof::Status status = camDepthSensor->initTargetDepthCompute(
+                (uint8_t *)buff_recv.func_bytes_param(0).c_str(),
+                static_cast<uint16_t>(buff_recv.func_int32_param(0)),
+                (uint8_t *)buff_recv.func_bytes_param(1).c_str(),
+                static_cast<uint16_t>(buff_recv.func_int32_param(1)));
+
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        }
+
+        case ADSD3500_READ_CMD: {
+            uint16_t cmd = static_cast<uint16_t>(buff_recv.func_int32_param(0));
+            uint16_t data;
+            unsigned int usDelay =
+                static_cast<unsigned int>(buff_recv.func_int32_param(1));
+
+            aditof::Status status =
+                camDepthSensor->adsd3500_read_cmd(cmd, &data, usDelay);
+            if (status == aditof::Status::OK) {
+                buff_send.add_int32_payload(static_cast<::google::int32>(data));
+            }
+
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        }
+
+        case ADSD3500_WRITE_CMD: {
+            uint16_t cmd = static_cast<uint16_t>(buff_recv.func_int32_param(0));
+            uint16_t data =
+                static_cast<uint16_t>(buff_recv.func_int32_param(1));
+            uint32_t usDelay =
+                static_cast<uint32_t>(buff_recv.func_int32_param(2));
+
+            aditof::Status status =
+                camDepthSensor->adsd3500_write_cmd(cmd, data, usDelay);
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        }
+
+        case ADSD3500_READ_PAYLOAD_CMD: {
+            uint32_t cmd = static_cast<uint32_t>(buff_recv.func_int32_param(0));
+            uint16_t payload_len =
+                static_cast<uint16_t>(buff_recv.func_int32_param(1));
+            uint8_t *data = new uint8_t[payload_len];
+
+            memcpy(data, buff_recv.func_bytes_param(0).c_str(),
+                   4 * sizeof(uint8_t));
+            aditof::Status status = camDepthSensor->adsd3500_read_payload_cmd(
+                cmd, data, payload_len);
+            if (status == aditof::Status::OK) {
+                buff_send.add_bytes_payload(data, payload_len);
+            }
+
+            delete[] data;
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        }
+
+        case ADSD3500_READ_PAYLOAD: {
+            uint16_t payload_len =
+                static_cast<uint16_t>(buff_recv.func_int32_param(0));
+            uint8_t *data = new uint8_t[payload_len];
+
+            aditof::Status status =
+                camDepthSensor->adsd3500_read_payload(data, payload_len);
+            if (status == aditof::Status::OK) {
+                buff_send.add_bytes_payload(data, payload_len);
+            }
+
+            delete[] data;
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        }
+
+        case ADSD3500_WRITE_PAYLOAD_CMD: {
+            uint32_t cmd = static_cast<uint32_t>(buff_recv.func_int32_param(0));
+            uint16_t payload_len =
+                static_cast<uint16_t>(buff_recv.func_int32_param(1));
+            uint8_t *data = new uint8_t[payload_len];
+
+            memcpy(data, buff_recv.func_bytes_param(0).c_str(), payload_len);
+            aditof::Status status = camDepthSensor->adsd3500_write_payload_cmd(
+                cmd, data, payload_len);
+
+            delete[] data;
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        }
+
+        case ADSD3500_WRITE_PAYLOAD: {
+            uint16_t payload_len =
+                static_cast<uint16_t>(buff_recv.func_int32_param(0));
+            uint8_t *data = new uint8_t[payload_len];
+
+            memcpy(data, buff_recv.func_bytes_param(0).c_str(), payload_len);
+            aditof::Status status =
+                camDepthSensor->adsd3500_write_payload(data, payload_len);
+
+            delete[] data;
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        }
+
+        case ADSD3500_GET_STATUS: {
+            int chipStatus;
+            int imagerStatus;
+
+            aditof::Status status =
+                camDepthSensor->adsd3500_get_status(chipStatus, imagerStatus);
+            if (status == aditof::Status::OK) {
+                buff_send.add_int32_payload(chipStatus);
+                buff_send.add_int32_payload(imagerStatus);
+            }
+
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        }
+
+        case GET_INTERRUPTS: {
+
+            {
+                if (adsd3500InterruptsQueueMutex.try_lock_for(
+                        std::chrono::milliseconds(500))) {
+                    while (!adsd3500InterruptsQueue.empty()) {
+                        buff_send.add_int32_payload(
+                            (int)adsd3500InterruptsQueue.front());
+                        adsd3500InterruptsQueue.pop();
+                    }
+                    adsd3500InterruptsQueueMutex.unlock();
+                } else {
+                    LOG(ERROR) << "Unable to lock adsd3500InterruptsQueueMutex "
+                                  "in 500 ms";
+                }
+            }
+
+            buff_send.set_status(
+                static_cast<::payload::Status>(aditof::Status::OK));
+            break;
+        }
+
+        case HANG_UP: {
+            if (sensors_are_created) {
+                cleanup_sensors();
+            }
+            clientEngagedWithSensors = false;
+
+            break;
+        }
+
+        case GET_DEPTH_COMPUTE_PARAM: {
+            std::map<std::string, std::string> ini_params;
+            aditof::Status status =
+                camDepthSensor->getDepthComputeParams(ini_params);
+            if (status == aditof::Status::OK) {
+                buff_send.add_strings_payload(ini_params["abThreshMin"]);
+                buff_send.add_strings_payload(ini_params["abSumThresh"]);
+                buff_send.add_strings_payload(ini_params["confThresh"]);
+                buff_send.add_strings_payload(ini_params["radialThreshMin"]);
+                buff_send.add_strings_payload(ini_params["radialThreshMax"]);
+                buff_send.add_strings_payload(ini_params["jblfApplyFlag"]);
+                buff_send.add_strings_payload(ini_params["jblfWindowSize"]);
+                buff_send.add_strings_payload(ini_params["jblfGaussianSigma"]);
+                buff_send.add_strings_payload(
+                    ini_params["jblfExponentialTerm"]);
+                buff_send.add_strings_payload(ini_params["jblfMaxEdge"]);
+                buff_send.add_strings_payload(ini_params["jblfABThreshold"]);
+                buff_send.add_strings_payload(ini_params["headerSize"]);
+            }
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        }
+
+        case SET_DEPTH_COMPUTE_PARAM: {
+            std::map<std::string, std::string> ini_params;
+            ini_params["abThreshMin"] = buff_recv.func_strings_param(0);
+            ini_params["abSumThresh"] = buff_recv.func_strings_param(1);
+            ini_params["confThresh"] = buff_recv.func_strings_param(2);
+            ini_params["radialThreshMin"] = buff_recv.func_strings_param(3);
+            ini_params["radialThreshMax"] = buff_recv.func_strings_param(4);
+            ini_params["jblfApplyFlag"] = buff_recv.func_strings_param(5);
+            ini_params["jblfWindowSize"] = buff_recv.func_strings_param(6);
+            ini_params["jblfGaussianSigma"] = buff_recv.func_strings_param(7);
+            ini_params["jblfExponentialTerm"] = buff_recv.func_strings_param(8);
+            ini_params["jblfMaxEdge"] = buff_recv.func_strings_param(9);
+            ini_params["jblfABThreshold"] = buff_recv.func_strings_param(10);
+
+            aditof::Status status =
+                camDepthSensor->setDepthComputeParams(ini_params);
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        }
+
+        case GET_INI_ARRAY: {
+            int mode = buff_recv.func_int32_param(0);
+            std::string iniStr;
+
+            aditof::Status status =
+                camDepthSensor->getIniParamsArrayForMode(mode, iniStr);
+
+            if (status == aditof::Status::OK) {
+                buff_send.add_strings_payload(iniStr);
+            }
+            buff_send.set_status(static_cast<::payload::Status>(status));
+            break;
+        }
+        case SERVER_CONNECT: {
+            if (!no_of_client_connected) {
+                buff_send.set_message("Connection Allowed");
+            } else {
+                buff_send.set_message("Only 1 client connection allowed");
+            }
+            break;
+        }
+
+        case RECV_ASYNC: {
+            send_async = true;
+            buff_send.set_message("send_async");
+
+            break;
+        }
+
+        default: {
+            std::string msgErr = "Function not found";
+            std::cout << msgErr << "\n";
+
+            buff_send.set_message(msgErr);
+            buff_send.set_server_status(
+                ::payload::ServerStatus::REQUEST_UNKNOWN);
+            break;
+        }
+        } // switch
+    } else {
+        LOG(ERROR) << "Unknown function name : " << buff_recv.func_name();
     }
-
-    case RECV_ASYNC: {
-        send_async = true;
-        buff_send.set_message("send_async");
-
-        break;
-    }
-
-    default: {
-        std::string msgErr = "Function not found";
-        std::cout << msgErr << "\n";
-
-        buff_send.set_message(msgErr);
-        buff_send.set_server_status(::payload::ServerStatus::REQUEST_UNKNOWN);
-        break;
-    }
-    } // switch
 
     {
         if (adsd3500InterruptsQueueMutex.try_lock_for(
