@@ -12,19 +12,16 @@ This test is designed to test the SDK stream without exiting between sessions. W
 ## Command Line Options
 
 ```
-SDK Stream Test.
+SDK Stream Test
     Usage:
-      data_collect
-      data_collect --i <test file> --f <output older path> [--ip <ip>]
-      data_collect (-h | --help)
+      sdk_stream_test --i <test file> --f <output older path> [--ip <ip>]
+      sdk_stream_test (-h | --help)
 
     Options:
       -h --help          Show this screen.
       --f <folder path>  Output folder path
       --ip <ip>          Camera IP
       --i <test file>    Test definition file
-
-    Note: --m argument supports index (0, 1, etc.)
 ``` 
 
 ## Test Definition File

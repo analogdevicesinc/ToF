@@ -50,18 +50,15 @@ int main(int argc, char *argv[]);
 
 static const char kUsagePublic[] =
     R"(SDK Stream Test
-    Usage:
-      data_collect 
-      data_collect --i <test file> --f <output older path> [--ip <ip>]
-      data_collect (-h | --help)
+    Usage: 
+      sdk_stream_test --i <test file> --f <output older path> [--ip <ip>]
+      sdk_stream_test (-h | --help)
 
     Options:
       -h --help          Show this screen.
       --f <folder path>  Output folder path
       --ip <ip>          Camera IP
       --i <test file>    Test definition file
-
-    Note: --m argument supports index (0, 1, etc.) 
 )";
 
 std::vector<std::map<std::string, std::string>>
