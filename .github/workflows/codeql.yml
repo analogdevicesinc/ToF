@@ -13,7 +13,7 @@ name: "CodeQL Advanced"
 
 on:
   push:
-    branches: [ "main", "dev-6.1.0" ,"codeql-advanced-mode-enable"]
+    branches: [ "main", "dev-6.1.0"]
   pull_request:
     branches: [ "main", "dev-6.1.0" ]
 
