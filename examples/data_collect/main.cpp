@@ -31,6 +31,8 @@
 #include <thread>
 #include <vector>
 
+#include "../../libaditof/sdk/src/connections/target/buffer_allocator.h"
+
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -368,6 +370,19 @@ int main(int argc, char *argv[]) {
             LOG(INFO) << "Please reboot the board!";
             return 0;
         }
+    }
+
+    // Get BufferAllocator singleton
+    std::shared_ptr<BufferAllocator> bufferAllocator =
+        BufferAllocator::getInstance();
+    LOG(INFO) << "Using BufferAllocator at: "
+              << static_cast<void *>(bufferAllocator.get());
+
+    // Allocate buffers before setting mode
+    status = bufferAllocator->allocate_queues_memory();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to allocate buffers!";
+        return 0;
     }
 
     // Get modes

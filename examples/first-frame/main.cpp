@@ -45,6 +45,8 @@
 #include <iostream>
 #include <map>
 
+#include "../../libaditof/sdk/src/connections/target/buffer_allocator.h"
+
 using namespace aditof;
 
 static const char Help_Menu[] =
@@ -212,6 +214,19 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "SD card image version: " << cameraDetails.sdCardImageVersion;
     LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
     LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
+
+    // Get BufferAllocator singleton
+    std::shared_ptr<BufferAllocator> bufferAllocator =
+        BufferAllocator::getInstance();
+    LOG(INFO) << "Using BufferAllocator at: "
+              << static_cast<void *>(bufferAllocator.get());
+
+    // Allocate buffers before setting mode
+    status = bufferAllocator->allocate_queues_memory();
+    if (status != Status::OK) {
+        LOG(ERROR) << "Failed to allocate buffers!";
+        return 0;
+    }
 
     std::vector<uint8_t> availableModes;
     camera->getAvailableModes(availableModes);
