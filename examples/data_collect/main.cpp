@@ -31,7 +31,9 @@
 #include <thread>
 #include <vector>
 
+#if defined(NXP) || defined(NVIDIA)
 #include "../../libaditof/sdk/src/connections/target/buffer_allocator.h"
+#endif
 
 #ifdef _WIN32
 #include <windows.h>
@@ -372,6 +374,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
+#if defined(NXP) || defined(NVIDIA)
+
     // Get BufferAllocator singleton
     std::shared_ptr<BufferAllocator> bufferAllocator =
         BufferAllocator::getInstance();
@@ -384,6 +388,7 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "Failed to allocate buffers!";
         return 0;
     }
+#endif
 
     // Get modes
     std::vector<uint8_t> availableModes;
