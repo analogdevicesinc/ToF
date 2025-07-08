@@ -683,6 +683,9 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             aditof::Status status = camDepthSensor->stop();
             buff_send.set_status(static_cast<::payload::Status>(status));
 
+            std::this_thread::sleep_for(std::chrono::milliseconds(
+                100)); // sleep this thread for proper closer.
+
             close_zmq_connection();
 
             break;
