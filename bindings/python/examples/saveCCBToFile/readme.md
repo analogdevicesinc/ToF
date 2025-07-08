@@ -9,5 +9,5 @@ Usage:
 
 Example:
 ```
-python saveCCBToFile.py 10.43.0.1
+python saveCCBToFile.py 192.168.56.1
 ```

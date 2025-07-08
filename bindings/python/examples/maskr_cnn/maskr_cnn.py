@@ -41,7 +41,7 @@ import statistics
 
 thr = 0.5
 
-ip = "" # Set to "ip:10.43.0.1" if networking is used.
+ip = "" # Set to "ip:192.168.56.1" if networking is used.
 
 class ModesEnum(Enum):
     MODE_NEAR = 0

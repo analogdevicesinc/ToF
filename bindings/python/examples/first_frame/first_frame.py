@@ -42,7 +42,7 @@ def help():
     print(f"Network connection: {sys.argv[0]} <mode number> <ip>")
     print()
     print("For example:")
-    print(f"python {sys.argv[0]} 0 10.43.0.1")
+    print(f"python {sys.argv[0]} 0 192.168.56.1")
     exit(1)
 
 if len(sys.argv) < 2 or len(sys.argv) > 3 or sys.argv[1] == "--help" or sys.argv[1] == "-h" :

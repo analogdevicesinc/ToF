@@ -27,7 +27,7 @@ optional arguments:
                                Note: --m argument supports both index and string (Default: 0/sr-native)
   -wt <warmup>         warmup time in seconds[default: 0]
   -ccb <FILE>          The path to store CCB content
-  -ip <ip>             camera IP[default: 10.43.0.1]
+  -ip <ip>             camera IP[default: 192.168.56.1]
   -fw <firmware>       Adsd3500 firmware file
   -s, --split          Save each frame into a separate file (Debug)
   -t, --netlinktest    Puts server on target in test mode (Debug)
