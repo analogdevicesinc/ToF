@@ -122,6 +122,14 @@ else()
         add_definitions(-DSINGLE)
 endif()
 
+
+# Add the device definition
+if(NXP)
+     add_definitions(-DNXP)
+elseif(NVIDIA)
+     add_definitions(-DNVIDIA)
+endif()
+
 set(RESOURCES_DIR "${CMAKE_BINARY_DIR}/resources")
 make_directory(${RESOURCES_DIR})
 
