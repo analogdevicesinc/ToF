@@ -43,7 +43,7 @@ In this case two test specified:
 ## Example Session
 
 ```
-$> sdk_stream_test.exe -f output -ip 10.43.0.1 -i test-example.vector 2> output.txt
+$> sdk_stream_test.exe -f output -ip 192.168.56.1 -i test-example.vector 2> output.txt
 $> dir output
 06/26/2025  02:02 PM        62,915,328 frame2025_06_26_14_02_32_0.bin
 06/26/2025  02:02 PM        25,691,008 frame2025_06_26_14_02_41_0.bin

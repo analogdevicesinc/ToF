@@ -37,7 +37,7 @@ from enum import Enum
 import sys
 import mediapipe as mp
 
-ip = "10.43.0.1" # Set to "10.43.0.1" if networking is used.
+ip = "192.168.56.1" # Set to "192.168.56.1" if networking is used.
 mode = 3
 
 inWidth = 300

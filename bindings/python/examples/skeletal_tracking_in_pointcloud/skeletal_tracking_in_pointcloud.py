@@ -48,7 +48,7 @@ frame_count = 0
 start_time = time.time()
 
 # Initialize Parameters
-ip = "10.43.0.1" # Set to "10.43.0.1" if networking is used.
+ip = "192.168.56.1" # Set to "192.168.56.1" if networking is used.
 mode = 3
 image_width = 512
 image_height = 512

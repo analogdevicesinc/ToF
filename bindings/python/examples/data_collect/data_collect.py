@@ -48,7 +48,7 @@ mode_help_message = """Valid mode (-m) options are:
         Note: --m argument supports index (Default: 0) """
 
 
-Ip= '10.43.0.1'
+Ip= '192.168.56.1'
 imager_configurations = ["standard", "standard-raw", "custom", "custom-raw"]
 if __name__ == '__main__':
     parser = argparse.ArgumentParser( formatter_class=argparse.RawTextHelpFormatter,
@@ -63,7 +63,7 @@ if __name__ == '__main__':
                         default=0, help='warmup time in seconds[default: 0]', metavar = '<warmup>')
     parser.add_argument('-ccb', type=str, 
                         help='The path to store CCB content', metavar='<FILE>')                    
-    parser.add_argument('-ip', default=Ip, help='camera IP[default: 10.42.0.1]', metavar = '<ip>')
+    parser.add_argument('-ip', default=Ip, help='camera IP[default: 192.168.56.1]', metavar = '<ip>')
     parser.add_argument('-fw', dest='firmware', help='Adsd3500 firmware file', metavar = '<firmware>')
     parser.add_argument('-s', '--split', action="store_true", dest='split', 
                         help='Save each frame into a separate file (Debug)')
