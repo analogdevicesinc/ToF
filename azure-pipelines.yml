@@ -37,18 +37,15 @@ jobs:
         imageName: 'ubuntu-22.04'
         DOCKER: "septimiuvana/arm64-ubuntu"
         EXTRA_CMAKE_FLAGS: "-DNVIDIA=1"
-        
       clang_format:
         imageName: 'ubuntu-22.04'
         BUILD_TYPE: "clang_format"
-        
       cppcheck:
         imageName: 'ubuntu-20.04'
         BUILD_TYPE: "cppcheck"
-        
       deploy_doxygen:
         imageName: 'ubuntu-20.04'
-        BUILD_TYPE: "deploy_doxygen"  
+        BUILD_TYPE: "deploy_doxygen"
 
   pool:
     vmImage: $(imageName)
@@ -83,8 +80,31 @@ jobs:
       displayName: "Install Dependencies"
 
     - script: |
+        echo "Running clang-format..."
+        ./ci/azure/run_clang_format.sh
+      condition: eq(variables['BUILD_TYPE'], 'clang_format')
+      displayName: "Clang Format"
+
+    - script: |
+        echo "Running cppcheck..."
+        ./ci/azure/run_cppcheck.sh
+      condition: eq(variables['BUILD_TYPE'], 'cppcheck')
+      displayName: "Cppcheck"
+
+    - script: |
+        echo "Deploying Doxygen..."
+        ./ci/azure/deploy_doxygen.sh
+      condition: eq(variables['BUILD_TYPE'], 'deploy_doxygen')
+      displayName: "Deploy Doxygen"
+
+    - script: |
         if [[ "${DOCKER}" != "" ]]; then sudo sysctl kernel.randomize_va_space=0; fi
         ./ci/azure/run_build.sh
+      condition: and(
+        ne(variables['BUILD_TYPE'], 'clang_format'),
+        ne(variables['BUILD_TYPE'], 'cppcheck'),
+        ne(variables['BUILD_TYPE'], 'deploy_doxygen')
+      )
       displayName: "Build"
 
 - job: WindowsBuild
