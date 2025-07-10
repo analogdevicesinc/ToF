@@ -1,119 +1,100 @@
 trigger:
   branches: 
     exclude:
-    - no_ci_*
+      - no_ci_*
 
 variables:
   WORK_DIR: "$(Agent.BuildDirectory)/s"  
-  BUILD_DIR:  "$(WORK_DIR)/build"
+  BUILD_DIR: "$(WORK_DIR)/build"
   DEPS_DIR: "$(BUILD_DIR)/deps"
-  DEFAULT_CMAKE_FLAGS: "-DWITH_NETWORK=1 \
-                        -DWITH_PYTHON=1 \
-                        -DWITH_OPENCV=1 \ 
-                        -DWITH_EXAMPLES=1 \
-                        -DWITH_DOC=0 \
-                        -DWITH_OPEN3D=0 \ 
-                        -DCI_BUILD=1"
+  DEFAULT_CMAKE_FLAGS: >
+    -DWITH_NETWORK=1
+    -DWITH_PYTHON=1
+    -DWITH_OPENCV=1
+    -DWITH_EXAMPLES=1
+    -DWITH_DOC=0
+    -DWITH_OPEN3D=0
+    -DCI_BUILD=1
   NUM_JOBS: 4
-  IS_PULL_REQUEST: ${{ eq('$(Build.Reason)', 'PullRequest') }}
+  IS_PULL_REQUEST: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
   BRANCH_NAME: $(Build.SourceBranchName)
   REPO_SLUG: $(Build.Repository.Name)
   CURRENT_COMMIT: $(Build.SourceVersion)
-  
 
 jobs:
 - job: LinuxBuilds
   timeoutInMinutes: 200
   strategy:
     matrix:
-      
-      #PC
-      #ubuntu_20_04_x86_64:
-       # imageName: 'ubuntu-20.04'
-
       ubuntu_22_04_x86_64:
         imageName: 'ubuntu-22.04'
-
       ubuntu_24_04_x86_64:
         imageName: 'ubuntu-24.04'
-
       ubuntu_22_04_x86_64_offline:
         imageName: 'ubuntu-22.04'
         EXTRA_CMAKE_FLAGS: "-DWITH_OFFLINE=on"
-
-      #IMX
-      #ubuntu_22_04_imx:
-        imageName: 'ubuntu-22.04'
-        DOCKER: "septimiuvana/arm64-ubuntu"
-        EXTRA_CMAKE_FLAGS: "-DNXP=1"
-
-      #NVIDIA
       ubuntu_22_04_nvidia:
         imageName: 'ubuntu-22.04'
         DOCKER: "septimiuvana/arm64-ubuntu"
         EXTRA_CMAKE_FLAGS: "-DNVIDIA=1"
-      
-      #code quality, TO DO: once entire code is formatted enable clang-format
-      #clang_format:
+        
+      clang_format:
         imageName: 'ubuntu-22.04'
         BUILD_TYPE: "clang_format"
-
-      #cppcheck:
-        imageName: 'ubuntu-22.04'
+        
+      cppcheck:
+        imageName: 'ubuntu-20.04'
         BUILD_TYPE: "cppcheck"
-
-      #deploy_doxygen:
-        imageName: 'ubuntu-22.04'
-        BUILD_TYPE: "deploy_doxygen"
+        
+      deploy_doxygen:
+        imageName: 'ubuntu-20.04'
+        BUILD_TYPE: "deploy_doxygen"  
 
   pool:
     vmImage: $(imageName)
+
   steps:
-  - checkout: self
-    fetchDepth: 1
-    submodules: true
-    clean: true
-    persistCredentials: true
+    - checkout: self
+      fetchDepth: 1
+      submodules: true
+      clean: true
+      persistCredentials: true
 
-  - task: Cache@2
-    condition: and(
-      eq(variables['DOCKER'], ''),
-      ne(variables['BUILD_TYPE'], 'clang_format'),
-      ne(variables['BUILD_TYPE'], 'cppcheck'),
-      ne(variables['BUILD_TYPE'], 'deploy_doxygen')
+    - task: Cache@2
+      condition: and(
+        eq(variables['DOCKER'], ''),
+        ne(variables['BUILD_TYPE'], 'clang_format'),
+        ne(variables['BUILD_TYPE'], 'cppcheck'),
+        ne(variables['BUILD_TYPE'], 'deploy_doxygen')
       )
+      inputs:
+        key: mykeyx-$(imageName)
+        restoreKeys: mykeyx-$(imageName)
+        path: $(DEPS_DIR)
+        cacheHitVar: CACHE_RESTORED
 
-    inputs:
-      key: mykeyx | "$(imageName)" 
-      restoreKeys: mykeyx | "$(imageName)"
-      path: $(DEPS_DIR)
-      cacheHitVar: CACHE_RESTORED
-    
-  - script: ./ci/azure/deps.sh
-    condition: or(
-      eq(variables.CACHE_RESTORED, 'false'), 
-      eq(variables['BUILD_TYPE'], 'clang_format'),
-      eq(variables['BUILD_TYPE'], 'cppcheck'),
-      eq(variables['BUILD_TYPE'], 'deploy_doxygen')
+    - script: ./ci/azure/deps.sh
+      condition: or(
+        eq(variables.CACHE_RESTORED, 'false'), 
+        eq(variables['BUILD_TYPE'], 'clang_format'),
+        eq(variables['BUILD_TYPE'], 'cppcheck'),
+        eq(variables['BUILD_TYPE'], 'deploy_doxygen')
       )
-      
-    displayName: "Install Dependencies"
+      displayName: "Install Dependencies"
 
-  - script: |
-      if [[ "${DOCKER}" != "" ]]; then sudo sysctl kernel.randomize_va_space=0; fi
-      ./ci/azure/run_build.sh
-    displayName: "Build"
+    - script: |
+        if [[ "${DOCKER}" != "" ]]; then sudo sysctl kernel.randomize_va_space=0; fi
+        ./ci/azure/run_build.sh
+      displayName: "Build"
 
 - job: WindowsBuild
   strategy:
     matrix:
-
       VS2019_Win64:
         imageName: 'windows-2019'
         COMPILER: 'Visual Studio 16 2019'
         ARCH: 'x64'
         artifactName: 'Windows-VS-16-2019-x64'
-
       VS2022_Win64:
         imageName: 'windows-2022'
         COMPILER: 'Visual Studio 17 2022'
@@ -121,29 +102,20 @@ jobs:
         artifactName: 'Windows-VS-17-2022-x64'
 
   pool:
-      vmImage: $[ variables['imageName'] ]
+    vmImage: $(imageName)
+
   steps:
-  - checkout: self
-    fetchDepth: 1
-    submodules: true
-    clean: true
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.9'
-  # - task: Cache@2
-  #   inputs:
-  #     key: deps_windows | "$(imageName)" 
-  #     restoreKeys: deps_windows | "$(imageName)"
-  #     path: $(Agent.BuildDirectory)/s/deps_installed
-  #     cacheHitVar: CACHE_RESTORED
-  # - task: PowerShell@2
-  #   inputs:
-  #     targetType: 'filePath'
-  #     filePath: ./ci/azure/windows-build/install_deps.ps1
-  #   condition: eq(variables.CACHE_RESTORED, 'false')
-  #   displayName: "Install Dependencies"
-  - task: PowerShell@2
-    inputs:
-      targetType: 'filePath'
-      filePath: ./ci/azure/windows-build/build_sdk.ps1
-    displayName: "Build"
+    - checkout: self
+      fetchDepth: 1
+      submodules: true
+      clean: true
+
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.9'
+
+    - task: PowerShell@2
+      inputs:
+        targetType: 'filePath'
+        filePath: ./ci/azure/windows-build/build_sdk.ps1
+      displayName: "Build"
