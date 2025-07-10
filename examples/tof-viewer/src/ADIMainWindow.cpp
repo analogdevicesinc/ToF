@@ -529,7 +529,7 @@ void ADIMainWindow::showMainMenu() {
                 showLoadAdsdParamsMenu();
             }
             if (ImGui::MenuItem("Save Configuration", nullptr, false,
-                                cameraWorkerDone && isPlaying)) {
+                                cameraWorkerDone && !isPlaying)) {
                 showSaveAdsdParamsMenu();
             }
             ImGui::EndMenu();
