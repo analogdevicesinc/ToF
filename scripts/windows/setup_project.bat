@@ -155,7 +155,7 @@ popd
 
 ::build the project with the selected options
 pushd %build_dire%
-cmake -G %generator% -DWITH_PYTHON=on -DRECV_ASYNC=off %source_dir% -DCMAKE_BUILD_TYPE=%config_type%
+cmake -G %generator% -DWITH_PYTHON=on -DRECV_ASYNC=on %source_dir% -DCMAKE_BUILD_TYPE=%config_type%
 cmake --build . --config %config_type% -j %threads%
 popd
 EXIT /B %ERRORLEVEL%

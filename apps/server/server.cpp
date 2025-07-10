@@ -35,6 +35,7 @@
 #include "aditof/sensor_enumerator_interface.h"
 #include "buffer.pb.h"
 
+#include "../../libaditof/sdk/src/connections/target/buffer_allocator.h"
 #include "../../sdk/src/connections/target/v4l_buffer_access_interface.h"
 
 #ifdef USE_GLOG
@@ -142,29 +143,37 @@ void close_zmq_connection() {
 
 void stream_zmq_frame() {
 
+    // Establish the connection and stream the frames. Since zmq is not thread safe, there
+    // this need to be initialized and used in same thread.
+
+    static zmq::context_t zmq_context(1);
+    server_socket =
+        std::make_unique<zmq::socket_t>(zmq_context, zmq::socket_type::push);
+    server_socket->setsockopt(ZMQ_SNDHWM, (int *)&max_send_frames,
+                              sizeof(max_send_frames));
+    server_socket->setsockopt(ZMQ_SNDTIMEO, FRAME_TIMEOUT);
+    server_socket->bind("tcp://*:5555");
+    LOG(INFO) << "ZMQ server socket connection established.";
+
     LOG(INFO) << "stream_frame thread running in the background.";
-    zmq::pollitem_t items[] = {
-        {static_cast<void *>(*server_socket), 0, ZMQ_POLLOUT, 0}};
 
     running = true;
 
     while (true) {
 
-        zmq::poll(items, 1, FRAME_TIMEOUT); // Poll with a timeout of 200 ms
+        if (stop_flag.load()) {
+            LOG(INFO) << "stream_frame thread is exiting.";
+            break;
+        }
 
         // 1. Wait for frame to be captured on the other thread
         std::unique_lock<std::mutex> lock(frameMutex);
         if (!cvGetFrame.wait_for(lock, std::chrono::milliseconds(500), []() {
-                return frameCaptured || stop_flag.load() == true;
+                return frameCaptured || stop_flag.load();
             })) {
             LOG(WARNING) << "stream_zmq_frame: Timeout waiting for "
                             "frameCaptured or stop_flag";
             continue;
-        }
-
-        if (stop_flag.load()) {
-            LOG(INFO) << "stream_frame thread is exiting.";
-            break;
         }
 
         // 2. Get your hands on the captured frame
@@ -185,11 +194,9 @@ void stream_zmq_frame() {
         }
         zmq::message_t message(buff_frame_length);
         memcpy(message.data(), buff_frame_to_send, buff_frame_length);
-        if (items[0].revents & ZMQ_POLLOUT) {
-            server_socket->send(message, zmq::send_flags::none);
-            // LOG(INFO) << "Frame sent successfully size : " << buff_frame_length;
-        } else {
-            LOG(INFO) << "Socket not ready, Dropping Frames";
+        auto send = server_socket->send(message, zmq::send_flags::none);
+        if (!send.has_value()) {
+            LOG(INFO) << "Client is busy , dropping the frame!";
         }
     }
 
@@ -225,8 +232,8 @@ void stop_stream_thread() {
     {
         std::lock_guard<std::mutex> lock(mtx);
         stop_flag.store(true);
-        cvGetFrame.notify_one();
     }
+    cvGetFrame.notify_all();
 
     {
         std::unique_lock<std::mutex> lock(mtx);
@@ -234,7 +241,6 @@ void stop_stream_thread() {
                             [] { return running.load() == false; })) {
             // Wait until the thread has stopped
             LOG(INFO) << "Waiting for stream thread to stop...";
-            continue;
         }
     }
 
@@ -491,6 +497,7 @@ int main(int argc, char *argv[]) {
         LOG(ERROR) << "Failed to bind Server socket : " << e.what();
         return 0;
     }
+
     std::string monitor_endpoint = "inproc://monitor";
     zmq_socket_monitor(server_cmd->handle(), "inproc://monitor", ZMQ_EVENT_ALL);
 
@@ -645,15 +652,18 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                 }
                 cvGetFrame.notify_one();
             }
-            static zmq::context_t zmq_context(1);
-            server_socket = std::make_unique<zmq::socket_t>(
-                zmq_context, zmq::socket_type::push);
-            server_socket->setsockopt(ZMQ_SNDHWM, (int *)&max_send_frames,
-                                      sizeof(max_send_frames));
-            server_socket->bind("tcp://*:5555");
-            LOG(INFO) << "ZMQ server socket connection established.";
+
             if (send_async == true) {
                 start_stream_thread(); // Start the stream_frame thread .
+            } else {
+                static zmq::context_t zmq_context(1);
+                server_socket = std::make_unique<zmq::socket_t>(
+                    zmq_context, zmq::socket_type::push);
+                server_socket->setsockopt(ZMQ_SNDHWM, (int *)&max_send_frames,
+                                          sizeof(max_send_frames));
+                server_socket->setsockopt(ZMQ_SNDTIMEO, FRAME_TIMEOUT);
+                server_socket->bind("tcp://*:5555");
+                LOG(INFO) << "ZMQ server socket connection established.";
             }
 
             buff_send.set_status(static_cast<::payload::Status>(status));
