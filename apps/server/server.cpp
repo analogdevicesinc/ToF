@@ -143,9 +143,19 @@ void close_zmq_connection() {
 
 void stream_zmq_frame() {
 
+    // Establish the connection and stream the frames. Since zmq is not thread safe, there
+    // this need to be initialized and used in same thread.
+
+    static zmq::context_t zmq_context(1);
+    server_socket =
+        std::make_unique<zmq::socket_t>(zmq_context, zmq::socket_type::push);
+    server_socket->setsockopt(ZMQ_SNDHWM, (int *)&max_send_frames,
+                              sizeof(max_send_frames));
+    server_socket->setsockopt(ZMQ_SNDTIMEO, FRAME_TIMEOUT);
+    server_socket->bind("tcp://*:5555");
+    LOG(INFO) << "ZMQ server socket connection established.";
+
     LOG(INFO) << "stream_frame thread running in the background.";
-    zmq::pollitem_t items[] = {
-        {static_cast<void *>(*server_socket), 0, ZMQ_POLLOUT, 0}};
 
     running = true;
 
@@ -495,24 +505,6 @@ int main(int argc, char *argv[]) {
     // Connect the monitor socket
     monitor_socket->connect("inproc://monitor");
 
-    // Get BufferAllocator singleton
-    std::shared_ptr<BufferAllocator> bufferAllocator =
-        BufferAllocator::getInstance();
-    LOG(INFO) << "Using BufferAllocator at: "
-              << static_cast<void *>(bufferAllocator.get());
-
-    // Allocate buffers before setting mode
-    aditof::Status status = bufferAllocator->allocate_queues_memory();
-    if (status != aditof::Status::OK) {
-        LOG(ERROR) << "Failed to allocate frames queues..";
-        return 0;
-    } else {
-        LOG(INFO) << __func__
-                  << "After allocation: m_v4l2_input_buffer_Q size: "
-                  << bufferAllocator->m_v4l2_input_buffer_Q.size()
-                  << ", m_tofi_io_Buffer_Q size: "
-                  << bufferAllocator->m_tofi_io_Buffer_Q.size();
-    }
     // run thread to receive data
     data_transaction_thread = std::thread(data_transaction);
     data_transaction_thread.detach();
@@ -660,16 +652,18 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
                 }
                 cvGetFrame.notify_one();
             }
-            static zmq::context_t zmq_context(1);
-            server_socket = std::make_unique<zmq::socket_t>(
-                zmq_context, zmq::socket_type::push);
-            server_socket->setsockopt(ZMQ_SNDHWM, (int *)&max_send_frames,
-                                      sizeof(max_send_frames));
-            server_socket->setsockopt(ZMQ_SNDTIMEO, FRAME_TIMEOUT);
-            server_socket->bind("tcp://*:5555");
-            LOG(INFO) << "ZMQ server socket connection established.";
+
             if (send_async == true) {
                 start_stream_thread(); // Start the stream_frame thread .
+            } else {
+                static zmq::context_t zmq_context(1);
+                server_socket = std::make_unique<zmq::socket_t>(
+                    zmq_context, zmq::socket_type::push);
+                server_socket->setsockopt(ZMQ_SNDHWM, (int *)&max_send_frames,
+                                          sizeof(max_send_frames));
+                server_socket->setsockopt(ZMQ_SNDTIMEO, FRAME_TIMEOUT);
+                server_socket->bind("tcp://*:5555");
+                LOG(INFO) << "ZMQ server socket connection established.";
             }
 
             buff_send.set_status(static_cast<::payload::Status>(status));
@@ -682,9 +676,6 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             }
             aditof::Status status = camDepthSensor->stop();
             buff_send.set_status(static_cast<::payload::Status>(status));
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(
-                100)); // sleep this thread for proper closer.
 
             close_zmq_connection();
 
