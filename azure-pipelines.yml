@@ -16,7 +16,6 @@ variables:
     -DWITH_OPEN3D=0
     -DCI_BUILD=1
   NUM_JOBS: 4
-  IS_PULL_REQUEST: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
   BRANCH_NAME: $(Build.SourceBranchName)
   REPO_SLUG: $(Build.Repository.Name)
   CURRENT_COMMIT: $(Build.SourceVersion)
@@ -48,7 +47,7 @@ jobs:
         BUILD_TYPE: "deploy_doxygen"
 
   pool:
-    vmImage: $(imageName)
+    vmImage: $[ variables['imageName'] ]
 
   steps:
     - checkout: self
