@@ -1,0 +1,774 @@
+<p><span style="font-size:30px;"><u>ADTF3175D Eval Kit Release
+6.1.0</u></span></p>
+<ul>
+<li><a href="#release-notes">Release Notes</a></li>
+<li><a href="#dependencies">Dependencies</a></li>
+<li><a href="#installation">Installation</a>
+<ul>
+<li><a href="#1-install-on-the-host">1. Install on the Host</a>
+<ul>
+<li><a href="#windows-11">Windows 11</a></li>
+<li><a href="#ubuntu-2204-or-ubuntu-2404">Ubuntu 22.04 or Ubuntu
+24.04</a></li>
+<li><a href="#overview-of-installed-files">Overview of Installed
+Files</a></li>
+</ul></li>
+<li><a href="#2-flashing-the-sd-card-image">2. Flashing the SD Card
+Image</a>
+<ul>
+<li><a
+href="#windows-11-ubuntu-2204-or-ubuntu-2404-using-balena-etcher">Windows
+11, Ubuntu 22.04 or Ubuntu 24.04: Using Balena Etcher</a></li>
+<li><a href="#windows-11-using-win32-disk-imager">Windows 11: Using
+Win32 Disk Imager</a></li>
+</ul></li>
+<li><a href="#3-updating-the-adsd3500-isp-firmware">3. Updating the
+ADSD3500 ISP firmware.</a></li>
+</ul></li>
+<li><a href="#configuration-of-the-eval-kit-from-the-host">Configuration
+of the Eval Kit from the Host</a>
+<ul>
+<li><a href="#powershell-interface">PowerShell Interface</a></li>
+</ul></li>
+<li><a href="#using-the-eval-kit">Using the Eval Kit</a>
+<ul>
+<li><a href="#c-tools">C++ Tools</a>
+<ul>
+<li><a href="#data_collect-c">data_collect (C++)</a>
+<ul>
+<li><a href="#command-line-interface">Command Line Interface</a></li>
+<li><a href="#example-1-basic-usage">Example 1: Basic Usage</a></li>
+<li><a href="#example-2-saving-configuration-data-to-json">Example 2:
+Saving Configuration Data to JSON</a></li>
+<li><a href="#example-3-loading-configuration-data-from-json">Example 3:
+Loading Configuration Data from JSON</a></li>
+<li><a
+href="#extracting-data-from-saved-streams-raw_parserpy">Extracting Data
+from Saved Streams: raw_parser.py</a></li>
+</ul></li>
+<li><a href="#first_frame-c">first_frame (C++)</a>
+<ul>
+<li><a href="#command-line-interface-1">Command Line Interface</a></li>
+<li><a href="#example-1-basic-usage-1">Example 1: Basic Usage</a></li>
+</ul></li>
+<li><a href="#aditofgui-c">ADIToFGUI (C++)</a>
+<ul>
+<li><a href="#open-adtf3175d-eval-kit">Open ADTF3175D Eval Kit</a></li>
+<li><a href="#mode-selection">Mode Selection</a></li>
+<li><a href="#data-views">Data Views</a></li>
+<li><a href="#aditofgui-and-configuration-parameters">ADIToFGUI and
+Configuration Parameters</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#python-tools">Python Tools</a>
+<ul>
+<li><a href="#data_collect-python">data_collect (Python)</a></li>
+<li><a href="#first_frame-python">first_frame (Python)</a></li>
+<li><a href="#streaming-python">streaming (Python)</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#appendix">Appendix</a>
+<ul>
+<li><a href="#understand-the-saved-configuration-json-file">Understand
+the Saved Configuration JSON File</a>
+<ul>
+<li><a href="#general-parameters">General Parameters</a></li>
+<li><a href="#mode-parameters">Mode Parameters</a></li>
+</ul></li>
+</ul></li>
+</ul>
+<h1 id="release-notes">Release Notes</h1>
+<ul>
+<li>IP address of device is now 192.168.56.1.</li>
+<li>Improved frame transfer performance:
+<ul>
+<li>ZeroMQ has replaced libwebsockets as the protocol stack between the
+device and the host for control and frame data.</li>
+<li>Multi-threading is now used to enhance frame data transfer between
+V4L2 and the depth compute library.</li>
+</ul></li>
+<li>Update and configuration accessible via a web interface or a
+PowerShell script.</li>
+<li>Ubuntu 20.04 support has been removed, but Ubuntu 24.04 has been
+added alongside Ubuntu 22.04.</li>
+<li>Fixed an issue with displaying the point cloud.</li>
+<li>Update cJSON to the latest version.</li>
+<li>Dependency libraries are now statically link instead of dynamically
+linked to the libaditof SDK binary.</li>
+<li>Support for ADSD3500 ISP firmware version 6.0.0 API updates.</li>
+</ul>
+<h1 id="dependencies">Dependencies</h1>
+<ul>
+<li>Host operating system: Windows 11, Ubuntu 22.04 or Ubuntu 24.04</li>
+<li><a
+href="https://www.python.org/downloads/release/python-3100/">Python
+3.10</a></li>
+<li>SD card flashing software:
+<ul>
+<li>Windows 11, Ubuntu 22.04 or Ubuntu 24.04: <a
+href="https://etcher.balena.io/#download-etcher">Balena Etcher</a></li>
+<li>Windows 11: <a
+href="https://sourceforge.net/projects/win32diskimager/">Win32 Disk
+Imager</a></li>
+</ul></li>
+<li>PowerShell:
+<ul>
+<li>Windows 11: A standard part of Windows 11</li>
+<li>Ubuntu 22.04 or Ubuntu 24.04: <a
+href="https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.5">Installing
+PowerShell on Ubuntu</a></li>
+</ul></li>
+</ul>
+<h1 id="installation">Installation</h1>
+<ol type="1">
+<li>Download the appropriate release of 6.1.0 from <a
+href="https://github.com/analogdevicesinc/ToF/releases">ADI ToF Release
+Page on GitHub</a>.</li>
+<li>Follow the installation instructions from <a
+href="https://github.com/analogdevicesinc/ToF/releases">ADI ToF Release
+Page on GitHub</a>.</li>
+</ol>
+<h2 id="install-on-the-host">1. Install on the Host</h2>
+<h3 id="windows-11">Windows 11</h3>
+<ol type="1">
+<li>Run the downloaded installer:
+<em>TOF_Evaluation_ADTF3175D-Rel6.1.0.exe</em>.
+<ol type="1">
+<li>Accept the ELA when prompted.</li>
+<li>When prompted with <strong>InstallShield Wizard Completed</strong>,
+choose <em>Download image file</em>.</li>
+</ol>
+<ul>
+<li>Notes
+<ul>
+<li>Unless changed by the user, the package installs to
+*c:Devices_Evaluation_ADTF3175D-Rel6.1.0* location.</li>
+<li>If the image file was not downloaded via the installer it can still
+be download using <em>get_image.cmd</em>. <em>get_image.cmd</em> isis
+available at *TOF_Evaluation_ADTF3175D-Rel6.1.0_image.cmd*. This can be
+also used to re-download the image file.</li>
+</ul></li>
+</ul></li>
+<li>Prepare for the next stages.
+<ol type="1">
+<li>Once download completed and zip file will be available at the same
+location.</li>
+<li>Unzip the downloaded file,
+<em>NXP-Img-Rel6.1.0-ADTF3175D-xxxxxxxx.zip</em> file. This can be done
+from the context menu of explorer. Or using PowerShell.</li>
+</ol>
+<ul>
+<li>Notes:
+<ul>
+<li>The created folder contains the NXP image, depth compute library
+installer, and ADSD3500 firmware binary.</li>
+</ul></li>
+</ul></li>
+</ol>
+<h3 id="ubuntu-22.04-or-ubuntu-24.04">Ubuntu 22.04 or Ubuntu 24.04</h3>
+<ol type="1">
+<li>Make the downloaded file executable: <em>chmod +x
+ToF_Evaluation_Ubuntu_ADTF3175D-Rel6.1.0.sh</em>.</li>
+<li>Run the downloaded installer:
+<em>./ToF_Evaluation_Ubuntu_ADTF3175D-Rel6.1.0.sh</em>.
+<ol type="1">
+<li>Accept the ELA when prompted.</li>
+</ol>
+<ul>
+<li>Notes
+<ul>
+<li>ToF_Evaluation_Ubuntu_ADTF3175D-Rel6.1.0 will be installed to
+<em>~/Analog Devices/ToF_Evaluation_Ubuntu_ADTF3175D-Rel6.1.0</em>.</li>
+<li>There are two bin folders <em>bin_22.04</em> and <em>bin_24.04</em>.
+Use the appropriate version for your Ubuntu Desktop AMD x64.</li>
+</ul></li>
+</ul></li>
+<li>Download the image file.
+<ol type="1">
+<li><em>cd
+~/Analog Devices/ToF_Evaluation_Ubuntu_ADTF3175D-Rel6.1.0/image</em>.</li>
+<li><em>source ./get_image.sh</em>.</li>
+</ol></li>
+<li>Prepare for the next stages.
+<ol type="1">
+<li>Unzip downloaded image file
+<ol type="1">
+<li><em>sudo apt install unzip</em></li>
+<li><em>unzip NXP-Img-Rel6.1.0-ADTF3175D-xxxxxxxx.zip -f
+NXP-Img-Rel6.1.0-ADTF3175D-xxxxxxxx</em></li>
+</ol>
+<ul>
+<li>Notes:
+<ul>
+<li>This folder contains the NXP image, depth compute library installer,
+and ADSD3500 firmware binary.</li>
+</ul></li>
+</ul></li>
+</ol></li>
+</ol>
+<h3 id="overview-of-installed-files">Overview of Installed Files</h3>
+<p>TODO</p>
+<h2 id="flashing-the-sd-card-image">2. Flashing the SD Card Image</h2>
+<p>The following requires <em>microsd-6.0.0-13dd25d8.zip</em> in the
+<em>image/NXP-Img-Rel6.1.0-ADTF3175D-xxxxxxxx</em> folder. This was
+extracted in the previous step.</p>
+<h3
+id="windows-11-ubuntu-22.04-or-ubuntu-24.04-using-balena-etcher">Windows
+11, Ubuntu 22.04 or Ubuntu 24.04: Using Balena Etcher</h3>
+<p>Note, the following images were taken from Windows, but you will see
+the same fundamental information on Ubuntu.</p>
+<p>Step 1. Select the image file, the destination folder, then
+<strong>Flash!</strong>.</p>
+<p><a
+href="images/balena-etcher-1.png"><img src="images/balena-etcher-1.png" width="25%"></a></p>
+<p>Step 2. Write is complete and successful.</p>
+<p><a
+href="images/balena-etcher-2.png"><img src="images/balena-etcher-2.png" width="25%"></a></p>
+<p>Trouble Shooting: * On Windows: If you get an error after clicking
+<strong>Write</strong>, try rebooting your computer and restarting the
+process.</p>
+<h3 id="windows-11-using-win32-disk-imager">Windows 11: Using Win32 Disk
+Imager</h3>
+<p>In the case of Win32 Disk Imager, it is necessary to unzip
+<em>microsd-6.0.0-13dd25d8.zip</em> to get the <em>.img</em> file
+contained within.</p>
+<p>Step 1. Select the image file, the destination folder, then
+<strong>Write</strong>.</p>
+<p><a
+href="images/win32-disk-imager-1.png"><img src="images/win32-disk-imager-1.png" width="25%"></a></p>
+<p>Step 2. Write is complete and successful.</p>
+<p><a
+href="images/win32-disk-imager-2.png"><img src="images/win32-disk-imager-2.png" width="25%"></a></p>
+<p>Trouble Shooting: * On Windows: If you get an error after clicking
+<strong>Write</strong>, try rebooting your computer and restarting the
+process.</p>
+<h2 id="updating-the-adsd3500-isp-firmware.">3. Updating the ADSD3500
+ISP firmware.</h2>
+<p>Note: This method has changed to use the new PowerShell
+interface.</p>
+<h1 id="configuration-of-the-eval-kit-from-the-host">Configuration of
+the Eval Kit from the Host</h1>
+<h2 id="powershell-interface">PowerShell Interface</h2>
+<p>TODO</p>
+<h1 id="using-the-eval-kit">Using the Eval Kit</h1>
+<p>Note, each tool below is supported on Windows 11, Ubuntu 22.04 and
+Ubuntu 24.04.</p>
+<h2 id="c-tools">C++ Tools</h2>
+<h3 id="data_collect-c">data_collect (C++)</h3>
+<p><strong>data_collect</strong> is use save a stream of frames to the
+file system of the host computer.</p>
+<h4 id="command-line-interface">Command Line Interface</h4>
+<pre><code>$ data_collect -h
+Usage: data_collect [options]
+    Data Collect.
+    Usage:
+      data_collect 
+      data_collect [--f &lt;folder&gt;] [--n &lt;ncapture&gt;] [--m &lt;mode&gt;] [--wt &lt;warmup&gt;] [--ccb FILE] [--ip &lt;ip&gt;] [--fw &lt;firmware&gt;] [-s | --split] [-t | --netlinktest] [--ic &lt;imager-configuration&gt;] [-scf &lt;save-configuration-file&gt;] [-lcf &lt;load-configuration-file&gt;]
+      data_collect (-h | --help)
+
+    Options:
+      -h --help          Show this screen.
+      --f &lt;folder&gt;       Output folder (max name 512) [default: ./]
+      --n &lt;ncapture&gt;     Capture frame num. [default: 1]
+      --m &lt;mode&gt;         Mode to capture data in. [default: 0]
+      --wt &lt;warmup&gt;      Warmup Time (sec) [default: 0]
+      --ccb &lt;FILE&gt;       The path to store CCB content
+      --ip &lt;ip&gt;          Camera IP
+      --fw &lt;firmware&gt;    Adsd3500 fw file
+      --split            Save each frame into a separate file (Debug)
+      --netlinktest      Puts server on target in test mode (Debug)
+      --singlethread     Store the frame to file using same tread
+      --ic &lt;imager-configuration&gt;   Select imager configuration: standard, standard-raw,
+                         custom, custom-raw. By default is standard.
+      --scf &lt;save-configuration-file&gt;    Save current configuration to json file
+      --lcf &lt;load-configuration-file&gt;    Load configuration from json file
+
+    Note: --m argument supports index (0, 1, etc.) 
+
+    Valid mode (--m) options are:
+        0: short-range native
+        1: long-range native
+        2: short-range Qnative
+        3: long-range Qnative
+        4: pcm-native
+        5: long-range mixed
+        6: short-range mixed</code></pre>
+<h4 id="example-1-basic-usage">Example 1: Basic Usage</h4>
+<ul>
+<li><em>–f output</em>: Place captured data into the folder
+<em>output</em>.</li>
+<li><em>–m 1</em>: Use mode 1.</li>
+<li><em>–n 100</em>: Capture 100 frames.</li>
+<li><em>–ip 192.168.56.1</em>: Access the camera on the IP address
+192.168.56.1.</li>
+</ul>
+<pre><code>$ data_collect --f output --m 1 --n 100 --ip 192.168.56.1
+I20250709 15:20:25.556339 28592 main.cpp:169] SDK version: 6.1.0 | branch:  | commit:
+I20250709 15:20:25.571966 28592 main.cpp:285] Output folder: output
+I20250709 15:20:25.571966 28592 main.cpp:286] Mode: 1
+I20250709 15:20:25.571966 28592 main.cpp:287] Number of frames: 100
+I20250709 15:20:25.571966 28592 main.cpp:288] Json file:
+I20250709 15:20:25.571966 28592 main.cpp:289] Warm Up Time is: 0 seconds
+I20250709 15:20:25.571966 28592 main.cpp:290] Configuration is: standard
+I20250709 15:20:25.571966 28592 main.cpp:293] Ip address is: 192.168.56.1
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I20250709 15:20:25.571966 28592 system_impl.cpp:91] SDK built with zmq version:4.3.6
+I20250709 15:20:25.571966 28592 network_sensor_enumerator.cpp:66] Looking for sensors over network: 192.168.56.1
+I20250709 15:20:25.635282 28592 network.cpp:215] Attempting to connect server...
+I20250709 15:20:25.635282 50912 network.cpp:501] Event: CONNECT_DELAYED - Connection attempt delayed, server might be unavailable.
+I20250709 15:20:25.635282 50912 network.cpp:461] Connected to server
+Conn established
+I20250709 15:20:25.793783 28592 camera_itof.cpp:105] Sensor name = adsd3500
+I20250709 15:20:25.793783 28592 camera_itof.cpp:125] Initializing camera
+I20250709 15:20:25.809423 28592 network.cpp:215] Attempting to connect server...
+I20250709 15:20:25.809423 50256 network.cpp:501] Event: CONNECT_DELAYED - Connection attempt delayed, server might be unavailable.
+I20250709 15:20:25.809423 50256 network.cpp:461] Connected to server
+Conn established
+I20250709 15:20:26.063987 28592 camera_itof.cpp:222] Current adsd3500 firmware version is: 6.0.0.0
+I20250709 15:20:26.063987 28592 camera_itof.cpp:224] Current adsd3500 firmware git hash is: 66d74765d8339ab89f3085eba04a1b077b1a6faa
+W20250709 15:20:26.112510 28592 camera_itof.cpp:252] fsyncMode is not being set by SDK.
+W20250709 15:20:26.112510 28592 camera_itof.cpp:262] mipiSpeed is not being set by SDK.
+W20250709 15:20:26.112510 28592 camera_itof.cpp:273] enableTempCompenstation is not being set by SDK.
+W20250709 15:20:26.112510 28592 camera_itof.cpp:283] enableEdgeConfidence is not being set by SDK.
+I20250709 15:20:26.127589 28592 camera_itof.cpp:289] Module serial number: Crosby_DV3_2_07D
+I20250709 15:20:26.127589 28592 camera_itof.cpp:297] Camera initialized
+I20250709 15:20:26.127589 28592 main.cpp:334] Configure camera with standard
+I20250709 15:20:26.127589 28592 main.cpp:351] SD card image version: microsd-v6.1.0-ace65e91.img
+I20250709 15:20:26.127589 28592 main.cpp:352] Kernel version: lf-5.10.72-2.2.0
+I20250709 15:20:26.127589 28592 main.cpp:353] U-Boot version: imx_v2020.04_5.4.70_2.3.0
+I20250709 15:20:26.426385 28592 camera_itof.cpp:1812] Camera FPS set from parameter list at: 10
+W20250709 15:20:26.426385 28592 camera_itof.cpp:2032] vcselDelay was not found in parameter list, not setting.
+W20250709 15:20:26.442023 28592 camera_itof.cpp:2084] enablePhaseInvalidation was not found in parameter list, not setting.
+I20250709 15:20:26.473274 28592 camera_itof.cpp:379] Using the following configuration parameters for mode 1
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] abThreshMin : 3.0
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] bitsInAB : 16
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] bitsInConf : 0
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] bitsInPhaseOrDepth : 12
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] confThresh : 25.0
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] depthComputeIspEnable : 1
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] fps : 10
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] headerSize : 128
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] inputFormat : mipiRaw12_8
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] interleavingEnable : 0
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] jblfABThreshold : 10.0
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] jblfApplyFlag : 1
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] jblfExponentialTerm : 5.0
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] jblfGaussianSigma : 10.0
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] jblfMaxEdge : 12.0
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] jblfWindowSize : 7
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] multiCoreEnable : 1
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] numCores : 4
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] partialDepthEnable : 1
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] phaseInvalid : 0
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] radialThreshMax : 4200.0
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] radialThreshMin : 30.0
+I20250709 15:20:26.473274 28592 camera_itof.cpp:382] xyzEnable : 1
+I20250709 15:20:26.473274 28592 camera_itof.cpp:392] Metadata in AB is enabled and it is stored in the first 128 bytes.
+I20250709 15:20:27.888085 28592 camera_itof.cpp:483] Using closed source depth compute library.
+I20250709 15:20:28.512868 28592 network.cpp:619] Frame Client Connection established.
+I20250709 15:20:28.658123 28592 camera_itof.cpp:615] Dropped first frame
+I20250709 15:20:28.734925 28592 main.cpp:462] Requesting 100 frames!
+I20250709 15:20:38.771598 28592 main.cpp:487] Measured FPS: 9.96419
+I20250709 15:20:38.771598 28592 network_depth_sensor.cpp:391] Stopping device
+I20250709 15:20:38.832966 28592 network.cpp:604] Frame socket connection closed.
+
+$ dir output
+ Volume in drive C is OSDisk
+ Volume Serial Number is B258-6604
+
+ Directory of ...\output
+
+07/09/2025  03:20 PM    &lt;DIR&gt;          .
+07/09/2025  03:20 PM    &lt;DIR&gt;          ..
+07/09/2025  03:20 PM     1,048,588,800 frame2025_07_09_15_20_28_0.bin
+               1 File(s)  1,048,588,800 bytes
+               2 Dir(s)  14,942,445,568 bytes free</code></pre>
+<h4 id="example-2-saving-configuration-data-to-json">Example 2: Saving
+Configuration Data to JSON</h4>
+<ul>
+<li><em>–scf saved_cfg.json</em>: Save the device configuration file to
+<em>saved_cfg.json</em>.</li>
+<li><em>–ip 192.168.56.1</em>: Access the camera on the IP address
+192.168.56.1.</li>
+</ul>
+<pre><code>$ data_collect --scf saved_cfg.json --ip 192.168.56.1
+I20250709 15:22:09.820384 18952 main.cpp:169] SDK version: 6.1.0 | branch:  | commit:
+I20250709 15:22:09.820384 18952 main.cpp:285] Output folder: .
+I20250709 15:22:09.820384 18952 main.cpp:286] Mode: 0
+I20250709 15:22:09.820384 18952 main.cpp:287] Number of frames: 0
+I20250709 15:22:09.820384 18952 main.cpp:288] Json file:
+I20250709 15:22:09.820384 18952 main.cpp:289] Warm Up Time is: 0 seconds
+I20250709 15:22:09.820384 18952 main.cpp:290] Configuration is: standard
+I20250709 15:22:09.820384 18952 main.cpp:293] Ip address is: 192.168.56.1
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I20250709 15:22:09.820384 18952 system_impl.cpp:91] SDK built with zmq version:4.3.6
+I20250709 15:22:09.820384 18952 network_sensor_enumerator.cpp:66] Looking for sensors over network: 192.168.56.1
+I20250709 15:22:09.883611 18952 network.cpp:215] Attempting to connect server...
+I20250709 15:22:09.883611 50976 network.cpp:501] Event: CONNECT_DELAYED - Connection attempt delayed, server might be unavailable.
+I20250709 15:22:09.883611 50976 network.cpp:461] Connected to server
+Conn established
+Assertion failed: Socket operation on non-socket [10038] (C:\dev\ToF\sources\eval-kit\SoMv1\dev\main\libaditof\libzmq\src\signaler.cpp:345)
+I20250709 15:22:10.047490 18952 camera_itof.cpp:105] Sensor name = adsd3500
+I20250709 15:22:10.047490 18952 camera_itof.cpp:125] Initializing camera
+I20250709 15:22:10.088671 18952 network.cpp:215] Attempting to connect server...
+I20250709 15:22:10.088671 39032 network.cpp:501] Event: CONNECT_DELAYED - Connection attempt delayed, server might be unavailable.
+I20250709 15:22:10.088671 39032 network.cpp:461] Connected to server
+Conn established
+I20250709 15:22:10.343323 18952 camera_itof.cpp:222] Current adsd3500 firmware version is: 6.0.0.0
+I20250709 15:22:10.343323 18952 camera_itof.cpp:224] Current adsd3500 firmware git hash is: 66d74765d8339ab89f3085eba04a1b077b1a6faa
+W20250709 15:22:10.389600 18952 camera_itof.cpp:252] fsyncMode is not being set by SDK.
+W20250709 15:22:10.389600 18952 camera_itof.cpp:262] mipiSpeed is not being set by SDK.
+W20250709 15:22:10.389600 18952 camera_itof.cpp:273] enableTempCompenstation is not being set by SDK.
+W20250709 15:22:10.389600 18952 camera_itof.cpp:283] enableEdgeConfidence is not being set by SDK.
+I20250709 15:22:10.389600 18952 camera_itof.cpp:289] Module serial number: Crosby_DV3_2_07D
+I20250709 15:22:10.389600 18952 camera_itof.cpp:297] Camera initialized
+I20250709 15:22:10.405228 18952 main.cpp:334] Configure camera with standard
+I20250709 15:22:10.406365 18952 main.cpp:343] Current configuration info saved to file saved_cfg.json
+I20250709 15:22:10.406365 18952 main.cpp:351] SD card image version: microsd-v6.1.0-ace65e91.img
+I20250709 15:22:10.406365 18952 main.cpp:352] Kernel version: lf-5.10.72-2.2.0
+I20250709 15:22:10.406365 18952 main.cpp:353] U-Boot version: imx_v2020.04_5.4.70_2.3.0
+I20250709 15:22:15.641728 18952 camera_itof.cpp:1812] Camera FPS set from parameter list at: 10
+W20250709 15:22:15.641728 18952 camera_itof.cpp:2032] vcselDelay was not found in parameter list, not setting.
+
+$ dir
+ Volume in drive C is OSDisk
+ Volume Serial Number is B258-6604
+
+ Directory of .
+
+07/09/2025  03:22 PM    &lt;DIR&gt;          .
+07/09/2025  03:22 PM    &lt;DIR&gt;          ..
+07/09/2025  12:54 PM         1,644,544 aditof.dll
+07/09/2025  12:54 PM           174,592 data_collect.exe
+07/09/2025  03:22 PM             4,047 saved_cfg.json
+               3 File(s)      1,823,183 bytes
+               2 Dir(s)  15,991,197,696 bytes free</code></pre>
+<h4 id="example-3-loading-configuration-data-from-json">Example 3:
+Loading Configuration Data from JSON</h4>
+<p>In this example we will use the JSON file to change the frame rate
+for mode 3 to 5fps.</p>
+<p><a
+href="images/data_collect_example_3_fps_change.png"><img src="images/data_collect_example_3_fps_change.png" width="25%"></a></p>
+<ul>
+<li><em>–f output</em>: Place captured data into the folder
+<em>output</em>.</li>
+<li><em>–m 1</em>: Use mode 1.</li>
+<li><em>–n 100</em>: Capture 100 frames.</li>
+<li><em>–lcf saved_cfg.json</em>: Used the device configuration file
+<em>saved_cfg.json</em>.</li>
+<li><em>–ip 192.168.56.1</em>: Access the camera on the IP address
+192.168.56.1.</li>
+</ul>
+<pre><code>$ data_collect --f output --m 1 --n 100 --lcf saved_cfg.json --ip 192.168.56.1
+I20250709 15:27:06.928929 24096 main.cpp:169] SDK version: 6.1.0 | branch:  | commit:
+I20250709 15:27:06.928929 24096 main.cpp:285] Output folder: output
+I20250709 15:27:06.928929 24096 main.cpp:286] Mode: 1
+I20250709 15:27:06.928929 24096 main.cpp:287] Number of frames: 100
+I20250709 15:27:06.928929 24096 main.cpp:288] Json file: saved_cfg.json
+I20250709 15:27:06.928929 24096 main.cpp:289] Warm Up Time is: 0 seconds
+I20250709 15:27:06.928929 24096 main.cpp:290] Configuration is: standard
+I20250709 15:27:06.928929 24096 main.cpp:293] Ip address is: 192.168.56.1
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I20250709 15:27:06.928929 24096 system_impl.cpp:91] SDK built with zmq version:4.3.6
+I20250709 15:27:06.928929 24096 network_sensor_enumerator.cpp:66] Looking for sensors over network: 192.168.56.1
+I20250709 15:27:06.975823 24096 network.cpp:215] Attempting to connect server...
+I20250709 15:27:06.975823 51092 network.cpp:501] Event: CONNECT_DELAYED - Connection attempt delayed, server might be unavailable.
+I20250709 15:27:06.978331 51092 network.cpp:461] Connected to server
+Conn established
+I20250709 15:27:07.148248 24096 camera_itof.cpp:105] Sensor name = adsd3500
+I20250709 15:27:07.148248 24096 camera_itof.cpp:125] Initializing camera
+I20250709 15:27:07.166107 24096 network.cpp:215] Attempting to connect server...
+I20250709 15:27:07.166107 43256 network.cpp:501] Event: CONNECT_DELAYED - Connection attempt delayed, server might be unavailable.
+I20250709 15:27:07.166107 43256 network.cpp:461] Connected to server
+Conn established
+I20250709 15:27:07.457262 24096 camera_itof.cpp:222] Current adsd3500 firmware version is: 6.0.0.0
+I20250709 15:27:07.458998 24096 camera_itof.cpp:224] Current adsd3500 firmware git hash is: 66d74765d8339ab89f3085eba04a1b077b1a6faa
+W20250709 15:27:07.479894 24096 camera_itof.cpp:252] fsyncMode is not being set by SDK.
+W20250709 15:27:07.479894 24096 camera_itof.cpp:262] mipiSpeed is not being set by SDK.
+W20250709 15:27:07.479894 24096 camera_itof.cpp:273] enableTempCompenstation is not being set by SDK.
+W20250709 15:27:07.479894 24096 camera_itof.cpp:283] enableEdgeConfidence is not being set by SDK.
+I20250709 15:27:07.479894 24096 camera_itof.cpp:289] Module serial number: Crosby_DV3_2_07D
+I20250709 15:27:07.479894 24096 camera_itof.cpp:297] Camera initialized
+I20250709 15:27:07.496006 24096 main.cpp:334] Configure camera with standard
+I20250709 15:27:07.496006 24096 main.cpp:351] SD card image version: microsd-v6.1.0-ace65e91.img
+I20250709 15:27:07.496006 24096 main.cpp:352] Kernel version: lf-5.10.72-2.2.0
+I20250709 15:27:07.496006 24096 main.cpp:353] U-Boot version: imx_v2020.04_5.4.70_2.3.0
+I20250709 15:27:07.763384 24096 camera_itof.cpp:1812] Camera FPS set from parameter list at: 5
+W20250709 15:27:07.763384 24096 camera_itof.cpp:2032] vcselDelay was not found in parameter list, not setting.
+W20250709 15:27:07.778898 24096 camera_itof.cpp:2084] enablePhaseInvalidation was not found in parameter list, not setting.
+I20250709 15:27:07.801113 24096 camera_itof.cpp:379] Using the following configuration parameters for mode 1
+I20250709 15:27:07.806582 24096 camera_itof.cpp:382] abThreshMin : 3
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] bitsInAB : 16
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] bitsInConf : 0
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] bitsInPhaseOrDepth : 12
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] confThresh : 25
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] depthComputeIspEnable : 1
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] fps : 5
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] headerSize : 128
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] inputFormat : mipiRaw12_8
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] interleavingEnable : 0
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] jblfABThreshold : 10
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] jblfApplyFlag : 1
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] jblfExponentialTerm : 5
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] jblfGaussianSigma : 10
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] jblfMaxEdge : 12
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] jblfWindowSize : 7
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] multiCoreEnable : 1
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] numCores : 4
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] partialDepthEnable : 1
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] phaseInvalid : 0
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] radialThreshMax : 4200
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] radialThreshMin : 30
+I20250709 15:27:07.807090 24096 camera_itof.cpp:382] xyzEnable : 1
+I20250709 15:27:07.811530 24096 camera_itof.cpp:392] Metadata in AB is enabled and it is stored in the first 128 bytes.
+I20250709 15:27:09.213614 24096 camera_itof.cpp:483] Using closed source depth compute library.
+I20250709 15:27:09.809082 24096 network.cpp:619] Frame Client Connection established.
+I20250709 15:27:09.989188 24096 camera_itof.cpp:615] Dropped first frame
+I20250709 15:27:10.179111 24096 main.cpp:462] Requesting 100 frames!
+I20250709 15:27:30.129359 24096 main.cpp:487] Measured FPS: 5.01556
+I20250709 15:27:30.129359 24096 network_depth_sensor.cpp:391] Stopping device
+I20250709 15:27:30.255499 24096 network.cpp:604] Frame socket connection closed.</code></pre>
+<p>Notice, in the 3rd last line (<em>Measured FPS: 5.01556</em>), the
+frame rate is 5fps.</p>
+<h4 id="extracting-data-from-saved-streams-raw_parser.py">Extracting
+Data from Saved Streams: raw_parser.py</h4>
+<p>TODO</p>
+<h3 id="first_frame-c">first_frame (C++)</h3>
+<h4 id="command-line-interface-1">Command Line Interface</h4>
+<pre><code>$ first-frame.exe -h
+First-frame usage:
+    first-frame
+    first-frame (-h | --help)
+    first-frame [-ip | --ip &lt;ip&gt;] [-m | --m &lt;mode&gt;] [-config | --config &lt;config_file.json&gt;]
+
+    Arguments:
+      config_file.json   Input config_default.json file (which has *.ccb and *.cfg)
+
+    Options:
+      -h --help          Show this screen.
+      -m --m &lt;mode&gt;      Mode to capture data in. [default: 0]
+
+    NOTE: -m | --m argument supports both index and string (0/sr-native)
+
+    Valid mode (-m | --m) options are:
+        0: short-range native
+        1: long-range native
+        2: short-range Qnative
+        3: long-range Qnative
+        4: pcm-native
+        5: long-range mixed
+        6: short-range mixed</code></pre>
+<h4 id="example-1-basic-usage-1">Example 1: Basic Usage</h4>
+<ul>
+<li><em>–m 1</em>: Use mode 1.</li>
+<li><em>–ip 192.168.56.1</em>: Access the camera on the IP address
+192.168.56.1.</li>
+</ul>
+<pre><code>$ first-frame.exe --m 1 --ip 192.168.56.1
+I20250709 16:06:43.101483 48388 main.cpp:148] SDK version: 6.1.0 | branch:  | commit:
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I20250709 16:06:43.101483 48388 system_impl.cpp:91] SDK built with zmq version:4.3.6
+I20250709 16:06:43.101483 48388 network_sensor_enumerator.cpp:66] Looking for sensors over network: 182.168.56.1
+I20250709 16:06:43.143138 48388 network.cpp:215] Attempting to connect server...
+I20250709 16:06:43.143138 38948 network.cpp:501] Event: CONNECT_DELAYED - Connection attempt delayed, server might be unavailable.
+I20250709 16:06:43.174392 48388 network.cpp:215] Attempting to connect server...
+I20250709 16:06:43.221859 48388 network.cpp:215] Attempting to connect server...
+W20250709 16:06:46.291255 48388 network_sensor_enumerator.cpp:71] Server Connect Failed
+I20250709 16:06:46.291255 38948 network.cpp:466] Closed connection with connection ID: 0
+W20250709 16:06:46.291255 48388 main.cpp:178] No cameras found
+
+C:\dev\ToF\sources\eval-kit\SoMv1\dev\main\build\examples\first-frame\Release&gt;first-frame.exe --m 1 --ip 192.168.56.1
+I20250709 16:06:54.994602 40956 main.cpp:148] SDK version: 6.1.0 | branch:  | commit:
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I20250709 16:06:55.010252 40956 system_impl.cpp:91] SDK built with zmq version:4.3.6
+I20250709 16:06:55.015236 40956 network_sensor_enumerator.cpp:66] Looking for sensors over network: 192.168.56.1
+I20250709 16:06:55.072685 40956 network.cpp:215] Attempting to connect server...
+I20250709 16:06:55.072685 44472 network.cpp:501] Event: CONNECT_DELAYED - Connection attempt delayed, server might be unavailable.
+I20250709 16:06:55.072685 44472 network.cpp:461] Connected to server
+Conn established
+I20250709 16:06:55.229804 40956 camera_itof.cpp:105] Sensor name = adsd3500
+I20250709 16:06:55.229804 40956 camera_itof.cpp:125] Initializing camera
+I20250709 16:06:55.245445 40956 network.cpp:215] Attempting to connect server...
+I20250709 16:06:55.245445 51080 network.cpp:501] Event: CONNECT_DELAYED - Connection attempt delayed, server might be unavailable.
+I20250709 16:06:55.261075 51080 network.cpp:461] Connected to server
+Conn established
+I20250709 16:06:55.481328 40956 camera_itof.cpp:222] Current adsd3500 firmware version is: 6.0.0.0
+I20250709 16:06:55.481328 40956 camera_itof.cpp:224] Current adsd3500 firmware git hash is: 66d74765d8339ab89f3085eba04a1b077b1a6faa
+W20250709 16:06:55.528570 40956 camera_itof.cpp:252] fsyncMode is not being set by SDK.
+W20250709 16:06:55.528570 40956 camera_itof.cpp:262] mipiSpeed is not being set by SDK.
+W20250709 16:06:55.528570 40956 camera_itof.cpp:273] enableTempCompenstation is not being set by SDK.
+W20250709 16:06:55.528570 40956 camera_itof.cpp:283] enableEdgeConfidence is not being set by SDK.
+I20250709 16:06:55.545256 40956 camera_itof.cpp:289] Module serial number: Crosby_DV3_2_07D
+I20250709 16:06:55.545256 40956 camera_itof.cpp:297] Camera initialized
+I20250709 16:06:55.545256 40956 main.cpp:212] SD card image version: microsd-v6.1.0-ace65e91.img
+I20250709 16:06:55.545256 40956 main.cpp:213] Kernel version: lf-5.10.72-2.2.0
+I20250709 16:06:55.545256 40956 main.cpp:214] U-Boot version: imx_v2020.04_5.4.70_2.3.0
+I20250709 16:06:55.828395 40956 camera_itof.cpp:1812] Camera FPS set from parameter list at: 10
+W20250709 16:06:55.828395 40956 camera_itof.cpp:2032] vcselDelay was not found in parameter list, not setting.
+W20250709 16:06:55.844854 40956 camera_itof.cpp:2084] enablePhaseInvalidation was not found in parameter list, not setting.
+I20250709 16:06:55.859369 40956 camera_itof.cpp:379] Using the following configuration parameters for mode 1
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] abThreshMin : 3.0
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] bitsInAB : 16
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] bitsInConf : 0
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] bitsInPhaseOrDepth : 12
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] confThresh : 25.0
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] depthComputeIspEnable : 1
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] fps : 10
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] headerSize : 128
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] inputFormat : mipiRaw12_8
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] interleavingEnable : 0
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] jblfABThreshold : 10.0
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] jblfApplyFlag : 1
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] jblfExponentialTerm : 5.0
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] jblfGaussianSigma : 10.0
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] jblfMaxEdge : 12.0
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] jblfWindowSize : 7
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] multiCoreEnable : 1
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] numCores : 4
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] partialDepthEnable : 1
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] phaseInvalid : 0
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] radialThreshMax : 4200.0
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] radialThreshMin : 30.0
+I20250709 16:06:55.859369 40956 camera_itof.cpp:382] xyzEnable : 1
+I20250709 16:06:55.859369 40956 camera_itof.cpp:392] Metadata in AB is enabled and it is stored in the first 128 bytes.
+I20250709 16:06:57.267123 40956 camera_itof.cpp:483] Using closed source depth compute library.
+I20250709 16:06:57.850332 40956 main.cpp:187] Running the callback for which the status of ADSD3500 has been forwarded. ADSD3500 status = Adsd3500Status::OK
+I20250709 16:06:57.863314 40956 main.cpp:187] Running the callback for which the status of ADSD3500 has been forwarded. ADSD3500 status = Adsd3500Status::OK
+I20250709 16:06:57.866338 40956 network.cpp:619] Frame Client Connection established.
+I20250709 16:06:58.040611 40956 camera_itof.cpp:615] Dropped first frame
+I20250709 16:06:58.087862 40956 main.cpp:241] succesfully requested frame!
+I20250709 16:06:58.087862 40956 network_depth_sensor.cpp:391] Stopping device
+I20250709 16:06:58.215757 40956 main.cpp:187] Running the callback for which the status of ADSD3500 has been forwarded. ADSD3500 status =
+I20250709 16:06:58.215757 40956 main.cpp:187] Running the callback for which the status of ADSD3500 has been forwarded. ADSD3500 status =
+I20250709 16:06:58.215757 40956 network.cpp:604] Frame socket connection closed.
+E20250709 16:06:58.230296 40956 camera_itof.cpp:1891] ADSD3500 error detected:
+I20250709 16:06:58.230296 40956 main.cpp:261] Chip status error code: 41
+I20250709 16:06:58.230296 40956 main.cpp:262] Imager status error code: 0
+I20250709 16:06:58.230296 40956 main.cpp:271] Sensor Temperature: 35
+I20250709 16:06:58.230296 40956 main.cpp:272] Laser Temperature: 41
+I20250709 16:06:58.230296 40956 main.cpp:273] Frame Number: 207
+I20250709 16:06:58.230296 40956 main.cpp:274] Mode: 1</code></pre>
+<h3 id="aditofgui-c">ADIToFGUI (C++)</h3>
+<pre><code>$ ADIToFGUI</code></pre>
+<h5 id="open-adtf3175d-eval-kit">Open ADTF3175D Eval Kit</h5>
+<p><a
+href="images/aditofgui_1.png"><img src="images/aditofgui_1.png" width="25%"></a></p>
+<h5 id="mode-selection">Mode Selection</h5>
+<p><a
+href="images/aditofgui_3.png"><img src="images/aditofgui_3.png" width="25%"></a></p>
+<h5 id="data-views">Data Views</h5>
+<p><strong>Depth View and AB View</strong></p>
+<p><a
+href="images/aditofgui_4.png"><img src="images/aditofgui_4.png" width="25%"></a></p>
+<p><strong>Depth View and Point Cloud View</strong></p>
+<p><a
+href="images/aditofgui_5.png"><img src="images/aditofgui_5.png" width="25%"></a></p>
+<h5 id="aditofgui-and-configuration-parameters">ADIToFGUI and
+Configuration Parameters</h5>
+<p>This section covers modification of ToF parameters per mode. To
+accomplish this the user needs to:</p>
+<ol type="1">
+<li>Save the configuration file, via <em>Tools-&gt;Save
+Configuration</em>.</li>
+</ol>
+<p><a
+href="images/aditofgui_6.png"><img src="images/aditofgui_6.png" width="25%"></a></p>
+<ol start="2" type="1">
+<li>Mody the saved configuration file outside of ADIToFGUI using a text
+editor.</li>
+</ol>
+<p><a
+href="images/data_collect_example_3_fps_change.png"><img src="images/data_collect_example_3_fps_change.png" width="25%"></a></p>
+<ol start="3" type="1">
+<li>Load the configuration file, via <em>Tools-&gt;Load
+Configuration</em>.</li>
+</ol>
+<p><a
+href="images/aditofgui_7.png"><img src="images/aditofgui_7.png" width="25%"></a></p>
+<ol start="4" type="1">
+<li>Observing the result.</li>
+</ol>
+<p>From the screen capture below you can see the frame rate for mode 1
+is now 5fps.</p>
+<p><a
+href="images/aditofgui_8.png"><img src="images/aditofgui_8.png" width="25%"></a></p>
+<h2 id="python-tools">Python Tools</h2>
+<p>The Python tools rely on the included Python bindings.</p>
+<h3 id="data_collect-python">data_collect (Python)</h3>
+<p>A data collect example, but in Python.</p>
+<h3 id="first_frame-python">first_frame (Python)</h3>
+<p>A basic example showing how to get a frame from the device.</p>
+<h3 id="streaming-python">streaming (Python)</h3>
+<p>This tool uses Pygame to show streaming frames from the device in
+real-time.</p>
+<h1 id="appendix">Appendix</h1>
+<h2 id="understand-the-saved-configuration-json-file">Understand the
+Saved Configuration JSON File</h2>
+<p>For the following discussion <a
+href="other/example-cfg.json">example-cfg.json</a> will be
+referenced.</p>
+<h3 id="general-parameters">General Parameters</h3>
+<p>These should not be changed in the context of the eval kit unless
+explicitly asked to do so by ADI.</p>
+<ul>
+<li><em>errata1</em>: DO NOT CHANGE</li>
+<li><em>fsyncMode</em>: DO NOT A</li>
+<li><em>mipiOutputSpeed</em>: DO NOT CHANGE</li>
+<li><em>enableTempCompensation</em>: DO NOT CHANGE</li>
+<li><em>enableEdgeConfidence</em>: DO NOT CHANGE</li>
+</ul>
+<pre><code>    &quot;errata1&quot;:  1,
+    &quot;fsyncMode&quot;:    -1,
+    &quot;mipiOutputSpeed&quot;:  -1,
+    &quot;enableTempCompensation&quot;:   -1,
+    &quot;enableEdgeConfidence&quot;: -1,</code></pre>
+<h3 id="mode-parameters">Mode Parameters</h3>
+<p>Each supported mode has an entry in the saved file. For example Mode
+0 is shown below.</p>
+<p>This is further sub-divived into two groups:</p>
+<ul>
+<li><em>depth-compute</em>: These parameters are used to configure the
+depth compute parameters for the ADSD3500 and depth compute library. A
+document is avaialble to descript these parameters, please contact ADI
+at tof@analog.com. Please note, this document is only available under
+NDA.</li>
+<li><em>configuration-parameters</em>:
+<ul>
+<li><em>fps</em>: desired frame rate in frames per second.</li>
+<li><em>headerSize</em>: DO NOT CHANGE.</li>
+<li><em>multiCoreEnable</em>: Enable use of multiple CPU cores by the
+depth compute library on the eval kit.</li>
+<li><em>numCores</em>: The number of CPU cores to use when
+<em>multiCoreEnable</em> is set to <em>1</em>.</li>
+<li><em>xyzEnable</em>: DO NOT CHANGE.</li>
+</ul>
+<pre><code>  &quot;0&quot;:    {
+      &quot;depth-compute&quot;:    {
+          &quot;abThreshMin&quot;:  3,
+          &quot;bitsInAB&quot;: 16,
+          &quot;bitsInConf&quot;:   0,
+          &quot;bitsInPhaseOrDepth&quot;:   12,
+          &quot;confThresh&quot;:   25,
+          &quot;depthComputeIspEnable&quot;:    1,
+          &quot;inputFormat&quot;:  &quot;mipiRaw12_8&quot;,
+          &quot;interleavingEnable&quot;:   0,
+          &quot;jblfABThreshold&quot;:  10,
+          &quot;jblfApplyFlag&quot;:    1,
+          &quot;jblfExponentialTerm&quot;:  5,
+          &quot;jblfGaussianSigma&quot;:    10,
+          &quot;jblfMaxEdge&quot;:  12,
+          &quot;jblfWindowSize&quot;:   7,
+          &quot;partialDepthEnable&quot;:   1,
+          &quot;phaseInvalid&quot;: 0,
+          &quot;radialThreshMax&quot;:  4200,
+          &quot;radialThreshMin&quot;:  30
+      },
+      &quot;configuration-parameters&quot;: {
+          &quot;fps&quot;:  10,
+          &quot;headerSize&quot;:   128,
+          &quot;multiCoreEnable&quot;:  1,
+          &quot;numCores&quot;: 4,
+          &quot;xyzEnable&quot;:    1
+      }
+  },</code></pre></li>
+</ul>

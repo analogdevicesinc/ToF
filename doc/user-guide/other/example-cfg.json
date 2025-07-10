@@ -1,0 +1,181 @@
+{
+	"errata1":	1,
+	"fsyncMode":	-1,
+	"mipiOutputSpeed":	-1,
+	"enableTempCompensation":	-1,
+	"enableEdgeConfidence":	-1,
+	"0":	{
+		"depth-compute":	{
+			"abThreshMin":	3,
+			"bitsInAB":	16,
+			"bitsInConf":	0,
+			"bitsInPhaseOrDepth":	12,
+			"confThresh":	25,
+			"depthComputeIspEnable":	1,
+			"inputFormat":	"mipiRaw12_8",
+			"interleavingEnable":	0,
+			"jblfABThreshold":	10,
+			"jblfApplyFlag":	1,
+			"jblfExponentialTerm":	5,
+			"jblfGaussianSigma":	10,
+			"jblfMaxEdge":	12,
+			"jblfWindowSize":	7,
+			"partialDepthEnable":	1,
+			"phaseInvalid":	0,
+			"radialThreshMax":	4200,
+			"radialThreshMin":	30
+		},
+		"configuration-parameters":	{
+			"fps":	10,
+			"headerSize":	128,
+			"multiCoreEnable":	1,
+			"numCores":	4,
+			"xyzEnable":	1
+		}
+	},
+	"1":	{
+		"depth-compute":	{
+			"abThreshMin":	3,
+			"bitsInAB":	16,
+			"bitsInConf":	0,
+			"bitsInPhaseOrDepth":	12,
+			"confThresh":	25,
+			"depthComputeIspEnable":	1,
+			"inputFormat":	"mipiRaw12_8",
+			"interleavingEnable":	0,
+			"jblfABThreshold":	10,
+			"jblfApplyFlag":	1,
+			"jblfExponentialTerm":	5,
+			"jblfGaussianSigma":	10,
+			"jblfMaxEdge":	12,
+			"jblfWindowSize":	7,
+			"partialDepthEnable":	1,
+			"phaseInvalid":	0,
+			"radialThreshMax":	4200,
+			"radialThreshMin":	30
+		},
+		"configuration-parameters":	{
+			"fps":	10,
+			"headerSize":	128,
+			"multiCoreEnable":	1,
+			"numCores":	4,
+			"xyzEnable":	1
+		}
+	},
+	"2":	{
+		"depth-compute":	{
+			"abThreshMin":	3,
+			"bitsInAB":	16,
+			"bitsInConf":	8,
+			"bitsInPhaseOrDepth":	16,
+			"confThresh":	25,
+			"depthComputeIspEnable":	1,
+			"inputFormat":	"raw8",
+			"interleavingEnable":	1,
+			"jblfABThreshold":	10,
+			"jblfApplyFlag":	1,
+			"jblfExponentialTerm":	5,
+			"jblfGaussianSigma":	10,
+			"jblfMaxEdge":	12,
+			"jblfWindowSize":	7,
+			"partialDepthEnable":	0,
+			"phaseInvalid":	0,
+			"radialThreshMax":	10000,
+			"radialThreshMin":	100
+		},
+		"configuration-parameters":	{
+			"fps":	40,
+			"headerSize":	128,
+			"multiCoreEnable":	1,
+			"numCores":	4,
+			"xyzEnable":	1
+		}
+	},
+	"3":	{
+		"depth-compute":	{
+			"abThreshMin":	3,
+			"bitsInAB":	16,
+			"bitsInConf":	8,
+			"bitsInPhaseOrDepth":	16,
+			"confThresh":	25,
+			"depthComputeIspEnable":	1,
+			"inputFormat":	"raw8",
+			"interleavingEnable":	1,
+			"jblfABThreshold":	10,
+			"jblfApplyFlag":	1,
+			"jblfExponentialTerm":	5,
+			"jblfGaussianSigma":	10,
+			"jblfMaxEdge":	12,
+			"jblfWindowSize":	7,
+			"partialDepthEnable":	0,
+			"phaseInvalid":	0,
+			"radialThreshMax":	10000,
+			"radialThreshMin":	100
+		},
+		"configuration-parameters":	{
+			"fps":	40,
+			"headerSize":	128,
+			"multiCoreEnable":	1,
+			"numCores":	4,
+			"xyzEnable":	1
+		}
+	},
+	"5":	{
+		"depth-compute":	{
+			"abThreshMin":	3,
+			"bitsInAB":	16,
+			"bitsInConf":	8,
+			"bitsInPhaseOrDepth":	16,
+			"confThresh":	25,
+			"depthComputeIspEnable":	1,
+			"inputFormat":	"raw8",
+			"interleavingEnable":	1,
+			"jblfABThreshold":	10,
+			"jblfApplyFlag":	1,
+			"jblfExponentialTerm":	5,
+			"jblfGaussianSigma":	10,
+			"jblfMaxEdge":	12,
+			"jblfWindowSize":	7,
+			"partialDepthEnable":	0,
+			"phaseInvalid":	0,
+			"radialThreshMax":	10000,
+			"radialThreshMin":	100
+		},
+		"configuration-parameters":	{
+			"fps":	40,
+			"headerSize":	128,
+			"multiCoreEnable":	1,
+			"numCores":	4,
+			"xyzEnable":	1
+		}
+	},
+	"6":	{
+		"depth-compute":	{
+			"abThreshMin":	3,
+			"bitsInAB":	16,
+			"bitsInConf":	8,
+			"bitsInPhaseOrDepth":	16,
+			"confThresh":	25,
+			"depthComputeIspEnable":	1,
+			"inputFormat":	"raw8",
+			"interleavingEnable":	1,
+			"jblfABThreshold":	10,
+			"jblfApplyFlag":	1,
+			"jblfExponentialTerm":	5,
+			"jblfGaussianSigma":	10,
+			"jblfMaxEdge":	12,
+			"jblfWindowSize":	7,
+			"partialDepthEnable":	0,
+			"phaseInvalid":	0,
+			"radialThreshMax":	10000,
+			"radialThreshMin":	100
+		},
+		"configuration-parameters":	{
+			"fps":	40,
+			"headerSize":	128,
+			"multiCoreEnable":	1,
+			"numCores":	4,
+			"xyzEnable":	1
+		}
+	}
+}
