@@ -35,7 +35,6 @@
 #include "aditof/sensor_enumerator_interface.h"
 #include "buffer.pb.h"
 
-#include "../../libaditof/sdk/src/connections/target/buffer_allocator.h"
 #include "../../sdk/src/connections/target/v4l_buffer_access_interface.h"
 
 #ifdef USE_GLOG
@@ -322,7 +321,9 @@ static void cleanup_sensors() {
     // Stop the frame capturing thread
     if (frameCaptureThread.joinable()) {
         keepCaptureThreadAlive = false;
-        { std::lock_guard<std::mutex> lock(frameMutex); }
+        {
+            std::lock_guard<std::mutex> lock(frameMutex);
+        }
         cvGetFrame.notify_one();
         frameCaptureThread.join();
     }

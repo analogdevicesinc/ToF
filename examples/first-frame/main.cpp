@@ -45,9 +45,7 @@
 #include <iostream>
 #include <map>
 
-#if defined(NXP) || defined(NVIDIA)
-#include "../../libaditof/sdk/src/connections/target/buffer_allocator.h"
-#endif
+
 
 using namespace aditof;
 
@@ -217,20 +215,7 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
     LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
 
-#if defined(NXP) || defined(NVIDIA)
-    // Get BufferAllocator singleton
-    std::shared_ptr<BufferAllocator> bufferAllocator =
-        BufferAllocator::getInstance();
-    LOG(INFO) << "Using BufferAllocator at: "
-              << static_cast<void *>(bufferAllocator.get());
 
-    // Allocate buffers before setting mode
-    status = bufferAllocator->allocate_queues_memory();
-    if (status != Status::OK) {
-        LOG(ERROR) << "Failed to allocate buffers!";
-        return 0;
-    }
-#endif
 
     std::vector<uint8_t> availableModes;
     camera->getAvailableModes(availableModes);
