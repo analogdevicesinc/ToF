@@ -2,6 +2,7 @@
 6.1.0</u></span></p>
 <ul>
 <li><a href="#release-notes">Release Notes</a></li>
+<li><a href="#-requirements-">🛑 Requirements 🛑</a></li>
 <li><a href="#dependencies">Dependencies</a></li>
 <li><a href="#installation">Installation</a>
 <ul>
@@ -69,8 +70,7 @@ Configuration Parameters</a></li>
 </ul></li>
 <li><a href="#appendix">Appendix</a>
 <ul>
-<li><a href="#understand-the-saved-configuration-json-file">Understand
-the Saved Configuration JSON File</a>
+<li><a href="#configuration-json-file">Configuration JSON File</a>
 <ul>
 <li><a href="#general-parameters">General Parameters</a></li>
 <li><a href="#mode-parameters">Mode Parameters</a></li>
@@ -96,6 +96,23 @@ added alongside Ubuntu 22.04.</li>
 <li>Dependency libraries are now statically link instead of dynamically
 linked to the libaditof SDK binary.</li>
 <li>Support for ADSD3500 ISP firmware version 6.0.0 API updates.</li>
+</ul>
+<h1 id="requirements">🛑 Requirements 🛑</h1>
+<p><strong>IMPORTANT</strong>: The SD card image and the ADSD3500
+firmware must be updated with the following.</p>
+<ul>
+<li>ADSD3500 firmware version 6.0.0</li>
+<li>SD Card Image 6.1.0</li>
+</ul>
+<p>Please note, both of these items are available via the installation
+package in the <em>image</em> folder.</p>
+<p>To update each the ADSD3500 firmware and SD card image see the
+following sections, respectively:</p>
+<ul>
+<li><a href="#2-flashing-the-sd-card-image">Flashing the SD Card
+Image</a></li>
+<li><a href="#3-updating-the-adsd3500-isp-firmware">Updating the
+ADSD3500 ISP firmware.</a></li>
 </ul>
 <h1 id="dependencies">Dependencies</h1>
 <ul>
@@ -702,8 +719,7 @@ href="images/aditofgui_8.png"><img src="images/aditofgui_8.png" width="25%"></a>
 <p>This tool uses Pygame to show streaming frames from the device in
 real-time.</p>
 <h1 id="appendix">Appendix</h1>
-<h2 id="understand-the-saved-configuration-json-file">Understand the
-Saved Configuration JSON File</h2>
+<h2 id="configuration-json-file">Configuration JSON File</h2>
 <p>For the following discussion <a
 href="other/example-cfg.json">example-cfg.json</a> will be
 referenced.</p>
