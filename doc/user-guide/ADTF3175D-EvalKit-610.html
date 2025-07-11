@@ -77,6 +77,7 @@ Configuration Parameters</a></li>
 <li><a href="#streaming-python">streaming (Python)</a>
 <ul>
 <li><a href="#command-line-interface-5">Command Line Interface</a></li>
+<li><a href="#example-usage-1">Example Usage</a></li>
 </ul></li>
 </ul></li>
 </ul></li>
@@ -882,6 +883,74 @@ Network connection: depth-image-animation-pygame.py &lt;mode number&gt; &lt;ip&g
 
 For example:
 python depth-image-animation-pygame.py 0 192.168.56.1</code></pre>
+<h4 id="example-usage-1">Example Usage</h4>
+<pre><code>$ python depth-image-animation-pygame.py 3 192.168.56.1
+pygame 2.6.1 (SDL 2.28.4, Python 3.10.11)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+SDK version:  6.1.0  | branch:    | commit:
+Looking for camera on network @ 192.168.56.1.
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I20250711 15:56:41.197575 58104 system_impl.cpp:91] SDK built with zmq version:4.3.6
+I20250711 15:56:41.197575 58104 network_sensor_enumerator.cpp:66] Looking for sensors over network: 192.168.56.1
+I20250711 15:56:41.244740 58104 network.cpp:215] Attempting to connect server...
+I20250711 15:56:41.245250 19180 network.cpp:501] Event: CONNECT_DELAYED - Connection attempt delayed, server might be unavailable.
+I20250711 15:56:41.245250 19180 network.cpp:461] Connected to server
+Conn established
+I20250711 15:56:41.398015 58104 camera_itof.cpp:105] Sensor name = adsd3500
+system.getCameraList() Status.Ok
+I20250711 15:56:41.398015 58104 camera_itof.cpp:125] Initializing camera
+I20250711 15:56:41.428682 58104 network.cpp:215] Attempting to connect server...
+I20250711 15:56:41.428682 53232 network.cpp:501] Event: CONNECT_DELAYED - Connection attempt delayed, server might be unavailable.
+I20250711 15:56:41.428682 53232 network.cpp:461] Connected to server
+Conn established
+I20250711 15:56:41.698410 58104 camera_itof.cpp:222] Current adsd3500 firmware version is: 6.0.0.0
+I20250711 15:56:41.698410 58104 camera_itof.cpp:224] Current adsd3500 firmware git hash is: 66d74765d8339ab89f3085eba04a1b077b1a6faa
+W20250711 15:56:41.744942 58104 camera_itof.cpp:252] fsyncMode is not being set by SDK.
+W20250711 15:56:41.744942 58104 camera_itof.cpp:262] mipiSpeed is not being set by SDK.
+W20250711 15:56:41.744942 58104 camera_itof.cpp:273] enableTempCompenstation is not being set by SDK.
+W20250711 15:56:41.744942 58104 camera_itof.cpp:283] enableEdgeConfidence is not being set by SDK.
+I20250711 15:56:41.755470 58104 camera_itof.cpp:289] Module serial number: Crosby_DV3_2_07D
+I20250711 15:56:41.755470 58104 camera_itof.cpp:297] Camera initialized
+camera1.initialize() Status.Ok
+camera1.getAvailableModes() Status.Ok
+[0, 1, 2, 3, 6, 5]
+camera1.getDetails() Status.Ok
+camera1 details: id: 192.168.56.1 connection: ConnectionType.Network
+I20250711 15:56:42.037783 58104 camera_itof.cpp:1812] Camera FPS set from parameter list at: 40
+W20250711 15:56:42.037783 58104 camera_itof.cpp:2032] vcselDelay was not found in parameter list, not setting.
+W20250711 15:56:42.048796 58104 camera_itof.cpp:2084] enablePhaseInvalidation was not found in parameter list, not setting.
+I20250711 15:56:42.082342 58104 camera_itof.cpp:379] Using the following configuration parameters for mode 3
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] abThreshMin : 3.0
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] bitsInAB : 16
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] bitsInConf : 8
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] bitsInPhaseOrDepth : 16
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] confThresh : 25.0
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] depthComputeIspEnable : 1
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] fps : 40
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] headerSize : 128
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] inputFormat : raw8
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] interleavingEnable : 1
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] jblfABThreshold : 10.0
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] jblfApplyFlag : 1
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] jblfExponentialTerm : 5.0
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] jblfGaussianSigma : 10.0
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] jblfMaxEdge : 12.0
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] jblfWindowSize : 7
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] multiCoreEnable : 1
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] numCores : 4
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] partialDepthEnable : 0
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] phaseInvalid : 0
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] radialThreshMax : 10000.0
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] radialThreshMin : 100.0
+I20250711 15:56:42.082342 58104 camera_itof.cpp:382] xyzEnable : 1
+I20250711 15:56:42.098796 58104 camera_itof.cpp:392] Metadata in AB is enabled and it is stored in the first 128 bytes.
+I20250711 15:56:42.452740 58104 camera_itof.cpp:483] Using closed source depth compute library.
+camera1.setMode() Status.Ok
+I20250711 15:56:42.906859 58104 network.cpp:619] Frame Client Connection established.
+camera1.start() Status.Ok
+I20250711 15:56:45.397756 58104 camera_itof.cpp:615] Dropped first frame
+I20250711 15:56:50.738039 58104 network_depth_sensor.cpp:391] Stopping device
+I20250711 15:56:50.769250 58104 network.cpp:604] Frame socket connection closed.</code></pre>
 <h1 id="appendix">Appendix</h1>
 <h2 id="configuration-json-file">Configuration JSON File</h2>
 <p>For the following discussion <a
