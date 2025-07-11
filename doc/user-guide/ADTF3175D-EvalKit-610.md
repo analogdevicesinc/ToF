@@ -34,8 +34,11 @@
         - [ADIToFGUI and Configuration Parameters](#aditofgui-and-configuration-parameters)
   - [Python Tools](#python-tools)
     - [data\_collect (Python)](#data_collect-python)
+      - [Command Line Interface](#command-line-interface-3)
     - [first\_frame (Python)](#first_frame-python)
+      - [Command Line Interface](#command-line-interface-4)
     - [streaming (Python)](#streaming-python)
+      - [Command Line Interface](#command-line-interface-5)
 - [Appendix](#appendix)
   - [Configuration JSON File](#configuration-json-file)
     - [General Parameters](#general-parameters)
@@ -732,15 +735,80 @@ The Python tools rely on the included Python bindings.
 
 ### data_collect (Python)
 
-A data collect example, but in Python.
+A data collect example, but in Python. This will not be covered in detail since it is similar to data_collect binary executable.
+
+#### Command Line Interface
+
+```
+$ python data_collect.py -h
+usage: data_collect.py [-h] [-f <folder>] [-n <ncapture>] [-m <mode>] [-wt <warmup>] [-ccb <FILE>]
+                       [-ip <ip>] [-fw <firmware>] [-s] [-t] [-st] [-ic <imager-configuration>]
+                       [-scf <save-configuration-file>] [-lcf <load-configuration-file>]
+
+Script to run data collect python script
+
+options:
+  -h, --help            show this help message and exit
+  -f <folder>           output folder [default: ./]
+  -n <ncapture>         number of frame captured[default: 1]
+  -m <mode>             Valid mode (-m) options are:
+                                0: short-range native;
+                                1: long-range native;
+                                2: short-range Qnative;
+                                3: long-range Qnative
+                                4: pcm-native;
+                                5: long-range mixed;
+                                6: short-range mixed;
+
+                                Note: --m argument supports index (Default: 0)
+  -wt <warmup>          warmup time in seconds[default: 0]
+  -ccb <FILE>           The path to store CCB content
+  -ip <ip>              camera IP[default: 192.168.56.1]
+  -fw <firmware>        Adsd3500 firmware file
+  -s, --split           Save each frame into a separate file (Debug)
+  -t, --netlinktest     Puts server on target in test mode (Debug)
+  -st, --singlethread   Store the frame to file using same thread
+  -ic <imager-configuration>
+                        Select imager configuration. By default is standard.
+  -scf <save-configuration-file>
+                        Save current configuration to json file
+  -lcf <load-configuration-file>
+                        Load custom configuration to json file
+```
 
 ### first_frame (Python)
 
 A basic example showing how to get a frame from the device.
 
+#### Command Line Interface
+
+```
+python first_frame.py
+first_frame.py usage:
+USB: first_frame.py <mode number>
+Network connection: first_frame.py <mode number> <ip>
+
+For example:
+python first_frame.py 0 192.168.56.1
+```
+
 ### streaming (Python)
 
 This tool uses Pygame to show streaming frames from the device in real-time.
+
+#### Command Line Interface
+
+```
+python depth-image-animation-pygame.py
+pygame 2.6.1 (SDL 2.28.4, Python 3.10.11)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+depth-image-animation-pygame.py usage:
+USB: depth-image-animation-pygame.py <mode number>
+Network connection: depth-image-animation-pygame.py <mode number> <ip>
+
+For example:
+python depth-image-animation-pygame.py 0 192.168.56.1
+```
 
 # Appendix
 

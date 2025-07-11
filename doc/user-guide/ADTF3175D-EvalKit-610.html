@@ -66,9 +66,18 @@ Configuration Parameters</a></li>
 </ul></li>
 <li><a href="#python-tools">Python Tools</a>
 <ul>
-<li><a href="#data_collect-python">data_collect (Python)</a></li>
-<li><a href="#first_frame-python">first_frame (Python)</a></li>
-<li><a href="#streaming-python">streaming (Python)</a></li>
+<li><a href="#data_collect-python">data_collect (Python)</a>
+<ul>
+<li><a href="#command-line-interface-3">Command Line Interface</a></li>
+</ul></li>
+<li><a href="#first_frame-python">first_frame (Python)</a>
+<ul>
+<li><a href="#command-line-interface-4">Command Line Interface</a></li>
+</ul></li>
+<li><a href="#streaming-python">streaming (Python)</a>
+<ul>
+<li><a href="#command-line-interface-5">Command Line Interface</a></li>
+</ul></li>
 </ul></li>
 </ul></li>
 <li><a href="#appendix">Appendix</a>
@@ -813,12 +822,66 @@ href="images/aditofgui_8.png"><img src="images/aditofgui_8.png" width="25%"></a>
 <h2 id="python-tools">Python Tools</h2>
 <p>The Python tools rely on the included Python bindings.</p>
 <h3 id="data_collect-python">data_collect (Python)</h3>
-<p>A data collect example, but in Python.</p>
+<p>A data collect example, but in Python. This will not be covered in
+detail since it is similar to data_collect binary executable.</p>
+<h4 id="command-line-interface-3">Command Line Interface</h4>
+<pre><code>$ python data_collect.py -h
+usage: data_collect.py [-h] [-f &lt;folder&gt;] [-n &lt;ncapture&gt;] [-m &lt;mode&gt;] [-wt &lt;warmup&gt;] [-ccb &lt;FILE&gt;]
+                       [-ip &lt;ip&gt;] [-fw &lt;firmware&gt;] [-s] [-t] [-st] [-ic &lt;imager-configuration&gt;]
+                       [-scf &lt;save-configuration-file&gt;] [-lcf &lt;load-configuration-file&gt;]
+
+Script to run data collect python script
+
+options:
+  -h, --help            show this help message and exit
+  -f &lt;folder&gt;           output folder [default: ./]
+  -n &lt;ncapture&gt;         number of frame captured[default: 1]
+  -m &lt;mode&gt;             Valid mode (-m) options are:
+                                0: short-range native;
+                                1: long-range native;
+                                2: short-range Qnative;
+                                3: long-range Qnative
+                                4: pcm-native;
+                                5: long-range mixed;
+                                6: short-range mixed;
+
+                                Note: --m argument supports index (Default: 0)
+  -wt &lt;warmup&gt;          warmup time in seconds[default: 0]
+  -ccb &lt;FILE&gt;           The path to store CCB content
+  -ip &lt;ip&gt;              camera IP[default: 192.168.56.1]
+  -fw &lt;firmware&gt;        Adsd3500 firmware file
+  -s, --split           Save each frame into a separate file (Debug)
+  -t, --netlinktest     Puts server on target in test mode (Debug)
+  -st, --singlethread   Store the frame to file using same thread
+  -ic &lt;imager-configuration&gt;
+                        Select imager configuration. By default is standard.
+  -scf &lt;save-configuration-file&gt;
+                        Save current configuration to json file
+  -lcf &lt;load-configuration-file&gt;
+                        Load custom configuration to json file</code></pre>
 <h3 id="first_frame-python">first_frame (Python)</h3>
 <p>A basic example showing how to get a frame from the device.</p>
+<h4 id="command-line-interface-4">Command Line Interface</h4>
+<pre><code>python first_frame.py
+first_frame.py usage:
+USB: first_frame.py &lt;mode number&gt;
+Network connection: first_frame.py &lt;mode number&gt; &lt;ip&gt;
+
+For example:
+python first_frame.py 0 192.168.56.1</code></pre>
 <h3 id="streaming-python">streaming (Python)</h3>
 <p>This tool uses Pygame to show streaming frames from the device in
 real-time.</p>
+<h4 id="command-line-interface-5">Command Line Interface</h4>
+<pre><code>python depth-image-animation-pygame.py
+pygame 2.6.1 (SDL 2.28.4, Python 3.10.11)
+Hello from the pygame community. https://www.pygame.org/contribute.html
+depth-image-animation-pygame.py usage:
+USB: depth-image-animation-pygame.py &lt;mode number&gt;
+Network connection: depth-image-animation-pygame.py &lt;mode number&gt; &lt;ip&gt;
+
+For example:
+python depth-image-animation-pygame.py 0 192.168.56.1</code></pre>
 <h1 id="appendix">Appendix</h1>
 <h2 id="configuration-json-file">Configuration JSON File</h2>
 <p>For the following discussion <a
