@@ -2,7 +2,7 @@ See **ADTF3175D-EvalKit-610.html** for documentation.
 
 # ADI Time-of-Flight Evaluation
 
-## Version 6.0.1
+## Version 6.1.0
 
 ### Additions, Updates and Fixes
 
