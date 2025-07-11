@@ -206,7 +206,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Script to parse a raw file and extract different frame data ')
     parser.add_argument("filename", type=str ,help="bin filename to parse")
-    parser.add_argument("--no_xyz", dest='no_xyz', action='store_true', help="Provide false if input file don't have XYZ. Default assuming false")
+    parser.add_argument("--no_xyz", dest='no_xyz', action='store_true', help="Provide false if input file doesn't have XYZ data. Default assuming false")
 
    
     args = parser.parse_args()
@@ -308,11 +308,6 @@ if __name__ == "__main__":
         #check if confidence data is included
         if (width in qMegaPixel and height in qMegaPixel) and confBytesPerPx:
             visualize_confidence(binFileName,frameDir,str(i))
-
-        #render and visualize point cloud at first frame only
-        if first_time_render_pc:
-            visualize_pcloud(binFileName,frameDir,str(i))
-            first_time_render_pc = 0
             
     #generate video stitched from ab and depth    
     generate_vid(dir_path, m_numberOfFrames, width, height)
