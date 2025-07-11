@@ -21,9 +21,11 @@
       - [Example 1: Basic Usage](#example-1-basic-usage)
       - [Example 2: Saving Configuration Data to JSON](#example-2-saving-configuration-data-to-json)
       - [Example 3: Loading Configuration Data from JSON](#example-3-loading-configuration-data-from-json)
-      - [Extracting Data from Saved Streams: raw\_parser.py](#extracting-data-from-saved-streams-raw_parserpy)
+      - [Extracting Data from Saved Streams: rawparser.py](#extracting-data-from-saved-streams-rawparserpy)
+        - [Command Line Interface](#command-line-interface-1)
+        - [Example Usage](#example-usage)
     - [first\_frame (C++)](#first_frame-c)
-      - [Command Line Interface](#command-line-interface-1)
+      - [Command Line Interface](#command-line-interface-2)
       - [Example 1: Basic Usage](#example-1-basic-usage-1)
     - [ADIToFGUI (C++)](#aditofgui-c)
         - [Open ADTF3175D Eval Kit](#open-adtf3175d-eval-kit)
@@ -460,9 +462,106 @@ I20250709 15:27:30.255499 24096 network.cpp:604] Frame socket connection closed.
 ```
 Notice, in the 3rd last line (*Measured FPS: 5.01556*), the frame rate is 5fps.
 
-#### Extracting Data from Saved Streams: raw_parser.py
+#### Extracting Data from Saved Streams: rawparser.py
 
-TODO
+*rawparser.py* is used to extract frames from data streams collected by data_collect. It can also be used to do the same for data streams recorded by ADIToFGUI. As with the Pyton bindings, Python 3.10 is required.
+
+##### Command Line Interface
+```
+python rawparser.py -h
+usage: rawparser.py [-h] [-o OUTDIR] [-n] [-f FRAMES] filename
+
+Script to parse a raw file and extract different frame data
+
+positional arguments:
+  filename              bin filename to parse
+
+options:
+  -h, --help            show this help message and exit
+  -o OUTDIR, --outdir OUTDIR
+                        Output directory (optional)
+  -n, --no_xyz          Input file doesn't have XYZ data
+  -f FRAMES, --frames FRAMES
+                        Frame range: N (just N), N- (from N to end), N-M (N to M inclusive)
+```
+
+##### Example Usage
+
+The following example extarcts frames 10 thru 10 from the capture file *output\frame2025_07_09_15_27_10_0.bin* and places the contents in the folder *output\range_10_16*.
+
+```
+$ python rawparser.py output\frame2025_07_09_15_27_10_0.bin --outdir output\range_10_16 -f 10-16
+rawparser 1.1.0
+filename: output\frame2025_07_09_15_27_10_0.bin
+The directory C:\tmp\output\range_10_16 was created.
+Width x Height: 1024px x 1024px
+Bits in depth: 2
+Bits in AB: 2
+Bits in conf: 0
+File size: 1048588800
+Frame size: 10485888
+Relative Frame Range: 0 to 99
+Processing frame #: 16
+
+$ dir output\range_10_16\
+ Volume in drive C is OSDisk
+ Volume Serial Number is B258-6604
+
+ Directory of C:\tmp\output\range_10_16
+
+07/11/2025  03:09 PM    <DIR>          .
+07/11/2025  03:09 PM    <DIR>          ..
+07/11/2025  03:09 PM    <DIR>          frame2025_07_09_15_27_10_0_10
+07/11/2025  03:09 PM    <DIR>          frame2025_07_09_15_27_10_0_11
+07/11/2025  03:09 PM    <DIR>          frame2025_07_09_15_27_10_0_12
+07/11/2025  03:09 PM    <DIR>          frame2025_07_09_15_27_10_0_13
+07/11/2025  03:09 PM    <DIR>          frame2025_07_09_15_27_10_0_14
+07/11/2025  03:09 PM    <DIR>          frame2025_07_09_15_27_10_0_15
+07/11/2025  03:09 PM    <DIR>          frame2025_07_09_15_27_10_0_16
+07/11/2025  03:09 PM    <DIR>          vid_frame2025_07_09_15_27_10_0
+               0 File(s)              0 bytes
+              10 Dir(s)  648,952,090,624 bytes free
+
+$ dir output\range_10_16\frame2025_07_09_15_27_10_0_10
+ Volume in drive C is OSDisk
+ Volume Serial Number is B258-6604
+
+ Directory of C:\tmp\output\range_10_16\frame2025_07_09_15_27_10_0_10
+
+07/11/2025  03:09 PM    <DIR>          .
+07/11/2025  03:09 PM    <DIR>          ..
+07/11/2025  03:09 PM           425,239 ab_frame2025_07_09_15_27_10_0_10.png
+07/11/2025  03:09 PM           235,164 depth_frame2025_07_09_15_27_10_0_10.png
+07/11/2025  03:09 PM        10,485,888 frame2025_07_09_15_27_10_0_10.bin
+07/11/2025  03:09 PM               381 metadata_frame2025_07_09_15_27_10_0_10.txt
+07/11/2025  03:09 PM        25,165,974 pointcloud_frame2025_07_09_15_27_10_0_10.ply
+               5 File(s)     36,312,646 bytes
+               2 Dir(s)  648,951,046,144 bytes free
+```
+
+Each frame and its contents are extracted to its own folders:
+```
+C:\TMP\OUTPUT\RANGE_10_16
+├───frame2025_07_09_15_27_10_0_10
+├───frame2025_07_09_15_27_10_0_11
+├───frame2025_07_09_15_27_10_0_12
+├───frame2025_07_09_15_27_10_0_13
+├───frame2025_07_09_15_27_10_0_14
+├───frame2025_07_09_15_27_10_0_15
+├───frame2025_07_09_15_27_10_0_16
+└───vid_frame2025_07_09_15_27_10_0
+```
+
+Let's discuss *vid_frame2025_07_09_15_27_10_0* first. This contains an MP4 which represents a video of the captured frames, showing the depth and AB stream.
+
+Let's take a look at the other generated frame data, we will consider the output in the folder *frame2025_07_09_15_27_10_0_10*. The following files are in the folder:
+
+* **frame2025_07_09_15_27_10_0_10.bin**: This is frame #10 exracted from the recorded stream.
+* **ab_frame2025_07_09_15_27_10_0_10.png**: PNG of the AB frame for frame #10.
+* **depth_frame2025_07_09_15_27_10_0_10.png**: PNG of the depth frame for frame #10.
+* **metadata_frame2025_07_09_15_27_10_0_10.txt**: Text file of metadata for frame #10.
+* **pointcloud_frame2025_07_09_15_27_10_0_10.ply**: Point cloud file, in ply format, for frame #10.
+
 
 ### first_frame (C++)
 
