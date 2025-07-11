@@ -1,6 +1,7 @@
 <span style="font-size:30px;"><u>ADTF3175D Eval Kit Release 6.1.0</u></span>
 
 - [Release Notes](#release-notes)
+- [🛑 Requirements 🛑](#-requirements-)
 - [Dependencies](#dependencies)
 - [Installation](#installation)
   - [1. Install on the Host](#1-install-on-the-host)
@@ -34,7 +35,7 @@
     - [first\_frame (Python)](#first_frame-python)
     - [streaming (Python)](#streaming-python)
 - [Appendix](#appendix)
-  - [Understand the Saved Configuration JSON File](#understand-the-saved-configuration-json-file)
+  - [Configuration JSON File](#configuration-json-file)
     - [General Parameters](#general-parameters)
     - [Mode Parameters](#mode-parameters)
 
@@ -55,6 +56,23 @@
 * Dependency libraries are now statically link instead of dynamically linked to the libaditof SDK binary.
 * Support for ADSD3500 ISP firmware version 6.0.0 API updates.
 
+---
+---
+
+# 🛑 Requirements 🛑
+
+**IMPORTANT**: The SD card image and the ADSD3500 firmware must be updated with the following.
+
+* ADSD3500 firmware version 6.0.0
+* SD Card Image 6.1.0
+
+Please note, both of these items are available via the installation package in the *image* folder.
+
+To update each the ADSD3500 firmware and SD card image see the following sections, respectively:
+
+* [Flashing the SD Card Image](#2-flashing-the-sd-card-image)
+* [Updating the ADSD3500 ISP firmware.](#3-updating-the-adsd3500-isp-firmware)
+  
 ---
 ---
 # Dependencies
@@ -627,7 +645,7 @@ This tool uses Pygame to show streaming frames from the device in real-time.
 
 # Appendix
 
-## Understand the Saved Configuration JSON File
+## Configuration JSON File
 
 For the following discussion [example-cfg.json](other/example-cfg.json) will be referenced.
 
