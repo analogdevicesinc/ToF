@@ -142,8 +142,8 @@ void close_zmq_connection() {
 
 void stream_zmq_frame() {
 
-    // Establish the connection and stream the frames. Since zmq is not thread safe, there
-    // this need to be initialized and used in same thread.
+    // Establish the connection and stream the frames. Since zmq is not thread safe
+    // It needs to be initialized and used in same thread.
 
     static zmq::context_t zmq_context(1);
     server_socket =
@@ -473,7 +473,7 @@ void data_transaction() {
             }
             connection_mtx.unlock();
         } else {
-            continue; // not able to lock connection mutex in 100 ms try again
+            continue; // not able to lock connection mutex in 200 ms try again
         }
     }
 }
