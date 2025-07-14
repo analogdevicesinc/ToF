@@ -521,15 +521,15 @@ void ADIMainWindow::showMainMenu() {
             showPlaybackMenu();
             ImGui::Separator();
             ImGui::MenuItem("Debug Log", nullptr, &show_app_log);
-            ImGui::MenuItem("Ini Params", nullptr, &show_ini_window,
-                            cameraWorkerDone && isPlaying);
+            //ImGui::MenuItem("Ini Params", nullptr, &show_ini_window,
+            //                cameraWorkerDone && isPlaying);
             ImGui::Separator();
             if (ImGui::MenuItem("Load Configuration", nullptr, false,
                                 cameraWorkerDone && !isPlaying)) {
                 showLoadAdsdParamsMenu();
             }
             if (ImGui::MenuItem("Save Configuration", nullptr, false,
-                                cameraWorkerDone && isPlaying)) {
+                                cameraWorkerDone && !isPlaying)) {
                 showSaveAdsdParamsMenu();
             }
             ImGui::EndMenu();
