@@ -321,9 +321,7 @@ static void cleanup_sensors() {
     // Stop the frame capturing thread
     if (frameCaptureThread.joinable()) {
         keepCaptureThreadAlive = false;
-        {
-            std::lock_guard<std::mutex> lock(frameMutex);
-        }
+        { std::lock_guard<std::mutex> lock(frameMutex); }
         cvGetFrame.notify_one();
         frameCaptureThread.join();
     }
