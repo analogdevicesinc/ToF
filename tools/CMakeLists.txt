@@ -5,6 +5,4 @@ if (ON_TARGET)
     add_subdirectory(nvm_tools)
 endif()
 
-add_subdirectory(software_check)
-
 include(GNUInstallDirs)
