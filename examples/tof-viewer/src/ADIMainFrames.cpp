@@ -134,8 +134,8 @@ float ADIMainWindow::DisplayFrameWindow(ImVec2 windowSize, ImVec2 &displayUpdate
     float autoscale = std::fmin((windowSize.x / m_view_instance->frameWidth),
                                 (windowSize.y / m_view_instance->frameHeight));
 
-    size.x = m_view_instance->frameWidth * autoscale;
-    size.y = m_view_instance->frameHeight * autoscale;
+    size.x = m_view_instance->frameWidth * autoscale * m_dpi_scale_factor;
+    size.y = m_view_instance->frameHeight * autoscale * m_dpi_scale_factor;
 
     if (rotationangledegrees == 90 || rotationangledegrees == 270) {
         std::swap(size.x, size.y);
@@ -748,19 +748,19 @@ void ADIMainWindow::PointCloudReset() {
     { {1.0f, 0.0f, 0.0f, 0.0f},
       {0.0f, 1.0f, 0.0f, 0.0f},
       {0.0f, 0.0f, 0.0f, 1.0f},
-      {-0.0213157870, -0.00631578919, -3.0f, 1.0f} };
+      {-0.0213157870f, -0.00631578919f, -3.0f, 1.0f} };
 
     const mat4x4 m_projection_default = 
-    { {9.51436424, 0.00000000, 0.00000000, 0.00000000},
-      {0.00000000, 9.51436424, 0.00000000, 0.00000000},
-      {0.00000000, 0.00000000, -1.00200200, -1.00000000},
-      {0.00000000, 0.00000000, -0.200200200, 0.00000000} };
+    { {9.51436424f, 0.00000000f, 0.00000000f, 0.00000000f},
+      {0.00000000f, 9.51436424f, 0.00000000f, 0.00000000f},
+      {0.00000000f, 0.00000000f, -1.00200200f, -1.00000000f},
+      {0.00000000f, 0.00000000f, -0.200200200f, 0.00000000f} };
 
     const mat4x4 m_model_default =
-    { {-0.989992976, 0.0140884947, -0.140415087, 0.00000000},
-      {0.00000000, 0.995004535, 0.0998334810, 0.00000000},
-      {0.141119987, 0.0988343805, -0.985047400, 0.00000000},
-      {0.00000000, 0.00000000, 0.00000000, 1.00000000} };
+    { {-0.989992976f, 0.0140884947f, -0.140415087f, 0.00000000f},
+      {0.00000000f, 0.995004535f, 0.0998334810f, 0.00000000f},
+      {0.141119987f, 0.0988343805f, -0.985047400f, 0.00000000f},
+      {0.00000000f, 0.00000000f, 0.00000000f, 1.00000000f} };
 
     memcpy(m_view_mat, m_view_default, sizeof(m_view_mat));
     memcpy(m_projection_mat, m_projection_default, sizeof(m_projection_mat));

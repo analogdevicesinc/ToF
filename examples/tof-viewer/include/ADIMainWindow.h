@@ -547,7 +547,7 @@ class ADIMainWindow {
     vec3 m_camera_front_vec = {0.0f, 0.0f, -1.0f};
     vec3 m_camera_up_vec = {0.0f, 1.0f, 0.0f};
     vec3 m_camera_position_front_vec;
-    float m_delta_time = 0.1;
+    float m_delta_time = 0.1f;
     float m_field_of_view = 8.0f;
     float m_translation_sensitivity = 0.03f;
     int32_t m_point_size = 1;
@@ -556,7 +556,6 @@ class ADIMainWindow {
     bool m_mouse_down = false;
     bool m_saveBinaryFormatTmp = false;
     float m_tof_image_pos_y;
-    bool m_is_high_dpi = false;
     float m_dpi_scale_factor = HIGHDPISCALAR;
     std::thread initCameraWorker;
     bool m_cameraWorkerDone = false;

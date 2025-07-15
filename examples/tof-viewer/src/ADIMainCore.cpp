@@ -247,12 +247,10 @@ bool ADIMainWindow::StartImGUI(const ADIViewerArgs& args) {
     // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
     // Enable Gamepad Controls
 
-    if (args.HighDpi && 0) {
+    if (args.HighDpi) {
         m_dpi_scale_factor = HIGHDPISCALAR;
-        m_is_high_dpi = true;
     } else {
         m_dpi_scale_factor = NORMALDPISCALAR;
-        m_is_high_dpi = false;
     }
     SetDpi();
 
