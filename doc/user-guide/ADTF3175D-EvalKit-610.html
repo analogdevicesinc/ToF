@@ -17,6 +17,8 @@ Files</a></li>
 <li><a href="#2-flashing-the-sd-card-image">2. Flashing the SD Card
 Image</a>
 <ul>
+<li><a href="#do-you-need-to-update-the-sd-card">Do you need to update
+the SD card?</a></li>
 <li><a
 href="#windows-11-ubuntu-2204-or-ubuntu-2404-using-balena-etcher">Windows
 11, Ubuntu 22.04 or Ubuntu 24.04: Using Balena Etcher</a></li>
@@ -66,6 +68,13 @@ Configuration Parameters</a></li>
 </ul></li>
 <li><a href="#python-tools">Python Tools</a>
 <ul>
+<li><a href="#setting-for-using-the-python-bindings">Setting for using
+the Python Bindings</a>
+<ul>
+<li><a href="#setup">Setup</a></li>
+<li><a href="#activate">Activate</a></li>
+<li><a href="#decativate">Decativate</a></li>
+</ul></li>
 <li><a href="#data_collect-python">data_collect (Python)</a>
 <ul>
 <li><a href="#command-line-interface-3">Command Line Interface</a></li>
@@ -78,6 +87,11 @@ Configuration Parameters</a></li>
 <ul>
 <li><a href="#command-line-interface-5">Command Line Interface</a></li>
 <li><a href="#example-usage-1">Example Usage</a></li>
+</ul></li>
+<li><a href="#showpointcloud">showPointCloud</a>
+<ul>
+<li><a href="#command-line-interface-6">Command Line Interface</a></li>
+<li><a href="#example-usage-2">Example Usage</a></li>
 </ul></li>
 </ul></li>
 </ul></li>
@@ -110,6 +124,9 @@ added alongside Ubuntu 22.04.</li>
 linked to the libaditof SDK binary.</li>
 <li>Support for ADSD3500 ISP firmware version 6.0.0 API updates.</li>
 </ul>
+<pre><code>$ ssh analog@192.168.56.1
+Username: analog
+Password: analog</code></pre>
 <h1 id="requirements">🛑 Requirements 🛑</h1>
 <p><strong>IMPORTANT</strong>: The SD card image and the ADSD3500
 firmware must be updated with the following.</p>
@@ -242,6 +259,16 @@ and ADSD3500 firmware binary.</li>
 <p>The following requires <em>microsd-6.0.0-13dd25d8.zip</em> in the
 <em>image/NXP-Img-Rel6.1.0-ADTF3175D-xxxxxxxx</em> folder. This was
 extracted in the previous step.</p>
+<h3 id="do-you-need-to-update-the-sd-card">Do you need to update the SD
+card?</h3>
+<p>Username: analog Password: analog</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ssh analog@192.168.56.1 <span class="st">&quot;cat /boot/sw-versions | grep sd_img_ver&quot;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">analog@192.168.56.1</span><span class="st">&#39;s password:</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="st">sd_img_ver      microsd-v6.1.0-ace65e91.img</span></span></code></pre></div>
+<p>Where <em>sd_img_ver</em> indicates the image on the SD card. As of
+writing, if you are running with v6.1.0 already there is no need to
+update the SD card.</p>
 <h3
 id="windows-11-ubuntu-22.04-or-ubuntu-24.04-using-balena-etcher">Windows
 11, Ubuntu 22.04 or Ubuntu 24.04: Using Balena Etcher</h3>
@@ -822,6 +849,23 @@ is now 5fps.</p>
 href="images/aditofgui_8.png"><img src="images/aditofgui_8.png" width="25%"></a></p>
 <h2 id="python-tools">Python Tools</h2>
 <p>The Python tools rely on the included Python bindings.</p>
+<h3 id="setting-for-using-the-python-bindings">Setting for using the
+Python Bindings</h3>
+<h4 id="setup">Setup</h4>
+<p>Note, this process may take a while when setting up the python
+environment.</p>
+<ul>
+<li>cd bin-setup</li>
+<li>setup_python_env.bat</li>
+</ul>
+<h4 id="activate">Activate</h4>
+<ul>
+<li>activate.bat</li>
+</ul>
+<h4 id="decativate">Decativate</h4>
+<ul>
+<li>deactivate.bat</li>
+</ul>
 <h3 id="data_collect-python">data_collect (Python)</h3>
 <p>A data collect example, but in Python. This will not be covered in
 detail since it is similar to data_collect binary executable.</p>
@@ -951,6 +995,87 @@ camera1.start() Status.Ok
 I20250711 15:56:45.397756 58104 camera_itof.cpp:615] Dropped first frame
 I20250711 15:56:50.738039 58104 network_depth_sensor.cpp:391] Stopping device
 I20250711 15:56:50.769250 58104 network.cpp:604] Frame socket connection closed.</code></pre>
+<h3 id="showpointcloud">showPointCloud</h3>
+<p>This tool uses Pygame to show the point cloud for streaming frames
+from the device in real-time.</p>
+<h4 id="command-line-interface-6">Command Line Interface</h4>
+<pre><code>python showPointCloud.py -h
+usage: showPointCloud.py [-h] [-ip IP] [-f FRAME] [-m MODE]
+
+Script to run PointCloud
+
+options:
+  -h, --help            show this help message and exit
+  -ip IP, --ip IP       Ip address of the ToF device
+  -f FRAME, --frame FRAME
+                        Name of an acquired frame to be used
+  -m MODE, --mode MODE  Camera mode</code></pre>
+<h4 id="example-usage-2">Example Usage</h4>
+<pre><code>$ python showPointCloud.py --ip 192.168.56.1 --mode 3
+SDK version:  6.1.0  | branch:    | commit:
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I20250715 14:20:14.848824 14844 system_impl.cpp:91] SDK built with zmq version:4.3.6
+I20250715 14:20:14.848824 14844 network_sensor_enumerator.cpp:66] Looking for sensors over network: 192.168.56.1
+I20250715 14:20:14.896183 14844 network.cpp:215] Attempting to connect server...
+I20250715 14:20:14.896183 48040 network.cpp:501] Event: CONNECT_DELAYED - Connection attempt delayed, server might be unavailable.
+I20250715 14:20:14.912205 48040 network.cpp:461] Connected to server
+Conn established
+I20250715 14:20:15.051323 14844 camera_itof.cpp:105] Sensor name = adsd3500
+system.getCameraList() Status.Ok
+I20250715 14:20:15.051323 14844 camera_itof.cpp:125] Initializing camera
+I20250715 14:20:15.060851 14844 network.cpp:215] Attempting to connect server...
+I20250715 14:20:15.061357 42524 network.cpp:501] Event: CONNECT_DELAYED - Connection attempt delayed, server might be unavailable.
+I20250715 14:20:15.086187 42524 network.cpp:461] Connected to server
+I20250715 14:20:15.086187 14844 network.cpp:215] Attempting to connect server...
+Conn established
+I20250715 14:20:15.330229 14844 camera_itof.cpp:222] Current adsd3500 firmware version is: 6.0.0.0
+I20250715 14:20:15.330229 14844 camera_itof.cpp:224] Current adsd3500 firmware git hash is: 66d74765d8339ab89f3085eba04a1b077b1a6faa
+W20250715 14:20:15.378489 14844 camera_itof.cpp:252] fsyncMode is not being set by SDK.
+W20250715 14:20:15.378489 14844 camera_itof.cpp:262] mipiSpeed is not being set by SDK.
+W20250715 14:20:15.378489 14844 camera_itof.cpp:273] enableTempCompenstation is not being set by SDK.
+W20250715 14:20:15.378489 14844 camera_itof.cpp:283] enableEdgeConfidence is not being set by SDK.
+I20250715 14:20:15.388603 14844 camera_itof.cpp:289] Module serial number: Crosby_DV3_2_07D
+I20250715 14:20:15.388603 14844 camera_itof.cpp:297] Camera initialized
+I20250715 14:20:15.655239 14844 camera_itof.cpp:1812] Camera FPS set from parameter list at: 40
+W20250715 14:20:15.655239 14844 camera_itof.cpp:2032] vcselDelay was not found in parameter list, not setting.
+W20250715 14:20:15.672330 14844 camera_itof.cpp:2084] enablePhaseInvalidation was not found in parameter list, not setting.
+I20250715 14:20:15.686842 14844 camera_itof.cpp:379] Using the following configuration parameters for mode 3
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] abThreshMin : 3.0
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] bitsInAB : 16
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] bitsInConf : 8
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] bitsInPhaseOrDepth : 16
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] confThresh : 25.0
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] depthComputeIspEnable : 1
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] fps : 40
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] headerSize : 128
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] inputFormat : raw8
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] interleavingEnable : 1
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] jblfABThreshold : 10.0
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] jblfApplyFlag : 1
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] jblfExponentialTerm : 5.0
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] jblfGaussianSigma : 10.0
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] jblfMaxEdge : 12.0
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] jblfWindowSize : 7
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] multiCoreEnable : 1
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] numCores : 4
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] partialDepthEnable : 0
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] phaseInvalid : 0
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] radialThreshMax : 10000.0
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] radialThreshMin : 100.0
+I20250715 14:20:15.686842 14844 camera_itof.cpp:382] xyzEnable : 1
+I20250715 14:20:15.686842 14844 camera_itof.cpp:392] Metadata in AB is enabled and it is stored in the first 128 bytes.
+I20250715 14:20:16.061110 14844 camera_itof.cpp:483] Using closed source depth compute library.
+I20250715 14:20:16.508561 14844 network.cpp:619] Frame Client Connection established.
+camera1.start() Status.Ok
+I20250715 14:20:16.540714 14844 camera_itof.cpp:615] Dropped first frame
+I20250715 14:20:30.759270 42524 network.cpp:485] Disconnected from server at with connection ID: 0
+Traceback (most recent call last):
+  File &quot;C:\dev\ToF\sources\eval-kit\SoMv1\dev\main\build\bindings\python\examples\showPointCloud\Release\showPointCloud.py&quot;, line 143, in &lt;module&gt;
+    status = cameras[0].requestFrame(frame)
+RuntimeError: Context was terminated
+W20250715 14:20:30.969238 14844 network_depth_sensor.cpp:130] Not connected to server
+W20250715 14:20:30.969238 14844 network_depth_sensor.cpp:139] Send Command Failed
+^C</code></pre>
 <h1 id="appendix">Appendix</h1>
 <h2 id="configuration-json-file">Configuration JSON File</h2>
 <p>For the following discussion <a
