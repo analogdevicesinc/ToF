@@ -83,6 +83,32 @@ PYBIND11_MODULE(aditofpython, m) {
                aditof::Adsd3500Status::FIRMWARE_UPDATE_COMPLETE)
         .value("Nvm_Write_Complete", aditof::Adsd3500Status::NVM_WRITE_COMPLETE)
         .value("Imager_Error", aditof::Adsd3500Status::IMAGER_ERROR)
+        .value("Timeout_Error", aditof::Adsd3500Status::TIMEOUT_ERROR)
+        .value("Dynamic_Mode_Switching_Not_Enabled",
+               aditof::Adsd3500Status::DYNAMIC_MODE_SWITCHING_NOT_ENABLED)
+        .value("Invalid_Dynamic_Mode_Compositions",
+               aditof::Adsd3500Status::INVALID_DYNAMIC_MODE_COMPOSITIONS)
+        .value("Invalid_Phase_Invalid_Value",
+               aditof::Adsd3500Status::INVALID_PHASE_INVALID_VALUE)
+        .value("CCB_Write_Complete", aditof::Adsd3500Status::CCB_WRITE_COMPLETE)
+        .value("Invalid_CCB_Write_CRC",
+               aditof::Adsd3500Status::INVALID_CCB_WRITE_CRC)
+        .value("CFG_Write_Complete", aditof::Adsd3500Status::CFG_WRITE_COMPLETE)
+        .value("Invalid_CFG_Write_CRC",
+               aditof::Adsd3500Status::INVALID_CFG_WRITE_CRC)
+        .value("Init_FW_Write_Complete",
+               aditof::Adsd3500Status::INIT_FW_WRITE_COMPLETE)
+        .value("Invalid_Init_FW_Write_CRC",
+               aditof::Adsd3500Status::INVALID_INIT_FW_WRITE_CRC)
+        .value("Invalid_Bin_Size", aditof::Adsd3500Status::INVALID_BIN_SIZE)
+        .value("ACK_Error", aditof::Adsd3500Status::ACK_ERROR)
+        .value("Flash_Status_Chunk_Already_Found",
+               aditof::Adsd3500Status::FLASH_STATUS_CHUNK_ALREADY_FOUND)
+        .value("Invalid_INI_Update_In_PCM_Mode",
+               aditof::Adsd3500Status::INVALID_INI_UPDATE_IN_PCM_MODE)
+        .value("Unsupported_Mode_INI_Read",
+               aditof::Adsd3500Status::UNSUPPORTED_MODE_INI_READ)
+        .value("Imager_Stream_Off", aditof::Adsd3500Status::IMAGER_STREAM_OFF)
         .value("Unknown_Error_Id", aditof::Adsd3500Status::UNKNOWN_ERROR_ID);
 
     // Frame declarations
