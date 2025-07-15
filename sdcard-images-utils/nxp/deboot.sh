@@ -295,12 +295,18 @@ cp /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/data_collect /hom
 cp /home/${USERNAME}/Workspace/ToF/build/examples/first-frame/first-frame /home/${USERNAME}/Workspace/bin
 mv /home/${USERNAME}/Workspace/ToF/sdcard-images-utils/nxp/patches/ubuntu_overlay/step1/usr/share/systemd/* /home/${USERNAME}/Workspace/bin
 
-pushd /home/${USERNAME}/Workspace/bin
-chmod +x ros_install_noetic.sh
-echo "3" | ./ros_install_noetic.sh
-chmod +x install_ros2_dependencies.sh
-./install_ros2_dependencies.sh
-popd
+#pushd /home/${USERNAME}/Workspace/bin
+#chmod +x ros_install_noetic.sh
+#echo "3" | ./ros_install_noetic.sh
+#chmod +x install_ros2_dependencies.sh
+#./install_ros2_dependencies.sh
+#popd
+#mkdir -p /opt/ros/humble
+#pushd /opt/ros/humble
+#sudo mv /tmp/ros2_src/* /opt/ros/humble/
+#popd
+#rm -rf /tmp/ros2_src
+
 
 #generate licences file
 tail -n 10000 /usr/share/doc/*/copyright > /licenses.txt
@@ -308,6 +314,9 @@ EOF
 
   # Apply step1 overlay
   sudo cp -R ${SCRIPT_DIR}/patches/ubuntu_overlay/step1/* ${ROOTFS_TMP}/
+
+  #mkdir -p ${ROOTFS_TMP}/tmp/ros2_src
+  #sudo cp -r ${SCRIPT_DIR}/install/* ${ROOTFS_TMP}/tmp/ros2_src/
 
   sudo mv stage3.sh ${ROOTFS_TMP}/tmp
   sudo chmod +x ${ROOTFS_TMP}/tmp/stage3.sh
@@ -342,8 +351,8 @@ function create_ui_setup(){
 
 pushd /home/${USERNAME}
 
-sudo mv /tmp/ros_temp/* /home/${USERNAME}/Workspace
-chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/catkin_ws
+#sudo mv /tmp/ros_temp/* /home/${USERNAME}/Workspace
+#chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/catkin_ws
 
 sudo mv Workspace/ToF/Web-UI/requirements/ /home/${USERNAME}/Workspace
 sudo mv Workspace/ToF/Web-UI/web-1.0.0/ /home/${USERNAME}/
@@ -351,9 +360,9 @@ sudo mv Workspace/ToF/Web-UI/web-1.0.0/ /home/${USERNAME}/
 sudo  ln -s  /home/${USERNAME}/web-1.0.0 web
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/web
 
-sudo mkdir ADSD3500-firmware-5.3.3
-sudo mv /tmp/fw_temp/* ADSD3500-firmware-5.3.3/
-sudo ln -s /home/${USERNAME}/ADSD3500-firmware-5.3.3 ADSD3500-firmware
+#sudo mkdir ADSD3500-firmware-5.3.3
+#sudo mv /tmp/fw_temp/* ADSD3500-firmware-5.3.3/
+#sudo ln -s /home/${USERNAME}/ADSD3500-firmware-5.3.3 ADSD3500-firmware
 sudo mv Workspace/  Workspace-6.0.0
 sudo ln -s /home/${USERNAME}/Workspace-6.0.0 Workspace
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace
@@ -378,14 +387,14 @@ mkdir /home/${USERNAME}/Workspace/module
 mv /usr/lib/modules/5.10.72-*/kernel/drivers/media/i2c/adsd3500.ko /home/${USERNAME}/Workspace/module
 sudo ln -s /home/${USERNAME}/Workspace/module/adsd3500.ko /usr/lib/modules/5.10.72-*/kernel/drivers/media/i2c/
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/module
-rm -rf /tmp/ros_temp
-rm -rf /tmp/fw_temp
+#rm -rf /tmp/ros_temp
+#rm -rf /tmp/fw_temp
 
 EOF
-     mkdir -p ${ROOTFS_TMP}/tmp/ros_temp
-     mkdir -p ${ROOTFS_TMP}/tmp/fw_temp
-     sudo cp -r ${SCRIPT_DIR}/ROS/* ${ROOTFS_TMP}/tmp/ros_temp/ &&  echo "ROS1 copied successfully" >> ${SCRIPT_DIR}/ROS/log.txt
-     sudo cp -r ${SCRIPT_DIR}/Firmware/* ${ROOTFS_TMP}/tmp/fw_temp/ &&  echo "Firmware copied successfully" >> ${SCRIPT_DIR}/Firmware/log.txt
+     #mkdir -p ${ROOTFS_TMP}/tmp/ros_temp
+     #mkdir -p ${ROOTFS_TMP}/tmp/fw_temp
+     #sudo cp -r ${SCRIPT_DIR}/ROS/* ${ROOTFS_TMP}/tmp/ros_temp/ &&  echo "ROS1 copied successfully" >> ${SCRIPT_DIR}/ROS/log.txt
+     #sudo cp -r ${SCRIPT_DIR}/Firmware/* ${ROOTFS_TMP}/tmp/fw_temp/ &&  echo "Firmware copied successfully" >> ${SCRIPT_DIR}/Firmware/log.txt
      sudo mv web_ui_setup.sh ${ROOTFS_TMP}/tmp
      sudo chmod +x ${ROOTFS_TMP}/tmp/web_ui_setup.sh
      sudo chroot ${ROOTFS_TMP} /tmp/web_ui_setup.sh
@@ -410,7 +419,9 @@ function main() {
   # debootstrap 1st
   sudo debootstrap --arch=${TARGET_ARCH} --include="${INCLUDE_LIST}" --foreign ${DISTRO_CODE} ${ROOTFS_TMP} ${DISTRO_MIRROR}
   # copy libs to ${SCRIPT_DIR}/build/ubuntu/rootfs_tmp/home/temp(Make sure to add a path to .so files here)
-
+  #sudo cp /home/esptguest/SSingh/Workspace/libs/*.so  ${SCRIPT_DIR}/build/ubuntu/rootfs_tmp
+  #echo "libs copied sucessfully" >  /home/esptguest/SSingh/Workspace/libs/log.txt
+  #date >> /home/esptguest/SSingh/Workspace/libs/log.txt 1> /dev/null 2>&1
   
   # debootstrap 2nd
   sudo chroot ${ROOTFS_TMP} /debootstrap/debootstrap --second-stage
