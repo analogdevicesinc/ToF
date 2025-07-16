@@ -34,7 +34,7 @@ try{
 		}
 
 		# Step 2: Prompt user to select a workspace
-		$selection = Read-Host "`nEnter the number of the workspace to switch to (or press Enter to cancel)"
+		$selection = Read-Host "`nChoose the option (ex. 1, 2) (or press Enter to cancel)"
 		if ([string]::IsNullOrWhiteSpace($selection)) {
 			Write-Host "Operation cancelled." -ForegroundColor Yellow
 			exit
