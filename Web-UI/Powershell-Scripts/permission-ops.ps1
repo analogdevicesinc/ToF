@@ -2,8 +2,9 @@ param (
     [Parameter(Mandatory=$true)]
     [string]$value
 )
-
+if($value -like "modify"){
 Write-Host "Warning : This process will reboot the system." -ForegroundColor Red
+}
 
 # Define the Flask server base URL
 $baseUrl = "http://192.168.56.1:8000"
