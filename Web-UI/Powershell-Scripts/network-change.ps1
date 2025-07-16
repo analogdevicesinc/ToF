@@ -1,17 +1,29 @@
 # Define the Flask server base URL
 $baseUrl = "http://192.168.56.1:8000"
 
-# Define the network mode value to send (choose from 'windows', 'ubuntu', 'check')
-$os = (Get-CimInstance Win32_OperatingSystem).Caption
+# Default value
+$value = "check"
 
-# Determine the value based on OS
-if ($os -like "*Windows*") {
-    $value = "windows"
-} elseif ($os -like "*Ubuntu*") {
-    $value = "ubuntu"
-} else {
-    $value = "check"
+# Try to detect Windows
+try {
+    $os = (Get-CimInstance Win32_OperatingSystem -ErrorAction Stop).Caption
+    if ($os -like "*Windows*") {
+        $value = "windows"
+    }
 }
+catch {
+    # If not Windows, try to detect Ubuntu from /etc/os-release
+    if (Test-Path "/etc/os-release") {
+        $osRelease = Get-Content "/etc/os-release"
+        if ($osRelease -match "ID=ubuntu") {
+            $value = "ubuntu"
+        }
+    }
+}
+
+Write-Output "Network mode value: $value"
+
+
 
 
 Write-Host "Starting network change script with value: $value"
