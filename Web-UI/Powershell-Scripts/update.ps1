@@ -31,4 +31,4 @@ tar xzf $remoteDest && echo $remotePassword |sudo -S rm -f $remoteDest
 Write-Host "`nUnzipping ..."
 ssh "$remoteUser@$remoteHost" "$remoteCommand"
 
-Write-Host "`nWorkspace has been Sucessfully updated !!" -ForegroundColor Green
+Write-Host "`nWorkspace has been Successfully updated !!" -ForegroundColor Green
