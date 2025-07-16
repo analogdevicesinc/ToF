@@ -30,3 +30,5 @@ tar xzf $remoteDest && echo $remotePassword |sudo -S rm -f $remoteDest
 # Flash firmware on remote device
 Write-Host "`nUnzipping ..."
 ssh "$remoteUser@$remoteHost" "$remoteCommand"
+
+Write-Host "`nWorkspace has been Sucessfully updated !!" -ForegroundColor Green
