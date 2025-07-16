@@ -18,6 +18,19 @@ $postBody = @{
 Invoke-RestMethod -Uri "$baseUrl/download" -Method Post -Body $postBody -ContentType "application/json"
 
 # Step 2: Send GET request to /download-event to download the file
-Invoke-WebRequest -Uri "$baseUrl/download-event" -OutFile $filename
+$downloadUrl = "$baseUrl/download-event"
 
-Write-Host "File downloaded as $filename"
+try {
+    Invoke-WebRequest -Uri $downloadUrl -OutFile $filename -ErrorAction Stop
+    $fileInfo = Get-Item $filename
+
+    if ($fileInfo.Length -eq 0) {
+        Remove-Item $filename
+        Write-Host "Invalid file. Read failed !"
+    } else {
+        Write-Host "File downloaded successfully: $filename ($($fileInfo.Length) bytes)"
+    }
+} catch {
+    Write-Host "Download failed: $($_.Exception.Message)"
+}
+

@@ -82,7 +82,7 @@ try {
         }
     }
 	
-	Write-Host "`nRead Successful! Check $logFile" -ForegroundColor Green
+	Write-Host "`nCheck $logFile" -ForegroundColor Green
 
     $reader.Close()
     $response.Close()
