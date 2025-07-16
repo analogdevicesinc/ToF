@@ -8,6 +8,5 @@ try {
     Write-Host $response.message -ForegroundColor Yellow
 }
 catch {
-    Write-Host "An error occurred while trying to system power down:"
-    Write-Host $_
+    Write-Host $response.message -ForegroundColor Yellow
 }
