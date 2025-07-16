@@ -390,8 +390,11 @@ def reboot_system():
 @app.route('/power-down-system', methods=['POST'])
 def power_down_system():
     import subprocess
-    subprocess.run(["sudo", "poweroff"], check=True)
-    return jsonify({"message": "Power down initiated successfully."}), 200
+    try:
+        subprocess.run(["sudo", "poweroff"], check=True)
+        return jsonify({"message": "Power down initiated successfully."}), 200
+    except:
+        return jsonify({"message": "Power down initiated successfully."}), 500
 
 @app.route('/status', methods=['GET'])
 def status():
