@@ -2,7 +2,7 @@
 Description=Enable network when path is available
 
 [Path]
-PathExists=/sys/kernel/config/usb_gadget/g1/functions/rndis.0
+PathExists=/run/usb_gadget_ready
 Unit=network-gadget.service
 
 [Install]
