@@ -63,6 +63,7 @@ static int interrupted = 0;
 std::vector<std::shared_ptr<aditof::DepthSensorInterface>> depthSensors;
 bool sensors_are_created = false;
 bool clientEngagedWithSensors = false;
+bool isConnectionClosed = true;
 
 std::unique_ptr<aditof::SensorEnumeratorInterface> sensorsEnumerator;
 
@@ -138,6 +139,7 @@ void close_zmq_connection() {
     }
 
     LOG(INFO) << "ZMQ Client Connection closed.";
+    isConnectionClosed = true;
 }
 
 void stream_zmq_frame() {
@@ -381,6 +383,9 @@ int Network::callback_function(const zmq_event_t &event) {
                 cleanup_sensors();
                 clientEngagedWithSensors = false;
             }
+            if (isConnectionClosed == false) {
+                close_zmq_connection();
+            }
             stop_stream_thread();
             Client_Connected = false;
         } else {
@@ -417,6 +422,9 @@ int Network::callback_function(const zmq_event_t &event) {
             if (clientEngagedWithSensors) {
                 cleanup_sensors();
                 clientEngagedWithSensors = false;
+            }
+            if (isConnectionClosed == false) {
+                close_zmq_connection();
             }
             stop_stream_thread();
             Client_Connected = false;
@@ -653,6 +661,10 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
             }
 
             if (send_async == true) {
+                if (isConnectionClosed == false) {
+                    close_zmq_connection();
+                }
+                isConnectionClosed = false;
                 start_stream_thread(); // Start the stream_frame thread .
             } else {
                 static zmq::context_t zmq_context(1);
