@@ -243,6 +243,8 @@ systemctl enable usb-gadget.service
 systemctl enable network-gadget.path
 systemctl enable uvc-gadget.path
 systemctl enable adi-backup.service
+systemctl enable network-gadget.service
+systemctl enable adi-tof.service
 systemctl enable gunicorn.service
 
 #set default python3
