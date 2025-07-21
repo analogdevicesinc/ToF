@@ -1,20 +1,45 @@
-# 🛠️ System Utilities Script
+# System Utilities Script
 
-This repository contains a PowerShell script `system-utils.ps1` that opens the system utilities homepage. It is compatible with both **Windows** and **Ubuntu** systems using PowerShell Core.
-
-## 📋 Prerequisites
-
-You need **PowerShell 7+** installed on your system to run this script.
+This repository contains a PowerShell script `System-Utils.ps1` that opens a system utilities homepage with quick-access buttons for common system tasks. It is compatible with both **Windows** and **Ubuntu** systems using PowerShell Core.
 
 ---
 
-## 💻 Installing PowerShell
+## Installing PowerShell
 
-### 🔹 On Ubuntu
+### On Ubuntu
 
-1. **Update the package list and install prerequisites:**
+Install PowerShell using Snap:
 
-   ```bash
-   sudo apt update
-   sudo apt install -y wget apt-transport-https software-properties-common
+```bash
+sudo snap install powershell --classic
+```
+Launch PowerShell with:
+```bash
+pwsh
+```
+---
+
+## Usage
+
+Run Script on PowerShell terminal:
+```bash
+./System-Utils.ps1
+```
+
+---
+
+## Available Actions
+
+- **Update Worksapce**<br>
+   &nbsp; This Updates the Workspace you need to use tar.gz .<br>
    ```
+   Give the Firmware Path: C:\Worksapce\Web-UI\ps_scripts\Workspace-6.1.0.tar.gz
+   ```
+
+- **Flash Firmware**<br>
+   &nbsp; Give the firmware bin file path to flash the firmware.
+   ```
+   Give the Firmware Path: C:\Worksapce\Web-UI\ps_scripts\Firmware\Fw_Update_5.3.3.bin
+   ```
+---
+
