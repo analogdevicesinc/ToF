@@ -64,6 +64,7 @@ std::vector<std::shared_ptr<aditof::DepthSensorInterface>> depthSensors;
 bool sensors_are_created = false;
 bool clientEngagedWithSensors = false;
 bool isConnectionClosed = true;
+bool gotStream_off = false;
 
 std::unique_ptr<aditof::SensorEnumeratorInterface> sensorsEnumerator;
 
@@ -640,6 +641,10 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         }
 
         case START: {
+            if (gotStream_off == true) {
+                gotStream_off =
+                    false; // reset this flag to expect the stream-off after start.
+            }
             aditof::Status status = camDepthSensor->start();
 
             // When in test mode, capture 2 frames. 1st might be corrupt after a ADSD3500 reset.
@@ -682,13 +687,21 @@ void invoke_sdk_api(payload::ClientRequest buff_recv) {
         }
 
         case STOP: {
-            if (send_async == true) {
-                stop_stream_thread();
-            }
-            aditof::Status status = camDepthSensor->stop();
-            buff_send.set_status(static_cast<::payload::Status>(status));
+            if (gotStream_off ==
+                false) { // this operation will prevent to unecessary calling of stream-off
+                if (send_async == true) {
+                    stop_stream_thread();
+                }
+                aditof::Status status = camDepthSensor->stop();
+                if (status != aditof::Status::OK) {
+                    gotStream_off = false;
+                } else {
+                    gotStream_off = true;
+                }
+                buff_send.set_status(static_cast<::payload::Status>(status));
 
-            close_zmq_connection();
+                close_zmq_connection();
+            }
 
             break;
         }
