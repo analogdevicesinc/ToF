@@ -22,6 +22,7 @@ try{
 		Write-Host $response.workspace
 	
 	} elseif($choice -eq "2"){
+		Write-Host "`nWarning : This Process Will Reboot the system." -ForegroundColor Red
 		# Get the list of Available workspaces
 		$workspaceList = Invoke-RestMethod -Uri "$baseUrL/execute-post-script" -Method Get
 		if(-not $workspaceList){
@@ -36,7 +37,7 @@ try{
 		# Step 2: Prompt user to select a workspace
 		$selection = Read-Host "`nChoose the option (ex. 1, 2) (or press Enter to cancel)"
 		if ([string]::IsNullOrWhiteSpace($selection)) {
-			Write-Host "Operation cancelled." -ForegroundColor Yellow
+			Write-Host "Cancelled." -ForegroundColor Yellow
 			exit
 		}
 
@@ -59,3 +60,6 @@ try{
 	Write-Host "An error occured while getting workspace"
 	Write-Host $_ -ForegroundColor Red
 }
+
+# reboot the system
+./system-reboot.ps1

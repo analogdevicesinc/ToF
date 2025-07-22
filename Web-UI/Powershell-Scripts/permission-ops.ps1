@@ -6,6 +6,16 @@ if($value -like "modify"){
 Write-Host "Warning : This process will reboot the system." -ForegroundColor Red
 }
 
+if($value -like "modify"){
+Write-Host "`nPress 'y' to continue (any other key to cancel)..."
+$key = [System.Console]::ReadKey($true).KeyChar
+	if($key -eq 'y' -or $key -eq 'Y'){}
+	else{
+		Write-Host "`nCancelled." -ForegroundColor Yellow
+		exit 1
+	}
+}
+
 # Define the Flask server base URL
 $baseUrl = "http://192.168.56.1:8000"
 
