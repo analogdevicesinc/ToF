@@ -25,20 +25,31 @@ catch {
 Write-Output "Network mode value: $value"
 
 
+Write-Host "Press 'y' to continue (any other key to cancel)..."
+$key = [System.Console]::ReadKey($true).KeyChar
 
+if($key -eq 'y' -or $key -eq 'Y'){
 
-Write-Host "Starting network change script with value: $value"
+	Write-Host "Starting network change script with value: $value"
 
-try {
-    # Step 1: Send POST request to /Change-Network
-    $postBody = @{ value = $value } | ConvertTo-Json
-    Invoke-RestMethod -Uri "$baseUrl/Change-Network" -Method Post -Body $postBody -ContentType "application/json"
+	try {
+		# Step 1: Send POST request to /Change-Network
+		$postBody = @{ value = $value } | ConvertTo-Json
+		Invoke-RestMethod -Uri "$baseUrl/Change-Network" -Method Post -Body $postBody -ContentType "application/json"
 
-    # Step 2: Send GET request to /Change-Network-GET
-    $response = Invoke-RestMethod -Uri "$baseUrl/Change-Network-GET"
-	Write-Host ""
-    Write-Host $response.message -ForegroundColor Yellow
+		# Step 2: Send GET request to /Change-Network-GET
+		$response = Invoke-RestMethod -Uri "$baseUrl/Change-Network-GET"
+		Write-Host ""
+		Write-Host $response.message -ForegroundColor Yellow
+	}
+	catch {
+		Write-Host "An error occurred: $_"
+		exit 1
+	}
+	
+	# reboot the system
+	./system-reboot.ps1
+}else{
+	Write-Host "`nCancelled." -ForegroundColor Yellow
 }
-catch {
-    Write-Host "An error occurred: $_"
-}
+
