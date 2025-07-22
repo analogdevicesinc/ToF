@@ -22,7 +22,11 @@ catch {
     }
 }
 
+
 Write-Output "Network mode value: $value"
+
+Write-Host "`nWarning : This Process Will Reboot the system." -ForegroundColor Red
+Write-Host ""
 
 
 Write-Host "Press 'y' to continue (any other key to cancel)..."
