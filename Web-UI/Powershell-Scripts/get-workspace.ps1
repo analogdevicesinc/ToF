@@ -59,6 +59,7 @@ try{
 }catch{
 	Write-Host "An error occured while getting workspace"
 	Write-Host $_ -ForegroundColor Red
+	exit 1
 }
 
 # reboot the system
