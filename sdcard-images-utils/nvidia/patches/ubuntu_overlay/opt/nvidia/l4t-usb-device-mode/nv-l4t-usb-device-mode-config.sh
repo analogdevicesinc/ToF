@@ -90,11 +90,11 @@ ecm_ncm=ncm
 enable_ums=1
 
 # The IP address shared by all USB network interfaces created by this script.
-net_ip=10.43.0.1
+net_ip=192.168.55.1
 # The associated netmask.
 net_mask=255.255.255.0
 # The associated network address.
-net_net=10.43.0.0
+net_net=192.168.55.0
 # DHCP parameters:
 # Linux kernel 4.8 and later contain commit a5a18bdf7453 "rndis_host: Set valid
 # random MAC on buggy devices", which causes any device-provided MAC address to
@@ -109,8 +109,8 @@ net_net=10.43.0.0
 # not be assigned for roughly 15 seconds (plus host DHCP request repeat delay)
 # after a quick unplug/replug.
 # The DHCP pool range
-net_dhcp_start=10.43.0.100
-net_dhcp_end=10.43.0.100
+net_dhcp_start=192.168.55.100
+net_dhcp_end=192.168.55.100
 # The duration of a DHCP lease
 net_dhcp_lease_time=1500
 # The IPv6 address shared by all USB network interfaces created by this script.
@@ -118,7 +118,7 @@ net_dhcp_lease_time=1500
 net_ipv6=fe80::1
 # The metric of the IPv4 default route; higher value is lower priority
 # Leave blank to prevent creating a default route
-net_ipv4_defroute_router=10.43.0.100
+net_ipv4_defroute_router=192.168.55.100
 # The metric value for the default route; can be empty for none.
 # Empirically, 32766 is the largest metric value, so lowest priority available.
 net_ipv4_defroute_metric=32766
