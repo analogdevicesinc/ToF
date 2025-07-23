@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# SPDX-FileCopyrightText: Copyright (c) 2017-2021 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-FileCopyrightText: Copyright (c) 2017-2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 # Redistribution and use in source and binary forms, with or without
@@ -38,21 +38,15 @@ modprobe libcomposite
 
 # Wait for any modules to load and initialize
 for attempt in $(seq 60); do
-    udc_dev_t210=700d0000.xudc
-    if [ -e "/sys/class/udc/${udc_dev_t210}" ]; then
-        udc_dev="${udc_dev_t210}"
+    udc_dev=3550000.xudc
+    if [ -e "/sys/class/udc/${udc_dev}" ]; then
         break
     fi
-    udc_dev_t186=3550000.xudc
-    if [ -e "/sys/class/udc/${udc_dev_t186}" ]; then
-        udc_dev="${udc_dev_t186}"
+    udc_dev=3550000.usb
+    if [ -e "/sys/class/udc/${udc_dev}" ]; then
         break
     fi
-    udc_dev_t186=3550000.usb
-    if [ -e "/sys/class/udc/${udc_dev_t186}" ]; then
-        udc_dev="${udc_dev_t186}"
-        break
-    fi
+    udc_dev=""
     sleep 1
 done
 if [ "${udc_dev}" == "" ]; then
@@ -174,28 +168,28 @@ fi
 # so that any system that's attached to the USB port can identify this device.
 # Do this even if $enable_ums!=1, since $fs_img is locally mounted too.
 mntpoint="/mnt/l4t-devmode-$$"
-#rm -rf "${mntpoint}"
-#mkdir -p "${mntpoint}"
-#mount -o loop "${fs_img}" "${mntpoint}"
-#rm -rf "${mntpoint}/version"
-#mkdir -p "${mntpoint}/version"
-#if [ -f /etc/nv_tegra_release ]; then
-#    cp /etc/nv_tegra_release "${mntpoint}/version"
-#fi
-#if dpkg -s nvidia-l4t-core > /dev/null 2>&1; then
-#    dpkg -s nvidia-l4t-core > "${mntpoint}/version/nvidia-l4t-core.dpkg-s.txt"
-#fi
-#plug_man_dir="/proc/device-tree/chosen/plugin-manager/"
-#chosen_dir="/proc/device-tree/chosen/"
+rm -rf "${mntpoint}"
+mkdir -p "${mntpoint}"
+modprobe loop
+mount -o loop "${fs_img}" "${mntpoint}"
+rm -rf "${mntpoint}/version"
+mkdir -p "${mntpoint}/version"
+if [ -f /etc/nv_tegra_release ]; then
+    cp /etc/nv_tegra_release "${mntpoint}/version"
+fi
+if dpkg -s nvidia-l4t-core > /dev/null 2>&1; then
+    dpkg -s nvidia-l4t-core > "${mntpoint}/version/nvidia-l4t-core.dpkg-s.txt"
+fi
+plug_man_dir="/proc/device-tree/chosen/plugin-manager/"
+chosen_dir="/proc/device-tree/chosen/"
 
-#if [ -d "${plug_man_dir}" ]; then
-#    cp -r "${plug_man_dir}" "${mntpoint}/version/plugin-manager"
-#elif [ -d "${chosen_dir}" ]; then
-#    cp -r "${chosen_dir}" "${mntpoint}/version/chosen"
-
-#fi
-#umount "${mntpoint}"
-#rm -rf "${mntpoint}"
+if [ -d "${plug_man_dir}" ]; then
+    cp -r "${plug_man_dir}" "${mntpoint}/version/plugin-manager"
+elif [ -d "${chosen_dir}" ]; then
+    cp -r "${chosen_dir}" "${mntpoint}/version/chosen"
+fi
+umount "${mntpoint}"
+rm -rf "${mntpoint}"
 
 if [ ${enable_ums} -eq 1 ]; then
     cfg_str="${cfg_str}+UMS"
@@ -259,12 +253,12 @@ echo "${udc_dev}" > UDC
 if [ ${enable_rndis} -eq 1 ]; then
     /sbin/brctl addif l4tbr0 "$(cat functions/rndis.usb0/ifname)"
     /sbin/ifconfig "$(cat functions/rndis.usb0/ifname)" up
+    sudo ip link set l4tbr0 mtu 15000
 fi
 
 if [ ${enable_ecm} -eq 1 ]; then
     /sbin/brctl addif l4tbr0 "$(cat functions/${ecm_ncm}.usb0/ifname)"
     /sbin/ifconfig "$(cat functions/${ecm_ncm}.usb0/ifname)" up
-    sudo ip link set l4tbr0 mtu 15000
 fi
 
 cd - # Out of /sys/kernel/config/usb_gadget
