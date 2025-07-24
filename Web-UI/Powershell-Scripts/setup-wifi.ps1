@@ -1,7 +1,22 @@
 # Define the Flask server base URL
 $baseUrl = "http://192.168.56.1:8000"
 
-Write-Host "`nNote : This Setup requires RW access." -ForegroundColor Cyan
+# check for file system Read-Write Permission
+$output = powershell -Command "& { .\permission-ops.ps1 -value 'view' }"
+
+$output = $output -join "`n"
+$output = $output.Trim()
+
+if ($output -match "Permission is\s*:\s*(RO|RW)") {
+    $permission = $matches[1]
+	if($permission -eq "RO"){
+		Write-Host "File System Permission is : $permission. Make Sure File System Permission is RW." -ForegroundColor Red
+		exit 1
+	}
+} else {
+    Write-Host "Permission not found in output."
+    exit 1
+}
 
 Write-Host "`nWarning : This Process Will Reboot the system." -ForegroundColor Red
 Write-Host ""
