@@ -63,4 +63,6 @@ try{
 }
 
 # reboot the system
+if($choice -eq "2"){
 ./system-reboot.ps1
+}
