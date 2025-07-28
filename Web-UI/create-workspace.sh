@@ -88,6 +88,11 @@ mkdir -p $dir_name/module
 
 cp $module_file_path $dir_name/module
 
+# Create requirements directory
+
+mkdir -p $dir_name/requirements
+cp -r $dir_name/ToF/Web-UI/requirements/* $dir_name/requirements
+
 # make a zip file 
 
 tar -cvzf $dir_name.tar.gz $dir_name/
