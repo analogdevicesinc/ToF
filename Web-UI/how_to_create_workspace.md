@@ -5,6 +5,7 @@ This document outlines the procedure to create a compressed `.tar.gz` update fil
 - `ToF/`
 - `Tools/`
 - `module/`
+- `requirements/`
 - `services/`
 
 These directories are packaged into a `.tar.gz` file, which can be uploaded as a new workspace using a PowerShell script.
@@ -36,6 +37,11 @@ Contains kernel driver files, typically with `.ko` extension.
 
 **Example:**
 - `adsd3500.ko`
+
+---
+
+### `requirements/`
+Contains the auxiliary usb-gadget.sh script for ECM/RNDIS configuration. This directory may also include a text file named fm_version_requirement.txt, which specifies the recommended firmware version for a particular workspace.
 
 ---
 
