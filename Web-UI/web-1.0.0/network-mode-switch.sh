@@ -10,7 +10,8 @@ fi
 VERSION=$1
 USER_CHOICE=$2
 
-CONFIG_FILE_1="/home/analog/Workspace/bin/usb-gadget.sh"
+CONFIG_FILE_1="/usr/share/systemd/usb-gadget.sh"
+CONFIG_FILE_3="/usr/share/systemd/"
 TEMP_FILE="/home/analog/Workspace/requirements/usb-gadget.tmp"
 CONFIG_FILE_2="/home/analog/Workspace/requirements/usb-gadget.sh"
 
@@ -47,10 +48,10 @@ if [ "$USER_CHOICE" == "windows" ]; then
         echo "Already in RNDIS mode for Windows."
     elif [ "$CURRENT_MODE" == "ecm" ]; then
         cp "$CONFIG_FILE_1" "$TEMP_FILE"
-        cp "$CONFIG_FILE_2" "$CONFIG_FILE_1"
+        cp "$CONFIG_FILE_2" "$CONFIG_FILE_3"
         cp "$TEMP_FILE" "$CONFIG_FILE_2"
         echo "Switched to RNDIS mode for Windows."
-        chmod +x "$CONFIG_FILE_1"
+        #chmod +x "$CONFIG_FILE_1"
     else
         echo "Unable to determine current mode."
     fi
@@ -60,10 +61,10 @@ elif [ "$USER_CHOICE" == "ubuntu" ]; then
         echo "Already in ECM mode for Ubuntu."
     elif [ "$CURRENT_MODE" == "rndis" ]; then
         cp "$CONFIG_FILE_1" "$TEMP_FILE"
-        cp "$CONFIG_FILE_2" "$CONFIG_FILE_1"
+        cp "$CONFIG_FILE_2" "$CONFIG_FILE_3"
         cp "$TEMP_FILE" "$CONFIG_FILE_2"
         echo "Switched to ECM mode for Ubuntu."
-        chmod +x "$CONFIG_FILE_1"
+        #chmod +x "$CONFIG_FILE_1"
     else
         echo "Unable to determine current mode."
     fi
