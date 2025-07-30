@@ -1,0 +1,38 @@
+name: Auto Merge main to dev branch (with submodules)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Manually clone the repository
+        run: |
+          git init
+          git remote add origin https://github.com/${{ github.repository }}.git
+          git fetch origin main
+          git fetch origin dev-6.1.0
+          git checkout -b dev-6.1.0 origin/dev-6.1.0
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Force replace dev branch with main branch contents (including submodules)
+        run: |
+          set -e
+          git reset --hard origin/main
+          git submodule update --init --recursive
+          git add .
+          git commit -m "Force sync dev branch with main branch (including submodules)" || echo "No changes to commit"
+
+      - name: Push changes to dev
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git dev-6.1.0 --force

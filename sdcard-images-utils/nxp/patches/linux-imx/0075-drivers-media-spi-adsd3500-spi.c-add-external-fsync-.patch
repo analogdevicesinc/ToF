@@ -1,0 +1,241 @@
+From 7b9cb0365588950625343a81f89546ce5ca7bc9a Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Thu, 12 Jun 2025 11:56:37 +0530
+Subject: [PATCH] drivers: media: spi: adsd3500-spi.c: add external fsync
+ support to toggle the fsync gpio using pwm trigger
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ drivers/media/spi/adsd3500-spi.c  | 97 +++++++++++++++++++++++++++++--
+ drivers/media/spi/adsd3500_regs.h |  6 ++
+ 2 files changed, 99 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/media/spi/adsd3500-spi.c b/drivers/media/spi/adsd3500-spi.c
+index d290ab6fe719..62e047f64b4a 100644
+--- a/drivers/media/spi/adsd3500-spi.c
++++ b/drivers/media/spi/adsd3500-spi.c
+@@ -65,6 +65,7 @@ struct adsd3500 {
+ 	struct v4l2_ctrl *confidence_bits;
+ 	struct v4l2_ctrl *ab_avg;
+ 	struct v4l2_ctrl *depth_en;
++	struct v4l2_ctrl *fsync_trigger;
+ 
+ 	struct mutex lock;
+ 	bool streaming;
+@@ -78,6 +79,9 @@ struct adsd3500 {
+ 	struct dentry *debugfs;
+ 	struct task_struct *task;
+ 	int signalnum;
++	struct pwm_device *pwm_fsync;
++	s64 framerate;
++	u8  curr_sync_mode;
+ };
+ 
+ static int adsd3500_spi_read_response(struct spi_device *client, uint8_t *receivebuff, unsigned size);
+@@ -96,6 +100,7 @@ static inline struct adsd3500 *to_adsd3500(struct v4l2_subdev *sd)
+ #define V4L2_CID_ADSD3500_CONFIDENCE_BITS (V4L2_CID_USER_ADSD_BASE + 4)
+ #define V4L2_CID_ADSD3500_AB_AVG (V4L2_CID_USER_ADSD_BASE + 5)
+ #define V4L2_CID_ADSD3500_DEPTH_EN (V4L2_CID_USER_ADSD_BASE + 6)
++#define V4L2_CID_ADSD3500_FSYNC_TRIGGER (V4L2_CID_USER_ADSD_BASE + 7)
+ 
+ static const struct reg_sequence adsd3500_powerup_setting[] = {
+ };
+@@ -923,6 +928,31 @@ static int adsd3500_s_power(struct v4l2_subdev *sd, int on)
+ 	return 0;
+ }
+ 
++static int adsd3500_set_fsync_trigger(struct adsd3500 *adsd3500, s32 val)
++{
++	struct device *dev = adsd3500->dev;
++	struct spi_device *client = to_spi_device(dev);
++	int ret;
++	unsigned int write_cmd;
++
++	if(adsd3500->pwm_fsync == NULL){
++		dev_warn(adsd3500->dev, "Failed to get the pwm device\n");
++		return -ENODEV;
++	}
++
++	dev_dbg(adsd3500->dev, "Entered: %s value = %d\n",__func__, val);
++	adsd3500->curr_sync_mode = val;
++	write_cmd = (ENABLE_FSYNC_TRIGGER << 16) | val;
++	write_cmd = REVERSE_LONG(write_cmd);
++	ret = adsd3500_regmap_write(client, &write_cmd, sizeof(unsigned int));
++	if (ret < 0){
++		dev_err(adsd3500->dev, "Write of ENABLE_FSYNC_TRIGGER command failed.\n");
++		return ret;
++	}
++
++	return ret;
++}
++
+ static int adsd3500_bpp_config(struct adsd3500 *priv,
+ 				    struct v4l2_ctrl *ctrl)
+ {
+@@ -1069,6 +1099,9 @@ static int adsd3500_s_ctrl(struct v4l2_ctrl *ctrl)
+ 	case V4L2_CID_ADSD3500_CONFIDENCE_BITS:
+ 		ret = adsd3500_bpp_config(adsd3500, ctrl);
+ 		break;
++	case V4L2_CID_ADSD3500_FSYNC_TRIGGER:
++		ret = adsd3500_set_fsync_trigger(adsd3500, ctrl->val);
++		break;
+ 	default:
+ 		dev_err(adsd3500->dev, "%s > Unhandled: %x  param=%x\n",
+ 			__func__, ctrl->id, ctrl->val);
+@@ -1167,6 +1200,18 @@ static const struct v4l2_ctrl_config adsd3500_depth_en = {
+ 	.step		= 1,
+ };
+ 
++static const struct v4l2_ctrl_config adsd3500_fsync_trigger = {
++	.ops            = &adsd3500_ctrl_ops,
++	.id             = V4L2_CID_ADSD3500_FSYNC_TRIGGER,
++	.name           = "Fsync Trigger",
++	.type           = V4L2_CTRL_TYPE_INTEGER,
++	.def            = 1,
++	.min            = 0,
++	.max            = 2,
++	.step           = 1,
++
++};
++
+ static int adsd3500_enum_mbus_code(struct v4l2_subdev *sd,
+ 				   struct v4l2_subdev_pad_config *cfg,
+ 				   struct v4l2_subdev_mbus_code_enum *code)
+@@ -1374,6 +1419,13 @@ static int adsd3500_start_streaming(struct adsd3500 *adsd3500)
+ 	if (ret < 0)
+ 		dev_err(adsd3500->dev, "Write of STREAM-ON command failed.\n");
+ 
++	if(adsd3500->pwm_fsync != NULL && adsd3500->curr_sync_mode == FSYNC_HIZ_STATE ){
++		ret = pwm_enable(adsd3500->pwm_fsync);
++		if (ret)
++			dev_err(adsd3500->dev, "Could not enable FSYNC PWM\n");
++		return ret;
++	}
++
+ 	return ret;
+ }
+ 
+@@ -1384,6 +1436,11 @@ static int adsd3500_stop_streaming(struct adsd3500 *adsd3500)
+ 	unsigned int write_cmd;
+ 	int ret;
+ 
++	if(adsd3500->pwm_fsync != NULL && adsd3500->curr_sync_mode == FSYNC_HIZ_STATE){
++		pwm_disable(adsd3500->pwm_fsync);
++		msleep(1000 / adsd3500->framerate);
++	}
++
+ 	write_cmd = REVERSE_LONG(STREAM_OFF_CMD);
+ 	ret = adsd3500_regmap_write(client, &write_cmd, sizeof(unsigned int));
+ 	if (ret < 0)
+@@ -1463,13 +1520,20 @@ static int adsd3500_s_frame_interval(struct v4l2_subdev *subdev,
+ 	struct adsd3500 *adsd3500 = to_adsd3500(subdev);
+ 	struct device *dev = adsd3500->dev;
+ 	struct spi_device *client = to_spi_device(dev);
+-	uint32_t write_val, write_cmd =0;
++	struct pwm_state state;
++	uint32_t write_cmd =0;
+ 	int ret;
+ 
+-	write_val = DIV_ROUND_UP(fi->interval.denominator,  fi->interval.numerator);
+-	write_cmd = (SET_FRAMERATE_CMD << 16) | write_val;
+-	write_cmd = REVERSE_LONG(write_cmd);
++	adsd3500->framerate = DIV_ROUND_UP(fi->interval.denominator,  fi->interval.numerator);;
++	if(adsd3500->pwm_fsync != NULL){
++		pwm_init_state(adsd3500->pwm_fsync, &state);
++		state.period = DIV_ROUND_UP(1 * NSEC_PER_SEC, adsd3500->framerate);
++		pwm_set_relative_duty_cycle(&state, 50, 100);
++		ret = pwm_apply_state(adsd3500->pwm_fsync, &state);
++	}
+ 
++	write_cmd = (SET_FRAMERATE_CMD << 16) | adsd3500->framerate;
++	write_cmd = REVERSE_LONG(write_cmd);
+ 	ret = adsd3500_regmap_write(client, &write_cmd, sizeof(unsigned int));
+ 	if (ret < 0)
+ 		dev_err(adsd3500->dev, "Set FRAMERATE COMMAND failed.\n");
+@@ -1530,6 +1594,8 @@ static int adsd3500_init_ctrls(struct adsd3500 *priv){
+ 
+ 	v4l2_ctrl_handler_init(&priv->ctrls, 3);
+ 
++	priv->framerate = ADSD3500_DEFAULT_FPS;
++	priv->curr_sync_mode = FSYNC_START;
+ 	priv->pixel_rate = v4l2_ctrl_new_std(&priv->ctrls,
+ 						  &adsd3500_ctrl_ops,
+ 						  V4L2_CID_PIXEL_RATE,
+@@ -1570,6 +1636,10 @@ static int adsd3500_init_ctrls(struct adsd3500 *priv){
+ 						&adsd3500_depth_en,
+ 						NULL);
+ 
++	priv->fsync_trigger= v4l2_ctrl_new_custom(&priv->ctrls,
++						&adsd3500_fsync_trigger,
++						NULL);
++
+ 	ret = priv->ctrls.error;
+ 	if (ret) {
+ 		dev_err(dev, "%s: control initialization error %d\n",
+@@ -1617,6 +1687,7 @@ static int adsd3500_spi_bus_init(struct v4l2_subdev *sd)
+ static int adsd3500_parse_dt(struct adsd3500 *priv){
+ 	struct v4l2_fwnode_endpoint bus_cfg = {.bus_type = V4L2_MBUS_CSI2_DPHY};
+ 	struct fwnode_handle *endpoint;
++	struct pwm_state state;
+ 	struct device *dev = priv->dev;
+ 	int ret;
+ 
+@@ -1683,6 +1754,23 @@ static int adsd3500_parse_dt(struct adsd3500 *priv){
+ 
+ 	priv->current_config.use_vc = of_property_read_bool(dev->of_node, "adi,use-vc");
+ 
++	priv->pwm_fsync = devm_pwm_get(dev, NULL);
++	if(IS_ERR(priv->pwm_fsync)){
++		dev_warn(dev, "Unable to get the pwm device\n");
++		priv->pwm_fsync = NULL;
++	}
++
++	if(priv->pwm_fsync != NULL){
++		priv->framerate = ADSD3500_DEFAULT_FPS;
++		pwm_init_state(priv->pwm_fsync, &state);
++		state.period = DIV_ROUND_UP(1 * NSEC_PER_SEC, priv->framerate);
++		pwm_set_relative_duty_cycle(&state, 50, 100);
++		ret = pwm_apply_state(priv->pwm_fsync, &state);
++		if(ret){
++			dev_err(dev, "PWM init failed %d\n", ret);
++		}
++	}
++
+ 	return 0;
+ }
+ 
+@@ -1976,6 +2064,7 @@ static int adsd3500_remove(struct spi_device *client)
+ 	gpiod_put(adsd3500->irq_gpio);
+ 	debugfs_remove(adsd3500->debugfs);
+ 	v4l2_ctrl_handler_free(&adsd3500->ctrls);
++	pwm_put(adsd3500->pwm_fsync);
+ 	mutex_destroy(&adsd3500->lock);
+ 
+ 	pm_runtime_disable(adsd3500->dev);
+diff --git a/drivers/media/spi/adsd3500_regs.h b/drivers/media/spi/adsd3500_regs.h
+index e543901dbf38..b0f6db0bad0c 100644
+--- a/drivers/media/spi/adsd3500_regs.h
++++ b/drivers/media/spi/adsd3500_regs.h
+@@ -49,6 +49,11 @@
+ 
+ #define SET_FRAMERATE_CMD                   0x0022
+ #define GET_FRAMERATE_CMD                   0x00230000
++#define ENABLE_FSYNC_TRIGGER                            0x0025
++#define FSYNC_STOP                                      0x0000
++#define FSYNC_START                                     0x0001
++#define FSYNC_HIZ_STATE                                 0x0002
++
+ 
+ #define READ_REGISTER_CMD					0xFFFF
+ #define WRITE_REGISTER_CMD					0xFFFF
+@@ -56,6 +61,7 @@
+ #define SWITCH_TO_BURST_CMD         	    0x00190000
+ 
+ #define ADSD3500_CHIP_ID					0x5931
++#define ADSD3500_DEFAULT_FPS                    10
+ #define USER_TASK 				_IOW('A',1,int32_t*)
+ #define SIGETX 					44
+ #define ADSD3500_FIRMWARE			"adi/adsd3500-fw.bin"
+-- 
+2.28.0
+

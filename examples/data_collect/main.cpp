@@ -31,6 +31,8 @@
 #include <thread>
 #include <vector>
 
+
+
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -334,6 +336,7 @@ int main(int argc, char *argv[]) {
             return 0;
         }
     }
+
 
     // Get modes
     std::vector<uint8_t> availableModes;

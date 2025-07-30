@@ -1,4 +1,4 @@
-# Gesture recognition example
+# Gesture recognition example (DEPRECATED)
 
 ### Overview
 This example is intended to present the gesture recognition for the Rock-Paper-Scissor game.

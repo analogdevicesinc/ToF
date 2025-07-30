@@ -11,8 +11,8 @@ endif()
 
 ############################### Version #######################################
 set(ADITOF_VERSION_MAJOR 6)
-set(ADITOF_VERSION_MINOR 0)
-set(ADITOF_VERSION_PATCH 1)
+set(ADITOF_VERSION_MINOR 1)
+set(ADITOF_VERSION_PATCH 0)
 
 set(VERSION "${ADITOF_VERSION_MAJOR}.${ADITOF_VERSION_MINOR}.${ADITOF_VERSION_PATCH}")
 
@@ -20,9 +20,6 @@ set(VERSION "${ADITOF_VERSION_MAJOR}.${ADITOF_VERSION_MINOR}.${ADITOF_VERSION_PA
 option(WITH_EXAMPLES "Build examples?" ON)
 option(WITH_DOC "Build documentation?" OFF)
 option(WITH_PYTHON "Build python bindings?" ON)
-option(WITH_OPENCV "Build opencv bindings?" OFF)
-option(WITH_OPEN3D "Build open3d bindings?" OFF)
-option(WITH_ROS2 "Build ros2 bindings?" OFF)
 option(WITH_NETWORK "Build network interface?" ON)
 option(WITH_OFFLINE "Build offline interface?" ON)
 option(WITH_GLOG_DEPENDENCY "Build with GLOG dependency to be used for logging?" ON)
@@ -122,6 +119,14 @@ else()
         add_definitions(-DSINGLE)
 endif()
 
+
+# Add the device definition
+if(NXP)
+     add_definitions(-DNXP)
+elseif(NVIDIA)
+     add_definitions(-DNVIDIA)
+endif()
+
 set(RESOURCES_DIR "${CMAKE_BINARY_DIR}/resources")
 make_directory(${RESOURCES_DIR})
 
@@ -184,6 +189,7 @@ add_definitions(-DRESOURCES="${RESOURCES_DIR}")
 
 add_subdirectory(libaditof)
 add_subdirectory(apps)
+add_subdirectory(tests)
 
 if (WITH_EXAMPLES AND NOT NXP)
 	add_subdirectory(dependencies/third-party/imgui)
@@ -195,15 +201,6 @@ if (WITH_DOC)
 endif()
 if (WITH_PYTHON)
         add_subdirectory(bindings/python)
-endif()
-if (WITH_OPENCV)
-        add_subdirectory(bindings/opencv)
-endif()
-if (WITH_OPEN3D)
-        add_subdirectory(bindings/open3D)
-endif()
-if (WITH_ROS2)
-        add_subdirectory(bindings/ros2)
 endif()
 if (WITH_COMMAND_LINE_TOOLS)
         add_subdirectory(tools)

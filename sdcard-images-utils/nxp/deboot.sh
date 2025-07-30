@@ -70,7 +70,8 @@ function setup_config() {
   TZ_CITY=UTC
   LOCALE_LANG=en_US.UTF-8
   ADD_LIST='git build-essential gcc autoconf nano vim parted flex bison'
-  ADD_LIST_ST_3='i2c-tools v4l-utils rfkill wpasupplicant libtool libconfig-dev avahi-daemon htpdate openssh-server iperf3 bc python3-dev python3-pip python3-matplotlib'
+  ADD_LIST_ST_3='i2c-tools v4l-utils rfkill wpasupplicant libtool libconfig-dev avahi-daemon htpdate openssh-server iperf3 bc python3-dev python3-pip python3-matplotlib gunicorn python3-gevent python3-flask python3-tz unzip'
+  ROS_DEP='software-properties-common'
 
   # output example of the config file
 #  cat <<EOF>config-example
@@ -103,6 +104,7 @@ function setup_config() {
   echo LANG        : ${LOCALE_LANG}
   echo ADD_LIST    : ${ADD_LIST}
   echo ADD_LIST_STAGE_3 : ${ADD_LIST_ST_3}
+  echo ROS_DEP : ${ROS_DEP}
 
   # language pack
   LANG_PACK=language-pack-${LOCALE_LANG%%_*}-base
@@ -215,6 +217,7 @@ groupadd gpio
 usermod -a -G sudo,video,disk,i2c,gpio ${USERNAME}
 echo -e "${PASSWORD}\n${PASSWORD}\n" | passwd ${USERNAME}
 
+
 # overwrite apt source list
 rm -f /etc/apt/sources.list
 echo deb     ${DISTRO_MIRROR} ${DISTRO_CODE}          main universe >> /etc/apt/sources.list
@@ -226,6 +229,10 @@ echo deb-src ${DISTRO_MIRROR} ${DISTRO_CODE}-security main universe >> /etc/apt/
 
 apt update -y
 apt upgrade -y
+apt-get update -y
+apt-get upgrade -y
+
+apt-get install -y ${ROS_DEP}
 
 apt install -y ${ADD_LIST_ST_3}
 
@@ -236,6 +243,9 @@ systemctl enable usb-gadget.service
 systemctl enable network-gadget.path
 systemctl enable uvc-gadget.path
 systemctl enable adi-backup.service
+systemctl enable network-gadget.service
+systemctl enable adi-tof.service
+systemctl enable gunicorn.service
 
 #set default python3
 update-alternatives --install /usr/bin/python python /usr/bin/python3 1
@@ -260,7 +270,7 @@ if [ -n ${BRANCH} ]; then
 	popd
 fi
 pushd ToF
-git submodule update --init
+git submodule update --init --recursive
 popd
 if [ -n ${LIBADITOF_BRANCH} ]; then
 	echo "Checkout to Branch: ${LIBADITOF_BRANCH}"
@@ -270,6 +280,7 @@ if [ -n ${LIBADITOF_BRANCH} ]; then
 	popd
   popd
 fi
+
 pushd ToF/scripts/nxp/
 chmod +x setup.sh
 ./setup.sh -y -b ../../build -j4
@@ -283,8 +294,20 @@ chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace
 #copy executables to bin folder
 mkdir /home/${USERNAME}/Workspace/bin
 cp /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/data_collect /home/${USERNAME}/Workspace/bin
-cp /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/*.so* /home/${USERNAME}/Workspace/bin
 cp /home/${USERNAME}/Workspace/ToF/build/examples/first-frame/first-frame /home/${USERNAME}/Workspace/bin
+mv /home/${USERNAME}/Workspace/ToF/sdcard-images-utils/nxp/patches/ubuntu_overlay/step1/usr/share/systemd/* /home/${USERNAME}/Workspace/bin
+
+#pushd /home/${USERNAME}/Workspace/bin
+#chmod +x ros_install_noetic.sh
+#echo "3" | ./ros_install_noetic.sh
+#chmod +x install_ros2_dependencies.sh
+#./install_ros2_dependencies.sh
+#popd
+#mkdir -p /opt/ros/humble
+#pushd /opt/ros/humble
+#sudo mv /tmp/ros2_src/* /opt/ros/humble/
+#popd
+#rm -rf /tmp/ros2_src
 
 
 #generate licences file
@@ -293,6 +316,9 @@ EOF
 
   # Apply step1 overlay
   sudo cp -R ${SCRIPT_DIR}/patches/ubuntu_overlay/step1/* ${ROOTFS_TMP}/
+
+  #mkdir -p ${ROOTFS_TMP}/tmp/ros2_src
+  #sudo cp -r ${SCRIPT_DIR}/install/* ${ROOTFS_TMP}/tmp/ros2_src/
 
   sudo mv stage3.sh ${ROOTFS_TMP}/tmp
   sudo chmod +x ${ROOTFS_TMP}/tmp/stage3.sh
@@ -318,8 +344,64 @@ EOF
 
   # Apply step3 overlay (configs)
   sudo cp -R ${SCRIPT_DIR}/patches/ubuntu_overlay/step3/* ${ROOTFS_TMP}/
-  
-  
+
+}
+
+function create_ui_setup(){
+	cat<<EOF>web_ui_setup.sh
+#!/bin/bash
+
+pushd /home/${USERNAME}
+
+#sudo mv /tmp/ros_temp/* /home/${USERNAME}/Workspace
+#chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/catkin_ws
+
+sudo mv Workspace/ToF/Web-UI/requirements/ /home/${USERNAME}/Workspace
+sudo mv Workspace/ToF/Web-UI/web-1.0.0/ /home/${USERNAME}/
+
+sudo  ln -s  /home/${USERNAME}/web-1.0.0 web
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/web
+
+#sudo mkdir ADSD3500-firmware-5.3.3
+#sudo mv /tmp/fw_temp/* ADSD3500-firmware-5.3.3/
+#sudo ln -s /home/${USERNAME}/ADSD3500-firmware-5.3.3 ADSD3500-firmware
+sudo mv Workspace/  Workspace-6.1.0
+sudo ln -s /home/${USERNAME}/Workspace-6.1.0 Workspace
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/Tools/
+
+
+#copy service files to services folder
+mkdir /home/${USERNAME}/Workspace/services
+mv /usr/lib/systemd/system/adi-backup.service /home/${USERNAME}/Workspace/services
+mv /usr/lib/systemd/system/adi-tof.service /home/${USERNAME}/Workspace/services
+mv /usr/lib/systemd/system/network-gadget.service /home/${USERNAME}/Workspace/services
+mv /usr/lib/systemd/system/usb-gadget.service /home/${USERNAME}/Workspace/services
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/services
+
+# link the services in Workspace
+sudo ln -s /home/${USERNAME}/Workspace/services/adi-backup.service /usr/lib/systemd/system/adi-backup.service
+sudo ln -s /home/${USERNAME}/Workspace/services/adi-tof.service /usr/lib/systemd/system/adi-tof.service
+sudo ln -s /home/${USERNAME}/Workspace/services/network-gadget.service /usr/lib/systemd/system/network-gadget.service
+sudo ln -s /home/${USERNAME}/Workspace/services/usb-gadget.service /usr/lib/systemd/system/usb-gadget.service
+
+#copy the driver build in modules folderAdd commentMore actions
+mkdir /home/${USERNAME}/Workspace/module
+mv /usr/lib/modules/5.10.72-*/kernel/drivers/media/i2c/adsd3500.ko /home/${USERNAME}/Workspace/module
+sudo ln -s /home/${USERNAME}/Workspace/module/adsd3500.ko /usr/lib/modules/5.10.72-*/kernel/drivers/media/i2c/
+chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace/module
+#rm -rf /tmp/ros_temp
+#rm -rf /tmp/fw_temp
+
+EOF
+     #mkdir -p ${ROOTFS_TMP}/tmp/ros_temp
+     #mkdir -p ${ROOTFS_TMP}/tmp/fw_temp
+     #sudo cp -r ${SCRIPT_DIR}/ROS/* ${ROOTFS_TMP}/tmp/ros_temp/ &&  echo "ROS1 copied successfully" >> ${SCRIPT_DIR}/ROS/log.txt
+     #sudo cp -r ${SCRIPT_DIR}/Firmware/* ${ROOTFS_TMP}/tmp/fw_temp/ &&  echo "Firmware copied successfully" >> ${SCRIPT_DIR}/Firmware/log.txt
+     sudo mv web_ui_setup.sh ${ROOTFS_TMP}/tmp
+     sudo chmod +x ${ROOTFS_TMP}/tmp/web_ui_setup.sh
+     sudo chroot ${ROOTFS_TMP} /tmp/web_ui_setup.sh
+     sudo rm -f ${ROOTFS_TMP}/tmp/web_ui_setup.sh
 }
 
 function main() {
@@ -329,8 +411,8 @@ function main() {
   
   cd ${OUTPUT_DIR}
   
-  # create 5GB ext4 image
-  dd if=/dev/zero of=rootfs.ext4 bs=1M count=5000
+  # create 10GB ext4 image
+  dd if=/dev/zero of=rootfs.ext4 bs=1M count=10000
   mkdir -p ${ROOTFS_TMP}
   mkfs.ext4 rootfs.ext4
   sudo mount -o loop -o barrier=0 rootfs.ext4 ${ROOTFS_TMP}
@@ -340,14 +422,19 @@ function main() {
   # debootstrap 1st
   sudo debootstrap --arch=${TARGET_ARCH} --include="${INCLUDE_LIST}" --foreign ${DISTRO_CODE} ${ROOTFS_TMP} ${DISTRO_MIRROR}
   # copy libs to ${SCRIPT_DIR}/build/ubuntu/rootfs_tmp/home/temp(Make sure to add a path to .so files here)
+  #sudo cp /home/esptguest/SSingh/Workspace/libs/*.so  ${SCRIPT_DIR}/build/ubuntu/rootfs_tmp
+  #echo "libs copied sucessfully" >  /home/esptguest/SSingh/Workspace/libs/log.txt
+  #date >> /home/esptguest/SSingh/Workspace/libs/log.txt 1> /dev/null 2>&1
+  
   # debootstrap 2nd
   sudo chroot ${ROOTFS_TMP} /debootstrap/debootstrap --second-stage
 
   run_3rd_stage_script
 
-  uninstall_qemu
+  # for web-ui
+  create_ui_setup
   
-  	
+  uninstall_qemu
   #Adding rsz script to .bashrc
   sudo cat ${ROOTFS_TMP}/home/bashrc_extension >> ${ROOTFS_TMP}/home/${USERNAME}/.bashrc
   sudo cat ${ROOTFS_TMP}/home/${USERNAME}/.bashrc >> ${SCRIPT_DIR}/build/log_rc.txt

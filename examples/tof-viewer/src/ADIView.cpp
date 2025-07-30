@@ -514,17 +514,7 @@ void ADIView::_displayAbImage() {
                 continue;
             }
 
-            lock.unlock(); // Lock is no longer needed
-        }
-        //OutputDebugString("_displayAbImage: Processing\n");
-
-#ifdef AB_TIME
-        auto timerStart = startTimer();
-#endif //AB_TIME
-
-        uint16_t* _ab_video_data = nullptr;
-
-        std::lock_guard<std::mutex> lock(ab_data_ready_mtx);
+        lock.unlock(); // Lock is no longer needed
 
         auto camera = m_ctrl->m_cameras[static_cast<unsigned int>(
             m_ctrl->getCameraInUse())];

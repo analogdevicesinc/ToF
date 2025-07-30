@@ -1,0 +1,14 @@
+[Unit]
+Description=gunicorn daemon
+After=network.target
+
+
+[Service]
+#User=analog
+#Group=www-data
+WorkingDirectory=/home/analog/web
+ExecStart=/usr/bin/gunicorn -w 4 -k gevent --timeout 500 --worker-connections 1000 --bind 0.0.0.0:8000 app:app --access-logfile /tmp/access.log --error-logfile /tmp/error.log
+
+
+[Install]
+WantedBy=multi-user.target

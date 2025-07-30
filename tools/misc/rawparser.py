@@ -1,61 +1,62 @@
-#
-# BSD 3-Clause License
-#
-# Copyright (c) 2019, Analog Devices, Inc.
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-# 1. Redistributions of source code must retain the above copyright notice, this
-#    list of conditions and the following disclaimer.
-#
-# 2. Redistributions in binary form must reproduce the above copyright notice,
-#    this list of conditions and the following disclaimer in the documentation
-#    and/or other materials provided with the distribution.
-#
-# 3. Neither the name of the copyright holder nor the names of its
-#    contributors may be used to endorse or promote products derived from
-#    this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-#import aditofpython as tof
+#!/usr/bin/env python3
+# BSD 3-Clause License (see original notice above)
+
 import numpy as np
 import sys
 import os
-import time
 import argparse
 import cv2 as cv
 import open3d as o3d
 import struct
+import re
 
-MegaPixel = 1024
-qMegaPixel = [512, 640, 256, 320]
-confBytesPerPx = 4 
-abBytesPerPx = 2
-xyzBytesPerPx = 6
-depthPerPx = 2
-#BIT_MAP = {'confBytesPerPx': 4,'abBytesPerPx': 2, 'depthPerPx': 2,'xyzBytesPerPx':6}
+# ---- CONSTANTS ----
+MEGA_PIXEL = 1024
+QMEGA_PIXEL = [512, 640, 256, 320]
+PNG_EXT = '.png'
+PLY_EXT = '.ply'
+METADATA_LENGTH = 128
+RAW_PARSER_VERSION = "1.1.0"
+DEFAULT_CONF_BYTES = 4
+DEFAULT_AB_BYTES = 2
+DEFAULT_XYZ_BYTES = 6
+DEFAULT_DEPTH_BYTES = 2
 
-startOfFrame = 0
-metadataLength = 128
-logImage = False
-pngFileType = '.png'
-plyFileType = '.ply'
+def make_dir(path):
+    os.makedirs(path, exist_ok=True)
 
-rawParserVersion = "1.0.0"
-TOFEvalVersion = "5.0.0"
-def parse_metadata(filename, directory, index):
+def safe_join(*args):
+    return os.path.join(*args)
+
+def parse_frame_range(range_str, total_frames):
+    """
+    Accepts range_str (e.g. '30', '30-', '30-40') and total_frames.
+    Returns (start, end) inclusive.
+    """
+    if not range_str:
+        return 0, total_frames - 1
+    match = re.fullmatch(r'(\d+)(?:-(\d*)?)?', range_str)
+    if not match:
+        raise ValueError(f"Invalid frame range: {range_str}")
+    start = int(match.group(1))
+    end = match.group(2)
+    if match.group(2) is not None:
+        # It's a range: '10-', '10-15'
+        if end == '' or end is None:
+            end_idx = total_frames - 1
+        else:
+            end_idx = int(end)
+    else:
+        # Single frame: '10'
+        end_idx = start
+    # Clamp to valid frame indices
+    start = max(start, 0)
+    end_idx = min(end_idx, total_frames - 1)
+    if start > end_idx:
+        raise ValueError(f"Start frame {start} greater than end frame {end_idx}")
+    return start, end_idx
+
+def generate_metadata(filename, directory, base_filename, index):
     elemsList = [
         ('frameWidth',             'H'),
         ('frameHeight',            'H'),
@@ -76,244 +77,186 @@ def parse_metadata(filename, directory, index):
         ('laserTemp',              'L'),
         ('paddingBytes',         '92x'),
     ]
-    format_string ='=' +"".join(fmt for name, fmt in elemsList)
-    #with open ('%s' % filename) as file:
+    format_string = '=' + ''.join(fmt for _, fmt in elemsList)
     with open(filename, "rb") as file:
-        file.seek(0)
-        data = file.read(metadataLength)
+        data = file.read(METADATA_LENGTH)
         values = struct.unpack(format_string, data)
-        
-        # Create a list of elements with names and values
-        elements = [(name, value) for (name, fmt), value in zip(elemsList, values)]
-        # depthbitsPerPx, abbitsPerPx, confbitsPerPx = elements[3:6]
-                
-        # print('Bits in depth: %s, AB: %s and Conf: %s' %(depthPerPx, abBytesPerPx, confBytesPerPx))
-        
-        # Save the elements list
-        with open(directory + 'metadata_' + base_filename + '_' + index +'.txt', 'w') as outfile:
-            outfile.writelines([str(i)+'\n' for i in elements])
+        elements = [(name, value) for (name, _), value in zip(elemsList, values)]
+        meta_path = safe_join(directory, f'metadata_{base_filename}_{index}.txt')
+        with open(meta_path, 'w') as outfile:
+            outfile.writelines([f"{i}\n" for i in elements])
 
-def visualize_depth(filename, directory, index):
-    depth_frame = np.zeros([height,width])
-    with open ('%s' % filename) as file:
-        #parse the depth data from binary file 
-        byte_array = np.fromfile(file, dtype=np.uint16, offset = metadataLength, count = height*width)
-        depth_frame = np.reshape(byte_array, [height,width])
+def generate_depth(filename, directory, base_filename, index, width, height):
+    with open(filename, "rb") as file:
+        file.seek(METADATA_LENGTH)
+        byte_array = np.fromfile(file, dtype=np.uint16, count=height * width)
+    depth_frame = np.reshape(byte_array, (height, width))
+    norm_depth = cv.normalize(depth_frame, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
+    color_depth = cv.applyColorMap(norm_depth, cv.COLORMAP_TURBO)
+    img = o3d.geometry.Image(color_depth)
+    o3d.io.write_image(safe_join(directory, f'depth_{base_filename}_{index}{PNG_EXT}'), img)
 
-        #normalize depth data to 8bit image
-        norm_depth_frame = cv.normalize(depth_frame, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
-        norm_depth_frame = np.uint8(norm_depth_frame)
-        norm_depth_frame = cv.applyColorMap(norm_depth_frame,cv.COLORMAP_TURBO)
-        
-        #save depth frame as
-        img = o3d.geometry.Image(norm_depth_frame)
-        #Save the image to a file
-        o3d.io.write_image(directory + 'depth_' + base_filename + '_' + index + pngFileType, img)
+def visualize_ab(filename, directory, base_filename, index, width, height, depth_bytes, log_image = False):
+    offset = depth_bytes * height * width + METADATA_LENGTH
+    with open(filename, "rb") as file:
+        file.seek(offset)
+        byte_array = np.fromfile(file, dtype=np.uint16, count=height * width)
+    ab_frame = np.reshape(byte_array, (height, width))
+    norm_ab = cv.normalize(ab_frame, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
+    if log_image:
+        c = 255 / np.log(1 + np.max(norm_ab))
+        norm_ab = c * (np.log(norm_ab + 1))
+        norm_ab = np.array(norm_ab, dtype=np.uint8)
+    else:
+        norm_ab = np.uint8(norm_ab)
+    norm_ab = cv.cvtColor(norm_ab, cv.COLOR_GRAY2RGB)
+    img = o3d.geometry.Image(norm_ab)
+    o3d.io.write_image(safe_join(directory, f'ab_{base_filename}_{index}{PNG_EXT}'), img)
 
-def visualize_ab(filename, directory, index):
-    ab_frame = np.zeros([height,width])
-    with open ('%s' % filename) as file:
-        #parse the AB data from binary file 
-        byte_array = np.fromfile(file, dtype=np.uint16,
-            offset = depthPerPx * height * width + metadataLength, count = height*width)
-        ab_frame = np.reshape(byte_array, [height,width])
+def generate_confidence(filename, directory, base_filename, index, width, height, depth_bytes, ab_bytes):
+    offset = (depth_bytes + ab_bytes) * height * width + METADATA_LENGTH
+    with open(filename, "rb") as file:
+        file.seek(offset)
+        byte_array = np.fromfile(file, dtype=np.int16, count=height * width)
+    conf_frame = np.reshape(byte_array, (height, width))
+    norm_conf = cv.normalize(conf_frame, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
+    norm_conf = 255 - np.uint8(norm_conf)
+    img = o3d.geometry.Image(norm_conf)
+    o3d.io.write_image(safe_join(directory, f'conf_{base_filename}_{index}{PNG_EXT}'), img)
 
-        #normalize ab data to 8bit image
-        norm_ab_frame = cv.normalize(ab_frame, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
-        #Apply log transform if logImage is true
-        if logImage == True:
-            c = 255 / np.log(1 + np.max(norm_ab_frame)) 
-            norm_ab_frame = c * (np.log(norm_ab_frame + 1)) 
-            norm_ab_frame = np.array(norm_ab_frame, dtype = np.uint8)
-        else:
-            norm_ab_frame = np.uint8(norm_ab_frame)
-        norm_ab_frame = cv.cvtColor(norm_ab_frame, cv.COLOR_GRAY2RGB)
-            
-        #save depth frame as
-        img = o3d.geometry.Image(norm_ab_frame)
-        #Save the image to a file
-        o3d.io.write_image(directory + 'ab_' + base_filename + '_' + index + pngFileType, img)
-
-def visualize_confidence(filename, directory, index):
-    conf_frame = np.zeros([height,width])
-    with open ('%s' % filename) as file:
-        #parse the confidence data from binary file 
-        byte_array = np.fromfile(file, dtype=np.int16, offset = (depthPerPx + 
-                abBytesPerPx)*height*width+metadataLength, count = height*width)
-        conf_frame = np.reshape(byte_array, [height,width])
-        
-        norm_conf_frame = cv.normalize(conf_frame, None, 0, 255, cv.NORM_MINMAX, dtype=cv.CV_8U)
-        norm_conf_frame = np.uint8(norm_conf_frame)
-        norm_conf_frame = 255 - norm_conf_frame
-        
-        #save depth frame as
-        img = o3d.geometry.Image(norm_conf_frame)
-        #Save the image to a file
-        o3d.io.write_image(directory + 'conf_' + base_filename + '_' + index + pngFileType, img)
-
-def visualize_pcloud(filename, directory, index):
-    # Create visualizer
-    vis = o3d.visualization.Visualizer()
-    vis.create_window("PointCloud", 1200, 1200)
-
+def visualize_pcloud(filename, directory, base_filename, index, width, height, qmegapixel, mega_pixel, conf_bytes, depth_bytes, ab_bytes, xyz_bytes):
+    if width in qmegapixel and height in qmegapixel:
+        offset = (conf_bytes + depth_bytes + ab_bytes) * height * width + METADATA_LENGTH
+    elif width == mega_pixel and height == mega_pixel:
+        offset = (depth_bytes + ab_bytes) * height * width + METADATA_LENGTH
+    else:
+        return
+    with open(filename, "rb") as file:
+        file.seek(offset)
+        byte_array = np.fromfile(file, dtype=np.int16, count=height * width * 3)
+    if byte_array.size != height * width * 3:
+        return
+    xyz_frame = np.resize(byte_array, (height * width, 3))
     point_cloud = o3d.geometry.PointCloud()
-    xyz_frame = np.zeros([height*width,3])
-    with open ('%s' % filename) as file:
-        
-        if width in qMegaPixel and height in qMegaPixel:
-            byte_array = np.fromfile(file, dtype=np.int16, offset = (confBytesPerPx + depthPerPx + 
-                abBytesPerPx)*height*width+metadataLength, count = height*width*3)
-        elif width == MegaPixel and height == MegaPixel:
-            byte_array = np.fromfile(file, dtype=np.int16, offset = (depthPerPx + 
-                abBytesPerPx)*height*width+metadataLength, count = height*width*3)
-        
-        
-        xyz_frame = np.resize(byte_array, (height*width,3))
+    point_cloud.points = o3d.utility.Vector3dVector(xyz_frame)
+    point_cloud.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
+    o3d.io.write_point_cloud(safe_join(directory, f'pointcloud_{base_filename}_{index}{PLY_EXT}'), point_cloud)
 
-        point_cloud.points = o3d.utility.Vector3dVector(xyz_frame)
-        point_cloud.transform([[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
-        o3d.io.write_point_cloud(directory + 'pointcloud_' + base_filename 
-            + '_' + index + plyFileType,point_cloud)
-        vis.add_geometry(point_cloud)
-        vis.update_geometry(point_cloud)
-        vis.run()
-        vis.poll_events()
-        vis.update_renderer()
-        
-def generate_vid(mainDir,numberOfFrames,width,height):
-    #create video directory
-    vidDir = mainDir + '/vid_' + base_filename
-    if not os.path.exists(vidDir):
-        os.makedirs(vidDir)
-        
-    #Create a video writer object
-    video = cv.VideoWriter(vidDir + '/vid_' + base_filename + '.mp4', cv.VideoWriter_fourcc(*"mp4v"), 10, (width*2, height))
-    
-    #Loop over the AB and depth images and and write them to video
-    for i in range(0,numberOfFrames):
-        binDir = mainDir +  '/' + base_filename + '_' + str(i) +'/' 
-        depth_img = cv.imread(binDir + 'depth_' + base_filename + '_' + str(i) + pngFileType)
-        ab_img = cv.imread(binDir + 'ab_' + base_filename + '_' + str(i) + pngFileType)
-
-        # concatenate the images horizontally
+def generate_vid(main_dir, base_filename, processed_frames, width, height):
+    vid_dir = safe_join(main_dir, f'vid_{base_filename}')
+    make_dir(vid_dir)
+    video_path = safe_join(vid_dir, f'vid_{base_filename}.mp4')
+    video = cv.VideoWriter(video_path, cv.VideoWriter_fourcc(*"mp4v"), 10, (width * 2, height))
+    for i in processed_frames:
+        frame_dir = safe_join(main_dir, f"{base_filename}_{i}")
+        depth_img = cv.imread(safe_join(frame_dir, f'depth_{base_filename}_{i}{PNG_EXT}'))
+        ab_img = cv.imread(safe_join(frame_dir, f'ab_{base_filename}_{i}{PNG_EXT}'))
+        if depth_img is None or ab_img is None:
+            continue
         new_img = cv.hconcat([depth_img, ab_img])
-        new_img = cv.resize(new_img, (width*2,height))
-        # save and show the new image 
+        new_img = cv.resize(new_img, (width * 2, height))
         video.write(new_img)
- 
-    
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description='Script to parse a raw file and extract different frame data ')
-    parser.add_argument("filename", type=str ,help="bin filename to parse")
-    parser.add_argument("--no_xyz", dest='no_xyz', action='store_true', help="Provide false if input file don't have XYZ. Default assuming false")
+    video.release()
 
-   
+def main():
+    parser = argparse.ArgumentParser(
+        description='Script to parse a raw file and extract different frame data')
+    parser.add_argument("filename", type=str, help="bin filename to parse")
+    parser.add_argument("-o", "--outdir", type=str, default=None, help="Output directory (optional)")
+    parser.add_argument("-n", "--no_xyz", dest='no_xyz', action='store_true', help="Input file doesn't have XYZ data")
+    parser.add_argument("-f", "--frames", type=str, default=None,
+                        help="Frame range: N (just N), N- (from N to end), N-M (N to M inclusive)")
     args = parser.parse_args()
-    #print(args)
-    #set to identify  for rendering xyz at first frame
-    first_time_render_pc = 1
-    if args.no_xyz:
-        xyzBytesPerPx = 0
-        first_time_render_pc = 0
-    
-    
-    #check if file exist
+
+    conf_bytes = DEFAULT_CONF_BYTES
+    ab_bytes = DEFAULT_AB_BYTES
+    xyz_bytes = 0 if args.no_xyz else DEFAULT_XYZ_BYTES
+    depth_bytes = DEFAULT_DEPTH_BYTES
+
     if not os.path.exists(args.filename):
         sys.exit(f"Error: {args.filename} does not exist")
-    
-    print("rawparser version: ", rawParserVersion)
-    print("TOF SDK Version: ", TOFEvalVersion)
-    
-    print(f"filename: {args.filename}")
-    base_dir, _ = os.path.splitext(args.filename)
-    dir_path = base_dir + "_parsed"
+
+    print(f"rawparser {RAW_PARSER_VERSION}\nfilename: {args.filename}")
+
+    base_filename, _ = os.path.splitext(os.path.basename(args.filename))
+    if args.outdir:
+        dir_path = os.path.abspath(args.outdir)
+    else:
+        base_dir, _ = os.path.splitext(args.filename)
+        dir_path = base_dir
+
     if os.path.exists(dir_path):
         print(f"The directory {dir_path} already exists.")
+        sys.exit(1)
     else:
-        # Create the directory
-        os.makedirs(dir_path)
-        print(f"The directory {dir_path} was created.")
+        make_dir(dir_path)
+    print(f"The directory {dir_path} was created.")
 
-    #identify width, height and number of frames from raw file
-    with open(args.filename , 'rb') as f:
-        data = f.read(5)
+    # --- Read header and info ---
+    with open(args.filename, 'rb') as f:
+        data = f.read(8)
         width = int.from_bytes(data[:2], 'little')
         height = int.from_bytes(data[2:4], 'little')
-        print(f"width: {width} height: {height}")
-
-        
-
-        #bitsperpixcel
-        f.seek(0)
-        bitsperpixcel = f.read(8)
-        print(bitsperpixcel) 
-        
-        if not (bitsperpixcel[5]):            
-            depthPerPx=0
-           
+        bitsperpixcel = data
+        print(f"Width x Height: {width}px x {height}px")
+        if not (bitsperpixcel[5]):
+            depth_bytes = 0
         if not (bitsperpixcel[6]):
-            abBytesPerPx=0
-            
+            ab_bytes = 0
         if not (bitsperpixcel[7]):
-            confBytesPerPx=0
-        
-          
-        print('Bits in depth: %s, AB: %s and Conf: %s' %(depthPerPx, abBytesPerPx, confBytesPerPx))
+            conf_bytes = 0
+        print(f"Bits in depth: {depth_bytes}")
+        print(f"Bits in AB: {ab_bytes}")
+        print(f"Bits in conf: {conf_bytes}")
 
-        
-        #show frame details
         file_size = os.path.getsize(args.filename)
-        print("file size: " + str(file_size))
+        print(f"File size: {file_size}")
 
-        #identify the image size
-        if width in qMegaPixel and height in qMegaPixel:
-            bytePerPx = abBytesPerPx + depthPerPx + confBytesPerPx + xyzBytesPerPx
-        elif width == MegaPixel and height == MegaPixel:
-            bytePerPx = abBytesPerPx + depthPerPx + xyzBytesPerPx
+        if width in QMEGA_PIXEL and height in QMEGA_PIXEL:
+            byte_per_px = ab_bytes + depth_bytes + conf_bytes + xyz_bytes
+        elif width == MEGA_PIXEL and height == MEGA_PIXEL:
+            byte_per_px = ab_bytes + depth_bytes + xyz_bytes
         else:
             sys.exit("Error: no byte per pixel data on this file, cannot parse.")
-            
-        sizeOfFrame = (bytePerPx * height * width)+ metadataLength;
-        print("frame size: " + str(sizeOfFrame))
-        m_numberOfFrames = int((file_size) / sizeOfFrame);
-        print("number of frames: " + str(m_numberOfFrames))
-        
+        size_of_frame = (byte_per_px * height * width) + METADATA_LENGTH
+        print(f"Frame size: {size_of_frame}")
+        num_frames = file_size // size_of_frame
+        print(f"Relative Frame Range: 0 to {num_frames-1}")
         f.seek(0)
-        data = f.read(file_size)
-        m_frameData = np.frombuffer(data, dtype=np.uint8)
-      
-    
-    
-    for i in range(0, m_numberOfFrames):
-        # Create frame folders
-        base_filename, _ = os.path.splitext(os.path.basename(args.filename))
-        frameDir = dir_path + '/' + base_filename + '_' + str(i) +'/'
-        if not os.path.exists(frameDir):
-            os.makedirs(frameDir)
-        binFileName = frameDir + base_filename + '_' + str(i) + ".bin"
-        print(binFileName)
-     
-        # Open the file in binary mode
-        with open(binFileName , "wb") as f:
-            endOfFrame = startOfFrame + sizeOfFrame
-            f.write(m_frameData[startOfFrame : endOfFrame])
-            startOfFrame = endOfFrame
-        parse_metadata(binFileName,frameDir,str(i))   
-        if depthPerPx: 
-            visualize_depth(binFileName,frameDir,str(i))
-        if abBytesPerPx:
-            visualize_ab(binFileName,frameDir,str(i))
-        
-        #check if confidence data is included
-        if (width in qMegaPixel and height in qMegaPixel) and confBytesPerPx:
-            visualize_confidence(binFileName,frameDir,str(i))
+        m_frame_data = np.frombuffer(f.read(file_size), dtype=np.uint8)
 
-        #render and visualize point cloud at first frame only
-        if first_time_render_pc:
-            visualize_pcloud(binFileName,frameDir,str(i))
-            first_time_render_pc = 0
-            
-    #generate video stitched from ab and depth    
-    generate_vid(dir_path, m_numberOfFrames, width, height)
-    
+    # --- Parse frame range argument ---
+    try:
+        start_frame, end_frame = parse_frame_range(args.frames, num_frames)
+    except Exception as e:
+        sys.exit(f"Invalid --frames argument: {e}")
+
+    # --- Frame Processing Loop ---
+    processed_frames = []
+    for i in range(num_frames):
+        if i < start_frame or i > end_frame:
+            continue
+        print(f"Processing frame #: {i}", end='\r', flush=True)
+        frame_dir = safe_join(dir_path, f"{base_filename}_{i}")
+        make_dir(frame_dir)
+        bin_filename = safe_join(frame_dir, f"{base_filename}_{i}.bin")
+        start_of_frame = i * size_of_frame
+        end_of_frame = start_of_frame + size_of_frame
+        with open(bin_filename, "wb") as f:
+            f.write(m_frame_data[start_of_frame:end_of_frame])
+        generate_metadata(bin_filename, frame_dir, base_filename, str(i))
+        if depth_bytes:
+            generate_depth(bin_filename, frame_dir, base_filename, str(i), width, height)
+        if ab_bytes:
+            visualize_ab(bin_filename, frame_dir, base_filename, str(i), width, height, depth_bytes, False)
+        if (width in QMEGA_PIXEL and height in QMEGA_PIXEL) and conf_bytes:
+            generate_confidence(bin_filename, frame_dir, base_filename, str(i), width, height, depth_bytes, ab_bytes)
+        if xyz_bytes:
+            visualize_pcloud(bin_filename, frame_dir, base_filename, str(i), width, height, QMEGA_PIXEL, MEGA_PIXEL, conf_bytes, depth_bytes, ab_bytes, xyz_bytes)
+        processed_frames.append(i)
+
+    if processed_frames:
+        generate_vid(dir_path, base_filename, processed_frames, width, height)
+
+if __name__ == "__main__":
+    main()

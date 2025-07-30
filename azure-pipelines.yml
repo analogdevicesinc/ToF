@@ -28,9 +28,6 @@ jobs:
     matrix:
       
       #PC
-      ubuntu_20_04_x86_64:
-        imageName: 'ubuntu-20.04'
-
       ubuntu_22_04_x86_64:
         imageName: 'ubuntu-22.04'
 
@@ -42,14 +39,14 @@ jobs:
         EXTRA_CMAKE_FLAGS: "-DWITH_OFFLINE=on"
 
       #IMX
-      ubuntu_20_04_imx:
-        imageName: 'ubuntu-20.04'
+      ubuntu_22_04_imx:
+        imageName: 'ubuntu-22.04'
         DOCKER: "septimiuvana/arm64-ubuntu"
         EXTRA_CMAKE_FLAGS: "-DNXP=1"
 
       #NVIDIA
-      ubuntu_20_04_nvidia:
-        imageName: 'ubuntu-20.04'
+      ubuntu_22_04_nvidia:
+        imageName: 'ubuntu-22.04'
         DOCKER: "septimiuvana/arm64-ubuntu"
         EXTRA_CMAKE_FLAGS: "-DNVIDIA=1"
       
@@ -59,11 +56,11 @@ jobs:
         BUILD_TYPE: "clang_format"
 
       cppcheck:
-        imageName: 'ubuntu-20.04'
+        imageName: 'ubuntu-22.04'
         BUILD_TYPE: "cppcheck"
 
       deploy_doxygen:
-        imageName: 'ubuntu-20.04'
+        imageName: 'ubuntu-22.04'
         BUILD_TYPE: "deploy_doxygen"
 
   pool:
