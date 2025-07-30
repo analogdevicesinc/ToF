@@ -31,7 +31,27 @@ ADSD3500 ISP firmware.</a></li>
 <li><a href="#configuration-of-the-eval-kit-from-the-host">Configuration
 of the Eval Kit from the Host</a>
 <ul>
-<li><a href="#powershell-interface">PowerShell Interface</a></li>
+<li><a href="#powershell-interface">PowerShell Interface</a>
+<ul>
+<li><a href="#1-reset-adsd3500">1. Reset ADSD3500</a></li>
+<li><a href="#2-reboot">2. Reboot</a></li>
+<li><a href="#3-power-down">3. Power Down</a></li>
+<li><a href="#4-get-file-system-permissions">4. Get File System
+Permissions</a></li>
+<li><a href="#5-modify-file-system-permissions">5. Modify File System
+Permissions</a></li>
+<li><a href="#6-get-date--time">6. Get Date &amp; Time</a></li>
+<li><a href="#7-set-date--time">7. Set Date &amp; Time</a></li>
+<li><a href="#8-check-wifi-connection">8. Check WiFi Connection</a></li>
+<li><a href="#9-setup-wifi">9. Setup WiFi</a></li>
+<li><a href="#10-check-firmware-version">10. Check Firmware
+Version</a></li>
+<li><a href="#11-update-firmware">11. Update Firmware</a></li>
+<li><a href="#12-get-sdk-version">12. Get SDK Version</a></li>
+<li><a href="#13-update-sdk-version">13. Update SDK Version</a></li>
+<li><a href="#14-switch-sdk-version">14. Switch SDK Version</a></li>
+<li><a href="#15-network-switch">15. Network Switch</a></li>
+</ul></li>
 </ul></li>
 <li><a href="#using-the-eval-kit">Using the Eval Kit</a>
 <ul>
@@ -306,7 +326,186 @@ interface.</p>
 <h1 id="configuration-of-the-eval-kit-from-the-host">Configuration of
 the Eval Kit from the Host</h1>
 <h2 id="powershell-interface">PowerShell Interface</h2>
-<p>TODO</p>
+<p>To configure the device we have provided a new interface via
+PowerShell. Through the configuration interface the user can: 1.
+ADSD3500 Reset<br />
+2. Reboot<br />
+3. Power Down<br />
+4. Get File System Permissions<br />
+5. Modify File System Permissions<br />
+6. Get Date &amp; Time<br />
+7. Set Date &amp; Time<br />
+8. Check WiFi Connection 9. Setup WiFi 10. Check Firmware Version 11.
+Update Firmware 12. Get SDK Version 13. Update SDK Version 14. Switch
+SDK Version 15. Network Switch 16. Exit</p>
+<p>PowerShell is natively a part of Windows 11, and it is also available
+on Linux, see <a
+href="https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.5">Installing
+PowerShell on Ubuntu</a>.</p>
+<p>The configuration scripts are available in the <em>config</em> folder
+in the installed folder.</p>
+<pre><code>cd config
+Unblock-File -Path *
+Evalkit_Config_Utility.ps1</code></pre>
+<p><a
+href="images/config-1.png"><img src="images/config-1.png" width="70%"></a></p>
+<h3 id="reset-adsd3500">1. Reset ADSD3500</h3>
+<p>This command resets the ADSD3500 ISP. It is generally not needed, but
+is available if needed.</p>
+<pre><code>Resetting ADSD3500...
+
+Reset Done.</code></pre>
+<h3 id="reboot">2. Reboot</h3>
+<p>As implied, this command reboots the ADTF3175D Eval Kit. The reboot
+command is sent to the eval kit, but it will take approximately 45
+seconds for the eval it to reboot.</p>
+<pre><code>Rebooting system...
+
+Reboot initiated successfully.</code></pre>
+<p>Pinging the eval kit will show when it is alive again: <em>ping
+192.168.56.1</em>.</p>
+<pre><code>$ ping 192.168.56.1
+
+Pinging 192.168.56.1 with 32 bytes of data:
+Reply from 192.168.56.1: bytes=32 time=6ms TTL=64
+Reply from 192.168.56.1: bytes=32 time=4ms TTL=64
+Reply from 192.168.56.1: bytes=32 time=3ms TTL=64
+Reply from 192.168.56.1: bytes=32 time=3ms TTL=64
+
+Ping statistics for 192.168.56.1:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 3ms, Maximum = 6ms, Average = 4ms</code></pre>
+<h3 id="power-down">3. Power Down</h3>
+<p>This command will power down the eval kit. The USB cable will need to
+be unplugged and re-plugged to power the device up again.</p>
+<p>Command output:</p>
+<pre><code>Powering Down system..</code></pre>
+<h3 id="get-file-system-permissions">4. Get File System Permissions</h3>
+<p>Checks the state of the Linux file system.</p>
+<p>If the file system is read-only this will be the following
+output.</p>
+<pre><code>Checking Permission...
+
+
+Permission is : RO</code></pre>
+<p>If the file system is read-write this will be the following
+output.</p>
+<pre><code>Checking Permission...
+
+
+Permission is : RW</code></pre>
+<h3 id="modify-file-system-permissions">5. Modify File System
+Permissions</h3>
+<p>This changes the Linux file system write permissions. If it is
+read-only, it will be changed to read-write. If it is read-write, it
+will change to read-only.</p>
+<p>Case 1. Read-only to read-write</p>
+<pre><code>Modifying Permission...
+Warning : This process will reboot the system.
+
+
+Change Permission from RO to RW
+
+
+Reboot initiated successfully.</code></pre>
+<p>Case 2. Read-write to read-only</p>
+<pre><code>Modifying Permission...
+Warning : This process will reboot the system.
+
+
+Change Permission from RW to RO
+
+
+Reboot initiated successfully.</code></pre>
+<h3 id="get-date-time">6. Get Date &amp; Time</h3>
+<p>This command will report the date and time of the eval kit in the
+context of the local time zone.</p>
+<pre><code>Getting Date &amp; Time...
+
+Server Time (Local): 07/30/2025 10:57:24</code></pre>
+<h3 id="set-date-time">7. Set Date &amp; Time</h3>
+<p>This command will sync the date and time of the eval kit with that of
+the current PC in the context of the local time zone.</p>
+<pre><code>Setting Date &amp; Time...
+
+Server time and time zone updated successfully</code></pre>
+<h3 id="check-wifi-connection">8. Check WiFi Connection</h3>
+<p>This command checks the state of the WiFi connection.</p>
+<p>Case 1. No WiFi Connection</p>
+<pre><code>Checking WiFi Connection...
+
+Disconnected</code></pre>
+<p>Case 2. WiFi Connected</p>
+<pre><code>Checking WiFi Connection...
+
+Connected</code></pre>
+<h3 id="setup-wifi">9. Setup WiFi</h3>
+<p>This command should be used to setup the WiFi connection of the
+device.</p>
+<p>Note: the device needs to be in read write mode. Use the command
+<strong>Modify File System Permissions</strong> to set the device to
+read write mode if needed.</p>
+<pre><code>Setting up Wifi ...
+
+Note : This Setup requires RW access.
+
+Warning : This Process Will Reboot the system.
+
+SSID: IamHereWiFi
+
+password: **********
+
+WiFi setup successful. System is Rebooting.</code></pre>
+<h3 id="check-firmware-version">10. Check Firmware Version</h3>
+<p>Report the firmware version for the ADSD3500 ISP.</p>
+<pre><code>Checking Firmware version...
+
+Current Firmware Version: 6.0.0</code></pre>
+<h3 id="update-firmware">11. Update Firmware</h3>
+<p>Update the ADSD3500 firmware.</p>
+<pre><code>TODO</code></pre>
+<h3 id="get-sdk-version">12. Get SDK Version</h3>
+<p>Reports back the current SDK version used on the ADTF3175D Eval
+Kit.</p>
+<pre><code>Getting SDK Version..
+6.1.0</code></pre>
+<h3 id="update-sdk-version">13. Update SDK Version</h3>
+<pre><code>TODO</code></pre>
+<h3 id="switch-sdk-version">14. Switch SDK Version</h3>
+<pre><code>TODO</code></pre>
+<h3 id="network-switch">15. Network Switch</h3>
+<p>This must be only used for Linux systems. It enables the user to
+switch the USB network mode between RNDIS and ECM.</p>
+<p>RNDIS is the default mode - which supports Linux and Windows.
+However, RNDIS has poor performance in Linux.</p>
+<p>For Linux it is recommended the user switch to ECM mode.</p>
+<pre><code>Switching Network...
+Network mode value: ubuntu
+
+Warning : This Process Will Reboot the system.</code></pre>
+<p>The next stage is critical. Note, unplugging re-plugging the device
+may require the following to be done again.</p>
+<p>For example, where the device name in this case is
+<strong>enx3e35aecf0ede</strong>. The before and after MTU sizes are
+<strong>1500</strong> and <strong>15000</strong> respectively.</p>
+<pre><code>$ ip a
+22: enx3e35aecf0ede: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 1000
+    link/ether 3e:35:ae:cf:0e:de brd ff:ff:ff:ff:ff:ff
+    inet 192.168.56.101/24 brd 192.168.56.255 scope global dynamic noprefixroute enx3e35aecf0ede
+       valid_lft 3349sec preferred_lft 3349sec
+    inet6 fe80::a657:5ddd:a219:2e0e/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+
+$ sudo ip link set dev enx3e35aecf0ede mtu 15000
+
+$ ip a
+22: enx3e35aecf0ede: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 15000 qdisc fq_codel state UNKNOWN group default qlen 1000
+    link/ether 3e:35:ae:cf:0e:de brd ff:ff:ff:ff:ff:ff
+    inet 192.168.56.101/24 brd 192.168.56.255 scope global dynamic noprefixroute enx3e35aecf0ede
+       valid_lft 3132sec preferred_lft 3132sec
+    inet6 fe80::a657:5ddd:a219:2e0e/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever</code></pre>
 <h1 id="using-the-eval-kit">Using the Eval Kit</h1>
 <p>Note, each tool below is supported on Windows 11, Ubuntu 22.04 and
 Ubuntu 24.04.</p>
