@@ -15,6 +15,21 @@
   - [3. Updating the ADSD3500 ISP firmware.](#3-updating-the-adsd3500-isp-firmware)
 - [Configuration of the Eval Kit from the Host](#configuration-of-the-eval-kit-from-the-host)
   - [PowerShell Interface](#powershell-interface)
+    - [1. Reset ADSD3500](#1-reset-adsd3500)
+    - [2. Reboot](#2-reboot)
+    - [3. Power Down](#3-power-down)
+    - [4. Get File System Permissions](#4-get-file-system-permissions)
+    - [5. Modify File System Permissions](#5-modify-file-system-permissions)
+    - [6. Get Date \& Time](#6-get-date--time)
+    - [7. Set Date \& Time](#7-set-date--time)
+    - [8. Check WiFi Connection](#8-check-wifi-connection)
+    - [9. Setup WiFi](#9-setup-wifi)
+    - [10. Check Firmware Version](#10-check-firmware-version)
+    - [11. Update Firmware](#11-update-firmware)
+    - [12. Get SDK Version](#12-get-sdk-version)
+    - [13. Update SDK Version](#13-update-sdk-version)
+    - [14. Switch SDK Version](#14-switch-sdk-version)
+    - [15. Network Switch](#15-network-switch)
 - [Using the Eval Kit](#using-the-eval-kit)
   - [C++ Tools](#c-tools)
     - [data\_collect (C++)](#data_collect-c)
@@ -210,7 +225,264 @@ Note: This method has changed to use the new PowerShell interface.
 
 ## PowerShell Interface
 
+To configure the device we have provided a new interface via PowerShell. Through the configuration interface the user can:
+1.  ADSD3500 Reset                  
+2.  Reboot                          
+3.  Power Down                      
+4.  Get File System Permissions     
+5.  Modify File System Permissions  
+6.  Get Date & Time                 
+7.  Set Date & Time                 
+8.  Check WiFi Connection
+9.  Setup WiFi
+10. Check Firmware Version
+11. Update Firmware
+12. Get SDK Version
+13. Update SDK Version
+14. Switch SDK Version
+15. Network Switch
+16. Exit
+
+PowerShell is natively a part of Windows 11, and it is also available on Linux, see [Installing PowerShell on Ubuntu](https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.5).
+
+The configuration scripts are available in the *config* folder in the installed folder.
+
+```
+cd config
+Unblock-File -Path *
+Evalkit_Config_Utility.ps1
+```
+[<img src="images/config-1.png" width="70%">](images/config-1.png)
+
+### 1. Reset ADSD3500
+
+This command resets the ADSD3500 ISP. It is generally not needed, but is available if needed.
+
+```
+Resetting ADSD3500...
+
+Reset Done.
+```
+
+### 2. Reboot
+
+As implied, this command reboots the ADTF3175D Eval Kit. The reboot command is sent to the eval kit, but it will take approximately 45 seconds for the eval it to reboot. 
+
+```
+Rebooting system...
+
+Reboot initiated successfully.
+```
+
+Pinging the eval kit will show when it is alive again: *ping 192.168.56.1*.
+```
+$ ping 192.168.56.1
+
+Pinging 192.168.56.1 with 32 bytes of data:
+Reply from 192.168.56.1: bytes=32 time=6ms TTL=64
+Reply from 192.168.56.1: bytes=32 time=4ms TTL=64
+Reply from 192.168.56.1: bytes=32 time=3ms TTL=64
+Reply from 192.168.56.1: bytes=32 time=3ms TTL=64
+
+Ping statistics for 192.168.56.1:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 3ms, Maximum = 6ms, Average = 4ms
+```
+
+### 3. Power Down
+
+This command will power down the eval kit. The USB cable will need to be unplugged and re-plugged to power the device up again.
+
+Command output:
+```
+Powering Down system..
+```
+
+### 4. Get File System Permissions
+
+Checks the state of the Linux file system. 
+
+If the file system is read-only this will be the following output.
+```
+Checking Permission...
+
+
+Permission is : RO
+```
+
+If the file system is read-write this will be the following output.
+```
+Checking Permission...
+
+
+Permission is : RW
+```
+
+### 5. Modify File System Permissions
+
+This changes the Linux file system write permissions. If it is read-only, it will be changed to read-write. If it is read-write, it will change to read-only.
+
+Case 1. Read-only to read-write
+```
+Modifying Permission...
+Warning : This process will reboot the system.
+
+
+Change Permission from RO to RW
+
+
+Reboot initiated successfully.
+```
+
+Case 2. Read-write to read-only
+```
+Modifying Permission...
+Warning : This process will reboot the system.
+
+
+Change Permission from RW to RO
+
+
+Reboot initiated successfully.
+```
+
+### 6. Get Date & Time
+
+This command will report the date and time of the eval kit in the context of the local time zone.
+
+```
+Getting Date & Time...
+
+Server Time (Local): 07/30/2025 10:57:24
+```
+
+### 7. Set Date & Time
+
+This command will sync the date and time of the eval kit with that of the current PC in the context of the local time zone.
+
+```
+Setting Date & Time...
+
+Server time and time zone updated successfully
+```
+
+### 8. Check WiFi Connection
+
+This command checks the state of the WiFi connection.
+
+Case 1. No WiFi Connection
+```
+Checking WiFi Connection...
+
+Disconnected
+```
+
+Case 2. WiFi Connected
+```
+Checking WiFi Connection...
+
+Connected
+```
+
+### 9. Setup WiFi
+
+This command should be used to setup the WiFi connection of the device.
+
+Note: the device needs to be in read write mode. Use the command **Modify File System Permissions** to set the device to read write mode if needed.
+
+```
+Setting up Wifi ...
+
+Note : This Setup requires RW access.
+
+Warning : This Process Will Reboot the system.
+
+SSID: IamHereWiFi
+
+password: **********
+
+WiFi setup successful. System is Rebooting.
+```
+
+### 10. Check Firmware Version
+
+Report the firmware version for the ADSD3500 ISP.
+
+```
+Checking Firmware version...
+
+Current Firmware Version: 6.0.0
+```
+
+### 11. Update Firmware
+
+Update the ADSD3500 firmware.
+
+```
 TODO
+```
+
+### 12. Get SDK Version
+
+Reports back the current SDK version used on the ADTF3175D Eval Kit.
+
+```
+Getting SDK Version..
+6.1.0
+```
+
+### 13. Update SDK Version
+
+```
+TODO
+```
+
+### 14. Switch SDK Version
+
+```
+TODO
+```
+
+### 15. Network Switch
+
+This must be only used for Linux systems. It enables the user to switch the USB network mode between RNDIS and ECM. 
+
+RNDIS is the default mode - which supports Linux and Windows. However, RNDIS has poor performance in Linux.
+
+For Linux it is recommended the user switch to ECM mode.
+
+```
+Switching Network...
+Network mode value: ubuntu
+
+Warning : This Process Will Reboot the system.
+```
+
+The next stage is critical. Note, unplugging re-plugging the device may require the following to be done again.
+
+For example, where the device name in this case is **enx3e35aecf0ede**. The before and after MTU sizes are **1500** and **15000** respectively.
+
+```
+$ ip a
+22: enx3e35aecf0ede: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 1000
+    link/ether 3e:35:ae:cf:0e:de brd ff:ff:ff:ff:ff:ff
+    inet 192.168.56.101/24 brd 192.168.56.255 scope global dynamic noprefixroute enx3e35aecf0ede
+       valid_lft 3349sec preferred_lft 3349sec
+    inet6 fe80::a657:5ddd:a219:2e0e/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+
+$ sudo ip link set dev enx3e35aecf0ede mtu 15000
+
+$ ip a
+22: enx3e35aecf0ede: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 15000 qdisc fq_codel state UNKNOWN group default qlen 1000
+    link/ether 3e:35:ae:cf:0e:de brd ff:ff:ff:ff:ff:ff
+    inet 192.168.56.101/24 brd 192.168.56.255 scope global dynamic noprefixroute enx3e35aecf0ede
+       valid_lft 3132sec preferred_lft 3132sec
+    inet6 fe80::a657:5ddd:a219:2e0e/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+```
+
 
 ---
 ---
