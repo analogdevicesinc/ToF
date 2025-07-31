@@ -27,6 +27,14 @@
 #define BUF_SIZE 4096
 #define CTRL_SIZE 4099
 
+#ifdef NVIDIA
+#define V4L2_CID_ADSD3500_DEV_CHIP_CONFIG (0x009819d1)
+#endif
+
+#ifdef NXP
+#define V4L2_CID_ADSD3500_DEV_CHIP_CONFIG (0x009819e1)
+#endif
+
 static int xioctl(int fd, int request, void *arg)
 {
 	    int r;
@@ -110,7 +118,7 @@ int main(int argc, char **argv)
 	data[4] = 0x19;
 	data[5] = 0x00;
 	data[6] = 0x00;
-	v4l2_ctrl_set(fd, 0x009819e1, data);
+	v4l2_ctrl_set(fd, V4L2_CID_ADSD3500_DEV_CHIP_CONFIG, data);
 
 	//Write header and readback response
 	memset(data, 0x00, 16);
@@ -121,15 +129,15 @@ int main(int argc, char **argv)
 	data[6] = 0x13;
 	data[11] = 0x13;
 	data[15] = 1;
-	v4l2_ctrl_set(fd, 0x009819e1, data);
+	v4l2_ctrl_set(fd, V4L2_CID_ADSD3500_DEV_CHIP_CONFIG, data);
 
 	usleep(1000 * 1);	
 
 	data[0] = 0;
 	data[2] = 16;
-	v4l2_ctrl_set(fd, 0x009819e1, data);
+	v4l2_ctrl_set(fd, V4L2_CID_ADSD3500_DEV_CHIP_CONFIG, data);
 
-	v4l2_ctrl_get(fd, 0x009819e1, data);
+	v4l2_ctrl_get(fd, V4L2_CID_ADSD3500_DEV_CHIP_CONFIG, data);
 	
 	std::cout<<"Done reading response header "<<std::endl;
 
@@ -158,8 +166,8 @@ int main(int argc, char **argv)
 		
 		usleep(1000 * 30);
 
-		bool retval = v4l2_ctrl_set(fd, 0x009819e1, data);
-		v4l2_ctrl_get(fd, 0x009819e1, data);
+		bool retval = v4l2_ctrl_set(fd, V4L2_CID_ADSD3500_DEV_CHIP_CONFIG, data);
+		v4l2_ctrl_get(fd, V4L2_CID_ADSD3500_DEV_CHIP_CONFIG, data);
 		if (retval == false)
 		{
 			return -1;
@@ -176,8 +184,8 @@ int main(int argc, char **argv)
 	data[1] = chunkSize >> 8;
 	data[2] = chunkSize & 0xFF;
 		
-	v4l2_ctrl_set(fd, 0x009819e1, data);
-	v4l2_ctrl_get(fd, 0x009819e1, data);
+	v4l2_ctrl_set(fd, V4L2_CID_ADSD3500_DEV_CHIP_CONFIG, data);
+	v4l2_ctrl_get(fd, V4L2_CID_ADSD3500_DEV_CHIP_CONFIG, data);
 	memcpy(binbuff, &data[3], chunkSize);
 	fp.write(binbuff, chunkSize - 4);
 	std::cout<<"Packet number : "<<packetsNeeded + 1<<" / "<<packetsNeeded + 1<<std::endl;
@@ -192,7 +200,7 @@ int main(int argc, char **argv)
 	data[3] = 0xAD;
 	data[6] = 0x10;
 	data[11] = 0x10;
-	v4l2_ctrl_set(fd, 0x009819e1, data);
+	v4l2_ctrl_set(fd, V4L2_CID_ADSD3500_DEV_CHIP_CONFIG, data);
 
 	fp.close();
 	

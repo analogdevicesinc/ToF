@@ -33,14 +33,21 @@
 #define BUF_SIZE (4000000)
 #define CTRL_SIZE 4099
 #define ADSD3500_CTRL_PACKET_SIZE 4099
-#define V4L2_CID_AD_DEV_CHIP_CONFIG (0x9819e1)
 #define ADI_STATUS_NVM_FLASH_UPDATE	0x000F
 #define FULL_UPDATE_CMD 0x12
 #define VER_MAJ 1
-#define VER_MIN 3
+#define VER_MIN 4
 #define VER_PATCH 0
 #define MAX_BIN_SIZE	1048576
 #define MIN_BIN_SIZE    741376
+
+#ifdef NVIDIA
+#define V4L2_CID_ADSD3500_DEV_CHIP_CONFIG (0x009819d1)
+#endif
+
+#ifdef NXP
+#define V4L2_CID_ADSD3500_DEV_CHIP_CONFIG (0x009819e1)
+#endif
 
 /* Seed value for CRC computation */
 #define ADI_ROM_CFG_CRC_SEED_VALUE                      (0xFFFFFFFFu)
@@ -256,7 +263,7 @@ int main(int argc, char **argv)
 	data[4] = 0x19;
 	data[5] = 0x00;
 	data[6] = 0x00;
-	retval = v4l2_ctrl_set(fd, 0x009819e1, data);
+	retval = v4l2_ctrl_set(fd, V4L2_CID_ADSD3500_DEV_CHIP_CONFIG, data);
 	usleep(110 * 1000);
 	if (retval == false)
 	{
@@ -288,7 +295,7 @@ int main(int argc, char **argv)
 		printf("%02x", data[i]);
 	std::cout<<std::endl;
 
-	retval = v4l2_ctrl_set(fd, 0x009819e1, data);
+	retval = v4l2_ctrl_set(fd, V4L2_CID_ADSD3500_DEV_CHIP_CONFIG, data);
 	usleep(110 * 1000);
 	if (retval == false)
 	{
@@ -307,7 +314,7 @@ int main(int argc, char **argv)
 
 		memcpy(&data[3], &binbuff[i*PAGE_SIZE], PAGE_SIZE);
 
-		retval = v4l2_ctrl_set(fd, 0x009819e1, data);
+		retval = v4l2_ctrl_set(fd, V4L2_CID_ADSD3500_DEV_CHIP_CONFIG, data);
 		if (retval == false)
 		{
 			return -1;
@@ -342,7 +349,7 @@ int main(int argc, char **argv)
 	data[6] = 0x10;
 	data[11] = 0x10;
 	data[15] = 0x01;
-	retval = v4l2_ctrl_set(fd, 0x009819e1, data);
+	retval = v4l2_ctrl_set(fd, V4L2_CID_ADSD3500_DEV_CHIP_CONFIG, data);
 	usleep(110 * 1000);
 	if (retval == false)
 	{
@@ -362,14 +369,14 @@ int main(int argc, char **argv)
 	data[2] = 2;
 	data[3] = 0;
 	data[4] = 32;
-	retval = v4l2_ctrl_set(fd, 0x009819e1, data);
+	retval = v4l2_ctrl_set(fd, V4L2_CID_ADSD3500_DEV_CHIP_CONFIG, data);
 	usleep(110 * 1000);
 	data[0] = 0;
 	data[1] = 0;
 	data[2] = 2;
-	v4l2_ctrl_set(fd, 0x009819e1, data);
+	v4l2_ctrl_set(fd, V4L2_CID_ADSD3500_DEV_CHIP_CONFIG, data);
 	usleep(110 * 1000);
-	v4l2_ctrl_get(fd, 0x009819e1, data);
+	v4l2_ctrl_get(fd, V4L2_CID_ADSD3500_DEV_CHIP_CONFIG, data);
 
 	printf("Get Status: %02X\n", data[4]);
 	Status_Command = data[4];

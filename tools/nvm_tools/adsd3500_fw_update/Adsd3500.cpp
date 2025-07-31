@@ -14,9 +14,16 @@
 #include "compute_crc.h"
 #define ADSD3500_CTRL_PACKET_SIZE 4099
 #define ADI_STATUS_FIRMWARE_UPDATE	0x000E
-#define V4L2_CID_AD_DEV_CHIP_CONFIG (0x9819e1)
 #define USER_TASK _IOW('A',1,int32_t*)
 #define SIGETX 		44
+
+#ifdef NVIDIA
+#define V4L2_CID_ADSD3500_DEV_CHIP_CONFIG (0x009819d1)
+#endif
+
+#ifdef NXP
+#define V4L2_CID_ADSD3500_DEV_CHIP_CONFIG (0x009819e1)
+#endif
 
 /* Seed value for CRC computation */
 #define ADI_ROM_CFG_CRC_SEED_VALUE                      (0xFFFFFFFFu)
@@ -410,13 +417,13 @@ bool Adsd3500::Current_Firmware_Version()
 
 	bool status = true;
 	uint8_t Current_FW_Version[44]={0};
-	char version[10];
+	char version[16];
 
 	// Read Current Firmware version
 	uint8_t current_fw_version_command[] = {0xAD, 0x00, 0x2C, 0x05, 0x00, 0x00, 0x00, 0x00, 0x31, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00};
 	status = read_burst_cmd(current_fw_version_command, sizeof(current_fw_version_command) / sizeof(current_fw_version_command[0]),Current_FW_Version);
 
-	sprintf(version, "%d.%d.%d.%d", Current_FW_Version[0], Current_FW_Version[1], Current_FW_Version[2], Current_FW_Version[3]);
+	snprintf(version, sizeof(version), "%d.%d.%d.%d", Current_FW_Version[0], Current_FW_Version[1], Current_FW_Version[2], Current_FW_Version[3]);
 	std::cout << "Current firmware version is : " << version << std::endl;
 
 	if (!status)
@@ -437,7 +444,7 @@ bool Adsd3500::write_cmd(uint16_t cmd, uint16_t data)
 	static uint8_t                  buf[ADSD3500_CTRL_PACKET_SIZE];
 
 	extCtrl.size = ADSD3500_CTRL_PACKET_SIZE;
-	extCtrl.id   = V4L2_CID_AD_DEV_CHIP_CONFIG;
+	extCtrl.id   = V4L2_CID_ADSD3500_DEV_CHIP_CONFIG;
 	memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
 	extCtrls.controls = &extCtrl;
 	extCtrls.count    = 1;
@@ -468,7 +475,7 @@ bool Adsd3500::write_payload(uint8_t* payload, uint16_t payload_len)
 	static uint8_t                  buf[ADSD3500_CTRL_PACKET_SIZE];
 
 	extCtrl.size = ADSD3500_CTRL_PACKET_SIZE;
-	extCtrl.id   = V4L2_CID_AD_DEV_CHIP_CONFIG;
+	extCtrl.id   = V4L2_CID_ADSD3500_DEV_CHIP_CONFIG;
 	memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
 	extCtrls.controls = &extCtrl;
 	extCtrls.count    = 1;
@@ -499,7 +506,7 @@ bool Adsd3500::read_cmd(uint16_t cmd, uint16_t* data)
 	static uint8_t                  buf[ADSD3500_CTRL_PACKET_SIZE];
 
 	extCtrl.size = ADSD3500_CTRL_PACKET_SIZE;
-	extCtrl.id   = V4L2_CID_AD_DEV_CHIP_CONFIG;
+	extCtrl.id   = V4L2_CID_ADSD3500_DEV_CHIP_CONFIG;
 	memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
 	extCtrls.controls = &extCtrl;
 	extCtrls.count    = 1;
@@ -549,7 +556,7 @@ bool Adsd3500::read_burst_cmd(uint8_t* payload, uint16_t payload_len, uint8_t *d
 	static uint8_t                  buf[ADSD3500_CTRL_PACKET_SIZE];
 
 	extCtrl.size = ADSD3500_CTRL_PACKET_SIZE;
-	extCtrl.id   = V4L2_CID_AD_DEV_CHIP_CONFIG;
+	extCtrl.id   = V4L2_CID_ADSD3500_DEV_CHIP_CONFIG;
 	memset(&extCtrls, 0, sizeof(struct v4l2_ext_controls));
 	extCtrls.controls = &extCtrl;
 	extCtrls.count    = 1;
