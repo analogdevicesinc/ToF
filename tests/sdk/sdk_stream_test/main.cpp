@@ -439,7 +439,7 @@ int main(int argc, char *argv[]) {
                     }
                     return -3;
                 }
-
+                LOG(INFO) << "metadata.frameNumber:Expected Frame Number = " << metadata.frameNumber << ":" << frameNumber+1;
                 if (metadata.frameNumber != frameNumber + 1) {
                     LOG(ERROR) << "@@," << argv[0] << ",FAIL"
                                << ",LN" << __LINE__
