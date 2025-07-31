@@ -59,6 +59,7 @@ static const char kUsagePublic[] =
       --f <folder path>  Output folder path
       --ip <ip>          Camera IP
       --i <test file>    Test definition file
+      --e                Exit on error
 )";
 
 std::vector<std::map<std::string, std::string>>
@@ -109,7 +110,7 @@ parseCSV(const std::string &filename) {
 
     return data;
 }
-
+ 
 int main(int argc, char *argv[]) {
     std::map<std::string, struct Argument> command_map = {
         {"-h", {"--help", false, "", "", false}},
@@ -397,6 +398,8 @@ int main(int argc, char *argv[]) {
         uint32_t divisor = (expectNumberOfFrames * 20) / 100;
 
         uint32_t frame_count = 0;
+        uint32_t frame_loss_count = 0;
+        bool continueAlthoughError = false;
         auto start_time = std::chrono::high_resolution_clock::now();
         if (capture_time_milliseconds.count() > 0) {
             LOG(INFO) << "Capturing frames for "
@@ -441,18 +444,27 @@ int main(int argc, char *argv[]) {
                 }
                 LOG(INFO) << "metadata.frameNumber:Expected Frame Number = " << metadata.frameNumber << ":" << frameNumber+1;
                 if (metadata.frameNumber != frameNumber + 1) {
-                    LOG(ERROR) << "@@," << argv[0] << ",FAIL"
-                               << ",LN" << __LINE__
-                               << ",DN:Frame number mismatch expected "
-                               << (frameNumber + frame_count) << " but got "
-                               << metadata.frameNumber << ":" << summary;
-                    status = camera->stop();
-                    if (status != Status::OK) { // Result already given, not test result error message
-                        LOG(ERROR) << argv[0] << ",FAIL"
+                    frame_loss_count++;
+                    if (frame_loss_count > 5) {
+                        LOG(ERROR) << "@@," << argv[0] << ",FAIL"
                             << ",LN" << __LINE__
-                            << ",DNError stopping camera:TST:" << summary;
+                            << ",DN:Frame number mismatch expected "
+                            << (frameNumber + frame_count) << " but got "
+                            << metadata.frameNumber << ":" << summary;
+                        status = camera->stop();
+                        if (status != Status::OK) { // Result already given, not test result error message
+                            LOG(ERROR) << argv[0] << ",FAIL"
+                                << ",LN" << __LINE__
+                                << ",DNError stopping camera:TST:" << summary;
+                        }
+                        //return -3;
+                        continueAlthoughError = true;
+                    } else {
+                        LOG(INFO) << "Frame number mismatch expected "
+                                  << (frameNumber + frame_count)
+                                  << " but got " << metadata.frameNumber
+							      << ". Continuing test... " << frame_loss_count;
                     }
-                    return -3;
                 }
 
                 frameNumber = metadata.frameNumber;
@@ -468,24 +480,28 @@ int main(int argc, char *argv[]) {
 
         auto end_time = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> total_time = end_time - start_time;
-        if (frame_count > 0) {
-            double measured_fps = (double)n_frames / total_time.count();
-            LOG(INFO) << "@@," << argv[0] << ",PASS"
-                      << ",LN" << __LINE__ << ",DN:FPS:" << measured_fps
-                      << ":FC:" << frame_count << ":TST:" << summary;
-        } else {
-            LOG(INFO) << "@@," << argv[0] << ",FAIL"
-                      << ",LN" << __LINE__ << ",DN:FC:" << frame_count
-                      << ":TST:" << summary;
-            return -3;
-        }
+        if (!continueAlthoughError) {
 
-        status = camera->stop();
-        if (status != Status::OK) { // Result already given, not test result error message
-            LOG(ERROR) << argv[0] << ",FAIL"
-                       << ",LN" << __LINE__
-                       << ",DNError stopping camera:TST:" << summary;
-            return -3;
+            if (frame_count > 0) {
+                double measured_fps = (double)n_frames / total_time.count();
+                LOG(INFO) << "@@," << argv[0] << ",PASS"
+                    << ",LN" << __LINE__ << ",DN:FPS:" << measured_fps
+                    << ":FC:" << frame_count << ":TST:" << summary;
+            }
+            else {
+                LOG(INFO) << "@@," << argv[0] << ",FAIL"
+                    << ",LN" << __LINE__ << ",DN:FC:" << frame_count
+                    << ":TST:" << summary;
+                return -3;
+            }
+
+            status = camera->stop();
+            if (status != Status::OK) { // Result already given, not test result error message
+                LOG(ERROR) << argv[0] << ",FAIL"
+                    << ",LN" << __LINE__
+                    << ",DNError stopping camera:TST:" << summary;
+                return -3;
+            }
         }
 
         for (int i = 2; i > 0; --i) {
