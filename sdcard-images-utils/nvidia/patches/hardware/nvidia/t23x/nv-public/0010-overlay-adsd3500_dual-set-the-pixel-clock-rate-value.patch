@@ -1,0 +1,126 @@
+From dfc6f7b0f211be5e3bf9544524bcbf6dc52eec2f Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Thu, 31 Jul 2025 15:29:47 +0530
+Subject: [PATCH 2/2] overlay: adsd3500_dual: set the pixel clock rate value
+ for 2.5 Gbps data rate
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ ...67-camera-p3768-dual-adsd3500-adsd3100.dts | 24 +++++++++----------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
+
+diff --git a/overlay/tegra234-p3767-camera-p3768-dual-adsd3500-adsd3100.dts b/overlay/tegra234-p3767-camera-p3768-dual-adsd3500-adsd3100.dts
+index 3d773ab..ea762ee 100644
+--- a/overlay/tegra234-p3767-camera-p3768-dual-adsd3500-adsd3100.dts
++++ b/overlay/tegra234-p3767-camera-p3768-dual-adsd3500-adsd3100.dts
+@@ -249,7 +249,7 @@
+ 							line_length = "256";
+ 							inherent_gain = "1";
+ 							mclk_multiplier = "4";
+-							pix_clk_hz = "208333333";
++							pix_clk_hz = "417000000";
+ 
+ 							min_gain_val = "0"; /* dB */
+ 							max_gain_val = "48"; /* dB */
+@@ -282,7 +282,7 @@
+ 							line_length = "1280";
+ 							inherent_gain = "1";
+ 							mclk_multiplier = "4";
+-							pix_clk_hz = "312500000";
++							pix_clk_hz = "625000000";
+ 
+ 							min_gain_val = "0";
+ 							max_gain_val = "48";
+@@ -315,7 +315,7 @@
+ 							line_length = "512";
+ 							inherent_gain = "1";
+ 							mclk_multiplier = "4";
+-							pix_clk_hz = "312500000";
++							pix_clk_hz = "625000000";
+ 
+ 							min_gain_val = "0";
+ 							max_gain_val = "48";
+@@ -348,7 +348,7 @@
+ 							line_length = "2560";
+ 							inherent_gain = "1";
+ 							mclk_multiplier = "4";
+-							pix_clk_hz = "312500000";
++							pix_clk_hz = "625000000";
+ 
+ 							min_gain_val = "0";
+ 							max_gain_val = "48";
+@@ -381,7 +381,7 @@
+ 							line_length = "512";
+ 							inherent_gain = "1";
+ 							mclk_multiplier = "4";
+-							pix_clk_hz = "208333333";
++							pix_clk_hz = "417000000";
+ 
+ 							min_gain_val = "0";
+ 							max_gain_val = "48";
+@@ -414,7 +414,7 @@
+ 							line_length = "2048";
+ 							inherent_gain = "1";
+ 							mclk_multiplier = "4";
+-							pix_clk_hz = "312500000";
++							pix_clk_hz = "625000000";
+ 
+ 							min_gain_val = "0";
+ 							max_gain_val = "48";
+@@ -447,7 +447,7 @@
+ 							line_length = "2560";
+ 							inherent_gain = "1";
+ 							mclk_multiplier = "4";
+-							pix_clk_hz = "312500000";
++							pix_clk_hz = "625000000";
+ 
+ 							min_gain_val = "0";
+ 							max_gain_val = "48";
+@@ -480,7 +480,7 @@
+ 							line_length = "256";
+ 							inherent_gain = "1";
+ 							mclk_multiplier = "4";
+-							pix_clk_hz = "208333333";
++							pix_clk_hz = "417000000";
+ 
+ 							min_gain_val = "0"; /* dB */
+ 							max_gain_val = "48"; /* dB */
+@@ -513,7 +513,7 @@
+                                                         line_length = "1024";
+                                                         inherent_gain = "1";
+                                                         mclk_multiplier = "4";
+-                                                        pix_clk_hz = "208333333";
++                                                        pix_clk_hz = "417000000";
+ 
+                                                         min_gain_val = "0";
+                                                         max_gain_val = "48";
+@@ -546,7 +546,7 @@
+                                                         line_length = "2048";
+                                                         inherent_gain = "1";
+                                                         mclk_multiplier = "4";
+-                                                        pix_clk_hz = "312500000";
++                                                        pix_clk_hz = "625000000";
+ 
+                                                         min_gain_val = "0";
+                                                         max_gain_val = "48";
+@@ -579,7 +579,7 @@
+                                                         line_length = "2048";
+                                                         inherent_gain = "1";
+                                                         mclk_multiplier = "4";
+-                                                        pix_clk_hz = "312500000";
++                                                        pix_clk_hz = "625000000";
+ 
+                                                         min_gain_val = "0";
+                                                         max_gain_val = "48";
+@@ -612,7 +612,7 @@
+                                                         line_length = "1024";
+                                                         inherent_gain = "1";
+                                                         mclk_multiplier = "4";
+-                                                        pix_clk_hz = "208333333";
++                                                        pix_clk_hz = "417000000";
+ 
+                                                         min_gain_val = "0";
+                                                         max_gain_val = "48";
+-- 
+2.25.1
+
