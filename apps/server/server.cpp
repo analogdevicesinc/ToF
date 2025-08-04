@@ -134,6 +134,14 @@ struct clientData {
 };
 
 void close_zmq_connection() {
+    if (!gotStream_off) { // if host is unable to issue stream-off then stream-off while closing the connection
+        aditof::Status status = camDepthSensor->stop();
+        if (status != aditof::Status::OK) {
+            gotStream_off = false;
+        } else {
+            gotStream_off = true;
+        }
+    }
     if (server_socket) {
         server_socket->close(); // Close the socket
         server_socket.reset();  // Release the unique pointer
@@ -384,10 +392,10 @@ int Network::callback_function(const zmq_event_t &event) {
                 cleanup_sensors();
                 clientEngagedWithSensors = false;
             }
+            stop_stream_thread();
             if (isConnectionClosed == false) {
                 close_zmq_connection();
             }
-            stop_stream_thread();
             Client_Connected = false;
         } else {
             std::cout << "Another Client Connection Closed" << std::endl;
@@ -424,10 +432,10 @@ int Network::callback_function(const zmq_event_t &event) {
                 cleanup_sensors();
                 clientEngagedWithSensors = false;
             }
+            stop_stream_thread();
             if (isConnectionClosed == false) {
                 close_zmq_connection();
             }
-            stop_stream_thread();
             Client_Connected = false;
         } else {
             std::cout << "Another Client Connection Closed" << std::endl;
