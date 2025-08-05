@@ -16,14 +16,25 @@ $key = [System.Console]::ReadKey($true).KeyChar
 	}
 }
 
+$value = $value.Trim()
 # Define the Flask server base URL
 $baseUrl = "http://192.168.56.1:8000"
 
+for($i = 0; $i -lt 3; $i++){
+   try{
+	    # Step 1: Send POST request to /Change-Permission
+	    $postBody = @{ value = $value } | ConvertTo-Json -Depth 2
+	    Invoke-RestMethod -Uri "$baseUrl/Change-Permission" -Method Post -Body $postBody -ContentType "application/json"
+	    break
+    }
+    catch{
+	Write-Host "Attempt $($i + 1) failed: $_"
+	Start-Sleep 1
+    }
+}
+
 
 try {
-    # Step 1: Send POST request to /Change-Permission
-    $postBody = @{ value = $value } | ConvertTo-Json
-    Invoke-RestMethod -Uri "$baseUrl/Change-Permission" -Method Post -Body $postBody -ContentType "application/json"
 
     # Step 2: Send GET request to /Change-Permission-Events
     $response = Invoke-RestMethod -Uri "$baseUrl/Change-Permission-Events"
