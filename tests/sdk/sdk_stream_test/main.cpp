@@ -15,6 +15,7 @@
 #include <command_parser.h>
 #include <ctime>
 #include <fstream>
+#include <iomanip>
 
 #ifdef USE_GLOG
 #include <glog/logging.h>
@@ -47,6 +48,16 @@ using namespace aditof;
 #ifdef _WIN32
 int main(int argc, char *argv[]);
 #endif
+
+struct TestResult {
+    std::string mode;
+    std::string fps;
+    std::string rtms;
+    std::string cfg;
+    std::string status;
+    double measured_fps = 0.0;
+    uint32_t frames_captured = 0;
+};
 
 static const char kUsagePublic[] =
     R"(SDK Stream Test 1.1
@@ -120,6 +131,7 @@ int main(int argc, char *argv[]) {
 
     CommandParser command;
     std::string arg_error;
+    std::vector<TestResult> results;
     command.parseArguments(argc, argv, command_map);
 
     int result = command.checkArgumentExist(command_map, arg_error);
@@ -255,6 +267,7 @@ int main(int argc, char *argv[]) {
 
 	uint32_t cntr = 2; // Start from 2 to match the test vector numbering
     for (const auto& row : testVectors) {
+        TestResult res;
         std::string modeStr = getField(argv[0], __LINE__, row, "mode");
         if (modeStr.empty()) {
             continue;
@@ -281,6 +294,11 @@ int main(int argc, char *argv[]) {
 
         const std::string summary =
             cntrStr + ":" + modeStr + ":" + rtmsStr + ":" + fpsStr + ":" + cfgStr;
+
+        res.mode = modeStr;
+        res.fps = fpsStr;
+        res.rtms = rtmsStr;
+        res.cfg = cfgStr;
 
         uint32_t n_frames = 0;
 
@@ -480,15 +498,19 @@ int main(int argc, char *argv[]) {
 
         auto end_time = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> total_time = end_time - start_time;
+        res.frames_captured = frame_count;
         if (!continueAlthoughError) {
 
             if (frame_count > 0) {
                 double measured_fps = (double)n_frames / total_time.count();
+                res.measured_fps = measured_fps;
+                res.status = "PASS";
                 LOG(INFO) << "@@," << argv[0] << ",PASS"
                     << ",LN" << __LINE__ << ",DN:FPS:" << measured_fps
                     << ":FC:" << frame_count << ":TST:" << summary;
             }
             else {
+                res.status = "FAIL";
                 LOG(INFO) << "@@," << argv[0] << ",FAIL"
                     << ",LN" << __LINE__ << ",DN:FC:" << frame_count
                     << ":TST:" << summary;
@@ -504,11 +526,42 @@ int main(int argc, char *argv[]) {
             }
         }
 
+        results.push_back(res);
         for (int i = 2; i > 0; --i) {
             LOG(INFO) << "\rSleeping for " << i << " seconds...   "
                       << std::flush;
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
+
+    // Print aligned summary with test number
+    LOG(INFO) << std::string(88, '-');
+    LOG(INFO) << std::string(37, ' ') << " Test Summary ";
+    LOG(INFO) << std::string(88, '-');
+    LOG(INFO) << std::left
+              << std::setw(7) << "Test#" << " | "
+              << std::setw(6) << "Mode" << " | "
+              << std::setw(5) << "FPS" << " | "
+              << std::setw(6) << "RTMS" << " | "
+              << std::setw(10) << "CFG" << " | "
+              << std::setw(7) << "Status" << " | "
+              << std::setw(13) << "Measured FPS" << " | "
+              << std::setw(13) << "Frame Count";
+    LOG(INFO) << std::string(88, '=');
+
+    int testIndex = 1;
+    for (const auto &r : results) {
+        LOG(INFO) << std::left
+                  << std::setw(7) << testIndex++ << " | "
+                  << std::setw(6) << r.mode << " | "
+                  << std::setw(5) << r.fps << " | "
+                  << std::setw(6) << r.rtms << " | "
+                  << std::setw(10) << r.cfg << " | "
+                  << std::setw(7) << r.status << " | "
+                  << std::setw(13) << std::fixed << std::setprecision(2) << r.measured_fps << " | "
+                  << std::setw(13) << r.frames_captured;
+    }
+    LOG(INFO) << std::string(88, '=');
+
     return 0;
 }
