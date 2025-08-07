@@ -1,117 +1,101 @@
 #!/bin/bash
 
 # Script Name: remove-workspace.sh
-# Description: 
-#   - Removes the symbolic link ~/Workspace if it points to <directory>/Workspace-<version>.
-#   - Moves the specified Workspace directory (<directory>/Workspace-<version>) to /tmp/Workspace-<version>-<GUID>.
-# Usage: ./remove-workspace.sh <directory> <version>
+# Description:
+#   - Lists available workspaces by version.
+#   - Prevents deletion of the currently linked workspace unless a new target is selected.
+#   - Updates symlink if needed and deletes the selected workspace.
+# Usage: ./remove-workspace.sh
 
-# Exit Codes:
-# 0: Success
-# 1: Incorrect usage
-# 2: Symbolic link does not exist
-# 3: Symbolic link exists but does not point to the expected target
-# 4: 'uuidgen' command not found
-# 5: Failed to remove symbolic link
-# 6: Workspace directory does not exist
-# 7: Failed to move workspace directory
 
-# Function to display usage instructions
-print_help() {
-    echo "Usage: $0 <directory> <version>"
-    echo "Both <directory> and <version> parameters are mandatory."
-}
 
-# Check for exactly two arguments
-if [ "$#" -ne 2 ]; then
-    echo "Error: Incorrect number of arguments."
-    print_help
-    exit 1
-fi
 
-# Assign arguments to variables
-DIRECTORY="$1"
-VERSION="$2"
 
-# Expand ~ to home directory if DIRECTORY is ~
-if [ "$DIRECTORY" == "~" ]; then
-    DIRECTORY="$HOME"
-fi
-
-# Construct the workspace directory name
-WORKSPACE_DIR="Workspace-${VERSION}"
-
-# Full path to the workspace directory
-FULL_WORKSPACE_PATH="${DIRECTORY}/${WORKSPACE_DIR}"
-
-# Path to the symbolic link named 'Workspace' in the user's home directory
+HOME="/home/analog"
 SYMLINK_PATH="${HOME}/Workspace"
 
-# Function to remove the symbolic link if it points to the expected target
-remove_symlink_if_matches() {
-    local symlink="$1"
-    local expected_target="$2"
-
-    if [ -L "$symlink" ]; then
-        # Resolve the absolute path the symlink points to
-        SYMLINK_TARGET=$(readlink -f "$symlink")
-
-        if [ "$SYMLINK_TARGET" == "$expected_target" ]; then
-            echo "Symbolic link '${symlink}' points to '${expected_target}'. Removing symbolic link."
-            rm "$symlink"
-            if [ $? -eq 0 ]; then
-                echo "Symbolic link '${symlink}' removed successfully."
-                return 0
-            else
-                echo "Error: Failed to remove symbolic link '${symlink}'."
-                return 5
-            fi
-        else
-            echo "Symbolic link '${symlink}' does not point to '${expected_target}'. No action taken."
-            return 3
-        fi
-    else
-        echo "No symbolic link named 'Workspace' found in '${HOME}'. No action taken."
-        return 2
-    fi
+print_help() {
+    echo "Usage: $0"
+    echo "This script lists available workspaces and allows you to delete one."
 }
 
-# Remove the symbolic link before moving the directory
-remove_symlink_if_matches "$SYMLINK_PATH" "$FULL_WORKSPACE_PATH"
-SYMLINK_STATUS=$?
-
-if [ $SYMLINK_STATUS -eq 5 ] || [ $SYMLINK_STATUS -eq 3 ]; then
-    exit $SYMLINK_STATUS
+if [[ "$1" != "y" ]]; then
+  echo "Cancelled."
+  exit 1
 fi
 
-# Check if the workspace directory exists
-if [ -d "$FULL_WORKSPACE_PATH" ]; then
-    echo "Found workspace directory: '${FULL_WORKSPACE_PATH}'"
-
-    # Check if 'uuidgen' is available
-    if ! command -v uuidgen &> /dev/null; then
-        echo "Error: 'uuidgen' command not found. Please install it to generate GUIDs."
-        exit 4
-    fi
-
-    # Generate a GUID
-    GUID=$(uuidgen)
-    echo "Generated GUID: ${GUID}"
-
-    # Define the new directory name with GUID
-    NEW_WORKSPACE_DIR="Workspace-${VERSION}-${GUID}"
-
-    # Move the workspace directory to /tmp with the new name
-    mv "$FULL_WORKSPACE_PATH" "/tmp/${NEW_WORKSPACE_DIR}"
-    
-    if [ $? -eq 0 ]; then
-        echo "Successfully moved '${FULL_WORKSPACE_PATH}' to '/tmp/${NEW_WORKSPACE_DIR}'."
-        exit 0
-    else
-        echo "Error: Failed to move '${FULL_WORKSPACE_PATH}' to '/tmp/${NEW_WORKSPACE_DIR}'."
-        exit 7
-    fi
+# Get current symlink target
+if [ -L "$SYMLINK_PATH" ]; then
+    CURRENT_TARGET=$(readlink -f "$SYMLINK_PATH")
 else
-    echo "Workspace directory '${FULL_WORKSPACE_PATH}' does not exist. No action taken."
-    exit 6
+    echo "No symbolic link named 'Workspace' found in '${HOME}'."
+    exit 2
+fi
+
+# List available workspaces
+echo "Available workspaces:"
+WORKSPACES=($(ls -d ${HOME}/Workspace-* 2>/dev/null))
+if [ ${#WORKSPACES[@]} -eq 0 ]; then
+    echo "No workspaces found."
+    exit 4
+fi
+
+VERSIONS=()
+for ws in "${WORKSPACES[@]}"; do
+    version=$(basename "$ws" | cut -d'-' -f2-)
+    VERSIONS+=("$version")
+done
+
+for i in "${!VERSIONS[@]}"; do
+    echo "$((i+1)). ${VERSIONS[$i]}"
+done
+
+# Prompt user to select workspace to delete
+read -p "Enter the number of the workspace you want to delete: " CHOICE
+INDEX=$((CHOICE-1))
+
+if [ "$INDEX" -lt 0 ] || [ "$INDEX" -ge "${#WORKSPACES[@]}" ]; then
+    echo "Invalid selection."
+    exit 5
+fi
+
+SELECTED_WORKSPACE="${WORKSPACES[$INDEX]}"
+
+if [ "$SELECTED_WORKSPACE" == "$CURRENT_TARGET" ]; then
+    echo "You selected the current workspace."
+    echo ""
+    echo "Please select a new workspace to point the symlink to before deletion."
+    echo ""
+
+    for i in "${!WORKSPACES[@]}"; do
+        if [ "${WORKSPACES[$i]}" != "$CURRENT_TARGET" ]; then
+            echo "$((i+1)). ${VERSIONS[$i]}"
+        fi
+    done
+
+    read -p "Enter the number of the new workspace to point the symlink to: " NEW_CHOICE
+    NEW_INDEX=$((NEW_CHOICE-1))
+
+    if [ "${WORKSPACES[$NEW_INDEX]}" == "$CURRENT_TARGET" ] || [ "$NEW_INDEX" -lt 0 ] || [ "$NEW_INDEX" -ge "${#WORKSPACES[@]}" ]; then
+        echo "Invalid selection or same as current."
+        exit 6
+    fi
+
+    NEW_TARGET="${WORKSPACES[$NEW_INDEX]}"
+    ln -sfn "$NEW_TARGET" "$SYMLINK_PATH"
+    echo "Symlink updated to point to: ${VERSIONS[$NEW_INDEX]}"
+fi
+
+# Delete the selected workspace
+rm -rf "$SELECTED_WORKSPACE"
+
+if [ $? -eq 0 ]; then
+    echo "Successfully deleted workspace version '${VERSIONS[$INDEX]}'."
+    echo ""
+    echo "Now system will reboot"
+    sudo reboot
+    exit 0
+else
+    echo "Error: Failed to delete workspace version '${VERSIONS[$INDEX]}'."
+    exit 7
 fi
