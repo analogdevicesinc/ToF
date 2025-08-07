@@ -115,8 +115,8 @@ To update each the ADSD3500 firmware and SD card image see the following section
 * Host operating system: Windows 11, Ubuntu 22.04 or Ubuntu 24.04
 * [Python 3.10](https://www.python.org/downloads/release/python-3100/)
 * SD card flashing software: 
-    * Windows 11, Ubuntu 22.04 or Ubuntu 24.04: [Balena Etcher](https://etcher.balena.io/#download-etcher)
-    * Windows 11: [Win32 Disk Imager](https://sourceforge.net/projects/win32diskimager/)
+    * Windows 11: [Balena Etcher](https://github.com/balena-io/etcher/releases/tag/v1.19.25) 
+    * Ubuntu 22.04 or Ubuntu 24.04: [Balena Etcher](https://etcher.balena.io/#download-etcher)
 * PowerShell:
     * Windows 11: A standard part of Windows 11
     * Ubuntu 22.04 or Ubuntu 24.04: [Installing PowerShell on Ubuntu](https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.5)
@@ -253,6 +253,18 @@ Unblock-File -Path *
 Evalkit_Config_Utility.ps1
 ```
 [<img src="images/config-1.png" width="70%">](images/config-1.png)
+
+Next, make sure you can ssh into the device.
+
+```
+ssh analog@192.168.56.1
+Password: analog
+```
+If you cannot get to the Linux console, then do the following.
+
+1. Find the *known_hosts* file. It is typically under the user/home folder in the *.ssh* folder.
+1. Delete the lines associated with *192.168.56.1*.
+2. Repeat trying to access the device via *ssh*.
 
 ### 1. Reset ADSD3500
 
@@ -420,7 +432,49 @@ Current Firmware Version: 6.0.0
 Update the ADSD3500 firmware.
 
 ```
-TODO
+Flashing Firmware...
+Give the Firmware Path: Fw_Update_6.0.0.bin
+File integrity verified.
+Copying firmware to remote device...
+analog@192.168.56.1's password:
+Fw_Update_6.0.0.bin                                                                   100%   96KB   8.5MB/s   00:00
+analog@192.168.56.1's password:
+
+
+Flashing firmware...
+analog@192.168.56.1's password:
+[sudo] password for analog: Installed signal handler for SIGETX = 44
+
+Chip ID is: 5931
+
+Switched from standard mode to burst mode
+
+Before upgrading new firmware
+Current firmware version is : 6.0.0.0
+
+Writing Firmware packets...
+Packet number: 382 / 382
+
+Adsd3500 firmware updated succesfully!
+
+Waiting for the ADSD3500 kernel Driver signal
+Received signal from ADSD3500 kernel driver
+
+Get status Command e
+
+Firmware soft resetting...
+Waiting for 0 seconds
+
+Chip ID is: 5931
+
+Switched from standard mode to burst mode
+
+After upgrading new firmware
+Current firmware version is : 6.0.0.0
+
+Switched from burst mode to standard mode
+
+Chip ID is: 5931
 ```
 
 ### 12. Get SDK Version
@@ -434,14 +488,38 @@ Getting SDK Version..
 
 ### 13. Update SDK Version
 
+Note, the password is *analog*.
+
 ```
-TODO
+Updating the SDK Version...
+Give the File Path: Workspace-6.2.0.tar.gz
+File integrity verified.
+Copying file to remote device...
+analog@192.168.56.1's password:
+Workspace-6.2.0.tar.gz                                                                    100%   42MB  56.7MB/s   00:00
+
+Unzipping ...
+analog@192.168.56.1's password:
+
+Workspace has been Successfully updated !!
 ```
 
 ### 14. Switch SDK Version
 
+In this example, the SDK is switched to 
 ```
-TODO
+Switching SDK...
+
+Warning : This Process Will Reboot the system.
+
+Available Workspaces:
+1. 6.1.0
+2. 6.2.0
+
+Choose the option (ex. 1, 2) (or press Enter to cancel): 2
+Workspace switched to 6.2.0 successfully.
+
+Reboot initiated successfully.
 ```
 
 ### 15. Network Switch

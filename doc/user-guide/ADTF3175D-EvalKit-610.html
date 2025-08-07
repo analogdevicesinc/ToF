@@ -172,11 +172,11 @@ href="https://www.python.org/downloads/release/python-3100/">Python
 3.10</a></li>
 <li>SD card flashing software:
 <ul>
-<li>Windows 11, Ubuntu 22.04 or Ubuntu 24.04: <a
-href="https://etcher.balena.io/#download-etcher">Balena Etcher</a></li>
 <li>Windows 11: <a
-href="https://sourceforge.net/projects/win32diskimager/">Win32 Disk
-Imager</a></li>
+href="https://github.com/balena-io/etcher/releases/tag/v1.19.25">Balena
+Etcher</a></li>
+<li>Ubuntu 22.04 or Ubuntu 24.04: <a
+href="https://etcher.balena.io/#download-etcher">Balena Etcher</a></li>
 </ul></li>
 <li>PowerShell:
 <ul>
@@ -349,6 +349,16 @@ Unblock-File -Path *
 Evalkit_Config_Utility.ps1</code></pre>
 <p><a
 href="images/config-1.png"><img src="images/config-1.png" width="70%"></a></p>
+<p>Next, make sure you can ssh into the device.</p>
+<pre><code>ssh analog@192.168.56.1
+Password: analog</code></pre>
+<p>If you cannot get to the Linux console, then do the following.</p>
+<ol type="1">
+<li>Find the <em>known_hosts</em> file. It is typically under the
+user/home folder in the <em>.ssh</em> folder.</li>
+<li>Delete the lines associated with <em>192.168.56.1</em>.</li>
+<li>Repeat trying to access the device via <em>ssh</em>.</li>
+</ol>
 <h3 id="reset-adsd3500">1. Reset ADSD3500</h3>
 <p>This command resets the ADSD3500 ISP. It is generally not needed, but
 is available if needed.</p>
@@ -464,16 +474,81 @@ WiFi setup successful. System is Rebooting.</code></pre>
 Current Firmware Version: 6.0.0</code></pre>
 <h3 id="update-firmware">11. Update Firmware</h3>
 <p>Update the ADSD3500 firmware.</p>
-<pre><code>TODO</code></pre>
+<pre><code>Flashing Firmware...
+Give the Firmware Path: Fw_Update_6.0.0.bin
+File integrity verified.
+Copying firmware to remote device...
+analog@192.168.56.1&#39;s password:
+Fw_Update_6.0.0.bin                                                                   100%   96KB   8.5MB/s   00:00
+analog@192.168.56.1&#39;s password:
+
+
+Flashing firmware...
+analog@192.168.56.1&#39;s password:
+[sudo] password for analog: Installed signal handler for SIGETX = 44
+
+Chip ID is: 5931
+
+Switched from standard mode to burst mode
+
+Before upgrading new firmware
+Current firmware version is : 6.0.0.0
+
+Writing Firmware packets...
+Packet number: 382 / 382
+
+Adsd3500 firmware updated succesfully!
+
+Waiting for the ADSD3500 kernel Driver signal
+Received signal from ADSD3500 kernel driver
+
+Get status Command e
+
+Firmware soft resetting...
+Waiting for 0 seconds
+
+Chip ID is: 5931
+
+Switched from standard mode to burst mode
+
+After upgrading new firmware
+Current firmware version is : 6.0.0.0
+
+Switched from burst mode to standard mode
+
+Chip ID is: 5931</code></pre>
 <h3 id="get-sdk-version">12. Get SDK Version</h3>
 <p>Reports back the current SDK version used on the ADTF3175D Eval
 Kit.</p>
 <pre><code>Getting SDK Version..
 6.1.0</code></pre>
 <h3 id="update-sdk-version">13. Update SDK Version</h3>
-<pre><code>TODO</code></pre>
+<p>Note, the password is <em>analog</em>.</p>
+<pre><code>Updating the SDK Version...
+Give the File Path: Workspace-6.2.0.tar.gz
+File integrity verified.
+Copying file to remote device...
+analog@192.168.56.1&#39;s password:
+Workspace-6.2.0.tar.gz                                                                    100%   42MB  56.7MB/s   00:00
+
+Unzipping ...
+analog@192.168.56.1&#39;s password:
+
+Workspace has been Successfully updated !!</code></pre>
 <h3 id="switch-sdk-version">14. Switch SDK Version</h3>
-<pre><code>TODO</code></pre>
+<p>In this example, the SDK is switched to</p>
+<pre><code>Switching SDK...
+
+Warning : This Process Will Reboot the system.
+
+Available Workspaces:
+1. 6.1.0
+2. 6.2.0
+
+Choose the option (ex. 1, 2) (or press Enter to cancel): 2
+Workspace switched to 6.2.0 successfully.
+
+Reboot initiated successfully.</code></pre>
 <h3 id="network-switch">15. Network Switch</h3>
 <p>This must be only used for Linux systems. It enables the user to
 switch the USB network mode between RNDIS and ECM.</p>
