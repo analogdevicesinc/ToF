@@ -1,3 +1,5 @@
+Write-Host "Warning: Updating an existing workspace will overwrite it with the new changes you apply." -ForegroundColor Red
+
 $Updatefile = Read-Host "Give the File Path"
 
 # Check if the firmware file exists
@@ -15,7 +17,7 @@ $output = $output.Trim()
 if ($output -match "Permission is\s*:\s*(RO|RW)") {
     $permission = $matches[1]
 	if($permission -eq "RO"){
-		Write-Host "File System Permission is : $permission. Make Sure File System Permission is RW." -ForegroundColor Red
+		Write-Host "`nFile System Permission is : $permission. Make Sure File System Permission is RW." -ForegroundColor Red
 		exit 1
 	}
 } else {
@@ -44,6 +46,7 @@ if ((Test-Path $Updatefile) -and (Test-Path $hashFilePath)) {
     Write-Host "File or hash file not found." -ForegroundColor Red
     exit 1
 }
+
 
 
 # Remote connection details
