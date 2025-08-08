@@ -64,7 +64,7 @@ std::vector<std::shared_ptr<aditof::DepthSensorInterface>> depthSensors;
 bool sensors_are_created = false;
 bool clientEngagedWithSensors = false;
 bool isConnectionClosed = true;
-bool gotStream_off = false;
+bool gotStream_off = true;
 
 std::unique_ptr<aditof::SensorEnumeratorInterface> sensorsEnumerator;
 
@@ -133,18 +133,17 @@ struct clientData {
     std::vector<char> data;
 };
 
-void close_zmq_connection() {
-    if (!gotStream_off) { // if host is unable to issue stream-off then stream-off while closing the connection
+static void close_zmq_connection() {
+
+    // Stop the sensor if not already stopped
+    if (!gotStream_off && camDepthSensor) {
         aditof::Status status = camDepthSensor->stop();
-        if (status != aditof::Status::OK) {
-            gotStream_off = false;
-        } else {
-            gotStream_off = true;
-        }
+        gotStream_off = (status == aditof::Status::OK);
     }
+
     if (server_socket) {
-        server_socket->close(); // Close the socket
-        server_socket.reset();  // Release the unique pointer
+        server_socket->close();
+        server_socket.reset();
     }
 
     LOG(INFO) << "ZMQ Client Connection closed.";
@@ -388,13 +387,13 @@ int Network::callback_function(const zmq_event_t &event) {
         std::cout << "Closed connection " << std::endl;
         if (Client_Connected && !no_of_client_connected) {
             std::cout << "Connection Closed" << std::endl;
-            if (clientEngagedWithSensors) {
-                cleanup_sensors();
-                clientEngagedWithSensors = false;
-            }
             stop_stream_thread();
             if (isConnectionClosed == false) {
                 close_zmq_connection();
+            }
+            if (clientEngagedWithSensors) {
+                cleanup_sensors();
+                clientEngagedWithSensors = false;
             }
             Client_Connected = false;
         } else {
@@ -428,13 +427,13 @@ int Network::callback_function(const zmq_event_t &event) {
     case ZMQ_EVENT_DISCONNECTED: {
         if (Client_Connected && !no_of_client_connected) {
             std::cout << "Connection Closed" << std::endl;
-            if (clientEngagedWithSensors) {
-                cleanup_sensors();
-                clientEngagedWithSensors = false;
-            }
             stop_stream_thread();
             if (isConnectionClosed == false) {
                 close_zmq_connection();
+            }
+            if (clientEngagedWithSensors) {
+                cleanup_sensors();
+                clientEngagedWithSensors = false;
             }
             Client_Connected = false;
         } else {
@@ -541,7 +540,10 @@ int main(int argc, char *argv[]) {
     }
     clientEngagedWithSensors = false;
 
-    stop_stream_thread();
+    if (send_async == true) {
+        stop_stream_thread();
+    }
+
     close_zmq_connection();
 
     if (server_cmd) {
