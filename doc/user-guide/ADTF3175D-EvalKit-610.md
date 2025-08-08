@@ -504,7 +504,15 @@ analog@192.168.56.1's password:
 Workspace has been Successfully updated !!
 ```
 
-### 14. Switch SDK Version
+### 14. Delete SDK Version
+
+This removes a use specified version of the SDK from the eval kit's SD card image.
+
+```
+
+```
+
+### 15. Switch SDK Version
 
 In this example, the SDK is switched to 
 ```
