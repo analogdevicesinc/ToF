@@ -28,7 +28,8 @@
     - [11. Update Firmware](#11-update-firmware)
     - [12. Get SDK Version](#12-get-sdk-version)
     - [13. Update SDK Version](#13-update-sdk-version)
-    - [14. Switch SDK Version](#14-switch-sdk-version)
+    - [14. Delete SDK Version](#14-delete-sdk-version)
+    - [15. Switch SDK Version](#15-switch-sdk-version)
     - [15. Network Switch](#15-network-switch)
 - [Using the Eval Kit](#using-the-eval-kit)
   - [C++ Tools](#c-tools)
@@ -506,7 +507,7 @@ Workspace has been Successfully updated !!
 
 ### 14. Delete SDK Version
 
-This removes a use specified version of the SDK from the eval kit's SD card image.
+This removes a user specified version of the SDK from the eval kit's SD card image.
 
 ```
 
