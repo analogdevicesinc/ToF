@@ -53,7 +53,7 @@
     - [Setting for using the Python Bindings](#setting-for-using-the-python-bindings)
       - [Setup](#setup)
       - [Activate](#activate)
-      - [Decativate](#decativate)
+      - [Deactivate](#deactivate)
     - [data\_collect (Python)](#data_collect-python)
       - [Command Line Interface](#command-line-interface-3)
     - [first\_frame (Python)](#first_frame-python)
@@ -139,7 +139,7 @@ To update each the ADSD3500 firmware and SD card image see the following section
    2. When prompted with **InstallShield Wizard Completed**, choose *Download image file*.
    * Notes
      * Unless changed by the user, the package installs to *c:\Analog Devices\TOF_Evaluation_ADTF3175D-Rel6.1.0* location.
-     * If the image file was not downloaded via the installer it can still be download using *get_image.cmd*. *get_image.cmd* isis available at *TOF_Evaluation_ADTF3175D-Rel6.1.0\image\get_image.cmd*. This can be also used to re-download the image file.
+     * If the image file was not downloaded via the installer it can still be download using *get_image.cmd*. *get_image.cmd* is available at *TOF_Evaluation_ADTF3175D-Rel6.1.0\image\get_image.cmd*. This can be also used to re-download the image file.
 1. Prepare for the next stages.
    1. Once download completed and zip file will be available at the same location.
    2. Unzip the downloaded file, *NXP-Img-Rel6.1.0-ADTF3175D-xxxxxxxx.zip* file. This can be done from the context menu of explorer. Or using PowerShell.
@@ -166,7 +166,16 @@ To update each the ADSD3500 firmware and SD card image see the following section
 
 ### Overview of Installed Files
 
-TODO
+```
+├───bin             : executables and python samples
+│   └───Python-setup: setup of the Python environment
+├───config          : Device configuration files
+├───doc             : documentation
+│   ├───images      : images used in the documentation
+│   └───other       : collateral used in the documentation
+├───image           : script to retrieve the SD card image archive
+└───license         : license file
+```
 
 ## 2. Flashing the SD Card Image
 
@@ -515,7 +524,8 @@ This removes a user specified version of the SDK from the eval kit's SD card ima
 
 ### 15. Switch SDK Version
 
-In this example, the SDK is switched to 
+Through this command the SDK version can be switched if there are multiple versions installed.
+
 ```
 Switching SDK...
 
@@ -604,7 +614,7 @@ Usage: data_collect [options]
       --fw <firmware>    Adsd3500 fw file
       --split            Save each frame into a separate file (Debug)
       --netlinktest      Puts server on target in test mode (Debug)
-      --singlethread     Store the frame to file using same tread
+      --singlethread     Store the frame to file using same thread
       --ic <imager-configuration>   Select imager configuration: standard, standard-raw,
                          custom, custom-raw. By default is standard.
       --scf <save-configuration-file>    Save current configuration to json file
@@ -878,7 +888,7 @@ options:
 
 ##### Example Usage
 
-The following example extarcts frames 10 thru 10 from the capture file *output\frame2025_07_09_15_27_10_0.bin* and places the contents in the folder *output\range_10_16*.
+The following example extracts frames 10 thru 10 from the capture file *output\frame2025_07_09_15_27_10_0.bin* and places the contents in the folder *output\range_10_16*.
 
 ```
 $ python rawparser.py output\frame2025_07_09_15_27_10_0.bin --outdir output\range_10_16 -f 10-16
@@ -1059,7 +1069,7 @@ I20250709 16:06:57.850332 40956 main.cpp:187] Running the callback for which the
 I20250709 16:06:57.863314 40956 main.cpp:187] Running the callback for which the status of ADSD3500 has been forwarded. ADSD3500 status = Adsd3500Status::OK
 I20250709 16:06:57.866338 40956 network.cpp:619] Frame Client Connection established.
 I20250709 16:06:58.040611 40956 camera_itof.cpp:615] Dropped first frame
-I20250709 16:06:58.087862 40956 main.cpp:241] succesfully requested frame!
+I20250709 16:06:58.087862 40956 main.cpp:241] successfully requested frame!
 I20250709 16:06:58.087862 40956 network_depth_sensor.cpp:391] Stopping device
 I20250709 16:06:58.215757 40956 main.cpp:187] Running the callback for which the status of ADSD3500 has been forwarded. ADSD3500 status =
 I20250709 16:06:58.215757 40956 main.cpp:187] Running the callback for which the status of ADSD3500 has been forwarded. ADSD3500 status =
@@ -1133,7 +1143,7 @@ Note, this process may take a while when setting up the python environment.
 #### Activate
 * activate.bat
 
-#### Decativate
+#### Deactivate
 * deactivate.bat
 
 ### data_collect (Python)

@@ -94,7 +94,7 @@ the Python Bindings</a>
 <ul>
 <li><a href="#setup">Setup</a></li>
 <li><a href="#activate">Activate</a></li>
-<li><a href="#decativate">Decativate</a></li>
+<li><a href="#deactivate">Deactivate</a></li>
 </ul></li>
 <li><a href="#data_collect-python">data_collect (Python)</a>
 <ul>
@@ -212,7 +212,7 @@ choose <em>Download image file</em>.</li>
 <li>Unless changed by the user, the package installs to
 *c:Devices_Evaluation_ADTF3175D-Rel6.1.0* location.</li>
 <li>If the image file was not downloaded via the installer it can still
-be download using <em>get_image.cmd</em>. <em>get_image.cmd</em> isis
+be download using <em>get_image.cmd</em>. <em>get_image.cmd</em> is
 available at *TOF_Evaluation_ADTF3175D-Rel6.1.0_image.cmd*. This can be
 also used to re-download the image file.</li>
 </ul></li>
@@ -275,7 +275,14 @@ and ADSD3500 firmware binary.</li>
 </ol></li>
 </ol>
 <h3 id="overview-of-installed-files">Overview of Installed Files</h3>
-<p>TODO</p>
+<pre><code>├───bin             : executables and python samples
+│   └───Python-setup: setup of the Python environment
+├───config          : Device configuration files
+├───doc             : documentation
+│   ├───images      : images used in the documentation
+│   └───other       : collateral used in the documentation
+├───image           : script to retrieve the SD card image archive
+└───license         : license file</code></pre>
 <h2 id="flashing-the-sd-card-image">2. Flashing the SD Card Image</h2>
 <p>The following requires <em>microsd-6.0.0-13dd25d8.zip</em> in the
 <em>image/NXP-Img-Rel6.1.0-ADTF3175D-xxxxxxxx</em> folder. This was
@@ -283,10 +290,10 @@ extracted in the previous step.</p>
 <h3 id="do-you-need-to-update-the-sd-card">Do you need to update the SD
 card?</h3>
 <p>Username: analog Password: analog</p>
-<div class="sourceCode" id="cb2"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ssh analog@192.168.56.1 <span class="st">&quot;cat /boot/sw-versions | grep sd_img_ver&quot;</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">analog@192.168.56.1</span><span class="st">&#39;s password:</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="st">sd_img_ver      microsd-v6.1.0-ace65e91.img</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ssh analog@192.168.56.1 <span class="st">&quot;cat /boot/sw-versions | grep sd_img_ver&quot;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">analog@192.168.56.1</span><span class="st">&#39;s password:</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="st">sd_img_ver      microsd-v6.1.0-ace65e91.img</span></span></code></pre></div>
 <p>Where <em>sd_img_ver</em> indicates the image on the SD card. As of
 writing, if you are running with v6.1.0 already there is no need to
 update the SD card.</p>
@@ -541,7 +548,8 @@ Workspace has been Successfully updated !!</code></pre>
 SD card image.</p>
 <pre><code></code></pre>
 <h3 id="switch-sdk-version">15. Switch SDK Version</h3>
-<p>In this example, the SDK is switched to</p>
+<p>Through this command the SDK version can be switched if there are
+multiple versions installed.</p>
 <pre><code>Switching SDK...
 
 Warning : This Process Will Reboot the system.
@@ -613,7 +621,7 @@ Usage: data_collect [options]
       --fw &lt;firmware&gt;    Adsd3500 fw file
       --split            Save each frame into a separate file (Debug)
       --netlinktest      Puts server on target in test mode (Debug)
-      --singlethread     Store the frame to file using same tread
+      --singlethread     Store the frame to file using same thread
       --ic &lt;imager-configuration&gt;   Select imager configuration: standard, standard-raw,
                          custom, custom-raw. By default is standard.
       --scf &lt;save-configuration-file&gt;    Save current configuration to json file
@@ -889,7 +897,7 @@ options:
   -f FRAMES, --frames FRAMES
                         Frame range: N (just N), N- (from N to end), N-M (N to M inclusive)</code></pre>
 <h5 id="example-usage">Example Usage</h5>
-<p>The following example extarcts frames 10 thru 10 from the capture
+<p>The following example extracts frames 10 thru 10 from the capture
 file *output_07_09_15_27_10_0.bin* and places the contents in the folder
 *output_10_16*.</p>
 <pre><code>$ python rawparser.py output\frame2025_07_09_15_27_10_0.bin --outdir output\range_10_16 -f 10-16
@@ -1070,7 +1078,7 @@ I20250709 16:06:57.850332 40956 main.cpp:187] Running the callback for which the
 I20250709 16:06:57.863314 40956 main.cpp:187] Running the callback for which the status of ADSD3500 has been forwarded. ADSD3500 status = Adsd3500Status::OK
 I20250709 16:06:57.866338 40956 network.cpp:619] Frame Client Connection established.
 I20250709 16:06:58.040611 40956 camera_itof.cpp:615] Dropped first frame
-I20250709 16:06:58.087862 40956 main.cpp:241] succesfully requested frame!
+I20250709 16:06:58.087862 40956 main.cpp:241] successfully requested frame!
 I20250709 16:06:58.087862 40956 network_depth_sensor.cpp:391] Stopping device
 I20250709 16:06:58.215757 40956 main.cpp:187] Running the callback for which the status of ADSD3500 has been forwarded. ADSD3500 status =
 I20250709 16:06:58.215757 40956 main.cpp:187] Running the callback for which the status of ADSD3500 has been forwarded. ADSD3500 status =
@@ -1141,7 +1149,7 @@ environment.</p>
 <ul>
 <li>activate.bat</li>
 </ul>
-<h4 id="decativate">Decativate</h4>
+<h4 id="deactivate">Deactivate</h4>
 <ul>
 <li>deactivate.bat</li>
 </ul>
