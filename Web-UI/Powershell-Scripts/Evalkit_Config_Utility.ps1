@@ -58,7 +58,7 @@ do {
 			& .\network-status.ps1
 		}
 		"9"{
-			Write-Host "Setting up Wifi ..." 
+			Write-Host "Setting up Wifi..." 
 			& .\setup-wifi.ps1
 		}
 		"10"{
@@ -78,7 +78,7 @@ do {
 			& .\update.ps1
 		}
 		"14"{
-			Write-Host "Deleting the SDK Verision..."
+			Write-Host "Deleting the SDK Version..."
 			& .\delete-workspace.ps1
 		}
 		"15"{
