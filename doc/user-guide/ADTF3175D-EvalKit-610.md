@@ -49,6 +49,7 @@
         - [Mode Selection](#mode-selection)
         - [Data Views](#data-views)
         - [ADIToFGUI and Configuration Parameters](#aditofgui-and-configuration-parameters)
+        - [Troubleshooting](#troubleshooting)
   - [Python Tools](#python-tools)
     - [Setting for using the Python Bindings](#setting-for-using-the-python-bindings)
       - [Setup](#setup)
@@ -519,7 +520,18 @@ Workspace has been Successfully updated !!
 This removes a user specified version of the SDK from the eval kit's SD card image.
 
 ```
+Press 'y' to continue (any other key to cancel)...
+analog@192.168.56.1's password:
+Available workspaces:
+1. 6.1.0
+2. 6.2.0
+Enter the number of the workspace you want to delete: 2
+Successfully deleted workspace version '6.2.0'.
 
+Now system will reboot
+[sudo] password for analog:
+Connection to 192.168.56.1 closed by remote host.
+Connection to 192.168.56.1 closed.
 ```
 
 ### 15. Switch SDK Version
@@ -1126,6 +1138,22 @@ This section covers modification of ToF parameters per mode. To accomplish this 
 From the screen capture below you can see the frame rate for mode 1 is now 5fps.
 
 [<img src="images/aditofgui_8.png" width="25%">](images/aditofgui_8.png)
+
+##### Troubleshooting
+
+For the best performance, ADIToFGUI should be set to run using your systems best performing graphics card. To do this it is necessary to instruct Windows of the graphics card to use, if you have multiple options.
+
+In this example we bind ADIToFGUI.exe to the NVIDIA graphics device.
+
+[<img src="images/aditofgui-ts-1.png" width="25%">](images/aditofgui-ts-1.png)
+
+[<img src="images/aditofgui-ts-1.png" width="25%">](images/aditofgui-ts-2.png)
+
+[<img src="images/aditofgui-ts-1.png" width="25%">](images/aditofgui-ts-3.png)
+
+[<img src="images/aditofgui-ts-1.png" width="25%">](images/aditofgui-ts-4.png)
+
+[<img src="images/aditofgui-ts-1.png" width="25%">](images/aditofgui-ts-5.png)
 
 ## Python Tools
 

@@ -85,6 +85,7 @@ Data from Saved Streams: rawparser.py</a>
 <li><a href="#data-views">Data Views</a></li>
 <li><a href="#aditofgui-and-configuration-parameters">ADIToFGUI and
 Configuration Parameters</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
 </ul></li>
 </ul></li>
 <li><a href="#python-tools">Python Tools</a>
@@ -546,7 +547,18 @@ Workspace has been Successfully updated !!</code></pre>
 <h3 id="delete-sdk-version">14. Delete SDK Version</h3>
 <p>This removes a user specified version of the SDK from the eval kit’s
 SD card image.</p>
-<pre><code></code></pre>
+<pre><code>Press &#39;y&#39; to continue (any other key to cancel)...
+analog@192.168.56.1&#39;s password:
+Available workspaces:
+1. 6.1.0
+2. 6.2.0
+Enter the number of the workspace you want to delete: 2
+Successfully deleted workspace version &#39;6.2.0&#39;.
+
+Now system will reboot
+[sudo] password for analog:
+Connection to 192.168.56.1 closed by remote host.
+Connection to 192.168.56.1 closed.</code></pre>
 <h3 id="switch-sdk-version">15. Switch SDK Version</h3>
 <p>Through this command the SDK version can be switched if there are
 multiple versions installed.</p>
@@ -1134,6 +1146,23 @@ href="images/aditofgui_7.png"><img src="images/aditofgui_7.png" width="25%"></a>
 is now 5fps.</p>
 <p><a
 href="images/aditofgui_8.png"><img src="images/aditofgui_8.png" width="25%"></a></p>
+<h5 id="troubleshooting">Troubleshooting</h5>
+<p>For the best performance, ADIToFGUI should be set to run using your
+systems best performing graphics card. To do this it is necessary to
+instruct Windows of the graphics card to use, if you have multiple
+options.</p>
+<p>In this example we bind ADIToFGUI.exe to the NVIDIA graphics
+device.</p>
+<p><a
+href="images/aditofgui-ts-1.png"><img src="images/aditofgui-ts-1.png" width="25%"></a></p>
+<p><a
+href="images/aditofgui-ts-2.png"><img src="images/aditofgui-ts-1.png" width="25%"></a></p>
+<p><a
+href="images/aditofgui-ts-3.png"><img src="images/aditofgui-ts-1.png" width="25%"></a></p>
+<p><a
+href="images/aditofgui-ts-4.png"><img src="images/aditofgui-ts-1.png" width="25%"></a></p>
+<p><a
+href="images/aditofgui-ts-5.png"><img src="images/aditofgui-ts-1.png" width="25%"></a></p>
 <h2 id="python-tools">Python Tools</h2>
 <p>The Python tools rely on the included Python bindings.</p>
 <h3 id="setting-for-using-the-python-bindings">Setting for using the
