@@ -34,6 +34,19 @@ if [[ "$module_file_path" != *.ko ]]; then
 	exit 1
 fi
 
+read -p "Give the libs directory: " libs_path
+
+if [ -d "$libs_path" ] && [ "$(ls -A "$libs_path")" ]; then
+	# check all files are .so files
+	if find "$libs_path" -type -f ! -name "*.so" | grep -q .; then
+		echo "Folder contains files other that .so"
+	else
+		echo "Folder is not empty and contains only .so files"
+	fi
+else
+	echo "Folder is either empty or does not exists."
+fi
+
 # Create Workspace directory
 dir_name="Workspace-$version"
 mkdir -p "$dir_name"
@@ -83,6 +96,11 @@ cd $dir_name/services
 rm -f gunicorn.service uvc-gadget.service
 
 cd ../../
+
+# copy the libs folder
+mkdir -p $dir_name/libs
+
+cp  $libs_path/*.so $dir_name/libs
 
 mkdir -p $dir_name/module
 
