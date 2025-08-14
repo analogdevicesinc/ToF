@@ -1684,11 +1684,11 @@ void ADIMainWindow::displayInfoWindow(ImGuiWindowFlags overlayFlags) {
                     }
                     int32_t sensorTemp = (metadata.sensorTemperature);
                     int32_t laserTemp = (metadata.laserTemperature);
-                    uint32_t totalFrames = frameNum - firstFrame + 1;
-                    uint32_t frameLost = totalFrames - frameRecvd;
-                    ImGui::Text(" Number of frames lost: %u", frameLost);
-                    ImGui::SameLine();
-                    ImGui::Text(" | Number of frames received: %u", frameRecvd);
+                    //uint32_t totalFrames = frameNum - firstFrame + 1;
+                    //uint32_t frameLost = totalFrames - frameRecvd;
+                    //ImGui::Text(" Number of frames lost: %u", frameLost);
+                    //ImGui::SameLine();
+                    //ImGui::Text(" | Number of frames received: %u", frameRecvd);
                     ImGui::Text(" Laser Temperature: %iC", laserTemp);
                     ImGui::SameLine();
                     ImGui::Text(" | Sensor Temperature: %iC", sensorTemp);
