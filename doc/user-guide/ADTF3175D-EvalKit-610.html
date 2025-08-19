@@ -90,12 +90,23 @@ Configuration Parameters</a></li>
 </ul></li>
 <li><a href="#python-tools">Python Tools</a>
 <ul>
-<li><a href="#setting-for-using-the-python-bindings">Setting for using
-the Python Bindings</a>
+<li><a href="#set-up-for-using-the-python-bindings-for-windows">Set up
+for using the Python Bindings for Windows</a>
 <ul>
-<li><a href="#setup">Setup</a></li>
-<li><a href="#activate">Activate</a></li>
-<li><a href="#deactivate">Deactivate</a></li>
+<li><a href="#setup-the-virtual-environment">Setup the Virtual
+Environment</a></li>
+<li><a href="#activate-the-virtual-environment">Activate the Virtual
+Environment</a></li>
+<li><a href="#deactivate-the-virtual-environment">Deactivate the Virtual
+Environment</a></li>
+</ul></li>
+<li><a href="#set-up-for-using-the-python-bindings-for-ubuntu-2204">Set
+up for using the Python Bindings for Ubuntu 22.04</a>
+<ul>
+<li><a href="#setup-the-virtual-environment-1">Setup the Virtual
+Environment</a></li>
+<li><a href="#activate-the-virtual-environment-1">Activate the Virtual
+Environment</a></li>
 </ul></li>
 <li><a href="#data_collect-python">data_collect (Python)</a>
 <ul>
@@ -1165,23 +1176,47 @@ href="images/aditofgui-ts-4.png"><img src="images/aditofgui-ts-1.png" width="25%
 href="images/aditofgui-ts-5.png"><img src="images/aditofgui-ts-1.png" width="25%"></a></p>
 <h2 id="python-tools">Python Tools</h2>
 <p>The Python tools rely on the included Python bindings.</p>
-<h3 id="setting-for-using-the-python-bindings">Setting for using the
-Python Bindings</h3>
-<h4 id="setup">Setup</h4>
+<h3 id="set-up-for-using-the-python-bindings-for-windows">Set up for
+using the Python Bindings for Windows</h3>
+<h4 id="setup-the-virtual-environment">Setup the Virtual
+Environment</h4>
+<p>Note, this is a onetime operation unless the virtual environment is
+corrupted or removed.</p>
 <p>Note, this process may take a while when setting up the python
 environment.</p>
 <ul>
 <li>cd bin-setup</li>
 <li>setup_python_env.bat</li>
 </ul>
-<h4 id="activate">Activate</h4>
+<h4 id="activate-the-virtual-environment">Activate the Virtual
+Environment</h4>
 <ul>
 <li>activate.bat</li>
 </ul>
-<h4 id="deactivate">Deactivate</h4>
+<h4 id="deactivate-the-virtual-environment">Deactivate the Virtual
+Environment</h4>
 <ul>
 <li>deactivate.bat</li>
 </ul>
+<h3 id="set-up-for-using-the-python-bindings-for-ubuntu-22.04">Set up
+for using the Python Bindings for Ubuntu 22.04</h3>
+<h4 id="setup-the-virtual-environment-1">Setup the Virtual
+Environment</h4>
+<p>Note, this is a onetime operation unless the virtual environment is
+corrupted or removed.</p>
+<p>First setup on Ubuntu:</p>
+<ul>
+<li>Ubuntu 22.04: sudo apt install python3.10-venv</li>
+<li>Ubuntu 24.04: sudo apt install python3.12-venv</li>
+</ul>
+<p>Note, this process may take a while when setting up the python
+environment.</p>
+<p>From the <strong>bin</strong> folder: * cd Python-setup *
+./aditofpython_env.sh</p>
+<h4 id="activate-the-virtual-environment-1">Activate the Virtual
+Environment</h4>
+<p>From the <strong>bin</strong> folder: * cd Python-setup *
+./activate.sh</p>
 <h3 id="data_collect-python">data_collect (Python)</h3>
 <p>A data collect example, but in Python. This will not be covered in
 detail since it is similar to data_collect binary executable.</p>
