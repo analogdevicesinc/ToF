@@ -669,7 +669,7 @@ index 0000000..8f296cd
 +						};
 +					};
 +				gpio_exp_1: gpio@68 {
-+						compatible = "maxim,max7321";
++						compatible = "maxim,max7327";
 +						status = "okay";
 +						reg = <0x68>;
 +						gpio-controller;
