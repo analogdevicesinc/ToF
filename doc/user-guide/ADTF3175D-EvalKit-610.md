@@ -51,10 +51,13 @@
         - [ADIToFGUI and Configuration Parameters](#aditofgui-and-configuration-parameters)
         - [Troubleshooting](#troubleshooting)
   - [Python Tools](#python-tools)
-    - [Setting for using the Python Bindings](#setting-for-using-the-python-bindings)
-      - [Setup](#setup)
-      - [Activate](#activate)
-      - [Deactivate](#deactivate)
+    - [Set up for using the Python Bindings for Windows](#set-up-for-using-the-python-bindings-for-windows)
+      - [Setup the Virtual Environment](#setup-the-virtual-environment)
+      - [Activate the Virtual Environment](#activate-the-virtual-environment)
+      - [Deactivate the Virtual Environment](#deactivate-the-virtual-environment)
+    - [Set up for using the Python Bindings for Ubuntu 22.04](#set-up-for-using-the-python-bindings-for-ubuntu-2204)
+      - [Setup the Virtual Environment](#setup-the-virtual-environment-1)
+      - [Activate the Virtual Environment](#activate-the-virtual-environment-1)
     - [data\_collect (Python)](#data_collect-python)
       - [Command Line Interface](#command-line-interface-3)
     - [first\_frame (Python)](#first_frame-python)
@@ -1159,20 +1162,44 @@ In this example we bind ADIToFGUI.exe to the NVIDIA graphics device.
 
 The Python tools rely on the included Python bindings.
 
-### Setting for using the Python Bindings
+### Set up for using the Python Bindings for Windows
 
-#### Setup
+#### Setup the Virtual Environment
+
+Note, this is a onetime operation unless the virtual environment is corrupted or removed.
 
 Note, this process may take a while when setting up the python environment.
 
 * cd bin\Python-setup
 * setup_python_env.bat
 
-#### Activate
+#### Activate the Virtual Environment
 * activate.bat
-
-#### Deactivate
+  
+#### Deactivate the Virtual Environment
 * deactivate.bat
+
+### Set up for using the Python Bindings for Ubuntu 22.04
+
+#### Setup the Virtual Environment
+
+Note, this is a onetime operation unless the virtual environment is corrupted or removed.
+
+First setup on Ubuntu:
+
+* Ubuntu 22.04: sudo apt install python3.10-venv
+* Ubuntu 24.04: sudo apt install python3.12-venv
+
+Note, this process may take a while when setting up the python environment.
+
+From the **bin** folder:
+* cd Python-setup
+* ./aditofpython_env.sh
+
+#### Activate the Virtual Environment
+From the **bin** folder:
+* cd Python-setup
+* ./activate.sh
 
 ### data_collect (Python)
 
