@@ -6,11 +6,19 @@ See **ADTF3175D-EvalKit-610.html** for documentation.
 
 ### Additions, Updates and Fixes
 
-TODO
+* HTML documentation added in the 'doc' folder.
+* IP address of device is now *192.168.56.1*.
+* Support for Ubuntu 20.04 dropped.
+* Support for Ubuntu 24.04 added.
+* libwebsockets replaced with ZMQ
+* Multi-threaded support added for pulling frames from V4L2
+* ADIToF GUI:
+  * Fixed point cloud viewing issue.
+* A PowerShell configuration interface has been added, see the documentation for more details.
 
 ### Known Issues
 
-TODO
+* On the host there is an occasional issue with network.cpp destructor when exiting an application. This may force the user to use CTRL+C. This is associated with ZMQ.
 
 ## Version 6.0.1
 
