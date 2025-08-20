@@ -113,7 +113,7 @@ if %generator%=="vs2015" (
 )
 
 if %set_generator%==0 (
-   echo "No generator specified, see help '-g'."
+   echo "No generator specified, see help '-h'."
    EXIT /B 0
    )
 
