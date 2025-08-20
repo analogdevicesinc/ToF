@@ -58,6 +58,7 @@
     - [Set up for using the Python Bindings for Ubuntu 22.04](#set-up-for-using-the-python-bindings-for-ubuntu-2204)
       - [Setup the Virtual Environment](#setup-the-virtual-environment-1)
       - [Activate the Virtual Environment](#activate-the-virtual-environment-1)
+      - [Deactivate the Virtual Environment](#deactivate-the-virtual-environment-1)
     - [data\_collect (Python)](#data_collect-python)
       - [Command Line Interface](#command-line-interface-3)
     - [first\_frame (Python)](#first_frame-python)
@@ -1199,7 +1200,10 @@ From the **bin** folder:
 #### Activate the Virtual Environment
 From the **bin** folder:
 * cd Python-setup
-* ./activate.sh
+* source ./activate.sh
+
+#### Deactivate the Virtual Environment
+* deactivate
 
 ### data_collect (Python)
 
