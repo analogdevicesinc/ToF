@@ -1151,13 +1151,13 @@ In this example we bind ADIToFGUI.exe to the NVIDIA graphics device.
 
 [<img src="images/aditofgui-ts-1.png" width="25%">](images/aditofgui-ts-1.png)
 
-[<img src="images/aditofgui-ts-1.png" width="25%">](images/aditofgui-ts-2.png)
+[<img src="images/aditofgui-ts-2.png" width="25%">](images/aditofgui-ts-2.png)
 
-[<img src="images/aditofgui-ts-1.png" width="25%">](images/aditofgui-ts-3.png)
+[<img src="images/aditofgui-ts-3.png" width="25%">](images/aditofgui-ts-3.png)
 
-[<img src="images/aditofgui-ts-1.png" width="25%">](images/aditofgui-ts-4.png)
+[<img src="images/aditofgui-ts-4.png" width="25%">](images/aditofgui-ts-4.png)
 
-[<img src="images/aditofgui-ts-1.png" width="25%">](images/aditofgui-ts-5.png)
+[<img src="images/aditofgui-ts-5.png" width="25%">](images/aditofgui-ts-5.png)
 
 ## Python Tools
 
