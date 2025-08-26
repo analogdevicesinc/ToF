@@ -85,14 +85,17 @@ if [[ $MODULE == "adi_dual_adsd3500_adsd3100" ]]; then
 	#Pull ADSD3500 reset low
 	sudo echo 0 > /sys/class/gpio/PH.06/value
 
+	#Disable the the supply voltage
 	#EN_1P8
-	sudo gpioset 2 0=1
+	sudo gpioset 2 0=0
 
 	#EN_0P8
-	sudo gpioset 2 1=1
+	sudo gpioset 2 1=0
+
+	sleep 1
 
 	#I2CM_SET
-	sudo gpioset 2 3=1
+	sudo gpioset 2 3=0
 
 	#NET HOST_IO_SEL
 	sudo gpioset 2 5=1
@@ -115,14 +118,25 @@ if [[ $MODULE == "adi_dual_adsd3500_adsd3100" ]]; then
 	#FSYNC_DIR
 	sudo gpioset 2 11=1
 
-	#EN_VAUX
-	sudo gpioset 2 12=1
+	#EN_1P8
+	sudo gpioset 2 0=1
+
+	sleep 1
+
+	#EN_0P8
+	sudo gpioset 2 1=1
+
+	sleep 1
+
+	#EN_VSYS
+	sudo gpioset 2 14=1
 
 	#EN_VAUX_LS
 	sudo gpioset 2 13=1
 
-	#EN_VSYS
-	sudo gpioset 2 14=1
+	#EN_VAUX
+	sudo gpioset 2 12=1
+	sleep 1
 
 	#Pull ADSD3500 reset high
 	sudo echo 1 > /sys/class/gpio/PH.06/value
