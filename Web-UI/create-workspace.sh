@@ -47,6 +47,8 @@ else
 	echo "Folder is either empty or does not exists."
 fi
 
+
+
 # Create Workspace directory
 dir_name="Workspace-$version"
 mkdir -p "$dir_name"
@@ -61,9 +63,6 @@ git clone https://github.com/analogdevicesinc/ToF.git
 cd ToF/
 
 git submodule update --init --recursive
-
-# delete git metadata
-rm -rf .git
 
 cd ../
 cd ../
@@ -102,6 +101,26 @@ mkdir -p $dir_name/libs
 
 cp  $libs_path/*.so $dir_name/libs
 
+
+# make build folder
+cd ../
+mkdir -p $dir_name/ToF/build
+cd $dir_name/ToF/build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j4
+cd ../../../
+
+#copy bin file in workspace
+mkdir -p $dir_name/bin
+cp $dir_name/ToF/build/examples/data_collect/data_collect $dir_name/bin
+cp $dir_name/ToF/build/examples/first-frame/first-frame $dir_name/bin
+cp $dir_name/ToF/build/examples/first-frame/aditof-server $dir_name/bin
+mv $dir_name/ToF/sdcard-images-utils/nxp/patches/ubuntu_overlay/step1/usr/share/systemd/* $dir_name/bin
+
+# delete git metadata
+rm -rf .git
+
+#copy module 
 mkdir -p $dir_name/module
 
 cp $module_file_path $dir_name/module
