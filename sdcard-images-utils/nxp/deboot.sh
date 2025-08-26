@@ -286,7 +286,7 @@ chmod +x setup.sh
 ./setup.sh -y -b ../../build -j4
 popd
 #cp ToF/build/apps/uvc-app/uvc-app /usr/share/systemd/
-cp ToF/build/apps/server/aditof-server /usr/share/systemd/
+#cp ToF/build/apps/server/aditof-server /usr/share/systemd/
 popd
 popd
 chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}/Workspace
@@ -296,6 +296,7 @@ mkdir /home/${USERNAME}/Workspace/bin
 cp /home/${USERNAME}/Workspace/ToF/build/examples/data_collect/data_collect /home/${USERNAME}/Workspace/bin
 cp /home/${USERNAME}/Workspace/ToF/build/examples/first-frame/first-frame /home/${USERNAME}/Workspace/bin
 mv /home/${USERNAME}/Workspace/ToF/sdcard-images-utils/nxp/patches/ubuntu_overlay/step1/usr/share/systemd/* /home/${USERNAME}/Workspace/bin
+cp /home/${USERNAME}/Workspace/ToF/build/apps/server/aditof-server /home/${USERNAME}/Workspace/bin
 
 #pushd /home/${USERNAME}/Workspace/bin
 #chmod +x ros_install_noetic.sh
@@ -385,6 +386,13 @@ sudo ln -s /home/${USERNAME}/Workspace/services/adi-tof.service /usr/lib/systemd
 sudo ln -s /home/${USERNAME}/Workspace/services/network-gadget.service /usr/lib/systemd/system/network-gadget.service
 sudo ln -s /home/${USERNAME}/Workspace/services/usb-gadget.service /usr/lib/systemd/system/usb-gadget.service
 
+# link the shell scripts to bin files
+sudo ln -s /home/${USERNAME}/Workspace/bin/aditof-server /usr/share/systemd/aditof-server
+sudo rm -f /usr/share/systemd/tof-power-en.sh
+sudo ln -s /home/${USERNAME}/Workspace/bin/tof-power-en.sh /usr/share/systemd/tof-power-en.sh
+sudo rm -f /usr/share/systemd/usb-gadget.sh
+sudo ln -s /home/${USERNAME}/Workspace/bin/usb-gadget.sh /usr/share/systemd/usb-gadget.sh
+
 #copy the driver build in modules folderAdd commentMore actions
 mkdir /home/${USERNAME}/Workspace/module
 mv /usr/lib/modules/5.10.72-*/kernel/drivers/media/i2c/adsd3500.ko /home/${USERNAME}/Workspace/module
@@ -422,9 +430,9 @@ function main() {
   # debootstrap 1st
   sudo debootstrap --arch=${TARGET_ARCH} --include="${INCLUDE_LIST}" --foreign ${DISTRO_CODE} ${ROOTFS_TMP} ${DISTRO_MIRROR}
   # copy libs to ${SCRIPT_DIR}/build/ubuntu/rootfs_tmp/home/temp(Make sure to add a path to .so files here)
-  #sudo cp /home/esptguest/SSingh/Workspace/libs/*.so  ${SCRIPT_DIR}/build/ubuntu/rootfs_tmp
-  #echo "libs copied sucessfully" >  /home/esptguest/SSingh/Workspace/libs/log.txt
-  #date >> /home/esptguest/SSingh/Workspace/libs/log.txt 1> /dev/null 2>&1
+  sudo cp /home/esptguest/SSingh/Workspace/libs/*.so  ${SCRIPT_DIR}/build/ubuntu/rootfs_tmp
+  echo "libs copied sucessfully" >  /home/esptguest/SSingh/Workspace/libs/log.txt
+  date >> /home/esptguest/SSingh/Workspace/libs/log.txt 1> /dev/null 2>&1
   
   # debootstrap 2nd
   sudo chroot ${ROOTFS_TMP} /debootstrap/debootstrap --second-stage
