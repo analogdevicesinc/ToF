@@ -98,6 +98,7 @@ if [[ $MODULE == "adi_dual_adsd3500_adsd3100" ]]; then
 	sudo gpioset 2 3=0
 
 	#NET HOST_IO_SEL
+	#Set 0: EXT_FSYNC / 1: ISP_INT
 	sudo gpioset 2 5=1
 
 	#ISP_BS0
@@ -107,7 +108,8 @@ if [[ $MODULE == "adi_dual_adsd3500_adsd3100" ]]; then
 	sudo gpioset 2 7=0
 
 	#HOST_IO_DIR
-	sudo gpioset 2 8=0
+	#Set 0: EXT_FSYNC / 1: ISP_INT
+	sudo gpioset 2 8=1
 
 	#ISP_BS4
 	sudo gpioset 2 9=0
