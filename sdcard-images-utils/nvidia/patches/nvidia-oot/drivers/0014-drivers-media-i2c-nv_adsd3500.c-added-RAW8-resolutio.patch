@@ -1,0 +1,52 @@
+From 58dcfeff5cdf045687877ab0241aed536372a809 Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Thu, 28 Aug 2025 14:37:14 +0530
+Subject: [PATCH] drivers: media: i2c: nv_adsd3500.c: added RAW8 resolution
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ drivers/media/i2c/adsd3500_mode_tbls.h | 2 ++
+ drivers/media/i2c/nv_adsd3500.c        | 7 +++++++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/drivers/media/i2c/adsd3500_mode_tbls.h b/drivers/media/i2c/adsd3500_mode_tbls.h
+index 532e24d1..5fc19671 100644
+--- a/drivers/media/i2c/adsd3500_mode_tbls.h
++++ b/drivers/media/i2c/adsd3500_mode_tbls.h
+@@ -14,6 +14,7 @@ enum {
+     ADSD3500_MODE_2048x2560_30FPS,
+     ADSD3500_MODE_2048x3328_30FPS,
+     ADSD3500_MODE_1024x2304_30FPS,
++    ADSD3500_MODE_1024x4096_30FPS
+ };
+ 
+ static const int adsd3500_30fps[] = {
+@@ -37,6 +38,7 @@ static const struct camera_common_frmfmt adsd3500_frmfmt[] = {
+     {{2048,2560}, adsd3500_30fps, 1, 0, ADSD3500_MODE_2048x2560_30FPS},
+     {{2048,3328}, adsd3500_30fps, 1, 0, ADSD3500_MODE_2048x3328_30FPS},
+     {{1024,2304}, adsd3500_30fps, 1, 0, ADSD3500_MODE_1024x2304_30FPS},
++    {{1024,4096}, adsd3500_30fps, 1, 0, ADSD3500_MODE_1024x4096_30FPS},
+     /* Add modes with no device tree support after below */
+ };
+ 
+diff --git a/drivers/media/i2c/nv_adsd3500.c b/drivers/media/i2c/nv_adsd3500.c
+index c57610d6..a7f50e11 100644
+--- a/drivers/media/i2c/nv_adsd3500.c
++++ b/drivers/media/i2c/nv_adsd3500.c
+@@ -306,6 +306,13 @@ static const struct adsd3500_mode_info adsd3500_mode_info_data[] = {
+ 		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
+ 		.link_freq_idx = 1 /* an index in link_freq_tbl[] */
+ 	},
++	{ //RAW8
++		.width = 1024,
++		.height = 4096,
++		.pixel_rate = 625000000,
++		.code = MEDIA_BUS_FMT_SRGGB8_1X8,
++		.link_freq_idx = 1 /* an index in link_freq_tbl[] */
++	},
+ 	{ //RAW8 24BPP ADSD3030
+ 		.width = 1536,
+ 		.height = 640,
+-- 
+2.25.1
+
