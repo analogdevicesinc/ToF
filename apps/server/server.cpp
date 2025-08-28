@@ -505,6 +505,16 @@ int main(int argc, char *argv[]) {
 
     context = std::make_unique<zmq::context_t>(2);
     server_cmd = std::make_unique<zmq::socket_t>(*context, ZMQ_REP);
+
+    // Set heartbeat options before binding
+    int heartbeat_ivl = 1000;     // Send heartbeat every 1000 ms
+    int heartbeat_timeout = 3000; // Timeout if no heartbeat received in 3000 ms
+    int heartbeat_ttl = 5000;     // Heartbeat message TTL
+
+    server_cmd->set(zmq::sockopt::heartbeat_ivl, heartbeat_ivl);
+    server_cmd->set(zmq::sockopt::heartbeat_timeout, heartbeat_timeout);
+    server_cmd->set(zmq::sockopt::heartbeat_ttl, heartbeat_ttl);
+
     // Bind the socket
     try {
         server_cmd->bind("tcp://*:5556");
