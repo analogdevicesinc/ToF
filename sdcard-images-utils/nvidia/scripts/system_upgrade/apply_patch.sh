@@ -9,7 +9,8 @@ function setup_workspace_directory()
 	# Check if ${HOME}/Workspace exists
 	if [ ! -d "${HOME}/Workspace" ]; then
 		echo "Workspace directory doesn't exists"
-		exit 1
+		echo "Create the Workspace directory"
+		mkdir -p ${HOME}/Workspace
 	fi
 
 	# Delete the existing ToF repo on the device.
@@ -84,8 +85,8 @@ function apply_ubuntu_overlay()
 	echo "Copy all the shell scripts"
 	sudo cp $ROOTDIR/ubuntu_overlay/usr/share/systemd/*.sh		/usr/share/systemd/
 
-	#echo "Copy Tools directory"
-	#cp -rf $ROOTDIR/ubuntu_overlay/Tools/ ${HOME}/Workspace/
+	echo "Copy Tools directory"
+	cp -rf $ROOTDIR/ubuntu_overlay/Tools/ ${HOME}/Workspace/
 
 }
 

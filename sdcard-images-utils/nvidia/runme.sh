@@ -192,7 +192,7 @@ function main()
 	apply_git_format_patches
 	build_kernel_Image
 	copy_ubuntu_overlay
-	#clone_sdk
+	clone_sdk
 	sw_version_info
 	cp $ROOTDIR/scripts/system_upgrade/apply_patch.sh $PATCH_DIR
 	cd $ROOTDIR/build
