@@ -1,0 +1,26 @@
+From f15c2a620ff5e88192a689ede80bb63cd17f3c33 Mon Sep 17 00:00:00 2001
+From: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Thu, 28 Aug 2025 12:37:14 +0530
+Subject: [PATCH] arch: arm64: configs: defconfig: add interrupt controller
+ support for MAX732x
+
+Signed-off-by: Sivasubramaniyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 3aac17cf1b6e..32e3ccb28de8 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -610,6 +610,7 @@ CONFIG_GPIO_WCD934X=m
+ CONFIG_GPIO_XGENE=y
+ CONFIG_GPIO_XGENE_SB=y
+ CONFIG_GPIO_MAX732X=y
++CONFIG_GPIO_MAX732X_IRQ=y
+ CONFIG_GPIO_PCA953X=y
+ CONFIG_GPIO_PCA953X_IRQ=y
+ CONFIG_GPIO_BD9571MWV=m
+-- 
+2.25.1
+
