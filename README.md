@@ -21,12 +21,13 @@ For more details on building the SDK on a host platform please check the **User 
 
 Host Platform: 
 
-* Windows 10 or
-* Ubuntu 20.04 or
-* Ubuntu 22.04
+* Windows 11 or
+* Ubuntu 22.04 or
+* Ubuntu 24.04
 
 Other
-* Python 3.10
+* Python 3.10 on Windows and Ubuntu 22.04
+* Python 3.12 on Ubuntu 24.04
 
 ## Supported Embedded Platforms
 
