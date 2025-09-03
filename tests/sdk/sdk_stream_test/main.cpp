@@ -110,7 +110,7 @@ parseCSV(const std::string &filename) {
 
     return data;
 }
- 
+
 int main(int argc, char *argv[]) {
     std::map<std::string, struct Argument> command_map = {
         {"-h", {"--help", false, "", "", false}},
@@ -175,13 +175,13 @@ int main(int argc, char *argv[]) {
 
     Status status = Status::OK;
 
-	bool saveOutput = false;
+    bool saveOutput = false;
 
     if (!command_map["-f"].value.empty()) {
         saveOutput = true;
         // Parsing output folder
         err = snprintf(folder_path, sizeof(folder_path), "%s",
-            command_map["-f"].value.c_str());
+                       command_map["-f"].value.c_str());
         if (err < 0) {
             LOG(ERROR) << "Error copying the output folder path!";
             return -1;
@@ -190,13 +190,15 @@ int main(int argc, char *argv[]) {
         // Create folder if not created already
         char dir_path[MAX_PATH];
         if (GetFullPathName(folder_path, MAX_PATH, &dir_path[0], NULL) == 0) {
-            LOG(ERROR) << "Error Unable to get directory. Error:" << GetLastError();
+            LOG(ERROR) << "Error Unable to get directory. Error:"
+                       << GetLastError();
             return -1;
         }
 
         if (!(CreateDirectory(dir_path, NULL))) {
             if (ERROR_ALREADY_EXISTS != GetLastError()) {
-                LOG(ERROR) << "Error creating directory. Error:", GetLastError();
+                LOG(ERROR) << "Error creating directory. Error:",
+                    GetLastError();
                 return -1;
             }
         }
@@ -209,7 +211,7 @@ int main(int argc, char *argv[]) {
             return -1;
         }
 #endif
-    }   
+    }
 
     // Parsing ip
     if (!command_map["-ip"].value.empty()) {
@@ -253,8 +255,8 @@ int main(int argc, char *argv[]) {
 
     auto camera = cameras.front();
 
-	uint32_t cntr = 2; // Start from 2 to match the test vector numbering
-    for (const auto& row : testVectors) {
+    uint32_t cntr = 2; // Start from 2 to match the test vector numbering
+    for (const auto &row : testVectors) {
         std::string modeStr = getField(argv[0], __LINE__, row, "mode");
         if (modeStr.empty()) {
             continue;
@@ -275,37 +277,36 @@ int main(int argc, char *argv[]) {
 
         std::string cfgStr = getField(argv[0], __LINE__, row, "cfg");
 
-
         std::string cntrStr = std::to_string(cntr);
         cntr++;
 
-        const std::string summary =
-            cntrStr + ":" + modeStr + ":" + rtmsStr + ":" + fpsStr + ":" + cfgStr;
+        const std::string summary = cntrStr + ":" + modeStr + ":" + rtmsStr +
+                                    ":" + fpsStr + ":" + cfgStr;
 
         uint32_t n_frames = 0;
 
         status = camera->initialize(cfgStr);
         if (status != Status::OK) {
             LOG(ERROR) << "@@," << argv[0] << ",FAIL"
-                << ",LN" << __LINE__
-                << ",DN:Could not initialize camera:TST:" << summary;
+                       << ",LN" << __LINE__
+                       << ",DN:Could not initialize camera:TST:" << summary;
             return -2;
         }
 
         status = camera->setSensorConfiguration(configuration);
         if (status != Status::OK) {
             LOG(ERROR) << "@@," << argv[0] << ",FAIL"
-                << ",LN" << __LINE__
-                << ",DN:Could not configure camera with "
-                << configuration << ":TST:" << summary;
-			return -2;
+                       << ",LN" << __LINE__
+                       << ",DN:Could not configure camera with "
+                       << configuration << ":TST:" << summary;
+            return -2;
         }
 
         aditof::CameraDetails cameraDetails;
         camera->getDetails(cameraDetails);
 
         LOG(INFO) << "SD card image version: "
-            << cameraDetails.sdCardImageVersion;
+                  << cameraDetails.sdCardImageVersion;
         LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
         LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
 
@@ -320,8 +321,8 @@ int main(int argc, char *argv[]) {
         status = camera->setMode(static_cast<uint8_t>(mode));
         if (status != Status::OK) {
             LOG(ERROR) << "@@," << argv[0] << ",FAIL"
-                << ",LN" << __LINE__
-                << ",DN:Could not set camera mode:TST:" << summary;
+                       << ",LN" << __LINE__
+                       << ",DN:Could not set camera mode:TST:" << summary;
             return -2;
         }
 
@@ -342,8 +343,8 @@ int main(int argc, char *argv[]) {
         status = camera->start();
         if (status != Status::OK) {
             LOG(ERROR) << "@@," << argv[0] << ",FAIL"
-                << ",LN" << __LINE__
-                << ",DN:Could not start camera:TST:" << summary;
+                       << ",LN" << __LINE__
+                       << ",DN:Could not start camera:TST:" << summary;
             return -2;
         }
 
@@ -365,10 +366,12 @@ int main(int argc, char *argv[]) {
                        << ",LN" << __LINE__
                        << ",DN:Could not request frame:TST:" << summary;
             status = camera->stop();
-            if (status != Status::OK) { // Result already given, not test result error message
+            if (status !=
+                Status::
+                    OK) { // Result already given, not test result error message
                 LOG(ERROR) << argv[0] << ",FAIL"
-                    << ",LN" << __LINE__
-                    << ",DNError stopping camera:TST:" << summary;
+                           << ",LN" << __LINE__
+                           << ",DNError stopping camera:TST:" << summary;
             }
             return -2;
         }
@@ -381,10 +384,12 @@ int main(int argc, char *argv[]) {
                        << ",LN" << __LINE__
                        << ",DN:Could not get metadata:TST:" << summary;
             status = camera->stop();
-            if (status != Status::OK) { // Result already given, not test result error message
+            if (status !=
+                Status::
+                    OK) { // Result already given, not test result error message
                 LOG(ERROR) << argv[0] << ",FAIL"
-                    << ",LN" << __LINE__
-                    << ",DNError stopping camera:TST:" << summary;
+                           << ",LN" << __LINE__
+                           << ",DNError stopping camera:TST:" << summary;
             }
             return -2;
         }
@@ -411,8 +416,11 @@ int main(int argc, char *argv[]) {
             while (std::chrono::high_resolution_clock::now() - start_time <
                    capture_duration) {
 
-                if ((frame_count % divisor) == 0) {
-                    LOG(INFO) << __func__ << ": framecount: " << frame_count;
+                if (divisor > 0) {
+                    if ((frame_count % divisor) == 0) {
+                        LOG(INFO)
+                            << __func__ << ": framecount: " << frame_count;
+                    }
                 }
 
                 status = camera->requestFrame(&frame);
@@ -421,8 +429,11 @@ int main(int argc, char *argv[]) {
                                << ",LN" << __LINE__
                                << ",DN:Could not request frame:TST:" << summary;
                     status = camera->stop();
-                    if (status != Status::OK) { // Result already given, not test result error message
-                        LOG(ERROR) << argv[0] << ",FAIL"
+                    if (status !=
+                        Status::
+                            OK) { // Result already given, not test result error message
+                        LOG(ERROR)
+                            << argv[0] << ",FAIL"
                             << ",LN" << __LINE__
                             << ",DNError stopping camera:TST:" << summary;
                     }
@@ -435,42 +446,52 @@ int main(int argc, char *argv[]) {
                                << ",LN" << __LINE__
                                << ",DN:Could not get metadata:TST:" << summary;
                     status = camera->stop();
-                    if (status != Status::OK) { // Result already given, not test result error message
-                        LOG(ERROR) << argv[0] << ",FAIL"
+                    if (status !=
+                        Status::
+                            OK) { // Result already given, not test result error message
+                        LOG(ERROR)
+                            << argv[0] << ",FAIL"
                             << ",LN" << __LINE__
                             << ",DNError stopping camera:TST:" << summary;
                     }
                     return -3;
                 }
-                LOG(INFO) << "metadata.frameNumber:Expected Frame Number = " << metadata.frameNumber << ":" << frameNumber+1;
+                LOG(INFO) << "metadata.frameNumber:Expected Frame Number = "
+                          << metadata.frameNumber << ":" << frameNumber + 1;
                 if (metadata.frameNumber != frameNumber + 1) {
                     frame_loss_count++;
                     if (frame_loss_count > 5) {
                         LOG(ERROR) << "@@," << argv[0] << ",FAIL"
-                            << ",LN" << __LINE__
-                            << ",DN:Frame number mismatch expected "
-                            << (frameNumber + frame_count) << " but got "
-                            << metadata.frameNumber << ":" << summary;
+                                   << ",LN" << __LINE__
+                                   << ",DN:Frame number mismatch expected "
+                                   << (frameNumber + frame_count) << " but got "
+                                   << metadata.frameNumber << ":" << summary;
                         status = camera->stop();
-                        if (status != Status::OK) { // Result already given, not test result error message
-                            LOG(ERROR) << argv[0] << ",FAIL"
+                        if (status !=
+                            Status::
+                                OK) { // Result already given, not test result error message
+                            LOG(ERROR)
+                                << argv[0] << ",FAIL"
                                 << ",LN" << __LINE__
                                 << ",DNError stopping camera:TST:" << summary;
                         }
                         //return -3;
                         continueAlthoughError = true;
                     } else {
-                        LOG(INFO) << "Frame number mismatch expected "
-                                  << (frameNumber + frame_count)
-                                  << " but got " << metadata.frameNumber
-							      << ". Continuing test... " << frame_loss_count;
+                        LOG(INFO)
+                            << "Frame number mismatch expected "
+                            << (frameNumber + frame_count) << " but got "
+                            << metadata.frameNumber << ". Continuing test... "
+                            << frame_loss_count;
                     }
                 }
 
                 frameNumber = metadata.frameNumber;
 
-                if (saveOutput && (frame_count % divisor) == 0) {
-                    frameSaver.saveFrameToFile(frame);
+                if (divisor > 0) {
+                    if (saveOutput && (frame_count % divisor) == 0) {
+                        frameSaver.saveFrameToFile(frame);
+                    }
                 }
 
                 frame_count++;
@@ -485,21 +506,22 @@ int main(int argc, char *argv[]) {
             if (frame_count > 0) {
                 double measured_fps = (double)n_frames / total_time.count();
                 LOG(INFO) << "@@," << argv[0] << ",PASS"
-                    << ",LN" << __LINE__ << ",DN:FPS:" << measured_fps
-                    << ":FC:" << frame_count << ":TST:" << summary;
-            }
-            else {
+                          << ",LN" << __LINE__ << ",DN:FPS:" << measured_fps
+                          << ":FC:" << frame_count << ":TST:" << summary;
+            } else {
                 LOG(INFO) << "@@," << argv[0] << ",FAIL"
-                    << ",LN" << __LINE__ << ",DN:FC:" << frame_count
-                    << ":TST:" << summary;
+                          << ",LN" << __LINE__ << ",DN:FC:" << frame_count
+                          << ":TST:" << summary;
                 return -3;
             }
 
             status = camera->stop();
-            if (status != Status::OK) { // Result already given, not test result error message
+            if (status !=
+                Status::
+                    OK) { // Result already given, not test result error message
                 LOG(ERROR) << argv[0] << ",FAIL"
-                    << ",LN" << __LINE__
-                    << ",DNError stopping camera:TST:" << summary;
+                           << ",LN" << __LINE__
+                           << ",DNError stopping camera:TST:" << summary;
                 return -3;
             }
         }
