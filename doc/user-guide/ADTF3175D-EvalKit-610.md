@@ -241,6 +241,7 @@ Note: This method has changed to use the new PowerShell interface.
 ## PowerShell Interface
 
 To configure the device we have provided a new interface via PowerShell. Through the configuration interface the user can:
+
 1.  ADSD3500 Reset                  
 2.  Reboot                          
 3.  Power Down                      
@@ -254,9 +255,10 @@ To configure the device we have provided a new interface via PowerShell. Through
 11. Update Firmware
 12. Get SDK Version
 13. Update SDK Version
-14. Switch SDK Version
-15. Network Switch
-16. Exit
+14. Delete SDK Version
+15. Switch SDK Version
+16. Network Switch
+17. Exit
 
 PowerShell is natively a part of Windows 11, and it is also available on Linux, see [Installing PowerShell on Ubuntu](https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.5).
 
