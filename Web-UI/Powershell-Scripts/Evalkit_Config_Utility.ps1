@@ -10,10 +10,10 @@ function Show-Menu {
     Write-Host "2.  Reboot                          11. Update Firmware"
 	Write-Host "3.  Power Down                      12. Get SDK Version"
     Write-Host "4.  Get File System Permissions     13. Update SDK Version"
-    Write-Host "5.  Modify File System Permissions  14. Switch SDK Version"
-    Write-Host "6.  Get Date & Time                 15. Network Switch"
-    Write-Host "7.  Set Date & Time                 16. Exit"
-    Write-Host "8.  Check WiFi Connection"
+    Write-Host "5.  Modify File System Permissions  14. Delete SDK Version"
+    Write-Host "6.  Get Date & Time                 15. Switch SDK Version"
+    Write-Host "7.  Set Date & Time                 16. Network Switch"
+    Write-Host "8.  Check WiFi Connection           17. Exit"
     Write-Host "9.  Setup WiFi"
     Write-Host ""
 }
@@ -21,7 +21,7 @@ function Show-Menu {
 
 do {
     Show-Menu
-    $choice = Read-Host "Enter your choice (1-16)"
+    $choice = Read-Host "Enter your choice (1-17)"
 
     switch ($choice) {
         "1" {
@@ -58,7 +58,7 @@ do {
 			& .\network-status.ps1
 		}
 		"9"{
-			Write-Host "Setting up Wifi ..." 
+			Write-Host "Setting up Wifi..." 
 			& .\setup-wifi.ps1
 		}
 		"10"{
@@ -78,14 +78,18 @@ do {
 			& .\update.ps1
 		}
 		"14"{
+			Write-Host "Deleting the SDK Version..."
+			& .\delete-workspace.ps1
+		}
+		"15"{
 			Write-Host "Switching SDK..."
 			& .\get-workspace.ps1 -choice 2
 		}
-		"15"{
+		"16"{
 			Write-Host "Switching Network..."
             .\network-change.ps1
 		}
-		"16"{
+		"17"{
 			Write-Host "`nExiting. Goodbye!" -ForegroundColor Yellow
 		}
         default {
@@ -93,9 +97,9 @@ do {
         }
     }
 
-    if ($choice -ne "16") {
+    if ($choice -ne "17") {
         Write-Host ""
         Read-Host "Press Enter to return to the menu"
     }
 
-} while ($choice -ne "16")
+} while ($choice -ne "17")

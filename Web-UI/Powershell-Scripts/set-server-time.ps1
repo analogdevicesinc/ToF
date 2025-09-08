@@ -46,11 +46,14 @@ $body = @{
 } | ConvertTo-Json
 
 # Send POST request
-try {
-    $response = Invoke-RestMethod -Uri $flaskUrl -Method POST -Body $body -ContentType "application/json"
-    Write-Host ""
-    Write-Host $response.message -ForegroundColor Yellow
-} catch {
-    Write-Host "`nFailed to send request. Error:"
-    Write-Output $_.Exception.Message
+for($i = 0; $i -lt 3; $i++){
+	try {
+	    $response = Invoke-RestMethod -Uri $flaskUrl -Method POST -Body $body -ContentType "application/json"
+	    Write-Host ""
+	    Write-Host $response.message -ForegroundColor Yellow
+	    break
+	} catch {
+	    Write-Host "Attempt $($i + 1) failed: $_"
+	    Start-Sleep 1
+	}
 }

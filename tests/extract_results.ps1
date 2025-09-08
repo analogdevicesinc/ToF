@@ -26,9 +26,9 @@ if ($help -or !$infile -or !$outfile) {
 # Clear or create output file
 '' | Set-Content $outfile
 
-# Process each line
+# Read all lines and process them directly
 Get-Content $infile | ForEach-Object {
-    if ($_ -match "@@,(.*)$") {
+    if ($_ -match "@@,(.*)") {
         $Matches[1] | Add-Content $outfile
     }
 }

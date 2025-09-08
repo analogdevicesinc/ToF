@@ -15,6 +15,22 @@
   - [3. Updating the ADSD3500 ISP firmware.](#3-updating-the-adsd3500-isp-firmware)
 - [Configuration of the Eval Kit from the Host](#configuration-of-the-eval-kit-from-the-host)
   - [PowerShell Interface](#powershell-interface)
+    - [1. Reset ADSD3500](#1-reset-adsd3500)
+    - [2. Reboot](#2-reboot)
+    - [3. Power Down](#3-power-down)
+    - [4. Get File System Permissions](#4-get-file-system-permissions)
+    - [5. Modify File System Permissions](#5-modify-file-system-permissions)
+    - [6. Get Date \& Time](#6-get-date--time)
+    - [7. Set Date \& Time](#7-set-date--time)
+    - [8. Check WiFi Connection](#8-check-wifi-connection)
+    - [9. Setup WiFi](#9-setup-wifi)
+    - [10. Check Firmware Version](#10-check-firmware-version)
+    - [11. Update Firmware](#11-update-firmware)
+    - [12. Get SDK Version](#12-get-sdk-version)
+    - [13. Update SDK Version](#13-update-sdk-version)
+    - [14. Delete SDK Version](#14-delete-sdk-version)
+    - [15. Switch SDK Version](#15-switch-sdk-version)
+    - [15. Network Switch](#15-network-switch)
 - [Using the Eval Kit](#using-the-eval-kit)
   - [C++ Tools](#c-tools)
     - [data\_collect (C++)](#data_collect-c)
@@ -33,11 +49,16 @@
         - [Mode Selection](#mode-selection)
         - [Data Views](#data-views)
         - [ADIToFGUI and Configuration Parameters](#aditofgui-and-configuration-parameters)
+        - [Troubleshooting](#troubleshooting)
   - [Python Tools](#python-tools)
-    - [Setting for using the Python Bindings](#setting-for-using-the-python-bindings)
-      - [Setup](#setup)
-      - [Activate](#activate)
-      - [Decativate](#decativate)
+    - [Set up for using the Python Bindings for Windows](#set-up-for-using-the-python-bindings-for-windows)
+      - [Setup the Virtual Environment](#setup-the-virtual-environment)
+      - [Activate the Virtual Environment](#activate-the-virtual-environment)
+      - [Deactivate the Virtual Environment](#deactivate-the-virtual-environment)
+    - [Set up for using the Python Bindings for Ubuntu 22.04](#set-up-for-using-the-python-bindings-for-ubuntu-2204)
+      - [Setup the Virtual Environment](#setup-the-virtual-environment-1)
+      - [Activate the Virtual Environment](#activate-the-virtual-environment-1)
+      - [Deactivate the Virtual Environment](#deactivate-the-virtual-environment-1)
     - [data\_collect (Python)](#data_collect-python)
       - [Command Line Interface](#command-line-interface-3)
     - [first\_frame (Python)](#first_frame-python)
@@ -100,8 +121,8 @@ To update each the ADSD3500 firmware and SD card image see the following section
 * Host operating system: Windows 11, Ubuntu 22.04 or Ubuntu 24.04
 * [Python 3.10](https://www.python.org/downloads/release/python-3100/)
 * SD card flashing software: 
-    * Windows 11, Ubuntu 22.04 or Ubuntu 24.04: [Balena Etcher](https://etcher.balena.io/#download-etcher)
-    * Windows 11: [Win32 Disk Imager](https://sourceforge.net/projects/win32diskimager/)
+    * Windows 11: [Balena Etcher](https://github.com/balena-io/etcher/releases/tag/v1.19.25) 
+    * Ubuntu 22.04 or Ubuntu 24.04: [Balena Etcher](https://etcher.balena.io/#download-etcher)
 * PowerShell:
     * Windows 11: A standard part of Windows 11
     * Ubuntu 22.04 or Ubuntu 24.04: [Installing PowerShell on Ubuntu](https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.5)
@@ -123,7 +144,7 @@ To update each the ADSD3500 firmware and SD card image see the following section
    2. When prompted with **InstallShield Wizard Completed**, choose *Download image file*.
    * Notes
      * Unless changed by the user, the package installs to *c:\Analog Devices\TOF_Evaluation_ADTF3175D-Rel6.1.0* location.
-     * If the image file was not downloaded via the installer it can still be download using *get_image.cmd*. *get_image.cmd* isis available at *TOF_Evaluation_ADTF3175D-Rel6.1.0\image\get_image.cmd*. This can be also used to re-download the image file.
+     * If the image file was not downloaded via the installer it can still be download using *get_image.cmd*. *get_image.cmd* is available at *TOF_Evaluation_ADTF3175D-Rel6.1.0\image\get_image.cmd*. This can be also used to re-download the image file.
 1. Prepare for the next stages.
    1. Once download completed and zip file will be available at the same location.
    2. Unzip the downloaded file, *NXP-Img-Rel6.1.0-ADTF3175D-xxxxxxxx.zip* file. This can be done from the context menu of explorer. Or using PowerShell.
@@ -150,7 +171,16 @@ To update each the ADSD3500 firmware and SD card image see the following section
 
 ### Overview of Installed Files
 
-TODO
+```
+├───bin             : executables and python samples
+│   └───Python-setup: setup of the Python environment
+├───config          : Device configuration files
+├───doc             : documentation
+│   ├───images      : images used in the documentation
+│   └───other       : collateral used in the documentation
+├───image           : script to retrieve the SD card image archive
+└───license         : license file
+```
 
 ## 2. Flashing the SD Card Image
 
@@ -210,7 +240,364 @@ Note: This method has changed to use the new PowerShell interface.
 
 ## PowerShell Interface
 
-TODO
+To configure the device we have provided a new interface via PowerShell. Through the configuration interface the user can:
+
+1.  ADSD3500 Reset                  
+2.  Reboot                          
+3.  Power Down                      
+4.  Get File System Permissions     
+5.  Modify File System Permissions  
+6.  Get Date & Time                 
+7.  Set Date & Time                 
+8.  Check WiFi Connection
+9.  Setup WiFi
+10. Check Firmware Version
+11. Update Firmware
+12. Get SDK Version
+13. Update SDK Version
+14. Delete SDK Version
+15. Switch SDK Version
+16. Network Switch
+17. Exit
+
+PowerShell is natively a part of Windows 11, and it is also available on Linux, see [Installing PowerShell on Ubuntu](https://learn.microsoft.com/en-us/powershell/scripting/install/install-ubuntu?view=powershell-7.5).
+
+The configuration scripts are available in the *config* folder in the installed folder.
+
+```
+cd config
+Unblock-File -Path *
+Evalkit_Config_Utility.ps1
+```
+[<img src="images/config-1.png" width="70%">](images/config-1.png)
+
+Next, make sure you can ssh into the device.
+
+```
+ssh analog@192.168.56.1
+Password: analog
+```
+If you cannot get to the Linux console, then do the following.
+
+1. Find the *known_hosts* file. It is typically under the user/home folder in the *.ssh* folder.
+1. Delete the lines associated with *192.168.56.1*.
+2. Repeat trying to access the device via *ssh*.
+
+### 1. Reset ADSD3500
+
+This command resets the ADSD3500 ISP. It is generally not needed, but is available if needed.
+
+```
+Resetting ADSD3500...
+
+Reset Done.
+```
+
+### 2. Reboot
+
+As implied, this command reboots the ADTF3175D Eval Kit. The reboot command is sent to the eval kit, but it will take approximately 45 seconds for the eval it to reboot. 
+
+```
+Rebooting system...
+
+Reboot initiated successfully.
+```
+
+Pinging the eval kit will show when it is alive again: *ping 192.168.56.1*.
+```
+$ ping 192.168.56.1
+
+Pinging 192.168.56.1 with 32 bytes of data:
+Reply from 192.168.56.1: bytes=32 time=6ms TTL=64
+Reply from 192.168.56.1: bytes=32 time=4ms TTL=64
+Reply from 192.168.56.1: bytes=32 time=3ms TTL=64
+Reply from 192.168.56.1: bytes=32 time=3ms TTL=64
+
+Ping statistics for 192.168.56.1:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 3ms, Maximum = 6ms, Average = 4ms
+```
+
+### 3. Power Down
+
+This command will power down the eval kit. The USB cable will need to be unplugged and re-plugged to power the device up again.
+
+Command output:
+```
+Powering Down system..
+```
+
+### 4. Get File System Permissions
+
+Checks the state of the Linux file system. 
+
+If the file system is read-only this will be the following output.
+```
+Checking Permission...
+
+
+Permission is : RO
+```
+
+If the file system is read-write this will be the following output.
+```
+Checking Permission...
+
+
+Permission is : RW
+```
+
+### 5. Modify File System Permissions
+
+This changes the Linux file system write permissions. If it is read-only, it will be changed to read-write. If it is read-write, it will change to read-only.
+
+Case 1. Read-only to read-write
+```
+Modifying Permission...
+Warning : This process will reboot the system.
+
+
+Change Permission from RO to RW
+
+
+Reboot initiated successfully.
+```
+
+Case 2. Read-write to read-only
+```
+Modifying Permission...
+Warning : This process will reboot the system.
+
+
+Change Permission from RW to RO
+
+
+Reboot initiated successfully.
+```
+
+### 6. Get Date & Time
+
+This command will report the date and time of the eval kit in the context of the local time zone.
+
+```
+Getting Date & Time...
+
+Server Time (Local): 07/30/2025 10:57:24
+```
+
+### 7. Set Date & Time
+
+This command will sync the date and time of the eval kit with that of the current PC in the context of the local time zone.
+
+```
+Setting Date & Time...
+
+Server time and time zone updated successfully
+```
+
+### 8. Check WiFi Connection
+
+This command checks the state of the WiFi connection.
+
+Case 1. No WiFi Connection
+```
+Checking WiFi Connection...
+
+Disconnected
+```
+
+Case 2. WiFi Connected
+```
+Checking WiFi Connection...
+
+Connected
+```
+
+### 9. Setup WiFi
+
+This command should be used to setup the WiFi connection of the device.
+
+Note: the device needs to be in read write mode. Use the command **Modify File System Permissions** to set the device to read write mode if needed.
+
+```
+Setting up Wifi ...
+
+Note : This Setup requires RW access.
+
+Warning : This Process Will Reboot the system.
+
+SSID: IamHereWiFi
+
+password: **********
+
+WiFi setup successful. System is Rebooting.
+```
+
+### 10. Check Firmware Version
+
+Report the firmware version for the ADSD3500 ISP.
+
+```
+Checking Firmware version...
+
+Current Firmware Version: 6.0.0
+```
+
+### 11. Update Firmware
+
+Update the ADSD3500 firmware.
+
+```
+Flashing Firmware...
+Give the Firmware Path: Fw_Update_6.0.0.bin
+File integrity verified.
+Copying firmware to remote device...
+analog@192.168.56.1's password:
+Fw_Update_6.0.0.bin                                                                   100%   96KB   8.5MB/s   00:00
+analog@192.168.56.1's password:
+
+
+Flashing firmware...
+analog@192.168.56.1's password:
+[sudo] password for analog: Installed signal handler for SIGETX = 44
+
+Chip ID is: 5931
+
+Switched from standard mode to burst mode
+
+Before upgrading new firmware
+Current firmware version is : 6.0.0.0
+
+Writing Firmware packets...
+Packet number: 382 / 382
+
+Adsd3500 firmware updated succesfully!
+
+Waiting for the ADSD3500 kernel Driver signal
+Received signal from ADSD3500 kernel driver
+
+Get status Command e
+
+Firmware soft resetting...
+Waiting for 0 seconds
+
+Chip ID is: 5931
+
+Switched from standard mode to burst mode
+
+After upgrading new firmware
+Current firmware version is : 6.0.0.0
+
+Switched from burst mode to standard mode
+
+Chip ID is: 5931
+```
+
+### 12. Get SDK Version
+
+Reports back the current SDK version used on the ADTF3175D Eval Kit.
+
+```
+Getting SDK Version..
+6.1.0
+```
+
+### 13. Update SDK Version
+
+Note, the password is *analog*.
+
+```
+Updating the SDK Version...
+Give the File Path: Workspace-6.2.0.tar.gz
+File integrity verified.
+Copying file to remote device...
+analog@192.168.56.1's password:
+Workspace-6.2.0.tar.gz                                                                    100%   42MB  56.7MB/s   00:00
+
+Unzipping ...
+analog@192.168.56.1's password:
+
+Workspace has been Successfully updated !!
+```
+
+### 14. Delete SDK Version
+
+This removes a user specified version of the SDK from the eval kit's SD card image.
+
+```
+Press 'y' to continue (any other key to cancel)...
+analog@192.168.56.1's password:
+Available workspaces:
+1. 6.1.0
+2. 6.2.0
+Enter the number of the workspace you want to delete: 2
+Successfully deleted workspace version '6.2.0'.
+
+Now system will reboot
+[sudo] password for analog:
+Connection to 192.168.56.1 closed by remote host.
+Connection to 192.168.56.1 closed.
+```
+
+### 15. Switch SDK Version
+
+Through this command the SDK version can be switched if there are multiple versions installed.
+
+```
+Switching SDK...
+
+Warning : This Process Will Reboot the system.
+
+Available Workspaces:
+1. 6.1.0
+2. 6.2.0
+
+Choose the option (ex. 1, 2) (or press Enter to cancel): 2
+Workspace switched to 6.2.0 successfully.
+
+Reboot initiated successfully.
+```
+
+### 15. Network Switch
+
+This must be only used for Linux systems. It enables the user to switch the USB network mode between RNDIS and ECM. 
+
+RNDIS is the default mode - which supports Linux and Windows. However, RNDIS has poor performance in Linux.
+
+For Linux it is recommended the user switch to ECM mode.
+
+```
+Switching Network...
+Network mode value: ubuntu
+
+Warning : This Process Will Reboot the system.
+```
+
+The next stage is critical. Note, unplugging re-plugging the device may require the following to be done again.
+
+For example, where the device name in this case is **enx3e35aecf0ede**. The before and after MTU sizes are **1500** and **15000** respectively.
+
+```
+$ ip a
+22: enx3e35aecf0ede: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 1000
+    link/ether 3e:35:ae:cf:0e:de brd ff:ff:ff:ff:ff:ff
+    inet 192.168.56.101/24 brd 192.168.56.255 scope global dynamic noprefixroute enx3e35aecf0ede
+       valid_lft 3349sec preferred_lft 3349sec
+    inet6 fe80::a657:5ddd:a219:2e0e/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+
+$ sudo ip link set dev enx3e35aecf0ede mtu 15000
+
+$ ip a
+22: enx3e35aecf0ede: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 15000 qdisc fq_codel state UNKNOWN group default qlen 1000
+    link/ether 3e:35:ae:cf:0e:de brd ff:ff:ff:ff:ff:ff
+    inet 192.168.56.101/24 brd 192.168.56.255 scope global dynamic noprefixroute enx3e35aecf0ede
+       valid_lft 3132sec preferred_lft 3132sec
+    inet6 fe80::a657:5ddd:a219:2e0e/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+```
+
 
 ---
 ---
@@ -245,7 +632,7 @@ Usage: data_collect [options]
       --fw <firmware>    Adsd3500 fw file
       --split            Save each frame into a separate file (Debug)
       --netlinktest      Puts server on target in test mode (Debug)
-      --singlethread     Store the frame to file using same tread
+      --singlethread     Store the frame to file using same thread
       --ic <imager-configuration>   Select imager configuration: standard, standard-raw,
                          custom, custom-raw. By default is standard.
       --scf <save-configuration-file>    Save current configuration to json file
@@ -519,7 +906,7 @@ options:
 
 ##### Example Usage
 
-The following example extarcts frames 10 thru 10 from the capture file *output\frame2025_07_09_15_27_10_0.bin* and places the contents in the folder *output\range_10_16*.
+The following example extracts frames 10 thru 10 from the capture file *output\frame2025_07_09_15_27_10_0.bin* and places the contents in the folder *output\range_10_16*.
 
 ```
 $ python rawparser.py output\frame2025_07_09_15_27_10_0.bin --outdir output\range_10_16 -f 10-16
@@ -700,7 +1087,7 @@ I20250709 16:06:57.850332 40956 main.cpp:187] Running the callback for which the
 I20250709 16:06:57.863314 40956 main.cpp:187] Running the callback for which the status of ADSD3500 has been forwarded. ADSD3500 status = Adsd3500Status::OK
 I20250709 16:06:57.866338 40956 network.cpp:619] Frame Client Connection established.
 I20250709 16:06:58.040611 40956 camera_itof.cpp:615] Dropped first frame
-I20250709 16:06:58.087862 40956 main.cpp:241] succesfully requested frame!
+I20250709 16:06:58.087862 40956 main.cpp:241] successfully requested frame!
 I20250709 16:06:58.087862 40956 network_depth_sensor.cpp:391] Stopping device
 I20250709 16:06:58.215757 40956 main.cpp:187] Running the callback for which the status of ADSD3500 has been forwarded. ADSD3500 status =
 I20250709 16:06:58.215757 40956 main.cpp:187] Running the callback for which the status of ADSD3500 has been forwarded. ADSD3500 status =
@@ -758,24 +1145,67 @@ From the screen capture below you can see the frame rate for mode 1 is now 5fps.
 
 [<img src="images/aditofgui_8.png" width="25%">](images/aditofgui_8.png)
 
+##### Troubleshooting
+
+For the best performance, ADIToFGUI should be set to run using your systems best performing graphics card. To do this it is necessary to instruct Windows of the graphics card to use, if you have multiple options.
+
+In this example we bind ADIToFGUI.exe to the NVIDIA graphics device.
+
+[<img src="images/aditofgui-ts-1.png" width="25%">](images/aditofgui-ts-1.png)
+
+[<img src="images/aditofgui-ts-2.png" width="25%">](images/aditofgui-ts-2.png)
+
+[<img src="images/aditofgui-ts-3.png" width="25%">](images/aditofgui-ts-3.png)
+
+[<img src="images/aditofgui-ts-4.png" width="25%">](images/aditofgui-ts-4.png)
+
+[<img src="images/aditofgui-ts-5.png" width="25%">](images/aditofgui-ts-5.png)
+
 ## Python Tools
 
 The Python tools rely on the included Python bindings.
 
-### Setting for using the Python Bindings
+### Set up for using the Python Bindings for Windows
 
-#### Setup
+#### Setup the Virtual Environment
+
+Note, this is a onetime operation unless the virtual environment is corrupted or removed.
 
 Note, this process may take a while when setting up the python environment.
 
 * cd bin\Python-setup
 * setup_python_env.bat
 
-#### Activate
+#### Activate the Virtual Environment
 * activate.bat
-
-#### Decativate
+  
+#### Deactivate the Virtual Environment
 * deactivate.bat
+
+### Set up for using the Python Bindings for Ubuntu 22.04
+
+#### Setup the Virtual Environment
+
+Note, this is a onetime operation unless the virtual environment is corrupted or removed.
+
+First setup on Ubuntu:
+
+* Ubuntu 22.04: sudo apt install python3.10-venv
+* Ubuntu 24.04: sudo apt install python3.12-venv
+
+Note, this process may take a while when setting up the python environment.
+
+From the **bin** folder:
+* cd Python-setup
+* ./aditofpython_env.sh
+
+#### Activate the Virtual Environment
+From the **bin** folder:
+* cd Python-setup
+* source ./activate.sh
+
+#### Deactivate the Virtual Environment
+* deactivate
 
 ### data_collect (Python)
 

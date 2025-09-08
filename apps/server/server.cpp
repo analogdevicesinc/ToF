@@ -64,7 +64,7 @@ std::vector<std::shared_ptr<aditof::DepthSensorInterface>> depthSensors;
 bool sensors_are_created = false;
 bool clientEngagedWithSensors = false;
 bool isConnectionClosed = true;
-bool gotStream_off = false;
+bool gotStream_off = true;
 
 std::unique_ptr<aditof::SensorEnumeratorInterface> sensorsEnumerator;
 
@@ -133,10 +133,17 @@ struct clientData {
     std::vector<char> data;
 };
 
-void close_zmq_connection() {
+static void close_zmq_connection() {
+
+    // Stop the sensor if not already stopped
+    if (!gotStream_off && camDepthSensor) {
+        aditof::Status status = camDepthSensor->stop();
+        gotStream_off = (status == aditof::Status::OK);
+    }
+
     if (server_socket) {
-        server_socket->close(); // Close the socket
-        server_socket.reset();  // Release the unique pointer
+        server_socket->close();
+        server_socket.reset();
     }
 
     LOG(INFO) << "ZMQ Client Connection closed.";
@@ -380,14 +387,14 @@ int Network::callback_function(const zmq_event_t &event) {
         std::cout << "Closed connection " << std::endl;
         if (Client_Connected && !no_of_client_connected) {
             std::cout << "Connection Closed" << std::endl;
+            stop_stream_thread();
+            if (isConnectionClosed == false) {
+                close_zmq_connection();
+            }
             if (clientEngagedWithSensors) {
                 cleanup_sensors();
                 clientEngagedWithSensors = false;
             }
-            if (isConnectionClosed == false) {
-                close_zmq_connection();
-            }
-            stop_stream_thread();
             Client_Connected = false;
         } else {
             std::cout << "Another Client Connection Closed" << std::endl;
@@ -420,14 +427,14 @@ int Network::callback_function(const zmq_event_t &event) {
     case ZMQ_EVENT_DISCONNECTED: {
         if (Client_Connected && !no_of_client_connected) {
             std::cout << "Connection Closed" << std::endl;
+            stop_stream_thread();
+            if (isConnectionClosed == false) {
+                close_zmq_connection();
+            }
             if (clientEngagedWithSensors) {
                 cleanup_sensors();
                 clientEngagedWithSensors = false;
             }
-            if (isConnectionClosed == false) {
-                close_zmq_connection();
-            }
-            stop_stream_thread();
             Client_Connected = false;
         } else {
             std::cout << "Another Client Connection Closed" << std::endl;
@@ -498,6 +505,16 @@ int main(int argc, char *argv[]) {
 
     context = std::make_unique<zmq::context_t>(2);
     server_cmd = std::make_unique<zmq::socket_t>(*context, ZMQ_REP);
+
+    // Set heartbeat options before binding
+    int heartbeat_ivl = 1000;     // Send heartbeat every 1000 ms
+    int heartbeat_timeout = 3000; // Timeout if no heartbeat received in 3000 ms
+    int heartbeat_ttl = 5000;     // Heartbeat message TTL
+
+    server_cmd->set(zmq::sockopt::heartbeat_ivl, heartbeat_ivl);
+    server_cmd->set(zmq::sockopt::heartbeat_timeout, heartbeat_timeout);
+    server_cmd->set(zmq::sockopt::heartbeat_ttl, heartbeat_ttl);
+
     // Bind the socket
     try {
         server_cmd->bind("tcp://*:5556");
@@ -533,7 +550,10 @@ int main(int argc, char *argv[]) {
     }
     clientEngagedWithSensors = false;
 
-    stop_stream_thread();
+    if (send_async == true) {
+        stop_stream_thread();
+    }
+
     close_zmq_connection();
 
     if (server_cmd) {

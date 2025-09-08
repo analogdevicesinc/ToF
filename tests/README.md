@@ -28,6 +28,16 @@ I20250626 14:02:37.792209 49612 main.cpp:399] @@,sdk_stream_test.exe,PASS,LN399,
 I20250626 14:02:41.432104 49612 main.cpp:399] @@,sdk_stream_test.exe,PASS,LN399,DN:FPS:31.2389:FC:7:TST:2:200:30:
 ```
 
+Note, if you capture via a PowerShell console, the following is required to avoid line splitting in output.txt:
+```
+cmd /c "sdk_stream_test.exe --ip 192.168.56.1 --i test-example.vector 2> .\output.txt"
+```
+
+Note, while sdk_stream_test.exe is executing another PowerShell console can be use to monitor the output:
+```
+Get-Content output.txt -Wait
+```
+
 The PowerShell script **extract_results.ps1** can be used to extract the results. For example:
 
 ```

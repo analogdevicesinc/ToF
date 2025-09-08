@@ -27,15 +27,13 @@ if ($key -eq 'y' -or $key -eq 'Y') {
     # Prompt user for WiFi credentials
 	$username = Read-Host "`nSSID"
 	$securePassword = Read-Host "`npassword" -AsSecureString
-	$password = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
-		[Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword)
-	)
+	$password = [System.Net.NetworkCredential]::new("",$securePassword).Password
 
 	try {
 		$postBody = @{
 			username = $username
 			password = $password
-		} | ConvertTo-Json
+		} | ConvertTo-Json -Depth 3
 
 		$response = Invoke-RestMethod -Uri "$baseUrl/setup-wifi" -Method Post -Body $postBody -ContentType "application/json"
 		Write-Host ""
