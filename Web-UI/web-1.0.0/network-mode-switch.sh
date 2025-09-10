@@ -10,8 +10,8 @@ fi
 VERSION=$1
 USER_CHOICE=$2
 
-CONFIG_FILE_1="/usr/share/systemd/usb-gadget.sh"
-CONFIG_FILE_3="/usr/share/systemd/"
+CONFIG_FILE_1="/home/analog/Workspace/bin/usb-gadget.sh"
+CONFIG_FILE_3="/home/analog/Workspace/bin/"
 TEMP_FILE="/home/analog/Workspace/requirements/usb-gadget.tmp"
 CONFIG_FILE_2="/home/analog/Workspace/requirements/usb-gadget.sh"
 
