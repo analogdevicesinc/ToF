@@ -14,8 +14,8 @@ For more details on building the SDK on a host platform please check the **User 
 
 | Operating System | Documentation | GitHub main status | Downloads |
 | --------- | ----------- | ----------- | ----------- |
-| Windows | [Build Instructions](scripts/windows) | [![Build status](https://dev.azure.com/AnalogDevices/3DToF-rework/_apis/build/status/analogdevicesinc.ToF?branchName=main)](https://dev.azure.com/AnalogDevices/3DToF-rework/_build?view=runs&branchFilter=3310) | [![ToF evaluation kit installer](https://img.shields.io/badge/release-ToF_evaluation_kit_installer-blue.svg)](https://github.com/analogdevicesinc/ToF/releases/latest) |
-| Linux | [Build Instructions](doc/itof/linux_build_instructions.md) | [![Build status](https://dev.azure.com/AnalogDevices/3DToF-rework/_apis/build/status/analogdevicesinc.ToF?branchName=main)](https://dev.azure.com/AnalogDevices/3DToF-rework/_build?view=runs&branchFilter=3310) | [![ToF evaluation kit installer](https://img.shields.io/badge/release-ToF_evaluation_kit_installer-blue.svg)](https://github.com/analogdevicesinc/ToF/releases/latest) |
+| Windows | [Build Instructions](scripts/windows) | [![Build status](https://dev.azure.com/AnalogDevices/ToF/_apis/build/status%2Fanalogdevicesinc.ToF?branchName=main)](https://dev.azure.com/AnalogDevices/ToF/_build/latest?definitionId=42&branchName=main) | [![ToF evaluation kit installer](https://img.shields.io/badge/release-ToF_evaluation_kit_installer-blue.svg)](https://github.com/analogdevicesinc/ToF/releases/latest) |
+| Linux | [Build Instructions](doc/itof/linux_build_instructions.md) | [![Build status](https://dev.azure.com/AnalogDevices/ToF/_apis/build/status%2Fanalogdevicesinc.ToF?branchName=main)](https://dev.azure.com/AnalogDevices/ToF/_build/latest?definitionId=42&branchName=main) | [![ToF evaluation kit installer](https://img.shields.io/badge/release-ToF_evaluation_kit_installer-blue.svg)](https://github.com/analogdevicesinc/ToF/releases/latest) |
 
 ### Requirements
 
@@ -35,7 +35,7 @@ For more details on building the SDK on an embedded platform please check the **
 ### ITOF camera
 | Operating system | Evaluation boards | Documentation | GitHub main status |
 | --------- | ----------- | ----------- | ----------- |
-| NXP | [EVAL-ADTF3175D-NXZ](https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175d-nxz) | [Build instructions](doc/itof/nxp_build_instructions.md) | [![Build status](https://dev.azure.com/AnalogDevices/3DToF-rework/_apis/build/status/analogdevicesinc.ToF?branchName=main)](https://dev.azure.com/AnalogDevices/3DToF-rework/_build?view=runs&branchFilter=3310) |
+| NXP | [EVAL-ADTF3175D-NXZ](https://wiki.analog.com/resources/eval/user-guides/eval-adtf3175d-nxz) | [Build instructions](doc/itof/nxp_build_instructions.md) | [![Build status]([https://dev.azure.com/AnalogDevices/3DToF-rework/_apis/build/status/analogdevicesinc.ToF?branchName=main)](https://dev.azure.com/AnalogDevices/3DToF-rework/_build?view=runs&branchFilter=3310](https://dev.azure.com/AnalogDevices/ToF/_apis/build/status%2Fanalogdevicesinc.ToF?branchName=main)](https://dev.azure.com/AnalogDevices/ToF/_build/latest?definitionId=42&branchName=main)) |
 
 [How to write the SD card image onto the SD card?](doc/sdcard_burn.md)
 
