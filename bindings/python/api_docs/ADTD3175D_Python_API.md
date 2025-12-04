@@ -1178,7 +1178,7 @@ stop(self: aditofpython.DepthSensorInterface) -> aditofpython.Status
 ---
 
 # Depth Sensor Mode Details API Documentation
-## Other Members
+## Attributes
 
 ### `baseResolutionHeight`
 
@@ -1435,7 +1435,7 @@ setDetails(self: aditofpython.Frame, details: aditofpython.FrameDetails) -> adit
 ---
 
 # Frame Data Details API Documentation
-## Other Members
+## Attributes
 
 ### `bytesCount`
 
@@ -1565,7 +1565,7 @@ Base 0 means to interpret the base from the string as an integer literal.
 ---
 
 # Frame Details API Documentation
-## Other Members
+## Attributes
 
 ### `cameraMode`
 
@@ -1757,7 +1757,7 @@ storeFramesToSingleFile(self: aditofpython.FrameHandler, enable: bool) -> aditof
 ---
 
 # Intrinsic Parameters API Documentation
-## Other Members
+## Attributes
 
 ### `codx`
 
@@ -1877,7 +1877,7 @@ Convert a string or number to a floating point number, if possible.
 ---
 
 # Metadata API Documentation
-## Other Members
+## Attributes
 
 ### `abFrequencyIndex`
 
@@ -2263,7 +2263,7 @@ Base 0 means to interpret the base from the string as an integer literal.
 ---
 
 # Sensor Details API Documentation
-## Other Members
+## Attributes
 
 ### `connectionType`
 
