@@ -1,35 +1,48 @@
-name: Auto Merge main to dev branch (with submodules)
+name: Auto Merge rel-6.1.1 to dev branch (with submodules)
 
 on:
   push:
     branches:
-      - main
+      - rel-6.1.1
 
 jobs:
   merge:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Manually clone the repository
-        run: |
-          git init
-          git remote add origin https://github.com/${{ github.repository }}.git
-          git fetch origin main
-          git fetch origin dev-6.1.1
-          git checkout -b dev-6.1.1 origin/dev-6.1.1
+      - name: Checkout rel-6.1.1 branch
+        uses: actions/checkout@v3
+        with:
+          ref: rel-6.1.1
+          fetch-depth: 0
+          submodules: true
+          persist-credentials: false
 
       - name: Configure Git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+       
 
-      - name: Force replace dev branch with main branch contents (including submodules)
+      - name: Fetch dev-6.1.1 branch
+        run: |
+          git fetch origin dev-6.1.1 || echo "dev-6.1.1 does not exist yet"
+
+      - name: Checkout or create dev-6.1.1
+        run: |
+          if git show-ref --verify --quiet refs/remotes/origin/dev-6.1.1; then
+            git checkout -b dev-6.1.1 origin/dev-6.1.1
+          else
+            git checkout -b dev-6.1.1
+          fi
+          
+      - name: Force replace dev branch with rel-6.1.1 branch contents (including submodules)
         run: |
           set -e
-          git reset --hard origin/main
+          git reset --hard origin/rel-6.1.1
           git submodule update --init --recursive
           git add .
-          git commit -m "Force sync dev branch with main branch (including submodules)" || echo "No changes to commit"
+          git commit -m "Force sync dev branch with rel-6.1.1 branch (including submodules)" || echo "No changes to commit"
 
       - name: Push changes to dev
         env:
