@@ -15,8 +15,8 @@ jobs:
           git init
           git remote add origin https://github.com/${{ github.repository }}.git
           git fetch origin main
-          git fetch origin dev-6.1.0
-          git checkout -b dev-6.1.0 origin/dev-6.1.0
+          git fetch origin dev-6.1.1
+          git checkout -b dev-6.1.1 origin/dev-6.1.1
 
       - name: Configure Git
         run: |
@@ -35,4 +35,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git dev-6.1.0 --force
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git dev-6.1.1 --force
