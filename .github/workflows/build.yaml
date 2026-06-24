@@ -1,0 +1,34 @@
+name: Build workflow for ToF
+
+on:
+  pull_request:
+    branches:
+        - main
+  push:
+    branches:
+        - main
+
+jobs:
+  build-linux:
+    strategy:
+      matrix:
+        os: ["ubuntu-22.04"]
+        docker: ["", "septimiuvana/arm64-ubuntu"]
+        include:
+          - extra-cmake-flags: ["-DWITH_OFFLINE=on", "-DNVIDIA=1"]
+            docker: septimiuvana/arm64-ubuntu
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.docker }}
+    env:
+      EXTRA_CMAKE_FLAGS: ${{ matrix.extra-cmake-flags }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Check clang format
+        uses: analogdevicesinc/wiki-scripts/check-clang-format@devops-actions
+        with:
+          source: ${{ github.workspace }}
+      - name: Check cpp format
+        uses: analogdevicesinc/wiki-scripts/check-cpp@devops-actions
+        with:
+          paths: "sdk/ apps/"
