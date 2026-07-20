@@ -1,0 +1,69 @@
+name: Build workflow for ToF
+
+on:
+  pull_request:
+    branches:
+        - main
+
+permissions:
+  contents: read
+
+env:
+  NUM_JOBS: 4
+
+jobs:
+  checkers:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+      - name: Check clang format
+        uses: analogdevicesinc/wiki-scripts/check-clang-format@devops-actions
+        with:
+          source: ${{ github.workspace }}
+      - name: Check cpp format
+        uses: analogdevicesinc/wiki-scripts/cpp-check@devops-actions
+        with:
+          paths: ${{ github.workspace }}/apps ${{ github.workspace }}/sdk
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            type: linux
+          - os: ubuntu-22.04
+            extra-cmake-flags: -DWITH_OFFLINE=on
+            type: linux
+          - os: ubuntu-24.04
+            type: linux
+          - os: ubuntu-22.04-arm
+            container: septimiuvana/arm64-ubuntu
+            extra-cmake-flags: -DWITH_OFFLINE=on
+            type: docker
+          - os: ubuntu-22.04-arm
+            extra-cmake-flags: -DNVIDIA=1
+            container: septimiuvana/arm64-ubuntu
+            type: docker
+          - os: windows-2022
+            type: windows
+    runs-on: ${{ matrix.os }}
+    env:
+      EXTRA_CMAKE_FLAGS: ${{ matrix.extra-cmake-flags || '' }}
+    container:
+      image: ${{ matrix.container || '' }}
+      volumes:
+        - ${{ github.workspace }}:${{ github.workspace }}
+        - /home/runner/work/_actions:/home/runner/work/_actions
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+      - name: Builds ${{ matrix.type }}
+        uses: analogdevicesinc/wiki-scripts/build-tof@devops-actions
+        with:
+          source-path: ${{ github.workspace }}
+          extra-cmake-flags: ${{ env.EXTRA_CMAKE_FLAGS }}
+          build-type: ${{ matrix.type }}

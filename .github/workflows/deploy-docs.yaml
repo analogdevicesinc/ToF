@@ -1,0 +1,27 @@
+name: Deploy docs for ToF
+
+on:
+  push:
+    branches:
+      - main  
+
+permissions:
+  contents: write
+
+env:
+  NUM_JOBS: 4
+
+jobs:
+  deploy-doxygen:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+      - name: Deploy doxygen
+        uses: analogdevicesinc/wiki-scripts/deploy-doxygen@devops-actions
+        with:
+          source-path: ${{ github.workspace }}
+          args: evalkit-doc
+          version: 1.8.15
