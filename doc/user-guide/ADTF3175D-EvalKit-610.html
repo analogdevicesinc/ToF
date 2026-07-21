@@ -1459,8 +1459,12 @@ referenced.</p>
 <p>These should not be changed in the context of the eval kit unless
 explicitly asked to do so by ADI.</p>
 <ul>
-<li><em>errata1</em>: DO NOT CHANGE</li>
-<li><em>fsyncMode</em>: DO NOT A</li>
+<li><em>errata1</em>: Drops the first frame after streaming starts to avoid invalid sensor data (<code>1</code> = drop, <code>0</code> = keep). <strong>DO NOT CHANGE unless instructed by ADI.</strong>
+<ul>
+<li><strong>Manual trigger</strong> (<code>fsyncMode = 0</code>): Set <code>errata1 = 0</code> to avoid needing an extra fsync pulse for the dropped frame.</li>
+</ul>
+</li>
+<li><em>fsyncMode</em>: DO NOT CHANGE</li>
 <li><em>mipiOutputSpeed</em>: DO NOT CHANGE</li>
 <li><em>enableTempCompensation</em>: DO NOT CHANGE</li>
 <li><em>enableEdgeConfidence</em>: DO NOT CHANGE</li>

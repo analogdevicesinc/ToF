@@ -1456,8 +1456,9 @@ For the following discussion [example-cfg.json](other/example-cfg.json) will be 
 
 These should not be changed in the context of the eval kit unless explicitly asked to do so by ADI.
 
-* *errata1*: DO NOT CHANGE
-* *fsyncMode*: DO NOT A
+* *errata1*: Drops the first frame after streaming starts to avoid invalid sensor data (`1` = drop, `0` = keep). **DO NOT CHANGE unless instructed by ADI.**
+  * **Manual trigger** (`fsyncMode = 0`): Set `errata1 = 0` to avoid needing an extra fsync pulse for the dropped frame.
+* *fsyncMode*: DO NOT CHANGE
 * *mipiOutputSpeed*: DO NOT CHANGE
 * *enableTempCompensation*: DO NOT CHANGE
 * *enableEdgeConfidence*: DO NOT CHANGE
