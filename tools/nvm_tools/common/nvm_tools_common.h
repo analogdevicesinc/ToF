@@ -1,6 +1,5 @@
 #ifndef NVM_TOOLS_COMMON_H
 #define NVM_TOOLS_COMMON_H
-#include "crc.h"
 #include <algorithm>
 #include <cstring>
 #include <errno.h>
