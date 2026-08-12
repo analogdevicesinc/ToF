@@ -64,7 +64,6 @@ if __name__ == '__main__':
     parser.add_argument('-ccb', type=str, 
                         help='The path to store CCB content', metavar='<FILE>')                    
     parser.add_argument('-ip', default=Ip, help='camera IP[default: 192.168.56.1]', metavar = '<ip>')
-    parser.add_argument('-fw', dest='firmware', help='Adsd3500 firmware file', metavar = '<firmware>')
     parser.add_argument('-s', '--split', action="store_true", dest='split', 
                         help='Save each frame into a separate file (Debug)')
     parser.add_argument('-t', '--netlinktest', action="store_true", 
@@ -119,9 +118,6 @@ if __name__ == '__main__':
     
     if (args.ip):
         print("Ip address is: ", args.ip)
-    
-    if (args.firmware):
-        print("Firmware file is: ", args.firmware)
     
     if (args.ccb):
         print("Path to store CCB content: " , args.ccb)
@@ -179,15 +175,6 @@ if __name__ == '__main__':
     print ('SD card image version: ', cam_details.sdCardImageVersion)
     print ("Kernel version: ", cam_details.kernelVersion)
     print ("U-Boot version: ", cam_details.uBootVersion)
-
-    if (args.firmware):
-        if not os.path.isfile(args.firmware):
-            sys.exit(f"{args.firmware} does not exists")
-        status = camera1.adsd3500UpdateFirmware(args.firmware)
-        if status != tof.Status.Ok:
-            print('Could not update the Adsd3500 firmware')
-        else:
-            print('Please reboot the board')
 
     #Get frame types
     modes = []

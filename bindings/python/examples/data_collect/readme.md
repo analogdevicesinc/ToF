@@ -5,7 +5,7 @@
 ```
 usage: data_collect.py [-h] [-f <folder>] [-n <ncapture>] [-m <mode>]
                        [-wt <warmup>] [-ccb <FILE>] [-ip <ip>]
-                       [-fw <firmware>] [-s] [-t] [-st]
+                       [-s] [-t] [-st]
 					   [-ic <imager-configuration>]
                        [-scf <save-configuration-file>]
 
@@ -28,7 +28,6 @@ optional arguments:
   -wt <warmup>         warmup time in seconds[default: 0]
   -ccb <FILE>          The path to store CCB content
   -ip <ip>             camera IP[default: 192.168.56.1]
-  -fw <firmware>       Adsd3500 firmware file
   -s, --split          Save each frame into a separate file (Debug)
   -t, --netlinktest    Puts server on target in test mode (Debug)
   -st, --singlethread  Store the frame to file using same thread
