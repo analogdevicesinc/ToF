@@ -8,7 +8,7 @@
 ```
 Usage:
       data_collect CONFIG
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [-s | --split] [-t | --netlinktest] CONFIG
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [-s | --split] [-t | --netlinktest] CONFIG
       data_collect (-h | --help)
 
     Arguments:
@@ -22,7 +22,6 @@ Usage:
       --wt <warmup>      Warmup Time (sec) [default: 0]
       --ccb <FILE>       The path to store CCB content
       --ip <ip>          Camera IP
-      --fw <firmware>    Adsd3500 fw file
       --split            Save each frame into a separate file (Debug)
       --netlinktest      Puts server on target in test mode (Debug)
       --singlethread     Store the frame to file using same tread

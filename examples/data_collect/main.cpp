@@ -53,7 +53,7 @@ static const char kUsagePublic[] =
     R"(Data Collect.
     Usage:
       data_collect 
-      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [--fw <firmware>] [-s | --split] [-t | --netlinktest] [--ic <imager-configuration>] [-scf <save-configuration-file>] [-lcf <load-configuration-file>]
+      data_collect [--f <folder>] [--n <ncapture>] [--m <mode>] [--wt <warmup>] [--ccb FILE] [--ip <ip>] [-s | --split] [-t | --netlinktest] [--ic <imager-configuration>] [-scf <save-configuration-file>] [-lcf <load-configuration-file>]
       data_collect (-h | --help)
 
     Options:
@@ -64,7 +64,6 @@ static const char kUsagePublic[] =
       --wt <warmup>      Warmup Time (sec) [default: 0]
       --ccb <FILE>       The path to store CCB content
       --ip <ip>          Camera IP
-      --fw <firmware>    Adsd3500 fw file
       --split            Save each frame into a separate file (Debug)
       --netlinktest      Puts server on target in test mode (Debug)
       --singlethread     Store the frame to file using same tread
@@ -93,7 +92,6 @@ int main(int argc, char *argv[]) {
         {"-m", {"--m", false, "", "0", true}},
         {"-wt", {"--wt", false, "", "0", true}},
         {"-ip", {"--ip", false, "", "", true}},
-        {"-fw", {"--fw", false, "", "", true}},
         {"-ccb", {"--ccb", false, "", "", true}},
         {"-s", {"--split", false, "", "", false}},
         {"-t", {"--netlinktest", false, "", "", false}},
@@ -162,7 +160,6 @@ int main(int argc, char *argv[]) {
     uint8_t mode = 0;
     uint32_t warmup_time = 0;
     std::string ip;
-    std::string firmware;
     std::string configuration = "standard";
 
     google::InitGoogleLogging(argv[0]);
@@ -223,11 +220,6 @@ int main(int argc, char *argv[]) {
     // Parsing ip
     if (!command_map["-ip"].value.empty()) {
         ip = command_map["-ip"].value;
-    }
-
-    // Parsing firmware
-    if (!command_map["-fw"].value.empty()) {
-        firmware = command_map["-fw"].value;
     }
 
     //Parsing Warm up time
@@ -295,10 +287,6 @@ int main(int argc, char *argv[]) {
         LOG(INFO) << "Ip address is: " << ip;
     }
 
-    if (!firmware.empty()) {
-        LOG(INFO) << "Firmware file is is: " << firmware;
-    }
-
     if (!ccbFilePath.empty()) {
         LOG(INFO) << "Path to store CCB content: " << ccbFilePath;
     }
@@ -353,25 +341,6 @@ int main(int argc, char *argv[]) {
     LOG(INFO) << "SD card image version: " << cameraDetails.sdCardImageVersion;
     LOG(INFO) << "Kernel version: " << cameraDetails.kernelVersion;
     LOG(INFO) << "U-Boot version: " << cameraDetails.uBootVersion;
-
-    if (!firmware.empty()) {
-        std::ifstream file(firmware);
-        if (!(file.good() &&
-              file.peek() != std::ifstream::traits_type::eof())) {
-            LOG(ERROR) << firmware << " not found or is an empty file";
-            return 0;
-        }
-
-        status = camera->adsd3500UpdateFirmware(firmware);
-        if (status != Status::OK) {
-            LOG(ERROR) << "Could not update the adsd3500 firmware";
-            return 0;
-        } else {
-            LOG(INFO) << "Please reboot the board!";
-            return 0;
-        }
-    }
-
 
     // Get modes
     std::vector<uint8_t> availableModes;
