@@ -24,7 +24,7 @@
 #include <stdio.h>
 
 #include <aditof/system.h>
-#include <cJSON.h>
+#include <json.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -147,16 +147,16 @@ ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
     std::ifstream ifs(DEFAULT_TOOLS_CONFIG_FILENAME);
     std::string content((std::istreambuf_iterator<char>(ifs)),
                         (std::istreambuf_iterator<char>()));
-    cJSON *config_json = cJSON_Parse(content.c_str());
+    json_object *config_json = json_tokener_parse(content.c_str());
 
-    if (config_json != NULL) {
+    if (config_json != nullptr) {
         // Get option to look or not for network cameras
-        const cJSON *json_skip_network_cameras =
-            cJSON_GetObjectItemCaseSensitive(config_json,
-                                             "skip_network_cameras");
-        if (cJSON_IsString(json_skip_network_cameras) &&
-            (json_skip_network_cameras->valuestring != NULL)) {
-            std::string value = json_skip_network_cameras->valuestring;
+        json_object *json_skip_network_cameras = nullptr;
+        if (json_object_object_get_ex(config_json, "skip_network_cameras",
+                                      &json_skip_network_cameras) &&
+            json_object_get_type(json_skip_network_cameras) ==
+                json_type_string) {
+            std::string value = json_object_get_string(json_skip_network_cameras);
             if (value == "on") {
                 m_skipNetworkCameras = true;
             } else if (value == "off") {
@@ -168,23 +168,25 @@ ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
         }
 
         // Get the IP address of the network camera to which the application should try to connect to
-        const cJSON *json_camera_ip =
-            cJSON_GetObjectItemCaseSensitive(config_json, "camera_ip");
-        if (cJSON_IsString(json_camera_ip) &&
-            (json_camera_ip->valuestring != NULL)) {
-            m_cameraIp = json_camera_ip->valuestring;
+        json_object *json_camera_ip = nullptr;
+        if (json_object_object_get_ex(config_json, "camera_ip",
+                                      &json_camera_ip) &&
+            json_object_get_type(json_camera_ip) == json_type_string) {
+            m_cameraIp = json_object_get_string(json_camera_ip);
             if (!m_cameraIp.empty()) {
                 m_cameraIp = "ip:" + m_cameraIp;
             }
         }
 
-        const cJSON *json_camera_max_frame_rate =
-            cJSON_GetObjectItemCaseSensitive(config_json, "max_frame_rate");
+        json_object *json_camera_max_frame_rate = nullptr;
+        json_object_object_get_ex(config_json, "max_frame_rate",
+                                  &json_camera_max_frame_rate);
 
         m_max_frame_rate = 0;
-        if (cJSON_IsNumber(json_camera_max_frame_rate)) {
+        if (json_camera_max_frame_rate &&
+            json_object_get_type(json_camera_max_frame_rate) == json_type_int) {
             m_max_frame_rate =
-                static_cast<uint32_t>(json_camera_max_frame_rate->valueint);
+                static_cast<uint32_t>(json_object_get_int(json_camera_max_frame_rate));
             if (m_max_frame_rate == 0 || m_max_frame_rate > MAX_FRAME_RATE) {
                 LOG(WARNING)
                     << "Frame Rate, " << m_max_frame_rate
@@ -193,7 +195,7 @@ ADIMainWindow::ADIMainWindow() : m_skipNetworkCameras(true) {
             }
         }
 
-        cJSON_Delete(config_json);
+        json_object_put(config_json);
     }
     if (!ifs.fail()) {
         ifs.close();
