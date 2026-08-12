@@ -57,7 +57,7 @@ target_link_libraries(ADIToFGUI PRIVATE
 					  imgui::imgui
 					  ${OPENGL_gl_LIBRARY}
 					  ${CMAKE_DL_LIBS}
-					  cjson
+					  json-c
 					 )
 
 if( WIN32 )					 
@@ -79,7 +79,9 @@ target_include_directories(ADIToFGUI PUBLIC
 				)
 
 target_include_directories(ADIToFGUI PUBLIC
-                        "${CMAKE_SOURCE_DIR}/libaditof/sdk/src/cameras/itof-camera")
+                        "${CMAKE_SOURCE_DIR}/libaditof/sdk/src/cameras/itof-camera"
+                        "${CMAKE_SOURCE_DIR}/libaditof/dependencies/third-party/json-c"
+                        "${CMAKE_BINARY_DIR}/libaditof/dependencies/third-party/json-c")
 
 if (ENBABLE_PASSIVE_IR)
 	message(STATUS "Building with Passive IR Mode enabled")
