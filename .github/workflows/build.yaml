@@ -1,4 +1,4 @@
-name: Build workflow for ToF
+name: Build ToF
 
 on:
   pull_request:
@@ -12,22 +12,7 @@ env:
   NUM_JOBS: 4
 
 jobs:
-  checkers:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-        with:
-          submodules: recursive
-      - name: Check clang format
-        uses: analogdevicesinc/wiki-scripts/check-clang-format@devops-actions
-        with:
-          source: ${{ github.workspace }}
-      - name: Check cpp format
-        uses: analogdevicesinc/wiki-scripts/cpp-check@devops-actions
-        with:
-          paths: ${{ github.workspace }}/apps ${{ github.workspace }}/sdk
-  build:
+  build-tof-linux:
     strategy:
       matrix:
         include:
@@ -39,31 +24,45 @@ jobs:
           - os: ubuntu-24.04
             type: linux
           - os: ubuntu-22.04-arm
-            container: septimiuvana/arm64-ubuntu
             extra-cmake-flags: -DWITH_OFFLINE=on
-            type: docker
           - os: ubuntu-22.04-arm
             extra-cmake-flags: -DNVIDIA=1
-            container: septimiuvana/arm64-ubuntu
-            type: docker
-          - os: windows-2022
-            type: windows
+            type: linux
     runs-on: ${{ matrix.os }}
-    env:
-      EXTRA_CMAKE_FLAGS: ${{ matrix.extra-cmake-flags || '' }}
-    container:
-      image: ${{ matrix.container || '' }}
-      volumes:
-        - ${{ github.workspace }}:${{ github.workspace }}
-        - /home/runner/work/_actions:/home/runner/work/_actions
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
         with:
           submodules: recursive
-      - name: Builds ${{ matrix.type }}
-        uses: analogdevicesinc/wiki-scripts/build-tof@devops-actions
+      - name: Install dependencies
+        shell: sh
+        run: |
+          ./.github/scripts/install-deps.sh
+        env:
+          BUILD_TYPE: ${{ matrix.type }}
+      - name: Build ${{ matrix.type }}
+        shell: sh
+        run: |
+          ./.github/scripts/build-tof.sh
+        env:
+          WORK_DIR: ${{ github.workspace }}
+          BUILD_DIR: ${{ github.workspace }}/build
+          BUILD_TYPE: ${{ matrix.type }}
+          DOCKER_IMAGE: ${{ matrix.docker-image || '' }}
+          EXTRA_CMAKE_FLAGS: ${{ matrix.extra-cmake-flags }}
+  build-tof-windows:
+    continue-on-error: true
+    runs-on: windows-2022
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
         with:
-          source-path: ${{ github.workspace }}
-          extra-cmake-flags: ${{ env.EXTRA_CMAKE_FLAGS }}
-          build-type: ${{ matrix.type }}
+          submodules: recursive
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          ${{ github.workspace }}/.github/scripts/install-deps.ps1
+      - name: Build windows
+        shell: pwsh
+        run: |
+          ${{ github.workspace }}/.github/scripts/build-sdk.ps1

@@ -1,6 +1,9 @@
 name: Deploy docs for ToF
 
 on:
+  pull_request:   # only building, not publishing
+    branches:
+      - main
   push:
     branches:
       - main  
@@ -20,8 +23,10 @@ jobs:
         with:
           submodules: recursive
       - name: Deploy doxygen
-        uses: analogdevicesinc/wiki-scripts/deploy-doxygen@devops-actions
+        uses: analogdevicesinc/shared-actions/deploy-doxygen@main
         with:
-          source-path: ${{ github.workspace }}
+          work_dir: ${{ github.workspace }}
+          docs_dir: ${{ github.workspace }}/doc
           args: evalkit-doc
           version: 1.8.15
+          publish: ${{ github.event_name == 'pull_request' && 'false' || github.event_name == 'push' && 'true' }}
