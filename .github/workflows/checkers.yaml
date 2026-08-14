@@ -1,0 +1,30 @@
+name: Checkers for ToF
+
+on:
+  pull_request:
+    branches:
+        - main
+
+permissions:
+  contents: read
+
+env:
+  NUM_JOBS: 4
+
+jobs:
+  checkers:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+      - name: Check clang format
+        uses: analogdevicesinc/shared-actions/check-clang-format@main
+        with:
+          source: ${{ github.workspace }}
+      - name: Check cpp format
+        if: always()
+        uses: analogdevicesinc/shared-actions/check-cpp-format@main
+        with:
+          paths: ${{ github.workspace }}/apps ${{ github.workspace }}/sdk
