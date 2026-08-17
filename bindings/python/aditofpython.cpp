@@ -399,8 +399,6 @@ PYBIND11_MODULE(aditofpython, m) {
              py::arg("filepath"))
         .def("enableDepthCompute", &aditof::Camera::enableDepthCompute,
              py::arg("enable"))
-        .def("adsd3500UpdateFirmware", &aditof::Camera::adsd3500UpdateFirmware,
-             py::arg("filePath"))
         .def("saveDepthParamsToJsonFile",
              &aditof::Camera::saveDepthParamsToJsonFile,
              py::arg("savePathFile"))
