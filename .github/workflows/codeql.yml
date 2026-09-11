@@ -14,8 +14,14 @@ name: "CodeQL Advanced"
 on:
   push:
     branches: [ "main", "dev-6.1.0"]
+    paths-ignore:
+      - 'libaditof/**'
+      - 'dependencies/third-party/**'
   pull_request:
     branches: [ "main", "dev-6.1.0" ]
+    paths-ignore:
+      - 'libaditof/**'
+      - 'dependencies/third-party/**'
 
 jobs:
   analyze:
