@@ -568,12 +568,12 @@ def setup_wifi():
         
         script_path = f'/home/analog/Workspace-{current_workspace}/Tools/adi-enable-wifi.sh'
 
-        # Define the command and password
-        command = ['sudo', '-S', script_path, username, password]
+        # Credentials are sent over stdin, never as command-line arguments
+        command = ['sudo', '-S', script_path]
 
-        user_pass = 'analog\n'
+        stdin_payload = f'analog\n{username}\n{password}\n'
         
-        result = subprocess.run(command, capture_output=True, text=True,input=user_pass)
+        result = subprocess.run(command, capture_output=True, text=True,input=stdin_payload)
         return jsonify(message='WiFi setup successful. System is Rebooting.')
     except Exception as e:
         app.logger.error(f"Setting up WiFi failed: {e}")
@@ -717,9 +717,12 @@ def change_ui():
 
     try:
         if (version.lower() != 'no change'):
-            if not _is_safe_token(version):
+            # Resolve to a value from the trusted version list rather than passing user input straight through
+            valid_versions = {v.strip(): v.strip() for v in list_ui_versions().splitlines() if v.strip()}
+            if version not in valid_versions:
                 return jsonify({'error': 'Invalid version'}), 400
-            command = ['sudo', '-S', './switch-UI.sh','/home/analog', version]  
+            safe_version = valid_versions[version]
+            command = ['sudo', '-S', './switch-UI.sh','/home/analog', safe_version]  
 
             # Create the subprocess and pass the password to stdin
             process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
