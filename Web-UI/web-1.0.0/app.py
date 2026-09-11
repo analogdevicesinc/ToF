@@ -2,10 +2,33 @@ from flask import Flask, render_template, request, jsonify, Response,stream_with
 import os
 import json
 import logging
+import re
 import time
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
+
+# Matches simple identifiers only (letters, digits, dot, dash, underscore), no leading dash,
+# so values cannot be interpreted as command-line flags or inject shell metacharacters.
+_SAFE_TOKEN_RE = re.compile(r'^[A-Za-z0-9._-]{1,128}$')
+_UNSAFE_TEXT_RE = re.compile(r'[\r\n\x00]')
+
+
+def _is_safe_token(value):
+    """Reject values that aren't simple identifiers, preventing command-line/flag injection."""
+    return isinstance(value, str) and bool(_SAFE_TOKEN_RE.match(value)) and not value.startswith('-')
+
+
+def _is_safe_text(value, max_len=128):
+    """Reject values with control characters or a leading '-' that could be parsed as a flag."""
+    return (isinstance(value, str) and 0 < len(value) <= max_len
+            and not value.startswith('-') and not _UNSAFE_TEXT_RE.search(value))
+
+
+def _log_and_generic_error(context, exc, key='error', status=500, client_message=None):
+    """Log full exception details server-side without leaking them to the client."""
+    app.logger.error(f"{context}: {exc}")
+    return jsonify({key: client_message or f"{context} failed. Check server logs for details."}), status
 
 # Directories and file paths
 CHUNK_DIR = '/tmp/upload_chunks'
@@ -32,7 +55,7 @@ def get_workspace():
         return jsonify({"workspace": result})
     except subprocess.CalledProcessError as e:
         # Handle errors if the script fails to execute
-        return jsonify({"error": str(e)}), 500
+        return _log_and_generic_error("Fetching workspace", e)
 
 def calculate_sha256(file_path):
     import hashlib
@@ -144,10 +167,10 @@ def validate_and_process_unzipped_files(unzip_dir):
 
     except subprocess.CalledProcessError as e:
         logging.error(f"Subprocess error during unzipping: {str(e)}")
-        return False, f"Unzipping error: {str(e)}"
+        return False, "Unzipping error occurred. Check server logs for details."
     except Exception as e:
         logging.error(f"Validation error: {str(e)}")
-        return False, f"Validation or move error: {str(e)}"
+        return False, "Validation or move error occurred. Check server logs for details."
 
 
 @app.route('/execute-post-script', methods=['GET'])
@@ -168,9 +191,8 @@ def execute_post_script():
         output_lines = result.stdout.splitlines()[1:]  # Exclude the first line
         return "\n".join(output_lines)
     except Exception as e:
-        error_message = f"Script execution failed: {str(e)}"
-        logging.error(error_message)
-        return error_message
+        logging.error(f"Script execution failed: {str(e)}")
+        return "Script execution failed. Check server logs for details."
 
 def clean_up():
     import shutil
@@ -323,7 +345,7 @@ def complete_upload():
         return jsonify({'message': 'File uploaded successfully. Unzipping, validation, move, and script execution in progress.'}), 202
     except Exception as e:
         app.logger.error(f"Error during unzip initiation: {str(e)}")
-        return jsonify({'message': 'Error starting unzip process.', 'error': str(e)}), 500
+        return jsonify({'message': 'Error starting unzip process.'}), 500
 
 @app.route('/unzip-status', methods=['GET'])
 def unzip_status():
@@ -355,6 +377,8 @@ def switch_workspace():
 
     if not entry:
         return jsonify({"error": "No entry provided"}), 400
+    if not _is_safe_token(entry):
+        return jsonify({"error": "Invalid entry"}), 400
 
     try:
         # Run the switch-workspace script with the selected entry
@@ -368,9 +392,9 @@ def switch_workspace():
         return jsonify({"message": f"Workspace switched to {entry} successfully."})
     
     except subprocess.CalledProcessError as e:
-        return jsonify({"error": str(e)}), 500
+        return _log_and_generic_error("Switching workspace", e)
     except Exception as e:
-        return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
+        return _log_and_generic_error("Switching workspace", e)
 
 def reboot_async():
     import subprocess
@@ -427,9 +451,9 @@ def run_service():
 
         return jsonify({"output": journal_output.stdout}), 200
     except subprocess.CalledProcessError as e:
-        return jsonify({"output": f"Error: {e.stderr}"}), 500
+        return _log_and_generic_error("Running backup service", e, key='output')
     except Exception as e:
-        return jsonify({"output": f"Unexpected error: {str(e)}"}), 500
+        return _log_and_generic_error("Running backup service", e, key='output')
 
 @app.route('/check-file-sizes', methods=['GET'])
 def check_file_sizes():
@@ -455,7 +479,7 @@ def check_file_sizes():
         })
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return _log_and_generic_error("Checking file sizes", e)
 
 
 @app.route('/read-ini')
@@ -465,7 +489,8 @@ def read_ini():
             ini_content = file.read()
         return ini_content
     except Exception as e:
-        return str(e), 500
+        app.logger.error(f"Reading config.ini failed: {e}")
+        return "Failed to read configuration. Check server logs for details.", 500
 
 @app.route('/server-time', methods=['GET'])
 def server_time():
@@ -506,8 +531,7 @@ def set_server_time():
         return jsonify({"message": "Server time and time zone updated successfully"}), 200
 
     except Exception as e:
-        app.logger.error(f"Error setting server time: {e}")
-        return jsonify({"error": str(e)}), 500
+        return _log_and_generic_error("Setting server time", e)
 
 # setup the wifi
 
@@ -527,7 +551,7 @@ def getUserName():
 
         return jsonify({"username": result.stdout}),200
     except Exception as e:
-        return jsonify({'error': str(e)}),500
+        return _log_and_generic_error("Getting username", e)
 
 @app.route('/setup-wifi', methods=['POST'])
 def setup_wifi():
@@ -535,6 +559,9 @@ def setup_wifi():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
+
+    if not _is_safe_text(username) or not _is_safe_text(password):
+        return jsonify(message='Invalid username or password.'), 400
 
     try:
         current_workspace = get_workspace().get_json().get('workspace')
@@ -549,7 +576,8 @@ def setup_wifi():
         result = subprocess.run(command, capture_output=True, text=True,input=user_pass)
         return jsonify(message='WiFi setup successful. System is Rebooting.')
     except Exception as e:
-        return jsonify(message='Error setting up WiFi: ' + str(e)), 500
+        app.logger.error(f"Setting up WiFi failed: {e}")
+        return jsonify(message='Error setting up WiFi. Check server logs for details.'), 500
 
 @app.route('/adsd3500-reset', methods=['POST'])
 def adsd3500_reset():
@@ -571,7 +599,8 @@ def adsd3500_reset():
         else:
             return jsonify(message='Error while Resetting'), 500
     except Exception as e:
-        return jsonify(message='Error setting up WiFi: ' + str(e)), 500
+        app.logger.error(f"ADSD3500 reset failed: {e}")
+        return jsonify(message='Error resetting ADSD3500. Check server logs for details.'), 500
 
 @app.route('/network-status')
 def ping_host():
@@ -588,7 +617,7 @@ def ping_host():
         else:
             return jsonify({'status':False}), 500
     except Exception as e:
-        return jsonify({'error': str(e)}),500
+        return _log_and_generic_error("Checking network status", e)
     
 # flash firmware
 
@@ -600,7 +629,7 @@ def firmware_versions():
         versions = result.split('\n')
         return jsonify({'versions': versions})
     except subprocess.CalledProcessError as e:
-        return jsonify({'error': str(e)}), 500
+        return _log_and_generic_error("Fetching firmware versions", e)
 
 @app.route('/check_firmware')
 def check_firmware():
@@ -613,7 +642,7 @@ def check_firmware():
         return jsonify({'version':result})
     
     except subprocess.CalledProcessError as e:
-        return jsonify({'error': str(e)}), 500
+        return _log_and_generic_error("Checking firmware version", e)
 
 @app.route('/list_firmware_versions')
 def execute_list_firware():
@@ -631,7 +660,8 @@ def list_firmware_versions():
             return error_message
         return result.stdout
     except subprocess.CalledProcessError as e:
-        return jsonify({'error': str(e)}), 500
+        logging.error(f"Listing firmware versions failed: {e}")
+        return "Failed to list firmware versions. Check server logs for details."
 
 # list the web-ui version
 @app.route('/list_ui_versions')
@@ -650,7 +680,8 @@ def list_ui_versions():
             return error_message
         return result.stdout
     except subprocess.CalledProcessError as e:
-        return jsonify({'error': str(e)}), 500
+        logging.error(f"Listing UI versions failed: {e}")
+        return "Failed to list UI versions. Check server logs for details."
 
 @app.route('/current_firmware', methods=['GET'])
 def current_firmware():
@@ -660,7 +691,7 @@ def current_firmware():
         result = subprocess.check_output(['./get-firmware-version.sh', curr_version]).decode('utf-8').strip()
         return jsonify({'current_firmware': result})
     except subprocess.CalledProcessError as e:
-        return jsonify({'error': str(e)}), 500
+        return _log_and_generic_error("Fetching current firmware", e)
 
 @app.route('/current_ui', methods=['GET'])
 def current_ui():
@@ -671,7 +702,7 @@ def current_ui():
         return jsonify({"current_val": result})
     except subprocess.CalledProcessError as e:
         # Handle errors if the script fails to execute
-        return jsonify({"error": str(e)}), 500
+        return _log_and_generic_error("Fetching current UI version", e)
     
 
 # change ui
@@ -681,8 +712,13 @@ def change_ui():
     data = request.get_json()
     version = data.get('value')
 
+    if not isinstance(version, str):
+        return jsonify({'error': 'Invalid version'}), 400
+
     try:
         if (version.lower() != 'no change'):
+            if not _is_safe_token(version):
+                return jsonify({'error': 'Invalid version'}), 400
             command = ['sudo', '-S', './switch-UI.sh','/home/analog', version]  
 
             # Create the subprocess and pass the password to stdin
@@ -696,13 +732,19 @@ def change_ui():
         else:
             return jsonify({'result' : 9})
     except subprocess.CalledProcessError as e:
-        return jsonify({'error': str(e)}), 500
+        return _log_and_generic_error("Changing UI version", e)
 
 @app.route('/run_shell_script', methods=['POST'])
 def run_shell_script():
     data = request.get_json()
     version = data.get('version')
     script = data.get('script')
+
+    if version is not None and not _is_safe_token(version):
+        return jsonify({'error': 'Invalid version'}), 400
+    if script is not None and not _is_safe_token(script):
+        return jsonify({'error': 'Invalid script'}), 400
+
     app.config['SCRIPT'] = script
     app.config['VERSION'] = version  
     return '', 204  
@@ -770,12 +812,14 @@ def get_markdown():
         return jsonify({'error': f'File {file_name} not found in {directory}'}), 404
     except Exception as e:
         app.logger.exception(f'Error reading file {file_path}')
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': 'Failed to read the requested file.'}), 500
 
 @app.route('/Change-Permission', methods=['POST'])
 def changePermission():
     data = request.get_json()
     value = data.get('value')
+    if value not in ('modify', 'view'):
+        return jsonify({'error': 'Invalid value'}), 400
     app.config['VALUE'] = value  
     return '', 204 
 
@@ -796,7 +840,7 @@ def changePermissionEvents():
         # Return the output as a JSON response
         return jsonify({'output': stdout})
     except subprocess.CalledProcessError as e:
-        return jsonify({'error': str(e)}), 500
+        return _log_and_generic_error("Changing permission", e)
 
 # NetWork change
 @app.route("/Change-Network", methods=["POST"])
@@ -831,7 +875,7 @@ def change_network_get():
             }), 500
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return _log_and_generic_error("Changing network mode", e)
 
 # get the operating mode
 
@@ -861,7 +905,8 @@ def get_and_source_ros_version():
         return jsonify({"status": "OK"})
 
     except Exception as e:
-        return jsonify({"status": "Error", "message": str(e)}), 500
+        app.logger.error(f"Sourcing ROS environment failed: {e}")
+        return jsonify({"status": "Error", "message": "Failed to check ROS environment. Check server logs for details."}), 500
 
 
 # change operating mode 
@@ -938,8 +983,8 @@ def run_script():
             process.stderr.close()
 
         except Exception as e:
-            print(f"Exception: {str(e)}")
-            yield f"data: Exception: {str(e)}\n\n"
+            app.logger.error(f"Running script failed: {e}")
+            yield "data: Exception: Script execution failed. Check server logs for details.\n\n"
 
     return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
@@ -950,6 +995,8 @@ def download_file():
     data = request.get_json()
     file_name = data.get('filename')
     path = data.get('path')
+    if not _is_safe_token(file_name) or not isinstance(path, str) or '..' in path or path.startswith('/'):
+        return jsonify({'error': 'Invalid filename or path'}), 400
     app.config['fileName'] = file_name
     app.config['path'] = path
     return '', 204
@@ -971,8 +1018,8 @@ def download_file_get():
 
         return send_from_directory(download_path, file_name, as_attachment=True)
     except Exception as e:
-        print(f"Exception: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        app.logger.error(f"Downloading file failed: {e}")
+        return jsonify({'error': 'Failed to download the requested file.'}), 500
     finally:
         # Ensure the file is deleted after sending
         if os.path.exists(file_path):
