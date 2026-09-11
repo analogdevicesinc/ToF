@@ -2458,7 +2458,7 @@ bool ImGui::SliderBehaviorT(const ImRect& bb, ImGuiID id, ImGuiDataType data_typ
                 {
                     // For integer values we want the clicking position to match the grab box so we round above
                     // This code is carefully tuned to work with large values (e.g. high ranges of U64) while preserving this property..
-                    FLOATTYPE v_new_off_f = (v_max - v_min) * clicked_t;
+                    FLOATTYPE v_new_off_f = ((FLOATTYPE)(v_max - v_min)) * (FLOATTYPE)clicked_t;
                     TYPE v_new_off_floor = (TYPE)(v_new_off_f);
                     TYPE v_new_off_round = (TYPE)(v_new_off_f + (FLOATTYPE)0.5);
                     if (v_new_off_floor < v_new_off_round)
