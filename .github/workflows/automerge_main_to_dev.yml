@@ -5,6 +5,9 @@ on:
     branches:
       - rel-6.1.1
 
+permissions:
+  contents: write
+
 jobs:
   merge:
     runs-on: ubuntu-latest
