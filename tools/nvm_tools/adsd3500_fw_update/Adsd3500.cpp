@@ -576,12 +576,16 @@ bool Adsd3500::updateAdsd3500MasterFirmware(uint8_t *fw_data, uint32_t fw_len, b
             if (current_ver[i] > min_ver[i]) { below_minimum = false; break; }
         }
         if (below_minimum) {
-            std::cerr << "[MASTER] ERROR: Current device firmware version " << current_ver_str
-                      << " is below the minimum required version 8.1.0.0. Aborting." << std::endl;
-            Switch_from_Burst_to_Standard();
-            close(debug_fd);
-            close(sfd);
-            exit(EXIT_FAILURE);
+            std::cerr << "[MASTER] WARNING: Current device firmware version " << current_ver_str
+                      << " is below the minimum required version 8.1.0.0." << std::endl;
+            if (!force) {
+                std::cerr << "[MASTER] Aborting. Re-run with --force to override." << std::endl;
+                Switch_from_Burst_to_Standard();
+                close(debug_fd);
+                close(sfd);
+                exit(EXIT_FAILURE);
+            }
+            std::cerr << "[MASTER] Proceeding despite below-minimum version (--force specified)." << std::endl;
         }
 
         bool is_downgrade = false;
@@ -837,12 +841,16 @@ bool Adsd3500::updateAdsd3500SlaveFirmware(uint8_t *fw_data, uint32_t fw_len, bo
             if (current_ver[i] > min_ver[i]) { below_minimum = false; break; }
         }
         if (below_minimum) {
-            std::cerr << "[SLAVE] ERROR: Current device firmware version " << current_ver_str
-                      << " is below the minimum required version 8.1.0.0. Aborting." << std::endl;
-            Switch_from_Burst_to_Standard();
-            close(debug_fd);
-            close(sfd);
-            exit(EXIT_FAILURE);
+            std::cerr << "[SLAVE] WARNING: Current device firmware version " << current_ver_str
+                      << " is below the minimum required version 8.1.0.0." << std::endl;
+            if (!force) {
+                std::cerr << "[SLAVE] Aborting. Re-run with --force to override." << std::endl;
+                Switch_from_Burst_to_Standard();
+                close(debug_fd);
+                close(sfd);
+                exit(EXIT_FAILURE);
+            }
+            std::cerr << "[SLAVE] Proceeding despite below-minimum version (--force specified)." << std::endl;
         }
 
         bool is_downgrade = false;
