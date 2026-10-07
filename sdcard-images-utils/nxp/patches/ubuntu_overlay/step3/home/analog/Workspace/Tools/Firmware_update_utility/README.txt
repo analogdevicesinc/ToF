@@ -19,10 +19,10 @@
         $ cd Firmware_update_utility
 
 
-4) Firmware_update executable will be available at this path and it takes one argument that is the adsd3500 ADCAM_Fw_Dual_Update_X.Y.Z.bin.
+4) Firmware_update executable will be available at this path and it takes one argument that is the adsd3500 Unified_Fw_Update_X.Y.Z.bin.
 
         Note:
-          i) Copy the latest ADCAM_Fw_Dual_Update_X.Y.Z.bin file to Firmware_update_utility.
+          i) Copy the latest Unified_Fw_Update_X.Y.Z.bin file to Firmware_update_utility.
          ii) Below mentioned file, which is passed as an argument to executable file is just an example bin file.
 
-        $ sudo ./firmware_update ADCAM_Fw_Dual_Update_X.Y.Z.bin
+        $ sudo ./firmware_update Unified_Fw_Update_X.Y.Z.bin
