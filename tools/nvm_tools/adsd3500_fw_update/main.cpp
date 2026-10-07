@@ -24,14 +24,14 @@ int main(int argc, char *argv[]) {
 
 	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
-			std::cout << "Usage: " << argv[0] << " <ADCAM_Fw_Update_X.Y.Z.bin> [--force]" << std::endl;
+			std::cout << "Usage: " << argv[0] << " <Unified_Fw_Update_X.Y.Z.bin> [--force]" << std::endl;
 			std::cout << std::endl;
 			std::cout << "Firmware update utility for ADSD3500 devices." << std::endl;
 			std::cout << "Supports single-device (master only) and dual-device (master + slave)" << std::endl;
 			std::cout << "configurations. Device presence is detected automatically at runtime." << std::endl;
 			std::cout << std::endl;
 			std::cout << "Arguments:" << std::endl;
-			std::cout << "  <ADCAM_Fw_Update_X.Y.Z.bin>" << std::endl;
+			std::cout << "  <Unified_Fw_Update_X.Y.Z.bin>" << std::endl;
 			std::cout << "      Dual-slot .bin file (256 KB minimum, 2 x 128 KB slots)." << std::endl;
 			std::cout << "      Slot 0 (offset 0x00000): master firmware (chunkType=0x54)" << std::endl;
 			std::cout << "      Slot 1 (offset 0x20000): slave  firmware (chunkType=0x60)" << std::endl;
@@ -44,14 +44,14 @@ int main(int argc, char *argv[]) {
 			std::cout << "      Print this help message and exit." << std::endl;
 			std::cout << std::endl;
 			std::cout << "Examples:" << std::endl;
-			std::cout << "  " << argv[0] << " ADCAM_Fw_Update_8.1.0.bin" << std::endl;
-			std::cout << "  " << argv[0] << " ADCAM_Fw_Update_8.1.0.bin --force  # downgrade only" << std::endl;
+			std::cout << "  " << argv[0] << " Unified_Fw_Update_8.1.0.bin" << std::endl;
+			std::cout << "  " << argv[0] << " Unified_Fw_Update_8.1.0.bin --force  # downgrade only" << std::endl;
 			return 0;
 		}
 	}
 
 	if (argc < 2 || argc > 3) {
-		std::cerr << "Usage: " << argv[0] << " <ADCAM_Fw_Update_X.Y.Z.bin> [--force]" << std::endl;
+		std::cerr << "Usage: " << argv[0] << " <Unified_Fw_Update_X.Y.Z.bin> [--force]" << std::endl;
 		std::cerr << "       .bin file must be at least 262144 bytes (2 x 128 KB slots)" << std::endl;
 		std::cerr << "       --force   Required only for firmware downgrade" << std::endl;
 		std::cerr << "       -h, --help  Show full help" << std::endl;
