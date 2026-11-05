@@ -1,0 +1,27 @@
+From 57e45d219d49aea265e45302603bc6ea205ba124 Mon Sep 17 00:00:00 2001
+From: Sivasubramanaiyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Thu, 5 Nov 2026 14:34:32 +0530
+Subject: [PATCH 2/3] drivers: media: i2c: adsd3500.c: updated driver version
+ as 6.1.1
+
+Signed-off-by: Sivasubramanaiyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ drivers/media/i2c/adsd3500_regs.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/i2c/adsd3500_regs.h b/drivers/media/i2c/adsd3500_regs.h
+index f6c475c789a4..0de6423270f7 100644
+--- a/drivers/media/i2c/adsd3500_regs.h
++++ b/drivers/media/i2c/adsd3500_regs.h
+@@ -11,7 +11,7 @@
+ 
+ #include <linux/bitfield.h>
+ 
+-#define DRIVER_VERSION                          	"6.1.0"
++#define DRIVER_VERSION                          	"6.1.1"
+ 
+ #define GET_CHIP_ID_CMD						0x0112
+ 
+-- 
+2.25.1
+
