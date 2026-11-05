@@ -1,0 +1,27 @@
+From c2e3dc024b20d921e373275415aea5787c88924e Mon Sep 17 00:00:00 2001
+From: Sivasubramanaiyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+Date: Thu, 5 Nov 2026 14:36:47 +0530
+Subject: [PATCH 3/3] drivers: media: spi: adsd3500-spi.c: updated driver
+ version as 6.1.1
+
+Signed-off-by: Sivasubramanaiyan Padmanaban <sivasubramaniyan.padmanaban@analog.com>
+---
+ drivers/media/spi/adsd3500_regs.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/spi/adsd3500_regs.h b/drivers/media/spi/adsd3500_regs.h
+index 693fc40286ce..60035d38e55f 100644
+--- a/drivers/media/spi/adsd3500_regs.h
++++ b/drivers/media/spi/adsd3500_regs.h
+@@ -11,7 +11,7 @@
+ 
+ #include <linux/bitfield.h>
+ 
+-#define DRIVER_VERSION                          "6.1.0"
++#define DRIVER_VERSION                          "6.1.1"
+ 
+ #define REVERSE_SHORT(x) ((0x0000FF00 & x << 8) | (0x000000FF & x >> 8))
+ #define REVERSE_LONG(x) ( ((x&0xff000000)>>24) | (((x&0x00ff0000)<<8)>>16) | (((x&0x0000ff00)>>8)<<16) | ((x&0x000000ff) << 24) )
+-- 
+2.25.1
+
